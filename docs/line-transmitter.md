@@ -11,7 +11,7 @@ verified against the simulated frame before this document was written.
 ## 1. Block diagram
 
 ```
-  2.56 MHz ──÷4──→ 640 kHz ──÷2──→ 320 kHz ──÷10──→ 32 kHz
+  10.24 MHz ─÷16─→ 640 kHz ──÷2──→ 320 kHz ──÷10──→ 32 kHz
    osc              half-bit        line bit         frame clock
                        │               │                │
                        │               ↓                └──→ to all channel cards
@@ -119,19 +119,23 @@ edge `T=1` regardless of data, so data does not matter there at all.
 
 | | |
 |---|---|
-| nominal | 2.56 MHz |
-| divider | ÷4 → 640 kHz, ÷2 → 320 kHz, ÷10 → 32 kHz |
-| fastest node | oscillator and first divider only |
+| nominal | **10.24 MHz** |
+| divider | ÷16 → 640 kHz, ÷2 → 320 kHz, ÷10 → 32 kHz |
+| fastest node | oscillator and the ÷16 only; every other node ≤ 640 kHz |
 
 **Accuracy is nearly irrelevant.** The far end's monostable receiver classifies
 intervals against an RC with a ±13% window at high noise (spec §5.2), and the
 oscillator contributes ~0.01% of that. A ceramic resonator at ±0.5% would work.
 Specify a crystal anyway, for unit-to-unit repeatability rather than accuracy.
 
-**Verify 2.56 MHz availability before committing the divider chain.** It must be
-`2.56 × 2ⁿ` to reach 640 kHz on binary dividers; 5.12 MHz (÷8) and 10.24 MHz
-(÷16) are the clean fallbacks and cost only one more divider stage. Since only
-the oscillator runs at that rate, taking 10.24 MHz is not a board-wide penalty.
+10.24 MHz was chosen over the lower binary options (1.28 / 2.56 / 5.12 MHz)
+purely on availability — it is a standard telecom value and the others are not.
+None of the ubiquitous crystal values (1.8432, 2.048, 3.579545, 3.6864, 4.096,
+4.9152 MHz) divide to 640 kHz at all, which is why the list is short.
+
+This does not put a fast clock across the board: the oscillator feeds an
+immediate ÷16 and **everything downstream runs at 640 kHz or below**. Use a
+74HC393 for the ÷16 — one package, four binary stages.
 
 The 32 kHz frame clock is distributed to all four channel card slots as the
 CVSD encode clock. It is the only clock the channel cards receive from this
@@ -178,8 +182,9 @@ have to be redesigned when the feed is populated.
 
 | function | part |
 |---|---|
-| Oscillator | 74HC04 + 2.56 MHz crystal |
-| ÷4 and ÷2 dividers | 74HC74 |
+| Oscillator | 74HC04 + 10.24 MHz crystal |
+| ÷16 divider | 74HC393 |
+| ÷2 (half-bit phase H) | 74HC74 |
 | Mod-10 frame counter | 74HC161 |
 | Payload mux | 74HC151 |
 | S/T select | 74HC157 (¼) |
@@ -194,8 +199,8 @@ except the oscillator and first divider runs at 640 kHz or below.
 
 ## 7. Bring-up order
 
-1. **Clock chain alone.** Scope 640 / 320 / 32 kHz and confirm the divider
-   ratios before anything else is populated.
+1. **Clock chain alone.** Scope 10.24 MHz / 640 / 320 / 32 kHz and confirm the
+   divider ratios before anything else is populated.
 2. **Frame counter and mux, no encoder.** Watch the raw line bit stream on a
    logic analyser: it should show the 10-bit frame with 0 then 1 at counts 8
    and 9. This is directly comparable to `link.build` output from the simulator.

@@ -97,7 +97,8 @@ was tuned to):
 | τ_syl | 6 ms |
 | τ_int | 3 ms |
 | companding | 30 dB (31.6:1) |
-| step_max | 0.344 of full scale per bit |
+| slew | 12000 full-scale units/s |
+| step_max | 0.375 of full scale per bit |
 
 Worked starting point, full scale ±1 V about bias:
 
@@ -105,14 +106,42 @@ Worked starting point, full scale ±1 V about bias:
 |---|---|---|
 | `C_int` | 10 nF | film |
 | `R_int` | 300 kΩ | τ_int = 3 ms |
-| `Iabc` max | 110 µA | `step · C / t_bit`, t_bit = 31.25 µs |
-| `Iabc` min | 3.5 µA | 31.6:1 companding |
+| `Iabc` max | **120 µA** | `slew · C_int` — the bit rate cancels |
+| `Iabc` min | 3.8 µA | 31.6:1 companding |
 | `C_syl` | 100 nF | film |
 | `R_syl` | 60 kΩ | τ_syl = 6 ms |
 
 Both `Iabc` endpoints sit comfortably inside the LM13700's useful range.
-Expect to trim `Iabc max` on the bench against the encoder's own tracking —
-that single adjustment sets the slew rate and is the one thing worth a trimmer.
+
+**`Iabc max` is the one trimmer on the card.** Note that `slew = Iabc / C_int`
+with the bit rate cancelling entirely, so it is set by two components and
+nothing else.
+
+Measured sensitivity at 32 kbps (speech, matched pair):
+
+| slew | segSNR | |
+|---|---|---|
+| 9000 | 18.84 dB | slope overload begins |
+| 11000 | 18.94 dB | |
+| **12000** | **18.90 dB** | chosen — 120 µA is a round target |
+| 15000 | 18.68 dB | granular noise begins |
+
+A broad optimum: within 1 dB of peak runs roughly 6000–18000, i.e. 0.5× to 1.5×
+nominal, so a 3:1 trim range on `R_abc` covers it with margin.
+
+**Set it by measurement, not by ear.** Measure the actual `C_int`, compute
+`Iabc = 12000 × C_int`, set the current, then confirm with a 1 kHz tone at
+nominal level looped encoder-to-decoder on the card. The optimum is too flat to
+find reliably by listening.
+
+**The trims need not match between cards** — §2.4 shows step-size mismatch is
+pure gain error, ±30% tolerable. Trim each card to its own computed target.
+
+**Expect thermal drift.** The LM13700's transconductance follows `Iabc/2V_T`, so
+it carries the thermal-voltage tempco, about −0.33%/°C — roughly 17% over a 50°C
+range. That is inside the ±30% gain budget and shows up as level, not
+distortion, so leave it alone in the first build. Driving `Iabc` from a PTAT
+reference cancels it if it ever matters.
 
 ### 2.4 Component tolerance — measured, and looser than expected
 
@@ -177,10 +206,37 @@ two-lead interface with one lead driven outward and one sensed.
 | **M** | sensed locally, transmitted | opto isolator → A bit to the TX card |
 | **E** | received, driven locally | A bit → RC + 74HC14 → opto → E lead |
 
-Opto-isolate both. **Specify the E&M type (I–V) before laying out** — the types
-differ in whether signalling is by battery, ground, or separate SB/SG leads, and
-it changes the lead interface even though all of them are one binary state each
-way.
+### 4.1 Type V, laid out type-agnostic
+
+**Build Type V.** Both leads operate identically — assert by grounding, idle
+open — so the circuit is symmetric and the same card works at both ends,
+matching the "identical cards everywhere" property the rest of the system has.
+
+All five E&M types carry one binary state each way, so **the frame, the A bit
+and every digital block on this card are unaffected by the choice.** What
+differs is only the lead circuit:
+
+| Type | Leads | M lead | E lead | Common ground needed |
+|---|---|---|---|---|
+| I | 2 | ground / −48 V | open / ground | yes |
+| II | 4 (+SB, SG) | open / to SB | open / to SG | **no — isolated** |
+| **V** | **2** | **open / ground** | **open / ground** | yes |
+
+(Types III and IV are four-lead variants, uncommon and largely obsolete;
+confirm their details against whatever you are actually connecting to rather
+than against this table.)
+
+**Opto-isolating both leads makes the card nearly type-agnostic**, because the
+opto already provides the isolation each type arranges differently. What
+actually changes between Type I and Type V is the current-limit resistor and
+whether −48 V is routed to the connector — both jumperable.
+
+So: populate for Type V, jumper for Type I, and **lay out four connector
+positions per channel even though only two are populated.** That leaves Type II
+available later without a board re-spin, which is the one you would want if the
+switch ever ends up in a different building with a different ground reference.
+Since the E&M run is local — the long haul is the carrier itself — a common
+ground is normally fine, so this is insurance rather than a likely need.
 
 **Integration:** RC, τ = 2 ms, into a 74HC14 Schmitt. One resistor, one
 capacitor, one gate — this is both the error filter and the contact debounce.

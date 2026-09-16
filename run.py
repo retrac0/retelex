@@ -15,7 +15,7 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out')
 os.makedirs(OUT, exist_ok=True)
 
 # per-rate step-size tuning (the external components are picked for the clock rate)
-SLEW = {16000: 7000.0, 32000: 11000.0, 64000: 16000.0}
+SLEW = {16000: 7000.0, 32000: 12000.0, 64000: 16000.0}
 BASE = dict(run_length=3, tau_syl=0.006, tau_int=0.003, companding_db=30.0)
 
 SOURCES = {

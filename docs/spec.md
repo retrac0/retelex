@@ -72,12 +72,15 @@ false alignment feeds the constant S and T bits to the codecs.
 The frame generalises to `2 + 2N` bits for N channels. The alternation rule is
 satisfied automatically at any N.
 
-| N | frame | line rate | symbol rate | oscillator |
+| N | frame | line rate | symbol rate | half-bit clock |
 |---|---|---|---|---|
-| 1 | 4 | 128 kbps | 256 kbaud | 1.024 MHz |
-| 2 | 6 | 192 kbps | 384 kbaud | 1.536 MHz |
-| 3 | 8 | 256 kbps | 512 kbaud | 2.048 MHz |
-| **4** | **10** | **320 kbps** | **640 kbaud** | **2.56 MHz** |
+| 1 | 4 | 128 kbps | 256 kbaud | 256 kHz |
+| 2 | 6 | 192 kbps | 384 kbaud | 384 kHz |
+| 3 | 8 | 256 kbps | 512 kbaud | 512 kHz |
+| **4** | **10** | **320 kbps** | **640 kbaud** | **640 kHz** |
+
+The oscillator is any convenient binary multiple of the half-bit clock; for the
+4-channel build it is 10.24 MHz (§3).
 
 Build the frame for the maximum channel count and leave unequipped slots idle;
 idle slots need pull resistors, not logic. Populating a slot is the only
@@ -88,9 +91,9 @@ configuration step.
 ## 3. Rates and clocking
 
 ```
-2.56 MHz  ──÷4──>  640 kHz   half-bit clock (biphase transitions)
-          ──÷2──>  320 kHz   line bit clock
-          ──÷10──>  32 kHz   frame clock  ==  CVSD clock, all channels
+10.24 MHz ──÷16──>  640 kHz   half-bit clock (biphase transitions)
+          ──÷2───>  320 kHz   line bit clock
+          ──÷10──>   32 kHz   frame clock  ==  CVSD clock, all channels
 ```
 
 - CVSD rate **32 kbps per channel**. The frame clock *is* the codec clock, so
@@ -98,11 +101,20 @@ configuration step.
   buffering anywhere.
 - Only the oscillator and the first divider run above 640 kHz.
 
-**Oscillator accuracy is not critical.** The receiver classifies intervals
-against an RC and tolerates a ±13% window at high noise (§5.2), so the
-transmitter never needs crystal accuracy — a ceramic resonator at ±0.5% is
-ample. Specify a crystal anyway for unit-to-unit repeatability. 2.56 MHz needs
-a sourcing check; 5.12 and 10.24 MHz are clean fallbacks (÷8, ÷16).
+**Oscillator: 10.24 MHz.** Chosen for availability — it is a standard telecom
+value, where 1.28 / 2.56 / 5.12 MHz are not. The ÷16 costs one divider stage
+and keeps the chain purely binary.
+
+**Accuracy is not critical.** The receiver classifies intervals against an RC
+and tolerates a ±13% window at high noise (§5.2); the oscillator contributes
+~0.01% of that, so a ceramic resonator at ±0.5% would also serve. The crystal
+is specified for unit-to-unit repeatability, not accuracy.
+
+Note that the CVSD rate is not fixed by anything external — if a crystal value
+ever becomes the obstacle, move the line rate to suit the oscillator rather
+than contorting the divider chain. The frame, framer, signalling and line code
+are all rate-independent; only the codec RC values and the receiver's monostable
+RC scale with it.
 
 ---
 
