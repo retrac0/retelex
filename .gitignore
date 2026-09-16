@@ -1,0 +1,9 @@
+# Test audio: extracts from third-party source material, and renders derived
+# from it.  Regenerate locally with yt-dlp + sox (see README).
+*.wav
+out/
+
+# Build artifacts
+*.so
+__pycache__/
+*.pyc
