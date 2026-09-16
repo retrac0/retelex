@@ -86,3 +86,38 @@ def seg_snr_db(ref, test, fs, win_ms=20.0, lo=-10.0, hi=35.0, silence_db=-45.0):
         return float('nan')
     s = 10 * np.log10(pr[active] / np.maximum(pe[active], 1e-20))
     return float(np.clip(s, lo, hi).mean())
+
+
+def block_snr_db(ref, test, fs, block_s=0.10, max_lag=4000, silence_db=-45.0):
+    """
+    Segmental SNR with PER-BLOCK re-alignment.
+
+    A cycle slip shifts the whole remaining stream by a sample or two.  Globally
+    aligned SNR then collapses even though nothing audible happened.  Aligning
+    each block independently measures what you actually hear.
+    """
+    w = int(fs * block_s)
+    nb = min(len(ref), len(test)) // w
+    if nb == 0:
+        return float('nan'), 0.0
+    vals, bad = [], 0
+    for k in range(nb):
+        r = ref[k * w:(k + 1) * w]
+        lo = max(0, k * w - max_lag); hi = min(len(test), (k + 1) * w + max_lag)
+        t = test[lo:hi]
+        if len(t) < w or 10 * np.log10((r ** 2).mean() + 1e-20) < silence_db:
+            continue
+        c = signal.correlate(t - t.mean(), r - r.mean(), mode='valid')
+        off = int(np.argmax(c))
+        tt = t[off:off + w]
+        if len(tt) < w:
+            continue
+        g = np.dot(r, tt) / max(np.dot(tt, tt), 1e-20)
+        tt = tt * g
+        s = 10 * np.log10(np.dot(r, r) / max(np.dot(r - tt, r - tt), 1e-20))
+        vals.append(np.clip(s, -10, 35))
+        if s < 3.0:
+            bad += 1
+    if not vals:
+        return float('nan'), 0.0
+    return float(np.mean(vals)), 100.0 * bad / len(vals)

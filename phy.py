@@ -264,3 +264,39 @@ def ami_decode(x, os_bit, thresh=0.5, peak=None, lock_after=16):
         if phase == OS // 2:
             bits.append(1 if abs(x[i]) > t else 0)
     return np.array(bits, dtype=np.uint8)
+
+
+# ------------------------------------------------------- telco plant impairments
+
+def plant_noise(n, fs, rate_hz=10.0, amp=(1.0, 6.0), tau_s=(20e-6, 200e-6),
+                ring_hz=(15e3, 80e3), hum_hz=50.0, hum_amp=0.0, seed=0):
+    """
+    Impulse noise of the kind subscriber loops actually carry: switching
+    transients, relay operation, dial pulses bleeding off adjacent pairs,
+    induction.  Each event is a damped oscillation -- the pair rings rather than
+    stepping -- with Poisson arrivals.
+
+    rate_hz  events per second
+    amp      (min,max) amplitude relative to the signal peak (signal peak == 1)
+    tau_s    (min,max) decay time constant
+    ring_hz  (min,max) ringing frequency
+    hum_amp  differential residual of mains induction (the pair rejects most of it)
+    """
+    rng = np.random.default_rng(seed)
+    out = np.zeros(n)
+    n_ev = rng.poisson(rate_hz * n / fs)
+    for _ in range(n_ev):
+        t0 = rng.integers(0, n)
+        A = rng.uniform(*amp) * rng.choice([-1.0, 1.0])
+        tau = rng.uniform(*tau_s)
+        f = rng.uniform(*ring_hz)
+        ln = min(int(6 * tau * fs), n - t0)
+        if ln < 4:
+            continue
+        t = np.arange(ln) / fs
+        out[t0:t0 + ln] += A * np.exp(-t / tau) * np.sin(2 * np.pi * f * t)
+    if hum_amp:
+        t = np.arange(n) / fs
+        out += hum_amp * (np.sin(2 * np.pi * hum_hz * t)
+                          + 0.3 * np.sin(2 * np.pi * 3 * hum_hz * t))
+    return out
