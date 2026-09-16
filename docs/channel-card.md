@@ -1,6 +1,6 @@
 # Channel card — E&M 4-wire, semi-analog CVSD
 
-One card type. Both ends identical. Four slots per terminal.
+One card type. Both ends identical. Three slots per terminal.
 
 No hybrid, no ringing generator, no loop feed, no high voltage anywhere on this
 card. E&M 4-wire was chosen precisely to remove all of that; the FXO/FXS

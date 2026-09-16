@@ -1,6 +1,6 @@
 # Digital voice carrier — system specification
 
-4-channel CVSD voice carrier over twisted pair, built in discrete 74HC logic.
+3-channel CVSD voice carrier over twisted pair, built in discrete 74HC logic.
 
 Every number in this document was measured in the simulation in this repository
 rather than assumed. Where a figure comes from a specific experiment, the
@@ -31,22 +31,27 @@ Consequences worth stating plainly:
 - Crystal tolerance between ends is irrelevant. A ±100 ppm offset appears only
   as a 0.17-cent pitch shift in the recovered audio, which is inaudible.
 
-**Per end:** one TX card, one RX card, up to four channel cards, one backplane.
+**Per end:** one TX card, one RX card, up to three channel cards, one backplane.
 
 ---
 
 ## 2. Frame
 
 ```
-count:  0     1     2     3     4     5     6     7     8     9
-      [ A1 ][ C1 ][ A2 ][ C2 ][ A3 ][ C3 ][ A4 ][ C4 ][ S ][ T ]
-                                                        0     1
+count:  0     1     2     3     4     5     6     7
+      [ A1 ][ C1 ][ A2 ][ C2 ][ A3 ][ C3 ][ S ][ T ]
+                                              0     1
 
   An  channel n signalling bit          Cn  channel n CVSD bit
   S   start bit, always 0               T   stop bit, always 1
 ```
 
-Ten bits. Payload occupies counts 0–7, framing counts 8–9.
+Eight bits. Payload occupies counts 0–5, framing counts 6–7.
+
+**Eight is not an arbitrary size.** `2 + 2N` is a power of two only at N = 1, 3
+and 7, and only then does the whole crystal-to-frame chain divide by 2ⁿ — which
+is what collapses the transmitter's timing into a single package (§3) and
+removes the receiver's demux enable gating (§6.2).
 
 ### 2.1 The interleaving rule — a constraint, not a preference
 
@@ -60,7 +65,7 @@ adjacent pair of interior bits**. The alternation guarantees each such pair
 contains a CVSD bit, which is effectively random, so every wrong alignment is
 rejected within a few frames.
 
-Group the signalling bits together instead — `[C1..C4][A1..A4][S][T]` — and the
+Group the signalling bits together instead — `[C1..C3][A1..A3][S][T]` — and the
 pair `(An, An+1)` is two static bits. A channel on-hook next to one off-hook is
 an ordinary operating state, and it holds that false alignment **indefinitely**.
 This was measured, not argued: the grouped ordering false-locked on every
@@ -76,11 +81,13 @@ satisfied automatically at any N.
 |---|---|---|---|---|
 | 1 | 4 | 128 kbps | 256 kbaud | 256 kHz |
 | 2 | 6 | 192 kbps | 384 kbaud | 384 kHz |
-| 3 | 8 | 256 kbps | 512 kbaud | 512 kHz |
-| **4** | **10** | **320 kbps** | **640 kbaud** | **640 kHz** |
+| **3** | **8** | **256 kbps** | **512 kbaud** | **512 kHz** |
+| 4 | 10 | 320 kbps | 640 kbaud | 640 kHz |
 
 The oscillator is any convenient binary multiple of the half-bit clock; for the
-4-channel build it is 10.24 MHz (§3).
+3-channel build it is 8.192 MHz (§3). **N = 1, 3 and 7 are the only sizes whose
+frame length is a power of two**, and therefore the only ones where the entire
+clock chain is binary.
 
 Build the frame for the maximum channel count and leave unequipped slots idle;
 idle slots need pull resistors, not logic. Populating a slot is the only
@@ -91,9 +98,11 @@ configuration step.
 ## 3. Rates and clocking
 
 ```
-10.24 MHz ──÷16──>  640 kHz   half-bit clock (biphase transitions)
-          ──÷2───>  320 kHz   line bit clock
-          ──÷10──>   32 kHz   frame clock  ==  CVSD clock, all channels
+8.192 MHz ──÷16──>  512 kHz   half-bit clock (biphase transitions)
+          ──÷2───>  256 kHz   line bit clock
+          ──÷8───>   32 kHz   frame clock  ==  CVSD clock, all channels
+
+          total ÷256 = 2^8 — every stage binary, no decoded modulus anywhere
 ```
 
 - CVSD rate **32 kbps per channel**. The frame clock *is* the codec clock, so
@@ -101,9 +110,10 @@ configuration step.
   buffering anywhere.
 - Only the oscillator and the first divider run above 640 kHz.
 
-**Oscillator: 10.24 MHz.** Chosen for availability — it is a standard telecom
-value, where 1.28 / 2.56 / 5.12 MHz are not. The ÷16 costs one divider stage
-and keeps the chain purely binary.
+**Oscillator: 8.192 MHz.** A standard telecom value, and because crystal-to-frame
+is exactly ÷256, **the transmitter's entire timing chain is taps on one 74HC4040**
+— half-bit clock, line bit clock, frame counter and frame clock from a single
+package, with no decoded modulus and no sync-clear gate.
 
 **Accuracy is not critical.** The receiver classifies intervals against an RC
 and tolerates a ±13% window at high noise (§5.2); the oscillator contributes
@@ -162,18 +172,23 @@ no lock to lose.
 
 | condition | usable threshold window | margin about 0.75 |
 |---|---|---|
-| clean | 0.52 – 0.98 | ±31% |
-| moderate noise | 0.60 – 0.90 | ±20% |
-| high noise | 0.65 – 0.85 | **±13%** |
+| clean | 0.55 – 0.95 | ±27% |
+| moderate (sd 0.3) | 0.60 – 0.90 | ±20% |
+| **design limit (sd 0.4)** | 0.60 – 0.85 | **±13%** |
+| edge of lock (sd 0.5) | 0.65 – 0.80 | ±7% |
+
+Measured on the 3-channel build, two noise seeds agreeing at every point. The
+link is error-free to sd 0.6, so the last row is the last gasp rather than an
+operating point; **specify against ±13%**.
 
 The ±13% figure must absorb RC tolerance, tempco, and the far end's oscillator
-error combined. The oscillator contributes ~0.01% and is negligible. Use C0G/
-NP0 for the timing capacitor; the resistor then dominates and 1% parts leave
-large margin.
+error combined. The oscillator contributes ~0.01% and is negligible. Use a 1%
+resistor and a 2% C0G/NP0 capacitor: ±3% worst case, which clears ±13% with
+room and stays inside even the ±7% edge case.
 
 ### 5.3 Measured performance versus alternatives
 
-At 4 channels, all three receiver architectures were measured on identical
+All three receiver architectures were measured on identical
 waveforms:
 
 | receiver | board clock | performance |
@@ -345,7 +360,7 @@ Segmental SNR, real speech, clean line:
 Roughly 6–7 dB per doubling, with no knee — every doubling costs the same in
 line rate and buys the same in quality.
 
-Degradation with line errors (32 kbps, 4 channels):
+Degradation with line errors (32 kbps, 3 channels):
 
 | line BER | segSNR | loss-of-frame events |
 |---|---|---|
@@ -360,14 +375,14 @@ floor.** Acquisition, not tracking, sets the ceiling — a cold start needs 64
 consecutive clean frames, so acquisition becomes unreliable above a few percent
 BER while tracking continues far beyond.
 
-Channel isolation on a clean line, three distinct talkers: diagonal correlation
-0.981 / 0.989 / 0.993, off-diagonal ≤0.030.
+Measured end to end on the 3-channel build by `validate.py`: **19.06 dB** through
+the full chain, channel isolation diagonal ≥0.981 with off-diagonal ≤0.029.
 
 ---
 
 ## 10. Reach and power
 
-Fundamental 320 kHz. Expect order 1.5 km on 24 AWG before attenuation binds;
+Fundamental 256 kHz. Expect order 1.7 km on 24 AWG before attenuation binds;
 **measure it rather than trust that figure.** The bandwidth sweep suggests the
 limit is attenuation, not dispersion, which is the good case — attenuation is
 fixable with gain.
