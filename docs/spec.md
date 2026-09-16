@@ -282,8 +282,53 @@ cheapest.
 | event | response |
 |---|---|
 | Loss of frame | Mute all channel audio outputs; force all received A bits to idle; the 74HC259 clear pin does this in one wire |
-| Loss of signal / no transitions | Squelch. **Required, not optional** — both line codes fail as a cliff rather than a slope, so an unmuted receiver below threshold emits full-scale hash rather than quiet noise |
+| Loss of signal / no transitions | Squelch. **Required, not optional** — see §8.1 |
 | Unequipped slot | Idle pattern in, A bit pulled to idle |
+
+### 8.1 Why squelch is mandatory
+
+Measured by `squelch.py`, output level referred to normal received speech:
+
+| line condition | framer locks | rms | **peak** |
+|---|---|---|---|
+| truly dead (no signal, no noise) | no | silent | silent |
+| **noise only, sd=0.05** | no | **+24.1 dB** | **+47.7 dB** |
+| noise only, sd=0.2 | no | +14.7 dB | +30.9 dB |
+| noise only, sd=1.0 | no | +20.8 dB | +41.0 dB |
+| signal + noise sd=0.9 | yes | +4.2 dB | +21.6 dB |
+
+A genuinely dead pair is harmless — no transitions means no recovered clock, so
+the integrator simply decays. **The dangerous case is a dead pair with a little
+noise on it**, which is what a disconnected pair picking up induction actually
+looks like. Note the worst case is the *quietest* noise.
+
+**The mechanism is the syllabic compander, not the line code.** At low noise the
+slicer's hysteresis makes transitions sparse, so the monostable classifies
+nearly every interval as full-cell and emits a solid run of 1s — measured mean
+run length **1289 bits** at sd=0.05, against 1.00 for a good signal. Continuous
+coincidence is exactly what the syllabic filter reads as a loud signal, so it
+expands the step size to maximum and the integrator slams rail to rail at full
+slew.
+
+### 8.2 Implementation
+
+**Primary: mute on the not-locked level.** The framer never locks on any
+noise-only input, so the state it already produces to clear the signalling
+latches is a valid squelch signal and costs nothing.
+
+**Drive the mute from the not-locked *level*, not the loss-of-frame *edge*.** On
+a cable break mid-call the framer produced exactly one LOF event and then
+emitted 230,334 garbage frames at +14.8 dB while it searched. An edge-triggered
+mute would blank momentarily and then unmute into the hash. Trip time from the
++2/−1 counter is about six bad frames, ~0.2 ms, so a break sounds like a click.
+
+**Backstop: a carrier-detect monostable.** One retriggerable package watching
+transition rate, independent of the framer being correct. At sd=0.05 the
+recovered bit rate is 0.02× nominal, which is unmissable.
+
+**Clamp the audio output.** Squelch cannot catch a link that stays locked but is
+degraded — sd=0.9 gave +4.2 dB rms and +21.6 dB peak with the framer locked.
+Two diodes bound it.
 
 ---
 
