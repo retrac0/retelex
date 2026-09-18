@@ -1,0 +1,44 @@
+
+[1024 kbps line, symbol 2048 kbaud] repeater filter rcrc 2.048M, terminal lp2 2.048M; cable 1 MHz, fs 131.072 MHz (sd in 32.768 MHz units), 48000 bits
+    sd 0.794  1:A 3e-01 B 3e-01  |  4:--  |  9:--   (0.4s)
+    sd 0.630  1:A 1e-01 B 4e-02  |  4:--  |  9:--   (0.4s)
+    sd 0.500  1:A 0 B 0  |  4:A 5e-01 B 5e-01 nolock  |  9:--   (1.4s)
+    sd 0.397  1:A 0 B 0  |  4:A 5e-01 B 4e-01  |  9:--   (1.5s)
+    sd 0.315  1:A 0 B 0  |  4:A 3e-01 B 1e-01  |  9:--   (1.4s)
+    sd 0.250  1:A 0 B 0  |  4:A 3e-02 B 1e-04  |  9:A 5e-01 B 5e-01 nolock   (3.2s)
+    sd 0.198  1:A 0 B 0  |  4:A 3e-05 B 0  |  9:A 5e-01 B 5e-01 nolock   (3.1s)
+    sd 0.157  1:A 0 B 0  |  4:A 3e-05 B 0  |  9:A 5e-01 B 5e-01 nolock   (3.4s)
+    sd 0.125  1:A 0 B 0  |  4:A 0 B 0  |  9:A 5e-01 B 5e-01 nolock   (3.4s)
+    sd 0.099  1:A 0 B 0  |  4:A 0 B 0  |  9:A 5e-01 B 5e-01 nolock   (3.5s)
+    sd 0.079  1:A 0 B 0  |  4:A 0 B 0  |  9:A 5e-01 B 4e-01   (3.5s)
+    sd 0.062  1:A 0 B 0  |  4:A 0 B 0  |  9:A 4e-01 B 2e-01   (3.5s)
+    sd 0.050  1:A 0 B 0  |  4:A 0 B 0  |  9:A 3e-01 B 5e-02   (3.5s)
+    sd 0.561  1:A 3e-02 B 1e-02  |  4:--  |  9:--   (0.5s)
+    sd 0.281  1:A 0 B 0  |  4:A 1e-01 B 3e-02  |  9:--   (1.7s)
+    limits (sd @32.768MHz, BER<=1e-4): A1=0.500  A4=0.198  A9=<0.050  B1=0.500  B4=0.250  B9=<0.050
+
+[1024 kbps line, symbol 2048 kbaud] repeater filter rcrc 3.18M, terminal lp2 2.048M; cable 1 MHz, fs 131.072 MHz (sd in 32.768 MHz units), 48000 bits
+    sd 0.794  1:A 3e-01 B 3e-01  |  4:--  |  9:--   (0.5s)
+    sd 0.630  1:A 7e-02 B 4e-02  |  4:--  |  9:--   (0.5s)
+    sd 0.500  1:A 0 B 0  |  4:A 5e-01 B 5e-01 nolock  |  9:--   (1.7s)
+    sd 0.397  1:A 0 B 0  |  4:A 4e-01 B 4e-01  |  9:--   (1.7s)
+    sd 0.315  1:A 0 B 0  |  4:A 2e-01 B 2e-01  |  9:--   (1.7s)
+    sd 0.250  1:A 0 B 0  |  4:A 8e-03 B 8e-03  |  9:A 5e-01 B 5e-01 nolock   (3.5s)
+    sd 0.198  1:A 0 B 0  |  4:A 0 B 0  |  9:A 5e-01 B 5e-01 nolock   (3.6s)
+    sd 0.157  1:A 0 B 0  |  4:A 0 B 0  |  9:A 4e-01 B 4e-01   (3.6s)
+    sd 0.125  1:A 0 B 0  |  4:A 0 B 0  |  9:A 2e-01 B 2e-01   (3.0s)
+    sd 0.099  1:A 0 B 0  |  4:A 0 B 0  |  9:A 4e-02 B 4e-02   (2.9s)
+    sd 0.079  1:A 0 B 0  |  4:A 0 B 0  |  9:A 5e-05 B 5e-05   (3.2s)
+    sd 0.561  1:A 3e-02 B 1e-02  |  4:--  |  9:--   (0.4s)
+    sd 0.223  1:A 0 B 0  |  4:A 5e-05 B 3e-05  |  9:--   (1.5s)
+    sd 0.088  1:A 0 B 0  |  4:A 0 B 0  |  9:A 3e-04 B 1e-04   (3.2s)
+    limits (sd @32.768MHz, BER<=1e-4): A1=0.500  A4=0.223  A9=0.079  B1=0.500  B4=0.223  B9=0.079
+
+
+SUMMARY (a): largest per-span sd with line BER <= 1e-4, 32.768 MHz grid (divide by 2 for the spec sd at 8.192 MHz)
+A = every receiver uses the filter; B = repeaters use it, terminal plugged to symbol rate
+  line   rep filter  x sym | A1      A4      A9      B1      B4      B9      | dB vs symbol-rate filter (B)
+ 1024k  rcrc 2.048M      1 |  0.500   0.198  <0.050   0.500   0.250  <0.050 | 
+ 1024k   rcrc 3.18M   1.55 |  0.500   0.223   0.079   0.500   0.223   0.079 | 
+
+[a done in 66s]

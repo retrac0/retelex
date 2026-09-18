@@ -1,0 +1,157 @@
+THE F WORD
+  F carries an 8-bit word over the superframe, so it pins BIT phase
+  and SUPERFRAME phase with one check.  mfspec used 1010, which
+  spec.md 3.3 lists as "imitated by CVSD silence" and mf-vs-16bit 4.1
+  measured passing 100% of windows on an idle channel.
+
+  Longest run of consecutive frames a payload lane can match the word,
+  over every superframe phase.  Acquisition needs 32 in a row, so any
+  lane whose longest run is under 32 is rejected DETERMINISTICALLY.
+
+  word                              CVSD speech CVSD silence   constant 1   constant 0       random
+  10101010  period 2 -- mfspec             4708         8192            1            1           12
+  11101110  period 4 -- spec.md 3.3 T            4            3            3            1           14
+  11111110  one zero in eight                 4            3            7            1           20
+  11111100  two zeros, adjacent               4            2            6            2           14
+  11101100  five ones, period 8               5            3            3            2           14
+
+  0xAA is matched indefinitely by CVSD silence -- it IS CVSD silence.
+  0xEE has period 4, so it cannot pin an 8-state superframe at all.
+  0xFE, 0xFC and 0xEC all reject silence and constants outright.
+  0xFE is chosen because its generator is the cheapest: F = 0 only at
+  state 7, so TX F = NAND(q2,q1,q0) -- one 3-input gate, and the
+  receiver forms the same term from its own counter.
+
+  A WRONG SUPERFRAME PHASE at the right bit alignment is rejected
+  deterministically too: 11111110 rotated against itself mismatches
+  at 2 of every 8 frames, so the longest good run is 6 and 32
+  consecutive is unreachable.  That is what mfspec had no answer for.
+
+FALSE LOCKS -- every payload class, every start-up skew
+
+  payload                   locks  false  wrong sf  acq frames
+  speech                        8      0         0       37-54
+  idle (CVSD silence)           8      0         0       37-54
+  all constant 0                8      0         0       37-46
+  all constant 1                8      0         0       38-78
+  random data                   8      0         0       37-54
+  octet 10110010                8      0         0       37-46
+  one data card, idle           8      0         0       37-54
+  one data card, speech         8      0         0       37-54
+  THE F WORD as data            8      0         0       38-86
+  F word beside silence         8      0         0       37-62
+  F word + guard pattern        8      6         0       37-38
+
+  Exhaustive over hook states: all 64 combinations x all 8 skews,
+  on the payloads that can hold a wrong alignment open.
+
+  payload                     false locks   wrong sf phase
+  idle (CVSD silence)             0 / 512          0 / 512
+  all constant 0                  0 / 512          0 / 512
+  all constant 1                  0 / 512          0 / 512
+  one data card, idle             0 / 512          0 / 512
+  THE F WORD as data              0 / 512          0 / 512
+  F word beside silence           0 / 512          0 / 512
+  F word + guard pattern        384 / 512          0 / 512
+
+SUPERFRAME PHASE -- can a wrong one be held?
+
+  mfspec: the only thing pinning the phase was two pads in the S lane,
+  4 apart, so the check only ever compared channels 4 apart and any
+  pair differing in hook state admitted a wrong phase -- 56 of 64.
+
+  mf8: F itself carries the phase.  At offset d the receiver expects
+  11111110 and sees it rotated by d, which mismatches at 2 frames in
+  8 for every d != 0.  Hook states cannot enter into it.
+
+   offset   frames matching of 8   longest good run
+        0                      8                 64
+        1                      6                  6
+        2                      6                  5
+        3                      6                  4
+        4                      6                  3
+        5                      6                  4
+        6                      6                  5
+        7                      6                  6
+
+  Every wrong offset tops out at 6 consecutive good frames, against
+  the 32 acquisition needs.  Rejected deterministically, for every
+  hook state, with no enumeration required -- but here it is anyway:
+  wrong superframe phases admissible over all 64 hook states: 0
+
+SLOT RULES -- what a data card may sit next to
+
+  The adversarial content is the F word (11111110) in one lane and a
+  guard-satisfying pattern (bit 3 = 1, bit 5 = 0) in the next.
+
+  layout  (V voice, D data, . silence)              false
+
+  -- one data card, any seat, voice elsewhere:
+    seat 1 = F word, rest voice                   0 / 512
+    seat 2 = F word, rest voice                   0 / 512
+    seat 3 = F word, rest voice                   0 / 512
+    seat 4 = F word, rest voice                   0 / 512
+    seat 5 = F word, rest voice                   0 / 512
+    seat 6 = F word, rest voice                   0 / 512
+    seat 1 = guard pattern, rest idle             0 / 512
+    seat 2 = guard pattern, rest idle             0 / 512
+    seat 3 = guard pattern, rest idle             0 / 512
+    seat 4 = guard pattern, rest idle             0 / 512
+    seat 5 = guard pattern, rest idle             0 / 512
+    seat 6 = guard pattern, rest idle             0 / 512
+
+  -- two ADJACENT data cards, worst content:
+    seats 1,2 = word,guard; rest voice          128 / 512
+    seats 2,3 = word,guard; rest voice          192 / 512
+    seats 3,4 = word,guard; rest voice          256 / 512
+    seats 4,5 = word,guard; rest voice          320 / 512
+    seats 5,6 = word,guard; rest voice          384 / 512
+
+  -- two NON-adjacent data cards, worst content:
+    seats 1,3 = word,guard; rest voice            0 / 512
+    seats 1,4 = word,guard; rest voice            0 / 512
+    seats 1,6 = word,guard; rest voice            0 / 512
+    seats 2,4 = word,guard; rest voice            0 / 512
+    seats 2,6 = word,guard; rest voice            0 / 512
+    seats 3,6 = word,guard; rest voice            0 / 512
+    seats 4,6 = word,guard; rest voice            0 / 512
+
+  -- random data in every seat (the ordinary data case):
+    six data cards, random content                0 / 512
+
+  THE RULE.  One data card is safe in any seat whatever it carries;
+  two data cards are safe when they are not adjacent; two ADJACENT
+  data cards are not safe, because a wrong alignment can put the F
+  check on one and the guard on the other and neither is constrained.
+  This is the same shape of rule framing-review.md 5 found for the
+  4-bit word ("any seat, but never two adjacent") and spec.md 3.4
+  avoided on the 16-bit frame by strapping a data card's A bit -- a
+  bit this frame does not have, because signalling is sub-commutated.
+
+  Note that ordinary random data in all six seats is safe: the hole
+  needs the framing word specifically, not merely arbitrary data.
+
+LINE ERRORS -- tracking, with the +2/-1 trip-12 counter
+
+   line BER  locked frames  LOF events  off-phase  time down
+      0e+00         399961           0          0      0.01%
+      1e-04         399961           0          0      0.01%
+      1e-03         399937           0          0      0.02%
+      1e-02         399937           0          0      0.02%
+      3e-02         399937           0          0      0.02%
+
+  Compare mf-vs-16bit 7.2: mfspec, with no counter, took 10011
+  unlocks and 60.7% downtime at 1e-2 on the same class of line.
+
+
+RESYNC after an induced slip, every slip size
+
+   slip   frames misaligned   frames to relock
+      1                   8                  8
+      2                  12                 12
+      3                  15                 15
+      4                  12                 12
+      5                  11                 11
+      6                  13                 13
+      7                  13                 13
+

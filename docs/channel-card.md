@@ -1,6 +1,8 @@
 # Channel card — E&M 4-wire, semi-analog CVSD
 
-One card type. Both ends identical. Three slots per terminal.
+The CVSD voice option for a channel slot. Both ends identical. Up to seven slots
+per terminal, at 16, 32 or 64 kbps (spec §2). The other option is the data card
+(`data-card.md`); a slot must hold the same card type at both ends (spec §8.4).
 
 No hybrid, no ringing generator, no loop feed, no high voltage anywhere on this
 card. E&M 4-wire was chosen precisely to remove all of that; the FXO/FXS
@@ -12,11 +14,11 @@ variant is a separate optional card and carries those problems on its own.
 
 ```
    E&M transmit pair ─→ input filter ─→ CVSD ENCODER ─→ C bit  ─┐
-                                              ↑ TX 32 kHz clock │ to TX card
+                                              ↑ TX frame clock  │ to TX card
    M lead ─→ opto ─────────────────────────────────→ A bit  ────┘
 
    E&M receive pair ←─ recon filter ←─ CVSD DECODER ←─ C bit  ←─┐
-                                              ↑ RX 32 kHz clock │ from RX card
+                                              ↑ RX frame clock  │ from RX card
    E lead ←─ opto ←─ RC + Schmitt ←──────────────── A bit  ←────┘
 ```
 
@@ -39,7 +41,7 @@ only difference is where the data bit comes from.
                     │                                               │
    audio in ──→ [+]                                                 │
                  LM311 ──→ D  Q ──→ C bit out        (ENCODE)       │
-   integrator ─→ [−]        │  (74HC74, clk 32 kHz)                 │
+   integrator ─→ [−]        │  (74HC74, frame clock)               │
                             │                                       │
    C bit in ────────────────┘                        (DECODE)       │
                             │                                       │
@@ -92,7 +94,7 @@ was tuned to):
 
 | parameter | value |
 |---|---|
-| bit rate | 32 kbps |
+| bit rate | 16, 32 or 64 kbps — set by the mode, not by the card |
 | run window | 3 bits |
 | τ_syl | 6 ms |
 | τ_int | 3 ms |
@@ -116,6 +118,11 @@ Both `Iabc` endpoints sit comfortably inside the LM13700's useful range.
 **`Iabc max` is the one trimmer on the card.** Note that `slew = Iabc / C_int`
 with the bit rate cancelling entirely, so it is set by two components and
 nothing else.
+
+**The card takes no strap across rates.** Leaving `Iabc` at the 32 kbps target
+costs 0.35 dB at 16 kbps and 0.28 dB at 64 kbps against re-trimming for each
+rate (`strap.py` §9): the optimum moves, but it is broad. The syllabic and
+integrator RCs are real-time constants set by speech, not by the bit rate.
 
 Measured sensitivity at 32 kbps (speech, matched pair):
 
@@ -241,7 +248,7 @@ ground is normally fine, so this is insurance rather than a likely need.
 **Integration:** RC, τ = 2 ms, into a 74HC14 Schmitt. One resistor, one
 capacitor, one gate — this is both the error filter and the contact debounce.
 Measured zero spurious assertions at line error rates to 6e-2, and dial pulses
-recovered 78/78 with 0.16% ratio error (spec §7.1).
+recovered 78/78 with 0.16% ratio error (spec §9).
 
 `A = 1` means active. Idle is 0, so the loss-of-frame clear on the receive card
 drives the E lead to idle with no extra logic.
@@ -273,16 +280,19 @@ Per slot: 7 signals plus power.
 
 | signal | direction | from/to |
 |---|---|---|
-| TX 32 kHz clock | in | TX card |
+| TX frame clock (16 / 32 / 64 kHz) | in | TX card |
 | C bit out | out | TX card mux |
 | A bit out | out | TX card mux |
-| RX 32 kHz clock | in | RX card |
+| RX frame clock | in | RX card |
 | C bit in | in | RX card demux |
 | A bit in | in | RX card demux |
 | Mute / LOF | in | RX card |
 
-Adding a channel is a card and a slot strap; nothing on the common cards
-changes. Unequipped slots need pull resistors on their mux inputs, not logic.
+Adding a channel is fitting a card; nothing on the common cards changes. An
+empty slot presents A = 0 and C = the frame toggle through resistors on the TX
+card (`line-transmitter.md` §4), so a voice card at the far end of an empty slot
+hears CVSD idle rather than a rail-to-rail slam (spec §8.3). The backplane has
+seven slots whatever the channel strap.
 
 ---
 

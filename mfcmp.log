@@ -1,0 +1,1021 @@
+STAGE 1 -- "the F lane alternates over 8 consecutive frames"
+  A wrong bit alignment puts this test on a payload lane.  A lane that
+  passes is a lane that holds stage 1 open.
+
+  payload lane              P(bit flips)  P(8 in a row)  windows passing
+  CVSD speech                      0.957          0.706            0.699
+  CVSD silence                     1.000          1.000            1.000
+  CVSD, -40 dB tone                1.000          0.999            0.999
+  data, all ones                   0.000          0.000            0.000
+  data, octet 10110010             0.750          0.100            0.000
+  random data                      0.500          0.004            0.004
+
+  CVSD silence is exactly 1010..., so it alternates by construction.
+  spec.md 3.3: an alternating header is "imitated by CVSD silence" --
+  7/8 and 15/16 skews false-locked, permanently.  Stage 1 is that header.
+
+SUPERFRAME PHASE -- all 64 hook-state combinations, all 8 local offsets
+  Bit alignment is correct here.  Only the superframe phase is in question,
+  and the two pads are the only thing that pins it.
+
+  hook combinations admitting >= 1 wrong superframe phase: 56 / 64  (87.5%)
+  wrong phases admitted, mean 1.50, max 3
+  offsets never admitted: [4]
+
+  Why: the pads sit 4 apart in an 8-state superframe, so the signature
+  only ever compares channels 4 apart -- (1,4), (2,5), (3,6).  One wrong
+  phase is admitted per pair whose two channels differ in hook state:
+    ch4 off-hook, ch1 on-hook -> offset 1 holds;  reversed -> offset 5 holds
+    ch5 off-hook, ch2 on-hook -> offset 2 holds;  reversed -> offset 6 holds
+    ch6 off-hook, ch3 on-hook -> offset 3 holds;  reversed -> offset 7 holds
+
+  Worked example, ch4 on a call and ch1 idle (a1=0, a4=1):
+    hook states (0, 0, 0, 1, 0, 0) -> offsets [1] pass the signature forever.
+    At offset 1 the receiver is bit- and frame-aligned, audio is bit-exact,
+    and every hook state is delivered to the wrong channel latch.
+    Nothing in mfspec 5 can detect it.
+
+BIT-ALIGNMENT LOCK -- every start-up skew, mfspec receiver as written
+  hook states (0, 0, 0, 1, 0, 0); "false" = locked off the true bit phase
+
+  payload                      locks   false  wrong sf phase
+  speech                           8       0               7
+  idle                             8       0               7
+  idle + one data card             8       4               3
+  speech + one data card           8       4               3
+
+  One data card beside idle voice, swept over every octet phase
+  (a byte-aligned 64 kbps data channel, seat 4, all channels on-hook):
+    permanent false bit locks: 56 / 64 (8 octet phases x 8 skews)
+
+  Effect of demanding the stage-2 signature over more superframes
+  (speech + one data card, the cheapest available fix):
+    signature held over  1 superframe(s) ( 125 us): 4 false of 8 locks
+    signature held over  2 superframe(s) ( 250 us): 4 false of 8 locks
+    signature held over  4 superframe(s) ( 500 us): 4 false of 8 locks
+    signature held over  8 superframe(s) (1000 us): 4 false of 8 locks
+
+  CONTROL -- the 16-bit 7-channel frame, same line rate, same clip.
+  Both old headers: the original static (0,1) and the current S=0 T=1110.
+  A data card here straps A=1 and rides C (spec.md 3.4).
+
+  payload                              header   locks   false
+  speech                         static (0,1)      16       0
+  speech                           S=0 T=1110      16       0
+  idle                           static (0,1)      16       0
+  idle                             S=0 T=1110      16       0
+  idle + one data card           static (0,1)      16       0
+  idle + one data card             S=0 T=1110      16       0
+
+LINE ERRORS -- what one bad F bit costs
+
+  mfspec 5 gives no tracking rule and no bad-frame counter, so a single
+  F-bit error is a lost lock and a swallowed bit.  Mean time between
+  F-bit errors, at a 64 kHz frame rate:
+
+       BER   F errors/s   mean time between
+     1e-04          6.4           156.25 ms
+     1e-03         64.0            15.62 ms
+     1e-02        640.0             1.56 ms
+     3e-02       1920.0             0.52 ms
+
+  spec.md 7.3 carries a +1/-1 trip-16 counter for exactly this reason,
+  and measures 0 false reframes to 3e-2 (0-1 at 3e-2, 8 at 5e-2).
+
+  mfspec receiver at 1e-3, true skew: first lock at bit 444, sf offset 0
+
+ENCODER -- gate-level model against the frame builder
+  4096 frames, random payload and hook states: bit-exact
+
+  The model needs, and only needs:
+    3-stage frame counter          b0..b2, addresses the frame mux directly
+    3-stage superframe counter     addresses the signalling mux; its LSB IS F
+    8:1 frame mux                  in0 = F, in1 = signalling mux, in2..7 = C1..C6
+    8:1 signalling mux             in3 tied high, in7 tied low, rest = A1..A6
+
+  No S/T select gate, no framing-data AND, no mux-output override, and no
+  multiframe pattern generator.  The 16-bit frame needs all four, plus a
+  second 8:1 mux and a selector to reach 14 payload positions
+  (seven-channel.md 3.2: "one extra package on the transmitter, possibly two").
+
+  Placing the pads at states 3 and 7 does pay off as claimed: both are
+  b1.b0 = 1, and the expected value is the complement of b2, so the RX
+  guard is one AND for the enable and one XOR for the compare.
+
+BIT BUDGET at 512 kbps, both formats
+                                16-bit, N=7  8-bit, mfspec
+  frame length, bits                     16              8
+  frame rate, kHz                        32             64
+  voice channels                          7              6
+  per-channel rate, kbps                 32             64
+  voice payload, kbps                   224            384
+  signalling, kbps                      224             48
+  framing, kbps                          64             80
+  voice, % of line                    43.8%          75.0%
+  signalling per channel            32 kbps         8 kbps
+
+  Same line, same code, same baud: 1.71x the voice payload, because the
+  16-bit frame spends 43.75% of the line sending hook states 32000 times a
+  second.  spec.md 9 needs one bit per 2 ms.
+
+CONSTANT PAYLOAD -- false locks over all 64 hook states x all 8 skews
+  (bit level, no line impairment; 0.1 s = 6400 frames per run)
+
+  payload                       false locks  no lock at all
+  all six lanes constant 0          0 / 512         0 / 512
+  all six lanes constant 1          0 / 512         0 / 512
+  lanes alternate 0 / 1             0 / 512         0 / 512
+  one constant 0 in silence         0 / 512         0 / 512
+  one constant 1 in silence         0 / 512         0 / 512
+  one constant 0 in speech          0 / 512         0 / 512
+  two adjacent constants 0,1        0 / 512         0 / 512
+
+  Why constant payload is SAFE for this header, both ways round:
+    F position: a constant lane never alternates -> stage 1 fails at once.
+    S position: a constant lane cannot be both 1 at state 3 and 0 at
+                state 7 -> the guard fails deterministically.
+    The S lane itself cannot alternate for 8 frames either: an
+    alternating run needs index 3 = 1 and index 7 = 0, and both
+    01010101 and 10101010 fail one of them.  So skew 1 never holds.
+
+  TRACKING at the true alignment (mfspec 5 re-verified every superframe,
+  strictest reading: any pad mismatch unlocks):
+
+  payload                       locked frames  unlocks  off-phase
+  all six lanes constant 0               6385        0          0
+  all six lanes constant 1               6385        0          0
+  lanes alternate 0 / 1                  6385        0          0
+  one constant 0 in silence              6385        0          0
+  one constant 1 in silence              6385        0          0
+  one constant 0 in speech               6385        0          0
+  two adjacent constants 0,1             6385        0          0
+
+  Lock is held on every constant payload: F and S are dedicated bits,
+  so the header is independent of what the channels carry.  This is a
+  real advantage over the original static (0,1) header, which a constant
+  data slot false-locks permanently (spec.md 3.3, 40/192 measured).
+
+OVER THE LINE -- the mfspec receiver on a real waveform, both codes
+  512 kbps, one 1.8 MHz cable, 8000 frames, hook states (0, 0, 0, 1, 0, 0).
+  Noise sd is referred to the signal peak: one rail-limited driver,
+  one cable, one noise floor, so the two codes are compared on the
+  same physical line.  Biphase symbol rate 1.024 MBaud with a
+  1.024 MHz RX filter; AMI 512 kBaud with a 512 kHz RX filter.
+
+  lock = locked at the true bit phase and the six lanes in the right
+  order;  sig = hook states delivered to the right channels.
+
+  Mark density and the longest run of zeros -- AMI sends nothing for a
+  zero, so this is what its clock recovery has to live on:
+
+  payload            mark %   longest 0 run
+  speech               46.9               8
+  idle (silence)       46.9               2
+  constant 0            9.4              15
+  constant 1           84.4               2
+
+  payload          code       sd  mark%  lock  lanes  sig  unlk  payload BER
+  speech           biphase   0.0   46.9   yes     ok  BAD     0      0.0e+00
+  speech           biphase   0.4   46.9   yes     ok  BAD     0      0.0e+00
+  speech           biphase   0.5   46.9   yes     ok  BAD     0      0.0e+00
+  speech           biphase   0.6   46.9   yes     ok  BAD     0      0.0e+00
+  speech           biphase   0.7   46.9    NO    rot   ok     2      1.5e-01
+  speech           ami       0.0   46.9   yes     ok  BAD     0      0.0e+00
+  speech           ami       0.4   46.9   yes     ok  BAD     2      2.3e-01
+  speech           ami       0.5   46.9   yes     ok  BAD     2      2.3e-01
+  speech           ami       0.6   46.9    NO    rot  BAD    10      4.8e-01
+  speech           ami       0.7   46.9    NO    rot   ok    22      4.5e-01
+  idle (silence)   biphase   0.0   46.9   yes     ok  BAD     0      0.0e+00
+  idle (silence)   biphase   0.4   46.9   yes     ok  BAD     0      0.0e+00
+  idle (silence)   biphase   0.5   46.9   yes     ok  BAD     0      0.0e+00
+  idle (silence)   biphase   0.6   46.9   yes     ok  BAD     0      0.0e+00
+  idle (silence)   biphase   0.7   46.9   yes     ok  BAD     1      2.5e-01
+  idle (silence)   ami       0.0   46.9   yes     ok  BAD     0      0.0e+00
+  idle (silence)   ami       0.4   46.9   yes     ok  BAD     0      4.2e-05
+  idle (silence)   ami       0.5   46.9   yes     ok  BAD     1      2.5e-01
+  idle (silence)   ami       0.6   46.9   yes     ok  BAD    15      4.0e-01
+  idle (silence)   ami       0.7   46.9   yes     ok  BAD    22      3.6e-01
+  constant 0       biphase   0.0    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       biphase   0.4    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       biphase   0.5    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       biphase   0.6    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       biphase   0.7    9.4   yes     ok   ok     2      0.0e+00
+  constant 0       ami       0.0    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       ami       0.4    9.4   yes     ok  BAD     0      0.0e+00
+  constant 0       ami       0.5    9.4   yes     ok  BAD     1      6.4e-05
+  constant 0       ami       0.6    9.4   yes     ok  BAD     5      1.3e-04
+  constant 0       ami       0.7    9.4   yes     ok  BAD    26      6.7e-04
+  constant 1       biphase   0.0   84.4   yes     ok  BAD     0      0.0e+00
+  constant 1       biphase   0.4   84.4   yes     ok  BAD     0      0.0e+00
+  constant 1       biphase   0.5   84.4   yes     ok  BAD     0      0.0e+00
+  constant 1       biphase   0.6   84.4   yes     ok  BAD     0      0.0e+00
+  constant 1       biphase   0.7   84.4   yes     ok  BAD     3      1.5e-04
+  constant 1       ami       0.0   84.4   yes     ok  BAD     0      0.0e+00
+  constant 1       ami       0.4   84.4   yes     ok  BAD     0      4.2e-05
+  constant 1       ami       0.5   84.4   yes     ok  BAD     6      1.1e-03
+  constant 1       ami       0.6   84.4   yes     ok  BAD    28      9.3e-03
+  constant 1       ami       0.7   84.4   yes     ok  BAD    51      3.1e-02
+
+  RAW line BER, no framer -- the PHY on its own, so the two codes are
+  compared without the protocol amplifying a small error (below).
+  AMI `gain` is the receive amplitude error spec.md 5 rejected it for.
+
+  code                         0.0       0.4       0.5       0.6       0.7
+  biphase                       ok        ok        ok        ok   9.4e-05
+  ami, exact amplitude          ok   4.7e-05   3.0e-04   3.0e-03   1.1e-02
+  ami, 0.8x amplitude           ok        ok   6.3e-05   6.3e-04   2.7e-03
+  ami, 0.6x amplitude           ok   3.4e-04   2.1e-03   6.1e-03   1.3e-02
+
+  Biphase decides on transition TIMING against a 0.75-cell monostable,
+  so noise must displace an edge by a quarter cell to cause an error.
+  AMI decides on AMPLITUDE against a threshold at half the received
+  peak, and at equal peak line voltage that is the smaller margin --
+  which is why AMI loses here despite half the noise bandwidth.
+
+  CONTROL -- the 16-bit 7-channel frame, S=0 T=1110, same line and
+  same noise (32 kHz frame rate, 7 x 32 kbps):
+
+  payload          code       sd  lock  lanes  LOF  payload BER
+  speech           biphase   0.0   yes     ok    0      0.0e+00
+  speech           biphase   0.4   yes     ok    0      0.0e+00
+  speech           biphase   0.5   yes     ok    0      0.0e+00
+  speech           biphase   0.6   yes     ok    0      0.0e+00
+  speech           biphase   0.7   yes     ok    0      7.2e-05
+  speech           ami       0.0   yes     ok    0      0.0e+00
+  speech           ami       0.4   yes     ok    0      0.0e+00
+  speech           ami       0.5   yes     ok    0      2.5e-04
+  speech           ami       0.6   yes     ok    0      3.0e-03
+  speech           ami       0.7   yes     ok    0      1.1e-02
+  idle (silence)   biphase   0.0   yes     ok    0      0.0e+00
+  idle (silence)   biphase   0.4   yes     ok    0      0.0e+00
+  idle (silence)   biphase   0.5   yes     ok    0      0.0e+00
+  idle (silence)   biphase   0.6   yes     ok    0      0.0e+00
+  idle (silence)   biphase   0.7   yes     ok    0      1.1e-04
+  idle (silence)   ami       0.0   yes     ok    0      0.0e+00
+  idle (silence)   ami       0.4   yes     ok    0      0.0e+00
+  idle (silence)   ami       0.5   yes     ok    0      6.1e-04
+  idle (silence)   ami       0.6   yes     ok    0      2.9e-03
+  idle (silence)   ami       0.7   yes     ok    0      9.7e-03
+  constant 0       biphase   0.0   yes     ok    0      0.0e+00
+  constant 0       biphase   0.4   yes     ok    0      0.0e+00
+  constant 0       biphase   0.5   yes     ok    0      0.0e+00
+  constant 0       biphase   0.6   yes     ok    0      0.0e+00
+  constant 0       biphase   0.7   yes     ok    0      0.0e+00
+  constant 0       ami       0.0   yes     ok    0      0.0e+00
+  constant 0       ami       0.4   yes     ok    0      0.0e+00
+  constant 0       ami       0.5   yes     ok    0      7.2e-05
+  constant 0       ami       0.6   yes     ok    0      1.4e-04
+  constant 0       ami       0.7   yes     ok    0      7.6e-04
+  constant 1       biphase   0.0   yes     ok    0      0.0e+00
+  constant 1       biphase   0.4   yes     ok    0      0.0e+00
+  constant 1       biphase   0.5   yes     ok    0      0.0e+00
+  constant 1       biphase   0.6   yes     ok    0      0.0e+00
+  constant 1       biphase   0.7    NO     ok    1      3.4e-03
+  constant 1       ami       0.0   yes     ok    0      0.0e+00
+  constant 1       ami       0.4   yes     ok    0      3.6e-05
+  constant 1       ami       0.5   yes     ok    0      9.4e-04
+  constant 1       ami       0.6   yes     ok    0      8.1e-03
+  constant 1       ami       0.7   yes     ok    0      2.7e-02
+
+RANDOM DATA ON ALL SIX CHANNELS
+  2000000 frames = 31.25 s of line time, 16000000 line bits.
+  Unconstrained random data is the BENIGN end of the payload space:
+  a random lane alternates with p=0.5, so it passes stage 1 on only
+  0.4% of windows (4.1).  It is octet-PERIODIC data that is fatal (4.2).
+
+  Long run on a clean line, both readings of mfspec 5:
+
+  reading                             locked frames  unlocks  off-phase
+  'strict': any pad mismatch unlocks        1999985        0          0
+  'none': never re-checked after lock        1999985        0          0
+
+  Lock is held for the full 31 s with zero unlocks: F and S are
+  dedicated bits, so random payload cannot disturb a correct lock,
+  exactly as constant payload cannot (5).
+
+  Long run with line errors, strict reading:
+
+   line BER  locked frames  unlocks  off-phase  off-phase %  mean resync
+      0e+00        1999985        0          0       0.000%      15.0 fr
+      1e-05        1997176       26          0       0.000%     108.6 fr
+      1e-04        1974060      246          0       0.000%     105.4 fr
+      1e-03        1760818     2238          3       0.000%     106.9 fr
+      1e-02         785092    10011          2       0.000%     121.4 fr
+
+  Every unlock costs a full re-acquisition, and mfspec has no
+  hysteresis to absorb one bad pad sample.  spec.md 7.3 measures 0
+  false reframes to 3e-2 on the same class of line.
+
+  RESYNC after an induced slip, every slip size, clean line:
+
+   slip   strict: bad / relock       none: bad frames
+      1                  1 / 1                 999999
+      2                  0 / 0                 999999
+      3                  1 / 1                 999999
+      4                  0 / 0                 999999
+      5                  0 / 0                 999999
+      6                  0 / 0                 999999
+      7                  0 / 0                 999999
+
+  bad = frames emitted at a wrong phase after the slip;
+  relock = frames until the first correctly-phased frame.
+  Under 'none' a slip is NEVER detected and the channels stay rotated
+  for the rest of the run -- which is spec.md 7.4's point restated:
+  a misaligned frame fails only part of the time, so a rule that needs
+  a run of bad frames does not fire.  mfspec has neither rule.
+
+  Where a resync can LAND: false locks over many hunts on random data
+  (8 skews x 250 payload seeds, 2000 frames each):
+
+  false locks: 0 / 2000  (0.00% of hunts)
+  acquisition, true phase: 15-40 frames, mean 22.5 = 0.352 ms
+
+  Confirmation strength.  Analytically, ONE wrong phase tested once
+  against random data passes with probability
+    stage 1, 8 alternating frames   0.5^8 = 3.9e-03
+    stage 2, two pad bits           0.25
+    product                               = 9.8e-04  ~ 2^-10
+  against the 16-bit framer's 32 good frames at <=50% each = 2^-32.
+  The MEASURED per-hunt rate is lower than that product (0 of 2000,
+  so <=1.8e-03 at 95%), because a failing phase is abandoned after one
+  bad frame rather than retried -- the hunt walks away before it can
+  accumulate an 8-frame run.  So against random data the weak
+  confirmation does not bite in practice; 4.2's periodic-data hole is
+  structural rather than statistical, and no confirmation count
+  reaches it.  What mfspec buys for the weaker check is speed: 15-40
+  frames at 64 kHz against 31-49 at 32 kHz, so about 3x faster in time.
+
+  CONTROL -- 16-bit 7-channel, S=0 T=1110, random data on all seven
+  C bits with A strapped to 1 (spec.md 3.4), same line length:
+
+   line BER  locked frames  LOF events  off-phase
+      0e+00         999968           0          0
+      1e-04         999968           0          0
+      1e-03         999968           0          0
+      1e-02         999959           0          0
+
+BIT COUNT UNDER IMPULSE -- the mechanism behind 8.1
+  A decoder that emits a different NUMBER of bits than were sent has
+  slipped: the frame re-phases and must reacquire.  Emitted minus sent,
+  over 4 seeds, 128000 line bits:
+
+   impulse/s                    biphase              ami
+           0           [-1, -1, -1, -1]     [0, 0, 0, 0]
+          10        [-15, -90, -86, -1]     [0, 0, 0, 0]
+         100   [-243, -406, -485, -200]     [0, 0, 0, 0]
+        1000 [-3309, -3364, -3662, -2966]    [0, 0, -1, 0]
+
+  The monostable decides on transition TIMING and has no independent
+  time reference, so a transient that adds or swallows an edge changes
+  the bit count.  AMI is clocked: it emits exactly one bit per recovered
+  clock period whatever the line does, so the count cannot drift and the
+  +1/-1 counter only ever sees ordinary bit errors.  The -1 at zero
+  impulses is a constant end effect, not a slip.
+
+LINE IMPAIRMENTS, SWEPT INDEPENDENTLY -- random data, both codes
+  16000 frames x 4 noise seeds per cell.  Each impairment is applied
+  on its own, with the other two off, so the axes do not confound.
+  mfspec: unlock events, strict reading.  16-bit: loss-of-frame events.
+  "down %" is frames not locked -- availability, which is well defined
+  across a slip where a phase comparison is not.  "lane BER" is aligned
+  inside each locked run, so a re-phasing slip is not counted as errors.
+
+  IMPULSE NOISE (phy.plant_noise: damped rings at 0.5-3x the signal
+  peak as repeater.py uses, 15-80 kHz, 20-200 us decay, Poisson)
+
+    events/s code     | mfspec:  unlk  down %   lane BER | 16-bit:  LOF  down %   lane BER
+           0 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+           0 ami      |             0   0.09%    0.0e+00 |            0   0.40%    0.0e+00
+          10 biphase  |             8   1.47%    5.3e-05 |            7   1.24%    1.3e-02
+          10 ami      |            10   1.72%    5.9e-05 |            0   0.40%    6.4e-04
+         100 biphase  |            72  13.29%    5.6e-04 |           62   7.94%    3.7e-02
+         100 ami      |            79  13.40%    8.0e-04 |            0   0.40%    5.2e-03
+        1000 biphase  |           283  64.48%    3.8e-01 |          262  52.09%    6.9e-01
+        1000 ami      |           262  74.87%    2.7e-03 |           92  65.10%    3.7e-01
+        5000 biphase  |           186  95.61%    1.0e+00 |           38  97.01%    1.0e+00
+        5000 ami      |             0 100.00%    1.0e+00 |            0 100.00%    1.0e+00
+
+  ATTENUATION (signal scaled; noise floor sd 0.10 and the 0.05
+  comparator hysteresis both held fixed, so loss costs margin.
+  Hysteresis as a fraction of received amplitude: 5% at 1.0, 10%
+  at 0.5, 20% at 0.25, 42% at 0.12 -- spec.md 6.1 allows 10%, and
+  20% on a single span)
+
+       atten code     | mfspec:  unlk  down %   lane BER | 16-bit:  LOF  down %   lane BER
+           1 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+           1 ami      |             0   0.09%    0.0e+00 |            0   0.40%    0.0e+00
+         0.5 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+         0.5 ami      |             0   0.09%    0.0e+00 |            0   0.40%    0.0e+00
+        0.25 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+        0.25 ami      |             1   0.15%    1.0e-05 |            0   0.40%    0.0e+00
+        0.12 biphase  |           360  74.83%    5.0e-01 |          237  69.53%    1.0e+00
+        0.12 ami      |           313  87.82%    1.0e+00 |           22  15.23%    3.8e-02
+        0.06 biphase  |             1 100.00%    1.0e+00 |            0 100.00%    1.0e+00
+        0.06 ami      |             7  99.96%    1.0e+00 |            0 100.00%    1.0e+00
+
+  GAUSSIAN FLOOR, for reference on the same clip
+
+          sd code     | mfspec:  unlk  down %   lane BER | 16-bit:  LOF  down %   lane BER
+           0 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+           0 ami      |             0   0.09%    0.0e+00 |            0   0.40%    0.0e+00
+         0.4 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+         0.4 ami      |             1   0.15%    1.0e-05 |            0   0.40%    0.0e+00
+         0.5 biphase  |             0   0.10%    0.0e+00 |            0   0.41%    0.0e+00
+         0.5 ami      |            41   6.86%    4.1e-04 |            0   0.49%    4.4e-04
+         0.6 biphase  |             1   0.15%    0.0e+00 |            0   0.41%    0.0e+00
+         0.6 ami      |           190  32.95%    3.5e-03 |            0   0.58%    3.7e-03
+         0.7 biphase  |            14   2.24%    1.3e-04 |            7   1.28%    1.4e-03
+         0.7 ami      |           334  65.78%    1.3e-02 |            0   0.65%    1.3e-02
+
+
+ZERO RUNS -- the frame bounds them, so AMI needs no zero substitution
+  Worst run of zeros on the line, over all 64 hook states:
+
+  all constant 0      15
+  all constant 1       2
+  CVSD silence         2
+  CVSD speech          8
+  octet 10110010       9
+  random data         13
+
+  worst over everything: 15 bits.
+  F alternates, so a mark lands every 2 frames = 16 line bits whatever
+  the payload does.  15 is STRUCTURAL, not statistical, and it is the
+  8-bit frame that makes it so.  B8ZS substitutes at 8 zeros and HDB3
+  at 4, so neither is needed -- the framing bit already does the job.
+  T = 1110 on F (10, item 1) keeps the same bound: F is 0 one frame in
+  four, so the longest gap is still 2 frames.
+
+
+OPTION A -- analog tank (rectify, resonator, flywheel)
+  Sampling phase trimmed once at nominal: phase 0, BER 0.0e+00.
+  BER on the worst payload (constant 0), tank detuned:
+
+       Q  amp left    0.00%    0.10%    0.25%    0.50%    1.00%    2.00%
+      20      0.09 9.2e-02 9.2e-02 9.2e-02 9.0e-02 9.0e-02 6.2e-02
+      50      0.39 1.2e-01 3.1e-02 4.7e-02 4.7e-02 4.7e-02 6.2e-02
+     100      0.62      ok      ok      ok 3.1e-02 4.7e-02 6.2e-02
+     200      0.79      ok      ok      ok 3.1e-02 4.7e-02 1.2e-01
+     500      0.91      ok      ok 1.6e-02 4.7e-02 4.7e-02 1.2e-01
+
+  Two effects, and the second is the binding one:
+    coasting decay over 15 idle cycles = exp(-pi*15/Q)  -> wants Q high
+    static phase shift when detuned    = atan(2*Q*df/f) -> wants Q low
+  The measured edge sits at df/f ~ 1/(2Q): ok at 0.25% with Q=100,
+  broken at 0.5%.  So a tank wants Q ~ 100 AND tuning inside ~0.25%.
+  A 1% L and a 1% C give about 1% -- an LC tank does not reach it.
+  That is a ceramic resonator or a crystal, per line rate, on the
+  receiver's rate plug (line-receiver.md 8).
+
+
+OPTION B -- oversampling DPLL off the local 4.096 MHz crystal
+  The RX sampling clock is the local crystal; the far end's is an
+  independent one, so the offset is what two crystals disagree by.
+
+  4.096 MHz divides every family rate exactly:
+    1024 kbps -> 4x,  512 kbps -> 8x,  256 kbps -> 16x,  128 kbps -> 32x,  64 kbps -> 64x
+
+    TX ppm    const 0     random   clean line
+         0         ok         ok
+       100         ok         ok
+       200         ok         ok
+       500         ok         ok
+      1000         ok         ok
+      5000         ok         ok
+
+    TX ppm    sd    const 0     random   with noise
+         0   0.3         ok         ok
+         0   0.4         ok    3.1e-05
+         0   0.5         ok    6.9e-04
+       100   0.3         ok         ok
+       100   0.4         ok         ok
+       100   0.5    1.0e-05    5.2e-04
+
+  Two crystals at +/-100 ppm disagree by at most 200 ppm = 0.02%,
+  a phase slip of 0.0030 bit across a 15-zero gap.  Against the
+  tank's 0.25% requirement that is 12x margin on frequency, and the
+  coast is nothing.  Error-free to 1000 ppm on the worst payload.
+
+  The cost is architectural, not electrical: spec.md 6.1's receiver
+  has NO clock on the timing path, and this gives it one.  That is the
+  property being traded, and 6.3 already prices it -- the oversampling
+  DPLL is the reference receiver there.
+
+IMPULSE SUSCEPTIBILITY -- differential Manchester (== "biphase" here)
+  Mechanism: the rings are 15-80 kHz against a 512 kHz symbol rate, so
+  each one acts as a slowly varying OFFSET.  With the signal at +/-1 and
+  hysteresis h, an offset A sticks the comparator when A > 1-h: one
+  polarity stops crossing, every transition in the ring is lost, and the
+  decoder loses that many bits.  Ring length 20-200 us = 10-100 bits.
+
+  Bits lost vs impulse amplitude, fixed rate 200/s, 4 seeds:
+
+   amplitude  predicted                  bits lost
+        0.20          -               [1, 1, 1, 1]
+        0.50          -               [1, 2, 1, 1]
+        0.80          -             [9, 16, 13, 2]
+        0.95          -           [31, 39, 50, 25]
+        1.10     sticks       [250, 278, 301, 206]
+        1.50     sticks   [1665, 1820, 1966, 1423]
+        3.00     sticks   [6413, 7050, 7657, 5694]
+
+  The threshold sits where predicted, just below 1.0x the signal peak.
+  An impulse smaller than the signal cannot blank a polarity and costs
+  nothing; one larger than it costs the whole ring.
+
+  Hysteresis moves that threshold the WRONG way (A > 1-h), fixed
+  amplitude 0.9, rate 200/s -- so the impulse-optimal comparator is
+  a tight one, which is the opposite of what Gaussian noise wants:
+
+  hysteresis  threshold                  bits lost
+        0.02       0.98                   [13, 23]
+        0.05       0.95                   [14, 25]
+        0.10       0.90                   [22, 30]
+        0.20       0.80                   [77, 85]
+
+
+LINK QUALITY -- recovered voice through the full chain, 1.0 s clip
+  segSNR of channel 1 against the SAME codec with no link in the path,
+  so the figure is what the carrier adds (seven-channel.md 4).
+  Receiver is the spec.md 7 framer on the 16-bit frame -- a properly
+  built one -- so this isolates the LINE CODE, not mfspec's missing
+  loss-of-frame counter.
+
+  CVSD alone, no link, whole clip: 8.17 dB segSNR.
+  "vs codec" below compares against the codec over the SAME window,
+  so it is the carrier's contribution and not which speech landed in
+  the stretch.  A stretch under 200 ms is reported as too short.
+
+   impulse/s   segSNR  vs codec  breaks/s   down %  longest clean
+           0     8.34     +0.00         0    0.10%         999 ms
+           1     8.34     +0.00         0    0.10%         999 ms
+          10     6.23     -2.35         5    0.68%         475 ms
+         100 too short         -        65    7.91%          71 ms
+        1000  no lock         -       272   51.82%           0 ms
+
+  Impulse noise costs BOTH continuity and fidelity, and the cliff is
+  between 1 and 10 events/s:
+    1/s     carrier exactly transparent, +0.00 dB, no breaks
+    10/s    5 reframes/s AND -2.35 dB within the unbroken stretches --
+            impulses that never unseat the framer still corrupt bits
+    100/s   longest unbroken stretch 71 ms; no usable audio
+    1000/s  the framer never locks at all
+  Each reframe is a mute (spec.md 10), so the audible result at 10/s is
+  five dropouts a second over speech that is already 2.3 dB degraded.
+
+
+THE TRANSFORMER -- the model above has none, and that matters
+  The line is transformer coupled (spec.md 5).  The rings are 15-80 kHz
+  against a 512 kHz symbol rate, so AC coupling should reject much of
+  each one.  Same runs with a first-order high pass ahead of the slicer:
+
+  The lowest signal fundamental is 256 kHz (an all-ones payload), so a
+  corner well above the 15-80 kHz rings is available.
+
+   HP corner  impulse/s  breaks/s   down %
+        none        100        65    7.91%
+        none       1000       272   51.82%
+      30 kHz        100        51    6.06%
+      30 kHz       1000       271   47.00%
+      60 kHz        100        34    4.15%
+      60 kHz       1000       249   39.37%
+     120 kHz        100        26    3.15%
+     120 kHz       1000       217   32.89%
+     200 kHz        100        30    3.58%
+     200 kHz       1000       226   34.72%
+
+
+MITIGATION -- the dead time is already in the receiver
+  spec.md 6.1 ignores transitions within 0.2 cell of the last accepted
+  one; rx_review.py measures 0.05-0.30 usable.  Bits lost at 200/s,
+  amplitude 1.5, 2 seeds:
+
+      dead            bits lost
+      0.05         [1622, 1755]
+      0.15         [1627, 1760]
+      0.25         [1665, 1820]
+      0.35         [2239, 2418]
+      0.45         [3789, 4135]
+
+  Dead time rejects edges that arrive too EARLY.  A stuck comparator
+  removes edges instead, so there is nothing for it to reject: it is
+  the wrong tool for this failure and does not help.
+
+IMPULSE SUSCEPTIBILITY -- AMI, the same test as 10
+  AMI decides |x| > thresh*peak.  An offset of ~0.5 either fakes a mark
+  on a zero slot or cancels a real one, against the 1-h = 0.95 that
+  sticks the biphase comparator -- so AMI should start erring at HALF
+  the impulse amplitude.  What differs is the KIND of error.
+
+  Fixed rate 200/s, 4 seeds.  "bits lost" is emitted minus sent (a
+  count slip); "BER" is ordinary bit errors at preserved count.
+
+   amplitude          bits lost    raw BER   biphase bits lost
+        0.20       [0, 0, 0, 0]    0.0e+00   1, 1, 1, 1
+        0.50       [0, 0, 0, 0]    2.8e-05   1, 2, 1, 1
+        0.80       [0, 0, 0, 0]    2.7e-03   9, 16, 13, 2
+        0.95       [0, 0, 0, 0]    4.4e-03   31, 39, 50, 25
+        1.10       [0, 0, 0, 0]    6.0e-03   250, 278, 301, 206
+        1.50       [0, 0, 0, 0]    9.8e-03   1665, 1820, 1966, 1423
+        3.00       [0, 0, 0, 0]    1.8e-02   6413, 7050, 7657, 5694
+
+  A prediction that did NOT survive: ami_decode sets its threshold
+  from the 99th percentile of |x|, so the impulses should inflate it
+  and push real marks under.  Pinning the threshold to the nominal
+  signal peak instead makes no difference -- the AGC is not the problem:
+
+   amplitude  BER, self-AGC  BER, fixed peak
+        0.50        3.0e-05          7.0e-05
+        0.95        4.4e-03          4.7e-03
+        1.50        9.8e-03          1.0e-02
+        3.00        1.8e-02          1.9e-02
+
+
+LINK QUALITY -- AMI, same chain, same 1.0 s clip, same framer
+  CVSD alone, no link, whole clip: 8.17 dB segSNR
+
+   impulse/s    segSNR  vs codec  breaks/s   down %  longest clean   biphase
+           0      8.34     +0.00         0    0.10%         999 ms   +0.00 dB, 0 breaks
+           1      8.34     +0.00         0    0.10%         999 ms   +0.00 dB, 0 breaks
+          10      7.06     -1.28         0    0.10%         999 ms   -2.35 dB, 5 breaks/s
+         100      0.48     -7.86         0    0.10%         999 ms   too short, 65 breaks/s
+        1000   no lock         -         -  100.00%           0 ms   never locks
+
+
+MITIGATIONS -- AMI
+  Transformer (AC coupling), the same sweep as 10.3:
+
+   HP corner  impulse/s  breaks/s   down %
+        none        100         0    0.10%
+        none       1000         0  100.00%
+      60 kHz        100         0    0.10%
+      60 kHz       1000         0  100.00%
+     120 kHz        100         0   11.89%
+     120 kHz       1000         7    2.89%
+
+  Decision threshold, the AMI knob with no biphase equivalent
+  (100 events/s, 2 seeds):
+
+    thresh  breaks/s    raw BER
+      0.30         0    4.7e-03
+      0.40         0    4.4e-03
+      0.50         0    4.5e-03
+      0.60         0    4.8e-03
+      0.70         0    5.7e-03
+
+POLARITY -- is AMI blind to a tip/ring swap, as biphase is?
+
+  EXACT TEST: the complete received waveform is inverted, impairments
+  included, which is what swapping the two conductors actually does.
+
+  condition              code      identical  bits differing
+  clean                  biphase         YES               0
+  clean                  ami             YES               0
+  noise sd 0.4           biphase         YES               0
+  noise sd 0.4           ami             YES               0
+  noise sd 0.6           biphase         YES               0
+  noise sd 0.6           ami             YES               0
+  impulse 100/s          biphase         YES               0
+  impulse 100/s          ami             YES               0
+  attenuated 0.25x       biphase         YES               0
+  attenuated 0.25x       ami             YES               0
+
+  All conditions bit-identical: True.
+  Both codes are exactly polarity-blind, including while the link is
+  making errors -- the errors themselves are the same errors.
+
+  ENSEMBLE TEST: signal inverted, receiver-referred noise added after,
+  so the two runs are genuinely different experiments.  Individual
+  errors MUST differ; the error RATE must not.  Mean BER over 6 seeds:
+
+  condition              code         normal   inverted
+  noise sd 0.4           biphase     0.0e+00    0.0e+00
+  noise sd 0.4           ami         1.3e-05    5.2e-06
+  noise sd 0.6           biphase     5.2e-06    2.6e-06
+  noise sd 0.6           ami         3.4e-03    3.4e-03
+  impulse 100/s          biphase     4.4e-01    4.4e-01
+  impulse 100/s          ami         5.9e-03    6.0e-03
+  attenuated 0.25x       biphase     0.0e+00    0.0e+00
+  attenuated 0.25x       ami         1.3e-05    5.2e-06
+
+  The rates match; only which bits happened to break differs.  An
+  earlier version of this test compared those two columns bit for bit
+  and appeared to show AMI failing -- it was comparing two different
+  noise experiments, not two polarities.
+
+  END TO END, 16-bit frame, spec.md 7 framer, clean line:
+
+  code       polarity  locks  lanes   LOF
+  biphase      normal    yes     ok     0
+  biphase     swapped    yes     ok     0
+  ami          normal    yes     ok     0
+  ami         swapped    yes     ok     0
+
+  Why AMI is blind, and why it costs nothing:
+    The decision is |x| > thresh*peak, so the sign never enters
+    (phy.ami_decode; c_ami_decode uses fabs).
+    A full-wave front end is not an extra part bolted on for this --
+    AMI NEEDS one anyway, because marks arrive as both + and - pulses
+    and a half-wave receiver would miss every other one.  Polarity
+    neutrality comes free with the receiver you must build regardless.
+    The alternation rule is symmetric too: inverting +,-,+,- gives
+    -,+,-,+, still valid, and a bipolar violation stays a violation
+    under either polarity, so even BPV error detection survives.
+  Biphase is blind for a different reason: the decision is same-vs-
+  different half cells and inversion flips both (spec.md 5).
+
+WHY AMI NEEDS A TIME REFERENCE AND BIPHASE DOES NOT
+  It is the DYNAMIC RANGE of the timing measurement, not the presence
+  of timing information:
+
+    biphase  intervals are 0.5 or 1.0 cell   -> 2:1, and spec.md 6.2
+             measures +/-13% tolerance as sufficient
+    AMI      gaps run 1 to 16 bit periods    -> 16:1, and a gap of k
+             mis-rounds once tol*k > 0.5, so 16 needs tol < 3.1%
+  Same information, four times the precision, purely because the frame
+  lets zeros run 15 long (9.1).
+
+OPTION A -- no clock at all: quantise the gap between marks
+
+   RC tol  random BER   count |  const 0 BER    count
+     0.0%     0.0e+00      -8 |      0.0e+00      -15
+     0.5%     0.0e+00      -8 |      0.0e+00      -15
+     1.0%     0.0e+00      -8 |      0.0e+00      -15
+     2.0%     0.0e+00      -8 |      0.0e+00      -15
+     3.0%     6.5e-02      -9 |      1.5e-01     -765
+     5.0%     4.8e-01    -136 |      1.4e-01    -3014
+    10.0%     4.9e-01   -1566 |      1.4e-01    -3014
+
+  ("count" is emitted minus sent; the -8 / -15 at small tol is the
+  stream starting at the first mark and ending at the last, not slips.)
+
+  Error-free to 2%, broken at 3% -- the 3.1% predicted above.
+  spec.md 6.2: a 1% resistor and a 2% C0G capacitor give +/-3%.
+  So a clockless AMI receiver lands exactly ON its failure point with
+  no margin for temperature or ageing, where the same components give
+  biphase +/-13% against a +/-3% need -- four times the margin it needs.
+
+  And look at what it does when it fails: at 3% the constant-0 case
+  loses 765 bits.  A mis-rounded gap emits the wrong NUMBER of zeros,
+  so the failures are SLIPS.  A clockless receiver would hand back the
+  one property that made AMI worth considering (11.1: bit count exactly
+  preserved under every impulse tested).  It is not a real option.
+
+
+OPTION C -- local crystal: does it reintroduce slips?
+  spec.md 1 rests on "no rate mismatch anywhere and slips are
+  structurally impossible", so this is the question that matters.
+  The crystal is a SAMPLING reference; the DPLL recovers bit phase
+  from the line, so the bit clock stays locked to the far transmitter.
+  If that is right, the decoder emits exactly as many bits as were
+  sent however far the two crystals drift apart.
+
+   crystal offset  drift over the clip   bits emitted - sent       BER
+             0 ppm               0.0 bits                     0   0.0e+00
+           100 ppm               4.8 bits                     0   0.0e+00
+           200 ppm               9.6 bits                     0   0.0e+00
+          1000 ppm              48.0 bits                     0   0.0e+00
+          5000 ppm             240.0 bits                     0   0.0e+00
+
+  The bit count is exact at every offset, including 5000 ppm where
+  the two clocks drift by 240 bits across the clip.  The DPLL absorbs
+  the drift as phase, not as bits, so spec.md 1 survives: a local
+  crystal used as a SAMPLING reference does not cause slips.  Only a
+  free-running local clock used as the DATA clock would.
+
+
+SUMMARY -- what an AMI receiver needs
+  option                             reference              verdict
+  A  quantise mark-to-mark gaps      one RC, no crystal     needs <3.1%, RC gives 3% -- and fails by slipping
+  B  tank flywheeled off the line    resonator per rate     needs Q~100 AND +/-0.25% (9.2): ceramic, not LC
+  C  local crystal + DPLL            4.096 MHz, already specified works to 5000 ppm, no slips, every rate an exact divide
+
+  So: yes, the receiver needs a frequency reference, and C is the one
+  that works.  What it costs is not a part -- the crystal is already
+  on the board -- but the ARCHITECTURAL property spec.md 6.1 opens
+  with: "No PLL, no oversampling, no clock on the receive timing path".
+
+  It is NOT a loss of rate-blindness: the receiver already carries a
+  per-rate plug (spec.md 2.2, line-receiver.md 8) for the input filter,
+  classifier, dead time and carrier detect.  On that axis C is better --
+  the per-rate change becomes a counter tap, exact and digital, instead
+  of matched RC values, and 4.096 MHz divides every rate exactly.
+  Repeaters are unaffected either way: they slice and re-drive and
+  never see the frame (spec.md 2.2).
+
+LINE CODES ON THE mfspec FRAME -- structural properties, measured
+  Intervals and disparity in BIT periods.  min interval sets the max
+  fundamental; max interval sets what clock recovery must coast; the
+  disparity swing is the DC wander a transformer has to pass.
+
+  --- payload: random  (line ones density 0.451)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00    13.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    14.00    +0.451    14420.0
+  unipolar RZ                     2     0.50    13.50    +0.225     7210.0
+  polar NRZ                       2     1.00    14.00    -0.099     3168.5
+  NRZI                            2     1.00    14.00    +0.000      186.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     2.00    +0.002       96.5
+
+  --- payload: constant 0  (line ones density 0.078)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00    15.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    15.00    +0.078     2500.0
+  unipolar RZ                     2     0.50    15.50    +0.039     1250.0
+  polar NRZ                       2     1.00    15.00    -0.844    26999.5
+  NRZI                            2     1.00    16.00    +0.000       30.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     1.50    +0.016      502.0
+
+  --- payload: constant 1  (line ones density 0.828)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00     2.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    14.00    +0.828    26500.0
+  unipolar RZ                     2     0.50     2.50    +0.414    13250.0
+  polar NRZ                       2     1.00    14.00    +0.656    21002.0
+  NRZI                            2     1.00     3.00    +0.000        6.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     2.00    +0.000        5.0
+
+  READING IT.  The disparity column decides the candidate set, because
+  the pair is transformer coupled (spec.md 5) and a transformer cannot
+  pass unbounded DC wander:
+    bounded, order 1 bit period : Manchester, differential Manchester,
+                                  AMI, CMI  -> viable
+    data-dependent, 5-500 bits  : Miller, NRZI              -> not viable
+    100s to 10000s of bits      : unipolar NRZ/RZ, polar NRZ -> not viable
+
+  That is the whole answer to "is there anything we skipped".  The two
+  skipped codes with a REAL advantage are Miller and NRZI: both halve
+  the bandwidth (min interval 1.0 bit against the biphase family's 0.5),
+  and Miller also bounds its max interval at 2.0 bits, which would make
+  clock recovery nearly as easy as biphase.  Both fail on DC: Miller
+  swings 96 bit periods on random payload and 502 on constant 0, NRZI
+  186 and 30.  Miller-squared exists precisely to patch this, at the
+  cost of encoder state.  Neither is worth simulating as it stands.
+
+  CMI is the interesting near-miss: two levels, DC-free, disparity 1.5,
+  max interval 1.5 bits.  It matches differential Manchester on every
+  axis and beats it on none -- same 0.5-bit min interval, so the same
+  bandwidth and the same reach.  No reason to prefer it.
+
+  Manchester (biphase-L) is structurally identical to differential
+  Manchester in this table.  It differs in ONE respect the table cannot
+  show: it carries data in the DIRECTION of the mid-cell transition, so
+  inverting the pair swaps ones and zeros.  It is not polarity-blind,
+  and 12 measured that differential Manchester is -- for free.  That is
+  the entire reason to prefer the differential form.
+
+THE FAMILY.  F + S + N channels must be a power of two, so N = 2, 6, 14
+  (the 16-bit frame's 2+2N rule gave N = 1, 3, 7; this frame gives more
+  channels per bit because signalling is sub-commutated, 2).
+
+   frame   N  per-ch    line      baud  capacity  reach  superframe
+      4b   2     16k     64k    0.128M       32k  2.00x        4 fr
+      4b   2     32k    128k    0.256M       64k  1.41x        4 fr
+      4b   2     64k    256k    0.512M      128k  1.00x        4 fr
+
+      8b   6     16k    128k    0.256M       96k  1.41x        8 fr
+      8b   6     32k    256k    0.512M      192k  1.00x        8 fr
+      8b   6     64k    512k    1.024M      384k  0.71x        8 fr
+
+     16b  14     16k    256k    0.512M      224k  1.00x       16 fr
+     16b  14     32k    512k    1.024M      448k  0.71x       16 fr
+     16b  14     64k   1024k    2.048M      896k  0.50x       16 fr
+
+  reach is the sqrt(f) law scaled to the 256 kbps reference, as
+  spec.md 2.1 does -- ratios sound, absolutes not measured.
+
+  Read it by ROW for "what does 64 kHz cost me", but read it by
+  COLUMN for the choice that actually matters.  At one line rate --
+  one reach -- the frame length decides how it is divided:
+
+    256 kbps, 1.00x reach (order 1.7 km):
+       4-bit frame @ 64 kHz ->  2 channels x 64 kbps   (DS0 rate)
+       8-bit frame @ 32 kHz ->  6 channels x 32 kbps
+      16-bit frame @ 16 kHz -> 14 channels x 16 kbps
+    512 kbps, 0.71x reach (order 1.2 km):
+       8-bit frame @ 64 kHz ->  6 channels x 64 kbps   (DS0 rate)
+      16-bit frame @ 32 kHz -> 14 channels x 32 kbps
+
+  So "64 kHz or 32 kHz" is not the question.  Pick the reach the
+  plant needs, then pick how to divide it.  64 kbps channels are
+  available at ANY reach -- at 2 channels for 1.7 km, 6 for 1.2 km.
+
+
+WHAT THE PER-CHANNEL RATE COSTS THE AUDIO
+  CVSD alone, 2 s clip, one talker:
+
+   per-channel    segSNR  vs 64 kbps
+          16k   6.46 dB    -9.06 dB
+          32k  10.04 dB    -5.48 dB
+          64k  15.52 dB    +0.00 dB
+
+  (spec.md 2.1 on seven talkers: 10.8 dB at 16k, 17.4 at 32k,
+  23.3 at 64k, worst talker 9.0 / 14.9 / 19.7.  Specify against the
+  worst talker: 16 kbps voice is intelligible but visibly degraded,
+  32 kbps is the quality knee, 64 kbps is comfortable.)
+
+
+REACH IS NOT FREE EITHER -- the same span at three line rates
+  Attenuation goes as sqrt(f), so a fixed physical span costs each
+  rate a different loss.  Referenced to 12 dB at 256 kbps:
+
+     line    loss  amplitude  hysteresis % of rx
+     128k    8.5dB      0.376                 13%
+     256k   12.0dB      0.251                 20%
+     512k   17.0dB      0.142                 35%
+
+  spec.md 6.1 allows 10% hysteresis, 20% on a single span, so the
+  512 kbps column is already outside it on this span -- 8.2 measured
+  the cliff exactly there.
+
+  Link on that span, 0.25 s x 4 seeds, random payload, 100 impulses/s.
+  Noise floor and impulse rate are FIXED in absolute terms; only the
+  rate changes.  Everything is reported in TIME, not in frames: a
+  re-acquisition costs a fixed number of FRAMES (7.4), which is four
+  times longer in wall-clock at a 16 kHz frame rate than at 64 kHz,
+  so a frame-counted outage would flatter the low rates.
+
+     line    amp  breaks/s  ms per break  time down
+     128k  0.376        41         13.3 ms      54.7%
+     256k  0.251        74          5.0 ms      36.8%
+     512k  0.142        87          2.5 ms      21.3%
+
+  The two effects pull OPPOSITE ways, which is not the intuition:
+    a lower rate breaks LESS OFTEN -- its signal is larger against a
+      fixed impulse amplitude, so fewer rings clear the 1-h threshold
+      (10.1), and each ring spans fewer bits
+    but each break costs MORE TIME -- re-acquisition is counted in
+      frames, and frames are longer
+  On these numbers the second effect wins and the lower rate is down
+  for more of the time.  So reach does NOT buy impulse robustness for
+  free; it buys fewer, longer outages.  Which is preferable is a
+  question about the traffic, not about the link: for voice, fewer
+  long mutes are worse than more short ones.
+
+  (0.25 s x 4 seeds at one impulse rate.  The ORDERING is the result;
+  the magnitudes are thin and should not be quoted as rates.)
+
+
+THE PCM ARGUMENT -- stronger than it first looks
+  A 64 kbps slot is a DS0 rate, so a data card at a 64 kHz frame rate
+  is a G.711 pipe.  But rate alone is not enough: PCM needs OCTET
+  alignment to know where a sample starts, and data-card.md records
+  that the pipe is "not octet-aligned -- the framer establishes bit
+  alignment and slot identity, and nothing coarser".
+
+  This frame fixes that for free.  One channel takes one bit per
+  frame, and the superframe is 8 frames, so:
+
+    N  superframe  bits/ch/sf  frame kHz  superframe kHz  = PCM 8 kHz?
+    2        4 fr           4        16k            4.0k              
+    2        4 fr           4        32k            8.0k              
+    2        4 fr           4        64k           16.0k              
+
+    6        8 fr           8        16k            2.0k              
+    6        8 fr           8        32k            4.0k              
+    6        8 fr           8        64k            8.0k           YES
+
+   14       16 fr          16        16k            1.0k              
+   14       16 fr          16        32k            2.0k              
+   14       16 fr          16        64k            4.0k              
+
+  The elegant case is N = 6 at a 64 kHz frame rate, and it is better
+  than a rate coincidence.  THE SUPERFRAME COUNTER IS THE OCTET
+  COUNTER.  It has 8 phases; a channel takes one bit per frame; so
+  superframe state k IS bit k of that channel's octet.  The same three
+  bits that address the signalling demux (the 74xx259) do the byte
+  framing, with no extra counter and no extra state:
+
+    superframe state   0  1  2  3  4  5  6  7
+    signalling S       A1 A2 A3 P1 A4 A5 A6 P0   -> the 259 address
+    channel n octet    b0 b1 b2 b3 b4 b5 b6 b7   -> the byte boundary
+
+  And at a 64 kHz frame rate the superframe rate is 64/8 = 8 kHz,
+  the PCM sample rate exactly, so one superframe carries one sample.
+  A PCM card is then a shift register clocked by the frame clock and
+  transferred at state 7 -- one 74xx164 plus a latch per channel.
+  OCTET ALIGNMENT COMES FREE.  The slot becomes a true DS0, not merely
+  a 64 kbps pipe -- which is what data-card.md says it is not today.
+
+  No other combination lands on 8 kHz: N = 6 at 32 kHz gives a 4 kHz
+  superframe (an octet, but at half the PCM rate), and N = 14 at 64 kHz
+  gives 16 bits at 4 kHz -- two octets per superframe, also usable, but
+  it is N = 6 at 64 kHz that is one-for-one with a DS0.
+
+  The catch, and it is a serious one: 4.3 measured that the
+  superframe phase is admitted wrong for 56 of 64 hook states.  Today
+  that misroutes signalling.  If PCM octet alignment is carried on the
+  same phase, a wrong phase ROTATES EVERY PCM SAMPLE -- garbage audio
+  on a link that is otherwise bit-perfect.  Relying on the superframe
+  for octets raises 4.3 from a signalling bug to a payload bug, and
+  makes 15 item 3 a precondition rather than a recommendation.
+

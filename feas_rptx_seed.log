@@ -1,0 +1,19 @@
+(seed) 64 kbps, fs 16.384 MHz, sd in 32.768 MHz units: terminal (B) line BER at 4 and 9 spans, repeater filter at the symbol rate vs fixed 2.048 MHz, noise seeds 1 and 2
+    lp2 128k seed 1 sd 2.245: 4 spans 0  9 spans 2e-01   (16.8s)
+    lp2 128k seed 1 sd 1.782: 4 spans 0  9 spans 6e-02   (20.3s)
+    lp2 128k seed 1 sd 1.414: 4 spans 0  9 spans 0   (22.7s)
+    lp2 128k seed 1 sd 1.122: 4 spans 0  9 spans 0   (9.8s)
+    lp2 128k seed 2 sd 2.245: 4 spans 5e-05  9 spans 2e-01   (5.6s)
+    lp2 128k seed 2 sd 1.782: 4 spans 0  9 spans 3e-05   (5.1s)
+    lp2 128k seed 2 sd 1.414: 4 spans 0  9 spans 0   (5.0s)
+    lp2 128k seed 2 sd 1.122: 4 spans 0  9 spans 0   (4.9s)
+  lp2 2.048M seed 1 sd 2.245: 4 spans 4e-01  9 spans aborted   (2.3s)
+  lp2 2.048M seed 1 sd 1.782: 4 spans 2e-01  9 spans aborted   (2.4s)
+  lp2 2.048M seed 1 sd 1.414: 4 spans 1e-04  9 spans 1e-01   (5.1s)
+  lp2 2.048M seed 1 sd 1.122: 4 spans 0  9 spans 3e-05   (5.0s)
+  lp2 2.048M seed 2 sd 2.245: 4 spans 4e-01  9 spans aborted   (2.3s)
+  lp2 2.048M seed 2 sd 1.782: 4 spans 2e-01  9 spans aborted   (2.3s)
+  lp2 2.048M seed 2 sd 1.414: 4 spans 0  9 spans 2e-01   (5.0s)
+  lp2 2.048M seed 2 sd 1.122: 4 spans 0  9 spans 3e-05   (5.1s)
+
+[seed done in 121s]
