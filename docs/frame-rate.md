@@ -176,7 +176,7 @@ column.
 ## 6. Reproducing
 
 ```
-python3 mfcmp.py framerate
+python3 linecodes.py framerate
 ```
 
 Caveats:

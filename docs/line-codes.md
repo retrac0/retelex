@@ -20,7 +20,7 @@ on one twisted pair.
 
 ## 1. The candidate set, decided by one column
 
-Nine codes on the mfspec frame, structural properties measured (`mfcmp.py
+Nine codes on the MF8 frame, structural properties measured (`linecodes.py
 codes`). Intervals and disparity in **bit periods**: min interval sets the
 maximum fundamental and therefore bandwidth and reach; max interval sets what
 clock recovery has to coast; disparity swing is the DC wander a transformer must
@@ -273,21 +273,23 @@ AGC stage, not more launch amplitude.
 
 ## 4. Impulse noise — the ranking reverses
 
-`phy.plant_noise`: damped rings at 0.5–3× the signal peak as `linecodes.py` uses,
-15–80 kHz, 20–200 µs decay, Poisson arrivals. Each impairment swept alone.
+`phy.plant_noise`: damped rings at 0.5–3× the transmitted peak, 15–80 kHz,
+20–200 µs decay, Poisson arrivals, both polarities (§4.2). The full curve is §4.5;
+the short version, from `impulse_sweep.py`:
 
-| events/s | code | LOF | time down |
-|---|---|---|---|
-| 0 | either | 0 / 0.1% | 0 / 0.4% |
-| 10 | diff. Manchester | 8 / 1.47% | 7 / 1.24% |
-| 10 | **AMI** | 10 / 1.72% | **0 / 0.40%** |
-| 100 | diff. Manchester | 72 / 13.29% | 62 / 7.94% |
-| 100 | **AMI** | 79 / 13.40% | **0 / 0.40%** |
-| 1000 | diff. Manchester | 283 / 64.48% | 262 / 52.09% |
-| 1000 | AMI | 262 / 74.87% | 92 / 65.10% |
+| impulses/s | DM breaks/s | DM muted | AMI breaks/s | AMI muted |
+|---|---|---|---|---|
+| 1 | 0.78 | 0.06% | **0.13** | **0.01%** |
+| 10 | 7.8 | 0.59% | **1.3** | **0.11%** |
+| 100 | 68 | 5.3% | **13** | **1.1%** |
+| 500 | 259 | 22.9% | **88** | **9.4%** |
+| 800 | 341 | 33.3% | 173 | 29.6% |
+| 900 | 359 | **36.4%** | — | **100% — never locks** |
 
-**AMI takes far fewer loss-of-frame events than differential Manchester at the
-same impulse rate** — the mechanism is §4.1.
+**Through the whole working range AMI takes about a sixth of the breaks**, because
+differential Manchester's impulse failures are bit-count slips and AMI's are
+ordinary bit errors (§4.1). Past ~850/s that reverses: AMI collapses outright
+while differential Manchester is still delivering two thirds of the time.
 
 ### 4.1 The mechanism is bit count, measured directly
 
@@ -362,34 +364,38 @@ under. Pinning the threshold to the nominal peak changes nothing (4.4e−03 agai
 
 ### 4.3 What it costs the audio
 
-Channel 1 through the full chain, 1.0 s clip, with the `mf8-spec.md` §4 framer on the
-MF8 frame and its framer, so this isolates the line code. segSNR
-is scored on the **longest unbroken locked stretch** against the codec over the
-*same window*, because a slip shifts the time base and scoring the whole clip
-against one alignment reports a collapse that is mostly bookkeeping:
+What an outage *is* matters more than how much time it takes. Every break is
+short — **0.76 ms** for differential Manchester and 0.80 ms for AMI at low rate,
+barely more at 500/s — so neither code spends much time muted until the rate is
+very high. What climbs with impulse rate is the **number** of breaks, and each is
+a click plus a CVSD decoder that has to recover (its syllabic filter is 6 ms, so
+at tens of breaks a second it never settles).
 
-| impulse/s | diff. Manchester | AMI |
-|---|---|---|
-| 1 | +0.00 dB, 0 breaks, 999 ms clean | +0.00 dB, 0 breaks, 999 ms clean |
-| **10** | −2.35 dB, **5 breaks/s**, 475 ms | **−1.28 dB, 0 breaks, 999 ms** |
-| **100** | *too short to score*, **65 breaks/s**, 71 ms | **−7.86 dB, 0 breaks, 999 ms** |
-| 1000 | never locks | never locks |
+`mf8_render.py` puts all six talkers through the chain for 15 s and writes what
+the link delivers, muted where the framer is not locked. Per-channel segSNR is
+scored only where the link was up; muting is counted separately, because the two
+fail independently. The 15 s results are §4.6; from the 4 s verification pass:
 
-**At 100 events/s AMI holds frame for the entire second without a single
-reframe**, delivering continuously degraded audio, where differential Manchester
-is chopped into 71 ms fragments by 65 breaks a second. For voice that is the
-difference between a noisy channel and an unusable one — same impairment, same
-receiver, same framer.
+| impulse/s | code | breaks | muted | ch1 segSNR |
+|---|---|---|---|---|
+| 10 | diff. Manchester | 34 | 0.68% | 22.4 dB |
+| 10 | AMI | 3 | 0.07% | 23.5 dB |
+| 100 | diff. Manchester | 280 | 8.0% | **6.4 dB** |
+| 100 | AMI | 40 | 0.8% | **8.7 dB** |
 
-The cliff for differential Manchester spans about one decade of impulse rate and
-costs both continuity *and* fidelity: at 10/s, five mutes a second **and** 2.35 dB
-of degradation inside the stretches that never broke. There is no regime where it
-is merely noisy.
+At 10/s both codes are listenable and the difference is clicks — about eight a
+second for differential Manchester against one. At 100/s both are badly degraded,
+differential Manchester by constant decoder restarts and AMI by bit errors, and
+AMI still wins on both columns.
 
-The ranking inverts again at the extreme — at 1000 events/s AMI never achieves
-lock while differential Manchester locks intermittently — so the trend is not
-monotonic and should not be extrapolated past 100/s. Neither is a working link
-there.
+**A correction.** An earlier render reported differential Manchester as 72% muted
+at 100 impulses/s. It had discarded every locked run shorter than 31 ms, because
+its alignment needed that many bits, and at 100/s most runs are shorter — so
+locked time was counted as silence. The framer is up about 95% of that time; the
+render now aligns runs down to 1 ms and agrees with it. An earlier version of this
+section likewise scored only the longest unbroken stretch, which is what made
+differential Manchester look like it had "no regime where it is merely noisy".
+It does: at 10/s it is clicky but sound.
 
 ### 4.4 Mitigations — nothing tunes this away
 
@@ -422,6 +428,84 @@ to reject.
 **AMI's decision threshold does nothing either** — 0 breaks and 4.4–5.7e−03 raw
 BER flat across 0.3 to 0.7. So neither code has a *tuning* answer to impulse
 noise. The only measured answer is structural: AMI does not slip.
+
+---
+
+### 4.5 The falloff curve, measured precisely
+
+`impulse_sweep.py`: 23 impulse rates from 0.3/s to 1000/s, both codes, several
+independent 10 s runs per point — enough for ~200 impulses at the low rates, where
+each one counts. Link layer only, on the chunked physical layer `mf8_render.py`
+verified bit-identical against an unchunked reference. Full table and per-point
+standard errors in `impulse_sweep.log` and `impulse_sweep.csv`.
+
+**Thresholds**, interpolated on the measured points — no model. Per-point standard
+errors are 5–10% relative, so these are good to two significant figures:
+
+| link reaches | diff. Manchester | AMI | AMI ÷ DM |
+|---|---|---|---|
+| 1 break/s | 1.3 impulses/s | 7.3 | 5.6× |
+| 10 breaks/s | 13 | 77 | 5.9× |
+| 50 breaks/s | 71 | 320 | 4.5× |
+| 0.1% muted | 1.7 | 9.4 | 5.4× |
+| 1% muted | 18 | 95 | 5.3× |
+| 5% muted | 95 | 340 | 3.6× |
+| 10% muted | 200 | 515 | 2.6× |
+
+**The two curves are different shapes, not one curve displaced**, so there is no
+single "AMI is N× better":
+
+- **Differential Manchester degrades smoothly.** Each impulse above the comparator
+  threshold causes a slip — 0.77 per impulse at low rate — each slip costs
+  ~0.76 ms, and outages add. An independent-outage model built from those two
+  low-rate numbers, `muted = 1 − exp(−r / 1724)`, tracks the measurement to within
+  10–15% all the way to 1000/s. Breaks per impulse falls slowly at high rate (0.68
+  at 100/s, 0.37 at 1000/s) as one outage starts absorbing several impulses.
+- **AMI holds, then collapses.** Breaks per impulse stays near 0.13 — a sixth of
+  differential Manchester — and muting grows gently: 1% at 95/s, 9.4% at 500/s,
+  29.6% at 800/s. At **900/s it never locks.** Its outages lengthen as it nears the
+  edge (0.8 ms per break at low rate, 1.7 ms at 800/s), which is the warning. The
+  same independent-outage model fits it badly and should not be used for it.
+
+The likely mechanism for the collapse is F-bit errors reaching the `+2/−1`
+counter's one-in-three trip point, beyond which no 32-frame acquisition succeeds.
+That is a hypothesis consistent with the shape, not a measurement. What is
+measured is where it happens: **between 800 and 900 impulses/s**, which is also
+where the ranking reverses — at 800/s AMI is still muted less (29.6% against
+33.3%), at 900/s it is muted completely.
+
+**What this replaces.** Earlier versions of this document placed differential
+Manchester's "cliff between 1 and 10 events/s" from four points and 1 s clips.
+That was the right decade for where *breaks* start to become frequent — the link
+reaches 1 break/s at 1.3 impulses/s and 10 breaks/s at 13 — but it was never a
+cliff. Differential Manchester does not fall off anything; it accumulates clicks
+in proportion to the impulse rate. The only cliff on this page is AMI's, and it
+sits two orders of magnitude further out.
+
+### 4.6 Rendered audio
+
+`mf8_render.py`, 15 s, six independent talkers, the full duration as the link
+delivers it. "muted" is time with no audio placed; segSNR is scored only where
+the link was up. Clean is 26.1 / 21.1 dB on channels 1 and 4 in both codes.
+
+| condition | DM breaks/s | DM muted | DM ch1 / ch4 | AMI breaks/s | AMI muted | AMI ch1 / ch4 |
+|---|---|---|---|---|---|---|
+| impulse 10/s | 9.3 | 0.71% | 18.2 / 16.0 dB | **2.0** | **0.17%** | **22.4 / 18.7 dB** |
+| impulse 100/s | 71 | 8.9% | 5.3 / 4.9 dB | **13** | **1.1%** | **8.4 / 8.7 dB** |
+| Gaussian sd 0.60 | 0.13 | 0.02% | **25.9 / 21.0 dB** | 5.2 | 0.54% | 3.3 / 2.8 dB |
+| Gaussian sd 0.70 | 4.9 | 0.42% | **23.0 / 19.2 dB** | 28 | 5.3% | −1.7 / −1.8 dB |
+| attenuation 0.12 | 441 | 86% | 2.5 / 2.4 dB | 54 | 62% | −1.5 / −1.5 dB |
+
+The render agrees with the sweep where they overlap — at 100/s AMI is 1.10%
+muted with 12.9 breaks/s against the sweep's 1.05% and 12.8. Differential
+Manchester reads 8.9% muted against the sweep's 5.3% because runs shorter than
+1 ms are not placed; that remainder is time the framer counts as up but that is
+too short to carry audio.
+
+Listen to `dm_imp10_ch1.wav` against `ami_imp10_ch1.wav` for the realistic case:
+both sound like speech, and the difference is the ticking. At 100/s both are
+poor, and AMI is still the better of the two on every column. Under Gaussian
+noise the table flips entirely, which is §3 heard rather than measured.
 
 ---
 
@@ -462,15 +546,19 @@ timing decision that produces the Gaussian margin) against one measured loss
 (bit-count slips under impulse).
 
 **Re-examine it if the plant is impulse-dominated.** §4 is not a small
-correction: at 100 events/s it is the difference between a usable channel and a
-broken one, and §4.4 says no amount of receiver tuning closes it. If AMI is ever
+correction: through the working range AMI takes about a sixth of the breaks
+(§4.5), and §4.4 says no amount of receiver tuning closes that gap. If AMI is ever
 taken off the file, §2 is the answer sheet — the zero run is bounded at 15 by the
 frame, the clock comes off the 4.096 MHz crystal already on the board with 12×
 margin, and polarity is free.
 
 **The decision turns on one number nobody here has: the impulse rate on the
-target loops**, with the cliff located between 1 and 10 events/s. That is a
-counter on a real pair, and it is worth more than any further simulation. It is
+target loops.** The curve is now measured, so that number converts directly into
+a break rate for each code: 1 break/s at 1.3 impulses/s for differential
+Manchester and 7.3 for AMI, 10 breaks/s at 13 and 77 (§4.5). How many clicks a
+second a voice circuit can carry is a judgement; how many a given loop will
+produce no longer is. That is a counter on a real pair, and it is worth more than
+any further simulation. It is
 the same class of gap `frame-rate.md` §1 has on reach.
 
 ---
@@ -478,14 +566,15 @@ the same class of gap `frame-rate.md` §1 has on reach.
 ## 7. Reproducing
 
 ```
-python3 mfcmp.py codes        nine line codes on the frame, side by side
-python3 mfcmp.py line         over the line with noise, both codes
-python3 mfcmp.py plant        impulse and attenuation, swept independently
-python3 mfcmp.py impulse      impulse threshold, audio cost, mitigations
-python3 mfcmp.py impulse_ami  the same test again with AMI
-python3 mfcmp.py polarity     tip/ring swap, both codes
-python3 mfcmp.py clock        zero-run bound; AMI clock recovery, tank vs DPLL
-python3 mfcmp.py rxclock      does an AMI receiver need a local clock?
+python3 linecodes.py codes      nine line codes on the frame, side by side
+python3 linecodes.py clock      zero-run bound; AMI clock recovery, tank vs DPLL
+python3 linecodes.py rxclock    does an AMI receiver need a local clock?
+python3 linecodes.py polarity   tip/ring swap, both codes
+python3 linecodes.py plant      Gaussian, impulse and attenuation, swept independently
+python3 linecodes.py impulse    impulse threshold and mitigations
+python3 impulse_sweep.py        the impulse falloff curve, 23 rates, both codes
+python3 mf8_line.py             six talkers through the whole chain, both codes
+python3 mf8_render.py           15 s of every channel to out/, for listening
 ```
 
 How to read the numbers:
@@ -494,8 +583,8 @@ How to read the numbers:
   not simulated, which is the point — it cannot cross the transformer whatever
   its noise performance.
 - §§3–4 use 16 000-frame (0.25 s) clips × 4 seeds, and §4.3's audio is one 1.0 s
-  clip, one talker, one seed per cell. Enough to place the impulse cliff between
-  1 and 10 events/s; not enough to quote outage *rates* at the noise edge. Read
+  clip, one talker, one seed per cell. §4.5 supersedes it for impulse noise:
+  23 rates, 30–120 s per point, per-point standard errors. Read
   the 1000+ events/s and sd 0.6–0.7 cells as indicative.
 - Noise sd is referred to the signal peak, modelling a rail-limited driver.
   Referred to mean power instead, AMI would look better by its peak-to-rms ratio,

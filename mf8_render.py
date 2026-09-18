@@ -126,27 +126,41 @@ def render(tag, ln, code, src, bits, p, **kw):
     nfr = len(ln) // 8
     down = 100.0 * (1.0 - st['frames'] / nfr)
     pos = st['pos']
-    out = [np.zeros(nfr, np.uint8) for _ in range(NCH)]
+    # Gaps are filled with 1010 -- the codec's own idle pattern, and the
+    # empty-slot fill mf8-spec.md 12.3 specifies because it decodes as silence.
+    # A card's decoder runs continuously; what the mute gates is its OUTPUT.
+    idle = (np.arange(nfr) & 1).astype(np.uint8)
+    out = [idle.copy() for _ in range(NCH)]
     live = np.zeros(nfr, bool)
-    spans = []
     segs = [] if len(pos) == 0 else np.split(
         pos, np.flatnonzero(np.diff(pos) != 8) + 1)
     placed = 0
+    shift = None                                # source minus recovered, frames
     for g in segs:
-        if len(g) < 2000:                      # too short to align or to hear
+        if len(g) < 66:                         # under ~1 ms: not a run
             continue
         g = g[:len(g) - 2]
-        lane0 = rb[g + 2]
         c0 = int(g[0]) // 8
-        # bits are only ever LOST, so the source index runs AHEAD of the
-        # recovered index and the search is forward.  At 100 impulses/s the
-        # cumulative loss over a clip exceeds any narrow window.
+        if shift is None:
+            # First run: wide forward search on one lane.  Bits are only ever
+            # LOST, so the source index runs AHEAD of the recovered index.
+            cand = range(max(0, c0 - 64), min(c0 + 6000, nfr))
+            lanes = rb[g + 2][None, :]
+            ref_of = lambda d, n: bits[0][d:d + n][None, :]
+        else:
+            # Later runs: a slip loses only a few bits, so the offset sits just
+            # past the previous run's.  A narrow window over ALL six lanes aligns
+            # even a 64-frame run -- the old 2000-frame minimum discarded most of
+            # the LOCKED time at high impulse rates and reported it as muted.
+            cand = range(max(0, c0 + shift - 4), min(c0 + shift + 64, nfr))
+            lanes = np.stack([rb[g + 2 + j] for j in range(NCH)])
+            ref_of = lambda d, n: np.stack([bits[j][d:d + n] for j in range(NCH)])
         best = (1.0, None)
-        for d in range(max(0, c0 - 64), min(c0 + 6000, nfr)):
-            n = min(len(lane0), nfr - d)
-            if n < 1000:
+        for d in cand:
+            n = min(lanes.shape[1], nfr - d)
+            if n < 32:
                 break
-            e = float((lane0[:n] != bits[0][d:d + n]).mean())
+            e = float((lanes[:, :n] != ref_of(d, n)).mean())
             if e < best[0]:
                 best = (e, d)
             if e == 0.0:
@@ -157,9 +171,9 @@ def render(tag, ln, code, src, bits, p, **kw):
         if best[1] is None or best[0] > 0.10:
             continue
         d = best[1]; n = min(len(g), nfr - d)
+        shift = d - c0
         for j in range(NCH):
             out[j][d:d + n] = rb[g[:n] + 2 + j]
-        spans.append((d, n))
         live[d:d + n] = True
         placed += 1
     del rb; gc.collect()
@@ -170,14 +184,11 @@ def render(tag, ln, code, src, bits, p, **kw):
     mute = 100.0 * (1.0 - live.mean())
     segsnr = []
     for j in range(NCH):
-        # Decode each locked run on its own and mute the gaps in the AUDIO.
-        # Decoding the whole assembled array instead would feed the gaps' zeros
-        # to the CVSD integrator, which slams it to the rail -- the +47.7 dB
-        # failure mf8-spec.md 13 requires squelch for.  A real card mutes its
-        # output; it does not hand silence to the codec as data.
-        dec = np.zeros(nfr)
-        for (d, n) in spans:
-            dec[d:d + n] = cvsd.decode(out[j][d:d + n], p)
+        # One continuous decode, gaps idling on 1010, then the OUTPUT is muted
+        # in the gaps.  Feeding the gaps zeros instead slams the integrator to
+        # the rail -- the +47.7 dB failure mf8-spec.md 13 requires squelch for.
+        dec = cvsd.decode(out[j], p)
+        dec[~live[:len(dec)]] = 0.0
         y = audio.reconstruct(dec, RATE)
         # The assembled output is already in the SOURCE time base -- each run was
         # placed at its own offset -- so no global align, which would shift the

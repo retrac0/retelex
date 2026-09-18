@@ -3,15 +3,15 @@ Reference model and validation battery for the 8-bit superframe carrier.
 
 This is the design docs/mf8-spec.md specifies.  It is docs/mfspec.md's frame
 with the header replaced, because the original header was measured broken in
-three independent ways (docs/mf-vs-16bit.md 4.1-4.3):
+three independent ways (mf8-spec.md 1):
 
     mfspec                          mf8
-    F = 1010 (period 2)             F = 11110000-class word, period 8
+    F = 1010 (period 2)             F = 11111110, period 8
     superframe phase pinned by      superframe phase pinned by F itself
       two pads 4 apart, gated by
       hook bits -> 56/64 wrong
-    no tracking rule                +1/-1 floor 0 trip 16 (spec.md 7.3)
-    no acquisition count            32 consecutive good frames (spec.md 7.2)
+    no tracking rule                +2/-1 floor 0 trip 12
+    no acquisition count            32 consecutive good frames
 
 Frame, 8 bits at a 64 kHz frame rate:
 
@@ -27,6 +27,7 @@ Usage:  python3 mf8.py            the whole battery
         python3 mf8.py word       choose the F word
         python3 mf8.py locks      false locks over every payload class
         python3 mf8.py sfphase    superframe phase, exhaustive
+        python3 mf8.py guard      why the guard is at 3 and 5, not 3 and 7
         python3 mf8.py errors     line errors, acquisition, resync
 """
 import sys, itertools, numpy as np
@@ -70,8 +71,12 @@ FIXED = {3: 1, 5: 0}                              # S guard, and the positions m
 #   DIFFERENT FROM THE F WORD at those states: 0xFE is 1 at both 3 and 5, so a
 #     data lane carrying the framing word satisfies F but fails the guard.
 #     mfspec's pads were 1,0 at states 3,7 -- exactly what 0xFE does there --
-#     so the guard added nothing.  Measured: 384/512 false locks before this
-#     change, and the battery below after it.
+#     so they add nothing: 384/512 false locks on the F word (`mf8.py guard`).
+#   NOT HALF A SUPERFRAME APART.  Inverting mfspec's values to 0,1 at 3,7 fixes
+#     the above, but a 4-state shift maps 3 and 7 onto each other, and with
+#     every channel off-hook the S lane can impersonate F at exactly that shift.
+#     One data card in seat 1 then false-locks -- a legal layout.  3 and 5 have
+#     no such symmetry.  `mf8.py guard` measures all three.
 
 
 # --------------------------------------------------------------- transmitter
@@ -165,9 +170,10 @@ def framer(line, skew=0, confirm=32, up=2, dn=1, trip=12, word=0xFE):
                 cc += 1
                 if cc >= confirm:
                     locked = True
-                    st['lock_bit'] = i
-                    st['false_lock'] = (i % FLEN) != true
-                    st['sf_offset'] = (sfc - ((i + skew) // FLEN)) & 7
+                    if st['lock_bit'] is None:     # the FIRST lock: acquisition
+                        st['lock_bit'] = i
+                        st['false_lock'] = (i % FLEN) != true
+                        st['sf_offset'] = (sfc - ((i + skew) // FLEN)) & 7
                 i += FLEN; sfc = (sfc + 1) & 7
             else:
                 cc = 0; wait = 0; i += 1
@@ -395,6 +401,53 @@ def errors():
         print(f'  {k:>5d} {bad:>19d} {rel if rel >= 0 else "never":>18}', flush=True)
 
 
+def guard():
+    """Why the guard sits at superframe states 3 and 5, and not the more regular
+    3 and 7.  Three layouts, exhaustively over hook states and skews."""
+    nf = 2000
+    p = params(RATE)
+    sil = cvsd.encode(np.zeros(nf), p)
+    tile = lambda b: np.tile(np.array(b, np.uint8), nf // 8 + 1)[:nf]
+    W = tile([1, 1, 1, 1, 1, 1, 1, 0])
+    LAYOUTS = [
+        ('3,5 = 1,0  (this spec)',    {0: 0, 1: 1, 2: 2, 4: 3, 6: 4, 7: 5}, {3: 1, 5: 0}),
+        ('3,7 = 0,1  (regular)',      {0: 0, 1: 1, 2: 2, 4: 3, 5: 4, 6: 5}, {3: 0, 7: 1}),
+        ('3,7 = 1,0  (mfspec values)', {0: 0, 1: 1, 2: 2, 4: 3, 5: 4, 6: 5}, {3: 1, 7: 0}),
+    ]
+    global SLOT, FIXED
+    keep = (SLOT, FIXED)
+
+    def scan(C):
+        fl = 0
+        for h in itertools.product((0, 1), repeat=NCH):
+            A = [np.full(nf, h[j], np.uint8) for j in range(NCH)]
+            ln = build(C, A)
+            fl += sum(bool(framer(ln, skew=k)['false_lock']) for k in range(FLEN))
+        return fl
+
+    print('GUARD POSITION -- why 3 and 5, not 3 and 7\n')
+    print('  False locks over all 64 hook states x 8 skews (512 per cell).  "one')
+    print('  data card" is the F word in ONE seat, voice elsewhere -- legal under the')
+    print('  slot rule, so it has to be 0 in every seat for the rule to mean anything.\n')
+    print(f'  {"layout":28s} {"F word, every lane":>19s} {"one data card, worst seat":>26s}')
+    try:
+        for name, slot, fixed in LAYOUTS:
+            SLOT, FIXED = slot, fixed
+            every = scan([W] * NCH)
+            worst = max(scan([W if i == j else np.roll(sil, 13 * i) for i in range(NCH)])
+                        for j in range(NCH))
+            print(f'  {name:28s} {f"{every} / 512":>19s} {f"{worst} / 512":>26s}', flush=True)
+    finally:
+        SLOT, FIXED = keep
+    print('\n  mfspec\'s values copy the F word at states 3 and 7, so they add nothing.')
+    print('  Inverting them fixes that -- but 3 and 7 are half a superframe apart, and')
+    print('  a half-superframe shift maps the pair onto itself, swapped.  With every')
+    print('  channel off-hook the S lane has one zero and impersonates F; locking on')
+    print('  it shifts the receiver by exactly 4, the guard then reads the next lane at')
+    print('  states 7 and 3, and the F word there reads 0,1 -- which is what the')
+    print('  inverted guard wants.  3 and 5 have no such symmetry.')
+
+
 # --------------------------------------------------- 5: slot rules for data
 
 def seats():
@@ -471,7 +524,7 @@ def seats():
     print('  needs the framing word specifically, not merely arbitrary data.')
 
 
-TARGETS = {'word': word, 'locks': locks, 'sfphase': sfphase,
+TARGETS = {'word': word, 'locks': locks, 'sfphase': sfphase, 'guard': guard,
            'seats': seats, 'errors': errors}
 
 if __name__ == '__main__':

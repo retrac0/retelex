@@ -79,6 +79,25 @@ SUPERFRAME PHASE -- can a wrong one be held?
   hook state, with no enumeration required -- but here it is anyway:
   wrong superframe phases admissible over all 64 hook states: 0
 
+GUARD POSITION -- why 3 and 5, not 3 and 7
+
+  False locks over all 64 hook states x 8 skews (512 per cell).  "one
+  data card" is the F word in ONE seat, voice elsewhere -- legal under the
+  slot rule, so it has to be 0 in every seat for the rule to mean anything.
+
+  layout                        F word, every lane  one data card, worst seat
+  3,5 = 1,0  (this spec)                   0 / 512                    0 / 512
+  3,7 = 0,1  (regular)                     1 / 512                    1 / 512
+  3,7 = 1,0  (mfspec values)             384 / 512                    1 / 512
+
+  mfspec's values copy the F word at states 3 and 7, so they add nothing.
+  Inverting them fixes that -- but 3 and 7 are half a superframe apart, and
+  a half-superframe shift maps the pair onto itself, swapped.  With every
+  channel off-hook the S lane has one zero and impersonates F; locking on
+  it shifts the receiver by exactly 4, the guard then reads the next lane at
+  states 7 and 3, and the F word there reads 0,1 -- which is what the
+  inverted guard wants.  3 and 5 have no such symmetry.
+
 SLOT RULES -- what a data card may sit next to
 
   The adversarial content is the F word (11111110) in one lane and a

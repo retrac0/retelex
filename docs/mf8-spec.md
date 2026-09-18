@@ -107,8 +107,28 @@ Both positions are chosen, and both choices are load-bearing:
 - **Different from the F word at those states.** `11111110` is 1 at both state 3
   and state 5, so a data lane carrying the framing word satisfies F and fails the
   guard. `mfspec`'s pads were `1,0` at states 3 and 7 — *exactly* what the word
-  does there — so the guard added no information. Measured: **384 of 512 false
-  locks before this change, 0 after.**
+  does there — so the guard added no information: **384 of 512 false locks** on
+  the F word, against **0** here.
+- **Not half a superframe apart.** The regular choice, 3 and 7, fails on this
+  count even with the values inverted to `0,1`. A 4-state shift maps 3 and 7 onto
+  each other, swapped. With every channel off-hook the S lane has a single zero
+  and can impersonate F, and locking on it shifts the receiver by exactly 4 — so
+  the guard reads the *next* lane at states 7 and 3, where the F word gives `0,1`,
+  which is what the inverted guard wants. One data card in seat 1 then
+  false-locks on 1 of 512 start-ups. That is a layout §5's slot rule permits, and
+  the rule is only worth having if "one data card, any seat, anything" holds with
+  no exceptions. It is the same half-superframe symmetry that sank `mfspec`'s
+  pads, arriving by a different route. 3 and 5 have no such symmetry, and cost
+  one XOR gate more.
+
+| guard | F word in every lane | one data card, worst seat |
+|---|---|---|
+| **3,5 = `1,0` — this spec** | **0 / 512** | **0 / 512** |
+| 3,7 = `0,1` — regular | 1 / 512 | **1 / 512** |
+| 3,7 = `1,0` — `mfspec`'s values | **384 / 512** | **1 / 512** |
+
+(`mf8.py guard`: all 64 hook states × 8 skews per cell.) **Both** 3,7 layouts
+break the slot rule; only 3,5 is clean in every seat.
 
 The decode is three gates. States 3 (`011`) and 5 (`101`) are the only two with
 `q0 = 1` and `q1 ≠ q2`, and at those two the expected value is `q1` itself:
@@ -787,8 +807,9 @@ a floor computed on the same window.
 **And the open question is not in this document.** `line-codes.md` §6 records it:
 differential Manchester and AMI rank opposite ways under impulse noise, §7.2
 reproduces that split on this frame, and which matters depends on the impulse
-rate on the target loops — a plant measurement, with the cliff between 1 and 10
-events per second.
+rate on the target loops — a plant measurement. The curve that converts it into
+a break rate is measured (`line-codes.md` §4.5): 1 break/s at 1.3 impulses/s for
+differential Manchester and 7.3 for AMI, with AMI collapsing between 800 and 900.
 
 ---
 
@@ -799,10 +820,12 @@ python3 mf8.py            frame layer, ~15 min          (mf8.log is the run)
 python3 mf8.py word       why 11111110 and not the alternatives
 python3 mf8.py locks      false locks, every payload class and hook state
 python3 mf8.py sfphase    superframe phase, exhaustive
+python3 mf8.py guard      why the guard is at 3 and 5, not 3 and 7
 python3 mf8.py seats      the slot rule
 python3 mf8.py errors     line errors, acquisition, slip recovery
 
 python3 mf8_line.py       over the line, ~20 min        (mf8_line.log is the run)
+python3 impulse_sweep.py  impulse falloff, ~22 min      (impulse_sweep.log, .csv)
 python3 mf8_line.py clean clean line, both codes, per channel, isolation
 python3 mf8_line.py noise Gaussian sweep
 python3 mf8_line.py plant impulse and attenuation
