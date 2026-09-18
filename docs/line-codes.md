@@ -444,35 +444,43 @@ errors are 5–10% relative, so these are good to two significant figures:
 
 | link reaches | diff. Manchester | AMI | AMI ÷ DM |
 |---|---|---|---|
-| 1 break/s | 1.3 impulses/s | 7.3 | 5.6× |
-| 10 breaks/s | 13 | 77 | 5.9× |
-| 50 breaks/s | 71 | 320 | 4.5× |
-| 0.1% muted | 1.7 | 9.4 | 5.4× |
-| 1% muted | 18 | 95 | 5.3× |
-| 5% muted | 95 | 340 | 3.6× |
-| 10% muted | 200 | 515 | 2.6× |
+| 1 break/s | 1.3 impulses/s | 8.5 | 6.4× |
+| 10 breaks/s | 13 | 80 | 6.3× |
+| 50 breaks/s | 70 | 330 | 4.7× |
+| 0.1% muted | 1.8 | 10 | 5.6× |
+| 1% muted | 18 | 103 | 5.6× |
+| 5% muted | 97 | 356 | 3.7× |
+| 10% muted | 203 | 540 | 2.7× |
+
+One caution on AMI's low-rate column. Between the run with S beside F and this
+one (`mf8-spec.md` §3.4 moved S, which changes the line bits under the same
+seeded noise), AMI's 1 break/s point moved from 7.3 to 8.5 impulses/s while
+differential Manchester's did not move: at AMI's low rates a run holds only a
+few dozen breaks, and that threshold is interpolated between two such points.
+Read AMI's first two rows to one significant figure.
 
 **The two curves are different shapes, not one curve displaced**, so there is no
 single "AMI is N× better":
 
 - **Differential Manchester degrades smoothly.** Each impulse above the comparator
   threshold causes a slip — 0.77 per impulse at low rate — each slip costs
-  ~0.76 ms, and outages add. An independent-outage model built from those two
-  low-rate numbers, `muted = 1 − exp(−r / 1724)`, tracks the measurement to within
-  10–15% all the way to 1000/s. Breaks per impulse falls slowly at high rate (0.68
-  at 100/s, 0.37 at 1000/s) as one outage starts absorbing several impulses.
-- **AMI holds, then collapses.** Breaks per impulse stays near 0.13 — a sixth of
-  differential Manchester — and muting grows gently: 1% at 95/s, 9.4% at 500/s,
-  29.6% at 800/s. At **900/s it never locks.** Its outages lengthen as it nears the
-  edge (0.8 ms per break at low rate, 1.7 ms at 800/s), which is the warning. The
-  same independent-outage model fits it badly and should not be used for it.
+  ~0.73 ms, and outages add. An independent-outage model built from those two
+  low-rate numbers, `muted = 1 − exp(−r / 1779)`, tracks the measurement to within
+  10–15% all the way to 1000/s. Breaks per impulse falls slowly at high rate (0.69
+  at 100/s, 0.39 at 1000/s) as one outage starts absorbing several impulses.
+- **AMI holds, then collapses.** Breaks per impulse stays near 0.13–0.14 — a sixth
+  of differential Manchester — and muting grows gently: 1% at 103/s, 8.6% at
+  500/s, 26.7% at 800/s. At **900/s it is muted 99.9% of the time.** Its outages
+  lengthen as it nears the edge (0.7 ms per break at low rate, 1.7 ms at 800/s),
+  which is the warning. The same independent-outage model fits it badly and
+  should not be used for it.
 
 The likely mechanism for the collapse is F-bit errors reaching the `+2/−1`
 counter's one-in-three trip point, beyond which no 32-frame acquisition succeeds.
 That is a hypothesis consistent with the shape, not a measurement. What is
 measured is where it happens: **between 800 and 900 impulses/s**, which is also
-where the ranking reverses — at 800/s AMI is still muted less (29.6% against
-33.3%), at 900/s it is muted completely.
+where the ranking reverses — at 800/s AMI is still muted less (26.7% against
+32.5%), at 900/s it is muted completely.
 
 **What this replaces.** Earlier versions of this document placed differential
 Manchester's "cliff between 1 and 10 events/s" from four points and 1 s clips.
@@ -555,7 +563,7 @@ margin, and polarity is free.
 **The decision turns on one number nobody here has: the impulse rate on the
 target loops.** The curve is now measured, so that number converts directly into
 a break rate for each code: 1 break/s at 1.3 impulses/s for differential
-Manchester and 7.3 for AMI, 10 breaks/s at 13 and 77 (§4.5). How many clicks a
+Manchester and about 8 for AMI, 10 breaks/s at 13 and 80 (§4.5). How many clicks a
 second a voice circuit can carry is a judgement; how many a given loop will
 produce no longer is. That is a counter on a real pair, and it is worth more than
 any further simulation. It is

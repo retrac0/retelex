@@ -142,11 +142,16 @@ def render(tag, ln, code, src, bits, p, **kw):
         g = g[:len(g) - 2]
         c0 = int(g[0]) // 8
         if shift is None:
-            # First run: wide forward search on one lane.  Bits are only ever
-            # LOST, so the source index runs AHEAD of the recovered index.
+            # First run: wide forward search.  Bits are only ever LOST, so the
+            # source index runs AHEAD of the recovered index.  All six lanes,
+            # over the run's first 4096 frames: one lane is not enough, because
+            # a talker's leading silence is CVSD idle, period 2, and an idle
+            # lane matches at every even offset -- the run is then placed up
+            # to 64 frames off, the shift it pins is one the narrow window
+            # below never recovers from, and the rest of the clip is muted.
             cand = range(max(0, c0 - 64), min(c0 + 6000, nfr))
-            lanes = rb[g + mf8.CBIT[0]][None, :]
-            ref_of = lambda d, n: bits[0][d:d + n][None, :]
+            lanes = np.stack([rb[g[:4096] + mf8.CBIT[j]] for j in range(NCH)])
+            ref_of = lambda d, n: np.stack([bits[j][d:d + n] for j in range(NCH)])
         else:
             # Later runs: a slip loses only a few bits, so the offset sits just
             # past the previous run's.  A narrow window over ALL six lanes aligns

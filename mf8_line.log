@@ -35,15 +35,15 @@ GAUSSIAN NOISE -- noise sd referred to the transmitted peak
   diff Manchester, sd 0.3       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   diff Manchester, sd 0.4       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   diff Manchester, sd 0.5       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, sd 0.6       21.23dB     0.06%     0   +0.00   +0.00   1.6e-05     999ms
-  diff Manchester, sd 0.7       20.76dB     0.46%     5   -0.76   -1.91   3.0e-04     422ms
+  diff Manchester, sd 0.6       21.18dB     0.06%     0   -0.06   -0.33   3.1e-05     999ms
+  diff Manchester, sd 0.7       20.71dB     0.43%     5   -0.85   -1.68   1.2e-04     523ms
 
   AMI, sd 0.0                   21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   AMI, sd 0.3                   21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, sd 0.4                   21.13dB     0.06%     0   -0.11   -0.65   4.7e-05     999ms
-  AMI, sd 0.5                   15.64dB     0.06%     0   -5.59  -10.13   1.3e-03     999ms
-  AMI, sd 0.6                    5.15dB     0.06%     0  -16.09  -23.31   7.1e-03     999ms
-  AMI, sd 0.7                     nandB     4.29%    21    +nan  -28.84   2.2e-02     213ms
+  AMI, sd 0.4                   21.12dB     0.06%     0   -0.12   -0.36   4.7e-05     999ms
+  AMI, sd 0.5                   16.60dB     0.11%     1   -5.35  -10.28   1.5e-03     734ms
+  AMI, sd 0.6                  chopped     0.47%     4       -       -         -     502ms
+  AMI, sd 0.7                  chopped     4.99%    25       -       -         -      99ms
 
 
 IMPULSE NOISE -- damped rings 0.5-3x peak, 15-80 kHz, Poisson
@@ -51,14 +51,14 @@ IMPULSE NOISE -- damped rings 0.5-3x peak, 15-80 kHz, Poisson
   condition                      segSNR      down   LOF  d mean d worst   max BER     clean
   diff Manchester, 0/s          21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   diff Manchester, 1/s          21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, 10/s         21.87dB     0.45%     5   -0.01   -0.04   1.3e-04     476ms
-  diff Manchester, 100/s       chopped     5.57%    71       -       -         -      71ms
-  diff Manchester, 1000/s      chopped    38.75%   386       -       -         -      11ms
+  diff Manchester, 10/s         20.04dB     0.44%     5   -1.83  -10.96   4.9e-04     476ms
+  diff Manchester, 100/s       chopped     5.27%    72       -       -         -      71ms
+  diff Manchester, 1000/s      chopped    38.58%   407       -       -         -      11ms
 
   AMI, 0/s                      21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   AMI, 1/s                      21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, 10/s                     21.22dB     0.11%     1   -0.01   -1.49   2.4e-04     968ms
-  AMI, 100/s                   chopped     1.10%    13       -       -         -     244ms
+  AMI, 10/s                     21.35dB     0.14%     1   -0.82   -3.04   3.5e-04     757ms
+  AMI, 100/s                   chopped     1.02%    13       -       -         -     214ms
   AMI, 1000/s                  no lock   100.00%     0       -       -         -       0ms
 
 ATTENUATION -- signal scaled, sd 0.10 floor and 0.05 hysteresis fixed
@@ -67,11 +67,11 @@ ATTENUATION -- signal scaled, sd 0.10 floor and 0.05 hysteresis fixed
   diff Manchester, atten 1.00    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   diff Manchester, atten 0.50    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   diff Manchester, atten 0.25    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, atten 0.12   chopped    59.25%   462       -       -         -       4ms
+  diff Manchester, atten 0.12   chopped    52.90%   455       -       -         -       6ms
 
   AMI, atten 1.00               21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
   AMI, atten 0.50               21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, atten 0.25               21.13dB     0.06%     0   -0.11   -0.65   4.7e-05     999ms
-  AMI, atten 0.12              chopped    61.65%    52       -       -         -      35ms
+  AMI, atten 0.25               21.12dB     0.06%     0   -0.12   -0.36   4.7e-05     999ms
+  AMI, atten 0.12              chopped    58.16%    53       -       -         -      23ms
 
 

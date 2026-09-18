@@ -68,8 +68,8 @@ six talkers through the whole chain in both line codes add **+0.00 dB**.
 
 Not settled, and not settleable here: **the impulse rate on the target loops.**
 The curve is measured (`impulse_sweep.py`, `docs/line-codes.md` §4.5): each
-impulse costs differential Manchester about 0.77 breaks and AMI about 0.13, so
+impulse costs differential Manchester about 0.77 breaks and AMI about 0.14, so
 differential Manchester reaches one click a second at 1.3 impulses/s and AMI at
-7.3. AMI holds that advantage until it collapses outright between 800 and 900
+about 8. AMI holds that advantage until it collapses outright between 800 and 900
 impulses/s. Which matters depends on the loop, and that is a counter on a real
 pair.

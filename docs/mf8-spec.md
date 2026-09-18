@@ -526,27 +526,37 @@ matrix can only report its own floor.
 | condition | differential Manchester | AMI |
 |---|---|---|
 | sd 0.3 | +0.00 dB, 0 LOF | +0.00 dB, 0 LOF |
-| sd 0.4 | **+0.00 dB**, 0 LOF | −0.11 dB, 0 LOF |
-| sd 0.5 | **+0.00 dB**, 0 LOF | **−5.59 dB**, 0 LOF |
-| sd 0.6 | **+0.00 dB**, 0 LOF | **−16.08 dB**, 0 LOF |
-| sd 0.7 | −0.79 dB, **5 LOF**, 421 ms clean | **no lock** |
+| sd 0.4 | **+0.00 dB**, 0 LOF | −0.12 dB, 0 LOF |
+| sd 0.5 | **+0.00 dB**, 0 LOF | **−5.35 dB**, 1 LOF |
+| sd 0.6 | **−0.06 dB**, 0 LOF | **chopped, 4 LOF** |
+| sd 0.7 | −0.85 dB, **5 LOF**, 523 ms clean | chopped, 25 LOF |
 | impulse 1/s | +0.00 dB, 0 LOF | +0.00 dB, 0 LOF |
-| impulse 10/s | **−0.01 dB**, 5 LOF | −0.01 dB, 1 LOF |
-| impulse 100/s | chopped, 71 LOF | chopped, 13 LOF |
-| atten 0.25 | **+0.00 dB**, 0 LOF | −0.11 dB, 0 LOF |
-| atten 0.12 | chopped, 462 LOF | chopped, 52 LOF |
+| impulse 10/s | −1.83 dB, 5 LOF | −0.82 dB, 1 LOF |
+| impulse 100/s | chopped, 72 LOF | chopped, 13 LOF |
+| atten 0.25 | **+0.00 dB**, 0 LOF | −0.12 dB, 0 LOF |
+| atten 0.12 | chopped, 455 LOF | chopped, 53 LOF |
 
 Differential Manchester is transparent to sd 0.6 where AMI is degraded from 0.4,
 which is `line-codes.md` §3's raw-BER result now heard as audio.
 
-**The interesting column is not which is better but how each fails.** At sd
-0.5–0.6 **AMI never loses frame** — 0 LOF, 0.06% downtime — while the audio falls
-5 to 16 dB. At sd 0.7 differential Manchester's audio inside a clean stretch is
-only −0.79 dB, but the link breaks five times. **AMI degrades in fidelity;
-differential Manchester degrades in continuity.** That is the same split
+**The interesting column is not which is better but how each fails.** AMI's
+audio falls first — 5 dB down at sd 0.5 with the link essentially up — and by
+sd 0.6 it is losing frame as well. Differential Manchester holds both to sd 0.6
+and then breaks: at sd 0.7 its audio inside a clean stretch is only −0.85 dB,
+but the link drops five times in a second. **AMI degrades in fidelity first;
+differential Manchester degrades in continuity only.** That is the same split
 `line-codes.md` §4.3 found under impulse noise, and it holds on a Gaussian floor
 too. For voice behind a mute (§11), continuity is the one that is audible as
 damage, which is a point in AMI's favour that the raw margin figures hide.
+
+**The marginal cells move between noise realizations.** The run before this
+one, with S beside F, had AMI at sd 0.6 with 0 LOF and −16 dB; moving S changed
+the line bits under the same seeded noise, and this run has 4 LOF. Re-running
+the old layout with a second seed also gives 4, and the impulse 10/s cell gives
+5 or 8 LOF by seed under either layout. The guard counter (§4) is not involved:
+on the same received bits it trips 0 times in every cell here, and the frame
+counter alone gives identical counts. What is stable is the order in which the
+two codes fail; the LOF count in any one marginal cell is one draw.
 
 ### 7.3 What this found in the framer
 
@@ -969,17 +979,20 @@ a floor computed on the same window.
   1, 2, 3 is safe by the rule but was not enumerated as a triple. The every-byte
   sweep in §5 is over one data card's content with one other fixed; it is not
   over two arbitrary bytes at once.
-- **The S move, over the line.** §7 was run with S beside F. Moving S changes
-  which bit carries it and nothing about the line code, so none of §7's numbers
-  is expected to move — but `mf8_line.py` and `impulse_sweep.py` have not been
-  re-run on the new layout, and their logs are from the old one.
+- **The S move, over the line — re-run.** `mf8_line.py`, `impulse_sweep.py` and
+  `mf8_render.py` have been re-run on this layout and their logs are from it.
+  The clean-line and low-noise cells are unchanged to the last digit; the
+  marginal cells moved as §7.2 describes, because moving S changes the line
+  bits under the same seeded noise; the impulse thresholds moved within their
+  spread, AMI's low-rate one the most (`line-codes.md` §4.5).
 - **Squelch, mute timing and carrier detect.** §13 specifies them from
   the squelch measurement; none has been exercised on this frame. §7's "chopped" rows are
   exactly the condition a mute has to handle, and what a listener would hear
   through one has not been measured.
 - **Long runs.** §7 is 1.0 s per cell, one seed. Enough to establish that the
   carrier is transparent and to place the failure modes; not enough for outage
-  rates. §4.2's 6.25 s BER runs are the longest anything here has run.
+  rates, and §7.2 shows a marginal cell flipping from 0 to 4 LOF between
+  realizations. §4.2's 6.25 s BER runs are the longest anything here has run.
 - **Repeatered spans.** Nothing here has been through more than one span.
 
 **And the open question is not in this document.** `line-codes.md` §6 records it:
@@ -987,7 +1000,7 @@ differential Manchester and AMI rank opposite ways under impulse noise, §7.2
 reproduces that split on this frame, and which matters depends on the impulse
 rate on the target loops — a plant measurement. The curve that converts it into
 a break rate is measured (`line-codes.md` §4.5): 1 break/s at 1.3 impulses/s for
-differential Manchester and 7.3 for AMI, with AMI collapsing between 800 and 900.
+differential Manchester and about 8 for AMI, with AMI collapsing between 800 and 900.
 
 ---
 
