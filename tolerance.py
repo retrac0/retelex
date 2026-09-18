@@ -18,7 +18,7 @@ level shift, so gain and distortion are reported separately.
 """
 import numpy as np
 from dataclasses import replace
-import audio, cvsd, run
+import audio, cvsd, mf8
 
 RATE = 32000
 SECS = 8.0
@@ -28,7 +28,7 @@ SOURCES = ('speech30.wav', 'spk_600.wav')
 def load(path):
     x, fs = audio.read_wav(path, seconds=SECS)
     x = audio.bandlimit(x, fs)
-    return audio.resample_to(x * (run.NOMINAL_RMS / x.std()), fs, RATE)
+    return audio.resample_to(x * (mf8.NOMINAL_RMS / x.std()), fs, RATE)
 
 
 def trial(x, enc_p, dec_p):
@@ -62,7 +62,7 @@ def tolerance_at(rows, ref, drop=1.0):
 
 
 if __name__ == '__main__':
-    base = run.params(RATE)
+    base = mf8.params(RATE)
     errs = (-0.30, -0.20, -0.15, -0.10, -0.05, -0.02, 0.0,
             0.02, 0.05, 0.10, 0.15, 0.20, 0.30)
     print('Semi-analog CVSD: encoder on one card, decoder on another.')

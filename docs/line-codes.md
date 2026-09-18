@@ -1,6 +1,6 @@
 # Line codes for this carrier — differential Manchester against the field
 
-> **Working record, and one question left open.** `spec.md` §5 chose differential
+> **Working record, and one question left open.** `mf8-spec.md` §9 chose differential
 > Manchester and kept AMI on file "for a span limited by bandwidth rather than
 > attenuation". This document tests that choice against everything the plant can
 > do, and finds a **second** reason to keep AMI on file: under impulse noise the
@@ -9,13 +9,12 @@
 > answerable. The decision now rests on a single number nobody here has: the
 > impulse rate on the target loops.
 >
-> Everything was measured by `mfcmp.py` on the same chain `s4_simple.py` and
-> `framing_review.py` run; `mfcmp.log` is the run. This began as part of
-> `mf-vs-16bit.md` and outgrew it. `frame-rate.md` is the other half.
+> Everything was measured by `linecodes.py` on the same chain `mf8.py` and
+> `linecodes.py` run; `linecodes.log` is the run. This began as part of
+> `mf8-spec.md` and outgrew it. `frame-rate.md` is the other half.
 
-Both codes are carried on the same frames throughout: the 8-bit superframe frame
-(`mfspec.md`, and now `mf8-spec.md`) and the 16-bit 7-channel frame (`spec.md`),
-at 512 kbps on one twisted pair.
+Both codes are carried on the MF8 frame throughout (`mf8-spec.md`), at 512 kbps
+on one twisted pair.
 
 ---
 
@@ -31,16 +30,16 @@ pass. Random payload, constant-0 worst case in brackets where it differs:
 |---|---|---|---|---|
 | Manchester (biphase-L) | 2 | 0.50 | 1.00 | **1.0** |
 | **differential Manchester** | **2** | **0.50** | **1.00** | **1.0** |
-| **AMI** | **3** | **1.00** | 13 (15) | **1.0** |
+| **AMI** | **3** | **1.00** | 15 | **1.0** |
 | CMI | 2 | 0.50 | 1.50 | **1.5** |
-| Miller | 2 | **1.00** | **2.00** | 96 (502) |
-| NRZI | 2 | **1.00** | 14 (16) | 186 (30) |
-| polar NRZ | 2 | 1.00 | 14 (15) | 3168 (26999) |
-| unipolar RZ | 2 | 0.50 | 13.5 (15.5) | 7210 (1250) |
-| unipolar NRZ | 2 | 1.00 | 14 (15) | 14420 (2500) |
+| Miller | 2 | **1.00** | **2.00** | 89 (3) |
+| NRZI | 2 | **1.00** | 16 | 210 (28) |
+| polar NRZ | 2 | 1.00 | 18 (15) | 854 (23001) |
+| unipolar RZ | 2 | 0.50 | 15.5 | 8210 (2250) |
+| unipolar NRZ | 2 | 1.00 | 18 (15) | 16420 (4500) |
 
 **The disparity column decides the candidate set** before noise performance is
-discussed at all. The pair is transformer coupled (`spec.md` §5) and a
+discussed at all. The pair is transformer coupled (`mf8-spec.md` §9) and a
 transformer cannot pass unbounded DC wander:
 
 - bounded, order one bit period — Manchester, **differential Manchester**, **AMI**, CMI → viable
@@ -52,15 +51,15 @@ transformer cannot pass unbounded DC wander:
 **Miller (delay modulation) was the promising one.** It halves the bandwidth like
 AMI *and* bounds its max interval at 2.0 bits, which would make clock recovery
 nearly as cheap as differential Manchester — the best of both, on paper.
-Measured, it swings **96 bit periods of disparity on random payload and 502 on
-constant 0.** That is the classic Miller DC problem, and it is why Miller-squared
+Measured, it swings **89 bit periods of disparity on random payload**, and its
+excursion is payload-dependent rather than bounded. That is the classic Miller DC problem, and it is why Miller-squared
 exists; the patch costs encoder state and is heuristic.
 
 **NRZI** halves the bandwidth, is polarity-blind, and has its run length bounded
 at 16 by the same framing bit that bounds AMI's (§2.1). It fails the same way:
-186 bit periods. Both would need a DC-management layer — scrambling or block
-coding — and `framing-review.md` §8 records why scrambling is unattractive here
-(lockup on all-zero idle onsets, ~2⁻⁷).
+210 bit periods on random payload. Both would need a DC-management layer — scrambling or block
+coding — and scrambling is unattractive here — a self-synchronising scrambler locks up on
+all-zero idle onsets, measured at ~2⁻⁷.
 
 **CMI is the near-miss.** Two levels, DC-free, disparity 1.5, max interval 1.5
 bits. It matches differential Manchester on every axis and beats it on none —
@@ -77,9 +76,8 @@ sufficient.
 duobinary need equalisation or echo cancellation and are not discrete-TTL
 propositions; 4B/5B needs a lookup table and a 25% rate increase, which also
 breaks the power-of-two frame; HDB3 and B8ZS solve a zero-run problem the frame
-has already solved (§2.1). `framing-review.md` §8 notes TRI-TAC ran this same
-codec over *conditioned diphase*, a biphase variant — the closest field
-precedent, and it lands where this design already is.
+has already solved (§2.1). TRI-TAC ran this same codec over *conditioned diphase*, a biphase variant —
+the closest field precedent, and it lands where this design already is.
 
 **So the viable set is {differential Manchester, AMI}**, and the rest of this
 document is those two.
@@ -90,7 +88,7 @@ document is those two.
 
 ### 2.1 Zero runs — the frame already solved it
 
-Worst run of zeros on the line, over all 64 hook states (`mfcmp.py clock`):
+Worst run of zeros on the line, over all 64 hook states (`linecodes.py`):
 
 | payload | longest zero run |
 |---|---|
@@ -108,7 +106,7 @@ one frame in eight.
 
 ### 2.2 Clock recovery — a tank is hard, the crystal is easy
 
-Differential Manchester has a transition every cell, so `spec.md` §6.1's receiver
+Differential Manchester has a transition every cell, so `mf8-spec.md` §9.4's receiver
 has **no clock on the timing path at all**. AMI sends nothing for a zero and must
 flywheel. The reason it is harder is the **dynamic range** of the measurement,
 not the presence of timing:
@@ -130,7 +128,7 @@ periods, the way the monostable rounds a half-cell against a full cell:
 | **3.0%** | 6.5e−02 | 1.5e−01 | **−765** |
 | 5.0% | 4.8e−01 | 1.4e−01 | −3014 |
 
-Error-free to 2%, broken at 3% — the 3.1% predicted. `spec.md` §6.2 says a 1%
+Error-free to 2%, broken at 3% — the 3.1% predicted. `mf8-spec.md` §9.4 says a 1%
 resistor with a 2% C0G capacitor gives **±3%**, so a clockless AMI receiver lands
 exactly *on* its failure point with no margin, where the same components give
 differential Manchester four times the margin it needs. And the failure mode
@@ -162,7 +160,7 @@ so an LC tank does not reach it. That is a ceramic resonator or a crystal, one
 per line rate, on the receiver's rate plug.
 
 **C — an oversampling DPLL off the local 4.096 MHz crystal.** The oscillator
-`spec.md` §4.1 already specifies divides every family rate exactly — 4× / 8× /
+`mf8-spec.md` §9.1 already specifies divides every family rate exactly — 4× / 8× /
 16× / 32× / 64× for 1024 / 512 / 256 / 128 / 64 kbps. Sampling at 8× and running
 an ordinary DPLL on the mark edges, on the worst payload:
 
@@ -173,7 +171,7 @@ an ordinary DPLL on the mark edges, on the worst payload:
 | **5000 ppm** | **240 bits** | **0** | 0 |
 
 **Does a local crystal reintroduce slips?** No, and that is the question that
-matters, because `spec.md` §1 rests on *"no rate mismatch anywhere and slips are
+matters, because `mf8-spec.md` §2 rests on *"no rate mismatch anywhere and slips are
 structurally impossible."* The crystal is a **sampling** reference; the DPLL
 recovers bit phase from the line, so the bit clock stays locked to the far
 transmitter. The bit count is exact at every offset, including 5000 ppm where the
@@ -181,14 +179,14 @@ two clocks drift 240 bits apart. **The DPLL absorbs drift as phase, not as
 bits.** Only a free-running local clock used as the *data* clock would slip.
 
 **It is also not a loss of rate-blindness**, which is the obvious objection and
-is wrong: the receiver already carries a per-rate plug (`spec.md` §2.2,
-`line-receiver.md` §8) for the input filter, classifier, dead time and carrier
+is wrong: the receiver already carries a per-rate plug (`mf8-spec.md` §9.7,
+`mf8-spec.md` §9.4) for the input filter, classifier, dead time and carrier
 detect. On that axis option C is an *improvement* — the per-rate change becomes a
 counter tap, exact and digital, instead of matched RC values. Repeaters are
 unaffected; they slice and re-drive and never see the frame.
 
 **What AMI's clock costs is the receiver's clocklessness, and nothing else.**
-`spec.md` §6.3 already prices that trade: the oversampling DPLL is the *reference*
+`mf8-spec.md` §9.4 already prices that trade: the oversampling DPLL is the *reference*
 receiver there, and the clockless monostable was chosen over it at a cost of 3×
 at the noise edge.
 
@@ -206,7 +204,7 @@ noise together, so the test is inverting the **complete received waveform**:
 
 Bit-identical in every condition for both codes, *including while the link is
 making errors* — the errors themselves are the same errors. End to end through
-the 16-bit frame and the `spec.md` §7 framer, both polarities lock, recover the
+the MF8 frame and its framer, both polarities lock, recover the
 lanes in the right order, and take 0 loss-of-frame events.
 
 The two get there differently. Differential Manchester decides *same-vs-different
@@ -226,7 +224,7 @@ even BPV error detection survives a swap.
 ## 3. Gaussian noise and attenuation — differential Manchester wins
 
 One 1.8 MHz cable, 512 kbps, noise sd referred to the signal **peak** — one
-rail-limited driver, one cable, one noise floor, which is `spec.md` §2.1's "same
+rail-limited driver, one cable, one noise floor, which is `frame-rate.md` §1's "same
 cable" condition. Differential Manchester runs at 1.024 MBaud with a 1.024 MHz
 receive filter and the 0.75-cell monostable; AMI at 512 kBaud with a 512 kHz
 receive filter, which is where its noise-bandwidth advantage comes from.
@@ -246,27 +244,27 @@ bandwidth.** Differential Manchester decides on transition *timing* against a
 an error; AMI decides on *amplitude* against a threshold at half the received
 peak, and at equal peak line voltage that is the smaller margin. The threshold is
 also not where you would put it — 0.8× the estimated peak beats the nominal 0.5×,
-and a 0.6× error costs about a factor of ten. This corroborates `spec.md` §5's
+and a 0.6× error costs about a factor of ten. This corroborates `mf8-spec.md` §9's
 rejection of AMI and adds the mechanism: **AMI's loss is the amplitude decision,
 not the bandwidth.** The AMI figures are generous, because the decoder estimates
 its own peak from the data — free AGC a real receiver would have to build.
 
 **Attenuation, and the cliff is the hysteresis spec.** Signal scaled; the sd 0.10
 noise floor and the 0.05 comparator hysteresis both held fixed, so loss costs
-real margin. (`spec.md` §5.1 notes the cable lowpass models dispersion, not loss,
+real margin. (`mf8-spec.md` §9 notes the cable lowpass models dispersion, not loss,
 which is why attenuation has to be applied separately.)
 
 | atten | hysteresis, % of received | differential Manchester | AMI |
 |---|---|---|---|
 | 1.0 | 5% | 0 LOF | 0 LOF |
-| 0.5 | **10% — `spec.md` §6.1 limit** | 0 LOF | 0 LOF |
+| 0.5 | **10% — `mf8-spec.md` §9.4 limit** | 0 LOF | 0 LOF |
 | 0.25 | **20% — single-span max** | 0 LOF | 0 LOF |
 | 0.12 | **42% — out of spec** | 237 LOF, 69.53% down | 22 LOF, 15.23% down |
 | 0.06 | 83% | 100% down | 100% down |
 
 **The measured cliff sits exactly where the hysteresis leaves its specified
 range.** Error-free at 0.25, where hysteresis is 20% of received amplitude and
-`spec.md` §6.1 allows 20% on a single span; collapsed at 0.12, where it is 42%
+`mf8-spec.md` §9.4 allows 20% on a single span; collapsed at 0.12, where it is 42%
 and the comparator stops responding to real transitions. So the attenuation limit
 is **the comparator, not the noise floor** — the fix is smaller hysteresis or an
 AGC stage, not more launch amplitude.
@@ -275,10 +273,10 @@ AGC stage, not more launch amplitude.
 
 ## 4. Impulse noise — the ranking reverses
 
-`phy.plant_noise`: damped rings at 0.5–3× the signal peak as `repeater.py` uses,
+`phy.plant_noise`: damped rings at 0.5–3× the signal peak as `linecodes.py` uses,
 15–80 kHz, 20–200 µs decay, Poisson arrivals. Each impairment swept alone.
 
-| events/s | code | mfspec framer: unlk / down | 16-bit framer: LOF / down |
+| events/s | code | LOF | time down |
 |---|---|---|---|
 | 0 | either | 0 / 0.1% | 0 / 0.4% |
 | 10 | diff. Manchester | 8 / 1.47% | 7 / 1.24% |
@@ -288,8 +286,8 @@ AGC stage, not more launch amplitude.
 | 1000 | diff. Manchester | 283 / 64.48% | 262 / 52.09% |
 | 1000 | AMI | 262 / 74.87% | 92 / 65.10% |
 
-**With the 16-bit framer, AMI takes 0 loss-of-frame events and 0.40% downtime at
-100 events/s where differential Manchester takes 62 and 7.94%.**
+**AMI takes far fewer loss-of-frame events than differential Manchester at the
+same impulse rate** — the mechanism is §4.1.
 
 ### 4.1 The mechanism is bit count, measured directly
 
@@ -364,8 +362,8 @@ under. Pinning the threshold to the nominal peak changes nothing (4.4e−03 agai
 
 ### 4.3 What it costs the audio
 
-Channel 1 through the full chain, 1.0 s clip, with the `spec.md` §7 framer on the
-16-bit frame — a properly built receiver, so this isolates the line code. segSNR
+Channel 1 through the full chain, 1.0 s clip, with the `mf8-spec.md` §4 framer on the
+MF8 frame and its framer, so this isolates the line code. segSNR
 is scored on the **longest unbroken locked stretch** against the codec over the
 *same window*, because a slip shifts the time base and scoring the whole clip
 against one alignment reports a collapse that is mostly bookkeeping:
@@ -416,7 +414,7 @@ below, so the filter removes AMI's own signal and distorts the pulse amplitudes
 its decision depends on.
 
 **Dead time does nothing**, and it is the obvious knob (0.05–0.30 cell usable per
-`rx_review.py`). Bits lost at 200/s, amplitude 1.5: 1622–1755 at 0.05, 1665–1820
+`linecodes.py`). Bits lost at 200/s, amplitude 1.5: 1622–1755 at 0.05, 1665–1820
 at 0.25, 3789–4135 at 0.45. Flat, then worse. **Dead time rejects edges that
 arrive too early; a stuck comparator removes edges**, so there is nothing for it
 to reject.
@@ -457,7 +455,7 @@ else is a tie or a detail.
 
 ## 6. Where this leaves it
 
-**Keep differential Manchester**, which is `spec.md` §5's choice, and the reason
+**Keep differential Manchester**, which is `mf8-spec.md` §9's choice, and the reason
 to cite is the **amplitude decision** — sd 0.6 against 0.4, plus the attenuation
 behaviour — not the clock. Clocking splits: two wins (no clock hardware, and the
 timing decision that produces the Gaussian margin) against one measured loss
@@ -473,7 +471,7 @@ margin, and polarity is free.
 **The decision turns on one number nobody here has: the impulse rate on the
 target loops**, with the cliff located between 1 and 10 events/s. That is a
 counter on a real pair, and it is worth more than any further simulation. It is
-the same class of gap `spec.md` §12 has on reach.
+the same class of gap `frame-rate.md` §1 has on reach.
 
 ---
 
@@ -511,5 +509,5 @@ How to read the numbers:
 - §4.4's transformer is a first-order high pass standing in for the real
   component's response. It shows the mechanism, not the part.
 - §5's impulse amplitude (0.5–3× peak) and the fixed 0.05 hysteresis are
-  `repeater.py`'s and `rx_review.py`'s values, so the rows are comparable with
-  `repeater.md`. Impulses are not scaled by attenuation, which is conservative.
+  `linecodes.py`'s and `linecodes.py`'s values, so the rows are comparable with
+  `mf8-spec.md` §9.3. Impulses are not scaled by attenuation, which is conservative.

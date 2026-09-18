@@ -30,12 +30,36 @@ Usage:  python3 mf8.py            the whole battery
         python3 mf8.py errors     line errors, acquisition, resync
 """
 import sys, itertools, numpy as np
-import audio, cvsd, run, link
+import audio, cvsd
 
 RATE = 64000
 NCH = 6
 FLEN = 8
 SF = 8
+NOMINAL_RMS = 0.15                # nominal line level; CVSD steps are tuned for it
+SLEW = {16000: 7000.0, 32000: 12000.0, 64000: 16000.0}
+BASE = dict(run_length=3, tau_syl=0.006, tau_int=0.003, companding_db=30.0)
+
+
+def params(rate=RATE):
+    """CVSD parameters for a per-channel rate (channel-card.md's engine)."""
+    return cvsd.CVSDParams(rate=rate, slew=SLEW[rate], **BASE)
+
+
+def impair(line, ber=0.0, seed=1):
+    """Random line bit errors."""
+    out = line.copy()
+    if ber > 0:
+        out[np.random.default_rng(seed).random(out.size) < ber] ^= 1
+    return out
+
+
+def slip(line, at, n=1):
+    """A cycle slip: delete n line bits at bit index `at`.  This is what forces
+    a reframe on a real link, and the only way channel slots can rotate."""
+    return np.concatenate([line[:at], line[at + n:]])
+
+
 SLOT = {0: 0, 1: 1, 2: 2, 4: 3, 6: 4, 7: 5}      # superframe state -> channel
 FIXED = {3: 1, 5: 0}                              # S guard, and the positions matter
 
@@ -167,7 +191,7 @@ def framer(line, skew=0, confirm=32, up=2, dn=1, trip=12, word=0xFE):
 # ----------------------------------------------------------------- payloads
 
 def payloads(nf, secs=None):
-    p = run.params(RATE)
+    p = params(RATE)
     src, fs = audio.read_wav('speech30.wav', seconds=nf / RATE + 0.5)
     x = audio.resample_to(audio.bandlimit(src, fs) * 0.15, fs, RATE)
     sp = cvsd.encode(x, p)[:nf]
@@ -210,7 +234,7 @@ def word():
     print('  spec.md 3.3 lists as "imitated by CVSD silence" and mf-vs-16bit 4.1')
     print('  measured passing 100% of windows on an idle channel.\n')
     nf = 8192
-    p = run.params(RATE)
+    p = params(RATE)
     src, fs = audio.read_wav('speech30.wav', seconds=nf / RATE + 0.5)
     x = audio.resample_to(audio.bandlimit(src, fs) * 0.15, fs, RATE)
     lanes = {'CVSD speech': cvsd.encode(x, p)[:nf],
@@ -346,7 +370,7 @@ def errors():
     print(f'  {"line BER":>9s} {"locked frames":>14s} {"LOF events":>11s} '
           f'{"off-phase":>10s} {"time down":>10s}')
     for ber in (0.0, 1e-4, 1e-3, 1e-2, 3e-2):
-        x = link.impair(ln, ber=ber, seed=5) if ber else ln
+        x = impair(ln, ber=ber, seed=5) if ber else ln
         st = framer(x)
         down = 100.0 * (1.0 - st['frames'] / nf)
         print(f'  {ber:9.0e} {st["frames"]:>14d} {st["lof_events"]:>11d} '
@@ -358,7 +382,7 @@ def errors():
     at = (nf // 2) * FLEN
     print(f'  {"slip":>5s} {"frames misaligned":>19s} {"frames to relock":>18s}')
     for k in range(1, FLEN):
-        sl = link.slip(ln, at, n=k)
+        sl = slip(ln, at, n=k)
         st = framer(sl)
         pos = st['pos']
         pre, post = pos[pos < at], pos[pos >= at]
@@ -384,7 +408,7 @@ def seats():
     (S,C1), (C1,C2) ... (C5,C6), (C6, next frame's F).
     """
     nf = 3000
-    p = run.params(RATE)
+    p = params(RATE)
     src, fs = audio.read_wav('speech30.wav', seconds=nf / RATE + 0.5)
     x = audio.resample_to(audio.bandlimit(src, fs) * 0.15, fs, RATE)
     sp = cvsd.encode(x, p)[:nf]

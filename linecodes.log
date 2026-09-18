@@ -1,0 +1,300 @@
+LINE CODES ON THE MF8 FRAME -- structural properties, measured
+  Intervals and disparity in BIT periods.  min interval sets the max
+  fundamental; max interval sets what clock recovery must coast; the
+  disparity swing is the DC wander a transformer has to pass.
+
+  --- payload: random  (line ones density 0.513)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00    15.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    18.00    +0.513    16419.5
+  unipolar RZ                     2     0.50    15.50    +0.257     8209.5
+  polar NRZ                       2     1.00    18.00    +0.026      854.0
+  NRZI                            2     1.00    16.00    +0.003      210.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     2.00    -0.001       89.0
+
+  --- payload: const0  (line ones density 0.141)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00    15.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    15.00    +0.141     4499.5
+  unipolar RZ                     2     0.50    15.50    +0.070     2249.5
+  polar NRZ                       2     1.00    15.00    -0.719    23001.0
+  NRZI                            2     1.00    16.00    +0.000       28.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     1.50    +0.000        3.0
+
+  --- payload: const1  (line ones density 0.891)
+  code                       levels  min int  max int   mean DC  disparity
+  Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
+  differential Manchester         2     0.50     1.00    +0.000        1.0
+  AMI                             3     1.00     2.00    +0.000        1.0
+  unipolar NRZ                    2     1.00    23.00    +0.891    28499.5
+  unipolar RZ                     2     0.50     2.50    +0.445    14249.5
+  polar NRZ                       2     1.00    23.00    +0.781    25000.0
+  NRZI                            2     1.00     3.00    +0.000        4.0
+  CMI                             2     0.50     1.50    +0.000        1.5
+  Miller                          2     1.00     2.00    -0.016      501.5
+
+  The disparity column decides the candidate set, because the pair is
+  transformer coupled (mf8-spec.md 9.3) and a transformer cannot pass
+  unbounded DC wander.  Bounded at order one bit period: Manchester,
+  differential Manchester, AMI, CMI.  Miller and NRZI halve the
+  bandwidth and would be the interesting candidates, and both fail
+  here.  Everything else fails by orders of magnitude.
+
+ZERO RUNS -- the frame bounds them, so AMI needs no zero substitution
+  Worst run of zeros on the line, over all 64 hook states.
+
+  const0          15
+  const1           2
+  silence          4
+  speech           2
+  random          11
+
+  worst over everything: 15 bits.
+  F is 0 one frame in eight, so a mark lands at worst every 2 frames =
+  16 line bits whatever the payload does.  B8ZS substitutes at 8 zeros
+  and HDB3 at 4, so neither is needed -- the framing bit does the job.
+
+
+OPTION B -- analog tank (rectify, resonator, flywheel)
+  Sampling phase trimmed once at nominal: phase 0, BER 0.0e+00.
+  BER on the worst payload (constant 0), tank detuned:
+
+       Q  amp left    0.00%    0.10%    0.25%    0.50%    1.00%    2.00%
+      20      0.09 1.7e-01 1.7e-01 1.7e-01 1.9e-01 1.9e-01 1.9e-01
+      50      0.39 1.6e-02 1.6e-02 1.6e-02 4.7e-02 6.2e-02 1.9e-01
+     100      0.62      ok      ok      ok 1.6e-02 6.2e-02 2.3e-01
+     200      0.79      ok      ok      ok 4.7e-02 1.1e-01 2.2e-01
+     500      0.91      ok      ok 1.6e-02 6.3e-02 9.4e-02 1.8e-01
+
+  Two effects pull opposite ways, and the second binds:
+    coasting decay over 15 idle cycles = exp(-pi*15/Q)  -> wants Q high
+    static phase shift when detuned    = atan(2*Q*df/f) -> wants Q low
+  The measured edge sits at df/f ~ 1/(2Q).  A tank wants Q ~ 100 AND
+  tuning inside ~0.25%: a ceramic resonator, not an LC.
+
+WHY AMI NEEDS A TIME REFERENCE AND DIFFERENTIAL MANCHESTER DOES NOT
+  It is the DYNAMIC RANGE of the timing measurement:
+
+    diff Manchester  intervals are 0.5 or 1.0 cell  -> 2:1, +/-13% ok
+    AMI              gaps run 1 to 16 bit periods   -> 16:1, needs
+                     tol < 0.5/16 = 3.1%
+
+OPTION A -- no clock at all: quantise the gap between marks
+
+   RC tol  random BER   count |  const 0 BER    count
+     0.0%     0.0e+00      -2 |      0.0e+00      -15
+     0.5%     0.0e+00      -2 |      0.0e+00      -15
+     1.0%     0.0e+00      -2 |      0.0e+00      -15
+     2.0%     0.0e+00      -2 |      0.0e+00      -15
+     3.0%     0.0e+00      -2 |      0.0e+00      -15
+     5.0%     4.2e-01     -31 |      2.4e-01     -764
+    10.0%     4.9e-01    -922 |      2.5e-01    -5264
+
+  Error-free to 2%, broken at 3% -- the 3.1% predicted.  A 1% resistor
+  and a 2% C0G give +/-3%, so a clockless AMI receiver sits ON its
+  failure point.  And it fails by SLIPPING: a mis-rounded gap emits the
+  wrong number of zeros, handing back the one property (4) that makes
+  AMI worth considering.  Not a real option.
+
+
+OPTION C -- oversampling DPLL off the local 4.096 MHz crystal
+  4.096 MHz divides every family rate exactly: 1024 kbps 4x, 512 kbps 8x, 256 kbps 16x, 128 kbps 32x, 64 kbps 64x
+
+  The crystal is a SAMPLING reference; the DPLL recovers bit phase
+  from the line, so the bit clock stays locked to the far transmitter.
+
+   crystal offset   drift over clip   bits emitted - sent       BER
+             0 ppm            0.0 bits                     0   0.0e+00
+           100 ppm            4.8 bits                     0   0.0e+00
+           200 ppm            9.6 bits                     0   0.0e+00
+          1000 ppm           48.0 bits                     0   0.0e+00
+          5000 ppm          240.0 bits                     0   0.0e+00
+
+  The bit count is exact at every offset.  The DPLL absorbs drift as
+  PHASE, not as bits, so mf8-spec.md 2's slip-free property survives:
+  a local crystal used as a SAMPLING reference does not cause slips.
+  What it costs is the receiver's clocklessness, and nothing else.
+
+POLARITY -- is AMI blind to a tip/ring swap, as biphase is?
+
+  A swap inverts everything arriving differentially, so the test is to
+  invert the complete received waveform, impairments included.
+
+  condition              code              identical  bits differing
+  clean                  diff Manchester         YES               0
+  clean                  AMI                     YES               0
+  noise sd 0.4           diff Manchester         YES               0
+  noise sd 0.4           AMI                     YES               0
+  noise sd 0.6           diff Manchester         YES               0
+  noise sd 0.6           AMI                     YES               0
+  impulse 100/s          diff Manchester         YES               0
+  impulse 100/s          AMI                     YES               0
+  attenuated 0.25x       diff Manchester         YES               0
+  attenuated 0.25x       AMI                     YES               0
+
+  All conditions bit-identical: True.
+
+  Differential Manchester decides same-vs-different half cells, and
+  inversion flips both.  AMI decides |x| > thresh*peak, so the sign
+  never enters -- and a full-wave front end is MANDATORY for AMI
+  anyway, because marks arrive as both + and - pulses.  Polarity
+  neutrality falls out of the receiver you must build regardless.
+  The alternation rule is symmetric too, so even bipolar-violation
+  error detection survives a swap.
+
+LINE IMPAIRMENTS, SWEPT INDEPENDENTLY -- random data, both codes
+  16000 frames x 4 seeds per cell.  Each impairment applied
+  on its own.  "raw BER" is the PHY alone; a slip re-phases the stream,
+  so raw BER reads high once slips start -- read LOF and down % then.
+
+  GAUSSIAN FLOOR, sd referred to the transmitted peak
+
+          sd code                raw BER    LOF   down %
+           0 diff Manchester     0.0e+00      0    0.25%
+           0 AMI                 0.0e+00      0    0.24%
+         0.4 diff Manchester     0.0e+00      0    0.25%
+         0.4 AMI                 3.3e-05      0    0.25%
+         0.5 diff Manchester     0.0e+00      0    0.25%
+         0.5 AMI                 8.8e-04      0    0.29%
+         0.6 diff Manchester     2.0e-06      0    0.25%
+         0.6 AMI                 7.2e-02      2    0.63%
+         0.7 diff Manchester     2.5e-01      7    0.80%
+         0.7 AMI                 2.5e-01     23    4.39%
+
+  IMPULSE NOISE, damped rings 0.5-3x peak, 15-80 kHz, Poisson
+
+         imp code                raw BER    LOF   down %
+           0 diff Manchester     0.0e+00      0    0.25%
+           0 AMI                 0.0e+00      0    0.24%
+          10 diff Manchester     3.0e-01      9    0.88%
+          10 AMI                 5.3e-02      3    0.50%
+         100 diff Manchester     4.7e-01     69    5.47%
+         100 AMI                 2.3e-01     16    1.56%
+        1000 diff Manchester     4.9e-01    366   40.97%
+        1000 AMI                 4.7e-01     42   84.71%
+
+  ATTENUATION, sd 0.10 floor and 0.05 hysteresis held fixed
+
+       atten code                raw BER    LOF   down %
+           1 diff Manchester     0.0e+00      0    0.25%
+           1 AMI                 0.0e+00      0    0.25%
+         0.5 diff Manchester     0.0e+00      0    0.25%
+         0.5 AMI                 0.0e+00      0    0.25%
+        0.25 diff Manchester     0.0e+00      0    0.25%
+        0.25 AMI                 3.3e-05      0    0.25%
+        0.12 diff Manchester     5.0e-01    441   57.85%
+        0.12 AMI                 4.3e-01     45   65.35%
+
+  Differential Manchester holds a Gaussian floor to sd 0.6 where AMI is
+  degraded from 0.4, and the attenuation cliff lands where the 0.05
+  hysteresis passes 20% of the received amplitude (mf8-spec.md 9.3).
+  Under IMPULSE the ranking reverses -- see 6 for the mechanism.
+
+IMPULSE SUSCEPTIBILITY
+
+  The rings are 15-80 kHz against a 512 kHz symbol rate, so each acts
+  as a slowly varying OFFSET on the timescale of a bit.  With the signal
+  at +/-1 and hysteresis h, an offset of magnitude A sticks the
+  comparator when A > 1-h, and every transition while that holds is
+  lost.  Each event is a DAMPED SINUSOID with a randomly signed
+  amplitude, so it swings BOTH polarities many times.
+
+  model check, 0.5 s at 200/s: min -3.165  max +2.859  mean -1.27e-04
+  below -0.1: 0.0193   above +0.1: 0.0191   -- symmetric
+
+  Bits gained or lost vs bits sent, 200 events/s, 4 seeds.  A count
+  change is a SLIP: the frame re-phases and must reacquire.
+
+   amplitude                    diff Manchester   AMI: count  AMI: raw BER
+        0.50           [-647, -834, -828, -514]  [1, -4, -2]       3.0e-01
+
+  (the amplitude sweep proper)
+
+   amplitude     diff Manchester: bits lost   AMI: bits lost
+        0.50                     [647, 834]           [2, 4]
+        0.80                     [647, 834]           [2, 4]
+        0.95                     [647, 834]           [2, 4]
+        1.10                     [647, 834]           [2, 4]
+        1.50                     [647, 834]           [2, 4]
+        3.00                     [647, 834]           [2, 4]
+
+  MITIGATIONS
+
+  hysteresis  threshold 1-h   bits lost, 200/s amp 0.9
+        0.02           0.98                 [632, 802]
+        0.05           0.95                 [647, 834]
+        0.10           0.90                 [696, 885]
+        0.20           0.80                [816, 1032]
+  -> hysteresis moves the threshold the WRONG way, so the
+     impulse-optimal comparator is a tight one.
+
+   dead time     bits lost, 200/s
+        0.05           [630, 815]
+        0.15           [632, 819]
+        0.25           [647, 834]
+        0.35           [740, 982]
+        0.45         [1093, 1433]
+  -> dead time rejects edges that arrive too EARLY; a stuck comparator
+     REMOVES edges, so there is nothing for it to reject.
+
+   HP corner   diff Manchester LOF   AMI LOF   (100 imp/s)
+        none                    16         4
+      60 kHz                     4         0
+     120 kHz                     4         0
+     200 kHz                     5         0
+  -> AC coupling helps differential Manchester; the lowest signal
+     fundamental is 256 kHz so a 120 kHz corner is free.  AMI's
+     spectrum reaches lower, so the same filter costs it signal.
+
+THE FAMILY.  F + S + N channels must be a power of two, so N = 2, 6, 14
+
+   frame   N  per-ch    line      baud  capacity  reach  superframe
+      4b   2     16k     64k    0.128M       32k  2.00x        4 fr
+      4b   2     32k    128k    0.256M       64k  1.41x        4 fr
+      4b   2     64k    256k    0.512M      128k  1.00x        4 fr
+
+      8b   6     16k    128k    0.256M       96k  1.41x        8 fr
+      8b   6     32k    256k    0.512M      192k  1.00x        8 fr
+      8b   6     64k    512k    1.024M      384k  0.71x        8 fr
+
+     16b  14     16k    256k    0.512M      224k  1.00x       16 fr
+     16b  14     32k    512k    1.024M      448k  0.71x       16 fr
+     16b  14     64k   1024k    2.048M      896k  0.50x       16 fr
+
+  Reach is the sqrt(f) law scaled to a 256 kbps reference; the ratios
+  are sound and the kilometres are not measured.
+
+  Read it by COLUMN: the line rate sets reach, the frame length decides
+  how that line is divided.  64 kbps channels are available at ANY
+  reach -- two of them at 1.00x, six at 0.71x.
+
+WHAT THE PER-CHANNEL RATE COSTS THE AUDIO
+
+   per-channel    segSNR  vs 64 kbps
+          16k  10.61 dB   -12.37 dB
+          32k  16.18 dB    -6.80 dB
+          64k  22.98 dB    +0.00 dB
+
+  32 kbps is the quality knee, 16 kbps is a real sacrifice, 64 kbps
+  is comfortable -- and only 64 kbps is one-for-one with a DS0
+  (mf8-spec.md 6): the 8-frame superframe IS the octet counter, and at
+  a 64 kHz frame rate the superframe rate is 8 kHz exactly.
+
+REACH IS NOT FREE EITHER -- the same span at three line rates
+  Attenuation goes as sqrt(f), referenced to 12 dB at 256 kbps.
+
+     line    loss  amplitude  hysteresis % of rx
+     128k    8.5dB      0.376                 13%
+     256k   12.0dB      0.251                 20%
+     512k   17.0dB      0.142                 35%
+
+  mf8-spec.md 9.3 specifies hysteresis at or under 10% of received, and
+  20% is the single-span maximum, so the 512 kbps column is already
+  outside it on this span.  That is the real case for a lower rate.
+

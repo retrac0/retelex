@@ -1,6 +1,0 @@
-(v5) 64k, 16.384 MHz (sd in 32.768 MHz units), 9 spans, terminal lp2 128k: window
-  rep   lp2 128k sd 0.707: 9 spans BER 0 win 0.60-0.85 lock True lof 0  (5.0s)
-  rep   lp2 128k sd 1.000: 9 spans BER 0 win 0.65-0.80 lock True lof 0  (4.9s)
-  rep lp2 2.048M sd 0.707: 9 spans BER 0 win 0.60-0.90 lock True lof 0  (5.0s)
-  rep lp2 2.048M sd 1.000: 9 spans BER 0 win 0.60-0.85 lock True lof 0  (4.7s)
-[v5 done in 20s]

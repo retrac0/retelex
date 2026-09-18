@@ -52,10 +52,3 @@ To entirely mitigate the risk of false-locking (mimic framing) on quiet CVSD cha
    * A full synchronization lock is granted only if Frame 3 == 1 and Frame 7 == 0.
       * If a signature mismatch occurs, the receiver must trigger a clock-swallow pulse to shift phase by 1 bit and reset the hunt routine.
    
-Would you like me to add:
-
-* The schematic pinouts for the 74LS151 and 74LS93 ICs realizing this layout?
-* A specification block for the receiver clock recovery tolerances?
-* A detailed truth table for the logic gate array handling the Frame 3/7 pad routing?
-
-

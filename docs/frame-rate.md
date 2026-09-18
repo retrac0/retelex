@@ -8,17 +8,15 @@
 > two of them at 1.00× reference, six at 0.71×. What distance costs is channel
 > count, not rate.
 >
-> Measured by `mfcmp.py framerate`; `mfcmp.log` is the run. `mf-vs-16bit.md` is
-> the frame-format review this came out of, `line-codes.md` the line-code half,
-> and `mf8-spec.md` the design that adopts the conclusion.
+> Measured by `linecodes.py`; `linecodes.log` is the run. `line-codes.md` is the
+> line-code half of the same question, and `mf8-spec.md` the design that adopts
+> the conclusion.
 
 ---
 
 ## 1. The family
 
-F + S + N channels must be a power of two, so **N = 2, 6, 14** — more channels
-per bit than the 16-bit frame's `2 + 2N` (N = 1, 3, 7), because signalling is
-sub-commutated.
+F + S + N channels must be a power of two, so **N = 2, 6, 14**.
 
 | frame | N | per-ch | line | baud | capacity | reach | superframe |
 |---|---|---|---|---|---|---|---|
@@ -32,7 +30,7 @@ sub-commutated.
 | 16 b | 14 | 32k | 512k | 1.024 M | 448k | 0.71× | 16 fr |
 | 16 b | 14 | 64k | 1024k | 2.048 M | 896k | 0.50× | 16 fr |
 
-Reach is the √f law scaled to `spec.md` §2.1's 256 kbps reference — the ratios
+Reach is the √f law scaled to a 256 kbps reference — the ratios
 are sound, the kilometres are not measured.
 
 **Read it by column, not by row.** "64 kHz or 32 kHz" is the wrong question,
@@ -57,9 +55,9 @@ CVSD alone, 2 s clip, one talker:
 | 32k | 10.04 dB | −5.48 dB |
 | 64k | 15.52 dB | — |
 
-Absolute values are clip-dependent — `spec.md` §2.1's seven-talker figures are
-the ones to specify against: 10.8 / 17.4 / 23.3 dB, worst talker 9.0 / 14.9 /
-19.7. Either way the shape is the same: **32 kbps is the quality knee, 16 kbps is
+Absolute values are clip-dependent; earlier seven-talker measurements gave
+10.8 / 17.4 / 23.3 dB, worst talker 9.0 / 14.9 / 19.7, and those are the ones to
+specify against. Either way the shape is the same: **32 kbps is the quality knee, 16 kbps is
 a real sacrifice, 64 kbps is comfortable.**
 
 ---
@@ -72,7 +70,7 @@ loss. Referenced to 12 dB at 256 kbps:
 | line | loss | amplitude | hysteresis as % of received |
 |---|---|---|---|
 | 128k | 8.5 dB | 0.376 | 13% |
-| 256k | 12.0 dB | 0.251 | **20% — `spec.md` §6.1's single-span limit** |
+| 256k | 12.0 dB | 0.251 | **20% — the single-span limit** |
 | 512k | 17.0 dB | 0.142 | **35% — outside spec** |
 
 On this span the 512 kbps mode is already outside the hysteresis specification,
@@ -112,9 +110,8 @@ is the result; the magnitudes are thin and should not be quoted as rates.)
 
 A 64 kbps slot is a DS0 rate, so a data card at a 64 kHz frame rate is a G.711
 pipe. But rate alone is not enough — PCM needs **octet alignment** to know where
-a sample starts, and `data-card.md` records that the 16-bit frame's pipe is *"not
-octet-aligned — the framer establishes bit alignment and slot identity, and
-nothing coarser."*
+a sample starts, and a framer that establishes bit alignment and slot identity
+establishes nothing coarser.
 
 This frame fixes that for nothing, because **the superframe counter is already
 the octet counter.** It has 8 phases, a channel takes one bit per frame, so
@@ -142,8 +139,8 @@ No other combination lands on 8 kHz:
 | **6** | **8 frames** | **8** | **8 kHz — one PCM sample** |
 | 14 | 16 frames | 16 | 4 kHz — two octets |
 
-**The catch is serious.** `mf-vs-16bit.md` §4.3 measured that `mfspec.md`'s
-superframe phase is admitted wrong for 56 of 64 hook states. There that
+**The catch is serious, and it is why the header matters.** `mfspec.md`'s
+superframe phase was admitted wrong for 56 of 64 hook states, which there
 misroutes signalling. If octet alignment rides the same phase, a wrong phase
 **rotates every PCM sample** — garbage audio on a link that is otherwise
 bit-perfect. Carrying PCM on the superframe promotes that from a signalling bug
@@ -184,10 +181,10 @@ python3 mfcmp.py framerate
 
 Caveats:
 
-- §1's reach column is the √f law scaled from `spec.md` §12's single unmeasured
+- §1's reach column is the √f law scaled from §1's single unmeasured
   anchor. The ratios are sound and the kilometres are not.
 - §2's segSNR is one talker on a 2 s clip, so the absolutes differ from
-  `spec.md` §2.1's seven-talker figures — use those to specify against.
+  §1's seven-talker figures — use those to specify against.
 - §3.1 is 0.25 s × 4 seeds at one impulse rate on one assumed span loss. The
   ordering is the finding; the magnitudes are thin.
 - The 4-bit and 16-bit frame lengths are arithmetic here. Only N = 6 has a

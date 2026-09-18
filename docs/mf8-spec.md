@@ -6,12 +6,12 @@ and octet-aligned, so it takes a CVSD voice card, a synchronous data card, or a
 G.711 PCM stream.
 
 Every number here was measured by `mf8.py` unless it is marked as analysis.
-§14 lists what has not been measured.
+§15 lists what has not been measured.
 
 > **Status: proposed, validated at the frame layer.** This is `mfspec.md`'s frame
 > with the header replaced. The original header was measured broken in three
-> independent ways (`mf-vs-16bit.md` §§4.1–4.3) and none of those failures
-> survives here. The physical layer is `spec.md`'s unchanged, and is not
+> independent ways (this document §§4.1–4.3) and none of those failures
+> survives here. The physical layer is this document's unchanged, and is not
 > re-measured; `line-codes.md` records the one open question about it.
 
 ---
@@ -25,7 +25,7 @@ Every number here was measured by `mf8.py` unless it is marked as analysis.
 | Wrong superframe phases admitted | **56 of 64 hook states** | **0** |
 | Acquisition | 8 alternating frames + one guard | **32 consecutive good frames** |
 | Tracking after lock | *unspecified* | **+2/−1, floor 0, trip 12** |
-| Squelch / mute | *absent* | **required, §12** |
+| Squelch / mute | *absent* | **required, §13** |
 | Data slot rules | *absent* | **§5** |
 
 The 8-bit geometry, the 6 × 64 kbps payload, the sub-commutated signalling and
@@ -160,7 +160,7 @@ on trip    :  not locked, slip one line bit, acquire again.
 
 **The superframe phase is read, not searched.** That makes acquisition a search
 over 8 bit alignments rather than 8 × 8 combinations, and it is what lets slip
-recovery be 8–15 frames (§4.2). The 32-frame count is `spec.md` §7.2's.
+recovery be 8–15 frames (§4.2). The 32-frame count is §4's.
 
 **Why +2/−1 and not +1/−1.** A `+1/−1` counter trips only when more than *half*
 of frames fail. At a wrong alignment this check fails at almost exactly half —
@@ -168,7 +168,7 @@ the word is seven ones and one zero, so a random payload lane matches it 50% of
 the time — and the counter random-walks instead of climbing. Measured over the
 line at 10 impulses/s, a transient false lock held **28 050 frames** with
 `+1/−1`. `+2/−1` trips above a *third*, which that 50% clears easily, and
-`spec.md` §7.3 measured `+2/−1` as the correct pairing for a **predictive**
+§4 measured `+2/−1` as the correct pairing for a **predictive**
 check, where one line error spoils one frame rather than four. §4.2 shows it
 costs nothing in false reframes.
 
@@ -206,7 +206,7 @@ exhaustively. At a wrong alignment the F check lands on one lane and the guard o
 the next, so with both lanes unconstrained there is nothing left to gate them.
 **No confirmation count reaches it** — the match is exact, not probabilistic — so
 it is closed by a slot rule instead. That is §5, and it is the one real cost this
-frame carries that the 16-bit frame does not.
+frame carries.
 
 Acquisition is **37–86 frames, 0.58–1.3 ms** at a 64 kHz frame rate.
 
@@ -222,9 +222,9 @@ Acquisition is **37–86 frames, 0.58–1.3 ms** at a 64 kHz frame rate.
 | 1e−02 | 399 937 | **0** | **0** | 0.02% |
 | **3e−02** | 399 937 | **0** | **0** | 0.02% |
 
-Zero loss-of-frame events to 3e−02, which is `spec.md` §7.3's standard. For
+Zero loss-of-frame events to 3e−02, which is §4's standard. For
 contrast, `mfspec.md` with no counter took **10 011 unlocks and 60.7% downtime
-at 1e−02** on the same class of line (`mf-vs-16bit.md` §7.2).
+at 1e−02** on the same class of line (§4).
 
 Recovery after an induced slip, every slip size:
 
@@ -232,8 +232,7 @@ Recovery after an induced slip, every slip size:
 |---|---|---|---|---|---|---|---|
 | frames misaligned | 8 | 12 | **15** | 12 | 11 | 13 | 13 |
 
-**Worst case 15 frames = 0.23 ms**, against the 16-bit frame's 0.94 ms
-(`spec.md` §7.3) — four times *better*, not worse. Reading the superframe phase
+**Worst case 15 frames = 0.23 ms.** Reading the superframe phase
 from the marker rather than searching for it is what does this: there is no
 second phase to re-find, so recovery costs little more than re-finding the bit
 alignment. (An earlier nested-search version of §4 measured 35–176 frames here.)
@@ -265,11 +264,12 @@ Note the third row: **ordinary data is safe in every seat.** The hole needs the
 framing word specifically, not merely arbitrary content, which is why the rule is
 about adjacency and not about scrambling.
 
-This is the same shape of rule `framing-review.md` §5 found for the 4-bit word
-("any seat, but never two adjacent"). The 16-bit frame avoided needing it by
-strapping a data card's A bit high (`spec.md` §3.4) — a bit this frame does not
-have, because signalling is sub-commutated. **That is the price of §2's
-efficiency, stated plainly: three data cards of six, not six.**
+This is the same shape of rule a 4-bit static framing word needs ("any seat, but
+never two adjacent"). A frame that carries a signalling bit in *every* frame can
+avoid needing it, by strapping that bit high so one half of the check is never
+arbitrary data — a bit this frame does not have, because signalling is
+sub-commutated into the superframe. **That is the price of §2's efficiency,
+stated plainly: three data cards of six, not six.**
 
 ---
 
@@ -290,10 +290,10 @@ rate exactly**, so one superframe carries one sample. A PCM card is a shift
 register clocked by the frame clock and transferred at state 7 — one 74HC164 and
 a latch per channel.
 
-This matters because `data-card.md` records that the 16-bit frame's pipe is *"not
-octet-aligned — the framer establishes bit alignment and slot identity, and
-nothing coarser."* Here it is aligned, for no extra logic, and the slot is a true
-DS0 rather than merely a 64 kbps pipe.
+This matters because a framer that establishes bit alignment and slot identity
+establishes nothing coarser, so a plain synchronous pipe is not octet-aligned and
+the endpoints must find their own byte phase. Here it is aligned, for no extra
+logic, and the slot is a true DS0 rather than merely a 64 kbps pipe.
 
 **It depends entirely on §3.3.** If the superframe phase could be held wrong — as
 it could in `mfspec.md` — a wrong phase would rotate every PCM sample and produce
@@ -332,7 +332,7 @@ Per channel, differential Manchester:
 channels is the talkers' own crest factors, not slot position — the Δ row is
 +0.00 for all six. Isolation: off-diagonal 0.134 against a source-correlation
 floor of **0.129 measured on the same 1.0 s window**, an excess of +0.005. (The
-0.009 floor in `seven-channel.md` §4.2 is for 30 s clips; a short window
+0.009 floor in §9.3 is for 30 s clips; a short window
 correlates more by chance, and reading an off-diagonal against a mismatched floor
 is the error that section records.) With BER identically zero the recovered bits
 *are* the transmitted bits, so crosstalk is exactly zero by construction and the
@@ -391,7 +391,7 @@ F + S + N channels must be a power of two, so **N = 2, 6, 14**.
 | 16 b | 14 | 32k | 512k | 1.024 M | 448k | 0.71× | 16 fr |
 
 **This spec is N = 6 at 64 kHz.** It is the only mode that is one-for-one with a
-DS0 (§6). Reach is the √f law scaled to `spec.md` §2.1's reference — ratios
+DS0 (§6). Reach is the √f law scaled to `frame-rate.md` §1's reference — ratios
 sound, kilometres not measured. `frame-rate.md` analyses the choice; the short
 version is that line rate sets reach and frame length decides how it is divided,
 so 64 kbps channels are available at any reach, at two of them for 1.00× or six
@@ -404,7 +404,7 @@ guard positions, and the mis-strap case between them is **not measured**.
 
 ## 9. Line code — differential Manchester
 
-Unchanged from `spec.md` §5, and not re-measured; the frame layout cannot affect
+Unchanged from §9, and not re-measured; the frame layout cannot affect
 the line code.
 
 - Transition at **every** cell boundary. This is the clock.
@@ -460,7 +460,7 @@ stages of a '393 — tens of nanoseconds against a settling budget of half a cel
 
 ### 9.2 Encoder circuit — one gate, one flip-flop
 
-`line-transmitter.md` §5, unchanged. Let `H` be the half-cell phase (0 in the
+§9.2, unchanged. Let `H` be the half-cell phase (0 in the
 first half of a line cell, 1 in the second) and `HB` the half-bit clock:
 
 ```
@@ -507,7 +507,7 @@ tolerates 20%; **specify ≤ 10%**, which is 0.5 V for 50 mV of hysteresis.
 
 ### 9.4 Decoder circuit — no PLL, no clock
 
-`line-receiver.md` §4, unchanged. The receiver times the gap between transitions
+§9.4, unchanged. The receiver times the gap between transitions
 against two thresholds. There is no clock anywhere on the receive timing path.
 
 ```
@@ -619,12 +619,12 @@ set per direction.
 | Driver | 75176 | §8.1 |
 | **Total** | **≈ 6 packages** | |
 
-The framing bits are **mux inputs, not an override**. `line-transmitter.md` §2
+The framing bits are **mux inputs, not an override**. §9.2
 puts the framing field last so the mux address needs no arithmetic, and pays for
 it with an S/T select gate, a framing-data AND and an output selector. Here the
 address is still offset-free *and* the override path disappears: channel *n*
 wires to input *n*+1, which is layout rather than logic. A gate-level model
-reproduces the frame bit-for-bit (`mf-vs-16bit.md` §3).
+reproduces the frame bit-for-bit (§4).
 
 **One race to watch.** F is a superframe-counter output read at bit-count 0,
 which is when that counter has just ticked. Clock the superframe counter off the
@@ -649,13 +649,72 @@ opposite edge, or from the 7→0 transition of the frame counter.
 | **Total** | **≈ 9 packages** |
 
 Everything except the interval classifier is shared with, or the same shape as,
-`line-receiver.md`'s. The framer is about five of those nine, which is
-`spec.md` §7.5's figure for the 16-bit framer — **the header change is not a
-package-count change.**
+§9.4's. The framer is about five of those nine, which is
+about five packages — **a framer, not a package-count problem.**
 
 ---
 
-## 12. Failure behaviour
+## 12. Channel cards
+
+A slot takes one of three cards. All use the same backplane signals: the frame
+clock, a C bit in and out, an A bit in and out, and the mute line.
+
+### 12.1 CVSD voice card
+
+Semi-analog CVSD, E&M four-wire. The card's components set slew, not step size,
+so the same card runs at any family rate with no strap.
+
+| parameter | value |
+|---|---|
+| bit rate | set by the mode, not the card — **64 kbps here** |
+| run window | 3 bits |
+| τ_syl | 6 ms |
+| τ_int | 3 ms |
+| companding | 30 dB (31.6:1) |
+| slew | 12 000 full-scale units/s |
+
+| component | value | note |
+|---|---|---|
+| `C_int` | 10 nF film | |
+| `R_int` | 300 kΩ | τ_int = 3 ms |
+| `Iabc` max | **120 µA** | `slew · C_int` — **the bit rate cancels** |
+| `Iabc` min | 3.8 µA | 31.6:1 companding |
+| `C_syl` | 100 nF film | |
+| `R_syl` | 60 kΩ | τ_syl = 6 ms |
+
+| network | tolerance | failure mode |
+|---|---|---|
+| integrator R·C | ±30% | distortion |
+| **syllabic R·C** | **±20%** | distortion — the binding spec |
+| step size | ±30% | **pure gain error, no distortion at all** |
+
+**A** is the E&M signalling bit: the M lead sensed through an opto-isolator to
+the TX card, the E lead driven from the received A bit through the §13 RC.
+
+### 12.2 Data card
+
+Synchronous and bit-transparent: one data bit per frame on C, clocked by the
+frame clock — the TX card's for transmit, the recovered frame clock for receive.
+No elastic store and no slip. At a 64 kHz frame rate the pipe is **64 kbps**.
+
+Unlike the frame it replaces, this pipe **is octet-aligned** (§6): the superframe
+counter is the octet counter, so a data card can be a true DS0 and carry G.711
+without the endpoints finding their own byte phase.
+
+**A data card must not sit beside another data card** (§5). One in any seat is
+safe whatever it carries; any non-adjacent pair is safe; ordinary random data is
+safe in all six seats.
+
+### 12.3 Empty slot
+
+An unfitted slot presents A = 0 and C = a `1010` toggle, fed through 4.7 kΩ so a
+fitted card overrides it. The toggle matters for what the far end *hears* when a
+slot is empty at one end only: a constant fill drives the far CVSD integrator
+rail to rail, where `1010` is the codec's own idle pattern and decodes as silence.
+
+---
+
+## 13. Failure behaviour
 
 | event | response |
 |---|---|
@@ -666,7 +725,7 @@ package-count change.**
 | Two adjacent data cards | **forbidden** (§5) |
 | Card type mismatch slot for slot | loud, locked, not squelched — label every slot |
 
-**Squelch is mandatory, not optional.** `spec.md` §10.1 measured a CVSD card with
+**Squelch is mandatory, not optional.** §13 measured a CVSD card with
 the framer bypassed on a dead pair with a little induced noise: **+24.1 dB rms,
 +47.7 dB peak** relative to normal speech. Sparse transitions make the monostable
 emit long runs of 1s and the syllabic compander reads it as a loud signal.
@@ -675,7 +734,7 @@ timeout.
 
 ---
 
-## 13. Signalling
+## 14. Signalling
 
 One bit per channel per direction, sampled once per superframe at **8 kHz**.
 A = 1 means active. E&M is a two-lead interface with one lead driven and one
@@ -683,7 +742,7 @@ sensed, so one bit each way carries seizure, answer, disconnect, dial pulses and
 wink or delay start.
 
 Received A bit → RC, τ = 2 ms → 74HC14 Schmitt: one resistor, one capacitor and
-one gate per channel, serving as both error filter and debounce. `spec.md` §9
+one gate per channel, serving as both error filter and debounce. §14
 measured 0 spurious assertions to 6e−2 BER at a 32 kHz signalling rate; here the
 rate is 8 kHz, so a burst of *k* bad samples lasts 125*k* µs instead of 31*k* µs.
 The measured worst run was 4 samples, which is 0.5 ms against the ~1.7 ms needed
@@ -692,14 +751,14 @@ re-measured.
 
 ---
 
-## 14. What is and is not measured
+## 15. What is and is not measured
 
 **Measured here** (`mf8.py`): the F word choice; false locks over ten payload
 classes at every skew, and exhaustively over all 64 hook states for the six that
 can hold an alignment open; the superframe-phase enumeration; the slot rule;
 acquisition time; loss of frame to 3e−02 BER; slip recovery at every slip size.
 
-**Inherited from `spec.md` and not re-measured**: the whole physical layer — line
+**Inherited from this document and not re-measured**: the whole physical layer — line
 code, driver, transformer, filter, comparator, classifier tolerances, reach,
 noise margin, squelch levels, CVSD performance, signalling RC.
 
@@ -710,21 +769,20 @@ a floor computed on the same window.
 
 **Not measured at all:**
 
-- **Mis-strap between family members** (N = 2, 6, 14). The 16-bit frame's `1110`
-  word defeats a ×2 mis-strap by a divisibility argument (`spec.md` §3.3); the
-  equivalent argument for `11111110` has not been made or tested.
+- **Mis-strap between family members** (N = 2, 6, 14). A period-4 word defeats a
+  ×2 mis-strap by a divisibility argument; the equivalent argument for
+  `11111110` has not been made or tested.
 - **The other frame lengths.** Only N = 6 has an F word and guard positions.
 - **The residual slot-rule risk beyond adjacency.** Three data cards at seats
   1, 3, 5 is safe by the rule but was not enumerated as a triple.
-- **Squelch, mute timing and carrier detect.** §12 specifies them from
-  `spec.md` §10; none has been exercised on this frame. §7's "chopped" rows are
+- **Squelch, mute timing and carrier detect.** §13 specifies them from
+  the squelch measurement; none has been exercised on this frame. §7's "chopped" rows are
   exactly the condition a mute has to handle, and what a listener would hear
   through one has not been measured.
 - **Long runs.** §7 is 1.0 s per cell, one seed. Enough to establish that the
   carrier is transparent and to place the failure modes; not enough for outage
   rates. §4.2's 6.25 s BER runs are the longest anything here has run.
-- **Repeatered spans.** `repeater.md` exists for the 16-bit frame and nothing
-  here has been through more than one span.
+- **Repeatered spans.** Nothing here has been through more than one span.
 
 **And the open question is not in this document.** `line-codes.md` §6 records it:
 differential Manchester and AMI rank opposite ways under impulse noise, §7.2
@@ -734,7 +792,7 @@ events per second.
 
 ---
 
-## 15. Reproducing
+## 16. Reproducing
 
 ```
 python3 mf8.py            frame layer, ~15 min          (mf8.log is the run)
@@ -764,5 +822,5 @@ Caveats that affect how the numbers should be read:
 - The exhaustive hook-state sweeps use 3000-frame clips, which is ample for a
   32-frame acquisition but short for rare events.
 - Speech is one talker rolled per channel, as elsewhere in this repository.
-- `mf-vs-16bit.md` is the review this design came out of, and records what the
+- this document is the review this design came out of, and records what the
   original header did and why each change here is here.

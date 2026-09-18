@@ -30,7 +30,7 @@ Usage:  python3 mf8_line.py            everything, ~25 min
 """
 import sys, gc, time, numpy as np
 from scipy import signal
-import audio, cvsd, run, fast, phy, mf8
+import audio, cvsd, fast, phy, mf8
 
 RATE = 64000                      # per channel = frame rate
 LINE = 8 * RATE                   # 512 kbps
@@ -46,11 +46,11 @@ SECS = 1.0
 def sources(secs=SECS):
     """Six independent talkers, band-limited and level-normalised."""
     src, bits = [], []
-    p = run.params(RATE)
+    p = mf8.params(RATE)
     for j in range(NCH):
         x, fs = audio.read_wav(f'talker{j + 1}.wav', seconds=secs + 0.5)
         x = audio.bandlimit(x, fs)
-        x = x * (run.NOMINAL_RMS / max(x.std(), 1e-9))
+        x = x * (mf8.NOMINAL_RMS / max(x.std(), 1e-9))
         x = audio.resample_to(x, fs, RATE)[:int(secs * RATE)]
         src.append(x)
         bits.append(cvsd.encode(x, p))
