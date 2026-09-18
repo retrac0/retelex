@@ -107,7 +107,8 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | `RAI` | — | — | — | — | one pin reserved for `mf8-spec.md` §3.5's seventh S bit; not connected |
 | `+5 V`, `GND` | PSU | all | | | logic |
 | `±12 V` | PSU | E&M cards, comparators | | | analog |
-| `−48 V`, `−48 RET` | PSU | line cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1 |
+| `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `mf8-cards.md` §3.4 |
+| `RING`, `RING RET` | a shelf ring generator on the PSU slot | FXS slots only, by a strap on the backplane per slot | | 20 Hz, ~90 Vrms | the ringing bus of `mf8-cards.md` §3.4; never reaches a line, data or E&M card |
 
 Two things are deliberately absent. **No slot-ID pins:** slot *n*'s `C_TX`,
 `A_TX`, `C_RX` and `A_RX` are wired to input and output *n* of the trunk card's
@@ -312,14 +313,19 @@ alone.
 | 9 | `C_RX[n]` | `−48 V` (fused) |
 | 10 | `A_RX[n]` | `−48 RET` |
 | 11 | `MUTE` | `GND` |
-| 12 | `LOCK` | `TYPE0` (reserved) |
-| 13 | `CD` | `TYPE1` (reserved) |
+| 12 | `TYPE0` (reserved) | `RING` (FXS slots only, strapped) |
+| 13 | `TYPE1` (reserved) | `RING RET` |
 | 14 | `RAI` (reserved) | `GND` |
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
-The trunk-card slot carries the six `C_TX`, six `A_TX`, six `C_RX` and six
-`A_RX` lines in place of the per-slot four, on a 2 × 32.
+`RING` sits on the power row between ground pins, and the backplane strap that
+brings it to a slot is fitted only for a slot that holds an FXS card; every
+other slot's pin c12 is left open. `LOCK` and `CD` go to the panel from the
+trunk-card slot and no channel card needs them, so they are not on the channel
+pins. The trunk-card slot carries the six `C_TX`, six `A_TX`, six `C_RX` and
+six `A_RX` lines in place of the per-slot four, plus `LOCK` and `CD`, on a
+2 × 32; the PSU slot carries the rails and the ring generator's output.
 
 ---
 

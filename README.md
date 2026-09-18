@@ -21,6 +21,7 @@ one superframe carries one sample.
 |---|---|
 | [docs/mf8-spec.md](docs/mf8-spec.md) | **the specification** — frame, header, framer, cards, line code, circuits |
 | [docs/mf8-backplane.md](docs/mf8-backplane.md) | the backplane: modules, the slot interface, the three clock domains and where they meet, and the measured cost of the plesiochronous slip |
+| [docs/mf8-cards.md](docs/mf8-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; signalling through the A bit, measured |
 | [docs/line-codes.md](docs/line-codes.md) | nine line codes; differential Manchester against AMI, and the one question left open |
 | [docs/frame-rate.md](docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
 | [docs/subscriber-line.md](docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |

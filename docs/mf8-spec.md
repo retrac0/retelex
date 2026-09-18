@@ -851,7 +851,10 @@ package-count problem.**
 ## 12. Channel cards
 
 A slot takes one of three cards. All use the same backplane signals: the frame
-clock, a C bit in and out, an A bit in and out, and the mute line.
+clock, a C bit in and out, an A bit in and out, and the mute line — the slot
+interface is `mf8-backplane.md` §3. The cards themselves — the CVSD subscriber
+line card, the analog FXS/FXO card and the data card — are `mf8-cards.md`; this
+section is the engine they share and the rules they obey.
 
 ### 12.1 CVSD voice card
 
