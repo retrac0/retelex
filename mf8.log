@@ -29,30 +29,34 @@ THE F WORD
 
 FALSE LOCKS -- every payload class, every start-up skew
 
-  payload                   locks  false  wrong sf  acq frames
-  speech                        8      0         0       37-54
-  idle (CVSD silence)           8      0         0       37-54
-  all constant 0                8      0         0       37-46
-  all constant 1                8      0         0       38-78
-  random data                   8      0         0       37-54
-  octet 10110010                8      0         0       37-46
-  one data card, idle           8      0         0       37-54
-  one data card, speech         8      0         0       37-54
-  THE F WORD as data            8      0         0       38-86
-  F word beside silence         8      0         0       37-62
-  F word + guard pattern        8      6         0       37-38
+  payload                           locks  false  wrong sf  acq frames
+  speech                                8      0         0       37-46
+  idle (CVSD silence)                   8      0         0       37-46
+  all constant 0                        8      0         0       37-46
+  all constant 1                        8      0         0       38-78
+  random data                           8      0         0       37-54
+  octet 10110010                        8      0         0       37-46
+  one data card, idle                   8      0         0       37-54
+  one data card, speech                 8      0         0       37-46
+  THE F WORD as data                    8      0         0       38-86
+  F word beside silence                 8      0         0       37-62
+  F word + guard pattern                8      3         0       37-38
+  S-beside-F hole, seat 6 (0xFB)        8      0         0       38-54
+  S-beside-F hole, seat 1 (0x04)        8      0         0       37-46
 
   Exhaustive over hook states: all 64 combinations x all 8 skews,
   on the payloads that can hold a wrong alignment open.
 
-  payload                     false locks   wrong sf phase
-  idle (CVSD silence)             0 / 512          0 / 512
-  all constant 0                  0 / 512          0 / 512
-  all constant 1                  0 / 512          0 / 512
-  one data card, idle             0 / 512          0 / 512
-  THE F WORD as data              0 / 512          0 / 512
-  F word beside silence           0 / 512          0 / 512
-  F word + guard pattern        384 / 512          0 / 512
+  payload                             false locks   wrong sf phase
+  idle (CVSD silence)                     0 / 512          0 / 512
+  all constant 0                          0 / 512          0 / 512
+  all constant 1                          0 / 512          0 / 512
+  one data card, idle                     0 / 512          0 / 512
+  THE F WORD as data                      0 / 512          0 / 512
+  F word beside silence                   0 / 512          0 / 512
+  F word + guard pattern                192 / 512          0 / 512
+  S-beside-F hole, seat 6 (0xFB)          0 / 512          0 / 512
+  S-beside-F hole, seat 1 (0x04)          0 / 512          0 / 512
 
 SUPERFRAME PHASE -- can a wrong one be held?
 
@@ -79,85 +83,147 @@ SUPERFRAME PHASE -- can a wrong one be held?
   hook state, with no enumeration required -- but here it is anyway:
   wrong superframe phases admissible over all 64 hook states: 0
 
-GUARD POSITION -- why 3 and 5, not 3 and 7
+GUARD POSITION -- why 0 and 4
 
   False locks over all 64 hook states x 8 skews (512 per cell).  "one
   data card" is the F word in ONE seat, voice elsewhere -- legal under the
   slot rule, so it has to be 0 in every seat for the rule to mean anything.
+  "voice" is how often speech at nominal level satisfies the guard 4
+  superframes running, which is what a chance acquisition on the residual
+  case (`mf8.py seats` 3) needs.
 
-  layout                        F word, every lane  one data card, worst seat
-  3,5 = 1,0  (this spec)                   0 / 512                    0 / 512
-  3,7 = 0,1  (regular)                     1 / 512                    1 / 512
-  3,7 = 1,0  (mfspec values)             384 / 512                    1 / 512
+  layout                        F word, every lane  one data card, worst seat        voice
+  0,4 = 0,1  (this spec)                   0 / 512                    0 / 512     1 in 522
+  3,5 = 1,0  (before 3.4)                  0 / 512                    0 / 512    1 in 1311
+  3,7 = 0,1  (regular)                     0 / 512                    0 / 512     1 in 544
+  3,7 = 1,0  (mfspec values)             192 / 512                    0 / 512     1 in 527
 
-  mfspec's values copy the F word at states 3 and 7, so they add nothing.
-  Inverting them fixes that -- but 3 and 7 are half a superframe apart, and
-  a half-superframe shift maps the pair onto itself, swapped.  With every
-  channel off-hook the S lane has one zero and impersonates F; locking on
-  it shifts the receiver by exactly 4, the guard then reads the next lane at
-  states 7 and 3, and the F word there reads 0,1 -- which is what the
-  inverted guard wants.  3 and 5 have no such symmetry.
+  Any two same-parity states with different values reject CVSD idle, which
+  gives the same value at both.  mfspec's values copy the F word at 3 and 7,
+  so they add nothing.  Every other layout is clean; what separates them is
+  cost and the residual.  0,4 = 0,1 decodes as enable = NOR(q1,q0),
+  expected = q2 -- one gate, no XOR -- and it makes the S lane mirror the
+  frame: A_n sits at the state that is C_n's frame bit, so the signalling
+  mux and demux share the frame mux's address map.  Its price is the
+  residual: speech satisfies two states 4 apart more often than 2 apart,
+  so the chance acquisition of `seats` 3 is 2.5x as frequent as with
+  3,5 -- and released by the guard counter either way.
 
-SLOT RULES -- what a data card may sit next to
+  3,5 was chosen when S sat beside F.  A half-superframe shift maps 3 and
+  7 onto each other, and with every channel off-hook the S lane has one
+  zero and impersonates F at exactly that shift; the guard then read C1,
+  and one data card in seat 1 false-locked (1 / 512) under 3,7.  With S
+  half a frame from F that shift reads the F lane, not C1, and is dead for
+  any guard (`mf8.py sbit`), which is what freed the choice.
 
-  The adversarial content is the F word (11111110) in one lane and a
-  guard-satisfying pattern (bit 3 = 1, bit 5 = 0) in the next.
+S POSITION -- why S sits half a frame from F, not beside it
 
-  layout  (V voice, D data, . silence)              false
+  The check reads two bits, F and S.  At a wrong bit alignment they land
+  on two other lanes, SBIT apart.  A wrong alignment is a HOLE when both
+  of those lanes carry fixed content that satisfies the check: the framer
+  acquires it, the check never fails, and nothing can release it.
+  Analytically, over every byte a data card could carry, in every seat,
+  under all 64 hook states, with CVSD idle elsewhere:
 
-  -- one data card, any seat, voice elsewhere:
-    seat 1 = F word, rest voice                   0 / 512
-    seat 2 = F word, rest voice                   0 / 512
-    seat 3 = F word, rest voice                   0 / 512
-    seat 4 = F word, rest voice                   0 / 512
-    seat 5 = F word, rest voice                   0 / 512
-    seat 6 = F word, rest voice                   0 / 512
-    seat 1 = guard pattern, rest idle             0 / 512
-    seat 2 = guard pattern, rest idle             0 / 512
-    seat 3 = guard pattern, rest idle             0 / 512
-    seat 4 = guard pattern, rest idle             0 / 512
-    seat 5 = guard pattern, rest idle             0 / 512
-    seat 6 = guard pattern, rest idle             0 / 512
+  S at bit 1, beside F      [F][S][C1][C2][C3][C4][C5][C6]
+    one data card, bytes that hold a wrong alignment:  seat 1: 64  seat 2: 0  seat 3: 0  seat 4: 0  seat 5: 0  seat 6: 1
+      seat 1: 0x04 0x05 0x06 0x07 0x0C 0x0D 0x0E 0x0F ...
+      seat 6: 0xFB
+    two data cards, the F word in one and every byte in the other:
+      unsafe pairs  (1,2) (1,3) (1,4) (1,5) (1,6) (2,3) (2,6) (3,4) (3,6) (4,5) (4,6) (5,6)
+      safe pairs    (2,4) (2,5) (3,5)
 
-  -- two ADJACENT data cards, worst content:
-    seats 1,2 = word,guard; rest voice          128 / 512
-    seats 2,3 = word,guard; rest voice          192 / 512
-    seats 3,4 = word,guard; rest voice          256 / 512
-    seats 4,5 = word,guard; rest voice          320 / 512
-    seats 5,6 = word,guard; rest voice          384 / 512
+  S at bit 4, opposite F    [F][C1][C2][C3][S][C4][C5][C6]
+    one data card, bytes that hold a wrong alignment:  seat 1: 0  seat 2: 0  seat 3: 0  seat 4: 0  seat 5: 0  seat 6: 0
+    two data cards, the F word in one and every byte in the other:
+      unsafe pairs  (1,4) (2,5) (3,6)
+      safe pairs    (1,2) (1,3) (1,5) (1,6) (2,3) (2,4) (2,6) (3,4) (3,5) (4,5) (4,6) (5,6)
 
-  -- two NON-adjacent data cards, worst content:
-    seats 1,3 = word,guard; rest voice            0 / 512
-    seats 1,4 = word,guard; rest voice            0 / 512
-    seats 1,6 = word,guard; rest voice            0 / 512
-    seats 2,4 = word,guard; rest voice            0 / 512
-    seats 2,6 = word,guard; rest voice            0 / 512
-    seats 3,6 = word,guard; rest voice            0 / 512
-    seats 4,6 = word,guard; rest voice            0 / 512
+  The framer confirms the holes S beside F has, all 64 hook states x 8 skews:
+    seat 1 = 0x04, rest idle:  1 / 512 false locks, 1 held to the end
+    seat 6 = 0xFB, rest idle:  448 / 512 false locks, 448 held to the end
 
-  -- random data in every seat (the ordinary data case):
-    six data cards, random content                0 / 512
+  With S beside F, skew 1 reads S as F and C1 as the guard, and skew 7
+  reads C6 as F and the NEXT frame's F as the guard.  Each is one data
+  card plus the header, and the header is fixed content.  Seat 6: one
+  byte passes for the word while the real F lane, at a fixed offset, reads
+  exactly the guard's values.  Seat 1: with every channel off-hook S has
+  one zero and passes for the word, and the guard then wants two
+  particular bits of C1 -- 64 bytes.  Which bytes depends on the guard:
+  with the guard at 3,5, as first found, they were 0x7F -- G.711 silence
+  -- and 0x40; every guard has its own pair.  Both are deterministic, and
+  both passed the old battery, whose "worst content" was one fixed
+  pattern at one alignment.  Any pair that includes seat 1 or 6 inherits
+  the hole, which is why only three pairs were actually safe.
 
-  THE RULE.  One data card is safe in any seat whatever it carries;
-  two data cards are safe when they are not adjacent; two ADJACENT
-  data cards are not safe, because a wrong alignment can put the F
-  check on one and the guard on the other and neither is constrained.
-  This is the same shape of rule framing-review.md 5 found for the
-  4-bit word ("any seat, but never two adjacent") and spec.md 3.4
-  avoided on the 16-bit frame by strapping a data card's A bit -- a
-  bit this frame does not have, because signalling is sub-commutated.
+  With S half a frame from F, the only skew that puts a header bit on a
+  header position is 4, where the receiver reads S as F and F as S: S
+  passes for the word only with every channel off-hook, and the F lane
+  then reads 1,1 where the guard wants 0,1.  Every other skew reads two
+  payload lanes three apart, so the slot rule becomes "not three apart".
+  4 is the only spacing in an 8-bit frame that maps the header onto itself.
 
-  Note that ordinary random data in all six seats is safe: the hole
-  needs the framing word specifically, not merely arbitrary data.
+SLOT RULES -- what a data card may sit where
 
-LINE ERRORS -- tracking, with the +2/-1 trip-12 counter
+  1. Exhaustive and analytic: every byte, every seat, every hook state,
+     CVSD idle elsewhere.  A "hold" is a wrong alignment the check passes
+     for a whole superframe, which on periodic lanes is forever.
 
-   line BER  locked frames  LOF events  off-phase  time down
-      0e+00         399961           0          0      0.01%
-      1e-04         399961           0          0      0.01%
-      1e-03         399937           0          0      0.02%
-      1e-02         399937           0          0      0.02%
-      3e-02         399937           0          0      0.02%
+     one data card, bytes that hold:  seat 1: 0  seat 2: 0  seat 3: 0  seat 4: 0  seat 5: 0  seat 6: 0
+     two data cards, the F word in one and every byte in the other:
+       seats 1,4: holds, 8320 (byte, hook state) combinations
+       seats 2,5: holds, 8320 (byte, hook state) combinations
+       seats 3,6: holds, 8320 (byte, hook state) combinations
+       safe: (1,2) (1,3) (1,5) (1,6) (2,3) (2,4) (2,6) (3,4) (3,5) (4,5) (4,6) (5,6)
+
+  2. The framer, all 64 hook states x 8 skews (512 start-ups).  "false"
+     is a false acquisition; "held" is one still wrong at the end.  The
+     guard pattern is 0x08, the byte that satisfies the guard in phase.
+
+  layout                                                false         held
+    seat 1 = F word, rest voice                       0 / 512      0 / 512
+    seat 2 = F word, rest voice                       0 / 512      0 / 512
+    seat 3 = F word, rest voice                       0 / 512      0 / 512
+    seat 4 = F word, rest voice                       0 / 512      0 / 512
+    seat 5 = F word, rest voice                       0 / 512      0 / 512
+    seat 6 = F word, rest voice                       0 / 512      0 / 512
+    seats 1,4 = F word, guard pattern; rest voice    64 / 512     64 / 512
+    seats 2,5 = F word, guard pattern; rest voice   128 / 512    128 / 512
+    seats 3,6 = F word, guard pattern; rest voice   192 / 512    192 / 512
+    seats 1,2 = F word, guard pattern; rest voice     0 / 512      0 / 512
+    seats 3,4 = F word, guard pattern; rest voice     0 / 512      0 / 512
+    seats 5,6 = F word, guard pattern; rest voice     0 / 512      0 / 512
+    six data cards, random content                    0 / 512      0 / 512
+
+  3. The residual: the F word in seat 1 and VOICE in seat 4, three apart.
+     The guard lands on voice, which satisfies it by chance, and the
+     framer acquires when that happens 4 superframes running.  Speech
+     at nominal line level here (0.15 rms, as mf8_line.py), because the
+     quieter lane the rest of this battery uses is closer to idle.
+     Over 30 s of speech that is once in 522 attempts at that skew.  Forced at
+     the first 24 such points, 0.5 s runs:
+
+     tracking                                    acquired  released, frames     mean  never
+     frame counter only                             24/24                 -        -     24
+     frame counter + guard counter (this spec)      24/24            34-246  1.47 ms      0
+
+  THE RULE.  Two data cards may not sit three slots apart: not (1,4),
+  not (2,5), not (3,6).  One data card is safe in any seat whatever it
+  carries, adjacent data cards are safe, ordinary random data is safe in
+  all six seats, and three data cards fit as 1,2,3 or 4,5,6.  A data card
+  carrying the F word three seats from VOICE is acquired by chance about
+  once in 522 attempts at that skew, and the guard counter releases it
+  within milliseconds, where the frame counter alone never would: with F
+  always passing the guard is 2 checks in 8, and +2/-1 needs a third.
+
+LINE ERRORS -- tracking, with the +2/-1 trip-12 counters
+
+   line BER  locked frames  LOF events  of which guard  off-phase  time down
+      0e+00         399961           0               0          0      0.01%
+      1e-04         399961           0               0          0      0.01%
+      1e-03         399937           0               0          0      0.02%
+      1e-02         399937           0               0          0      0.02%
+      3e-02         399801           0               0          0      0.05%
 
   Compare mf-vs-16bit 7.2: mfspec, with no counter, took 10011
   unlocks and 60.7% downtime at 1e-2 on the same class of line.
@@ -166,10 +232,10 @@ LINE ERRORS -- tracking, with the +2/-1 trip-12 counter
 RESYNC after an induced slip, every slip size
 
    slip   frames misaligned   frames to relock
-      1                   8                  8
-      2                  12                 12
-      3                  15                 15
-      4                  12                 12
+      1                  12                 12
+      2                   8                  8
+      3                   8                  8
+      4                  10                 10
       5                  11                 11
       6                  13                 13
       7                  13                 13

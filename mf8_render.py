@@ -145,7 +145,7 @@ def render(tag, ln, code, src, bits, p, **kw):
             # First run: wide forward search on one lane.  Bits are only ever
             # LOST, so the source index runs AHEAD of the recovered index.
             cand = range(max(0, c0 - 64), min(c0 + 6000, nfr))
-            lanes = rb[g + 2][None, :]
+            lanes = rb[g + mf8.CBIT[0]][None, :]
             ref_of = lambda d, n: bits[0][d:d + n][None, :]
         else:
             # Later runs: a slip loses only a few bits, so the offset sits just
@@ -153,7 +153,7 @@ def render(tag, ln, code, src, bits, p, **kw):
             # even a 64-frame run -- the old 2000-frame minimum discarded most of
             # the LOCKED time at high impulse rates and reported it as muted.
             cand = range(max(0, c0 + shift - 4), min(c0 + shift + 64, nfr))
-            lanes = np.stack([rb[g + 2 + j] for j in range(NCH)])
+            lanes = np.stack([rb[g + mf8.CBIT[j]] for j in range(NCH)])
             ref_of = lambda d, n: np.stack([bits[j][d:d + n] for j in range(NCH)])
         best = (1.0, None)
         for d in cand:
@@ -173,7 +173,7 @@ def render(tag, ln, code, src, bits, p, **kw):
         d = best[1]; n = min(len(g), nfr - d)
         shift = d - c0
         for j in range(NCH):
-            out[j][d:d + n] = rb[g[:n] + 2 + j]
+            out[j][d:d + n] = rb[g[:n] + mf8.CBIT[j]]
         live[d:d + n] = True
         placed += 1
     del rb; gc.collect()

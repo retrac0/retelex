@@ -152,7 +152,7 @@ def measure(ln, rx, src, bits, p, want_iso=False, **kw):
         return out
     g = g[:len(g) - 2]
     out['clean'] = len(g) / RATE
-    got = [rb[g + 2 + j] for j in range(NCH)]
+    got = [rb[g + mf8.CBIT[j]] for j in range(NCH)]
     del rb; gc.collect()
     # A slip before this run deletes line bits, so the recovered frame index no
     # longer maps to the source frame index.  Find the offset once, on channel

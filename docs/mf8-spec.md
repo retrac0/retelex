@@ -24,7 +24,9 @@ Every number here was measured by `mf8.py` unless it is marked as analysis.
 | Superframe phase pinned by | two S-lane pads, 4 apart | **F itself** |
 | Wrong superframe phases admitted | **56 of 64 hook states** | **0** |
 | Acquisition | 8 alternating frames + one guard | **32 consecutive good frames** |
-| Tracking after lock | *unspecified* | **+2/−1, floor 0, trip 12** |
+| Tracking after lock | *unspecified* | **+2/−1, floor 0, trip 12 — F and guard counted separately** |
+| S position | beside F | **half a frame from F (§3.4)** |
+| Guard | pads at states 3 and 7, valued as the F word is there | **states 0 and 4 = `0,1` (§3.2)** |
 | Squelch / mute | *absent* | **required, §13** |
 | Data slot rules | *absent* | **§5** |
 
@@ -39,20 +41,32 @@ replaced is the part that decides where the frame is.
 **Frame — 8 bits, 15.625 µs, 64 kHz:**
 
 ```
- bit:   0     1      2      3      4      5      6      7
-      [ F ][ S ][ C1 ][ C2 ][ C3 ][ C4 ][ C5 ][ C6 ]
-      000   001   010    011    100    101    110    111    <- mux address
+ bit:   0     1      2      3      4     5      6      7
+      [ F ][ C1 ][ C2 ][ C3 ][ S ][ C4 ][ C5 ][ C6 ]
+      000   001    010    011   100   101    110    111    <- mux address
 ```
+
+S sits at bit 4, half a frame from F, and not beside it. That is the one
+geometric choice in the frame, and §3.4 is why: the framing check reads F and S,
+and at a wrong bit alignment those two reads land on two other lanes 4 apart.
+With S beside F, two of the seven wrong alignments read one data card and one
+header bit, and a single data card can hold either of them open. With S
+opposite F, the header can only ever land on itself.
 
 **Superframe — 8 frames, 125 µs, 8 kHz:**
 
 | state | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|---|
 | **F** | 1 | 1 | 1 | 1 | 1 | 1 | 1 | **0** |
-| **S** | A1 | A2 | A3 | **1** | A4 | **0** | A5 | A6 |
+| **S** | **0** | A1 | A2 | A3 | **1** | A4 | A5 | A6 |
 
 `An` is channel *n*'s signalling bit; the two fixed S bits are the guard (§3.2).
 Signalling is one bit per channel per superframe — **8 kbps per channel**.
+
+The S superframe mirrors the frame: channel *n*'s signalling bit sits at the
+superframe state that is channel *n*'s bit position in the frame, so the
+signalling multiplexer and demultiplexer use the frame multiplexer's address
+map unchanged.
 
 The superframe counter is the only phase state in the system, and it does three
 jobs: it addresses the signalling demultiplexer, it carries the framing word,
@@ -92,51 +106,60 @@ F = NAND(q2, q1, q0)        one 3-input gate, from the superframe counter
 
 and the receiver forms the identical term from its own counter.
 
-### 3.2 The guard — S at states 3 and 5
+### 3.2 The guard — S at states 0 and 4
 
 F alone is not sufficient, because a data card can carry the framing word. The S
-lane supplies a second, independent condition: **S = 1 at state 3 and S = 0 at
-state 5.**
+lane supplies a second, independent condition: **S = 0 at state 0 and S = 1 at
+state 4.**
 
-Both positions are chosen, and both choices are load-bearing:
+Each part of that is load-bearing:
 
-- **Same parity** (3 and 5 are both odd) **with different required values.** A
-  period-2 lane — CVSD silence — gives the *same* value at two same-parity
-  states, so it fails deterministically. (`mfspec`'s pads at 3 and 7 had this
-  property, and it is the one thing about that header that worked.)
-- **Different from the F word at those states.** `11111110` is 1 at both state 3
-  and state 5, so a data lane carrying the framing word satisfies F and fails the
+- **Same parity** (0 and 4 are both even) **with different required values.** A
+  period-2 lane — CVSD silence, and the empty-slot fill — gives the *same* value
+  at two same-parity states, so it fails deterministically.
+- **Different from the F word at those states.** `11111110` is 1 at both state 0
+  and state 4, so a data lane carrying the framing word satisfies F and fails the
   guard. `mfspec`'s pads were `1,0` at states 3 and 7 — *exactly* what the word
-  does there — so the guard added no information: **384 of 512 false locks** on
-  the F word, against **0** here.
-- **Not half a superframe apart.** The regular choice, 3 and 7, fails on this
-  count even with the values inverted to `0,1`. A 4-state shift maps 3 and 7 onto
-  each other, swapped. With every channel off-hook the S lane has a single zero
-  and can impersonate F, and locking on it shifts the receiver by exactly 4 — so
-  the guard reads the *next* lane at states 7 and 3, where the F word gives `0,1`,
-  which is what the inverted guard wants. One data card in seat 1 then
-  false-locks on 1 of 512 start-ups. That is a layout §5's slot rule permits, and
-  the rule is only worth having if "one data card, any seat, anything" holds with
-  no exceptions. It is the same half-superframe symmetry that sank `mfspec`'s
-  pads, arriving by a different route. 3 and 5 have no such symmetry, and cost
-  one XOR gate more.
+  does there — so the guard added no information: **192 of 512 false locks** on
+  the F word (384 with S beside F), against **0** here.
+- **The mirror.** With the guard at 0 and 4 the six hook bits sit at states 1, 2,
+  3, 5, 6, 7 — the positions C1–C6 occupy in the frame — so the '259 and the
+  '151 share one address map (§2).
 
-| guard | F word in every lane | one data card, worst seat |
-|---|---|---|
-| **3,5 = `1,0` — this spec** | **0 / 512** | **0 / 512** |
-| 3,7 = `0,1` — regular | 1 / 512 | **1 / 512** |
-| 3,7 = `1,0` — `mfspec`'s values | **384 / 512** | **1 / 512** |
-
-(`mf8.py guard`: all 64 hook states × 8 skews per cell.) **Both** 3,7 layouts
-break the slot rule; only 3,5 is clean in every seat.
-
-The decode is three gates. States 3 (`011`) and 5 (`101`) are the only two with
-`q0 = 1` and `q1 ≠ q2`, and at those two the expected value is `q1` itself:
+The decode is one gate. States 0 (`000`) and 4 (`100`) are the two with
+`q1 = q0 = 0`, and at those two the expected value is `q2` itself:
 
 ```
-guard enabled  =  q0 · (q1 XOR q2)
-guard expected =  q1
+guard enabled  =  NOR(q1, q0)
+guard expected =  q2
 ```
+
+Any two same-parity states with different values pass the two tests above.
+`mf8.py guard` measures four layouts, all 64 hook states × 8 skews per cell, and
+adds the one thing that separates the clean ones: how often speech at nominal
+level satisfies the guard four superframes running, which is what a chance
+acquisition on §5's residual case needs.
+
+| guard | decode | F word in every lane | one data card, worst seat | voice, 4 running |
+|---|---|---|---|---|
+| **0,4 = `0,1` — this spec** | NOR, expect `q2` | **0 / 512** | **0 / 512** | 1 in 522 |
+| 3,5 = `1,0` — before §3.4 | `q0·(q1⊕q2)`, expect `q1` | 0 / 512 | 0 / 512 | 1 in 1 311 |
+| 3,7 = `0,1` | AND, expect `q2` | 0 / 512 | 0 / 512 | 1 in 544 |
+| 3,7 = `1,0` — `mfspec`'s values | AND, expect `/q2` | **192 / 512** | 0 / 512 | 1 in 527 |
+
+Speech satisfies two states four apart more often than two states two apart, so
+0,4 takes the residual about 2.5× as often as 3,5 did — and the guard counter
+releases it either way (§5). That is the price of the mirror and the one-gate
+decode, and it is small: one event in ~500 attempts at one skew, in one allowed
+layout, costing a mute of about a millisecond.
+
+**History.** The guard was at 3,5 until §3.4 moved S. With S beside F, 3 and 7
+were unusable: a half-superframe shift maps them onto each other, with every
+channel off-hook the S lane has a single zero and passes for F at exactly that
+shift, and the guard then read *C1* — one data card in seat 1 false-locked on 1
+of 512 start-ups, a layout §5 permits. 3,5 has no such symmetry and was chosen
+for it. With S half a frame from F that shift reads the F lane instead of C1 and
+is dead for any guard (§3.4), which is what freed the choice.
 
 ### 3.3 Why the superframe phase can no longer be held wrong
 
@@ -154,17 +177,108 @@ run of good frames is 6 — against the 32 that acquisition requires:
 56 of 64 hook combinations admitted a wrong phase. Enumerated here over all 64
 hook states: **0 admissible wrong superframe phases.**
 
+### 3.4 Where S sits — half a frame from F
+
+The check reads two bits, F at bit 0 and S at bit 4. At a wrong bit alignment,
+skew *d*, the receiver reads bit *d* as F and bit *d*+4 as S, and *which lanes
+those are* decides whether the wrong alignment can be held:
+
+| skew | read as F | read as S | |
+|---|---|---|---|
+| 1, 2, 3 | C1, C2, C3 | C4, C5, C6 | two payload lanes, three seats apart |
+| **4** | **S** | **F** (next frame) | **the header on itself** |
+| 5, 6, 7 | C4, C5, C6 | C1, C2, C3 (next frame) | two payload lanes, three seats apart |
+
+At skew 4 the S lane passes for the word only with every channel off-hook
+(`01111111` — one zero, at the guard's own state), and the F lane then reads
+`1,1` at the guard states, where the guard wants `0,1`. That fails for every
+hook state, deterministically. Every other wrong alignment reads two payload lanes, and a
+voice or idle lane fails one half of the check or the other (§3.1, §3.2). So a
+wrong alignment can be held only when **both** lanes are data cards, three seats
+apart — which is §5's rule, and the whole of it.
+
+**With S beside F**, at bit 1 — the previous layout — the table reads
+differently. Skew 1 reads S as F and C1 as the guard; skew 7 reads C6 as F and
+the *next frame's F* as the guard. Each of those is **one data card plus the
+header**, and the header is fixed content, so a single data card holds either
+open on its own. As found, with the guard then at 3,5:
+
+- **Seat 6, byte `0x7F`.** `01111111` in C6 passes for the word, and the real F
+  lane, two states on, reads exactly `1,0` at the guard states. Nothing else is
+  involved — not the hook state, not the other seats. With b0 as the MSB that
+  byte is **G.711 μ-law silence**, on the very DS0 §6 advertises.
+- **Seat 1, any of 64 bytes** (b1 = 1, b3 = 0; `0x40` is one), with every
+  channel off-hook. S is `11111011` and passes for the word; the guard then
+  lands on C1 two states early and wants 1 at bit 1 and 0 at bit 3.
+- **Seat 1 *voice*, every channel off-hook.** The same path with speech under
+  the guard, which passes it four superframes running about once in a thousand
+  attempts at that skew (§3.2's last column is that rate, per guard) — and once
+  acquired, held for good (§4).
+
+Every guard has its own pair of these; under the present 0,4 guard the same two
+classes are `0xFB` in seat 6 and the 64 bytes with b1 = 0 and b5 = 1 in seat 1,
+which is what `mf8.py sbit` now prints and confirms.
+
+Measured, `mf8.py sbit`: every byte a data card could carry, in every seat,
+under all 64 hook states, CVSD idle elsewhere, analytically — a wrong alignment
+that passes the check for one superframe passes it forever on periodic lanes —
+and then confirmed with the framer, 64 hook states × 8 skews:
+
+| | S at bit 1, beside F | **S at bit 4, this spec** |
+|---|---|---|
+| one data card: bytes that hold a wrong alignment | seat 1: **64**; seat 6: **1**; seats 2–5: 0 | **0 in every seat** |
+| two data cards, the F word in one and every byte in the other: unsafe pairs | every pair containing seat 1 or seat 6, and every adjacent pair — only (2,4) (2,5) (3,5) safe | **(1,4) (2,5) (3,6)** and no others |
+| the worst byte in seat 6, framer (`0x7F` under 3,5; `0xFB` now) | **448 / 512** false locks, all held to the end | 0 / 512 |
+| the worst byte in seat 1, framer (`0x40` under 3,5; `0x04` now) | **1 / 512** (every channel off-hook), held | 0 / 512 |
+
+None of this was visible to the earlier battery, whose "worst content" was one
+fixed pattern at one alignment — the F word, and `00010000` — and both holes
+need a different byte. The sweep over every byte is what §5 now runs.
+
+4 is the only spacing that does this. A spacing *s* puts S on F's position at
+skew *s* and F on S's position at skew −*s*; those are the same alignment, with
+nothing else in it, only when 2*s* ≡ 0 mod 8. It costs nothing: S is a mux
+input and a sample strobe, and both move from bit-count 1 to bit-count 4.
+
+### 3.5 A seventh S bit — not in this spec
+
+The guard spends two of the eight S states. One fixed bit cannot replace them:
+a single bit cannot reject a period-2 lane, so a data card carrying the F word
+holds a wrong alignment beside *idle* at half the idle phases (measured: 4 bytes
+in every seat). Two ways of freeing one state were measured at the frame layer
+and are recorded here as possible expansions, **not specified**:
+
+| | complement pair | alternating bit |
+|---|---|---|
+| S lane | `[x][A1][A2][A3][/x][A4][A5][A6]`, x free | `[q3][A1][A2][A3][A4][A5][A6][A7]`, q3 = a fourth superframe-counter stage |
+| receiver check | at state 4, S ≠ the '259's Q0 (which holds x from state 0) | at the guard state, S = own q3, read from the line once at acquisition |
+| new state | none | a 16-frame phase the receiver must acquire |
+| parts | one inverter at TX, one XOR at RX | TX free ('393 stage); RX a loadable `q3` flip-flop, a first-strobe flag and a mux, ≈ 1½ packages |
+| holes, every byte × every seat × 128 hook/spare states | 0; pairs (1,4) (2,5) (3,6) as now | 0; pairs as now, even against 16-frame patterns |
+| §5's residual, chance acquisition | 1 in 28 attempts | 1 in 10 |
+| release by the guard counter | 2.2 ms mean (one check per superframe) | 2.5 ms mean |
+| line errors, 3e−02, 3 s | 0 trips; 0.10% down | 0 trips |
+
+The complement pair is the better of the two on every line, and it is what a
+seventh bit — a remote-alarm indication, say, since nothing here tells the far
+end that this end has lost frame — should be built on. Its cost against the
+fixed guard is the residual, 1 in 28 against 1 in ~500, and one check per
+superframe instead of two. (A third variant, the complement pair with x
+alternating and the receiver checking *both* states against Q0, kills every
+8-periodic lane outright but frees nothing and tripped 7 times in 3 s at 3e−02
+BER, so it is not recorded further.)
+
 ---
 
 ## 4. Framer
 
-One check, one acquisition counter, one up/down counter. The reference model is
+One check, one acquisition counter, two up/down counters. The reference model is
 `mf8.framer`.
 
 ```
 good frame :=  F == word[sfc]
-               AND ( sfc != 3  OR  S == 1 )
-               AND ( sfc != 5  OR  S == 0 )
+               AND ( sfc != 0  OR  S == 0 )
+               AND ( sfc != 4  OR  S == 1 )
 
 acquire    :  the word has exactly one zero, at state 7, so F == 0 IS the phase
               marker.  At a bit alignment with no candidate phase yet:
@@ -174,8 +288,10 @@ acquire    :  the word has exactly one zero, at state 7, so F == 0 IS the phase
               With a candidate, the check is predictive; any mismatch slips one
               line bit and restarts the hunt.  Lock at 32 consecutive good frames.
 
-track      :  the same check, +2 bad / −1 good, floor 0, trip at 12.
-on trip    :  not locked, slip one line bit, acquire again.
+track      :  the same check, +2 bad / −1 good, floor 0, trip at 12 — on two
+              counters.  One is fed by every frame.  The other is fed only at
+              the guard states, 0 and 4, by the S half of the check alone.
+on trip    :  either counter: not locked, slip one line bit, acquire again.
 ```
 
 **The superframe phase is read, not searched.** That makes acquisition a search
@@ -196,6 +312,18 @@ Both of these were found by running the chain end to end (§7). Neither was
 visible at bit level: on clean data the old search locked at frame 31 and the old
 counter never tripped.
 
+**Why a second counter for the guard.** The guard is 2 checks in 8. On the frame
+counter, a lock whose F check always passes and whose guard *never* does gains 4
+and loses 6 per superframe: it peaks at 3 against a trip of 12 and holds
+forever. With one counter, then, the guard protects acquisition and nothing
+else, and any wrong alignment that passes the word deterministically but the
+guard only by chance — a data card carrying the F word three seats from a voice
+card, §5 — is permanent once acquired. Fed by the guard states alone, the second
+counter trips above a third of *guard* checks failing. Voice under the guard
+fails about half of them, and §5 measures the release in milliseconds; line
+errors at 3e−02 fail 3% of them, and §4.2 measures 0 trips in 6.25 s. It is one
+more 74HC193, clocked by the guard enable the decode already produces (§11).
+
 ### 4.1 False locks — measured
 
 Every start-up skew, every payload class this project has used to break a framer,
@@ -208,51 +336,55 @@ plus the adversarial case constructed against *this* header:
 | all constant 0 | 8/8 | **0** | **0** | 37–46 |
 | all constant 1 | 8/8 | **0** | **0** | 38–78 |
 | random data | 8/8 | **0** | **0** | 37–54 |
-| octet `10110010` | 8/8 | **0** | **0** | 37–46 |
+| octet `10110010` | 8/8 | **0** | **0** | 37–54 |
 | one data card + idle | 8/8 | **0** | **0** | 37–54 |
 | one data card + speech | 8/8 | **0** | **0** | 37–54 |
 | **the F word as data** | 8/8 | **0** | **0** | 38–86 |
 | the F word beside silence | 8/8 | **0** | **0** | 37–62 |
-| **the F word beside a guard-satisfying pattern** | 8/8 | **6** | **0** | 37–38 |
+| **the F word three seats from a guard-satisfying pattern** | 8/8 | **3** | **0** | 37–38 |
+| `0xFB` in seat 6, rest idle — §3.4's first hole, under this guard | 8/8 | **0** | **0** | 38–54 |
+| `0x04` in seat 1, rest idle — §3.4's second hole, under this guard | 8/8 | **0** | **0** | 37–46 |
 
 Exhaustively over all 64 hook-state combinations × all 8 skews — 512 trials per
 row — **0 false locks and 0 wrong superframe phases** on idle, both constants,
-one data card, the F word in every lane, and the F word beside silence.
+one data card, the F word in every lane, the F word beside silence, and both of
+§3.4's holes.
 
-**The last row is the exception, and it is not closed by the framer.** Two
-*adjacent* data cards, one carrying the framing word and the other a pattern that
-satisfies the guard, hold a wrong alignment: 6 of 8 skews here, 384 of 512
-exhaustively. At a wrong alignment the F check lands on one lane and the guard on
-the next, so with both lanes unconstrained there is nothing left to gate them.
-**No confirmation count reaches it** — the match is exact, not probabilistic — so
-it is closed by a slot rule instead. That is §5, and it is the one real cost this
-frame carries.
+**The F-word-and-pattern row is the exception, and it is not closed by the
+framer.** Two data cards *three seats apart*, one carrying the framing word and
+the other a pattern that satisfies the guard, hold a wrong alignment: 3 of 8
+skews here, 192 of 512 exhaustively. At a wrong alignment the F check lands on
+one lane and the guard on the lane three seats on (§3.4), so with both lanes
+unconstrained there is nothing left to gate them. **No confirmation count
+reaches it** — the match is exact, not probabilistic — so it is closed by a slot
+rule instead. That is §5, and it is the one real cost this frame carries.
 
 Acquisition is **37–86 frames, 0.58–1.3 ms** at a 64 kHz frame rate.
 
 ### 4.2 Line errors and slip recovery — measured
 
-6.25 s of random payload, tracking with the `+1/−1` trip-16 counter:
+6.25 s of random payload, tracking with both `+2/−1` trip-12 counters:
 
-| line BER | locked frames | **LOF events** | off-phase frames | time down |
-|---|---|---|---|---|
-| 0 | 399 961 | **0** | **0** | 0.01% |
-| 1e−04 | 399 961 | **0** | **0** | 0.01% |
-| 1e−03 | 399 937 | **0** | **0** | 0.02% |
-| 1e−02 | 399 937 | **0** | **0** | 0.02% |
-| **3e−02** | 399 937 | **0** | **0** | 0.02% |
+| line BER | locked frames | **LOF events** | of which the guard counter | off-phase frames | time down |
+|---|---|---|---|---|---|
+| 0 | 399 961 | **0** | **0** | **0** | 0.01% |
+| 1e−04 | 399 961 | **0** | **0** | **0** | 0.01% |
+| 1e−03 | 399 937 | **0** | **0** | **0** | 0.02% |
+| 1e−02 | 399 937 | **0** | **0** | **0** | 0.02% |
+| **3e−02** | 399 801 | **0** | **0** | **0** | 0.05% |
 
-Zero loss-of-frame events to 3e−02, which is §4's standard. For
-contrast, `mfspec.md` with no counter took **10 011 unlocks and 60.7% downtime
-at 1e−02** on the same class of line (§4).
+Zero loss-of-frame events to 3e−02, which is §4's standard, and **the guard
+counter never trips on line errors**: at 3e−02 it sees 3% of its checks fail
+against the third it needs. For contrast, `mfspec.md` with no counter took
+**10 011 unlocks and 60.7% downtime at 1e−02** on the same class of line (§4).
 
 Recovery after an induced slip, every slip size:
 
 | slip, bits | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|
-| frames misaligned | 8 | 12 | **15** | 12 | 11 | 13 | 13 |
+| frames misaligned | 12 | 8 | 8 | 10 | 11 | **13** | **13** |
 
-**Worst case 15 frames = 0.23 ms.** Reading the superframe phase
+**Worst case 13 frames = 0.20 ms.** Reading the superframe phase
 from the marker rather than searching for it is what does this: there is no
 second phase to re-find, so recovery costs little more than re-finding the bit
 alignment. (An earlier nested-search version of §4 measured 35–176 frames here.)
@@ -263,33 +395,64 @@ alignment. (An earlier nested-search version of §4 measured 35–176 frames her
 
 One rule, and it is measured rather than argued:
 
-> **Two data cards may not occupy adjacent slots.**
+> **Two data cards may not sit three slots apart: not 1 and 4, not 2 and 5, not
+> 3 and 6.**
 
 A voice channel is CVSD and cannot hold a wrong alignment. A data card can carry
 anything, including the framing word — and at a wrong alignment the F check lands
-on one lane while the guard lands on the *next* one, so two adjacent data cards
-can satisfy both halves with neither constrained.
+on one lane while the guard lands on the lane *three seats on* (§3.4), so two
+data cards three apart can satisfy both halves with neither constrained. §3.4
+shows that is the only way the check can be held, so it is the only rule.
 
-Adversarial content — the F word in one lane, a guard-satisfying pattern (bit 3
-= 1, bit 5 = 0) in another — over all 64 hook states × 8 skews:
+`mf8.py seats` measures it three ways.
 
-| layout | false locks |
+**Exhaustively, over content.** Every byte a data card could carry, in every
+seat, under all 64 hook states, CVSD idle elsewhere, checked analytically: a
+wrong alignment that passes the check for one superframe passes it forever on
+periodic lanes, and no tracking rule can then see it.
+
+| layout | wrong alignments held |
 |---|---|
-| one data card, **any** seat, voice or idle elsewhere | **0 / 512** |
-| two data cards, **non-adjacent** (1,3) (1,4) (1,6) (2,4) (2,6) (3,6) (4,6) | **0 / 512** |
-| six data cards, ordinary **random** content | **0 / 512** |
-| **two data cards, adjacent** (1,2) (2,3) (3,4) (4,5) (5,6) | **128–384 / 512** |
+| one data card, **any** seat, **any** of the 256 bytes | **0** |
+| two data cards, the F word in one and **every** byte in the other — (1,2) (1,3) (1,5) (1,6) (2,3) (2,4) (2,6) (3,4) (3,5) (4,5) (4,6) (5,6) | **0** |
+| two data cards, **(1,4) (2,5) (3,6)** | **held**, for 65 of the 256 bytes in either seat, under every hook state |
+
+**With the framer**, all 64 hook states × 8 skews, 512 start-ups per row, the F
+word as the data card's content and voice elsewhere:
+
+| layout | false locks | still wrong at the end |
+|---|---|---|
+| one data card, **any** seat | **0 / 512** in every seat | 0 |
+| two, the F word and a guard-satisfying pattern (`0x08`: bit 0 = 0, bit 4 = 1), **adjacent**: (1,2) (3,4) (5,6) | **0 / 512** | 0 |
+| six data cards, ordinary **random** content | **0 / 512** | 0 |
+| **two, the same content, three apart: (1,4) (2,5) (3,6)** | **64, 128, 192 / 512** | **all of them** |
 
 Note the third row: **ordinary data is safe in every seat.** The hole needs the
 framing word specifically, not merely arbitrary content, which is why the rule is
-about adjacency and not about scrambling.
+about spacing and not about scrambling.
 
-This is the same shape of rule a 4-bit static framing word needs ("any seat, but
-never two adjacent"). A frame that carries a signalling bit in *every* frame can
-avoid needing it, by strapping that bit high so one half of the check is never
-arbitrary data — a bit this frame does not have, because signalling is
-sub-commutated into the superframe. **That is the price of §2's efficiency,
-stated plainly: three data cards of six, not six.**
+**The residual, and the guard counter.** The rule is about two data cards. A data
+card carrying the F word three seats from a *voice* card is allowed, and the
+guard then lands on speech, which satisfies it by chance: at nominal line level
+both guard bits fall right in about 20% of superframes, and four superframes
+running — what acquisition needs — about once in 522 attempts at that skew.
+That is what §4's second counter is for. Forced at 24 such points, 0.5 s runs:
+
+| tracking | acquired | released after | mean | never released |
+|---|---|---|---|---|
+| frame counter only | 24 / 24 | — | — | **24** |
+| **frame counter + guard counter — this spec** | 24 / 24 | **34–246 frames** | **1.47 ms** | **0** |
+
+Each release is followed by a hunt that finds the true alignment; the cost of the
+event is a mute of a few milliseconds, not a call with the wrong channels in it.
+
+This is the same kind of rule a 4-bit static framing word needs ("any seat, but
+never two adjacent"); here the forbidden spacing is three because S is at bit 4.
+A frame that carries a signalling bit in *every* frame can avoid needing it, by
+strapping that bit high so one half of the check is never arbitrary data — a bit
+this frame does not have, because signalling is sub-commutated into the
+superframe. **That is the price of §2's efficiency, stated plainly: three data
+cards of six, not six — 1,2,3 or 4,5,6, or any three with no two three apart.**
 
 ---
 
@@ -301,7 +464,7 @@ channel's octet:
 
 ```
 superframe state   0   1   2   3   4   5   6   7
-signalling S      A1  A2  A3   1  A4   0  A5  A6    -> the '259 address
+signalling S       0  A1  A2  A3   1  A4  A5  A6    -> the '259 address
 channel n octet   b0  b1  b2  b3  b4  b5  b6  b7    -> the byte boundary
 ```
 
@@ -632,8 +795,8 @@ set per direction.
 |---|---|---|
 | Prescaler and rate tap | 74HC4040 | one per card |
 | Frame + superframe counters | 74HC393 | 3 stages each, both halves |
-| Frame mux | 74HC151 | in0 = F, in1 = S mux, in2–7 = C1–C6, addressed directly |
-| Signalling mux | 74HC151 | addressed by the superframe counter; state 3 tied high, state 5 tied low |
+| Frame mux | 74HC151 | in0 = F, in4 = S mux, in1–3 = C1–C3, in5–7 = C4–C6, addressed directly |
+| Signalling mux | 74HC151 | addressed by the superframe counter; input 0 tied low, input 4 tied high, A1–A6 on inputs 1–3 and 5–7 — the frame mux's map |
 | F generator | ⅓ 74HC10 | one 3-input NAND |
 | Biphase encoder | ½ 74HC74 + ¼ 74HC00 | §8.1 |
 | Driver | 75176 | §8.1 |
@@ -642,9 +805,9 @@ set per direction.
 The framing bits are **mux inputs, not an override**. §9.2
 puts the framing field last so the mux address needs no arithmetic, and pays for
 it with an S/T select gate, a framing-data AND and an output selector. Here the
-address is still offset-free *and* the override path disappears: channel *n*
-wires to input *n*+1, which is layout rather than logic. A gate-level model
-reproduces the frame bit-for-bit (§4).
+address is still offset-free *and* the override path disappears: C1–C3 wire to
+inputs 1–3 and C4–C6 to inputs 5–7, with S on input 4, which is layout rather
+than logic. A gate-level model reproduces the frame bit-for-bit (§4).
 
 **One race to watch.** F is a superframe-counter output read at bit-count 0,
 which is when that counter has just ticked. Clock the superframe counter off the
@@ -659,18 +822,19 @@ opposite edge, or from the 7→0 transition of the frame counter.
 | Interval classifier | §8.2 — '86, '221, '123, '74 |
 | Superframe counter | ½ 74HC393 |
 | Expected F | ⅓ 74HC10 — `NAND(q2,q1,q0)` |
-| Guard decode | ¼ 74HC86 + ¼ 74HC08 — enable `q0·(q1⊕q2)`, expected `q1` |
+| Guard decode | ¼ 74HC02 — enable `NOR(q1,q0)`, expected `q2` straight off the counter |
 | Compare and good-frame gate | 74HC86 / 74HC08 remainder |
 | Acquisition count to 32, rephase count to 8 | ½ 74HC393 |
-| Loss of frame, +1/−1 floor 0 trip 16 | 74HC193 — up on bad, down on good, carry = trip |
+| Loss of frame, +2/−1 floor 0 trip 12, every frame | 74HC193 — up on bad, down on good, carry = trip |
+| Loss of frame, +2/−1 floor 0 trip 12, guard states only | 74HC193 — clocked by the guard enable `NOR(q1,q0)`; either carry drops lock (§4) |
 | Lock state | ½ 74HC74 |
 | Signalling demux | 74HC259, addressed by the superframe counter, 6 of 8 used |
-| Channel demux | frame counter, shared |
-| **Total** | **≈ 9 packages** |
+| Channel demux | frame counter, shared; S is sampled at bit-count 4 |
+| **Total** | **≈ 10 packages** |
 
 Everything except the interval classifier is shared with, or the same shape as,
-§9.4's. The framer is about five of those nine, which is
-about five packages — **a framer, not a package-count problem.**
+§9.4's. The framer is about six of those ten packages — **a framer, not a
+package-count problem.**
 
 ---
 
@@ -721,9 +885,11 @@ Unlike the frame it replaces, this pipe **is octet-aligned** (§6): the superfra
 counter is the octet counter, so a data card can be a true DS0 and carry G.711
 without the endpoints finding their own byte phase.
 
-**A data card must not sit beside another data card** (§5). One in any seat is
-safe whatever it carries; any non-adjacent pair is safe; ordinary random data is
-safe in all six seats.
+**A data card must not sit three slots from another data card** — not 1 and 4,
+not 2 and 5, not 3 and 6 (§5). One in any seat is safe whatever it carries,
+which was measured over every byte; adjacent data cards are safe; three fit as
+1,2,3 or 4,5,6; ordinary random data is safe in all six seats. A data card need
+not present any particular A bit.
 
 ### 12.3 Empty slot
 
@@ -742,7 +908,8 @@ rail to rail, where `1010` is the codec's own idle pattern and decodes as silenc
 | Loss of signal, no transitions | **Squelch — required** |
 | Slip | detected and corrected within 2.75 ms (§4.2) |
 | Wrong superframe phase | cannot be held (§3.3) |
-| Two adjacent data cards | **forbidden** (§5) |
+| Two data cards three slots apart | **forbidden** (§5) |
+| A data card carrying the framing word three slots from a voice card | acquired by chance about once in 500 attempts at that skew; the guard counter releases it in milliseconds (§5) |
 | Card type mismatch slot for slot | loud, locked, not squelched — label every slot |
 
 **Squelch is mandatory, not optional.** §13 measured a CVSD card with
@@ -773,10 +940,15 @@ re-measured.
 
 ## 15. What is and is not measured
 
-**Measured here** (`mf8.py`): the F word choice; false locks over ten payload
-classes at every skew, and exhaustively over all 64 hook states for the six that
-can hold an alignment open; the superframe-phase enumeration; the slot rule;
-acquisition time; loss of frame to 3e−02 BER; slip recovery at every slip size.
+**Measured here** (`mf8.py`): the F word choice; false locks over thirteen
+payload classes at every skew, and exhaustively over all 64 hook states for the
+nine that can hold an alignment open; the superframe-phase enumeration; the
+guard position over four layouts, with each one's residual rate; the S position
+and the slot rule over **every byte in every seat under every hook state**, for
+both S positions; the guard counter's release time; acquisition time; loss of
+frame to 3e−02 BER; slip recovery at every slip size. §3.5's two expansions were
+measured the same way, at the frame layer only, from scratch scripts that are
+not in the repository.
 
 **Inherited from this document and not re-measured**: the whole physical layer — line
 code, driver, transformer, filter, comparator, classifier tolerances, reach,
@@ -793,8 +965,14 @@ a floor computed on the same window.
   ×2 mis-strap by a divisibility argument; the equivalent argument for
   `11111110` has not been made or tested.
 - **The other frame lengths.** Only N = 6 has an F word and guard positions.
-- **The residual slot-rule risk beyond adjacency.** Three data cards at seats
-  1, 3, 5 is safe by the rule but was not enumerated as a triple.
+- **The residual slot-rule risk beyond pairs.** Three data cards at seats
+  1, 2, 3 is safe by the rule but was not enumerated as a triple. The every-byte
+  sweep in §5 is over one data card's content with one other fixed; it is not
+  over two arbitrary bytes at once.
+- **The S move, over the line.** §7 was run with S beside F. Moving S changes
+  which bit carries it and nothing about the line code, so none of §7's numbers
+  is expected to move — but `mf8_line.py` and `impulse_sweep.py` have not been
+  re-run on the new layout, and their logs are from the old one.
 - **Squelch, mute timing and carrier detect.** §13 specifies them from
   the squelch measurement; none has been exercised on this frame. §7's "chopped" rows are
   exactly the condition a mute has to handle, and what a listener would hear
@@ -820,8 +998,9 @@ python3 mf8.py            frame layer, ~15 min          (mf8.log is the run)
 python3 mf8.py word       why 11111110 and not the alternatives
 python3 mf8.py locks      false locks, every payload class and hook state
 python3 mf8.py sfphase    superframe phase, exhaustive
-python3 mf8.py guard      why the guard is at 3 and 5, not 3 and 7
-python3 mf8.py seats      the slot rule
+python3 mf8.py guard      why the guard is at 0 and 4: four layouts, and each one's residual
+python3 mf8.py sbit       why S sits half a frame from F: every byte, every seat, both layouts
+python3 mf8.py seats      the slot rule, every byte in every seat, and the guard counter's release
 python3 mf8.py errors     line errors, acquisition, slip recovery
 
 python3 mf8_line.py       over the line, ~20 min        (mf8_line.log is the run)

@@ -6,7 +6,7 @@ octet-aligned, so it takes a CVSD voice card, a synchronous data card, or a
 G.711 PCM stream.
 
 ```
-[ F ][ S ][ C1 ][ C2 ][ C3 ][ C4 ][ C5 ][ C6 ]      8 bits, 15.625 µs, 64 kHz
+[ F ][ C1 ][ C2 ][ C3 ][ S ][ C4 ][ C5 ][ C6 ]      8 bits, 15.625 µs, 64 kHz
                                                      512 kbps, 1.024 MBaud
 ```
 
@@ -22,13 +22,14 @@ one superframe carries one sample.
 | [docs/mf8-spec.md](docs/mf8-spec.md) | **the specification** — frame, header, framer, cards, line code, circuits |
 | [docs/line-codes.md](docs/line-codes.md) | nine line codes; differential Manchester against AMI, and the one question left open |
 | [docs/frame-rate.md](docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
+| [docs/subscriber-line.md](docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
 
 ## Tools
 
 | | |
 |---|---|
-| `mf8.py` | reference model and frame-layer battery — the F word, false locks, superframe phase, slot rules, line errors, slip recovery |
+| `mf8.py` | reference model and frame-layer battery — the F word, false locks, superframe phase, where S sits, slot rules over every byte in every seat, line errors, slip recovery |
 | `mf8_line.py` | end to end: six independent talkers, real CVSD, a real waveform, both line codes |
 | `linecodes.py` | the line itself — which code, how it fails, what the rate costs |
 | `impulse_sweep.py` | the impulse falloff curve: 23 rates, both codes, error bars, thresholds |
