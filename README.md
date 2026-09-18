@@ -31,6 +31,7 @@ one superframe carries one sample.
 | `mf8.py` | reference model and frame-layer battery — the F word, false locks, superframe phase, slot rules, line errors, slip recovery |
 | `mf8_line.py` | end to end: six independent talkers, real CVSD, a real waveform, both line codes |
 | `linecodes.py` | the line itself — which code, how it fails, what the rate costs |
+| `mf8_render.py` | renders 15 s of every channel to `out/` under nine line conditions in both codes, for listening |
 | `tolerance.py` | CVSD encoder/decoder component-mismatch tolerance |
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
@@ -39,7 +40,13 @@ one superframe carries one sample.
 python3 mf8.py            frame layer          (mf8.log)
 python3 mf8_line.py       over the line        (mf8_line.log)
 python3 linecodes.py      line codes and rate  (linecodes.log)
+python3 mf8_render.py     listenable renders   (mf8_render.log; wavs in out/)
 ```
+
+`out/` is not committed. Each render is the full 15 s as the link delivers it —
+muted wherever the framer was not locked, so outages are heard in place rather
+than edited out. Files are `{dm,ami}_{condition}_ch{n}.wav`, with
+`source_ch{n}.wav` as the reference.
 
 The `.log` files beside each are the committed runs. Every table in the
 documents is reproducible from them.
