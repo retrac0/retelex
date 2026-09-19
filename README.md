@@ -27,6 +27,7 @@ one superframe carries one sample.
 | [docs/frame-rate.md](docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
 | [docs/subscriber-line.md](docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
 | [docs/register.md](docs/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
+| [docs/circuit-review.md](docs/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
 | [falstad/](falstad/README.md) | the CVSD encoder and decoder as a Falstad circuit: opening it, what to try, and how well it matches the model |
 
