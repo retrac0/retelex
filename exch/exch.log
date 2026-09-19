@@ -1,0 +1,784 @@
+TANDEM -- N codecs of mf8-spec 12.1 in analog tandem, 7 talkers x 12 s.
+  Each stage: encode, decode, 3.4 kHz reconstruction; the next card filters 300-3400 Hz
+  and is trimmed back to nominal level.  segSNR dB, two scorers:
+    total  against the source: codec noise plus the droop of the cascaded filters
+    codec  against the source through the same filters with no codec in the chain
+
+  talker1   total  27.52  21.27  17.09  16.15  15.43    codec  28.60  26.08  20.31  19.80  19.36
+  talker2   total  17.07  14.25  10.77  10.13   9.65    codec  17.48  16.50  12.63  12.41  12.21
+  talker3   total  24.91  14.46  12.13  10.57   9.89    codec  26.24  23.17  21.41  17.85  17.29
+  talker4   total  18.38  13.15  11.20  10.09   9.33    codec  19.26  17.97  17.13  16.45  15.87
+  talker5   total  17.13  13.50  11.77  10.74  10.01    codec  18.10  17.06  16.35  15.81  15.37
+  talker6   total  27.37  17.91  15.33  13.91  12.99    codec  28.28  25.57  23.90  22.71  21.88
+  talker7   total  25.09  20.26  18.39  17.26  15.15    codec  25.85  23.32  21.91  20.99  17.67
+
+     codecs in the chain       1       2       3       4       5
+       codec noise alone   23.40   21.38   19.09   18.00   17.09
+                    loss   +0.00   -2.02   -4.31   -5.40   -6.31
+      against the source   22.50   16.40   13.81   12.69   11.78
+                    loss   +0.00   -6.10   -8.69   -9.80  -10.72
+
+  Codecs in the chain, by fabric (a CVSD phone holds its own codec; an FXS card holds one):
+  call                                            voice band   bits
+  CVSD phone to CVSD phone, one exchange                   2      1
+    ... across one MF8 trunk                               3      1
+    ... through a transit exchange                         4      1
+  CVSD phone to analog phone, one exchange                 1      1
+  analog phone to analog phone, one exchange               0      1
+    ... across one MF8 trunk                               1      1
+    ... through a transit exchange                         2      1
+  64 kbps data                                        cannot      0
+
+  [tandem: 467 s]
+
+FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8 blocks.
+  2048 frames a run, random data on every fitted port.
+
+  1. Every source slot to every listening slot: 64 maps, port p listens to p+m (mod 64).
+     4096 (source, listener) pairs, C and A: 0 bit errors at a delay of exactly 1 frame.
+
+  2. Growth: random maps with 1 to 8 blocks fitted; an absent block or an empty slot is FILL / A=0.
+      blocks  maps  bits checked  errors  listening to nothing
+           1     8       2096128       0                   470
+           2     8       2096128       0                   411
+           3     8       2096128       0                   350
+           4     8       2096128       0                   284
+           5     8       2096128       0                   251
+           6     8       2096128       0                   187
+           7     8       2096128       0                   121
+           8     8       2096128       0                    78
+
+  3. Fan-out: 63 ports listen to port 25.
+     all 64 received streams identical: True;  errors against the source: 0
+
+  4. Idle: a cleared latch listens to port 00, which is never fitted.
+     C_RX is FILL (1010): True;  A_RX is 0: True;  decoded level -48.3 dB re nominal speech
+
+  5. Octets: a source sends bytes b0-first on TX_OCT; the listener frames on RX_OCT = TX_OCT + 1 frame.
+     port 52 <- 31: 255 octets, 0 wrong
+     port 07 <- 31: 255 octets, 0 wrong
+     framed on TX_OCT instead (no delay allowed for): 253 of 255 wrong
+
+  6. The marker re-points a latch at a random cell: 4000 writes.
+     new source from the write frame on                                        2289
+     old source for the write frame, then new                                  1045
+     one bit held over (neither slot strobed in the write frame), then new      666
+     anything else                                                                0
+     accounted for: 4000 of 4000.  The worst a re-point does is repeat one bit: the slip of mf8-backplane.md 7.
+
+  7. A trunk block: six ports on slots 1,2,3,5,6,7 of highway 1 are an MF8 frame (mf8.build / mf8.framer).
+     clean                                frames delivered  8153 of 8192, re-frames 0; bits wrong on their own port 0; against a neighbour's source 50 %; far fabric errors 0
+     one line bit slipped at frame 3000   frames delivered  8105 of 8191, re-frames 1; bits wrong on their own port 45 (all in frames 3000-3014, before the framer let go); against a neighbour's source 50 %; far fabric errors 0
+     A through the S bit, clean line: 0 errors in 6114 samples
+
+  8. A tie block: highway 7 of group X crossed to highway 7 of group Y, same clock, no framer.
+     8 junctors, C and A: 0 errors at a delay of exactly 2 frames (one per fabric)
+
+  [fabric: 238 s]
+
+CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.
+  00 idle (never fitted), 01 dial tone, 02 cannot-complete tone, 03-05 registers; subscribers 20-77.
+  Release: M or E low for 256 ms (each port's two detectors +-20%), after 16 ms high.  Scanner: 8 ports a tick.
+
+  1. A local call; the caller hangs up first, the called party stays off-hook and gets dial tone.
+         0.000  20 hears silence, free
+         0.000  21 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  20 hears silence
+         1.190  marker: 20 <-> 21
+         1.190  21 hears voice 20
+         1.191  20 hears ringback
+         1.191  21 hears voice 20, is being rung
+         4.190  20 hears voice 21
+         4.190  21 hears voice 20
+         9.000  21 hears silence
+         9.267  port 20 releases itself (M fell)
+         9.267  20 hears silence, is being rung, free
+         9.267  21 hears ringback
+         9.268  20 hears silence, free
+         9.268  21 hears silence
+         9.298  port 21 releases itself (E fell)
+         9.298  marker: register 03 -> 21, dial tone from 01
+         9.298  21 hears dial tone
+        12.246  port 03 releases itself (E fell)
+        12.266  port 21 releases itself (M fell)
+        12.266  21 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
+
+  2. The called party hangs up first.
+         0.000  20 hears silence, free
+         0.000  21 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  20 hears silence
+         1.190  marker: 20 <-> 21
+         1.190  21 hears voice 20
+         1.191  20 hears ringback
+         1.191  21 hears voice 20, is being rung
+         3.690  20 hears voice 21
+         3.690  21 hears voice 20
+         8.000  20 hears silence
+         8.266  port 21 releases itself (M fell)
+         8.266  20 hears ringback
+         8.266  21 hears silence, is being rung, free
+         8.267  20 hears silence
+         8.267  21 hears silence, free
+         8.284  port 20 releases itself (E fell)
+         8.284  20 hears silence, free
+         8.290  marker: register 03 -> 20, dial tone from 01
+         8.290  20 hears dial tone
+        11.246  port 03 releases itself (E fell)
+        11.267  port 20 releases itself (M fell)
+        11.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 18 ms;  overheard another call 0 ms
+
+  3. Busy: 22 calls 21 while 20 and 21 are talking.  Then 22 dials itself.
+         0.000  22 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         1.190  marker: 20 <-> 21
+         4.002  marker: register 03 -> 22, dial tone from 01
+         4.002  22 hears dial tone
+         4.840  22 hears silence
+         5.090  marker: 22 -> cannot-complete (21 busy)
+         5.090  22 hears cannot-complete tone
+         6.707  port 22 releases itself (M fell)
+         6.707  22 hears silence, free
+         7.002  marker: register 03 -> 22, dial tone from 01
+         7.002  22 hears dial tone
+         7.840  22 hears silence
+         8.090  marker: 22 -> cannot-complete (22 busy)
+         8.090  22 hears cannot-complete tone
+         9.207  port 22 releases itself (M fell)
+         9.207  22 hears silence, free
+         9.267  port 20 releases itself (M fell)
+         9.298  port 21 releases itself (E fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
+
+  4. Numbers that are not there: 26 (empty slot), 1 (reserved), 8, 2 then 9, 03 cannot be dialled at all.
+         0.000  20 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  20 hears silence
+         1.190  marker: 20 -> cannot-complete (26 is unequipped)
+         1.190  20 hears cannot-complete tone
+         2.767  port 20 releases itself (M fell)
+         2.767  20 hears silence, free
+         3.002  marker: register 03 -> 20, dial tone from 01
+         3.002  20 hears dial tone
+         3.840  marker: 20 -> cannot-complete (first key 1)
+         3.840  20 hears cannot-complete tone
+         5.267  port 20 releases itself (M fell)
+         5.267  20 hears silence, free
+         5.506  marker: register 03 -> 20, dial tone from 01
+         5.506  20 hears dial tone
+         6.340  marker: 20 -> cannot-complete (first key 8)
+         6.340  20 hears cannot-complete tone
+         7.767  port 20 releases itself (M fell)
+         7.767  20 hears silence, free
+         8.002  marker: register 03 -> 20, dial tone from 01
+         8.002  20 hears dial tone
+         8.840  20 hears silence
+         9.090  marker: 20 -> cannot-complete (second key 9)
+         9.090  20 hears cannot-complete tone
+        10.767  port 20 releases itself (M fell)
+        10.767  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  5. Abandoned while ringing: the called phone must stop ringing and be free.
+         0.000  20 hears silence, free
+         0.000  21 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  20 hears silence
+         1.190  marker: 20 <-> 21
+         1.190  21 hears voice 20
+         1.191  20 hears ringback
+         1.191  21 hears voice 20, is being rung
+         4.000  21 hears silence, is being rung
+         4.001  20 hears silence
+         4.001  21 hears silence
+         4.267  port 20 releases itself (M fell)
+         4.267  20 hears silence, free
+         4.298  port 21 releases itself (E fell)
+         4.298  21 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
+
+  6. Abandoned while dialling: the register must let go by itself.
+         0.000  20 hears silence, free
+         0.000  03 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.106  03 hears voice 20
+         0.940  20 hears silence
+         1.500  03 hears silence
+         1.746  port 03 releases itself (E fell)
+         1.746  03 hears silence, free
+         1.767  port 20 releases itself (M fell)
+         1.767  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  7. Permanent signal: off-hook and nothing dialled.
+         0.000  20 hears silence, free
+         0.000  03 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.106  03 hears voice 20
+        10.107  marker: 20 -> cannot-complete (nothing dialled)
+        10.107  20 hears cannot-complete tone
+        10.107  03 hears silence, free
+        13.267  port 20 releases itself (M fell)
+        13.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  8. Two callers dial each other at the same instant; and a called phone that lifts 3 ms before the test.
+         0.000  20 hears silence, free
+         0.000  21 hears silence, free
+         0.000  23 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 04 -> 21, dial tone from 01
+         0.106  20 hears dial tone
+         0.106  21 hears dial tone
+         0.940  20 hears silence
+         0.940  21 hears silence
+         1.190  marker: 20 -> cannot-complete (21 busy)
+         1.190  marker: 21 -> cannot-complete (20 busy)
+         1.190  20 hears cannot-complete tone
+         1.190  21 hears cannot-complete tone
+         3.266  port 21 releases itself (M fell)
+         3.266  21 hears silence, free
+         3.267  port 20 releases itself (M fell)
+         3.267  20 hears silence, free
+         4.002  marker: register 03 -> 20, dial tone from 01
+         4.002  20 hears dial tone
+         4.840  20 hears silence
+         5.090  marker: 20 -> cannot-complete (23 busy)
+         5.090  marker: register 03 -> 23, dial tone from 01
+         5.090  20 hears cannot-complete tone
+         5.090  23 hears dial tone
+         7.246  port 03 releases itself (E fell)
+         7.250  port 23 releases itself (M fell)
+         7.250  23 hears silence, free
+         7.267  port 20 releases itself (M fell)
+         7.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  9a. 0: the first operator is free.
+         0.000  20 hears silence, free
+         0.000  30 hears silence, free
+         0.000  31 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  marker: 20 <-> 30
+         0.940  20 hears silence
+         0.940  30 hears voice 20
+         0.941  20 hears ringback
+         0.941  30 hears voice 20, is being rung
+         2.440  20 hears voice 30
+         2.440  30 hears voice 20
+         6.000  30 hears silence
+         6.200  20 hears silence
+         6.267  port 20 releases itself (M fell)
+         6.267  20 hears silence, free
+         6.288  port 30 releases itself (E fell)
+         6.288  30 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 21 ms;  overheard another call 0 ms
+
+  9b. 0: the first operator is in a call, so the hunt falls to the second position.
+         0.000  20 hears silence, free
+         0.000  30 hears silence, free
+         0.000  31 hears silence, free
+         0.106  marker: register 03 -> 23, dial tone from 01
+         1.190  marker: 23 <-> 30
+         1.190  30 hears voice 23
+         1.191  30 hears voice 23, is being rung
+         2.690  30 hears voice 23
+         3.002  marker: register 03 -> 20, dial tone from 01
+         3.002  20 hears dial tone
+         3.840  marker: 20 <-> 31
+         3.840  20 hears silence
+         3.840  31 hears voice 20
+         3.841  20 hears ringback
+         3.841  31 hears voice 20, is being rung
+         5.340  20 hears voice 31
+         5.340  31 hears voice 20
+         8.000  31 hears silence
+         8.267  port 20 releases itself (M fell)
+         8.267  20 hears silence, is being rung, free
+         8.267  31 hears ringback
+         8.268  20 hears silence, free
+         8.268  31 hears silence
+         8.285  port 31 releases itself (E fell)
+         8.285  31 hears silence, free
+         8.291  marker: register 03 -> 31, dial tone from 01
+         8.291  31 hears dial tone
+         9.000  30 hears silence
+         9.246  port 03 releases itself (E fell)
+         9.250  port 23 releases itself (M fell)
+         9.273  port 31 releases itself (M fell)
+         9.273  31 hears silence, free
+         9.288  port 30 releases itself (E fell)
+         9.288  30 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 38 ms;  overheard another call 0 ms
+
+  9c. 0: both positions off-hook, so the announcement card answers, plays and drops; the caller is back at dial tone.
+         0.000  20 hears silence, free
+         0.000  32 hears silence, free
+         0.107  marker: register 03 -> 30, dial tone from 01
+         0.107  marker: register 04 -> 31, dial tone from 01
+         1.002  marker: register 05 -> 20, dial tone from 01
+         1.002  20 hears dial tone
+         1.840  marker: 20 <-> 32
+         1.840  20 hears silence
+         1.840  32 hears voice 20
+         1.841  20 hears ringback
+         1.841  32 hears voice 20, is being rung
+         2.140  20 hears night announcement 32
+         2.140  32 hears voice 20
+         4.640  20 hears silence
+         4.863  port 32 releases itself (M fell)
+         4.863  20 hears ringback
+         4.863  32 hears silence, is being rung, free
+         4.864  20 hears silence
+         4.864  32 hears silence, free
+         4.924  port 20 releases itself (E fell)
+         4.924  20 hears silence, free
+         4.930  marker: register 05 -> 20, dial tone from 01
+         4.930  20 hears dial tone
+         8.259  port 05 releases itself (E fell)
+         8.267  port 20 releases itself (M fell)
+         8.267  20 hears silence, free
+         8.707  port 04 releases itself (E fell)
+         8.718  port 30 releases itself (M fell)
+         8.746  port 03 releases itself (E fell)
+         8.773  port 31 releases itself (M fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 61 ms;  overheard another call 0 ms
+
+  9d. 0 with no operator class fitted.
+         0.000  20 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  marker: 20 -> cannot-complete (no free class 2)
+         0.940  20 hears cannot-complete tone
+         3.267  port 20 releases itself (M fell)
+         3.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  10. 9: two CO lines at 10 and 11, three callers.
+         0.000  20 hears silence, free
+         0.000  22 hears silence, free
+         0.000  23 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.940  marker: 20 <-> 10
+         0.940  20 hears CO line 10
+         1.002  marker: register 04 -> 22, dial tone from 01
+         1.002  22 hears dial tone
+         1.840  marker: 22 <-> 11
+         1.840  22 hears CO line 11
+         2.002  marker: register 03 -> 23, dial tone from 01
+         2.002  23 hears dial tone
+         2.840  marker: 23 -> cannot-complete (no free class 3)
+         2.840  23 hears cannot-complete tone
+         7.207  port 22 releases itself (M fell)
+         7.207  22 hears silence, free
+         7.218  port 10 releases itself (M fell)
+         7.225  port 11 releases itself (M fell)
+         7.250  port 23 releases itself (M fell)
+         7.250  23 hears silence, free
+         7.267  port 20 releases itself (M fell)
+         7.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 49 ms;  overheard another call 0 ms
+
+  11a. A CO line rings in: routed as 0.  The exchange FXO build holds A_TX across the cadence gap and while the loop is closed.
+         0.000  10 hears silence, free
+         0.000  30 hears silence, free
+         0.505  marker: 10 <-> 30
+         0.505  10 hears silence
+         0.505  30 hears CO line 10
+         0.506  10 hears ringback
+         0.506  30 hears CO line 10, is being rung
+         8.505  10 hears voice 30
+         8.505  30 hears CO line 10
+        14.000  10 hears silence
+        14.218  port 10 releases itself (M fell)
+        14.218  port 30 releases itself (M fell)
+        14.218  10 hears silence, free
+        14.218  30 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
+
+  11b. The same with mf8-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.
+         0.000  10 hears silence, free
+         0.000  30 hears silence, free
+         0.505  marker: 10 <-> 30
+         0.505  10 hears silence
+         0.505  30 hears CO line 10
+         0.506  10 hears ringback
+         0.506  30 hears CO line 10, is being rung
+         2.501  10 hears silence
+         2.501  30 hears CO line 10
+         2.717  port 10 releases itself (M fell)
+         2.717  10 hears silence, free
+         2.788  port 30 releases itself (E fell)
+         2.788  30 hears silence, free
+         6.505  marker: 10 <-> 30
+         6.505  10 hears silence
+         6.505  30 hears CO line 10
+         6.506  10 hears ringback
+         6.506  30 hears CO line 10, is being rung
+         8.501  10 hears silence
+         8.501  30 hears CO line 10
+         8.717  port 10 releases itself (M fell)
+         8.717  10 hears silence, free
+         8.788  port 30 releases itself (E fell)
+         8.788  30 hears silence, free
+        12.505  marker: 10 <-> 30
+        12.505  10 hears silence
+        12.505  30 hears CO line 10
+        12.506  10 hears ringback
+        12.506  30 hears CO line 10, is being rung
+        14.501  10 hears silence
+        14.501  30 hears CO line 10
+        14.717  port 10 releases itself (M fell)
+        14.717  10 hears silence, free
+        14.788  port 30 releases itself (E fell)
+        14.788  30 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 71 ms;  overheard another call 0 ms
+
+  12a. The dial-tone card is pulled; a second class-5 card at 06 serves.
+         0.000  20 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 06
+         0.106  20 hears dial tone (spare)
+         0.940  20 hears silence
+         1.190  marker: 20 <-> 21
+         1.191  20 hears ringback
+         2.190  20 hears voice 21
+         5.200  20 hears silence
+         5.267  port 20 releases itself (M fell)
+         5.267  20 hears silence, free
+         5.298  port 21 releases itself (E fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
+
+  12b. No tone cards at all: silence where the tones would be, and the call still completes.
+         0.000  20 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from nowhere
+         0.106  20 hears silence
+         1.190  marker: 20 <-> 21
+         1.191  20 hears ringback
+         2.190  20 hears voice 21
+         5.200  20 hears silence
+         5.267  port 20 releases itself (M fell)
+         5.267  20 hears silence, free
+         5.298  port 21 releases itself (E fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
+
+  13. One register, two callers lifting together: the second waits for dial tone.
+         0.000  20 hears silence, free
+         0.000  22 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         1.540  20 hears silence
+         1.790  marker: 20 <-> 24
+         1.791  20 hears ringback
+         2.042  marker: register 03 -> 22, dial tone from 01
+         2.042  22 hears dial tone
+         2.790  20 hears voice 24
+         3.540  22 hears silence
+         3.790  marker: 22 <-> 25
+         3.791  22 hears ringback
+         4.790  22 hears voice 25
+         6.200  20 hears silence
+         6.200  22 hears silence
+         6.207  port 22 releases itself (M fell)
+         6.207  22 hears silence, free
+         6.231  port 25 releases itself (E fell)
+         6.267  port 20 releases itself (M fell)
+         6.267  20 hears silence, free
+         6.292  port 24 releases itself (E fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 25 ms;  overheard another call 0 ms
+
+  14. Meet-me: three callers dial the three legs at 70, 71, 72.
+         0.000  20 hears silence, free
+         0.000  22 hears silence, free
+         0.000  23 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  20 hears dial tone
+         0.602  marker: register 04 -> 22, dial tone from 01
+         0.602  22 hears dial tone
+         0.940  20 hears silence
+         1.106  marker: register 05 -> 23, dial tone from 01
+         1.106  23 hears dial tone
+         1.190  marker: 20 <-> 70
+         1.191  20 hears ringback
+         1.390  20 hears conference 70
+         1.440  22 hears silence
+         1.690  marker: 22 <-> 71
+         1.691  22 hears ringback
+         1.890  22 hears conference 71
+         1.940  23 hears silence
+         2.190  marker: 23 <-> 72
+         2.191  23 hears ringback
+         2.390  23 hears conference 72
+         6.001  20 hears silence
+         6.231  port 70 releases itself (M fell)
+         6.267  port 20 releases itself (M fell)
+         6.267  20 hears silence, free
+         7.001  22 hears silence
+         7.207  port 22 releases itself (M fell)
+         7.207  22 hears silence, free
+         7.217  port 71 releases itself (E fell)
+         8.001  23 hears silence
+         8.212  port 23 releases itself (E fell)
+         8.212  23 hears silence, free
+         8.243  port 72 releases itself (M fell)
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 36 ms;  overheard another call 0 ms
+
+  15a. A rotary phone dials 20 on the A line: 10 pps, 60 % break.  The register counts its own A_RX; 0 is ten pulses.
+         0.000  24 hears silence, free
+         0.000  20 hears silence, free
+         0.106  marker: register 03 -> 24, dial tone from 01
+         0.106  24 hears dial tone
+         1.188  24 hears silence
+         2.888  marker: 24 <-> 20
+         2.888  20 hears voice 24
+         2.889  24 hears ringback
+         2.889  20 hears voice 24, is being rung
+         4.388  24 hears voice 20
+         4.388  20 hears voice 24
+         7.500  20 hears silence
+         7.700  24 hears silence
+         7.769  port 24 releases itself (M fell)
+         7.769  24 hears silence, free
+         7.784  port 20 releases itself (E fell)
+         7.784  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 15 ms;  overheard another call 0 ms
+
+  15b. The slowest dial register.md allows, 7 pps at 72 % (103 ms breaks), with every release detector at its shortest, 204 ms.
+         0.000  24 hears silence, free
+         0.000  27 hears silence, free
+         0.106  marker: register 03 -> 24, dial tone from 01
+         0.106  24 hears dial tone
+         1.273  24 hears silence
+         2.973  marker: 24 <-> 27
+         2.973  27 hears voice 24
+         2.974  24 hears ringback
+         2.974  27 hears voice 24, is being rung
+         3.973  24 hears voice 27
+         3.973  27 hears voice 24
+         6.585  27 hears silence
+         6.785  24 hears silence
+         6.788  port 24 releases itself (M fell)
+         6.788  24 hears silence, free
+         6.789  port 27 releases itself (E fell)
+         6.789  27 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 1 ms;  overheard another call 0 ms
+
+  Every scenario ended idle: True
+
+  16. 300 calls between random pairs; the two hang up within 600 ms of each other in random order, and a
+      third party dials the first number freed, its last digit landing ~270 ms after that hang-up.
+      Each port's two release detectors are drawn +-20% about 256 ms, so one can still be timing
+      out when the other has already freed the port.
+      a port reads busy while a detector times out    new calls killed by a stale release  longest dangling listen ms  third party: connected / busy  not idle at 9 s  ... not a register
+      no                                                                                6                        2439                      191 / 109                5                   0
+      yes                                                                               0                          94                       11 / 289                7                   0
+      Not idle at 9 s is always the same thing: the party left off-hook was given a register and hung up inside
+      the detector's 16 ms arming time, so the register never saw E rise; the 10 s no-digit timeout frees it.
+
+  17. The hang-up ping: the caller of scenario 1 hangs up first while the other party is still off-hook.
+      On-hook with E high is the ring condition, and it holds until the release fires.
+      ring and RBT gated by the filtered hook         caller rung (before cadence) ms  other party hears ringback ms
+      no                                                                          267                            268
+      yes                                                                           0                              1
+
+  18. Registers under load: 48 lines, callers WAIT for a register (dial tone is late, not refused).
+      200 000 calls a cell.  Holding = lift to last digit.
+       calls/line/h  holding s  erlang  registers  delayed %  mean wait of those s  wait > 1 s %  wait > 3 s %
+                  3          4    0.16          1      15.97                  2.56         12.50          5.71
+                  3          4    0.16          2       1.16                  1.41          0.67          0.10
+                  3          4    0.16          3       0.06                  1.06          0.03          0.00
+                  3         10    0.40          1      39.77                  9.05         37.39         32.20
+                  3         10    0.40          2       6.51                  3.91          5.46          3.59
+                  3         10    0.40          3       0.76                  2.70          0.57          0.28
+                 10          4    0.53          1      53.09                  4.67         46.45         31.08
+                 10          4    0.53          2      10.91                  1.68          7.00          1.65
+                 10          4    0.53          3       1.72                  1.11          0.79          0.06
+                 10         10    1.33          1     100.00             248580.34        100.00        100.00
+                 10         10    1.33          2      52.30                  8.58         48.43         40.48
+                 10         10    1.33          3      17.34                  3.79         14.29          8.99
+
+  [calls: 166 s]
+
+ANNOUNCE -- a recorded message as a ROM of CVSD bits: no codec on the card.
+  message 4.0 s + 0.25 s of silence each end = 288000 bits = 36000 bytes (crc32 020b1b95); 8 kB a second, so 8 s fills a 64 kB part.
+  played back through the decoder: segSNR 16.96 dB against the recording -- the codec's own figure, since the bits ARE the codec's.
+  first and last 32 bits of the image: 10101010101010101010101010101010 ... 10101010101010101010101010101010
+
+  The seams.  The port sends FILL (1010) until it answers, then the image, then FILL again; a looping
+  announcement joins the image's end to its start.  FILL free-runs, so the image can start on either
+  phase of it.  Peak within 20 ms of the seam, dB re speech rms (-99.9 = nothing):
+  seam                                      in phase  a bit doubled
+  idle -> image (the card answers)             -99.9          -30.5
+  image -> idle (the message ends)             -99.9          -30.5
+  image -> image (a loop)                      -99.9          -30.5
+  the image is 288000 bits, an even number, so a start in phase is an end in phase and a loop in phase:
+  one gate that starts the address counter on the right half of FILL makes all three seams exact.
+
+  An image cut out of running speech (no silence recorded round it): the decoder starts cold, with its
+  integrator and its syllabic filter at idle while the recording's were not.
+    cut at  error peak dB re speech rms  below -30 dB after ms
+     0.8 s                        -39.0                    0.0
+     1.5 s                        -33.2                    0.0
+     2.2 s                        -33.5                    0.0
+     3.0 s                        -75.7                    0.0
+
+  [announce: 6 s]
+
+ALINE -- digits as serial characters on A: start, data bits, stop; seized is mark.
+  A is sampled once a superframe (8 kHz) and crosses each trunk through a 2 ms RC and a Schmitt gate.
+
+  1. What one hop does to a pulse (clean line): a 16 ms space and a 16 ms mark, as received.
+      hops  space ms  mark ms  delay ms
+         1     15.50    16.50      2.00
+         3     14.50    17.50      6.00
+         7     12.50    19.50     14.00
+
+  2. Character errors in 4000, 3 data bits (octal), characters back to back.  A framing error counts.
+      bit ms  4 digits ms |           1 hop            |           3 hops           |           7 hops          
+                          |    clean     1e-2     6e-2 |    clean     1e-2     6e-2 |    clean     1e-2     6e-2
+           2           40 |     1675     1683     2091 |     3895     3829     3811 |     3756     3842     3895
+           4           80 |        0        0       39 |     2291     2386     2781 |     4000     3979     3950
+           8          160 |        0        0        0 |        0        0        5 |        0     2230     3127
+          16          320 |        0        0        0 |        0        0        0 |        0        0        8
+          32          640 |        0        0        0 |        0        0        0 |        0        0        0
+
+  3. The same with 4 data bits (the register's own code: 0-9, * and #), 7 hops.
+      bit ms  4 digits ms |    clean     1e-2     6e-2
+           8          192 |        0     2456     3302
+          16          384 |        0        0        0
+          32          768 |        0        0        0
+
+  4. Against the release rule: the longest space a character can hold, and the shortest release.
+     3 data bits at  8 ms: start + 3 zeros =   32 ms   against 204 ms
+     3 data bits at 16 ms: start + 3 zeros =   64 ms   against 204 ms
+     3 data bits at 32 ms: start + 3 zeros =  128 ms   against 204 ms
+     4 data bits at  8 ms: start + 4 zeros =   40 ms   against 204 ms
+     4 data bits at 16 ms: start + 4 zeros =   80 ms   against 204 ms
+     4 data bits at 32 ms: start + 4 zeros =  160 ms   against 204 ms
+
+  For scale: one dial pulse at 10 pps is 100 ms; the octal digit 0 is ten of them.
+
+  [aline: 19 s]
+
+FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and claimed.
+  Arithmetic from measured constants, not a simulation of the gates:
+    register windows HIT 8 / ID 128 ms (register.md 2); MT8870 StD 40 ms; A path per hop: a fall
+    2.0 ms, a rise 1.5 ms (aline 1); a seizure crosses an exchange in 7 ms; marker action 2 ms;
+    sender 20 pps 60/40 with 200 ms between digits (register.md 3 read 20 pps; mf8-cards.md 5 carried it);
+    guard, seizure to first break, 200 ms; release 256 ms.  The caller starts dialling 1 s after dial tone.
+
+  1. 2144 dials 2355 on 21 = 22 = 23 = 24.  A rotary caller; junctors seized when the FIRST digit is in.
+            0  lifts
+           10  register attached; dial tone
+         1000  dials 2 3 5 5
+         1290  digit 1 is in: seize a junctor in each trunk block, listening to the sender
+         1297    22: M rises; patched onward; monitor on
+         1304    23: M rises; patched onward; monitor on
+         1311    24: M rises; patched onward; monitor on
+         1490  sender: 2  (2 pulses, to 1570)
+         2350  sender: 3  (3 pulses, to 2480)
+         2610    22: digit 2 is not mine; monitor lets go
+         2612    24: digit 2 is not mine; monitor lets go
+         2613    23: CLAIM; onward patch cleared; backward A = 1
+         2616  origin: backward A rises on the junctor
+         2871    beyond 23: ports have released themselves
+         3610  sender: 5  (5 pulses, to 3840)
+         4870  sender: 5  (5 pulses, to 5100)
+         5107  origin: caller <-> junctor; register-sender freed
+         5233    23: has 5 5; junctor <-> line; the phone rings, RBT goes back
+         5233  caller hears ringback
+     post-dial delay, caller's last pulse to ringback: 493 ms
+
+  2. The same call, by where the junctors are seized and how the caller dials.
+     caller    seize at digit  post-dial delay ms  register-sender held s  link 23-24 held ms  monitor at 22 / 23 / 24 held ms
+     rotary                 1                 493                    5.10                1567               1312 / 3927 / 1302
+     rotary                 2                 493                    5.10                 987                 732 / 2867 / 722
+     rotary                 4                1733                    6.34                 987                 732 / 1587 / 722
+     keypad                 1                 645                    2.51                 987                 732 / 1587 / 722
+     keypad                 2                 945                    2.81                 987                 732 / 1587 / 722
+     keypad                 4                1545                    3.41                 987                 732 / 1587 / 722
+
+  3. A LOCAL call, 2144 dials 2155: what seizing at the first digit floods for nothing.
+     caller    seize at digit  every link held ms  a monitor at every exchange ms  local post-dial delay ms
+     rotary                 1                1116                            1109                       130
+     rotary                 2                   0                               0                       130
+     keypad                 1                 556                             549                         0
+     keypad                 2                   0                               0                         0
+
+  4. The load of the flood itself.  4 exchanges x 48 lines x 3 calls an hour, a fifth of them to another
+     exchange; erlangs of pure signalling on a link the call does not use (6 channels), and of monitor
+     time at an exchange the call passes (taken as 22).
+     caller    seize at digit  link: local calls  network calls   total  monitor: local  network   total
+     rotary                 1              0.143          0.050   0.193           0.142    0.042   0.184
+     rotary                 2              0.000          0.032   0.032           0.000    0.023   0.023
+     rotary                 4              0.000          0.032   0.032           0.000    0.023   0.023
+     keypad                 1              0.071          0.032   0.103           0.070    0.023   0.094
+     keypad                 2              0.000          0.032   0.032           0.000    0.023   0.023
+     keypad                 4              0.000          0.032   0.032           0.000    0.023   0.023
+
+  5. No sender: the junctors listen to the CALLER from the first digit, and his own remaining digits
+     go down the flood live.  The first digit is the district's, the same at every exchange flooded, so
+     nobody needs it again.  What must hold: every monitor is ready before his next digit begins.
+      hops |  dial: ready after his last pulse, ms  margin at 500 / 800 ms between digits |  keypad: ready after key release, ms  margin at a 200 ms gap
+         1 |                                   265                              235 / 535 |                                    9                     191
+         3 |                                   279                              221 / 521 |                                   23                     177
+         7 |                                   307                              193 / 493 |                                   51                     149
+     A monitor that is not ready refuses to claim (128 ms of make not seen; or a tone already present):
+     the call fails and is redialled; it is never a wrong number.
+     Post-dial delay to exchange 23: dial 133 ms after his last pulse, against 493 with a sender; keypad: connected 42 ms into the last tone.
+
+  6. Live, no sender: 2144 dials 2 3 5 5.  The origin acts on the first digit; exchange 23 on the second.
+     2 3 5 5, 800 ms between digits
+      digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
+          2            1160 origin 21: seize the flood                1439               1960        521
+          3            2220 -                           
+          5            3480 -                           
+          5            4740 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 521 ms
+
+     2 3 5 5, 500 ms between digits
+      digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
+          2            1160 origin 21: seize the flood                1439               1660        221
+          3            1920 -                           
+          5            2880 -                           
+          5            3840 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 221 ms
+
+  7. Live, no sender: 1 8 3 2 3 5 5 -- long distance.  Each digit is acted on by one level, which patches
+     the call into the next flood before the following digit.  Area codes begin with 8 or 9, which no
+     exchange digit can be (they are 1-7 pulses, or ten), so a monitor knows a toll call by its first digit.
+     1 8 3 2 3 5 5, 800 ms between digits
+      digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
+          1            1060 origin: not my district: seize              1339               1860        521
+          8            2620 district toll gateway: claim              2892               3420        528
+          3            3680 area 83 gateway: claim                    3952               4480        528
+          2            4640 district 2 gateway: claim                 4919               5440        521
+          3            5700 exchange 23: claim                        5958               6500        542
+          5            6960 -                           
+          5            8220 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 521 ms
+
+     1 8 3 2 3 5 5, 500 ms between digits
+      digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
+          1            1060 origin: not my district: seize              1339               1560        221
+          8            2320 district toll gateway: claim              2592               2820        228
+          3            3080 area 83 gateway: claim                    3352               3580        228
+          2            3740 district 2 gateway: claim                 4019               4240        221
+          3            4500 exchange 23: claim                        4758               5000        242
+          5            5460 -                           
+          5            6420 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 221 ms
+
+
+  [flood: 0 s]
+

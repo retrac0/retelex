@@ -30,6 +30,7 @@ one superframe carries one sample.
 | [docs/circuit-review.md](docs/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
 | [falstad/](falstad/README.md) | the CVSD encoder and decoder as a Falstad circuit: opening it, what to try, and how well it matches the model |
+| [exch/](exch/README.md) | **the exchange**: MF8's slot interface as a switched fabric — 8-slot highways, a marker that hunts ports by class, features as lines, MF8 between exchanges; its own documents, tool and log |
 
 ## Tools
 
