@@ -1,0 +1,32 @@
+$ python3 falstad_cvsd.py
+law: tau_syl 5 ms, tau_int 1 ms, 34.2 dB, slew 16000 FS/s
+R_int 1e+05  R1 5.11e+04  R2 2.55e+06  ratio 50.90 (34.13 dB)  tau_syl 5.010 ms
+I_max 160.0 uA  I_min 3.14 uA  R_set 3.094e+04  V_syl at idle 4.902 V  control at I_min 98 mV
+204 elements, 16 steps/bit -> falstad/cvsd_engine.txt
+
+$ python3 falstad_cvsd.py -o minus20.txt --level-db -20
+$ python3 falstad_cvsd.py -o minus20_8steps.txt --level-db -20 --steps 8
+$ node falstad/sim.mjs falstad/cvsd_engine.txt 0.024 nominal.json      (and the other two)
+
+$ python3 falstad_cvsd.py check nominal.json minus20.json minus20_8steps.json
+nominal.json: 16 steps/bit, 24.0 ms, 1 kHz at +0.0 dB re nominal; 24587 steps in 67 s wall, 0 solver failures
+  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+  OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.56-24.63 uA
+  decoder        against cvsd.decode on the circuit's own bits: gain 1.005, difference -42.8 dB re signal
+  syllabic node  decoder 4.262 V, law 4.264 V from the same bits; rms difference 1.6 mV
+  encoder        runs of three in 0.130 of bits; cvsd.encode on the same input 0.131
+  SINAD, 1 kHz   circuit 35.7 dB; cvsd.encode and cvsd.decode on the same input 33.6 dB (in band, 200-3400 Hz)
+minus20.json: 16 steps/bit, 24.1 ms, 1 kHz at -20.0 dB re nominal; 24636 steps in 64 s wall, 0 solver failures
+  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+  OTA            Iout / Iabc 0.990 (sd 0.000), Iabc 3.46-3.99 uA
+  decoder        against cvsd.decode on the circuit's own bits: gain 1.001, difference -37.4 dB re signal
+  syllabic node  decoder 4.884 V, law 4.884 V from the same bits; rms difference 0.2 mV
+  encoder        runs of three in 0.003 of bits; cvsd.encode on the same input 0.004
+  SINAD, 1 kHz   circuit 28.4 dB; cvsd.encode and cvsd.decode on the same input 29.7 dB (in band, 200-3400 Hz)
+minus20_8steps.json: 8 steps/bit, 24.2 ms, 1 kHz at -20.0 dB re nominal; 12376 steps in 40 s wall, 0 solver failures
+  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+  OTA            Iout / Iabc 0.989 (sd 0.001), Iabc 4.75-7.72 uA
+  decoder        against cvsd.decode on the circuit's own bits: gain 1.019, difference -27.4 dB re signal
+  syllabic node  decoder 4.799 V, law 4.799 V from the same bits; rms difference 0.8 mV
+  encoder        runs of three in 0.026 of bits; cvsd.encode on the same input 0.003
+  SINAD, 1 kHz   circuit 23.8 dB; cvsd.encode and cvsd.decode on the same input 29.8 dB (in band, 200-3400 Hz)

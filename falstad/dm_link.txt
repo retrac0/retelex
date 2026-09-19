@@ -1,0 +1,184 @@
+<cir f="64" ts="9.765625e-07" ic="10" cb="50" pb="50" vr="5" mts="1e-12">
+  <ccm nm="TX-CLK" f="1" sx="4" sy="2">
+    <ext nm="HB" nd="1" ps="0" sd="3"/>
+    <ext nm="H" nd="3" ps="1" sd="3"/>
+    <R nn="1" x="160 232 112 232" f="0" wf="2" maxv="2.5" fr="128000" bias="2.5" phaseShift="-0.3926990817"/>
+    <w nn="1 1" x="160 232 240 232" f="0"/>
+    <w nn="1 1" x="240 232 320 232" f="0"/>
+    <ln nn="1" x="240 232 240 296" f="0" te="HB"/>
+    <R nn="2" x="288 200 288 152" f="0" wf="0" maxv="5"/>
+    <JKFlipFlop nn="2 1 2 3 10001" x="320 200 416 200" f="0"/>
+    <w nn="2 2" x="320 200 288 200" f="0"/>
+    <w nn="2 2" x="288 200 288 264" f="0"/>
+    <w nn="2 2" x="288 264 320 264" f="0"/>
+    <w nn="3 3" x="416 200 464 200" f="0"/>
+    <ln nn="3" x="464 200 512 200" f="0" te="H"/>
+    <x nn="" x="112 360 128 360" f="0" si="16" te="clock chain: 128 kHz half-bit clock; half a 74HC112 divides by two on its falling edge"/>
+  </ccm>
+  <ccm nm="DM-ENC" f="1" sx="5" sy="3">
+    <ext nm="/D" nd="1" ps="0" sd="2"/>
+    <ext nm="H" nd="2" ps="1" sd="2"/>
+    <ext nm="HB" nd="4" ps="2" sd="2"/>
+    <ext nm="TXD" nd="5" ps="0" sd="3"/>
+    <Or nn="1 2 3" x="240 200 336 200" f="0" in="2" pd="1e-09"/>
+    <w nn="2 2" x="160 184 240 184" f="0"/>
+    <ln nn="2" x="160 184 112 184" f="0" te="H"/>
+    <w nn="1 1" x="160 216 240 216" f="0"/>
+    <ln nn="1" x="160 216 112 216" f="0" te="/D"/>
+    <JKFlipFlop nn="3 4 3 5 10001" x="432 168 528 168" f="0"/>
+    <w nn="3 3" x="336 200 384 200" f="0"/>
+    <w nn="3 3" x="384 200 384 168" f="0"/>
+    <w nn="3 3" x="384 168 432 168" f="0"/>
+    <w nn="3 3" x="384 200 384 232" f="0"/>
+    <w nn="3 3" x="384 232 432 232" f="0"/>
+    <w nn="4 4" x="432 200 400 200" f="0"/>
+    <w nn="4 4" x="400 200 400 296" f="0"/>
+    <ln nn="4" x="400 296 400 344" f="0" te="HB"/>
+    <w nn="5 5" x="528 168 576 168" f="0"/>
+    <ln nn="5" x="576 168 624 168" f="0" te="TXD"/>
+    <x nn="" x="112 400 128 400" f="0" si="16" te="differential Manchester: a transition at every cell boundary (H = 1),"/>
+    <x nn="" x="112 424 128 424" f="0" si="16" te="and at mid-cell (H = 0) when the bit is 0.  Half a 74HC112 and a quarter 74HC32"/>
+  </ccm>
+  <ccm nm="LINE" f="1" sx="5" sy="4">
+    <ext nm="TX" nd="1" ps="0" sd="2"/>
+    <ext nm="LEVEL" nd="2" ps="1" sd="2"/>
+    <ext nm="NOISE" nd="3" ps="2" sd="2"/>
+    <ext nm="IMP" nd="6" ps="3" sd="2"/>
+    <ext nm="RX" nd="8" ps="0" sd="3"/>
+    <ext nm="SUM" nd="5" ps="1" sd="3"/>
+    <VCVS nn="1 2 3 4 5 0" x="400 168 496 168" f="0" ic="4" ex="(a-2.5)/2.5*b+c+4.192*d"/>
+    <w nn="1 1" x="160 168 400 168" f="0"/>
+    <ln nn="1" x="160 168 112 168" f="0" te="TX"/>
+    <w nn="2 2" x="160 200 400 200" f="0"/>
+    <ln nn="2" x="160 200 112 200" f="0" te="LEVEL"/>
+    <w nn="3 3" x="160 232 400 232" f="0"/>
+    <ln nn="3" x="160 232 112 232" f="0" te="NOISE"/>
+    <ln nn="6" x="160 264 112 264" f="0" te="IMP"/>
+    <r nn="6 4" x="160 264 256 264" f="0" r="19100"/>
+    <w nn="4 4" x="256 264 320 264" f="0"/>
+    <w nn="4 4" x="320 264 400 264" f="0"/>
+    <l nn="4 0" x="256 264 256 344" f="0" l="0.01"/>
+    <g nn="0" x="256 344 256 360" f="0"/>
+    <c nn="4 0" x="320 264 320 344" f="0" c="1.58e-09"/>
+    <g nn="0" x="320 344 320 360" f="0"/>
+    <g nn="0" x="496 200 496 216" f="0"/>
+    <w nn="5 5" x="496 168 544 168" f="0"/>
+    <ln nn="5" x="544 168 544 120" f="0" te="SUM"/>
+    <r nn="5 7" x="544 168 640 168" f="0" r="1240"/>
+    <c nn="7 0" x="640 168 640 232" f="0" c="1e-09"/>
+    <g nn="0" x="640 232 640 248" f="0"/>
+    <r nn="7 8" x="640 168 736 168" f="0" r="12400"/>
+    <c nn="8 0" x="736 168 736 232" f="0" c="1e-10"/>
+    <g nn="0" x="736 232 736 248" f="0"/>
+    <ln nn="8" x="736 168 784 168" f="0" te="RX"/>
+    <x nn="" x="112 420 128 420" f="0" si="16" te="SUM = TX as +-LEVEL volts, plus NOISE, plus the ringing each edge on IMP starts;"/>
+    <x nn="" x="112 444 128 444" f="0" si="16" te="then the input filter: two RC sections at 128 kHz"/>
+  </ccm>
+  <ccm nm="DM-RX" f="1" sx="5" sy="5">
+    <ext nm="IN" nd="1" ps="0" sd="2"/>
+    <ext nm="BIT" nd="9" ps="0" sd="3"/>
+    <ext nm="RXC" nd="12" ps="1" sd="3"/>
+    <ext nm="CD" nd="13" ps="2" sd="3"/>
+    <ext nm="RXD" nd="2" ps="3" sd="3"/>
+    <ext nm="DT" nd="5" ps="4" sd="3"/>
+    <ln nn="1" x="160 200 112 200" f="0" te="IN"/>
+    <Schmitt nn="1 2" x="160 200 256 200" f="0" lt="-0.05" ut="0.05"/>
+    <ln nn="2" x="256 200 256 152" f="0" te="RXD"/>
+    <w nn="2 2" x="256 200 304 200" f="0"/>
+    <w nn="2 2" x="304 200 400 200" f="0"/>
+    <r nn="2 3" x="304 200 304 280" f="0" r="1000"/>
+    <c nn="3 0" x="304 280 304 344" f="0" c="2.113322814e-09"/>
+    <g nn="0" x="304 344 304 360" f="0"/>
+    <w nn="3 3" x="304 280 368 280" f="0"/>
+    <w nn="3 3" x="368 280 368 232" f="0"/>
+    <w nn="3 3" x="368 232 400 232" f="0"/>
+    <Xor nn="3 2 4" x="400 216 496 216" f="0" in="2" pd="1e-09"/>
+    <w nn="4 4" x="496 216 528 216" f="0"/>
+    <w nn="4 4" x="528 216 560 216" f="0"/>
+    <Monostable nn="4 5 6" x="560 216 656 216" f="0" rt="false" dl="2.44140625e-06"/>
+    <w nn="5 5" x="656 216 704 216" f="0"/>
+    <ln nn="5" x="704 216 752 216" f="0" te="DT"/>
+    <w nn="6 6" x="656 248 688 248" f="0"/>
+    <w nn="6 6" x="688 248 688 360" f="0"/>
+    <w nn="6 6" x="688 360 720 360" f="0"/>
+    <Monostable nn="6 7 8" x="720 360 816 360" f="0" rt="true" dl="8.30078125e-06"/>
+    <ln nn="8" x="816 392 864 392" f="1" te="EXP"/>
+    <JKFlipFlop nn="8 5 7 9 10001" x="1008 120 1104 120" f="4"/>
+    <ln nn="8" x="1008 120 960 120" f="1" te="EXP"/>
+    <ln nn="5" x="1008 152 960 152" f="0" te="DT"/>
+    <ln nn="7" x="1008 184 960 184" f="1" te="SHORT"/>
+    <ln nn="9" x="1104 120 1152 120" f="0" te="BIT"/>
+    <w nn="7 7" x="816 360 880 360" f="0"/>
+    <w nn="7 7" x="880 360 880 328" f="0"/>
+    <w nn="7 7" x="880 328 1008 328" f="0"/>
+    <ln nn="7" x="880 360 880 408" f="1" te="SHORT"/>
+    <R nn="10" x="976 440 976 488" f="0" wf="0" maxv="5"/>
+    <JKFlipFlop nn="7 5 10 11 10002" x="1008 328 1104 328" f="4"/>
+    <ln nn="5" x="1008 360 960 360" f="0" te="DT"/>
+    <w nn="10 10" x="1008 392 976 392" f="0"/>
+    <w nn="10 10" x="976 392 976 440" f="0"/>
+    <Nor nn="11 5 12" x="1200 312 1296 312" f="0" in="2" pd="1e-09"/>
+    <ln nn="5" x="1200 296 1152 296" f="0" te="DT"/>
+    <w nn="11 11" x="1104 328 1200 328" f="0"/>
+    <w nn="12 12" x="1296 312 1344 312" f="0"/>
+    <ln nn="12" x="1344 312 1392 312" f="0" te="RXC"/>
+    <w nn="4 4" x="528 216 528 456" f="0"/>
+    <w nn="4 4" x="528 456 560 456" f="0"/>
+    <Monostable nn="4 13 10003" x="560 456 656 456" f="0" rt="true" dl="3.076171875e-05"/>
+    <ln nn="13" x="656 456 704 456" f="0" te="CD"/>
+    <x nn="" x="112 560 128 560" f="0" si="16" te="dead time 3 steps: a transition under 4 steps (0.25 cell) after the last accepted one is ignored.  Classifier 9 steps from its end: a gap of 13 steps or more (0.78 cell) is a 1"/>
+    <x nn="" x="112 584 128 584" f="0" si="16" te="BIT is valid at the rising edge of RXC, the recovered clock.  Timers are whole time steps here; mf8-spec.md 9.7 has the real values"/>
+  </ccm>
+  <x x="48 48 64 48" f="0" si="24" te="Differential Manchester link, 64 kbps, 128 kBaud, on a PRBS"/>
+  <x x="48 80 64 80" f="0" si="12" te="mf8-spec.md 9.2 and 9.4 with circuit-review.md 3; by falstad_cvsd.py.  Each block is a subcircuit"/>
+  <SeqGen x="96 288 192 288" f="0" bc="127" dt="-1978130305 1596693031 -1112698312 711423153"/>
+  <ln x="96 288 48 288" f="0" te="TX_CLK"/>
+  <DFlipFlop x="288 320 384 320" f="0"/>
+  <w x="192 320 288 320" f="0"/>
+  <ln x="288 352 240 352" f="0" te="TX_CLK"/>
+  <ln x="384 320 432 320" f="0" te="C_TX"/>
+  <cc x="96 480 256 480" f="0" mo="TX-CLK"/>
+  <w x="256 480 320 480" f="0"/>
+  <ln x="320 480 368 480" f="0" te="HB"/>
+  <w x="256 512 320 512" f="0"/>
+  <ln x="320 512 368 512" f="0" te="TX_CLK"/>
+  <cc x="560 384 752 384" f="0" mo="DM-ENC"/>
+  <ln x="560 416 512 416" f="0" te="TX_CLK"/>
+  <ln x="560 448 512 448" f="0" te="HB"/>
+  <cc x="944 384 1136 384" f="0" mo="LINE"/>
+  <w x="752 384 912 384" f="0"/>
+  <w x="912 384 944 384" f="0"/>
+  <ln x="912 384 912 336" f="0" te="TXD"/>
+  <ln x="1136 416 1184 416" f="0" te="LSUM"/>
+  <w x="944 416 800 416" f="0"/>
+  <w x="800 416 800 592" f="0"/>
+  <R x="800 592 752 592" f="0" wf="0" maxv="1"/>
+  <w x="944 448 848 448" f="0"/>
+  <w x="848 448 848 656" f="0"/>
+  <R x="848 656 848 704" f="0" wf="6" maxv="0"/>
+  <w x="944 480 896 480" f="0"/>
+  <w x="896 480 896 592" f="0"/>
+  <R x="896 592 944 592" f="0" wf="2" maxv="0" fr="258.5" bias="0"/>
+  <x x="704 560 720 560" f="0" si="12" te="level"/>
+  <x x="784 688 800 688" f="0" si="12" te="noise"/>
+  <x x="928 560 944 560" f="0" si="12" te="impulses"/>
+  <cc x="1296 384 1488 384" f="0" mo="DM-RX"/>
+  <w x="1136 384 1216 384" f="0"/>
+  <w x="1216 384 1296 384" f="0"/>
+  <ln x="1216 384 1216 336" f="0" te="RXA"/>
+  <ln x="1488 448 1536 448" f="0" te="CD"/>
+  <ln x="1488 480 1536 480" f="0" te="RXD"/>
+  <ln x="1488 512 1536 512" f="0" te="DT"/>
+  <w x="384 384 560 384" f="0"/>
+  <ln x="1488 384 1536 384" f="0" te="RX_BIT"/>
+  <ln x="1488 416 1536 416" f="0" te="RX_CLK"/>
+  <x x="96 256 112 256" f="0" si="12" te="PRBS7"/>
+  <adj e="23" en="Voltage" mn="0" mx="1.5" st="Line level at the receiver, V peak"/>
+  <adj e="26" en="Max Voltage" mn="0" mx="3" st="Line noise, V (uniform, per time step)"/>
+  <adj e="29" en="Max Voltage" mn="0" mx="6" st="Impulse peak, V"/>
+  <adj e="29" en="Frequency (Hz)" mn="5" mx="2000" st="Impulse source, Hz (two impulses a cycle)"/>
+  <o en="19" sp="1" f="x206" p="0" x="TXD, the encoder output"><p e="19" v="0"/></o>
+  <o en="20" sp="1" f="x206" p="1" x="the line (green), after the input filter (red)"><p e="20" v="0"/><p e="36" v="0"/></o>
+  <o en="38" sp="1" f="x206" p="2" x="slicer (green), dead time = accepted transition (red)"><p e="38" v="0"/><p e="39" v="0"/></o>
+  <o en="41" sp="1" f="x206" p="3" x="recovered bit (green) and clock (red)"><p e="41" v="0"/><p e="42" v="0"/></o>
+</cir>
