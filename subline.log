@@ -1,0 +1,281 @@
+DENSITY -- what CVSD traffic looks like to each detector, codec only, no line
+  RC tau 4 ms, extremes after 50 ms.  The phone filters Q (ringing, all zeros, is 0.00);
+  the exchange filters Q^Q[n-2] (on-hook, 1100, is 1.00).  7 talkers x 30 s where named.
+
+  source                                     Q density      Q^Q[n-2]  longest run  longest X=1
+  speech, nominal                          0.427-0.575   0.000-0.526        44 b          6 b
+  speech +10 dB                            0.407-0.593   0.000-0.516        69 b          6 b
+  speech +20 dB, clipped at full scale     0.431-0.578   0.000-0.514        44 b          8 b
+  silence (encoder idle)                   0.499-0.501   0.000-0.000         1 b          0 b
+  tone 300 Hz, full scale                  0.458-0.542   0.426-0.463        50 b          2 b
+  tone 300 Hz, 3x full scale               0.441-0.559   0.304-0.339        81 b          2 b
+  tone 1 kHz, full scale                   0.482-0.519   0.274-0.289        31 b          4 b
+  tone 3.4 kHz, full scale                 0.490-0.510   0.209-0.216        10 b          2 b
+  square 300 Hz, full scale                0.469-0.531   0.114-0.136        51 b          3 b
+  noise 300-3400 Hz, 0.5 rms               0.458-0.530   0.210-0.385        31 b          6 b
+
+  [density: 61 s]
+
+HOOK AND RING DETECTORS over the line -- RC 4 ms, comparator 0.85 / 0.70, violation hold 16 cells, 2 s per cell, one seed.
+  "false events" is the number of times the detector left the correct state after 20 ms.
+
+ EXCHANGE hook detector -- density of Q^Q[n-2]; on-hook above 0.85, off below 0.70
+
+  phone on-hook, sending 1100 -> want on-hook
+    condition               mean     min     max  wrong %  false events
+    clean                  1.000   0.997   1.000     0.00             0
+    sd 0.4                 1.000   0.997   1.000     0.00             0
+    sd 0.6                 1.000   0.997   1.000     0.00             0
+    sd 0.7                 1.000   0.992   1.000     0.00             0
+    sd 0.8                 0.998   0.970   1.000     0.00             0
+    impulse 10/s           1.000   0.990   1.000     0.00             0
+    impulse 100/s          0.999   0.964   1.000     0.00             0
+    impulse 1000/s         0.981   0.903   1.000     0.00             0
+
+  phone off-hook, CVSD speech -> want off-hook
+    condition               mean     min     max  wrong %  false events
+    clean                  0.138   0.000   0.491     0.00             0
+    sd 0.4                 0.138   0.000   0.491     0.00             0
+    sd 0.6                 0.138   0.000   0.491     0.00             0
+    sd 0.7                 0.138   0.000   0.492     0.00             0
+    sd 0.8                 0.144   0.000   0.518     0.00             0
+    impulse 10/s           0.138   0.000   0.491     0.00             0
+    impulse 100/s          0.151   0.000   0.498     0.00             0
+    impulse 1000/s         0.251   0.005   0.601     0.00             0
+
+  phone off-hook, CVSD idle 1010 -> want off-hook
+    condition               mean     min     max  wrong %  false events
+    clean                  0.000   0.000   0.003     0.00             0
+    sd 0.4                 0.000   0.000   0.003     0.00             0
+    sd 0.6                 0.000   0.000   0.008     0.00             0
+    sd 0.7                 0.001   0.000   0.074     0.00             0
+    sd 0.8                 0.006   0.000   0.109     0.00             0
+    impulse 10/s           0.001   0.000   0.074     0.00             0
+    impulse 100/s          0.014   0.000   0.177     0.00             0
+    impulse 1000/s         0.128   0.005   0.400     0.00             0
+
+  dead pair -> want on-hook
+    condition               mean     min     max  wrong %  false events
+    quiet, sd 0.01         1.000   0.997   1.000     0.00             0
+    sd 0.03                1.000   0.997   1.000     0.00             0
+    sd 0.05                1.000   0.997   1.000     0.00             0
+    sd 0.1                 1.000   0.997   1.000     0.00             0
+    sd 0.3                 0.993   0.921   1.000     0.00             0
+    sd 1.0                 0.934   0.757   0.992     0.00             0
+    impulse 100/s          0.988   0.867   1.000     0.00             0
+    impulse 1000/s         0.897   0.620   0.993     2.21             9
+
+ PHONE ring detector -- density of Q; ringing below 0.15, released above 0.30
+
+  exchange sends all zeros -> want ring
+    condition               mean     min     max  wrong %  false events
+    clean                  0.000   0.000   0.003     0.00             0
+    sd 0.4                 0.000   0.000   0.003     0.00             0
+    sd 0.6                 0.000   0.000   0.003     0.00             0
+    sd 0.7                 0.000   0.000   0.003     0.00             0
+    sd 0.8                 0.000   0.000   0.061     0.00             0
+    impulse 10/s           0.001   0.000   0.074     0.00             0
+    impulse 100/s          0.010   0.000   0.182     0.00             0
+    impulse 1000/s         0.087   0.002   0.280     0.00             0
+
+  exchange sends idle 1010 -> want no ring
+    condition               mean     min     max  wrong %  false events
+    clean                  0.500   0.499   0.501     0.00             0
+    sd 0.4                 0.500   0.497   0.504     0.00             0
+    sd 0.6                 0.500   0.495   0.505     0.00             0
+    sd 0.7                 0.500   0.493   0.536     0.00             0
+    sd 0.8                 0.501   0.491   0.553     0.00             0
+    impulse 10/s           0.500   0.488   0.542     0.00             0
+    impulse 100/s          0.506   0.477   0.588     0.00             0
+    impulse 1000/s         0.552   0.474   0.673     0.00             0
+
+  exchange sends CVSD speech -> want no ring
+    condition               mean     min     max  wrong %  false events
+    clean                  0.500   0.462   0.539     0.00             0
+    sd 0.4                 0.500   0.463   0.539     0.00             0
+    sd 0.6                 0.500   0.463   0.539     0.00             0
+    sd 0.7                 0.500   0.463   0.543     0.00             0
+    sd 0.8                 0.501   0.464   0.561     0.00             0
+    impulse 10/s           0.500   0.462   0.548     0.00             0
+    impulse 100/s          0.506   0.469   0.593     0.00             0
+    impulse 1000/s         0.552   0.475   0.688     0.00             0
+
+  dead pair -> want no ring
+    condition               mean     min     max  wrong %  false events
+    quiet, sd 0.01         1.000   0.997   1.000     0.00             0
+    sd 0.03                1.000   0.997   1.000     0.00             0
+    sd 0.05                1.000   0.997   1.000     0.00             0
+    sd 0.1                 1.000   0.997   1.000     0.00             0
+    sd 0.3                 0.992   0.914   1.000     0.00             0
+    sd 1.0                 0.926   0.734   0.991     0.00             0
+    impulse 100/s          0.992   0.877   1.000     0.00             0
+    impulse 1000/s         0.920   0.633   0.998     0.00             0
+
+
+  [hook: 21 s]
+
+DIAL PULSES as the line card sees them -- digit 0, ten breaks, ON_HOOK after the 4 ms detector
+  "idle": the dial's off-normal contact mutes the transmitter, so the makes carry the codec's
+  1010.  "speech": it does not, and talk continues under the dial.  Widths in ms.
+
+  dial           makes   condition        pulses     break sent -> seen      make sent -> seen    corrected: break         make
+  7 pps 56/44    idle    clean             10/10    80.0 ->  73.9- 73.9    62.9 ->  69.0- 69.0       +0.0 to  +0.0  -0.0 to  +0.0
+  7 pps 56/44    idle    sd 0.8            10/10    80.0 ->  73.7- 73.9    62.9 ->  69.0- 69.2       -0.2 to  +0.0  -0.0 to  +0.1
+  7 pps 56/44    idle    impulse 100/s     10/10    80.0 ->  73.5- 74.1    62.9 ->  68.8- 69.3       -0.3 to  +0.3  -0.3 to  +0.3
+  7 pps 56/44    idle    impulse 1000/s    10/10    80.0 ->  73.8- 74.8    62.9 ->  67.9- 69.2       -0.0 to  +1.0  -1.1 to  +0.2
+  7 pps 56/44    speech  clean             10/10    80.0 ->  73.9- 76.9    62.9 ->  66.1- 69.0       +0.0 to  +3.0  -2.9 to  +0.0
+  7 pps 56/44    speech  sd 0.8            10/10    80.0 ->  73.7- 76.8    62.9 ->  66.2- 69.0       -0.2 to  +2.9  -2.8 to  +0.0
+  7 pps 56/44    speech  impulse 100/s     10/10    80.0 ->  73.6- 76.9    62.9 ->  65.9- 69.2       -0.2 to  +3.0  -3.1 to  +0.2
+  7 pps 56/44    speech  impulse 1000/s    10/10    80.0 ->  73.8- 77.8    62.9 ->  65.7- 69.2       -0.0 to  +3.9  -3.3 to  +0.2
+  7 pps 72/28    idle    clean             10/10   102.9 ->  96.7- 96.7    40.0 ->  46.1- 46.1       +0.0 to  +0.0  -0.0 to  -0.0
+  7 pps 72/28    idle    sd 0.8            10/10   102.9 ->  96.4- 96.7    40.0 ->  46.1- 46.4       -0.3 to  +0.0  -0.0 to  +0.2
+  7 pps 72/28    idle    impulse 100/s     10/10   102.9 ->  96.6- 97.0    40.0 ->  45.8- 46.2       -0.1 to  +0.3  -0.3 to  +0.0
+  7 pps 72/28    idle    impulse 1000/s    10/10   102.9 ->  96.0- 97.9    40.0 ->  44.9- 46.9       -0.7 to  +1.2  -1.2 to  +0.8
+  7 pps 72/28    speech  clean             10/10   102.9 ->  96.7-100.2    40.0 ->  42.7- 46.1       +0.0 to  +3.5  -3.5 to  -0.0
+  7 pps 72/28    speech  sd 0.8            10/10   102.9 ->  96.5-100.1    40.0 ->  42.7- 46.3       -0.2 to  +3.4  -3.5 to  +0.1
+  7 pps 72/28    speech  impulse 100/s     10/10   102.9 ->  96.6-100.2    40.0 ->  42.4- 46.2       -0.1 to  +3.5  -3.8 to  +0.0
+  7 pps 72/28    speech  impulse 1000/s    10/10   102.9 ->  95.3-101.1    40.0 ->  41.7- 47.5       -1.4 to  +4.4  -4.5 to  +1.4
+  10 pps 60/40   idle    clean             10/10    60.0 ->  53.9- 53.9    40.0 ->  46.1- 46.1       +0.0 to  +0.0  -0.0 to  -0.0
+  10 pps 60/40   idle    sd 0.8            10/10    60.0 ->  53.7- 53.9    40.0 ->  46.1- 46.4       -0.2 to  +0.0  -0.1 to  +0.2
+  10 pps 60/40   idle    impulse 100/s     10/10    60.0 ->  53.4- 54.2    40.0 ->  45.9- 46.2       -0.4 to  +0.4  -0.2 to  +0.1
+  10 pps 60/40   idle    impulse 1000/s    10/10    60.0 ->  53.7- 55.1    40.0 ->  45.1- 46.5       -0.2 to  +1.3  -1.0 to  +0.3
+  10 pps 60/40   speech  clean             10/10    60.0 ->  53.9- 57.2    40.0 ->  42.5- 46.1       +0.0 to  +3.4  -3.7 to  -0.0
+  10 pps 60/40   speech  sd 0.8            10/10    60.0 ->  53.7- 57.2    40.0 ->  42.5- 46.2       -0.2 to  +3.4  -3.7 to  +0.1
+  10 pps 60/40   speech  impulse 100/s     10/10    60.0 ->  53.5- 57.2    40.0 ->  42.4- 46.2       -0.4 to  +3.4  -3.8 to  +0.1
+  10 pps 60/40   speech  impulse 1000/s    10/10    60.0 ->  54.3- 58.8    40.0 ->  40.8- 45.9       +0.4 to  +4.9  -5.4 to  -0.3
+  10 pps 67/33   idle    clean             10/10    67.0 ->  60.9- 60.9    33.0 ->  39.1- 39.1       +0.0 to  +0.0  -0.0 to  -0.0
+  10 pps 67/33   idle    sd 0.8            10/10    67.0 ->  60.6- 60.9    33.0 ->  39.1- 39.3       -0.2 to  +0.1  -0.1 to  +0.2
+  10 pps 67/33   idle    impulse 100/s     10/10    67.0 ->  60.4- 61.0    33.0 ->  38.9- 39.6       -0.4 to  +0.2  -0.2 to  +0.4
+  10 pps 67/33   idle    impulse 1000/s    10/10    67.0 ->  60.8- 61.7    33.0 ->  38.1- 39.4       -0.1 to  +0.9  -1.1 to  +0.3
+  10 pps 67/33   speech  clean             10/10    67.0 ->  60.9- 64.3    33.0 ->  35.9- 39.1       +0.0 to  +3.5  -3.3 to  -0.0
+  10 pps 67/33   speech  sd 0.8            10/10    67.0 ->  60.7- 64.3    33.0 ->  35.9- 39.2       -0.1 to  +3.5  -3.2 to  +0.1
+  10 pps 67/33   speech  impulse 100/s     10/10    67.0 ->  60.4- 64.8    33.0 ->  35.9- 39.6       -0.4 to  +4.0  -3.3 to  +0.4
+  10 pps 67/33   speech  impulse 1000/s    10/10    67.0 ->  61.1- 65.6    33.0 ->  32.7- 39.3       +0.3 to  +4.7  -6.4 to  +0.1
+  12 pps 56/44   idle    clean             10/10    46.7 ->  40.5- 40.5    36.7 ->  42.8- 42.8       -0.0 to  +0.0  -0.1 to  +0.0
+  12 pps 56/44   idle    sd 0.8            10/10    46.7 ->  40.3- 40.6    36.7 ->  42.7- 42.9       -0.2 to  +0.1  -0.1 to  +0.0
+  12 pps 56/44   idle    impulse 100/s     10/10    46.7 ->  40.5- 40.8    36.7 ->  42.5- 42.9       -0.0 to  +0.3  -0.3 to  +0.1
+  12 pps 56/44   idle    impulse 1000/s    10/10    46.7 ->  39.9- 41.5    36.7 ->  42.0- 43.2       -0.6 to  +1.0  -0.8 to  +0.3
+  12 pps 56/44   speech  clean             10/10    46.7 ->  40.5- 44.1    36.7 ->  39.2- 42.8       -0.0 to  +3.6  -3.6 to  +0.0
+  12 pps 56/44   speech  sd 0.8            10/10    46.7 ->  40.3- 44.1    36.7 ->  39.2- 42.9       -0.2 to  +3.6  -3.7 to  +0.0
+  12 pps 56/44   speech  impulse 100/s     10/10    46.7 ->  40.5- 44.2    36.7 ->  39.2- 42.8       -0.0 to  +3.7  -3.6 to  -0.0
+  12 pps 56/44   speech  impulse 1000/s    10/10    46.7 ->  40.7- 46.4    36.7 ->  38.2- 43.1       +0.2 to  +5.9  -4.7 to  +0.3
+  12 pps 72/28   idle    clean             10/10    60.0 ->  53.9- 53.9    23.3 ->  29.5- 29.5       +0.0 to  +0.0  -0.0 to  +0.0
+  12 pps 72/28   idle    sd 0.8            10/10    60.0 ->  53.7- 53.9    23.3 ->  29.4- 29.5       -0.2 to  +0.1  -0.1 to  +0.1
+  12 pps 72/28   idle    impulse 100/s     10/10    60.0 ->  53.8- 54.1    23.3 ->  29.1- 29.5       -0.0 to  +0.3  -0.4 to  +0.0
+  12 pps 72/28   idle    impulse 1000/s    10/10    60.0 ->  53.3- 54.7    23.3 ->  28.3- 30.1       -0.5 to  +0.9  -1.2 to  +0.6
+  12 pps 72/28   speech  clean             10/10    60.0 ->  53.9- 56.9    23.3 ->  26.0- 29.5       +0.0 to  +3.1  -3.5 to  +0.0
+  12 pps 72/28   speech  sd 0.8            10/10    60.0 ->  53.7- 57.0    23.3 ->  26.0- 29.5       -0.2 to  +3.1  -3.5 to  +0.1
+  12 pps 72/28   speech  impulse 100/s     10/10    60.0 ->  53.8- 56.9    23.3 ->  25.8- 29.5       -0.0 to  +3.1  -3.6 to  -0.0
+  12 pps 72/28   speech  impulse 1000/s    10/10    60.0 ->  54.0- 59.9    23.3 ->  24.7- 29.5       +0.2 to  +6.1  -4.8 to  +0.0
+  20 pps 60/40   idle    clean             10/10    30.0 ->  23.9- 23.9    20.0 ->  26.1- 26.1       +0.0 to  +0.0  -0.0 to  -0.0
+  20 pps 60/40   idle    sd 0.8            10/10    30.0 ->  23.7- 23.9    20.0 ->  25.8- 26.3       -0.1 to  +0.1  -0.3 to  +0.1
+  20 pps 60/40   idle    impulse 100/s     10/10    30.0 ->  23.6- 24.2    20.0 ->  25.7- 26.4       -0.2 to  +0.4  -0.5 to  +0.2
+  20 pps 60/40   idle    impulse 1000/s    10/10    30.0 ->  23.9- 25.1    20.0 ->  25.0- 26.4       +0.1 to  +1.2  -1.1 to  +0.2
+  20 pps 60/40   speech  clean             10/10    30.0 ->  23.9- 27.9    20.0 ->  22.5- 26.1       +0.0 to  +4.1  -3.7 to  -0.0
+  20 pps 60/40   speech  sd 0.8            10/10    30.0 ->  23.7- 27.9    20.0 ->  22.5- 26.3       -0.1 to  +4.1  -3.7 to  +0.1
+  20 pps 60/40   speech  impulse 100/s     10/10    30.0 ->  23.6- 27.9    20.0 ->  22.5- 26.4       -0.2 to  +4.1  -3.7 to  +0.2
+  20 pps 60/40   speech  impulse 1000/s    10/10    30.0 ->  23.9- 29.2    20.0 ->  22.7- 26.4       +0.1 to  +5.4  -3.4 to  +0.2
+
+  "corrected" holds ON_HOOK 6.16 ms after each release -- a monostable on the falling
+  edge, sized to the RC's own asymmetry, TAU * (ln 1/(1-0.85) - ln 1/0.70) -- and gives the error
+  against what was sent.
+
+  Summary, all rates and conditions:
+    idle    pulses 10/10 in 28/28 cells;  break error as seen -6.9 to -4.9 ms;  corrected -0.7 to +1.3 ms
+    speech  pulses 10/10 in 28/28 cells;  break error as seen -7.5 to -0.1 ms;  corrected -1.4 to +6.1 ms
+
+  [dial: 16 s]
+
+THE REGISTER -- dialled digits end to end: phone, line, hook detector, register
+  1 kHz tick; a break counts after 8 ms, a make of 128 ms ends a digit, a break of 256 ms clears.
+
+  1. Random four-digit strings, 50 per cell.  Each string draws its own dial: rate in the range
+     shown, break ratio 56-72 %, +-2 % per-pulse jitter, each inter-digit pause 250-1000 ms
+     (ES 201 187 asks the phone for >= 720), a random tick phase and talker.  Widths are
+     as the register's own timer measured them, in ticks = ms.
+
+  dial       makes   condition        digits  wrong  break counted  make in digit     pause
+  7-12 pps   idle    clean               200      0          40-93          29-67      256-
+  7-12 pps   idle    sd 0.8              200      0          40-93          28-63      259-
+  7-12 pps   idle    impulse 100/s       200      0          42-84          29-62      267-
+  7-12 pps   idle    impulse 1000/s      200      0          43-89          30-61      264-
+  7-12 pps   speech  clean               200      0          42-99          26-67      259-
+  7-12 pps   speech  sd 0.8              200      0          40-87          26-61      255-
+  7-12 pps   speech  impulse 100/s       200      0          44-99          27-66      255-
+  7-12 pps   speech  impulse 1000/s      200      0          40-95          26-63      263-
+  20 pps     idle    clean               200      0          19-30          19-30      256-
+  20 pps     idle    sd 0.8              200      0          19-33          18-28      256-
+  20 pps     idle    impulse 100/s       200      0          19-32          18-28      257-
+  20 pps     idle    impulse 1000/s      200      0          18-35          17-29      258-
+  20 pps     speech  clean               200      0          19-36          15-29      261-
+  20 pps     speech  sd 0.8              200      0          18-35          14-27      258-
+  20 pps     speech  impulse 100/s       200      0          21-35          15-29      256-
+  20 pps     speech  impulse 1000/s      200      0          19-38          13-29      266-
+
+     Against the windows: shortest break counted 18 ms (20 pps; 40 at 7-12) vs HIT 8;
+     longest break 99 ms vs CLR 256; longest make in a digit 67 ms and shortest pause 255 ms, either side of ID 128.
+
+  2. Where each window gives way -- clean line, idle makes, one run per row.
+
+     a. Two digits, 2 then 3, at 10 pps 60/40, the pause between them shortened:
+        pause   100 ms sent,    - ticks seen  -> read [5]
+        pause   110 ms sent,    - ticks seen  -> read [5]
+        pause   115 ms sent,    - ticks seen  -> read [5]
+        pause   120 ms sent,    - ticks seen  -> read [5]
+        pause   125 ms sent,  130 ticks seen  -> read [2, 3]
+        pause   130 ms sent,  135 ticks seen  -> read [2, 3]
+        pause   140 ms sent,  145 ticks seen  -> read [2, 3]
+        pause   200 ms sent,  205 ticks seen  -> read [2, 3]
+     b. Digit 3 at 56 % break, the dial slowed until its makes pass for pauses:
+         7.0 pps, make  62.9 ms sent, longest seen   68  -> read [3]
+         5.0 pps, make  88.0 ms sent, longest seen   93  -> read [3]
+         4.0 pps, make 110.0 ms sent, longest seen  115  -> read [3]
+         3.8 pps, make 115.8 ms sent, longest seen  121  -> read [3]
+         3.6 pps, make 122.2 ms sent, longest seen  128  -> read [3]
+         3.4 pps, make 129.4 ms sent, longest seen    -  -> read [1, 1, 1]
+         3.2 pps, make 137.5 ms sent, longest seen    -  -> read [1, 1, 1]
+     c. Digit 2 at 10 pps 60/40 with its second break stretched:
+        break   100 ms  -> read [2]
+        break   200 ms  -> read [2]
+        break   240 ms  -> read [2]
+        break   250 ms  -> read [2]
+        break   255 ms  -> read [2]
+        break   260 ms  -> read [2]
+        break   280 ms  -> read []  and CLEAR
+     d. Digit 3 at 10 pps 60/40 with its second break shortened:
+        break     6 ms  -> read [1, 1]
+        break     8 ms  -> read [2]
+        break    10 ms  -> read [2]
+        break    12 ms  -> read [2]
+        break    14 ms  -> read [2]
+        break    16 ms  -> read [3]
+        break    18 ms  -> read [3]
+        break    20 ms  -> read [3]
+
+  3. Clearing mid-dial -- 4 then 2 dialled at 10 pps 60/40, then the event 500 ms later.
+     Latency is from the event to the register's CLR.
+
+     phone hung up                read [4, 2]  CLEAR after 266 ms
+     pair cut, quiet (sd 0.01)    read [4, 2]  CLEAR after 266 ms
+     pair cut, noise sd 0.3       read [4, 2]  CLEAR after 266 ms
+     pair cut, impulse 100/s      read [4, 2]  CLEAR after 266 ms
+     hung up on the 4th pulse of 5 read []  CLEAR after 266 ms
+
+  [register: 333 s]
+
+DTMF through 64 kbps CVSD -- worst of 16 digits at each level, high group +2 dB,
+  60 ms tone, 40 ms window from 15 ms in.
+
+          per-tone level  peak, FS  SINAD dB  twist change dB  group dominance dB
+       -30 dB re nominal      0.02      15.8            -0.67                17.6
+       -25 dB re nominal      0.03      21.7            +0.23                30.1
+       -20 dB re nominal      0.05      24.0            +0.17                31.4
+       -15 dB re nominal      0.09      25.2            +0.11                34.3
+       -10 dB re nominal      0.15      27.2            +0.11                35.8
+        -5 dB re nominal      0.27      28.8            -0.08                35.9
+        +0 dB re nominal      0.48      29.6            -0.05                38.0
+        +3 dB re nominal      0.68      26.0            -0.08                36.2
+        +6 dB re nominal      0.96      23.5            -0.05                32.7
+
+  [dtmf: 3 s]
+

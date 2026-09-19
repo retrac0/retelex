@@ -450,6 +450,7 @@ follows `DTR` with 1.5–2 ms of lag. Scratch script, not a repository tool.
   integrator against a real 20 Hz generator.
 - **`MUTE` heard through a phone**: `mf8-spec.md` §15's open item, one card
   further along.
-- **A dial-pulse receiver's window** against the 0.5 ms distortion measured
-  here; `subscriber-line.md` §5 measured the phone-to-exchange leg at 2–6 ms
-  short, and the two legs add.
+- **A CO's dial-pulse receiver** against the 0.5 ms distortion measured
+  here; `subscriber-line.md` §5 measured the phone-to-exchange leg at 6.1 ms
+  short with the phone muted while dialling (0.1–7.5 ms without), and the two
+  legs add. `register.md` §1.3 corrects the first leg on the line card.

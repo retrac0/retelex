@@ -26,7 +26,9 @@ one superframe carries one sample.
 | [docs/line-codes.md](docs/line-codes.md) | nine line codes; differential Manchester against AMI, and the one question left open |
 | [docs/frame-rate.md](docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
 | [docs/subscriber-line.md](docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
+| [docs/register.md](docs/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
+| [falstad/](falstad/README.md) | the CVSD encoder and decoder as a Falstad circuit: opening it, what to try, and how well it matches the model |
 
 ## Tools
 
@@ -37,8 +39,11 @@ one superframe carries one sample.
 | `linecodes.py` | the line itself — which code, how it fails, what the rate costs |
 | `impulse_sweep.py` | the impulse falloff curve: 23 rates, both codes, error bars, thresholds |
 | `mf8_render.py` | renders 15 s of every channel to `out/` under nine line conditions in both codes, for listening |
+| `subline.py` | the subscriber line: CVSD against the held patterns, the hook and ring detectors, dial pulses as the line card sees them, the register end to end, DTMF through the codec |
 | `cvsd_law.py` | the codec law: MIL-STD-188-113 read from the standard's own test patterns, against the previous law, whether it is bit-rate specific, and a DNVT on a 64 kbps channel |
 | `tolerance.py` | CVSD encoder/decoder component-mismatch tolerance at 64 kbps, `I_min` included |
+| `falstad_cvsd.py` | the CVSD engine as a Falstad (CircuitJS) circuit, `falstad/cvsd_engine.txt`, with its values from the codec law; and `check`, which compares a Falstad run with `cvsd.py` |
+| `falstad/sim.mjs` | runs a circuit in falstad.com's simulator in headless Chromium and records every labeled node, for that check |
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
 
@@ -48,8 +53,10 @@ python3 mf8_line.py       over the line        (mf8_line.log)
 python3 linecodes.py      line codes and rate  (linecodes.log)
 python3 impulse_sweep.py  impulse falloff      (impulse_sweep.log, .csv)
 python3 mf8_render.py     listenable renders   (mf8_render.log; wavs in out/)
+python3 subline.py        subscriber line      (subline.log)
 python3 cvsd_law.py       the codec law        (cvsd_law.log)
 python3 tolerance.py      codec tolerances     (tolerance.log)
+python3 falstad_cvsd.py   Falstad prototype    (falstad_cvsd.log; falstad/cvsd_engine.txt)
 ```
 
 `out/` is not committed. Each render is the full 15 s as the link delivers it —
