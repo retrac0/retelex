@@ -329,6 +329,14 @@ at 200 and 20.7 at 1 000.
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
+The exchange uses two of the three reserved pins (`exch/docs/ex-extensions.md`
+§2.1): a12 carries the port's word, its class and options one bit a frame, and
+a13 is `/ANS`, whether the port rings. a14 stays spare. A card only ever pulls
+the two to ground, and this shelf leaves them unconnected, so a card built for
+the exchange works here unchanged. The remote alarm that `mf8-spec.md` §3.5
+puts on x is between trunk cards, and reaches the panel from the trunk-card slot
+as `LOCK` and `CD` do.
+
 `RING` sits on the power row between ground pins, and the backplane strap that
 brings it to a slot is fitted only for a slot that holds an FXS card; every
 other slot's pin c12 is left open. `LOCK` and `CD` go to the panel from the

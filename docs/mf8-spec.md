@@ -268,6 +268,13 @@ alternating and the receiver checking *both* states against Q0, kills every
 8-periodic lane outright but frees nothing and tripped 7 times in 3 s at 3e−02
 BER, so it is not recorded further.)
 
+**Decided: x is the remote alarm.** An end holds x at 1 while its own receiver
+is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. Idle
+is x = 0, which is today's fixed guard. Between exchanges the same bit also
+carries SS0's messages (`exch/docs/ex-ss0.md`). A message holds x at 1 for 17 ms
+at most, so the one 32 ms rule serves both kinds of link. The pair itself is not
+yet written into §2–§4 or §11.
+
 ---
 
 ## 4. Framer
