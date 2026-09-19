@@ -29,7 +29,7 @@ one superframe carries one sample.
 | [docs/register.md](docs/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
 | [docs/circuit-review.md](docs/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
-| [falstad/](falstad/README.md) | the CVSD encoder and decoder as a Falstad circuit: opening it, what to try, and how well it matches the model |
+| [falstad/](falstad/README.md) | the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model |
 | [exch/](exch/README.md) | **the exchange**: MF8's slot interface as a switched fabric — 8-slot highways, a marker that hunts ports by class, features as lines, MF8 between exchanges; its own documents, tool and log |
 
 ## Tools
@@ -44,7 +44,7 @@ one superframe carries one sample.
 | `subline.py` | the subscriber line: CVSD against the held patterns, the hook and ring detectors, dial pulses as the line card sees them, the register end to end, DTMF through the codec |
 | `cvsd_law.py` | the codec law: MIL-STD-188-113 read from the standard's own test patterns, against the previous law, whether it is bit-rate specific, and a DNVT on a 64 kbps channel |
 | `tolerance.py` | CVSD encoder/decoder component-mismatch tolerance at 64 kbps, `I_min` included |
-| `falstad_cvsd.py` | the CVSD engine as a Falstad (CircuitJS) circuit, `falstad/cvsd_engine.txt`, with its values from the codec law; and `check`, which compares a Falstad run with `cvsd.py` |
+| `falstad_cvsd.py` | builds the Falstad (CircuitJS) modules and the three circuits in `falstad/` from the codec law and the line constants; and `check`, which compares a Falstad run with `cvsd.py` and `fast.mono_decode` |
 | `falstad/sim.mjs` | runs a circuit in falstad.com's simulator in headless Chromium and records every labeled node, for that check |
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
@@ -58,7 +58,7 @@ python3 mf8_render.py     listenable renders   (mf8_render.log; wavs in out/)
 python3 subline.py        subscriber line      (subline.log)
 python3 cvsd_law.py       the codec law        (cvsd_law.log)
 python3 tolerance.py      codec tolerances     (tolerance.log)
-python3 falstad_cvsd.py   Falstad prototype    (falstad_cvsd.log; falstad/cvsd_engine.txt)
+python3 falstad_cvsd.py   Falstad prototypes   (falstad_cvsd.log; falstad/*.txt)
 ```
 
 `out/` is not committed. Each render is the full 15 s as the link delivers it —

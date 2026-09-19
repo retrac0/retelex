@@ -624,6 +624,7 @@ def mod_line(steps=STEPS):
     s.c((736, 168), (736, 232), C_F2, 'RX', 'GND')
     s.gnd((736, 232))
     s.label((736, 168), (784, 168), 'RX')
+    s.text((400, 136), 'V+ = ' + ex.replace('*', ' x '), 12)
     s.text((112, 420), 'SUM = TX as +-LEVEL volts, plus NOISE, plus the ringing each edge on IMP starts;')
     s.text((112, 444), f'then the input filter: two RC sections at {F_IN/1e3:g} kHz')
     return Model('LINE', s, [('TX', W, 0), ('LEVEL', W, 1), ('NOISE', W, 2), ('IMP', W, 3),
@@ -663,7 +664,7 @@ def mod_dmrx(steps=STEPS):
     # 74HC123 half A: the classifier, retriggered when DT ENDS, so it times 0.75 - 0.2 cell
     s.wire((656, 248), (688, 248), (688, 360), (720, 360), net='/DT')
     s.mono(720, 360, t_of(n_c), True, '/DT', 'SHORT', 'EXP')
-    s.label((816, 392), (864, 392), 'EXP')
+    s.label((816, 392), (816, 440), 'EXP')
     # 74HC109, both halves, on DT's leading edge, straight off the classifier with no gate
     # between: LONG as a D (J = expired, K = not expired); MID with J = not expired, K = 1,
     # which is MID <- not expired and not MID.  (On a real '109 K is /K: EXP and ground.)
@@ -692,6 +693,10 @@ def mod_dmrx(steps=STEPS):
     s.mono(560, 456, t_of(n_cd), True, 'P', 'CD', None)
     s.label((656, 456), (704, 456), 'CD')
     thr = (n_dt + n_c + 0.5) / steps
+    for p, cap in (((160, 248), 'slicer, +-50 mV'), ((400, 168), "'86 + RC"), ((560, 184), "'221: dead time"),
+                   ((720, 328), "'123 A: classifier"), ((560, 424), "'123 B: carrier detect"),
+                   ((1008, 88), "'109 A: LONG"), ((1008, 296), "'109 B: MID"), ((1200, 264), "'02")):
+        s.text(p, cap, 12)
     s.text((112, 560), f'dead time {n_dt} steps: a transition under {n_dt+1} steps ({(n_dt+1)/steps:.2f} cell) after the last '
                        f'accepted one is ignored.  Classifier {n_c} steps from its end: '
                        f'a gap of {n_dt+n_c+1} steps or more ({thr:.2f} cell) is a 1')

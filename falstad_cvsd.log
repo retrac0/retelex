@@ -2,31 +2,185 @@ $ python3 falstad_cvsd.py
 law: tau_syl 5 ms, tau_int 1 ms, 34.2 dB, slew 16000 FS/s
 R_int 1e+05  R1 5.11e+04  R2 2.55e+06  ratio 50.90 (34.13 dB)  tau_syl 5.010 ms
 I_max 160.0 uA  I_min 3.14 uA  R_set 3.094e+04  V_syl at idle 4.902 V  control at I_min 98 mV
-204 elements, 16 steps/bit -> falstad/cvsd_engine.txt
+line: cell 15.625 us = 16 steps; dead time 3 steps, classifier 9, long from 13 steps (0.781 cell); carrier detect 32; filter 128.4 kHz x2; ring 40.0 kHz, tau 60 us, peak 0.1193 V/V
+link    63 elements and 7 modules (300 elements inside), 16 steps/bit -> falstad/cvsd_link.txt
+dmlink  44 elements and 4 modules (113 elements inside), 16 steps/bit -> falstad/dm_link.txt
+engine  33 elements and 3 modules (187 elements inside), 16 steps/bit -> falstad/cvsd_engine.txt
 
-$ python3 falstad_cvsd.py -o minus20.txt --level-db -20
-$ python3 falstad_cvsd.py -o minus20_8steps.txt --level-db -20 --steps 8
-$ node falstad/sim.mjs falstad/cvsd_engine.txt 0.024 nominal.json      (and the other two)
+# each run below: python3 falstad_cvsd.py <circuit> -o <name>.txt <options>, then
+#                 node falstad/sim.mjs <name>.txt <seconds> <name>.json
+# engine_nominal                 engine
+# engine_minus20                 engine --level-db -20
+# engine_minus20_8steps          engine --level-db -20 --steps 8
+# dm_noise_only, dm_impulse_only dmlink --line-level 0 --noise 1    |  --line-level 0 --impulse 1 --impulse-hz 2000
+# dm_clean                       dmlink
+# dm_sd04, dm_sd07, dm_sd10      dmlink --noise 0.61 | 1.07 | 1.53   (the documents sd 0.4, 0.7, 1.0)
+# dm_noise2V                     dmlink --noise 2.0
+# dm_impulses                    dmlink --impulse 3 --impulse-hz 517
+# dm_quarter_level               dmlink --line-level 0.25 --noise 0.153   (attenuated 0.25x at sd 0.10)
+# dm_dead_pair                   dmlink --line-level 0 --noise 0.153
+# link_nominal, link_minus20     link | link --level-db -20
+# link_sd04, link_sd07           link --noise 0.61 | link --noise 1.07
+# link_impulses                  link --impulse 3 --impulse-hz 517
+# the noise source is not seeded: a rerun moves the noisy rows
 
-$ python3 falstad_cvsd.py check nominal.json minus20.json minus20_8steps.json
-nominal.json: 16 steps/bit, 24.0 ms, 1 kHz at +0.0 dB re nominal; 24587 steps in 67 s wall, 0 solver failures
-  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+$ python3 falstad_cvsd.py check <name>.json ...
+engine_nominal.json: 16 steps/bit, 24.1 ms; 24635 steps in 77 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  input          1 kHz at +0.0 dB re nominal
   OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.56-24.63 uA
-  decoder        against cvsd.decode on the circuit's own bits: gain 1.005, difference -42.8 dB re signal
-  syllabic node  decoder 4.262 V, law 4.264 V from the same bits; rms difference 1.6 mV
-  encoder        runs of three in 0.130 of bits; cvsd.encode on the same input 0.131
-  SINAD, 1 kHz   circuit 35.7 dB; cvsd.encode and cvsd.decode on the same input 33.6 dB (in band, 200-3400 Hz)
-minus20.json: 16 steps/bit, 24.1 ms, 1 kHz at -20.0 dB re nominal; 24636 steps in 64 s wall, 0 solver failures
-  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.006, difference -43.1 dB re signal
+  syllabic node  decoder 4.262 V, law 4.263 V from the same bits; rms difference 1.0 mV
+  encoder        runs of three in 0.131 of bits; cvsd.encode on the same input 0.132
+  SINAD, 1 kHz   circuit 35.5 dB; cvsd.encode and cvsd.decode on the same input 33.5 dB (in band, 200-3400 Hz)
+engine_minus20.json: 16 steps/bit, 24.0 ms; 24611 steps in 88 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  input          1 kHz at -20.0 dB re nominal
   OTA            Iout / Iabc 0.990 (sd 0.000), Iabc 3.46-3.99 uA
-  decoder        against cvsd.decode on the circuit's own bits: gain 1.001, difference -37.4 dB re signal
-  syllabic node  decoder 4.884 V, law 4.884 V from the same bits; rms difference 0.2 mV
+  decoder        against cvsd.decode on the bits and intervals it received: gain 0.993, difference -36.6 dB re signal
+  syllabic node  decoder 4.884 V, law 4.885 V from the same bits; rms difference 0.6 mV
   encoder        runs of three in 0.003 of bits; cvsd.encode on the same input 0.004
   SINAD, 1 kHz   circuit 28.4 dB; cvsd.encode and cvsd.decode on the same input 29.7 dB (in band, 200-3400 Hz)
-minus20_8steps.json: 8 steps/bit, 24.2 ms, 1 kHz at -20.0 dB re nominal; 12376 steps in 40 s wall, 0 solver failures
-  clock          period 15.6250 us, spread 0 steps; C_TX changes [1] steps after TX_CLK, DEC_Q [1] after RX_CLK
+engine_minus20_8steps.json: 8 steps/bit, 24.0 ms; 12306 steps in 66 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  input          1 kHz at -20.0 dB re nominal
   OTA            Iout / Iabc 0.989 (sd 0.001), Iabc 4.75-7.72 uA
-  decoder        against cvsd.decode on the circuit's own bits: gain 1.019, difference -27.4 dB re signal
-  syllabic node  decoder 4.799 V, law 4.799 V from the same bits; rms difference 0.8 mV
-  encoder        runs of three in 0.026 of bits; cvsd.encode on the same input 0.003
-  SINAD, 1 kHz   circuit 23.8 dB; cvsd.encode and cvsd.decode on the same input 29.8 dB (in band, 200-3400 Hz)
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.014, difference -27.4 dB re signal
+  syllabic node  decoder 4.799 V, law 4.800 V from the same bits; rms difference 1.1 mV
+  encoder        runs of three in 0.024 of bits; cvsd.encode on the same input 0.003
+  SINAD, 1 kHz   circuit 23.8 dB; cvsd.encode and cvsd.decode on the same input 30.1 dB (in band, 200-3400 Hz)
+dm_noise_only.json: 16 steps/bit, 20.2 ms; 20711 steps in 20 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1292 bits sent, 1178 strobes: 571 bit errors, 244 bits with no strobe, 130 with two; latency 1.88 cell
+  recovered clk  period 16 steps, 8 to 60; carrier detect high 99.1 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1180 bits; strobe by strobe, 10 of 1167 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -260.0 dB
+  at the slicer  rms 0.242 V, peak 0.798 V; on the line rms 0.576 V, peak 1.000 V
+dm_impulse_only.json: 16 steps/bit, 20.3 ms; 20768 steps in 19 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1288 bits sent, 527 strobes: 279 bit errors, 843 bits with no strobe, 82 with two; latency 3.88 cell
+  recovered clk  period 13 steps, 13 to 376; carrier detect high 37.7 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 531 bits; strobe by strobe, 0 of 521 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -263.8 dB
+  at the slicer  rms 0.173 V, peak 0.892 V; on the line rms 0.191 V, peak 0.990 V
+dm_clean.json: 16 steps/bit, 100.3 ms; 102698 steps in 64 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6417 bits sent, 6417 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.56 cell
+  recovered clk  period 16 steps, 16 to 16; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6418 bits; strobe by strobe, 0 of 6395 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -241.0 dB
+  at the slicer  rms 0.787 V, peak 1.000 V; on the line rms 1.000 V, peak 1.000 V
+dm_sd04.json: 16 steps/bit, 100.1 ms; 102504 steps in 66 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6404 bits sent, 6404 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.56 cell
+  recovered clk  period 16 steps, 14 to 18; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6406 bits; strobe by strobe, 0 of 6383 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -240.9 dB
+  at the slicer  rms 0.801 V, peak 1.456 V; on the line rms 1.060 V, peak 1.610 V
+dm_sd07.json: 16 steps/bit, 100.2 ms; 102593 steps in 66 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6409 bits sent, 6409 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.56 cell
+  recovered clk  period 16 steps, 12 to 19; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6411 bits; strobe by strobe, 0 of 6388 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -240.8 dB
+  at the slicer  rms 0.828 V, peak 1.768 V; on the line rms 1.175 V, peak 2.070 V
+dm_sd10.json: 16 steps/bit, 100.0 ms; 102427 steps in 66 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6400 bits sent, 6348 strobes: 33 bit errors, 53 bits with no strobe, 1 with two; latency 1.38 cell
+  recovered clk  period 16 steps, 8 to 32; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6349 bits; strobe by strobe, 0 of 6326 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -240.6 dB
+  at the slicer  rms 0.870 V, peak 2.240 V; on the line rms 1.334 V, peak 2.530 V
+dm_noise2V.json: 16 steps/bit, 100.1 ms; 102503 steps in 65 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6404 bits sent, 6206 strobes: 313 bit errors, 211 bits with no strobe, 13 with two; latency 1.38 cell
+  recovered clk  period 16 steps, 8 to 49; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6209 bits; strobe by strobe, 7 of 6188 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -240.4 dB
+  at the slicer  rms 0.926 V, peak 2.574 V; on the line rms 1.528 V, peak 3.000 V
+dm_impulses.json: 16 steps/bit, 100.0 ms; 102412 steps in 64 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6399 bits sent, 6355 strobes: 62 bit errors, 60 bits with no strobe, 16 with two; latency 1.38 cell
+  recovered clk  period 16 steps, 10 to 31; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6356 bits; strobe by strobe, 0 of 6333 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -241.2 dB
+  at the slicer  rms 0.831 V, peak 3.675 V; on the line rms 1.042 V, peak 3.971 V
+dm_quarter_level.json: 16 steps/bit, 100.2 ms; 102592 steps in 65 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           6410 bits sent, 6410 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.56 cell
+  recovered clk  period 16 steps, 14 to 18; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 6411 bits; strobe by strobe, 0 of 6388 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -240.9 dB
+  at the slicer  rms 0.200 V, peak 0.374 V; on the line rms 0.265 V, peak 0.403 V
+dm_dead_pair.json: 16 steps/bit, 50.1 ms; 51305 steps in 33 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           3201 bits sent, 1263 strobes: 602 bit errors, 1958 bits with no strobe, 20 with two; latency 2.12 cell
+  recovered clk  period 32 steps, 9 to 233; carrier detect high 68.2 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1264 bits; strobe by strobe, 0 of 1255 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -246.0 dB
+  at the slicer  rms 0.037 V, peak 0.130 V; on the line rms 0.088 V, peak 0.153 V
+link_nominal.json: 16 steps/bit, 24.0 ms; 24616 steps in 81 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1537 bits sent, 1537 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.50 cell
+  recovered clk  period 16 steps, 15 to 17; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1538 bits; strobe by strobe, 0 of 1515 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -252.3 dB
+  at the slicer  rms 0.787 V, peak 1.000 V; on the line rms 1.000 V, peak 1.000 V
+  input          1 kHz at +0.0 dB re nominal
+  OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.42-24.65 uA
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.006, difference -43.3 dB re signal
+  syllabic node  decoder 4.266 V, law 4.266 V from the same bits; rms difference 0.8 mV
+  encoder        runs of three in 0.129 of bits; cvsd.encode on the same input 0.129
+  SINAD, 1 kHz   circuit 33.4 dB; cvsd.encode and cvsd.decode on the same input 33.1 dB (in band, 200-3400 Hz)
+link_minus20.json: 16 steps/bit, 24.0 ms; 24623 steps in 94 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1537 bits sent, 1537 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.50 cell
+  recovered clk  period 16 steps, 15 to 17; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1538 bits; strobe by strobe, 0 of 1515 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -252.3 dB
+  at the slicer  rms 0.787 V, peak 1.000 V; on the line rms 1.000 V, peak 1.000 V
+  input          1 kHz at -20.0 dB re nominal
+  OTA            Iout / Iabc 0.990 (sd 0.000), Iabc 3.30-3.80 uA
+  decoder        against cvsd.decode on the bits and intervals it received: gain 0.996, difference -37.5 dB re signal
+  syllabic node  decoder 4.889 V, law 4.889 V from the same bits; rms difference 0.2 mV
+  encoder        runs of three in 0.002 of bits; cvsd.encode on the same input 0.002
+  SINAD, 1 kHz   circuit 26.2 dB; cvsd.encode and cvsd.decode on the same input 27.2 dB (in band, 200-3400 Hz)
+link_sd04.json: 16 steps/bit, 24.0 ms; 24624 steps in 57 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1537 bits sent, 1537 strobes: 0 bit errors, 0 bits with no strobe, 0 with two; latency 1.50 cell
+  recovered clk  period 16 steps, 14 to 18; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1538 bits; strobe by strobe, 0 of 1515 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -252.2 dB
+  at the slicer  rms 0.802 V, peak 1.430 V; on the line rms 1.063 V, peak 1.610 V
+  input          1 kHz at +0.0 dB re nominal
+  OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.30-24.15 uA
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.006, difference -43.2 dB re signal
+  syllabic node  decoder 4.272 V, law 4.272 V from the same bits; rms difference 0.8 mV
+  encoder        runs of three in 0.128 of bits; cvsd.encode on the same input 0.129
+  SINAD, 1 kHz   circuit 27.8 dB; cvsd.encode and cvsd.decode on the same input 33.1 dB (in band, 200-3400 Hz)
+link_sd07.json: 16 steps/bit, 24.0 ms; 24591 steps in 100 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1535 bits sent, 1534 strobes: 0 bit errors, 1 bits with no strobe, 0 with two; latency 1.31 cell
+  recovered clk  period 16 steps, 13 to 24; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1535 bits; strobe by strobe, 0 of 1511 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -252.0 dB
+  at the slicer  rms 0.826 V, peak 1.716 V; on the line rms 1.174 V, peak 2.070 V
+  input          1 kHz at +0.0 dB re nominal
+  OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.30-24.16 uA
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.006, difference -43.0 dB re signal
+  syllabic node  decoder 4.268 V, law 4.268 V from the same bits; rms difference 0.8 mV
+  encoder        runs of three in 0.127 of bits; cvsd.encode on the same input 0.128
+  SINAD, 1 kHz   circuit 22.7 dB; cvsd.encode and cvsd.decode on the same input 33.1 dB (in band, 200-3400 Hz)
+link_impulses.json: 16 steps/bit, 24.1 ms; 24663 steps in 87 s wall, 0 solver failures
+  TX clock       period 15.6250 us, spread 0 steps
+  line           1539 bits sent, 1530 strobes: 15 bit errors, 12 bits with no strobe, 3 with two; latency 1.44 cell
+  recovered clk  period 16 steps, 11 to 30; carrier detect high 100.0 % of the time
+  receiver       fast.mono_decode on the same slicer output gives 1532 bits; strobe by strobe, 0 of 1509 differ
+  input filter   RXA against the same two RC sections applied to LSUM in Python: difference -252.4 dB
+  at the slicer  rms 0.829 V, peak 3.583 V; on the line rms 1.041 V, peak 3.971 V
+  input          1 kHz at +0.0 dB re nominal
+  OTA            Iout / Iabc 0.989 (sd 0.000), Iabc 22.43-24.63 uA
+  decoder        against cvsd.decode on the bits and intervals it received: gain 1.005, difference -42.7 dB re signal
+  syllabic node  decoder 4.247 V, law 4.247 V from the same bits; rms difference 0.8 mV
+  encoder        runs of three in 0.128 of bits; cvsd.encode on the same input 0.128
+  SINAD, 1 kHz   circuit 9.9 dB; cvsd.encode and cvsd.decode on the same input 32.9 dB (in band, 200-3400 Hz)

@@ -71,6 +71,7 @@
     <c nn="8 0" x="736 168 736 232" f="0" c="1e-10"/>
     <g nn="0" x="736 232 736 248" f="0"/>
     <ln nn="8" x="736 168 784 168" f="0" te="RX"/>
+    <x nn="" x="400 136 416 136" f="0" si="12" te="V+ = (a-2.5)/2.5 x b+c+4.192 x d"/>
     <x nn="" x="112 420 128 420" f="0" si="16" te="SUM = TX as +-LEVEL volts, plus NOISE, plus the ringing each edge on IMP starts;"/>
     <x nn="" x="112 444 128 444" f="0" si="16" te="then the input filter: two RC sections at 128 kHz"/>
   </ccm>
@@ -102,7 +103,7 @@
     <w nn="6 6" x="688 248 688 360" f="0"/>
     <w nn="6 6" x="688 360 720 360" f="0"/>
     <Monostable nn="6 7 8" x="720 360 816 360" f="0" rt="true" dl="8.30078125e-06"/>
-    <ln nn="8" x="816 392 864 392" f="1" te="EXP"/>
+    <ln nn="8" x="816 392 816 440" f="1" te="EXP"/>
     <JKFlipFlop nn="8 5 7 9 10001" x="1008 120 1104 120" f="4"/>
     <ln nn="8" x="1008 120 960 120" f="1" te="EXP"/>
     <ln nn="5" x="1008 152 960 152" f="0" te="DT"/>
@@ -126,6 +127,14 @@
     <w nn="4 4" x="528 456 560 456" f="0"/>
     <Monostable nn="4 13 10003" x="560 456 656 456" f="0" rt="true" dl="3.076171875e-05"/>
     <ln nn="13" x="656 456 704 456" f="0" te="CD"/>
+    <x nn="" x="160 248 176 248" f="0" si="12" te="slicer, +-50 mV"/>
+    <x nn="" x="400 168 416 168" f="0" si="12" te="'86 + RC"/>
+    <x nn="" x="560 184 576 184" f="0" si="12" te="'221: dead time"/>
+    <x nn="" x="720 328 736 328" f="0" si="12" te="'123 A: classifier"/>
+    <x nn="" x="560 424 576 424" f="0" si="12" te="'123 B: carrier detect"/>
+    <x nn="" x="1008 88 1024 88" f="0" si="12" te="'109 A: LONG"/>
+    <x nn="" x="1008 296 1024 296" f="0" si="12" te="'109 B: MID"/>
+    <x nn="" x="1200 264 1216 264" f="0" si="12" te="'02"/>
     <x nn="" x="112 560 128 560" f="0" si="16" te="dead time 3 steps: a transition under 4 steps (0.25 cell) after the last accepted one is ignored.  Classifier 9 steps from its end: a gap of 13 steps or more (0.78 cell) is a 1"/>
     <x nn="" x="112 584 128 584" f="0" si="16" te="BIT is valid at the rising edge of RXC, the recovered clock.  Timers are whole time steps here; mf8-spec.md 9.7 has the real values"/>
   </ccm>
