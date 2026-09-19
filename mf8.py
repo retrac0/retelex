@@ -44,11 +44,14 @@ FLEN = 8
 SF = 8
 NOMINAL_RMS = 0.15                # nominal line level; CVSD steps are tuned for it
 SLEW = {16000: 7000.0, 32000: 12000.0, 64000: 16000.0}
-BASE = dict(run_length=3, tau_syl=0.006, tau_int=0.003, companding_db=30.0)
+# MIL-STD-188-113, the DNVT's law, carried to 64 kbps (mf8-spec.md 12.1): 3-bit
+# window, 5 ms syllabic, 1 ms integrator, and 16:1 between the steps at 30 % and
+# 0 % run-of-threes -- 34.2 dB in cvsd.py's full-scale terms.  cvsd_law.py.
+BASE = dict(run_length=3, tau_syl=0.005, tau_int=0.001, companding_db=34.2)
 
 
 def params(rate=RATE):
-    """CVSD parameters for a per-channel rate (channel-card.md's engine)."""
+    """CVSD parameters for a per-channel rate (mf8-spec.md 12.1's engine)."""
     return cvsd.CVSDParams(rate=rate, slew=SLEW[rate], **BASE)
 
 

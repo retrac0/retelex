@@ -205,13 +205,14 @@ reproduces without special handling, and dial pulses cross as §5 measures.
 
 ### 3.2 The engine
 
-`mf8-spec.md` §12.1, verbatim: 3-bit run window, τ_syl 6 ms, τ_int 3 ms, 30 dB
-companding, `C_int` 10 nF, `R_int` 300 kΩ, `Iabc` 120 µA max and 3.8 µA min,
-`C_syl` 100 nF, `R_syl` 60 kΩ; 1 % resistors and 5 % film capacitors, against
-the measured ±20 % syllabic budget. One LM13700 serves both engines; `Iabc max`
-is the one trimmer, set by measuring `C_int`, not by ear. The encoder is in the
-T domain on `TX_CLK`, the decoder in R on `RX_CLK`, and the two never meet
-(`mf8-backplane.md` §2).
+`mf8-spec.md` §12.1, verbatim — MIL-STD-188-113's law at 64 kbps: 3-bit run
+window, τ_syl 5 ms, τ_int 1 ms, 16:1 compression at 30 % run-of-threes (51:1,
+34.2 dB full scale), `C_int` 10 nF, `R_int` 100 kΩ, `Iabc` 160 µA max and
+3.1 µA min, `C_syl` 100 nF 2 %, `R_syl` 49.9 kΩ; 1 % resistors, 5 % film for
+`C_int`, against the measured ±10 % syllabic budget. One LM13700 serves both
+engines; `Iabc max` is the one trimmer, set by measuring `C_int`, not by ear.
+The encoder is in the T domain on `TX_CLK`, the decoder in R on `RX_CLK`, and
+the two never meet (`mf8-backplane.md` §2).
 
 ### 3.3 Audio path and hybrid
 

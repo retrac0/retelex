@@ -9,11 +9,11 @@ THE F WORD
   lane whose longest run is under 32 is rejected DETERMINISTICALLY.
 
   word                              CVSD speech CVSD silence   constant 1   constant 0       random
-  10101010  period 2 -- mfspec             4708         8192            1            1           12
+  10101010  period 2 -- mfspec             1369         8192            1            1           12
   11101110  period 4 -- spec.md 3.3 T            4            3            3            1           14
   11111110  one zero in eight                 4            3            7            1           20
-  11111100  two zeros, adjacent               4            2            6            2           14
-  11101100  five ones, period 8               5            3            3            2           14
+  11111100  two zeros, adjacent               5            2            6            2           14
+  11101100  five ones, period 8               7            3            3            2           14
 
   0xAA is matched indefinitely by CVSD silence -- it IS CVSD silence.
   0xEE has period 4, so it cannot pin an 8-state superframe at all.
@@ -93,10 +93,10 @@ GUARD POSITION -- why 0 and 4
   case (`mf8.py seats` 3) needs.
 
   layout                        F word, every lane  one data card, worst seat        voice
-  0,4 = 0,1  (this spec)                   0 / 512                    0 / 512     1 in 522
-  3,5 = 1,0  (before 3.4)                  0 / 512                    0 / 512    1 in 1311
-  3,7 = 0,1  (regular)                     0 / 512                    0 / 512     1 in 544
-  3,7 = 1,0  (mfspec values)             192 / 512                    0 / 512     1 in 527
+  0,4 = 0,1  (this spec)                   0 / 512                    0 / 512     1 in 499
+  3,5 = 1,0  (before 3.4)                  0 / 512                    0 / 512    1 in 1200
+  3,7 = 0,1  (regular)                     0 / 512                    0 / 512     1 in 459
+  3,7 = 1,0  (mfspec values)             192 / 512                    0 / 512     1 in 484
 
   Any two same-parity states with different values reject CVSD idle, which
   gives the same value at both.  mfspec's values copy the F word at 3 and 7,
@@ -106,7 +106,7 @@ GUARD POSITION -- why 0 and 4
   frame: A_n sits at the state that is C_n's frame bit, so the signalling
   mux and demux share the frame mux's address map.  Its price is the
   residual: speech satisfies two states 4 apart more often than 2 apart,
-  so the chance acquisition of `seats` 3 is 2.5x as frequent as with
+  so the chance acquisition of `seats` 3 is 2.4x as frequent as with
   3,5 -- and released by the guard counter either way.
 
   3,5 was chosen when S sat beside F.  A half-superframe shift maps 3 and
@@ -200,19 +200,19 @@ SLOT RULES -- what a data card may sit where
      framer acquires when that happens 4 superframes running.  Speech
      at nominal line level here (0.15 rms, as mf8_line.py), because the
      quieter lane the rest of this battery uses is closer to idle.
-     Over 30 s of speech that is once in 522 attempts at that skew.  Forced at
+     Over 30 s of speech that is once in 499 attempts at that skew.  Forced at
      the first 24 such points, 0.5 s runs:
 
      tracking                                    acquired  released, frames     mean  never
      frame counter only                             24/24                 -        -     24
-     frame counter + guard counter (this spec)      24/24            34-246  1.47 ms      0
+     frame counter + guard counter (this spec)      24/24            34-170  1.29 ms      0
 
   THE RULE.  Two data cards may not sit three slots apart: not (1,4),
   not (2,5), not (3,6).  One data card is safe in any seat whatever it
   carries, adjacent data cards are safe, ordinary random data is safe in
   all six seats, and three data cards fit as 1,2,3 or 4,5,6.  A data card
   carrying the F word three seats from VOICE is acquired by chance about
-  once in 522 attempts at that skew, and the guard counter releases it
+  once in 499 attempts at that skew, and the guard counter releases it
   within milliseconds, where the frame counter alone never would: with F
   always passing the guard is 2 checks in 8, and +2/-1 needs a third.
 

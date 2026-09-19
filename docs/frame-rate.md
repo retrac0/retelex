@@ -51,14 +51,16 @@ CVSD alone, 2 s clip, one talker:
 
 | per-channel | segSNR | vs 64 kbps |
 |---|---|---|
-| 16k | 6.46 dB | **−9.06 dB** |
-| 32k | 10.04 dB | −5.48 dB |
-| 64k | 15.52 dB | — |
+| 16k | 11.17 dB | **−14.01 dB** |
+| 32k | 18.06 dB | −7.12 dB |
+| 64k | 25.18 dB | — |
 
-Absolute values are clip-dependent; earlier seven-talker measurements gave
-10.8 / 17.4 / 23.3 dB, worst talker 9.0 / 14.9 / 19.7, and those are the ones to
-specify against. Either way the shape is the same: **32 kbps is the quality knee, 16 kbps is
-a real sacrifice, 64 kbps is comfortable.**
+Absolute values are clip-dependent. Three talkers at nominal level on
+`mf8-spec.md` §12.1's law give 10.3 / 17.1 / 23.1 dB (`cvsd_law.py rates`), and
+those are the ones to specify against; seven-talker measurements on the previous
+law gave 10.8 / 17.4 / 23.3, worst talker 9.0 / 14.9 / 19.7. Either way the
+shape is the same: **32 kbps is the quality knee, 16 kbps is a real sacrifice,
+64 kbps is comfortable.**
 
 ---
 

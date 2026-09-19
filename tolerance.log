@@ -1,0 +1,33 @@
+Semi-analog CVSD: encoder on one card, decoder on another.
+base: tau_syl=5ms tau_int=1ms slew=16000 run=3 comp=34.2dB
+
+=== speech30.wav  (matched pair: 25.22 dB) ===
+  integrator leak    -30%: 19.0 -15%: 22.4 -5%: 24.8 +5%: 24.8 +15%: 23.1 +30%: 21.0
+                     gain error at +-15%: 1.033 1.009   |  within 1 dB out to +-5%
+    shelf undone     -30%: 25.2 -15%: 25.2 -5%: 25.2 +5%: 25.2 +15%: 25.2 +30%: 25.2
+                     the shelf at 300 Hz: -30%:-0.89 -15%:-0.35 -5%:-0.10 +5%:+0.09 +15%:+0.24 +30%:+0.41 dB
+  syllabic filter    -30%: 21.7 -15%: 24.1 -5%: 25.1 +5%: 25.0 +15%: 24.2 +30%: 22.9
+                     gain error at +-15%: 1.013 1.024   |  within 1 dB out to +-15%
+  step size / slew   -30%: 25.2 -15%: 25.2 -5%: 25.2 +5%: 25.2 +15%: 25.2 +30%: 25.2
+                     gain error at +-15%: 1.199 0.886   |  within 1 dB out to +-30%
+  I_min alone        -30%: 23.5 -15%: 24.6 -5%: 25.2 +5%: 25.1 +15%: 24.5 +30%: 23.5
+                     gain error at +-15%: 1.036 1.003   |  within 1 dB out to +-20%
+
+=== spk_600.wav  (matched pair: 23.72 dB) ===
+  integrator leak    -30%: 17.6 -15%: 20.7 -5%: 23.2 +5%: 23.2 +15%: 20.2 +30%: 19.7
+                     gain error at +-15%: 1.040 1.011   |  within 1 dB out to +-5%
+    shelf undone     -30%: 23.7 -15%: 23.7 -5%: 23.7 +5%: 23.7 +15%: 23.7 +30%: 23.7
+                     the shelf at 300 Hz: -30%:-0.89 -15%:-0.35 -5%:-0.10 +5%:+0.09 +15%:+0.24 +30%:+0.41 dB
+  syllabic filter    -30%: 19.3 -15%: 22.1 -5%: 23.5 +5%: 23.4 +15%: 22.1 +30%: 20.3
+                     gain error at +-15%: 1.014 1.029   |  within 1 dB out to +-10%
+  step size / slew   -30%: 23.7 -15%: 23.7 -5%: 23.7 +5%: 23.7 +15%: 23.7 +30%: 23.7
+                     gain error at +-15%: 1.203 0.889   |  within 1 dB out to +-30%
+  I_min alone        -30%: 20.3 -15%: 22.5 -5%: 23.7 +5%: 23.3 +15%: 21.9 +30%: 20.0
+                     gain error at +-15%: 1.037 1.009   |  within 1 dB out to +-10%
+
+=== BOM implication (worst case across sources, 1 dB criterion) ===
+  integrator R*C     card-to-card mismatch must stay within +-5%
+    shelf undone     card-to-card mismatch must stay within +-30%
+  syllabic R*C       card-to-card mismatch must stay within +-10%
+  step size          card-to-card mismatch must stay within +-30%
+  I_min alone        card-to-card mismatch must stay within +-10%

@@ -36,7 +36,8 @@ one superframe carries one sample.
 | `linecodes.py` | the line itself — which code, how it fails, what the rate costs |
 | `impulse_sweep.py` | the impulse falloff curve: 23 rates, both codes, error bars, thresholds |
 | `mf8_render.py` | renders 15 s of every channel to `out/` under nine line conditions in both codes, for listening |
-| `tolerance.py` | CVSD encoder/decoder component-mismatch tolerance |
+| `cvsd_law.py` | the codec law: MIL-STD-188-113 read from the standard's own test patterns, against the previous law, whether it is bit-rate specific, and a DNVT on a 64 kbps channel |
+| `tolerance.py` | CVSD encoder/decoder component-mismatch tolerance at 64 kbps, `I_min` included |
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
 
@@ -46,6 +47,8 @@ python3 mf8_line.py       over the line        (mf8_line.log)
 python3 linecodes.py      line codes and rate  (linecodes.log)
 python3 impulse_sweep.py  impulse falloff      (impulse_sweep.log, .csv)
 python3 mf8_render.py     listenable renders   (mf8_render.log; wavs in out/)
+python3 cvsd_law.py       the codec law        (cvsd_law.log)
+python3 tolerance.py      codec tolerances     (tolerance.log)
 ```
 
 `out/` is not committed. Each render is the full 15 s as the link delivers it —

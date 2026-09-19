@@ -1,0 +1,191 @@
+THE STANDARD -- MIL-STD-188-113 as IRIG 106-15 App. F reproduces it
+  5.5 quotes the compression ratio between the syllabic filter outputs at
+  30 % and 0 % run-of-threes.  cvsd.py steps linearly in the filtered
+  run-of-threes duty, so a ratio R quoted that way is 1 + (R - 1)/0.30 full
+  scale:
+
+    12:1 at 30 %  =  31.5 dB full scale
+    16:1 at 30 %  =  34.2 dB full scale
+    21:1 at 30 %  =  36.6 dB full scale
+    the previous mf8 law, 30 dB full scale  =  10.2:1 at 30 %  (below the 12:1 minimum)
+    mf8.BASE, 34.2 dB full scale  =  16.1:1 at 30 %
+
+  Table F-1: the decoder reference patterns, decoded (800 Hz, repeating).
+    16k  DB492       specified  0 % run-of-threes, measured  0.0 %
+    16k  FB412       specified 30 % run-of-threes, measured 30.0 %
+    32k  DB54924AB6  specified  0 % run-of-threes, measured  0.0 %
+    32k  FDAA10255E  specified 30 % run-of-threes, measured 30.0 %
+
+  At one fixed step the two patterns do not give one output: the 30 %
+  pattern has longer runs, so it swings further per step.
+    16k, integrator 1 ms: 30 % pattern / 0 % pattern = 1.86 (5.4 dB)
+    16k, integrator 3 ms: 30 % pattern / 0 % pattern = 1.86 (5.4 dB)
+    32k, integrator 1 ms: 30 % pattern / 0 % pattern = 1.90 (5.6 dB)
+    32k, integrator 3 ms: 30 % pattern / 0 % pattern = 1.90 (5.6 dB)
+    3.9 of the standard implies the same thing: 16:1 in step and a 0.48
+    amplitude for the 30 % step on the 0 % pattern, so 2.08 (6.4 dB).
+
+  So the standard contradicts itself.  Table F-1 wants the two outputs
+  24 +-2 dB apart; 5.5 wants the steps 12:1 to 21:1 apart, which with the
+  pattern factor above puts the outputs about 27-32 dB apart.  No decoder
+  meets both.  The two readings, as cvsd.py laws with 188-113 timing:
+
+                                   full scale  5.5 ratio  F-1 16k  F-1 32k
+    5.5 reading (mf8.BASE)            34.2 dB     16.1:1   29.5 dB   29.7 dB
+    Table F-1 reading, 16k            28.4 dB      8.6:1   24.0 dB   24.2 dB
+    Table F-1 reading, 32k            28.1 dB      8.4:1   23.8 dB   24.0 dB
+    previous mf8 law                  30.0 dB     10.2:1   25.5 dB   25.7 dB
+    Table F-1 passes at 22-26 dB; 5.5 passes at 12:1 to 21:1.
+
+  The reference level.  0 dBm0 is the 30 % pattern's output, which is set
+  by the slew.  Per 1000 units of slew, mf8.BASE:
+    16k: 0 dBm0 = 0.0343 full scale; mf8.SLEW 7000 puts nominal speech at -4.1 dBm0
+    32k: 0 dBm0 = 0.0321 full scale; mf8.SLEW 12000 puts nominal speech at -8.2 dBm0
+  Equal within a fraction of a dB: the standard holds the slew, not the step,
+  across its two rates.  mf8.SLEW raises it with rate instead, which is a
+  level alignment -- scaling the slew is scaling the input.
+
+THE LAW AGAINST THE PREVIOUS ONE -- 64 kbps, talkers (1, 2, 3), 6 s, segSNR dB
+  level re nominal speech; bit errors random, at nominal level
+
+                                       -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+  previous: 30 dB, 6 ms, 3 ms         16.6  21.3  24.0  21.3  16.8   20.0      15.0   5.3
+  previous, 1 ms integrator           16.7  21.4  24.1  22.6  16.7   20.3      18.0   8.8
+  188-113, 5.5 reading (mf8.BASE)     21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1
+  188-113, Table F-1 reading          14.7  19.9  23.3  22.6  16.6   19.4      17.8   8.5
+
+  The integrator buys the bit-error columns and costs nothing clean; the
+  ratio buys the quiet columns and costs nothing loud.
+
+  slew, mf8.BASE otherwise             -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+  10000 full scale/s                  24.6  26.5  26.3  17.7  12.8   21.6      15.8   9.5
+  12000 full scale/s                  23.4  25.7  26.2  19.0  14.7   21.8      16.7   9.6
+  16000 full scale/s                  21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1  <- mf8.SLEW
+  20000 full scale/s                  19.2  22.9  24.9  23.5  17.4   21.6      18.4   8.5
+  24000 full scale/s                  17.4  21.6  24.2  23.6  18.7   21.1      18.2   8.1
+  Slew and input level are one knob: raising the slew moves every column
+  toward the loud end.
+
+IS THE LAW BIT-RATE SPECIFIC? -- one parameter at a time around mf8.BASE
+  talkers (1, 2, 3), 6 s, segSNR dB; slew per mf8.SLEW
+
+  === 16 kbps
+  companding_db    -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         26.0 dB   5.4   8.3  10.2   9.9   7.2    8.2       9.2   4.9
+         28.3 dB   7.0   9.3  10.7  10.1   7.3    8.9       9.3   5.1
+         30.0 dB   7.9   9.9  11.0  10.1   7.3    9.3       9.4   5.2
+         32.0 dB   8.8  10.4  11.3  10.2   7.4    9.6       9.5   5.3
+         34.2 dB   9.5  10.9  11.5  10.3   7.4    9.9       9.5   5.4  <- mf8.BASE
+         36.6 dB   9.9  11.2  11.7  10.3   7.4   10.1       9.6   5.4
+         39.0 dB  10.2  11.4  11.7  10.3   7.4   10.2       9.6   5.5
+         42.0 dB  10.4  11.4  11.8  10.3   7.5   10.3       9.6   5.4
+  run_length       -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+          3 bits   9.5  10.9  11.5  10.3   7.4    9.9       9.5   5.4  <- mf8.BASE
+          4 bits  10.7  12.1  12.1  10.2   7.5   10.5       9.6   6.3
+          6 bits  11.6  12.5  10.8   8.0   6.2    9.8       7.7   6.0
+         12 bits  11.4   9.8   6.4   4.2   3.5    7.1       4.2   3.4
+  tau_syl          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         2.50 ms   9.3  10.6  11.4  10.4   7.4    9.8       9.6   5.3
+         3.50 ms   9.5  10.7  11.5  10.4   7.4    9.9       9.6   5.3
+         5.00 ms   9.5  10.9  11.5  10.3   7.4    9.9       9.5   5.4  <- mf8.BASE
+         7.00 ms   9.6  10.9  11.5  10.3   7.4    9.9       9.5   5.4
+        10.00 ms   9.7  10.8  11.4  10.1   7.4    9.9       9.4   5.3
+  tau_int          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         0.50 ms   9.7  11.0  11.5  11.3   8.2   10.3      10.6   7.0
+         0.75 ms   9.6  10.9  11.5  10.3   7.3    9.9       9.7   5.8
+         1.00 ms   9.5  10.9  11.5  10.3   7.4    9.9       9.5   5.4  <- mf8.BASE
+         1.50 ms   9.4  10.8  11.4  10.2   7.5    9.9       9.3   4.5
+         3.00 ms   9.2  10.7  11.2  10.2   7.5    9.8       8.8   3.0
+
+  === 32 kbps
+  companding_db    -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         26.0 dB   7.7  12.2  15.7  16.3  12.5   12.9      14.0   6.4
+         28.3 dB   9.9  14.0  16.9  16.6  12.7   14.0      14.3   6.7
+         30.0 dB  11.4  15.1  17.5  16.8  12.8   14.7      14.5   7.0
+         32.0 dB  13.2  16.2  18.1  17.0  12.8   15.5      14.7   7.0
+         34.2 dB  14.8  17.2  18.6  17.1  12.9   16.1      14.8   7.2  <- mf8.BASE
+         36.6 dB  16.2  18.0  19.0  17.2  13.0   16.7      14.9   7.2
+         39.0 dB  17.1  18.5  19.2  17.2  13.0   17.0      15.0   7.3
+         42.0 dB  17.7  18.8  19.4  17.3  13.0   17.2      15.1   7.4
+  run_length       -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+          3 bits  14.8  17.2  18.6  17.1  12.9   16.1      14.8   7.2  <- mf8.BASE
+          4 bits  15.9  18.5  19.4  16.9  11.7   16.5      14.9   8.3
+          6 bits  16.3  18.9  18.9  13.5  11.3   15.8      12.7   8.7
+         12 bits  16.4  18.0  13.4  10.7   7.6   13.2      10.2   7.4
+  tau_syl          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         2.50 ms  14.9  17.4  18.8  17.6  13.2   16.4      15.1   7.1
+         3.50 ms  14.9  17.3  18.7  17.3  13.1   16.2      15.0   7.2
+         5.00 ms  14.8  17.2  18.6  17.1  12.9   16.1      14.8   7.2  <- mf8.BASE
+         7.00 ms  14.8  17.1  18.4  16.9  12.9   16.0      14.7   7.2
+        10.00 ms  14.8  17.0  18.3  16.6  12.8   15.9      14.5   7.1
+  tau_int          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         0.50 ms  15.0  17.3  18.6  17.1  14.2   16.4      15.4   8.9
+         0.75 ms  14.9  17.3  18.7  17.1  12.9   16.2      15.1   8.0
+         1.00 ms  14.8  17.2  18.6  17.1  12.9   16.1      14.8   7.2  <- mf8.BASE
+         1.50 ms  14.7  17.2  18.5  17.0  13.0   16.1      14.4   6.1
+         3.00 ms  14.6  17.0  18.4  17.0  12.0   15.8      13.3   4.3
+
+  === 64 kbps
+  companding_db    -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         26.0 dB  11.9  17.6  22.0  22.2  16.5   18.1      17.4   8.2
+         28.3 dB  14.7  19.9  23.3  22.6  16.6   19.4      17.8   8.5
+         30.0 dB  16.7  21.4  24.2  22.8  16.8   20.4      18.0   8.7
+         32.0 dB  19.1  22.9  25.0  23.0  16.8   21.4      18.2   8.9
+         34.2 dB  21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1  <- mf8.BASE
+         36.6 dB  23.1  25.3  26.2  23.2  16.9   23.0      18.6   9.2
+         39.0 dB  24.6  26.1  26.6  23.3  16.9   23.5      18.6   9.1
+         42.0 dB  25.6  26.7  26.9  23.3  16.9   23.9      18.6   9.3
+  run_length       -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+          3 bits  21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1  <- mf8.BASE
+          4 bits  21.9  25.3  26.3  21.3  16.5   22.3      18.1  10.2
+          6 bits  22.2  25.8  25.8  18.6  13.8   21.2      16.9  10.6
+         12 bits  22.2  25.3  21.2  15.5  11.9   19.2      14.3  10.1
+  tau_syl          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         2.50 ms  21.4  24.5  26.1  24.1  17.4   22.7      18.9   8.9
+         3.50 ms  21.3  24.4  25.9  23.5  17.1   22.4      18.6   9.0
+         5.00 ms  21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1  <- mf8.BASE
+         7.00 ms  21.2  24.2  25.4  22.8  16.7   22.1      18.2   9.1
+        10.00 ms  21.2  24.0  25.2  22.4  16.6   21.9      18.0   9.1
+  tau_int          -30   -20   -10    +0    +6   mean  BER 1e-3 1e-2
+         0.50 ms  21.5  24.2  25.6  23.0  16.7   22.2      19.5  11.0
+         0.75 ms  21.3  24.3  25.6  23.0  16.8   22.2      18.9   9.9
+         1.00 ms  21.2  24.3  25.7  23.1  16.9   22.2      18.4   9.1  <- mf8.BASE
+         1.50 ms  21.2  24.2  25.6  23.1  16.9   22.2      17.6   7.9
+         3.00 ms  21.0  24.2  25.6  21.7  16.9   21.9      15.6   5.9
+
+  Best value of each parameter at each rate (level mean / BER 1e-2):
+                                  16k                  32k                  64k
+  companding_db        42.0 dB (edge)       42.0 dB (edge)       42.0 dB (edge)
+                              39.0 dB       42.0 dB (edge)       42.0 dB (edge)
+  run_length                   4 bits               4 bits               4 bits
+                               4 bits               6 bits               6 bits
+  tau_syl                     7.00 ms       2.50 ms (edge)       2.50 ms (edge)
+                              5.00 ms              7.00 ms              5.00 ms
+  tau_int              0.50 ms (edge)       0.50 ms (edge)              1.00 ms
+                       0.50 ms (edge)       0.50 ms (edge)       0.50 ms (edge)
+
+A DNVT ON A 64 kbps CHANNEL -- both ends on mf8.BASE, the DNVT at its own rate
+  talkers (1, 2, 3), 6 s; segSNR dB against the source, and the output
+  level re the source in dB, both heard at 64 kHz; m = 64k / DNVT rate
+
+                                        32k  level        16k  level
+  the DNVT alone                       16.7   -0.5       10.8   -0.9    reference: its own codec, end to end
+  up: repeat each bit                   5.4   +7.8        1.4  +16.5    DNVT -> trunk, into the 64k card as specified
+  up: repeat, window x m               15.3   +0.6        9.7   +4.0    ... into a 64k decoder whose window is 3m bits
+  up: tandem                           16.2   -0.7       10.8   -1.0    ... decoded and re-encoded on the card
+  down: every m-th bit                  0.0  +58.7        0.0  +54.8    trunk -> DNVT, decimated
+  down: remod                          16.6   -3.1        9.4   -8.6    ... summed per group, re-modulated to one bit
+  down: tandem                         15.6   -0.6       10.8   -1.0    ... decoded and re-encoded on the card
+  DNVT - 64k - DNVT, 2 tandems         15.1   -0.9       10.4   -1.0    two DNVTs through two transcoding cards
+
+  Why decimation cannot work: the 64k encoder's bits in one 16k period
+    net step  -4:  1.5 %  -2: 13.7 %  +0: 69.0 %  +2: 14.8 %  +4:  1.0 %
+    the kept bit reports +-4 for every group; 69 % of groups moved 0.
+    silence, 101010101010..., decimated 2:1 or 4:1 is 111111111111...: the far integrator goes to the rail.
+  Why repetition fails into the card as specified: the integrator is exact
+  (the same current for the same time), but a 3-bit window at 64k fires on
+  the DNVT's runs of 2 at 32k and of 1 at 16k -- the step runs high.
+  Repetition IS exact as transport: a card whose codec is clocked at the
+  DNVT's rate, carrying each bit m times in the DS0, takes any one of each m
+  back: bit-exact at every one of the 4 phases at 16k: True.
+

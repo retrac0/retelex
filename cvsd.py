@@ -18,7 +18,8 @@ class CVSDParams:
     tau_syl: float = 0.005       # syllabic filter time constant, s
     tau_int: float = 0.003       # principal integrator leak, s
     slew: float = 11000.0        # max tracking slew rate, full-scale units/s
-    companding_db: float = 36.0  # step_max / step_min
+    companding_db: float = 36.0  # step_max / step_min, FULL SCALE (100 % coincidence
+                                 # over 0 %); MIL-STD-188-113 quotes 30 % over 0 %
     step_max: float = field(init=False)
     step_min: float = field(init=False)
 

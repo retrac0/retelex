@@ -4,13 +4,13 @@ CLEAN LINE -- six independent talkers through the whole chain
   window with no link in the path, so it is what the CARRIER adds.
 
   condition                      segSNR      down   LOF  d mean d worst   max BER     clean
-  diff Manchester               21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI                           21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester               22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI                           22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
 
   Per channel, differential Manchester:
 
   channel          1        2        3        4        5        6
-  segSNR       20.70    14.85    29.04    19.87    14.23    28.71
+  segSNR       21.05    14.90    29.33    24.64    15.28    29.89
   vs codec     +0.00    +0.00    +0.00    +0.00    +0.00    +0.00
   bit BER      0e+00    0e+00    0e+00    0e+00    0e+00    0e+00
 
@@ -19,8 +19,8 @@ CLEAN LINE -- six independent talkers through the whole chain
   a short window correlates more by chance, so THIS is the number an
   off-diagonal has to be read against, not that one.)
 
-  Isolation, diff Manchester  diagonal min 0.950, off-diagonal max 0.134, excess over floor +0.005
-  Isolation, AMI              diagonal min 0.950, off-diagonal max 0.134, excess over floor +0.005
+  Isolation, diff Manchester  diagonal min 0.951, off-diagonal max 0.134, excess over floor +0.005
+  Isolation, AMI              diagonal min 0.951, off-diagonal max 0.134, excess over floor +0.005
 
   With BER identically zero the recovered bits ARE the transmitted
   bits, so carrier crosstalk is exactly zero by construction and the
@@ -31,47 +31,47 @@ CLEAN LINE -- six independent talkers through the whole chain
 GAUSSIAN NOISE -- noise sd referred to the transmitted peak
 
   condition                      segSNR      down   LOF  d mean d worst   max BER     clean
-  diff Manchester, sd 0.0       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, sd 0.3       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, sd 0.4       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, sd 0.5       21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, sd 0.6       21.18dB     0.06%     0   -0.06   -0.33   3.1e-05     999ms
-  diff Manchester, sd 0.7       20.71dB     0.43%     5   -0.85   -1.68   1.2e-04     523ms
+  diff Manchester, sd 0.0       22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, sd 0.3       22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, sd 0.4       22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, sd 0.5       22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, sd 0.6       22.51dB     0.06%     0   -0.01   -0.06   1.6e-05     999ms
+  diff Manchester, sd 0.7       22.48dB     0.35%     4   -0.50   -1.01   5.2e-04     600ms
 
-  AMI, sd 0.0                   21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, sd 0.3                   21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, sd 0.4                   21.12dB     0.06%     0   -0.12   -0.36   4.7e-05     999ms
-  AMI, sd 0.5                   16.60dB     0.11%     1   -5.35  -10.28   1.5e-03     734ms
-  AMI, sd 0.6                  chopped     0.47%     4       -       -         -     502ms
-  AMI, sd 0.7                  chopped     4.99%    25       -       -         -      99ms
+  AMI, sd 0.0                   22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, sd 0.3                   22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, sd 0.4                   22.42dB     0.06%     0   -0.10   -0.52   4.7e-05     999ms
+  AMI, sd 0.5                   18.88dB     0.06%     0   -3.63   -7.44   1.0e-03     999ms
+  AMI, sd 0.6                   10.90dB     0.20%     1  -12.74  -19.09   6.5e-03     759ms
+  AMI, sd 0.7                  chopped     4.15%    23       -       -         -     151ms
 
 
 IMPULSE NOISE -- damped rings 0.5-3x peak, 15-80 kHz, Poisson
 
   condition                      segSNR      down   LOF  d mean d worst   max BER     clean
-  diff Manchester, 0/s          21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, 1/s          21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, 10/s         20.04dB     0.44%     5   -1.83  -10.96   4.9e-04     476ms
-  diff Manchester, 100/s       chopped     5.27%    72       -       -         -      71ms
-  diff Manchester, 1000/s      chopped    38.58%   407       -       -         -      11ms
+  diff Manchester, 0/s          22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, 1/s          22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, 10/s         23.17dB     0.39%     5   -0.00   -0.02   4.9e-04     476ms
+  diff Manchester, 100/s       chopped     5.23%    71       -       -         -      71ms
+  diff Manchester, 1000/s      chopped    39.33%   412       -       -         -      11ms
 
-  AMI, 0/s                      21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, 1/s                      21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, 10/s                     21.35dB     0.14%     1   -0.82   -3.04   3.5e-04     757ms
-  AMI, 100/s                   chopped     1.02%    13       -       -         -     214ms
+  AMI, 0/s                      22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, 1/s                      22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, 10/s                     22.03dB     0.06%     0   -0.49   -1.18   3.6e-04     999ms
+  AMI, 100/s                    13.00dB     0.83%    10   -7.77  -15.05   8.0e-03     206ms
   AMI, 1000/s                  no lock   100.00%     0       -       -         -       0ms
 
 ATTENUATION -- signal scaled, sd 0.10 floor and 0.05 hysteresis fixed
 
   condition                      segSNR      down   LOF  d mean d worst   max BER     clean
-  diff Manchester, atten 1.00    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, atten 0.50    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, atten 0.25    21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  diff Manchester, atten 0.12   chopped    52.90%   455       -       -         -       6ms
+  diff Manchester, atten 1.00    22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, atten 0.50    22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, atten 0.25    22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  diff Manchester, atten 0.12   chopped    55.33%   431       -       -         -       5ms
 
-  AMI, atten 1.00               21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, atten 0.50               21.23dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
-  AMI, atten 0.25               21.12dB     0.06%     0   -0.12   -0.36   4.7e-05     999ms
-  AMI, atten 0.12              chopped    58.16%    53       -       -         -      23ms
+  AMI, atten 1.00               22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, atten 0.50               22.52dB     0.06%     0   +0.00   +0.00   0.0e+00     999ms
+  AMI, atten 0.25               22.42dB     0.06%     0   -0.10   -0.52   4.7e-05     999ms
+  AMI, atten 0.12              chopped    60.90%    51       -       -         -      30ms
 
 

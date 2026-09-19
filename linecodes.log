@@ -8,12 +8,12 @@ LINE CODES ON THE MF8 FRAME -- structural properties, measured
   Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
   differential Manchester         2     0.50     1.00    +0.000        1.0
   AMI                             3     1.00    15.00    +0.000        1.0
-  unipolar NRZ                    2     1.00    18.00    +0.513    16419.5
+  unipolar NRZ                    2     1.00    17.00    +0.513    16419.5
   unipolar RZ                     2     0.50    15.50    +0.257     8209.5
-  polar NRZ                       2     1.00    18.00    +0.026      854.0
-  NRZI                            2     1.00    16.00    +0.003      210.0
+  polar NRZ                       2     1.00    17.00    +0.026      854.0
+  NRZI                            2     1.00    16.00    +0.006      257.0
   CMI                             2     0.50     1.50    +0.000        1.5
-  Miller                          2     1.00     2.00    -0.001       89.0
+  Miller                          2     1.00     2.00    -0.002      109.0
 
   --- payload: const0  (line ones density 0.141)
   code                       levels  min int  max int   mean DC  disparity
@@ -23,21 +23,21 @@ LINE CODES ON THE MF8 FRAME -- structural properties, measured
   unipolar NRZ                    2     1.00    15.00    +0.141     4499.5
   unipolar RZ                     2     0.50    15.50    +0.070     2249.5
   polar NRZ                       2     1.00    15.00    -0.719    23001.0
-  NRZI                            2     1.00    16.00    +0.000       28.0
+  NRZI                            2     4.00    16.00    +0.000       16.0
   CMI                             2     0.50     1.50    +0.000        1.5
-  Miller                          2     1.00     1.50    +0.000        3.0
+  Miller                          2     1.00     1.50    +0.000        2.0
 
   --- payload: const1  (line ones density 0.891)
   code                       levels  min int  max int   mean DC  disparity
   Manchester (biphase-L)          2     0.50     1.00    +0.000        1.0
   differential Manchester         2     0.50     1.00    +0.000        1.0
-  AMI                             3     1.00     2.00    +0.000        1.0
+  AMI                             3     1.00     1.00    +0.000        1.0
   unipolar NRZ                    2     1.00    23.00    +0.891    28499.5
-  unipolar RZ                     2     0.50     2.50    +0.445    14249.5
-  polar NRZ                       2     1.00    23.00    +0.781    25000.0
-  NRZI                            2     1.00     3.00    +0.000        4.0
+  unipolar RZ                     2     0.50     1.50    +0.445    14249.5
+  polar NRZ                       2     1.00    23.00    +0.781    24999.5
+  NRZI                            2     1.00     2.00    +0.000        2.0
   CMI                             2     0.50     1.50    +0.000        1.5
-  Miller                          2     1.00     2.00    -0.016      501.5
+  Miller                          2     1.00     2.00    +0.000        2.0
 
   The disparity column decides the candidate set, because the pair is
   transformer coupled (mf8-spec.md 9.3) and a transformer cannot pass
@@ -50,10 +50,10 @@ ZERO RUNS -- the frame bounds them, so AMI needs no zero substitution
   Worst run of zeros on the line, over all 64 hook states.
 
   const0          15
-  const1           2
-  silence          4
+  const1           1
+  silence          3
   speech           2
-  random          11
+  random          12
 
   worst over everything: 15 bits.
   F is 0 one frame in eight, so a mark lands at worst every 2 frames =
@@ -66,11 +66,11 @@ OPTION B -- analog tank (rectify, resonator, flywheel)
   BER on the worst payload (constant 0), tank detuned:
 
        Q  amp left    0.00%    0.10%    0.25%    0.50%    1.00%    2.00%
-      20      0.09 1.7e-01 1.7e-01 1.7e-01 1.9e-01 1.9e-01 1.9e-01
-      50      0.39 1.6e-02 1.6e-02 1.6e-02 4.7e-02 6.2e-02 1.9e-01
-     100      0.62      ok      ok      ok 1.6e-02 6.2e-02 2.3e-01
-     200      0.79      ok      ok      ok 4.7e-02 1.1e-01 2.2e-01
-     500      0.91      ok      ok 1.6e-02 6.3e-02 9.4e-02 1.8e-01
+      20      0.09 1.4e-01 1.4e-01 1.4e-01 1.4e-01 1.4e-01 1.4e-01
+      50      0.39 1.6e-01 7.8e-02 7.8e-02 9.4e-02 1.2e-01 1.4e-01
+     100      0.62      ok      ok      ok      ok 1.2e-01 1.4e-01
+     200      0.79      ok      ok      ok 4.2e-05 1.2e-01 1.4e-01
+     500      0.91      ok      ok      ok 9.3e-02 1.4e-01 1.4e-01
 
   Two effects pull opposite ways, and the second binds:
     coasting decay over 15 idle cycles = exp(-pi*15/Q)  -> wants Q high
@@ -93,8 +93,8 @@ OPTION A -- no clock at all: quantise the gap between marks
      1.0%     0.0e+00      -2 |      0.0e+00      -15
      2.0%     0.0e+00      -2 |      0.0e+00      -15
      3.0%     0.0e+00      -2 |      0.0e+00      -15
-     5.0%     4.2e-01     -31 |      2.4e-01     -764
-    10.0%     4.9e-01    -922 |      2.5e-01    -5264
+     5.0%     4.2e-01     -35 |      2.4e-01     -764
+    10.0%     4.9e-01   -1068 |      2.5e-01    -3764
 
   Error-free to 2%, broken at 3% -- the 3.1% predicted.  A 1% resistor
   and a 2% C0G give +/-3%, so a clockless AMI receiver sits ON its
@@ -159,25 +159,25 @@ LINE IMPAIRMENTS, SWEPT INDEPENDENTLY -- random data, both codes
            0 diff Manchester     0.0e+00      0    0.25%
            0 AMI                 0.0e+00      0    0.24%
          0.4 diff Manchester     0.0e+00      0    0.25%
-         0.4 AMI                 3.3e-05      0    0.25%
+         0.4 AMI                 5.1e-05      0    0.25%
          0.5 diff Manchester     0.0e+00      0    0.25%
-         0.5 AMI                 8.8e-04      0    0.29%
-         0.6 diff Manchester     2.0e-06      0    0.25%
-         0.6 AMI                 7.2e-02      2    0.63%
-         0.7 diff Manchester     2.5e-01      7    0.80%
-         0.7 AMI                 2.5e-01     23    4.39%
+         0.5 AMI                 9.4e-04      0    0.25%
+         0.6 diff Manchester     3.9e-06      0    0.25%
+         0.6 AMI                 5.3e-02      1    0.44%
+         0.7 diff Manchester     3.1e-01     10    1.04%
+         0.7 AMI                 2.7e-01     33    8.18%
 
   IMPULSE NOISE, damped rings 0.5-3x peak, 15-80 kHz, Poisson
 
          imp code                raw BER    LOF   down %
            0 diff Manchester     0.0e+00      0    0.25%
            0 AMI                 0.0e+00      0    0.24%
-          10 diff Manchester     3.0e-01      9    0.88%
-          10 AMI                 5.3e-02      3    0.50%
-         100 diff Manchester     4.7e-01     69    5.47%
-         100 AMI                 2.3e-01     16    1.56%
-        1000 diff Manchester     4.9e-01    366   40.97%
-        1000 AMI                 4.7e-01     42   84.71%
+          10 diff Manchester     3.0e-01      8    0.82%
+          10 AMI                 2.1e-02      2    0.41%
+         100 diff Manchester     4.7e-01     71    5.46%
+         100 AMI                 3.2e-01     15    1.40%
+        1000 diff Manchester     4.9e-01    388   39.11%
+        1000 AMI                 4.7e-01     47   85.53%
 
   ATTENUATION, sd 0.10 floor and 0.05 hysteresis held fixed
 
@@ -187,9 +187,9 @@ LINE IMPAIRMENTS, SWEPT INDEPENDENTLY -- random data, both codes
          0.5 diff Manchester     0.0e+00      0    0.25%
          0.5 AMI                 0.0e+00      0    0.25%
         0.25 diff Manchester     0.0e+00      0    0.25%
-        0.25 AMI                 3.3e-05      0    0.25%
-        0.12 diff Manchester     5.0e-01    441   57.85%
-        0.12 AMI                 4.3e-01     45   65.35%
+        0.25 AMI                 5.1e-05      0    0.25%
+        0.12 diff Manchester     5.0e-01    434   53.48%
+        0.12 AMI                 4.2e-01     42   72.89%
 
   Differential Manchester holds a Gaussian floor to sd 0.6 where AMI is
   degraded from 0.4, and the attenuation cliff lands where the 0.05
@@ -212,42 +212,42 @@ IMPULSE SUSCEPTIBILITY
   change is a SLIP: the frame re-phases and must reacquire.
 
    amplitude                    diff Manchester   AMI: count  AMI: raw BER
-        0.50           [-647, -834, -828, -514]  [1, -4, -2]       3.0e-01
+        0.50           [-640, -813, -823, -516] [-6, -4, -3, -1]       4.2e-01
 
   (the amplitude sweep proper)
 
    amplitude     diff Manchester: bits lost   AMI: bits lost
-        0.50                     [647, 834]           [2, 4]
-        0.80                     [647, 834]           [2, 4]
-        0.95                     [647, 834]           [2, 4]
-        1.10                     [647, 834]           [2, 4]
-        1.50                     [647, 834]           [2, 4]
-        3.00                     [647, 834]           [2, 4]
+        0.50                     [640, 813]           [3, 4]
+        0.80                     [640, 813]           [3, 4]
+        0.95                     [640, 813]           [3, 4]
+        1.10                     [640, 813]           [3, 4]
+        1.50                     [640, 813]           [3, 4]
+        3.00                     [640, 813]           [3, 4]
 
   MITIGATIONS
 
   hysteresis  threshold 1-h   bits lost, 200/s amp 0.9
-        0.02           0.98                 [632, 802]
-        0.05           0.95                 [647, 834]
-        0.10           0.90                 [696, 885]
-        0.20           0.80                [816, 1032]
+        0.02           0.98                 [628, 785]
+        0.05           0.95                 [640, 813]
+        0.10           0.90                 [687, 874]
+        0.20           0.80                [817, 1032]
   -> hysteresis moves the threshold the WRONG way, so the
      impulse-optimal comparator is a tight one.
 
    dead time     bits lost, 200/s
-        0.05           [630, 815]
-        0.15           [632, 819]
-        0.25           [647, 834]
-        0.35           [740, 982]
-        0.45         [1093, 1433]
+        0.05           [625, 790]
+        0.15           [628, 796]
+        0.25           [640, 813]
+        0.35           [749, 955]
+        0.45         [1087, 1385]
   -> dead time rejects edges that arrive too EARLY; a stuck comparator
      REMOVES edges, so there is nothing for it to reject.
 
    HP corner   diff Manchester LOF   AMI LOF   (100 imp/s)
-        none                    16         4
-      60 kHz                     4         0
+        none                    15         3
+      60 kHz                     5         0
      120 kHz                     4         0
-     200 kHz                     5         0
+     200 kHz                     4         0
   -> AC coupling helps differential Manchester; the lowest signal
      fundamental is 256 kHz so a 120 kHz corner is free.  AMI's
      spectrum reaches lower, so the same filter costs it signal.
@@ -277,9 +277,9 @@ THE FAMILY.  F + S + N channels must be a power of two, so N = 2, 6, 14
 WHAT THE PER-CHANNEL RATE COSTS THE AUDIO
 
    per-channel    segSNR  vs 64 kbps
-          16k  10.61 dB   -12.37 dB
-          32k  16.18 dB    -6.80 dB
-          64k  22.98 dB    +0.00 dB
+          16k  11.17 dB   -14.01 dB
+          32k  18.06 dB    -7.12 dB
+          64k  25.18 dB    +0.00 dB
 
   32 kbps is the quality knee, 16 kbps is a real sacrifice, 64 kbps
   is comfortable -- and only 64 kbps is one-for-one with a DS0

@@ -89,11 +89,11 @@ below 32 is rejected *deterministically*:
 
 | word | CVSD speech | CVSD silence | constant 1 | constant 0 | random |
 |---|---|---|---|---|---|
-| `10101010` — `mfspec` | 4708 | **8192 (the whole clip)** | 1 | 1 | 12 |
+| `10101010` — `mfspec` | 1369 | **8192 (the whole clip)** | 1 | 1 | 12 |
 | `11101110` — period 4 | 4 | 3 | 3 | 1 | 14 |
 | **`11111110`** | **4** | **3** | **7** | **1** | **20** |
-| `11111100` | 4 | 2 | 6 | 2 | 14 |
-| `11101100` | 5 | 3 | 3 | 2 | 14 |
+| `11111100` | 5 | 2 | 6 | 2 | 14 |
+| `11101100` | 7 | 3 | 3 | 2 | 14 |
 
 `1010` *is* CVSD silence, which is why `mfspec`'s Stage 1 was no filter at all.
 A period-4 word cannot pin an 8-state superframe. Of the three period-8 words
@@ -142,13 +142,13 @@ acquisition on §5's residual case needs.
 
 | guard | decode | F word in every lane | one data card, worst seat | voice, 4 running |
 |---|---|---|---|---|
-| **0,4 = `0,1` — this spec** | NOR, expect `q2` | **0 / 512** | **0 / 512** | 1 in 522 |
-| 3,5 = `1,0` — before §3.4 | `q0·(q1⊕q2)`, expect `q1` | 0 / 512 | 0 / 512 | 1 in 1 311 |
-| 3,7 = `0,1` | AND, expect `q2` | 0 / 512 | 0 / 512 | 1 in 544 |
-| 3,7 = `1,0` — `mfspec`'s values | AND, expect `/q2` | **192 / 512** | 0 / 512 | 1 in 527 |
+| **0,4 = `0,1` — this spec** | NOR, expect `q2` | **0 / 512** | **0 / 512** | 1 in 499 |
+| 3,5 = `1,0` — before §3.4 | `q0·(q1⊕q2)`, expect `q1` | 0 / 512 | 0 / 512 | 1 in 1 200 |
+| 3,7 = `0,1` | AND, expect `q2` | 0 / 512 | 0 / 512 | 1 in 459 |
+| 3,7 = `1,0` — `mfspec`'s values | AND, expect `/q2` | **192 / 512** | 0 / 512 | 1 in 484 |
 
 Speech satisfies two states four apart more often than two states two apart, so
-0,4 takes the residual about 2.5× as often as 3,5 did — and the guard counter
+0,4 takes the residual about 2.4× as often as 3,5 did — and the guard counter
 releases it either way (§5). That is the price of the mirror and the one-gate
 decode, and it is small: one event in ~500 attempts at one skew, in one allowed
 layout, costing a mute of about a millisecond.
@@ -435,13 +435,13 @@ about spacing and not about scrambling.
 card carrying the F word three seats from a *voice* card is allowed, and the
 guard then lands on speech, which satisfies it by chance: at nominal line level
 both guard bits fall right in about 20% of superframes, and four superframes
-running — what acquisition needs — about once in 522 attempts at that skew.
+running — what acquisition needs — about once in 499 attempts at that skew.
 That is what §4's second counter is for. Forced at 24 such points, 0.5 s runs:
 
 | tracking | acquired | released after | mean | never released |
 |---|---|---|---|---|
 | frame counter only | 24 / 24 | — | — | **24** |
-| **frame counter + guard counter — this spec** | 24 / 24 | **34–246 frames** | **1.47 ms** | **0** |
+| **frame counter + guard counter — this spec** | 24 / 24 | **34–170 frames** | **1.29 ms** | **0** |
 
 Each release is followed by a hunt that finds the true alignment; the cost of the
 event is a mute of a few milliseconds, not a call with the wrong channels in it.
@@ -500,18 +500,18 @@ because a slip re-phases the stream and can rotate the channel slots.
 
 | code | segSNR | down | LOF | Δ mean | Δ worst | max BER |
 |---|---|---|---|---|---|---|
-| differential Manchester | 21.23 dB | 0.06% | **0** | **+0.00** | **+0.00** | **0** |
-| AMI | 21.23 dB | 0.06% | **0** | **+0.00** | **+0.00** | **0** |
+| differential Manchester | 22.52 dB | 0.06% | **0** | **+0.00** | **+0.00** | **0** |
+| AMI | 22.52 dB | 0.06% | **0** | **+0.00** | **+0.00** | **0** |
 
 Per channel, differential Manchester:
 
 | channel | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
-| segSNR | 20.70 | 14.85 | 29.04 | 19.87 | 14.23 | 28.71 |
+| segSNR | 21.05 | 14.90 | 29.33 | 24.64 | 15.28 | 29.89 |
 | vs codec | **+0.00** | **+0.00** | **+0.00** | **+0.00** | **+0.00** | **+0.00** |
 | bit BER | 0 | 0 | 0 | 0 | 0 | 0 |
 
-**The carrier adds exactly nothing**, in either code. The 14–29 dB spread across
+**The carrier adds exactly nothing**, in either code. The 15–30 dB spread across
 channels is the talkers' own crest factors, not slot position — the Δ row is
 +0.00 for all six. Isolation: off-diagonal 0.134 against a source-correlation
 floor of **0.129 measured on the same 1.0 s window**, an excess of +0.005. (The
@@ -526,24 +526,24 @@ matrix can only report its own floor.
 | condition | differential Manchester | AMI |
 |---|---|---|
 | sd 0.3 | +0.00 dB, 0 LOF | +0.00 dB, 0 LOF |
-| sd 0.4 | **+0.00 dB**, 0 LOF | −0.12 dB, 0 LOF |
-| sd 0.5 | **+0.00 dB**, 0 LOF | **−5.35 dB**, 1 LOF |
-| sd 0.6 | **−0.06 dB**, 0 LOF | **chopped, 4 LOF** |
-| sd 0.7 | −0.85 dB, **5 LOF**, 523 ms clean | chopped, 25 LOF |
+| sd 0.4 | **+0.00 dB**, 0 LOF | −0.10 dB, 0 LOF |
+| sd 0.5 | **+0.00 dB**, 0 LOF | **−3.63 dB**, 0 LOF |
+| sd 0.6 | **−0.01 dB**, 0 LOF | **−12.74 dB, 1 LOF** |
+| sd 0.7 | −0.50 dB, **4 LOF**, 600 ms clean | chopped, 23 LOF |
 | impulse 1/s | +0.00 dB, 0 LOF | +0.00 dB, 0 LOF |
-| impulse 10/s | −1.83 dB, 5 LOF | −0.82 dB, 1 LOF |
-| impulse 100/s | chopped, 72 LOF | chopped, 13 LOF |
-| atten 0.25 | **+0.00 dB**, 0 LOF | −0.12 dB, 0 LOF |
-| atten 0.12 | chopped, 455 LOF | chopped, 53 LOF |
+| impulse 10/s | −0.00 dB, 5 LOF | −0.49 dB, 0 LOF |
+| impulse 100/s | chopped, 71 LOF | −7.77 dB, 10 LOF |
+| atten 0.25 | **+0.00 dB**, 0 LOF | −0.10 dB, 0 LOF |
+| atten 0.12 | chopped, 431 LOF | chopped, 51 LOF |
 
 Differential Manchester is transparent to sd 0.6 where AMI is degraded from 0.4,
 which is `line-codes.md` §3's raw-BER result now heard as audio.
 
 **The interesting column is not which is better but how each fails.** AMI's
-audio falls first — 5 dB down at sd 0.5 with the link essentially up — and by
-sd 0.6 it is losing frame as well. Differential Manchester holds both to sd 0.6
-and then breaks: at sd 0.7 its audio inside a clean stretch is only −0.85 dB,
-but the link drops five times in a second. **AMI degrades in fidelity first;
+audio falls first — 3.6 dB down at sd 0.5 with the link up — and by sd 0.6 it
+is 12.7 dB down and losing frame as well. Differential Manchester holds both to
+sd 0.6 and then breaks: at sd 0.7 its audio inside a clean stretch is only
+−0.50 dB, but the link drops four times in a second. **AMI degrades in fidelity first;
 differential Manchester degrades in continuity only.** That is the same split
 `line-codes.md` §4.3 found under impulse noise, and it holds on a Gaussian floor
 too. For voice behind a mute (§11), continuity is the one that is audible as
@@ -557,6 +557,17 @@ the old layout with a second seed also gives 4, and the impulse 10/s cell gives
 on the same received bits it trips 0 times in every cell here, and the frame
 counter alone gives identical counts. What is stable is the order in which the
 two codes fail; the LOF count in any one marginal cell is one draw.
+
+**The codec law moved this table (§12.1).** It changes every payload bit, so the
+line bits under the same seeded noise change too, and the LOF counts are a new
+draw — 4 and 5 LOF where the previous law had 5 and 5, 1 where it had 4. What
+did not move by chance is the Δ at a given error rate. Differential Manchester
+at 10 impulses/s has the same 4.9e−04 bit error rate and the same 5 LOF under
+both laws, and costs −0.00 dB where the previous law cost −1.83. AMI at sd 0.5
+went from −5.35 to −3.63 dB at the same order of BER. That is the 1 ms
+integrator forgetting an error three times sooner, `cvsd_law.py laws`' bit-error
+columns heard over the line. Run on the previous law, this battery reproduces
+its old log to the last digit.
 
 ### 7.3 What this found in the framer
 
@@ -858,32 +869,137 @@ section is the engine they share and the rules they obey.
 
 ### 12.1 CVSD voice card
 
-Semi-analog CVSD, E&M four-wire. The card's components set slew, not step size,
-so the same card runs at any family rate with no strap.
+Semi-analog CVSD, E&M four-wire. **The law is MIL-STD-188-113's — the DNVT's —
+run at 64 kbps.** The card's components set slew, not step size, so the same
+card runs at any family rate with no strap.
 
-| parameter | value |
-|---|---|
-| bit rate | set by the mode, not the card — **64 kbps here** |
-| run window | 3 bits |
-| τ_syl | 6 ms |
-| τ_int | 3 ms |
-| companding | 30 dB (31.6:1) |
-| slew | 12 000 full-scale units/s |
+| parameter | this card | MIL-STD-188-113, at 16 and 32 kbps |
+|---|---|---|
+| bit rate | set by the mode — **64 kbps here** | 16, 32 kbps |
+| run window | 3 bits, run-of-threes | 3 bits, run-of-threes |
+| τ_syl | 5 ms | 5 ms ± 1 |
+| τ_int | **1 ms** | 1 ms ± 0.25 |
+| compression | **16:1** between the steps at 30% and 0% run-of-threes — **51:1, 34.2 dB, full scale** | 16:1, 12:1 to 21:1 |
+| slew | **16 000** full-scale units/s | set per rate by the 0 dBm0 pattern |
 
 | component | value | note |
 |---|---|---|
 | `C_int` | 10 nF film | |
-| `R_int` | 300 kΩ | τ_int = 3 ms |
-| `Iabc` max | **120 µA** | `slew · C_int` — **the bit rate cancels** |
-| `Iabc` min | 3.8 µA | 31.6:1 companding |
-| `C_syl` | 100 nF film | |
-| `R_syl` | 60 kΩ | τ_syl = 6 ms |
+| `R_int` | **100 kΩ** | τ_int = 1 ms |
+| `Iabc` max | **160 µA** | `slew · C_int` — **the bit rate cancels** |
+| `Iabc` min | **3.1 µA** | 51:1; the smallest step on `C_int` is 4.9 mV |
+| `C_syl` | 100 nF film, **2%** | |
+| `R_syl` | **49.9 kΩ** | τ_syl = 5 ms |
+
+Encoder on one card, decoder on another (`tolerance.py`, 64 kbps, within 1 dB
+of a matched pair, worst of two sources):
 
 | network | tolerance | failure mode |
 |---|---|---|
-| integrator R·C | ±30% | distortion |
-| **syllabic R·C** | **±20%** | distortion — the binding spec |
-| step size | ±30% | **pure gain error, no distortion at all** |
+| integrator R·C | ±30% | **a first-order bass shelf**, −0.9 dB at 300 Hz at −30% — linear, and undone exactly by its inverse. segSNR counts it as noise and would say ±5%; the standard's own insertion-loss mask allows ±1 dB from 300 Hz at 32 kbps |
+| **syllabic R·C** | **±10%** | distortion — the binding spec |
+| `I_min` alone | ±10% | a gain that follows the signal level |
+| step size, `I_max` and `I_min` together | ±30% | **pure gain error, no distortion at all** |
+
+1% resistors with a 2% `C_syl` hold the syllabic network to ±6% card to card,
+where a 5% capacitor would be ±12%. `I_min` is whatever the `Iabc` drive
+makes it: `circuit-review.md` §2.4's drive holds 51:1 with its ratio resistors
+at 51.1 kΩ and 2.55 MΩ (50.9:1; 50.1 kΩ in parallel, 5 ms on 100 nF), but its
+control voltage at `I_min` falls from 157 to 98 mV, so its op-amp's offset counts
+1.6 times as much — a low-offset part, or trim.
+
+**Why this law.** 64 kbps, three talkers, segSNR (`cvsd_law.py laws`):
+
+| law | −30 dB | −20 dB | nominal | +6 dB | BER 1e−3 | BER 1e−2 |
+|---|---|---|---|---|---|---|
+| previous: 30 dB full scale, τ_syl 6 ms, τ_int 3 ms | 16.6 | 21.3 | 21.3 | 16.8 | 15.0 | 5.3 |
+| previous, τ_int 1 ms | 16.7 | 21.4 | 22.6 | 16.7 | 18.0 | 8.8 |
+| **this card** | **21.2** | **24.3** | **23.1** | **16.9** | **18.4** | **9.1** |
+
+The integrator buys the bit-error columns — the decoder forgets an error three
+times sooner — and costs nothing clean; the ratio buys the quiet columns and
+costs nothing loud. Over the line that integrator is §7.2's recovered cells. On
+a plesiochronous slip, a dropped bit is now a −30 dB transient that settles in
+1.2 ms, where it was −25 dB and 5 ms (`mf8-backplane.md` §7).
+
+**The slew is 16 000, not the 12 000 this section gave before.** 12 000 was one
+setting for every family rate. At the only rate this frame runs it moves the
+card's best level down: 4.1 dB worse at nominal level (19.0 against 23.1),
+2.2 dB better at −30 dB. Slew and input level are one knob — scaling one is
+scaling the other — so in practice the card's level trims set it, against
+`mf8.NOMINAL_RMS` (`mf8-cards.md` §3.3).
+
+**The ratio is quoted two ways, and the standard contradicts itself.** Its §5.5
+quotes the ratio between the syllabic filter's outputs at 30% and 0%
+run-of-threes. A drive, and `cvsd.py`, set it full scale, 0% to 100%, so
+16:1 is 1 + 15 / 0.30 = 51:1. The standard's own decoder test — Table F-1,
+`FB412` and `DB492` repeating at 16 kbps, 800 Hz — wants those two patterns'
+outputs 24 ± 2 dB apart. But at one fixed step the 30% pattern swings
+1.9 times as far as the 0% pattern (the standard's §3.9 example implies 2.1),
+so a 16:1 step ratio decodes 29.5 dB apart, and a decoder that passes Table F-1
+has a step ratio of about 8.5:1. No decoder meets both. **This card follows
+§5.5**, the step ratio, which is what components set. Table F-1's reading,
+28.3 dB full scale, would cost 6.5 dB at −30 dB (14.7 against 21.2). Which one
+a real DNVT builds is a bench measurement (§15), and it matters only for the
+bit-exact interworking below.
+
+**Carried to 64 kbps.** The standard specifies 16 and 32 kbps. Its time
+constants are real time — its syllabic filter "is independent of the sampling
+rate" — and its ratio is a ratio of two currents, so neither knows the bit rate.
+One parameter at a time at 16, 32 and 64 kbps (`cvsd_law.py rates`):
+
+- **Ratio**: wider is better at every rate, out to 42 dB, with no optimum
+  inside. The model has no floor under `I_min`; the real one is analog — offset
+  and leakage against a 3 µA current — which is why the card stops at the
+  standard's figure.
+- **Window**: a count of bits, and it stays one. 12 bits at 64 kbps is the
+  standard's window in time at 16 kbps, and costs 7.6 dB at nominal (15.5
+  against 23.1); 6 bits at 32 kbps costs 3.6. 4 bits gains 0.1–0.6 dB on the
+  level mean at each rate but costs 1.8 dB at nominal at 64 kbps.
+- **τ_int**: shorter is better under bit errors at every rate, and neutral
+  clean. 0.5 ms would add another 1.9 dB at BER 1e−2, outside the standard's
+  tolerance.
+- **τ_syl**: flat at 16 kbps; at 64 kbps 2.5 ms is 0.5 dB better on the level
+  mean and 1.0 at nominal. The one parameter that leans with the rate, by half a
+  dB, and outside the standard's 4–6 ms. The card keeps 5 ms.
+
+Nothing in the law is tied to its rate. The one rate-bound setting is the
+reference level, which the standard fixes per rate with its patterns and this
+card fixes with its slew — the standard's two rates hold the slew equal to
+0.6 dB, where `mf8.SLEW` raises it with rate.
+
+**A DNVT on this channel.** Both ends on this law, the DNVT at its own rate,
+m = 64 / its rate; segSNR against the source (`cvsd_law.py dnvt`):
+
+| path | 32 kbps DNVT | 16 kbps DNVT |
+|---|---|---|
+| the DNVT alone — the reference | 16.7 | 10.8 |
+| DNVT → trunk: each bit repeated m times, into this card | 5.4, **7.8 dB loud** | 1.4, **16.5 dB loud** |
+| … into a decoder with a 3m-bit window | 15.3 | 9.7, 4.0 dB loud |
+| … transcoded on the card | **16.2** | **10.8** |
+| trunk → DNVT: every m-th bit | **0.0**, integrator on the rail | **0.0** |
+| … each m bits summed and re-quantised to one | 16.6, 3.1 dB quiet | 9.4, 8.6 dB quiet |
+| … transcoded on the card | **15.6** | **10.8** |
+| DNVT to DNVT through two transcoding cards | 15.1 | 10.4 |
+
+**Bit-domain conversion does not work.** Decimation keeps one bit of m where the
+information is their sum: 69% of groups of four net to zero, and the kept bit
+reports ±4 for all of them; silence, `1010`, decimates to all ones. Repetition
+is exact for the integrator — the same current for the same time — but a 3-bit
+window at 64 kbps fires on the DNVT's runs of two at 32 kbps and of one at 16,
+so the step runs high. Re-quantising the sum holds only while the two laws
+match, and delivers a level that depends on the rate.
+
+**Two ways do work:**
+
+1. **Transcode on the card**: decode, filter, re-encode at the DNVT's rate, as
+   the FXS card does to analog. 0–1.1 dB against the DNVT alone; two DNVTs
+   through two such cards, 0.4–1.6 dB. Neither end needs to know about the other.
+2. **Repeat bits end to end**: a DNVT's line card puts each bit m times into the
+   DS0 and takes any one of each m back — bit-exact at every phase. Between two
+   DNVTs that is the DNVT's own quality with no codec on either card. Toward a
+   voice card, that card's codec must be clocked at the DNVT's rate for the call
+   and match the DNVT's ratio; the slews differ, which is only gain.
 
 **A** is the E&M signalling bit: the M lead sensed through an opto-isolator to
 the TX card, the E lead driven from the received A bit through the §13 RC.
@@ -965,7 +1081,15 @@ not in the repository.
 
 **Inherited from this document and not re-measured**: the whole physical layer — line
 code, driver, transformer, filter, comparator, classifier tolerances, reach,
-noise margin, squelch levels, CVSD performance, signalling RC.
+noise margin, squelch levels, signalling RC.
+
+**Measured on the codec model** (`cvsd_law.py`, `tolerance.py`, §12.1): the law
+against the standard's own decoder patterns and against the previous law; the
+slew; whether the law is bit-rate specific, one parameter at a time at 16, 32
+and 64 kbps; a DNVT on a 64 kbps channel, eight ways; component tolerances at
+64 kbps, `I_min` alone included. All of it is `cvsd.py` — a model of the analog
+engine, scored by segSNR on three talkers — not a circuit and not a listening
+test.
 
 **Measured over the line** (`mf8_line.py`, §7): six independent talkers through
 the whole chain in both line codes, clean and under Gaussian noise, impulse noise
@@ -997,6 +1121,17 @@ a floor computed on the same window.
   rates, and §7.2 shows a marginal cell flipping from 0 to 4 LOF between
   realizations. §4.2's 6.25 s BER runs are the longest anything here has run.
 - **Repeatered spans.** Nothing here has been through more than one span.
+- **A real DNVT.** Which of the standard's two readings a DNVT actually builds
+  (§12.1) is a bench measurement: its decoder, the standard's two 16 kbps
+  patterns, a meter at 800 Hz. So is whether its absolute step matches the
+  slew here.
+- **The law change, over the line — re-run.** `mf8.py`, `mf8_line.py`,
+  `linecodes.py` and `mf8_render.py` have been re-run on §12.1's law and their
+  logs are from it; `impulse_sweep.py` carries random payload and cannot see the
+  codec. On the previous law `mf8_line.py` reproduces its old log to the last
+  digit, so everything that moved in §7 moved with the law. `linecodes.log` had
+  not been re-run since S moved; its structural tables moved with S, and only
+  its per-rate audio table moved with the law.
 
 **And the open question is not in this document.** `line-codes.md` §6 records it:
 differential Manchester and AMI rank opposite ways under impulse noise, §7.2
@@ -1024,6 +1159,13 @@ python3 impulse_sweep.py  impulse falloff, ~22 min      (impulse_sweep.log, .csv
 python3 mf8_line.py clean clean line, both codes, per channel, isolation
 python3 mf8_line.py noise Gaussian sweep
 python3 mf8_line.py plant impulse and attenuation
+
+python3 cvsd_law.py       the codec law, ~20 min        (cvsd_law.log is the run)
+python3 cvsd_law.py spec  the standard's patterns, and its two readings
+python3 cvsd_law.py laws  against the previous law; the slew
+python3 cvsd_law.py rates one parameter at a time at 16, 32 and 64 kbps
+python3 cvsd_law.py dnvt  a DNVT on a 64 kbps channel
+python3 tolerance.py      codec tolerances, ~20 min     (tolerance.log is the run)
 ```
 
 Caveats that affect how the numbers should be read:

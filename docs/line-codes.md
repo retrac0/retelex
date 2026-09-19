@@ -32,11 +32,11 @@ pass. Random payload, constant-0 worst case in brackets where it differs:
 | **differential Manchester** | **2** | **0.50** | **1.00** | **1.0** |
 | **AMI** | **3** | **1.00** | 15 | **1.0** |
 | CMI | 2 | 0.50 | 1.50 | **1.5** |
-| Miller | 2 | **1.00** | **2.00** | 89 (3) |
-| NRZI | 2 | **1.00** | 16 | 210 (28) |
-| polar NRZ | 2 | 1.00 | 18 (15) | 854 (23001) |
+| Miller | 2 | **1.00** | **2.00** | 109 (2) |
+| NRZI | 2 | **1.00** | 16 | 257 (16) |
+| polar NRZ | 2 | 1.00 | 17 (15) | 854 (23001) |
 | unipolar RZ | 2 | 0.50 | 15.5 | 8210 (2250) |
-| unipolar NRZ | 2 | 1.00 | 18 (15) | 16420 (4500) |
+| unipolar NRZ | 2 | 1.00 | 17 (15) | 16420 (4500) |
 
 **The disparity column decides the candidate set** before noise performance is
 discussed at all. The pair is transformer coupled (`mf8-spec.md` §9) and a
@@ -51,13 +51,13 @@ transformer cannot pass unbounded DC wander:
 **Miller (delay modulation) was the promising one.** It halves the bandwidth like
 AMI *and* bounds its max interval at 2.0 bits, which would make clock recovery
 nearly as cheap as differential Manchester — the best of both, on paper.
-Measured, it swings **89 bit periods of disparity on random payload**, and its
+Measured, it swings **109 bit periods of disparity on random payload**, and its
 excursion is payload-dependent rather than bounded. That is the classic Miller DC problem, and it is why Miller-squared
 exists; the patch costs encoder state and is heuristic.
 
 **NRZI** halves the bandwidth, is polarity-blind, and has its run length bounded
 at 16 by the same framing bit that bounds AMI's (§2.1). It fails the same way:
-210 bit periods on random payload. Both would need a DC-management layer — scrambling or block
+257 bit periods on random payload. Both would need a DC-management layer — scrambling or block
 coding — and scrambling is unattractive here — a self-synchronising scrambler locks up on
 all-zero idle onsets, measured at ~2⁻⁷.
 
@@ -368,7 +368,7 @@ What an outage *is* matters more than how much time it takes. Every break is
 short — **0.76 ms** for differential Manchester and 0.80 ms for AMI at low rate,
 barely more at 500/s — so neither code spends much time muted until the rate is
 very high. What climbs with impulse rate is the **number** of breaks, and each is
-a click plus a CVSD decoder that has to recover (its syllabic filter is 6 ms, so
+a click plus a CVSD decoder that has to recover (its syllabic filter is 5 ms, so
 at tens of breaks a second it never settles).
 
 `mf8_render.py` puts all six talkers through the chain for 15 s and writes what
@@ -494,26 +494,33 @@ sits two orders of magnitude further out.
 
 `mf8_render.py`, 15 s, six independent talkers, the full duration as the link
 delivers it. "muted" is time with no audio placed; segSNR is scored only where
-the link was up. Clean is 26.1 / 21.1 dB on channels 1 and 4 in both codes.
+the link was up. Clean is 26.8 / 22.1 dB on channels 1 and 4 in both codes.
 
 | condition | DM breaks/s | DM muted | DM ch1 / ch4 | AMI breaks/s | AMI muted | AMI ch1 / ch4 |
 |---|---|---|---|---|---|---|
-| impulse 10/s | 9.3 | 0.71% | 18.2 / 16.0 dB | **2.0** | **0.17%** | **22.4 / 18.7 dB** |
-| impulse 100/s | 71 | 8.9% | 5.3 / 4.9 dB | **13** | **1.1%** | **8.4 / 8.7 dB** |
-| Gaussian sd 0.60 | 0.13 | 0.02% | **25.9 / 21.0 dB** | 5.2 | 0.54% | 3.3 / 2.8 dB |
-| Gaussian sd 0.70 | 4.9 | 0.42% | **23.0 / 19.2 dB** | 28 | 5.3% | −1.7 / −1.8 dB |
-| attenuation 0.12 | 441 | 86% | 2.5 / 2.4 dB | 54 | 62% | −1.5 / −1.5 dB |
+| impulse 10/s | 9.7 | 0.73% | 24.3 / 20.4 dB | **1.9** | **0.14%** | **24.7 / 20.5 dB** |
+| impulse 100/s | 74 | 6.7% | 13.7 / 12.1 dB | **13** | **1.0%** | **15.1 / 13.2 dB** |
+| Gaussian sd 0.60 | 0.13 | 0.02% | **26.7 / 22.0 dB** | 4.4 | 0.37% | 10.0 / 8.5 dB |
+| Gaussian sd 0.70 | 4.6 | 0.37% | **25.1 / 20.8 dB** | 28 | 5.4% | 2.2 / 1.0 dB |
+| attenuation 0.12 | 444 | 86% | 3.7 / 3.5 dB | 46 | 66% | −1.5 / −1.7 dB |
 
-The render agrees with the sweep where they overlap — at 100/s AMI is 1.10%
-muted with 12.9 breaks/s against the sweep's 1.05% and 12.8. Differential
-Manchester reads 8.9% muted against the sweep's 5.3% because runs shorter than
+The render agrees with the sweep where they overlap — at 100/s AMI is 1.02%
+muted with 13.0 breaks/s against the sweep's 1.05% and 12.8. Differential
+Manchester reads 6.7% muted against the sweep's 5.3% because runs shorter than
 1 ms are not placed; that remainder is time the framer counts as up but that is
 too short to carry audio.
 
 Listen to `dm_imp10_ch1.wav` against `ami_imp10_ch1.wav` for the realistic case:
 both sound like speech, and the difference is the ticking. At 100/s both are
-poor, and AMI is still the better of the two on every column. Under Gaussian
+degraded, and AMI is still the better of the two on every column. Under Gaussian
 noise the table flips entirely, which is §3 heard rather than measured.
+
+**The codec law moved every error row.** On `mf8-spec.md` §12.1's law the
+decoder forgets a bit error in 1 ms where the previous law took 3, and the same
+render on the previous law (the log before this one, same layout) read 7.4 / 6.5
+dB for differential Manchester and 8.3 / 8.2 for AMI at 100/s, and 3.5 / 2.3 for
+AMI at sd 0.60. The breaks and muting are the link's and moved only as a new
+draw of the same noise.
 
 ---
 
