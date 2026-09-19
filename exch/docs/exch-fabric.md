@@ -119,19 +119,23 @@ eight puts a single '151 on each axis and runs the wires at MF8's own line rate.
 ## 2. The bus
 
 One clock domain. Everything below is on the mainboard or a ribbon between
-blocks; all 74HC at 5 V.
+blocks; all 74HC at 5 V. **`exch-mainboard.md` is this table in full** — the
+fifty-five signals, the two cables that carry them, the pinouts, and what the
+cable costs §4's margins (18 ns of 743).
 
 | signal | from | what |
 |---|---|---|
 | `HCLK` | clock card | 512 kHz, high for the first half of a cell. A cell is 1 953 ns |
 | `SLOT[2:0]` | clock card, a 74HC163 | the cell number; changes at the start of the cell. Addresses every commutator |
 | `SLOTQ[2:0]` | clock card, a 74HC175 on the 1.024 MHz tap | **the same count a quarter of a cell late.** Addresses every strobe decoder, and nothing else (§3.2) |
-| `TX_CLK`, `TX_OCT` | clock card | 64 kHz frame, 8 kHz octet, as `mf8-backplane.md` §3. **A card's `RX_CLK` pin is `TX_CLK`, and its `RX_OCT` is `TX_OCT` one frame late** (§3.4) |
+| `TX_CLK`, `TX_OCT`, `RX_OCT` | clock card | 64 kHz frame, 8 kHz octet, as `mf8-backplane.md` §3. **A card's `RX_CLK` pin is `TX_CLK`, and its `RX_OCT` is `TX_OCT` one frame late** (§3.4), from one flip-flop here |
+| `HB` | clock card | 1.024 MHz, the half-bit clock of `mf8-spec.md` §9.1. Only a trunk card wants it, and it is the fastest thing on the bus: **4.096 MHz never leaves the clock card** (`exch-mainboard.md` §8) |
 | `FILL`, `RBT`, `/RING_CAD`, `TICK` | clock card, ringback card | 32 kHz idle pattern; the ringback bit stream; 2 s / 4 s, low true; 1 kHz |
 | `HC[0..7]`, `HA[0..7]` | block *h* drives wire *h* | the highways. **One driver a wire**; every block listens to all sixteen through its own receivers. `HA` is also the marker's M highway |
 | `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a nail (`ex-extensions.md` §2.2), one bit a frame. Commutated like the highways; only the marker reads them, so eight blocks share two wires |
 | `BLK[0..7]` | marker | one select a block: point to point, so a block needs no address and no comparator — "layout, not logic" |
-| `PORT[2:0]`, `SRC[5:0]`, `BSY`, `CLM`, `WR`, `/RESET` | marker, or the console | a latch write, the port numbers as dialled |
+| `PORT[2:0]`, `SRC[5:0]`, `BSY`, `CLM`, `WR`, `/RESET` | marker, or the console | a latch write, the port numbers as dialled. `/RESET` is the one signal on the bus a glitch can hurt, and is filtered at every block (`exch-mainboard.md` §7) |
+| `/CON` | console | the console has the bus: the marker's drivers go high-impedance |
 
 ---
 
@@ -327,8 +331,10 @@ fabric's best property, which is that nothing in it is near a limit.
 - **A glitch on the slot select when its latch is written.** The marker writes at
   any instant; the select's output may pulse and capture one wrong bit, which is
   the single bit `exch.py fabric` 6 allows for a re-point. Not analysed further.
-- **Sixteen highways across eight blocks on a ribbon or a mainboard**: loading,
-  crosstalk, and whether the '244s want series resistors as the MF8 clock
-  drivers have (`mf8-backplane.md` §8).
+- **Sixteen highways across eight blocks on a ribbon or a mainboard**: worked
+  through in `exch-mainboard.md`. Loading and the series resistors are settled
+  there — 193 pF and 100 Ω, which buys an edge three times the cable's round
+  trip. **Crosstalk is still an estimate**, and is the one number there that
+  would change the design if it were wrong.
 - **The minimum delays.** Data sheets give typical and maximum; a third of typical
   is an assumption, and the hold figures rest on it.

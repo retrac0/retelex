@@ -36,6 +36,7 @@ line. 8 and 9 stay special in the code.
 | [docs/mvp-ex.md](docs/mvp-ex.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
 | [docs/exch-protocol.md](docs/exch-protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
 | [docs/exch-fabric.md](docs/exch-fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
+| [docs/exch-mainboard.md](docs/exch-mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
 | [docs/exch-marker.md](docs/exch-marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
 | [docs/exch-features.md](docs/exch-features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), a conference bridge that switches bits instead of adding them (measured), data |
 | [docs/exch-network.md](docs/exch-network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
@@ -57,6 +58,7 @@ python3 exch/exch.py aline      serial characters on A over 1–7 trunk hops
 python3 exch/exch.py flood      the timing of a flooded call, with a sender and live (arithmetic, not a simulation)
 python3 exch/exch.py monitor    which rules keep a flood from ever claiming a wrong number
 python3 exch/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
+python3 exch/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
 python3 exch/exch.py confer     a conference with no codec: the speech detector, the floor, the switch
 python3 exch/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
 python3 exch/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
@@ -118,6 +120,18 @@ may dial and any number may hear, and a **conference bridge with no codec**,
 which passes one talker's bits to everyone else and chooses the talker by
 counting runs of three in each caller's bits. Both are new classes
 (`exch-fabric.md` §3.5); neither is in the marker or the `calls` model yet.
+
+Proposed: **the mainboard is a ribbon for what every block shares and a
+board for the three signals that are not shared** (`exch-mainboard.md`). Block *h* drives
+highway *h* and answers to `BLK[h]`, which is the whole of a block's identity and
+the one thing an identical tap on a common ribbon cannot give it; three shunts in
+one labelled column give it back for no parts, where working it out in logic
+would cost six packages a block. Two metres of cable costs 18 ns of a 743 ns
+set-up budget, because the clock travels down it with the data and the flight
+cancels the skew. Of the fifty-five signals, **fifty-four cannot lose a call**:
+the worst a glitch does is one wrong CVSD bit, which is what a plesiochronous
+slip already does to every line in the system every 156 ms. `/RESET` is the exception, and it
+is filtered at every block.
 
 Proposed: **whatever sits behind a port says everything about it**
 (`ex-extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it

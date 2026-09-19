@@ -11,6 +11,7 @@ by class in fixed order, and features that are lines.
     flood     the timing of a network call: dial pulses on A, flooded and claimed
     monitor   the junctor monitor: which rules keep a flood from ever claiming a wrong number
     timing    the fabric's circuit in nanoseconds: strobes, capture, and what a card samples
+    mainboard what a ribbon between the blocks costs those margins: clock skew, the line, the edges
     confer    a conference with no codec in it: the bridge switches bits to whoever is talking
     ss0       a common signalling channel: the number as one message a link, forward only
     net       eight exchanges call by call: the flood, the monitors, the claim, the registers,
@@ -35,6 +36,7 @@ Usage:  python3 exch/exch.py            everything, ~20 min    (exch.log is the 
         python3 exch/exch.py topo       Topology.md
         python3 exch/exch.py monitor    exch-monitor.md   §5
         python3 exch/exch.py timing     exch-fabric.md    §4
+        python3 exch/exch.py mainboard  exch-mainboard.md §5
         python3 exch/exch.py confer     exch-features.md  §7
         python3 exch/exch.py ss0        ex-ss0.md
 
@@ -1315,6 +1317,71 @@ def timing():
           f'A: set-up {(capA - mux - T_SU).min():6.0f} ns, hold {(CELL + first_change - capA - T_H).min():6.0f} ns')
 
 
+# -------------------------------------------------------------- mainboard
+
+RIB_V = 5.1                   # ns/m down a 0.05" ribbon with a ground between every pair: Z0 ~ 105 ohm, 49 pF/m
+RIB_Z = 105.0
+RIB_X = 0.25                  # a block every quarter metre along the cable
+RIB_TAP = 12.0                # pF a tap: the IDC connector, the mainboard stub and one '244 input
+
+
+def skew(xc, n=8):
+    """The clock reaches block k late by |x_k - x_c|; the worst (driver, listener) pair and what it costs."""
+    x = RIB_X * np.arange(n)
+    dly = RIB_V * np.abs(x - xc)
+    pairs = [(dly[a] + RIB_V * abs(x[b] - x[a]) - dly[b], a, b) for a in range(n) for b in range(n)]
+    return max(pairs)
+
+
+def mainboard():
+    rng = np.random.default_rng(3)
+    N = 400000
+    def d(name):
+        t, m = HC[name]
+        return rng.uniform(0.35 * t, m, N)
+    print('MAINBOARD -- what a ribbon costs the fabric.  Eight blocks a quarter metre apart on one cable;')
+    print(f'  {RIB_V:.1f} ns/m, {RIB_Z:.0f} ohm, {1000 * RIB_V / RIB_Z:.0f} pF/m.  The same 400000 draws as `timing`, with the clock\'s own flight added.\n')
+
+    print('  1. The clock travels down the same cable as the data, so most of the flight cancels.')
+    print('     Data reaches listener b at  dly(a) + flight(a,b); b\'s strobe at  dly(b).  The loss is the difference,')
+    print('     and it is ZERO whenever the driver is nearer the clock card than the listener.')
+    for label, xc in (('at one end', -RIB_X), ('in the middle', RIB_X * 3.5), ('at the far end', RIB_X * 8)):
+        loss, a, b = skew(xc)
+        print(f'       clock card {label:16s} worst loss {loss:5.1f} ns   (block {a} driving, block {b} listening)')
+    print('     Hold is never worse than with no cable at all: the same term that shortens set-up lengthens hold.')
+
+    # the worst placement, folded into exch-fabric.md 4's own margins
+    loss, _, _ = skew(-RIB_X)
+    clkX, clkY = d('244'), d('244')
+    via_card = clkX + d('card clk-C_TX') + d('157 I-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+    via_count = d('163 clk-Q') + d('wire') + clkX + d('151 S-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+    valid, first_change = np.maximum(via_card, via_count), np.minimum(via_card, via_count)
+    cap = CELL / 2 + clkY + d('138 E-Y') + d('151 I-W')
+    print(f'\n  2. The worst pair on the worst placement ({loss:.0f} ns), against `timing` 4\'s figures:')
+    print(f'       set-up at the capture flip-flop {(cap - valid - T_SU - loss).min():6.0f} ns   (no cable: {(cap - valid - T_SU).min():.0f})')
+    print(f'       hold                            {(CELL + first_change - cap - T_H + loss).min():6.0f} ns   (no cable: {(CELL + first_change - cap - T_H).min():.0f})')
+    print(f'     The data\'s own flight is already inside the {HC["wire"][1]:.0f} ns `wire` term of §4; the clock\'s was not.')
+
+    # the strobe hazard: HCLK and SLOTQ go down the same cable, so their skew is conductor-to-conductor only
+    addr = CELL / 4 + d('175 clk-Q') + d('wire') + d('244') + d('138 A-Y')
+    print(f'\n  3. The §3.2 hazard is untouched.  HCLK and SLOTQ leave the clock card together and arrive together:')
+    print(f'     their skew is conductor to conductor in one ribbon, under 0.1 ns/m, not the {RIB_V:.0f} ns/m of the cable.')
+    print(f'       address settled {(CELL / 2 - addr).min():6.0f} ns before the enable, as it was')
+
+    # the line itself
+    print('\n  4. The line itself, and why the cure for an edge is to slow it down.')
+    for L, n in ((2.0, 8), (4.0, 8)):
+        C = 1000 * RIB_V / RIB_Z * L + n * RIB_TAP
+        print(f'     {L:.0f} m, {n} taps: {C:.0f} pF, one way {RIB_V * L:.1f} ns, round trip {2 * RIB_V * L:.1f} ns.'
+              f'  A \'244 alone gives a {2.2 * 40 * C * 1e-3:.0f} ns edge,')
+        for Rs in (33, 100, 220):
+            print(f'         {Rs:3d} ohm in series: edge {2.2 * (Rs + 40) * C * 1e-3:4.0f} ns, {100 * 2.2 * (Rs + 40) * C * 1e-3 / CELL:4.1f} % of a cell'
+                  f'{"   <- slower than the round trip: no ringing to settle" if 2.2 * (Rs + 40) * C * 1e-3 > 2 * RIB_V * L else ""}')
+        print(f'         a clock line draws C.V.f = {C * 5 * 512e-6:.2f} mA at 512 kHz, {C * 5 * 1024e-6:.2f} mA at 1.024 MHz')
+    print('\n  Nothing here is near a limit.  The cure for the edges is to SLOW them: the budget is three quarters')
+    print('  of a microsecond and the line is ten nanoseconds long, so a series resistor spends what it likes.')
+
+
 # ------------------------------------------------------------------ flood
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
@@ -2288,7 +2355,7 @@ def topo():
     print('     An unstrapped ring sends every flood round and round until the links are full, and holds them')
     print('     until the code is dialled: about two seconds of a whole ring for every call that leaves.')
 
-TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo}
+TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'mainboard': mainboard, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):
