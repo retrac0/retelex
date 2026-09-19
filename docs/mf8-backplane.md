@@ -71,8 +71,8 @@ of the trunk the slave and run its whole exchange from the recovered clock. The
 a PLL locked to the transition strobes (`line-codes.md` §2.2 C), and every phone
 on it would lose its downstream clock whenever the trunk did. Plesiochronous
 timing costs one slip per channel per 156 ms at 100 ppm, per 780 ms at 20 ppm,
-and §7 measures that slip at **−25 dB below speech for 5 ms**, 33 dB against
-the clean decode: below anything the codec itself does. And the exchange keeps
+and §7 measures that slip at **−30 dB below speech for about a millisecond**,
+34 dB against the clean decode: below anything the codec itself does. And the exchange keeps
 its phones clocked, idle-patterned and ringable with the trunk down. `RX_CLK`
 is on the bus anyway, so a slave trunk card with a PLL could take T from R
 later without a change to any channel card.
@@ -268,21 +268,31 @@ talkers at nominal level, 30 s each.
 Two scorers, because the obvious one misleads. `audio.block_snr_db` aligns each
 100 ms block once; a slip inside a block leaves half of it one sample out, and
 that phase error — not the codec — is what it then measures, capping a block at
-about 8 dB whatever the slip rate. Scored **sample-aligned** instead, with the
+about 9 dB whatever the slip rate. Scored **sample-aligned** instead, with the
 reference the clean decode with the same sample removed, only the decoder's
 transient remains:
 
 | slip rate | ppm equivalent | segSNR vs clean, sample-aligned | the transient |
 |---|---|---|---|
-| one bit in 50 000 (every 781 ms) | 20 | **34.6 dB** | peak −24 dB below speech rms, settled to 1 % in 5.4 ms |
-| one bit in 10 000 (every 156 ms) | 100 | **33.2 dB** | peak −25 dB, 5.0 ms |
-| one bit in 1 000 (every 16 ms) | 1 000 | 20.7 dB | peak −25 dB, never settles before the next |
+| one bit in 50 000 (every 781 ms) | 20 | **34.8 dB** | peak −29 dB below speech rms, settled to 1 % in 1.3 ms |
+| one bit in 15 625 (every 244 ms) | 64 | **34.3 dB** | peak −30 dB, 1.2 ms |
+| one bit in 10 000 (every 156 ms) | 100 | **34.0 dB** | peak −30 dB, 1.2 ms |
+| one bit in 5 000 (every 78 ms) | 200 | **33.0 dB** | peak −30 dB, 1.2 ms |
+| one bit in 3 333 (every 52 ms) | 300 | 31.9 dB | peak −30 dB, 1.2 ms |
+| one bit in 1 000 (every 16 ms) | 1 000 | 26.2 dB | peak −30 dB, 1.2 ms — settled well before the next |
 
-The codec's own clean decode scores 25.3 dB against the source, so at 20 and
-100 ppm the slip sits 8–9 dB below the codec's own error. Dropping and
-duplicating measure the same. **A ±100 ppm crystal at each end is enough**; the
-slip is inaudible, and the case for a PLL and loop timing is the data card's
-alone.
+The codec's own clean decode scores 25.4 dB against the source, so at 20 and
+100 ppm the slip sits 9 dB below the codec's own error, at 200 ppm — two
+±100 ppm crystals at opposite extremes, the real worst case — still 7 dB below
+it, and even 1 000 ppm does not reach it. Dropping and duplicating measure the
+same. **A ±100 ppm crystal at each end is enough**; the slip is inaudible, and
+the case for a PLL and loop timing is the data card's alone.
+
+These are under the MIL-STD-188-113 law `mf8.BASE` now carries — τ_syl 5 ms,
+τ_int 1 ms, 34.2 dB. The transient is the integrator recovering from one wrong
+step, so its length follows τ_int: under the earlier law, τ_int 3 ms, the same
+measurement gave a −25 dB peak settling in 5 ms, and 33.2 dB at 100 ppm, 31.3
+at 200 and 20.7 at 1 000.
 
 ---
 
@@ -291,7 +301,7 @@ alone.
 | | |
 |---|---|
 | Cards | Eurocard 100 × 160 mm |
-| Slots | 8: slot 0 the trunk card, slots 1–6 channels, slot 7 the power supply |
+| Slots | 9: slot 0 the trunk card, slots 1–6 channels, slot 7 the gateway slot, slot 8 the power supply |
 | Connector | 2 rows × 16, DIN 41612 half-length or 0.1-inch header; assignment below |
 | Bus length | ≤ 25 cm. At 512 kHz-class edges from 74HC drivers this is electrically short; no termination |
 | Clock drivers | one 74HC244 on the trunk card for `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series at the driver against ringing |
@@ -326,6 +336,14 @@ trunk-card slot and no channel card needs them, so they are not on the channel
 pins. The trunk-card slot carries the six `C_TX`, six `A_TX`, six `C_RX` and
 six `A_RX` lines in place of the per-slot four, plus `LOCK` and `CD`, on a
 2 × 32; the PSU slot carries the rails and the ring generator's output.
+
+**The gateway slot** is the trunk-card slot mirrored: the same 2 × 32 with all
+24 per-slot lines, the four clocks, `MUTE`, `LOCK` and `CD`, but `C_TX[n]` and
+`A_TX[n]` are its *outputs* and everything else its inputs. It lets one card
+stand in for any subset of the six channel cards, or listen to all of them; its
+drive rule — only into a slot that holds no card, every output released at
+power-up — and the card that uses it are `mf8-pico.md` §3. It needs no bus
+signal the other slots do not already have.
 
 ---
 
