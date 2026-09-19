@@ -10,6 +10,12 @@ by class in fixed order, and features that are lines.
     aline     digits as serial characters on the A bit, through one to seven trunk hops
     flood     the timing of a network call: dial pulses on A, flooded and claimed
     monitor   the junctor monitor: which rules keep a flood from ever claiming a wrong number
+    timing    the fabric's circuit in nanoseconds: strobes, capture, and what a card samples
+    confer    a conference with no codec in it: the bridge switches bits to whoever is talking
+    ss0       a common signalling channel: the number as one message a link, forward only
+    net       eight exchanges call by call: the flood, the monitors, the claim, the registers,
+              the channels, and what bursty demand does to a caller's wait for dial tone
+    topo      chains, stars, trees and rings: what each carries, by arithmetic and call by call
 
 The fabric is modelled at the cell (one highway slot, 1.95 us): a '151 puts port
 k's bit on its block's highway during cell k; every port's '151 pair picks a
@@ -18,18 +24,23 @@ at the frame edge.  The exchange is modelled at the 1 kHz tick, as the marker an
 the release detectors would run: ports, latches, BUSY, class marks, cards that
 behave (phones, tones, registers, announcements, conference legs, a CO line).
 
-Usage:  python3 exch/exch.py            everything, ~7 min     (exch.log is the run)
+Usage:  python3 exch/exch.py            everything, ~20 min    (exch.log is the run)
         python3 exch/exch.py tandem     exch-protocol.md  §2
         python3 exch/exch.py fabric     exch-protocol.md  §4
-        python3 exch/exch.py calls      exch-marker.md    §§3-6, exch-features.md
+        python3 exch/exch.py calls      exch-marker.md    §§3-6, exch-features.md, mvp-ex.md
         python3 exch/exch.py announce   exch-features.md  §3
         python3 exch/exch.py aline      exch-network.md   §8
         python3 exch/exch.py flood      exch-network.md   §4
+        python3 exch/exch.py net        exch-network.md   §5.1
+        python3 exch/exch.py topo       Topology.md
         python3 exch/exch.py monitor    exch-monitor.md   §5
+        python3 exch/exch.py timing     exch-fabric.md    §4
+        python3 exch/exch.py confer     exch-features.md  §7
+        python3 exch/exch.py ss0        ex-ss0.md
 
 The network of exch-network.md (`net`) is the second pass and is not here.
 """
-import os, sys, time, zlib
+import heapq, os, sys, time, zlib
 import numpy as np
 from scipy import signal
 
@@ -742,6 +753,21 @@ def calls():
                 d = w > 1e-9
                 print(f'      {rate:13d} {hold:10.0f} {48 * rate * hold / 3600:7.2f} {c:10d} {100 * d.mean():10.2f} '
                       f'{(w[d].mean() if d.any() else 0):21.2f} {100 * (w > 1).mean():13.2f} {100 * (w > 3).mean():13.2f}')
+    print()
+
+    # ---- the minimum exchange of mvp-ex.md, as a whole
+    ev1, _ = pulses(900, '21')
+    ev2, _ = pulses(8800, '20')
+    tries = []
+    for t0, number in ((18000, '0'), (21500, '9'), (25000, '25'), (29000, '20')):
+        ev, end = pulses(t0 + 800, number)
+        tries += [(t0, 'off')] + ev + [(end + 600, 'on')]
+    scene('19. The minimum exchange (mvp-ex.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
+          '      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;\n'
+          '      then 20 dials 0 (no operator), 9 (no outside line), 25 (an empty slot) and 20 (itself).',
+          layout({0o20: P_([(100, 'off')] + ev1 + [(7000, 'on'), (16500, 'on')] + tries, answer=1500),
+                  0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, regs=1, tones=False),
+          33500, [0o20, 0o21])
 
 
 # ------------------------------------------------------------------ announce
@@ -1008,6 +1034,287 @@ def monitor():
         print(f'  {calls:30d} {a:7.3f} | ' + ' '.join(f'{100 * v:9.2f}' for v in b[1:]))
 
 
+# ------------------------------------------------------------------ confer
+
+WIN = 1024                    # a window of 16 ms at 64 kbps: TICK / 16
+
+
+def run3(bits):
+    """Runs of three equal bits: what drives a CVSD decoder's syllabic filter, so a measure of level
+    that needs no decoder.  Three flip-flops and two gates; counted per window."""
+    b = bits.astype(np.int8)
+    e = np.concatenate([[0, 0], ((b[2:] == b[1:-1]) & (b[1:-1] == b[:-2])).astype(np.int32)])
+    nw = len(e) // WIN
+    return e[:nw * WIN].reshape(nw, WIN).sum(1)
+
+
+def floor_run(spoke, hang):
+    """The bridge, a window at a time.  spoke[k][w] = leg k's count reached the threshold in window w.
+    A leg is silent once `hang` windows have gone by since it last spoke.  The holder keeps the floor
+    until it is silent AND another leg asks; the first asker in slot order takes it.  No holder yet:
+    the first leg to speak takes it."""
+    L, nw = spoke.shape
+    since = np.full(L, 10 ** 6)
+    holder, out = -1, np.full(nw, -1, np.int8)
+    for w in range(nw):
+        since = np.where(spoke[:, w], 0, since + 1)
+        ask = [k for k in range(L) if k != holder and spoke[k, w]]
+        if ask and (holder < 0 or since[holder] >= hang):
+            holder = ask[0]
+        out[w] = holder
+    return out
+
+
+def confer():
+    rng = np.random.default_rng(4)
+    print('CONFER -- a conference bridge with no codec in it.  CVSD bits cannot be added, but they can be switched:')
+    print('  each leg watches its caller\'s bits for speech, one leg holds the floor, and every other leg sends its')
+    print('  caller the floor-holder\'s bits as they stand; the holder\'s own caller hears FILL.')
+    print(f'  Speech detector: runs of three equal bits counted over a 16 ms window ({WIN} bits); "spoke" = the count')
+    print('  reached a threshold.  No decoder, no RC: a shift register, two gates, a counter.\n')
+
+    def noise(n, db):
+        r = audio.bandlimit(rng.normal(0, 1, n), RATE)
+        return r / r.std() * mf8.NOMINAL_RMS * 10 ** (db / 20)
+
+    # 1 -- where to set the threshold
+    SECS = 12.0
+    n = int(SECS * RATE)
+    print(f'  1. Windows reaching the threshold, % of all 16 ms windows.  Speech: talkers 1-4, {SECS:.0f} s each with')
+    print('     their own pauses, plus room noise 45 dB below nominal speech; for speech the % of windows in which the')
+    print('     talker\'s own 16 ms rms is within 30 dB of nominal is given alongside, as what "talking" means.')
+    TH = (4, 8, 16, 32)
+    print(f'     {"source":38s} ' + ' '.join(f'{f"{t} or more":>11s}' for t in TH) + f' {"talking":>9s}')
+    for db in (0, -10, -20, -30):
+        cnt, talk = [], []
+        for j in range(1, 5):
+            sp = talker(j, SECS) * 10 ** (db / 20)
+            cnt.append(run3(cvsd.encode(sp + noise(n, -45), P)))
+            e = sp[:len(cnt[-1]) * WIN].reshape(-1, WIN).std(1)
+            talk.append(e > mf8.NOMINAL_RMS * 10 ** (-30 / 20))
+        c, tk = np.concatenate(cnt), np.concatenate(talk)
+        print(f'     {f"speech {db:+d} dB re nominal":38s} ' + ' '.join(f'{100 * np.mean(c >= t):11.1f}' for t in TH)
+              + f' {100 * tk.mean():9.1f}')
+    for db in (-20, -30, -40):
+        c = run3(cvsd.encode(noise(4 * n, db), P))
+        print(f'     {f"room noise alone, {db} dB":38s} ' + ' '.join(f'{100 * np.mean(c >= t):11.2f}' for t in TH))
+    c = run3(fill(n * 2))
+    print(f'     {"FILL (an idle leg)":38s} ' + ' '.join(f'{100 * np.mean(c >= t):11.2f}' for t in TH))
+    TH0 = 8
+    print(f'     -> threshold {TH0}: a counter\'s Q3.  Room noise 30 dB down reaches it once in a thousand windows, 40 dB')
+    print('        down never; speech 20 dB down reaches it in a window in five, which the hangover (2) holds between.\n')
+
+    # 2 -- a conversation
+    SECS = 14.0
+    n = int(SECS * RATE); nw = n // WIN; n = nw * WIN
+    plan = {'A': (1, [(0.5, 4.5), (10.5, 12.0)]), 'B': (3, [(2.6, 3.0), (4.6, 8.5)]), 'C': (5, [(9.0, 13.0)])}
+    names = list(plan)
+    print(f'  2. Three callers, {SECS:.0f} s, room noise 45 dB down in every microphone.  A speaks 0.5-4.5 s; B says "mm-hm"')
+    print('     at 2.6-3.0 s while A talks, then answers at 4.6 s, 100 ms after A stops, until 8.5 s; C speaks')
+    print('     9.0-13.0 s, and A talks over C from 10.5 to 12.0 s.  Legs in slot order A, B, C.')
+    bits, own, src, spoke = {}, {}, {}, []
+    ramp = int(0.01 * RATE)
+    for k in names:
+        j, spans = plan[k]
+        sp = talker(j, SECS)
+        g = np.zeros(n)
+        for a, b in spans:
+            i0, i1 = int(a * RATE), int(b * RATE)
+            g[i0:i1] = 1; g[i0:i0 + ramp] = np.linspace(0, 1, ramp); g[i1 - ramp:i1] = np.linspace(1, 0, ramp)
+        src[k] = sp[:n] * g
+        bits[k] = cvsd.encode(src[k] + noise(n, -45), P)
+        own[k] = audio.reconstruct(cvsd.decode(bits[k], P), RATE)
+        spoke.append(run3(bits[k]) >= TH0)
+    spoke = np.array(spoke)
+
+    def heard_by_others(fl):
+        f = np.repeat(fl, WIN)
+        f = np.concatenate([[-1], f[:-1]])                   # the decision at a window's end acts on the next bit
+        mouth = fill(n)
+        for q, k in enumerate(names):
+            mouth = np.where(f == q, bits[k], mouth)
+        return f, audio.reconstruct(cvsd.decode(mouth.astype(np.uint8), P), RATE)
+
+    def carried(f, k, a, b):
+        m = np.zeros(n, bool); m[int(a * RATE):int(b * RATE)] = True
+        return 100 * (m & (f == names.index(k))).sum() / m.sum()
+
+    def onset(k, a):
+        i0 = int(a * RATE)
+        return i0 + int(np.argmax(np.abs(src[k][i0:i0 + RATE]) > mf8.NOMINAL_RMS * 10 ** (-20 / 20)))
+
+    print('\n     "switched" is the change of floor against the word\'s onset, the first sample within 20 dB of nominal:')
+    print('     negative is before it.')
+    print(f'     {"hangover":>9s} {"B\'s mm-hm heard":>16s} {"B\'s answer: switched":>22s} {"C\'s start: switched":>21s} '
+          f'{"A over C heard":>15s} {"floor changes":>14s}')
+    for hang in (4, 8, 16, 32):
+        f, _ = heard_by_others(floor_run(spoke, hang))
+        sw = np.flatnonzero(np.diff(f)) + 1
+        def lost(k, a):
+            got = sw[(f[sw] == names.index(k)) & (sw >= int(a * RATE) - RATE // 10)]
+            return f'{(got[0] - onset(k, a)) / RATE * 1000:.0f} ms' if got.size else 'never'
+        print(f'     {hang * 16:6d} ms {carried(f, "B", 2.6, 3.0):15.0f}% {lost("B", 4.6):>22s} {lost("C", 9.0):>21s} '
+              f'{carried(f, "A", 10.5, 12.0):14.0f}% {len(sw):14d}')
+
+    HANG = 8
+    fl = floor_run(spoke, HANG)
+    f, heard = heard_by_others(fl)
+    sw = np.flatnonzero(np.diff(f)) + 1
+    print(f'\n     At {HANG * 16} ms, every change of floor.  The listener\'s decoder was following the old holder (or FILL); from')
+    print('     the switch it follows the new one.  Compared with the new holder\'s bits decoded all along:')
+    print(f'     {"at":>8s} {"floor":>7s} {"switched":>12s} {"peak, heard / all along":>24s} {"error below -30 dB after":>25s}')
+    for i in sw:
+        q = f[i]
+        k = names[q]
+        a = max(a for a, b in plan[k][1] if a * RATE <= i + RATE // 10)
+        rms = src[k][src[k] != 0].std()
+        w = slice(i, i + int(0.02 * RATE))
+        err = np.abs(heard[w] - own[k][w])
+        over = np.flatnonzero(20 * np.log10(err / rms + 1e-30) > -30)
+        print(f'     {i / RATE:7.3f}s {f"{names[f[i - 1]] if f[i - 1] >= 0 else chr(45)} -> {k}":>7s} '
+              f'{(i - onset(k, a)) / RATE * 1000:9.0f} ms {20 * np.log10(np.abs(heard[w]).max() / np.abs(own[k][w]).max()):21.1f} dB '
+              f'{(over[-1] + 1) / RATE * 1000 if over.size else 0:22.1f} ms')
+    print()
+    for q, k in enumerate(names):
+        m = (f == q)
+        for i in sw: m[i:i + int(0.02 * RATE)] = False
+        e = heard[m] - own[k][m]
+        tot = sum(b - a for a, b in plan[k][1])
+        got = sum(carried(f, k, a, b) * (b - a) for a, b in plan[k][1]) / tot
+        print(f'     {k}: {got:5.1f} % of its speech carried; what the others heard against its own decode, 20 ms clear of a '
+              f'switch: {10 * np.log10(np.sum(own[k][m] ** 2) / max(np.sum(e ** 2), 1e-30)):5.1f} dB')
+    os.makedirs(os.path.join(ROOT, 'exch', 'out'), exist_ok=True)
+    audio.write_wav(os.path.join(ROOT, 'exch', 'out', 'confer_heard.wav'), audio.resample_to(heard, RATE, 8000) * 3, 8000)
+    print('     exch/out/confer_heard.wav is what a caller who does not hold the floor hears.\n')
+
+    # 3 -- two at once, over every pair of talkers
+    SECS = 12.0
+    n = int(SECS * RATE)
+    tb = {j: cvsd.encode(talker(j, SECS) + noise(n, -45), P) for j in range(1, 8)}
+    sp = {j: run3(tb[j]) >= TH0 for j in range(1, 8)}
+    W = int(round(RATE / WIN))                                # windows a second, 62.5 -> 62
+    print('  3. Two at once.  The holder talks for 5 s; from 1 s to 4 s another caller talks over it.  Every ordered pair')
+    print('     of talkers 1-7, the interrupter\'s speech taken from 0, 3 and 6 s into its recording: 126 cases.')
+    print('     Counted over the 3 s of double talk, from the detector\'s windows alone (the bits pass as in 2).')
+    print(f'     {"hangover":>9s} {"floor changes, mean":>20s} {"most":>5s} {"interrupter carried":>20s} {"holder cut off":>15s}')
+    for hang in (4, 8, 16, 32):
+        ch, got, cut = [], [], []
+        for i in range(1, 8):
+            for j in range(1, 8):
+                if i == j: continue
+                for o in (0, 3, 6):
+                    a = np.zeros(5 * W, bool); a[:] = sp[i][:5 * W]
+                    b = np.zeros(5 * W, bool); b[W:4 * W] = sp[j][o * W:o * W + 3 * W]
+                    fl = floor_run(np.array([a, b]), hang)[W:4 * W]
+                    ch.append(np.count_nonzero(np.diff(fl)))
+                    bb, aa = b[W:4 * W], a[W:4 * W]
+                    got.append(100 * np.mean(fl[bb] == 1) if bb.any() else 0)
+                    cut.append(100 * np.mean(fl[aa] == 1) if aa.any() else 0)
+        print(f'     {hang * 16:6d} ms {np.mean(ch):20.1f} {max(ch):5d} {np.mean(got):19.0f}% {np.mean(cut):14.0f}%')
+
+    # 4 -- the switch itself
+    rng2 = np.random.default_rng(9)
+    H = int(0.05 * RATE)
+    print(f'\n  4. The switch itself.  The listener\'s decoder has followed the old holder and is switched, at a window\'s')
+    print('     end, to the new one\'s bits; against the new holder decoded all along.  400 switches of talkers 1-7 each way:')
+    print('       as the bridge does it   the old holder\'s detector silent for the 128 ms before; the new holder spoke')
+    print('       if it did not wait      both spoke in the window that ends at the switch')
+    print(f'     {"":24s} {"":34s} {"median":>8s} {"95 %":>8s} {"worst":>8s}')
+    for how in ('as the bridge does it', 'if it did not wait'):
+        settle, pk, er, tries = [], [], [], 0
+        while len(settle) < 400 and tries < 10 ** 6:
+            tries += 1
+            i, j = rng2.choice(np.arange(1, 8), 2, replace=False)
+            w = int(rng2.integers(12, len(sp[i]) - 4))
+            if not sp[j][w - 1]: continue
+            if how[0] == 'a' and sp[i][w - 8:w].any(): continue
+            if how[0] == 'i' and not sp[i][w - 1]: continue
+            t = w * WIN
+            heard = audio.reconstruct(cvsd.decode(np.concatenate([tb[i][t - H:t], tb[j][t:t + H]]), P), RATE)[H:]
+            ref = audio.reconstruct(cvsd.decode(tb[j][t - H:t + H], P), RATE)[H:]
+            e = 20 * np.log10(np.abs(heard - ref) / mf8.NOMINAL_RMS + 1e-30)
+            over = np.flatnonzero(e > -30)
+            settle.append((over[-1] + 1) / RATE * 1000 if over.size else 0.0)
+            er.append(e.max())
+            m = int(0.02 * RATE)
+            pk.append(20 * np.log10(np.abs(heard[:m]).max() / np.abs(ref[:m]).max()))
+        for lab, v, u in (('error below -30 dB re nominal after', settle, 'ms'), ('largest error, re nominal', er, 'dB'),
+                          ('peak in 20 ms, heard / all along', pk, 'dB')):
+            print(f'     {how if lab[0] == "e" and lab[1] == "r" else "":24s} {lab:34s} '
+                  + ' '.join(f'{x:5.1f} {u:2s}' for x in np.percentile(v, [50, 95, 100])))
+
+
+# ------------------------------------------------------------------ timing
+
+CELL = 1e9 / 512e3            # 1953.1 ns; HCLK is high for the first half of a cell
+HC = {                        # 74HC at 4.5 V: (typical, maximum over -40..85 C), ns, from the data sheets' tables
+    '163 clk-Q': (18, 43), '175 clk-Q': (17, 43), '138 A-Y': (15, 40), '138 E-Y': (17, 45),
+    '151 S-Y': (25, 63), '151 I-Y': (19, 47), '151 I-W': (21, 50), '157 I-Y': (13, 31), '157 S-Y': (15, 38),
+    '244': (10, 28), '74 clk-Q': (16, 44), 'card clk-C_TX': (20, 50), 'wire': (2, 12)}
+T_SU, T_H = 20.0, 5.0         # a 74HC74's set-up and hold, worst case
+
+
+def timing():
+    rng = np.random.default_rng(2)
+    N = 400000
+    def d(name):               # every part in every trial is its own draw, from a third of typical to the maximum
+        t, m = HC[name]
+        return rng.uniform(0.35 * t, m, N)
+    print('TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for its first half.')
+    print('  Every delay in every trial drawn on its own between 0.35 x typical and the data-sheet maximum')
+    print(f'  (74HC, 4.5 V, -40..85 C); {N} trials; the figure is the WORST seen.  Times from the start of the cell.\n')
+
+    # data onto a listener's capture flip-flop: two ways a highway bit can change
+    clkX, clkY = d('244'), d('244')                   # each block buffers the clocks it is given
+    via_card = clkX + d('card clk-C_TX') + d('157 I-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+    via_count = d('163 clk-Q') + d('wire') + clkX + d('151 S-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+    valid = np.maximum(via_card, via_count)
+    first_change = np.minimum(via_card, via_count)
+    print('  1. A highway bit at a listener\'s capture flip-flop: card or RBT mux -> commutator -> driver -> mainboard')
+    print('     -> the listening block\'s receiver -> the port\'s highway select.')
+    print(f'       valid by {valid.max():6.0f} ns        (typical {np.median(valid):.0f})')
+
+    # the strobe: '138 enabled while HCLK is low, its address the slot count delayed a quarter cell
+    addr = CELL / 4 + d('175 clk-Q') + d('wire') + d('244') + d('138 A-Y')
+    en = CELL / 2 + clkY + d('138 E-Y')
+    cap = en + d('151 I-W')                           # the port's strobe select; W is the capture clock
+    print('\n  2. The capture clock: a \'138 enabled while HCLK is low, addressed by the slot count DELAYED A QUARTER')
+    print('     CELL, so its address only ever moves while it is disabled; the port\'s \'151 picks one line, W clocks.')
+    print(f'       address settled {(CELL / 2 - addr).min():6.0f} ns before the enable, and moves {(CELL / 4 - (clkY + d("138 E-Y") - 0)).min():6.0f} ns after the disable')
+    print(f'       capture clock rises at {cap.min():6.0f} - {cap.max():.0f} ns')
+    print(f'       set-up at the flip-flop {(cap - valid - T_SU).min():6.0f} ns;  hold {(CELL + first_change - cap - T_H).min():6.0f} ns')
+
+    # the same decoder addressed by the undelayed count: does the next line glitch as the cell turns over?
+    new_addr = d('163 clk-Q') + d('wire') + d('244') + d('138 A-Y')
+    off = clkY + d('138 E-Y')
+    g = off - new_addr
+    print('\n  3. The same decoder addressed by the count as it stands: at the turn of the cell the new address can')
+    print('     arrive before the disable does, and the NEXT port\'s line pulses low with nothing settled.')
+    print(f'       in {100 * (g > 0).mean():.1f} % of trials; wider than 8 ns in {100 * (g > 8).mean():.1f} %; worst {g.max():.0f} ns.'
+          f'  Typical parts: {HC["244"][0] + HC["138 E-Y"][0] - (HC["163 clk-Q"][0] + HC["wire"][0] + HC["244"][0] + HC["138 A-Y"][0])} ns, no pulse.')
+    print('       It is only a hazard across the spread, which is exactly the kind not to build on.')
+
+    # what the card sees: it samples C_RX at the frame edge; captures are all at mid-cell
+    q = cap + d('74 clk-Q')
+    cardclk = clkY + d('wire')
+    print('\n  4. No re-timing flip-flop.  Every capture is at the middle of some cell, so nothing a card is given')
+    print('     changes within half a cell of the frame edge, where every card samples (RX_CLK = TX_CLK here).')
+    print(f'       a source in slot 7: C_RX settled {(CELL + cardclk - q - T_SU).min():6.0f} ns before the card samples')
+    print(f'       a source in slot 0: C_RX moves   {(cap + 0.35 * HC["74 clk-Q"][0] - cardclk - T_H).min():6.0f} ns after it')
+    print('     A bit sent in frame f is sampled at the edge that begins f+1 whatever the two slots: one frame,')
+    print('     as `fabric` 1 measured, which already models the card as sampling at that edge.')
+
+    # the economy: C in the first half of the cell and A in the second, on one wire
+    mux = CELL / 2 + clkX + d('157 S-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+    capC = CELL / 4 + clkY + d('138 E-Y') + d('151 I-W')      # strobe high for the middle half of the cell
+    capA = 3 * CELL / 4 + clkY + d('138 E-Y') + d('151 I-Y')
+    swap = CELL / 2 + 0.35 * (HC['244'][0] + HC['157 S-Y'][0] + HC['151 I-Y'][0] + 2 * HC['244'][0] + HC['wire'][0] + HC['151 I-Y'][0])
+    print('\n  5. The economy form: C in the first half of the cell and A in the second on ONE highway wire, captured')
+    print('     on the two edges of a strobe that is high for the middle half (the \'151 gives both senses).')
+    print(f'       C: set-up {(capC - valid - T_SU).min():6.0f} ns, hold {(swap - capC - T_H).min():6.0f} ns;   '
+          f'A: set-up {(capA - mux - T_SU).min():6.0f} ns, hold {(CELL + first_change - capA - T_H).min():6.0f} ns')
+
+
 # ------------------------------------------------------------------ flood
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
@@ -1150,20 +1457,18 @@ def flood():
             print(f'     {how:8s} {k:15d} {loc:18.3f} {nw:14.3f} {loc + nw:7.3f} {mloc:15.3f} {mnw:8.3f} {mloc + mnw:7.3f}')
 
     print('\n  5. No sender: the junctors listen to the CALLER from the first digit, and his own remaining digits')
-    print('     go down the flood live.  The first digit is the district\'s, the same at every exchange flooded, so')
-    print('     nobody needs it again.  What must hold: every monitor is ready before his next digit begins.')
-    print(f'     {"hops":>5s} | {"dial: ready after his last pulse, ms":>37s} {"margin at 500 / 800 ms between digits":>38s} | '
-          f'{"keypad: ready after key release, ms":>36s} {"margin at a 200 ms gap":>23s}')
-    for hops in (1, 3, 7):
-        dial = T_ID + T_MARK + HOP * hops + T_ID          # digit recognised, seized, flooded, 128 ms of make seen
-        keyp = T_MARK + HOP * hops                         # seized on the tone's end; a monitor needs only silence
-        print(f'     {hops:5d} | {dial:37.0f} {f"{500 - dial:.0f} / {800 - dial:.0f}":>38s} | {keyp:36.0f} {200 - keyp:23.0f}')
-    print('     A monitor that is not ready refuses to claim (128 ms of make not seen; or a tone already present):')
-    print('     the call fails and is redialled; it is never a wrong number.')
+    print('     go down the flood live.  The first digit is shared by everything the flood can reach, so nobody needs')
+    print('     it again.  What must hold: the whole flood is up before his next digit begins.  The origin makes sure:')
+    print(f'     it abandons a call whose next break comes within {G_ORIGIN} ms of its seizure (monitor, below).')
+    ready = T_ID + T_MARK + G_ORIGIN
+    print(f'     Ready {ready:.0f} ms after his last pulse = digit recognised {T_ID} + seizure {T_MARK:.0f} + guard {G_ORIGIN}, whatever the hop count.')
+    print(f'     {"hops":>5s} {"the flood itself takes, ms":>27s} {"at a slow marker, 10 ms a hop":>30s} {"inside the guard":>17s}')
+    for hops in (1, 3, 7, 10):
+        print(f'     {hops:5d} {HOP * hops:27.0f} {(10 + A_FALL) * hops:30.0f} {str((10 + A_FALL) * hops < G_ORIGIN):>17s}')
+    print(f'     Margin for a dial: {500 - ready:.0f} ms at 500 ms between digits, {800 - ready:.0f} ms at 800.  A caller who beats it is')
+    print('     abandoned to cannot-complete: a failed call, never a wrong number.')
     J = 2
-    print(f'     Post-dial delay to exchange 23: dial {A_RISE * J + T_ID + T_MARK:.0f} ms after his last pulse, against '
-          f'493 with a sender; keypad: connected {T_DTMF + T_MARK:.0f} ms into the last tone.')
-
+    print(f'     Post-dial delay to the third exchange: {A_RISE * J + T_ID + T_MARK:.0f} ms after his last pulse, against 493 with a sender.')
 
     def live(number, domains, pause, label):
         """Live digits.  domains: [(who acts on this digit, hops the NEXT flood must cross)] for each digit
@@ -1182,7 +1487,7 @@ def flood():
             if who is None:
                 print(f'     {d:>6s} {dg[i][1]:15.0f} {"-":28s}')
                 continue
-            ready = dg[i][1] + T_ID + T_MARK + HOP * hops + T_ID
+            ready = dg[i][1] + T_ID + T_MARK + G_ORIGIN
             nxt = dg[i + 1][0] if i + 1 < len(number) else None
             m = nxt - ready if nxt else None
             if m is not None: worst = min(worst, m)
@@ -1190,21 +1495,800 @@ def flood():
         heard = dg[-1][1] + A_RISE * 2 + T_ID + T_MARK
         print(f'     the far phone rings {heard - dg[-1][1]:.0f} ms after the last pulse;  smallest margin {worst:.0f} ms\n')
 
-    print('\n  6. Live, no sender: 2144 dials 2 3 5 5.  The origin acts on the first digit; exchange 23 on the second.')
+    print('\n  6. Live, no sender: 2144 dials 2 3 5 5.  The origin bank acts on the first digit; bank 23 on the second.')
     dom = [('origin 21: seize the flood', 3), ('exchange 23: claim', 0), (None, 0), (None, 0)]
     dom[1] = ('exchange 23: claim', 0)
     for pz in (800, 500):
         live('2355', [('origin 21: seize the flood', 3), (None, 0), (None, 0), (None, 0)], pz, '2 3 5 5')
-    print('  7. Live, no sender: 1 8 3 2 3 5 5 -- long distance.  Each digit is acted on by one level, which patches')
-    print('     the call into the next flood before the following digit.  Area codes begin with 8 or 9, which no')
-    print('     exchange digit can be (they are 1-7 pulses, or ten), so a monitor knows a toll call by its first digit.')
-    toll = [('origin: not my district: seize', 3), ('district toll gateway: claim', 2), ('area 83 gateway: claim', 2),
-            ('district 2 gateway: claim', 3), ('exchange 23: claim', 0), (None, 0), (None, 0)]
+    print('  7. Live, no sender, out of the exchange: 1, then 8 for another exchange of this area or 9 for another')
+    print('     area.  Each digit is acted on by one level, which patches the call into the next flood before the')
+    print('     following digit.  8 and 9 can never be a bank digit (that is 1-7 pulses, or ten), so a monitor')
+    print('     knows such a call by the first digit it hears.')
+    other = [('origin bank 21: not a home call: seize', 3), ("exchange 2's gateway bank: claim, onto MF8", 7),
+             ("exchange 3's gateway bank: claim, into its ties", 3), ('bank 31: claim', 0), (None, 0), (None, 0)]
+    area = [('origin bank 21: not a home call: seize', 3), ("exchange 2's gateway bank: claim, onto MF8", 7),
+            ('area 5\'s gateway: claim, into its area', 7), ("exchange 3's gateway bank: claim, into its ties", 3),
+            ('bank 31: claim', 0), (None, 0), (None, 0)]
     for pz in (800, 500):
-        live('1832355', toll, pz, '1 8 3 2 3 5 5')
+        live('183147', other, pz, '1 8 3 1 4 7  (exchange 3, bank 1, line 47)')
+    live('1953147', area, 800, '1 9 5 3 1 4 7  (area 5, exchange 3, bank 1, line 47)')
 
 
-TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor}
+# ------------------------------------------------------------------ ss0
+
+SS0_BITS = 18             # a message: start, 16 data bits, stop
+SS0_BAUD = 1.0            # bits a ms: the clock card's 1 kHz TICK.  The S lane's x bit is 8 kbps: 8 samples a bit
+T_MSG = SS0_BITS / SS0_BAUD
+T_ALIGN = 1.0             # a message waits for the next TICK to begin
+T_HUNT = HOP - A_FALL     # a hunt of the trunk ports and the marker's decision: a flood hop less its A path
+SS0_HOP = T_ALIGN + T_MSG + T_HUNT + T_MARK     # a SEIZE received, a trunk hunted onward, the next SEIZE loaded
+
+
+def erlang_b(E, N):
+    b = 1.0
+    for k in range(1, N + 1):
+        b = E * b / (k + E * b)
+    return b
+
+
+def erlang_cap(N, gos=0.01):
+    lo, hi = 0.0, float(N)
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if erlang_b(mid, N) < gos else (lo, mid)
+    return lo
+
+
+def waste(chain, net, how='rotary', calls_h=48 * 3):
+    """Erlangs of trunk held on each link of a chain by calls that do not use that link.  Every
+    exchange originates calls_h calls an hour, a fraction net of them spread evenly over the others.
+    Live flood: both ways seized at the first digit; a local call releases them at the second, a
+    network call when the owner's monitor has read the second.  SS0: nothing until the fourth digit;
+    a SEIZE relayed hop by hop; the far way seized only from a middle exchange, until the claim.
+    Returns {link: [flood local calls, flood network calls, SS0]}."""
+    n = len(chain)
+    links = [f'{chain[i]}-{chain[i + 1]}' for i in range(n - 1)]
+    out = {L: [0.0, 0.0, 0.0] for L in links}
+    for o in range(n):
+        sides = [[links[i] for i in range(o - 1, -1, -1)], [links[i] for i in range(o, n - 1)]]
+        dg = caller(chain[o] + '55', how); r = [x[2] for x in dg]
+        t_sz, t_rel = r[0] + T_MARK, r[1] + T_MARK
+        per = calls_h * (1 - net) / 3.6e6
+        for side in sides:
+            for j, L in enumerate(side, 1):
+                out[L][0] += per * (t_rel + A_FALL * j + T_FALL - (t_sz + HOP * (j - 1)))
+        for d in range(n):
+            if d == o:
+                continue
+            S, J = (0, o - d) if d < o else (1, d - o)
+            dg = caller(chain[d] + '55', how); r = [x[2] for x in dg]
+            per = calls_h * net / (n - 1) / 3.6e6
+            t_sz = r[0] + T_MARK
+            t_claim = dg[1][1] + A_RISE * J + T_ID + T_MARK
+            t_drop = t_claim + A_RISE * J + T_MARK                 # the origin lets the other way go
+            for s, side in enumerate(sides):
+                for j, L in enumerate(side, 1):
+                    if s == S and j <= J:
+                        continue                                   # the call's own path
+                    down = (t_claim + A_FALL * (j - J)) if s == S else (t_drop + A_FALL * j)
+                    out[L][1] += per * (down + T_FALL - (t_sz + HOP * (j - 1)))
+            t0 = r[3] + T_MARK
+            t_drop = t0 + J * SS0_HOP + A_RISE * J + T_MARK
+            for j, L in enumerate(sides[1 - S], 1):
+                up = t0 + (j - 1) * SS0_HOP
+                if up >= t_drop + A_FALL * (j - 1):               # the fall overtook the relay: never seized
+                    break
+                out[L][2] += per * (t_drop + A_FALL * j + T_FALL - up)
+    return out
+
+
+def ss0():
+    from math import comb
+    print('SS0 -- the number on a common channel: one SEIZE a link, forward only; A carries everything else.')
+    print('  Arithmetic from the constants of `flood`, not a simulation of the gates:')
+    print(f'    a message is {SS0_BITS} bits at {SS0_BAUD * 1000:.0f} baud, {T_MSG:.0f} ms, and waits up to {T_ALIGN:.0f} ms for the TICK;')
+    print(f'    a hop hunts onward in {T_HUNT:.0f} ms (a flood hop, {HOP:.0f} ms, less its A path) and writes in {T_MARK:.0f} ms:')
+    print(f'    {SS0_HOP:.0f} ms a hop.  Register ID {T_ID} ms; A rise {A_RISE} ms and fall {A_FALL} ms a hop; release {T_FALL} ms.\n')
+
+    print('  1. Post-dial delay, the caller\'s last pulse to ringback, by hops from the origin to the owner.')
+    print(f'     {"hops":>5s} {"live flood ms":>14s} {"SS0 ms":>8s}')
+    for J in range(1, 8):
+        live = T_ID + T_MARK + A_RISE * J
+        pdd = T_ID + T_MARK + J * SS0_HOP + A_RISE * J + T_MARK
+        print(f'     {J:5d} {live:14.0f} {pdd:8.0f}')
+
+    print('\n  2. Trunk held by calls that do not use it, erlangs on each link of 21 = 22 = 23 = 24.  Every exchange')
+    print('     48 lines x 3 calls an hour, the network share spread evenly over the other three, rotary dials.')
+    print('     Every exchange originates here, where `flood` 4 sent every call from 21.')
+    for net in (0.2, 0.5):
+        w = waste(['21', '22', '23', '24'], net)
+        print(f'     {net:.0%} of calls leave')
+        print(f'     {"link":>8s} {"flood: local calls":>19s} {"network calls":>14s} {"total":>7s} {"SS0":>7s}')
+        for L, (a, b, c) in w.items():
+            print(f'     {L:>8s} {a:19.3f} {b:14.3f} {a + b:7.3f} {c:7.3f}')
+
+    print('\n  3. A message against line errors.  Each x sample (one line bit a superframe) wrong with probability p,')
+    print('     independently.  A data bit is the majority of the middle 1, 3 or 5 of its 8 samples; odd parity')
+    print('     over the 16 data bits; a bad stop bit discards.  Per million messages: LOST, discarded, so the call')
+    print('     fails; WRONG, an even number of data bits wrong and accepted -- an upper bound on a wrong number.')
+    print(f'     {"line p":>8s} {"samples":>8s} {"bit error":>10s} {"lost / 1e6":>11s} {"wrong / 1e6":>12s}')
+    for p in (1e-4, 1e-3, 1e-2, 3e-2):
+        for m in (1, 3, 5):
+            q = sum(comb(m, k) * p ** k * (1 - p) ** (m - k) for k in range(m // 2 + 1, m + 1))
+            odd = sum(comb(16, k) * q ** k * (1 - q) ** (16 - k) for k in range(1, 17, 2))
+            even = sum(comb(16, k) * q ** k * (1 - q) ** (16 - k) for k in range(2, 17, 2))
+            lost = odd + (1 - odd) * q
+            wrong = even * (1 - q)
+            print(f'     {p:8.0e} {m:8d} {q:10.1e} {lost * 1e6:11.1f} {wrong * 1e6:12.4f}')
+
+    print('\n  4. The bearer.  Erlangs a direction carries at 1 % blocking (Erlang B), by voice channels left:')
+    print(f'     {"channels":>9s} {"erlang":>7s}')
+    for N in (5, 6, 10, 12):
+        print(f'     {N:9d} {erlang_cap(N):7.2f}')
+    print('     The S lane\'s x bit costs no channel.  Channel 6 given over costs 6 -> 5 a link, 12 -> 10 a doubled direction.')
+
+
+
+# ------------------------------------------------------------------ net
+
+NET_SCAN = 8.0            # the marker's scanner comes round to a port this often, ms
+NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (exch-network.md 3.2)
+NET_REPOINT = NET_SCAN / 2 + T_MARK     # a hub re-points its incoming trunk when the claim comes back
+FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (exch-network.md 4)
+NO_CLAIM = 2000.0         # no claim this long after the last digit -> cannot-complete
+HOLD_MEAN = 48000.0       # 0.08 E a line at 3 calls an hour, a line being one of two in each call
+STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of exch-network.md 4
+
+
+def pulses_of(d):
+    return 10 if d == 0 else d
+
+
+def code_hold(code):
+    """seconds a flood is held for a call to this code: until e and b are in, and the release.  The
+    1.116 s and 0.86 s are flood_call's, for a first and a second digit heard of one pulse"""
+    return 1.116 + 0.86 + 0.1 * (pulses_of(int(code[0])) - 1) + 0.1 * (pulses_of(int(code[1])) - 1)
+
+
+class Pool:
+    """n of something, with the time it spends busy and the calls it turns away."""
+
+    def __init__(self, n):
+        self.n, self.used, self.busy, self.last, self.refused, self.taken = n, 0, 0.0, 0.0, 0, 0
+
+    def _mark(self, t):
+        self.busy += self.used * (t - self.last); self.last = t
+
+    def take(self, t):
+        self._mark(t)
+        if self.used >= self.n:
+            self.refused += 1; return False
+        self.used += 1; self.taken += 1; return True
+
+    def give(self, t):
+        self._mark(t); self.used -= 1
+
+    def erlang(self, t):
+        self._mark(t); return self.busy / t if t else 0.0
+
+
+class Net:
+    """A network of exchanges: the flood, the monitors, the claim and the registers, in milliseconds.
+
+    Every exchange has registers, a trunk block a direction with monitors on it, and, where it
+    faces more than two directions, fan-out resolvers.  Every link has channels.  A call is
+    dialled digit by digit at 10 pps; the key opens the flood, e and b go down it live, and the
+    exchange whose code they are claims (exch-network.md 3)."""
+
+    def __init__(self, links, lines, regs=3, mons=3, resolvers=3, leave=0.3, seed=1, strapped=()):
+        self.rng = np.random.default_rng(seed)
+        self.t, self.q, self.seq = 0.0, [], 0
+        self.lines, self.leave = lines, leave
+        self.strapped = {frozenset(l) for l in strapped}          # links whose words carry n (exch-network.md 3.3)
+        self.codes = list(lines)
+        self.dirs = {x: [] for x in lines}                       # exchange -> the exchanges it faces
+        self.chan = {}
+        for (u, v), n in links.items():
+            self.dirs[u].append(v); self.dirs[v].append(u)
+            self.chan[frozenset((u, v))] = Pool(n)
+        self.reg = {x: Pool(regs) for x in lines}
+        self.mon = {(x, d): Pool(mons) for x in lines for d in self.dirs[x]}
+        self.res = {x: Pool(resolvers) for x in lines if len(self.dirs[x]) > 2}
+        self.busy_lines = {x: 0 for x in lines}
+        self.stat = {k: 0 for k in ('calls', 'local', 'net', 'no_register', 'waited', 'no_trunk',
+                                    'no_monitor', 'no_resolver', 'called_busy', 'no_claim',
+                                    'timed_out', 'done')}
+        self.dialtone, self.complete_local, self.complete_net, self.hops = [], [], [], []
+        self.flood_held, self.stopped_held = [], []
+
+    # --- event queue -------------------------------------------------
+    def free(self, pool):
+        pool.give(self.t)
+
+    def at(self, t, fn, *a):
+        self.seq += 1; heapq.heappush(self.q, (t, self.seq, fn, a))
+
+    def run(self, until):
+        while self.q and self.q[0][0] < until:
+            self.t, _, fn, a = heapq.heappop(self.q); fn(*a)
+        self.t = until
+
+    # --- the topology ------------------------------------------------
+    def hop(self, u, v):
+        return NET_HOP + (NET_HUB if len(self.dirs[u]) > 2 else 0.0)
+
+    # --- calls -------------------------------------------------------
+    def digits(self, dst=None):
+        """when the register has each digit, from the first digit's first break.  A local number is
+        h s, h 2-7 and s 0-7.  A network number is 1 e b h s, with e b the code of the exchange called;
+        a 0 is ten pulses"""
+        h, sl = int(self.rng.integers(2, 8)), int(self.rng.integers(0, 8))
+        number = [h, sl] if dst is None else [1, int(dst[0]), int(dst[1]), h, sl]
+        t, out = 0.0, []
+        for d in number:
+            t += (pulses_of(d) - 1) * 100 + 60
+            out.append(t + T_ID)
+            t += float(self.rng.uniform(500, 900))
+        return out
+
+    def arrive(self, x):
+        self.stat['calls'] += 1
+        remote = self.rng.random() < self.leave and len(self.lines) > 1
+        dst = x
+        if remote:
+            dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
+            while dst == x:
+                dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
+        self.at(self.t + float(self.rng.uniform(0, NET_SCAN)) + T_MARK, self.seize_register, x, dst, self.t)
+
+    def seize_register(self, x, dst, lifted):
+        if not self.reg[x].take(self.t):
+            self.stat['no_register'] += 1
+            if self.t - lifted < NET_SCAN * 1.5:
+                self.stat['waited'] += 1          # the first time this caller was turned away
+            self.at(self.t + NET_SCAN, self.seize_register, x, dst, lifted)   # the scanner comes round again
+            return
+        self.dialtone.append(self.t - lifted)
+        start = self.t + float(self.rng.uniform(300, 1000))
+        if dst == x:
+            self.stat['local'] += 1
+            d = self.digits()
+            self.at(start + d[-1] + T_MARK, self.local_call, x, lifted)
+        else:
+            self.stat['net'] += 1
+            d = self.digits(dst)                     # 1 e b h s
+            stopped = self.rng.random() < STOPS
+            self.at(start + d[0] + T_MARK, self.open_flood, x, dst, lifted,
+                    start + d[1], start + d[2], start + d[4], stopped)
+
+    def local_call(self, x, lifted):
+        self.reg[x].give(self.t)
+        if self.rng.random() < self.busy_lines[x] / self.lines[x]:
+            self.stat['called_busy'] += 1; return
+        self.complete_local.append(self.t - lifted)
+        self.connect(x, x, [], lifted)
+
+    # --- the flood ---------------------------------------------------
+    def open_flood(self, x, dst, lifted, t_e, t_b, t_last, stopped):
+        legs, seized = [], []
+        for d in self.dirs[x]:
+            ch = self.chan[frozenset((x, d))]
+            if ch.take(self.t):
+                legs.append(d); seized.append(frozenset((x, d)))
+        if not legs:
+            self.stat['no_trunk'] += 1; self.reg[x].give(self.t); return
+        call = dict(origin=x, dst=dst, lifted=lifted, t_e=t_e, t_b=t_b, t_last=t_last,
+                    held=seized, seized_at=self.t, claimed=False, stopped=stopped)
+        for d in legs:
+            self.at(self.t + self.hop(x, d), self.reaches, call, x, d, [frozenset((x, d))])
+        if stopped:
+            self.at(self.t + FLOOD_TIMEOUT, self.give_up, call, True)      # the 5 s rule
+        else:
+            self.at(t_b + NO_CLAIM, self.give_up, call, False)
+
+    def reaches(self, call, frm, x, path):
+        """a seizure arrives at x from frm, having come by path: a monitor listens, and a transit
+        forwards it on -- never into a strapped link, and never onward from one"""
+        mon = self.mon[(x, frm)]
+        watched = mon.take(self.t)
+        if not watched and x == call['dst'] and not call['stopped']:
+            self.stat['no_monitor'] += 1
+        if watched and call['stopped']:
+            # no digit ever comes: the monitor holds until the origin's 5 s rule releases the trunk
+            self.at(call['seized_at'] + FLOOD_TIMEOUT + T_FALL, self.free, mon)
+        elif watched:
+            # the monitor lets go at e if the first code digit is not this exchange's
+            same_e = x[0] == call['dst'][0]
+            self.at(max(self.t, call['t_b'] if same_e else call['t_e']), self.free, mon)
+            if x == call['dst']:
+                self.at(call['t_b'] + T_MARK, self.claim, call, path)
+        if call['claimed'] or path[-1] in self.strapped:
+            return
+        onward = [d for d in self.dirs[x] if d != frm and frozenset((x, d)) not in self.strapped]
+        if not onward:
+            return
+        if len(onward) > 1:
+            if not self.res[x].take(self.t):
+                self.stat['no_resolver'] += 1
+                onward = onward[:1]                              # patch into the first direction only
+            else:
+                self.at(call['t_b'] + T_MARK + NET_REPOINT, self.free, self.res[x])
+        for d in onward:
+            ch = self.chan[frozenset((x, d))]
+            if ch.take(self.t):
+                call['held'].append(frozenset((x, d)))
+                self.at(self.t + self.hop(x, d), self.reaches, call, x, d, path + [frozenset((x, d))])
+
+    def claim(self, call, path):
+        """the first copy of the flood to be claimed is the call; every other leg lets go"""
+        if call['claimed']:
+            return
+        call['claimed'] = True
+        hops = len(path)
+        back = hops * A_RISE + hops * NET_REPOINT
+        keep, rest = list(path), list(call['held'])
+        for l in keep:
+            rest.remove(l)
+        for l in rest:
+            self.at(self.t + back + T_FALL, self.free, self.chan[l])
+            self.flood_held.append(self.t + back + T_FALL - call['seized_at'])
+        call['held'] = keep
+        self.hops.append(hops)
+        self.at(max(self.t + back, call['t_last'] + T_MARK), self.answered, call, keep)
+
+    def answered(self, call, keep):
+        x, dst = call['origin'], call['dst']
+        self.reg[x].give(self.t)
+        if self.rng.random() < self.busy_lines[dst] / self.lines[dst]:
+            self.stat['called_busy'] += 1
+            for l in keep:
+                self.at(self.t + 3000, self.free, self.chan[l])
+            return
+        self.complete_net.append(self.t - call['lifted'])
+        self.connect(x, dst, keep, call['lifted'])
+
+    def give_up(self, call, timed_out=False):
+        if call['claimed']:
+            return
+        call['claimed'] = True
+        self.stat['timed_out' if timed_out else 'no_claim'] += 1
+        if timed_out:
+            self.stopped_held.append(self.t + T_FALL - call['seized_at'])
+        self.reg[call['origin']].give(self.t)
+        for l in call['held']:
+            self.at(self.t + T_FALL, self.free, self.chan[l])
+        call['held'] = []
+
+    def connect(self, x, dst, keep, lifted):
+        self.stat['done'] += 1
+        self.busy_lines[x] += 1; self.busy_lines[dst] += 1
+        hold = float(self.rng.exponential(HOLD_MEAN))
+        self.at(self.t + hold, self.release, x, dst, keep)
+
+    def release(self, x, dst, keep):
+        self.busy_lines[x] -= 1; self.busy_lines[dst] -= 1
+        for l in keep:
+            self.at(self.t + T_FALL, self.free, self.chan[l])
+
+
+NET_HOP = 7.0             # a seizure crossing one exchange (exch-network.md 4)
+
+
+def net_topology():
+    """two hubs of four directions, three leaves each (exch-network.md 5).  Codes share e by side."""
+    hubs = ('11', '12')                      # backbone codes, by convention
+    leaves = {'21': '11', '22': '11', '23': '11', '31': '12', '32': '12', '33': '12'}
+    links = {(v, h): 6 for v, h in leaves.items()}
+    links[hubs] = 12
+    lines = {h: 30 for h in hubs}
+    lines.update({v: 48 for v in leaves})
+    return links, lines
+
+
+BURST_UP, BURST_DOWN, BURST_X = 30e3, 300e3, 8.0   # 30 s of it, every 5 minutes, eight times the rate
+
+
+def net_arrivals(sim, hours, spiky):
+    """calls a line makes: 3 an hour.  Smooth is Poisson.  Bursty is the same mean in bursts -- an
+    office where a meeting ends, a shift changes, a switchboard is thrown open: 30 s at eight times
+    the rate, once every 5 minutes.  The two differ in when the calls come, not how many."""
+    rng, end = sim.rng, hours * 3600e3
+    for x, n in sim.lines.items():
+        mean = n * 3 / 3600e3                     # calls a millisecond
+        if not spiky:
+            t = 0.0
+            while t < end:
+                t += float(rng.exponential(1 / mean))
+                if t < end:
+                    sim.at(t, sim.arrive, x)
+            continue
+        share = BURST_UP / (BURST_UP + BURST_DOWN)
+        quiet = mean / (1 - share + BURST_X * share)
+        t, hot = 0.0, False
+        while t < end:
+            span = float(rng.exponential(BURST_UP if hot else BURST_DOWN))
+            rate = quiet * (BURST_X if hot else 1.0)
+            u = t
+            while True:
+                u += float(rng.exponential(1 / rate))
+                if u >= t + span or u >= end:
+                    break
+                sim.at(u, sim.arrive, x)
+            t += span; hot = not hot
+
+
+def net():
+    print('NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, the claim,')
+    print('  the registers and the channels.  Two hubs of four directions, three leaves each; 12 channels')
+    print('  between the hubs and 6 to every leaf; 30 lines at a hub, 48 at a leaf, 348 in all.')
+    print('  A line makes 3 calls an hour and holds one 48 s.  Dial 10 pps, 0.5-0.9 s between digits.')
+    print('  Local calls are h s and touch no trunk; the rest are 1 e b h s and open a flood.')
+    print(f'  Bursty is the same mean in bursts: {BURST_UP / 1000:.0f} s at {BURST_X:.0f}x the rate, every '
+          f'{BURST_DOWN / 1000:.0f} s, an office at a shift change.')
+    links, lines = net_topology()
+    cases = (('smooth, 30 % leaving', 0.3, False, 3), ('bursty, 30 % leaving', 0.3, True, 3),
+             ('bursty, 50 % leaving', 0.5, True, 3), ('bursty, 30 %, 2 registers', 0.3, True, 2),
+             ('bursty, 30 %, 1 register', 0.3, True, 1))
+    rows, hours = [], 12
+    for label, leave, spiky, regs in cases:
+        sim = Net(links, lines, regs=regs, leave=leave, seed=3)
+        net_arrivals(sim, hours, spiky)
+        sim.run(hours * 3600e3)
+        rows.append((label, sim))
+
+    print('\n  1. What a caller waits for.  Dial tone is the register; ringback is everything.')
+    print(f'  {"":27s} {"calls":>6s} {"waited for":>11s} {"dial tone, ms":>26s} {"lift to ringback, s":>26s}')
+    print(f'  {"":27s} {"an hr":>6s} {"a register":>11s} {"mean":>7s} {"95 %":>7s} {"99 %":>7s} {"worst":>7s}'
+          f' {"local":>8s} {"network":>8s} {"worst":>8s}')
+    for label, sim in rows:
+        dt = np.array(sim.dialtone); loc = np.array(sim.complete_local) / 1000
+        nw = np.array(sim.complete_net) / 1000
+        print(f'  {label:27s} {sim.stat["calls"] / hours:6.0f} {100 * sim.stat["waited"] / sim.stat["calls"]:10.1f} %'
+              f' {dt.mean():7.1f} {np.percentile(dt, 95):7.1f} {np.percentile(dt, 99):7.1f} {dt.max():7.0f}'
+              f' {loc.mean():8.2f} {nw.mean():8.2f} {max(loc.max(), nw.max()):8.2f}')
+
+    print('\n  2. What failed, per 1 000 calls.  A caller turned away waits a scan and asks again, so')
+    print('     only the last five columns are calls that did not go through.')
+    print(f'  {"":27s} {"no trunk":>9s} {"no monitor":>11s} {"no resolver":>12s} {"no claim":>9s} {"called busy":>12s}')
+    for label, sim in rows:
+        k, c = sim.stat, sim.stat['calls'] / 1000
+        print(f'  {label:27s} {k["no_trunk"] / c:9.1f} {k["no_monitor"] / c:11.1f} '
+              f'{k["no_resolver"] / c:12.1f} {k["no_claim"] / c:9.1f} {k["called_busy"] / c:12.1f}')
+
+    print('\n  3. The links: erlangs, and the calls that found no free channel.')
+    print(f'  {"":27s} {"a leaf link, 6 ch":>22s} {"hub to hub, 12 ch":>22s} {"flood held for nothing":>24s}')
+    for label, sim in rows:
+        t = hours * 3600e3
+        leaf, hub = sim.chan[frozenset(('21', '11'))], sim.chan[frozenset(('11', '12'))]
+        fh = np.array(sim.flood_held) / 1000
+        print(f'  {label:27s} {leaf.erlang(t):9.2f} E {100 * leaf.refused / max(leaf.taken, 1):7.2f} %'
+              f' {hub.erlang(t):9.2f} E {100 * hub.refused / max(hub.taken, 1):7.2f} %'
+              f' {fh.mean():13.2f} s a leg')
+
+    print('\n  4. The pools, erlangs and the % of the calls that wanted one and found none free.')
+    print(f'  {"":27s} {"hub resolvers":>17s} {"hub registers":>12s} {"leaf registers":>15s} {"leaf monitors":>17s}')
+    print('     A register turned away is a caller waiting a scan, counted in 1; the others are calls lost.')
+    for label, sim in rows:
+        t = hours * 3600e3
+        f = lambda p: f'{p.erlang(t):6.2f} E {100 * p.refused / max(p.taken + p.refused, 1):5.1f} %'
+        print(f'  {label:27s} {f(sim.res["11"]):>17s} {sim.reg["11"].erlang(t):10.2f} E'
+              f' {sim.reg["21"].erlang(t):13.2f} E {f(sim.mon[("21", "11")]):>17s}')
+
+    print(f'\n  5. The 5 s rule (exch-network.md 4).  {100 * STOPS:.0f} % of network callers dial the key and stop.')
+    print(f'  {"":27s} {"they were":>10s} {"trunks held, s":>15s} {"without the rule":>18s}')
+    for label, sim in rows:
+        if sim.stopped_held:
+            sh = np.array(sim.stopped_held) / 1000
+            print(f'  {label:27s} {sim.stat["timed_out"]:10d} {sh.mean():15.2f} {10 + T_FALL / 1000:18.2f}')
+
+    p = predict(links, lines, (), 0.3)
+    print(f'\n  6. Against the arithmetic of exch-network.md 5, with these codes\' own floods ({p["flood"]:.2f} E a link):')
+    print(f'     at 30 % leaving a leaf link is predicted {p["worst_e"]:.2f} E and {100 * p["worst_b"]:.2f} % blocking.  **Bursts leave')
+    print('     the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.')
+
+
+# ------------------------------------------------------------------ topo
+
+FLOOD_S = sum(code_hold(f'{e}{b}') for e in range(8) for b in range(8)) / 64     # over all 64 codes
+ORIG_E = 3 * HOLD_MEAN / 3600e3           # erlangs a line originates: 3 calls an hour of 48 s
+SLOW_HOP, SLOW_HUB = 12.0, 4.0            # a slow marker's hop, and a hub's extra (exch-monitor.md 3)
+SS0_HOLD = 0.4                            # SS0: a seizure held till the claim, a few hops out and back, and released
+
+
+def lines_for(groups):
+    """lines left at an exchange with this many trunk groups: the first two sit in blocks 0 and 1,
+    which hold no lines anyway; each one more takes six line slots (exch-protocol.md 5)"""
+    return 48 - 6 * max(0, groups - 2)
+
+
+BACKBONE = [f'{e}{b}' for e in (1, 0) for b in (1, 2, 3, 4, 5, 6, 7, 0)]            # 00-17, by convention
+ORDINARY = [f'{e}{b}' for e in (2, 3, 4, 5, 6, 7) for b in (1, 2, 3, 4, 5, 6, 7, 0)]   # 20-77, fewest pulses first
+
+
+def shape(links, straps=()):
+    """a network from its links {(u, v): channels}: lines by the groups each exchange fits, and codes by
+    the convention of exch-network.md 2 -- an exchange of three or four directions takes a backbone
+    code, 00-17, the rest 20-77, and either kind spills into the other's when its own run out"""
+    names = sorted({x for l in links for x in l}, key=lambda n: (len(n), n))
+    assert len(names) <= 64, 'more than 64 exchanges'
+    degree = {n: sum(n in l for l in links) for n in names}
+    spare = {True: list(BACKBONE), False: list(ORDINARY)}
+    code = {}
+    for n in names:
+        kind = degree[n] > 2
+        code[n] = (spare[kind] or spare[not kind]).pop(0)
+    groups = {n: 0 for n in names}
+    for (u, v), ch in links.items():
+        groups[u] += -(-ch // 6); groups[v] += -(-ch // 6)
+    lk = {(code[u], code[v]): ch for (u, v), ch in links.items()}
+    ln = {code[n]: lines_for(groups[n]) for n in names}
+    assert max(groups.values()) <= 8, 'more than eight trunk groups'
+    return lk, ln, [(code[u], code[v]) for u, v in straps], code
+
+
+def predict(links, lines, straps=(), leave=0.3, hold=None):
+    """Erlang arithmetic for a tree, or a tree with strapped links across it (exch-network.md 3.3, 5).
+    hold: seconds a call that leaves holds a channel on every link it is offered to.  None is the
+    pulse flood, each code its own; a number is SS0, where the seizure lasts only till the claim"""
+    strapped = {frozenset(l) for l in straps}
+    tree = {x: [] for x in lines}
+    for u, v in links:
+        if frozenset((u, v)) not in strapped:
+            tree[u].append(v); tree[v].append(u)
+    assert max(len(tree[x]) + sum(x in l for l in strapped) for x in lines) <= 4, 'more than four directions'
+
+    def path(u, v):
+        if frozenset((u, v)) in strapped:
+            return [u, v]
+        seen, front = {u: [u]}, [u]
+        while front:
+            nxt = []
+            for x in front:
+                for y in tree[x]:
+                    if y not in seen:
+                        seen[y] = seen[x] + [y]; nxt.append(y)
+            front = nxt
+        return seen[v]
+
+    n, total = len(lines), sum(lines.values())
+    load = {frozenset(l): 0.0 for l in links}
+    paths = {}
+    for u in lines:
+        for v in lines:
+            if u != v:
+                p = path(u, v); paths[(u, v)] = p
+                for a, b in zip(p, p[1:]):
+                    load[frozenset((a, b))] += lines[u] * ORIG_E * leave / (n - 1)
+    rate = 3 / 3600 * leave * (hold if hold else sum(code_hold(c) for c in lines) / n)
+    chans = {frozenset(l): c for l, c in links.items()}
+    flood = {l: (sum(lines[x] for x in l) if l in strapped else total) * rate for l in load}
+    block = {l: erlang_b(load[l] + flood[l], chans[l]) for l in load}
+    worst = max(block, key=block.get)
+    lost = {}
+    for (u, v), p in paths.items():
+        ok = 1.0
+        for a, b in zip(p, p[1:]):
+            ok *= 1 - block[frozenset((a, b))]
+        lost[(u, v)] = 1 - ok
+    w = {k: lines[k[0]] for k in lost}
+    need = lambda a: next(m for m in range(1, 40) if erlang_b(a, m) <= 0.005)
+    hubs = [x for x in lines if len(tree[x]) > 2]
+    far = max(total - lines[x] for x in lines)                 # the worst block hears every flood but its own
+    spread = max(sum(SLOW_HOP + (SLOW_HUB if len(tree[x]) > 2 else 0) for x in p[1:]) for p in paths.values())
+    return dict(n=n, lines=total, flood=total * rate, worst=worst, worst_e=load[worst] + flood[worst],
+                worst_ch=chans[worst], worst_b=block[worst], pair=max(lost.values()),
+                mean=sum(lost[k] * w[k] for k in lost) / sum(w.values()),
+                hops=sum((len(paths[k]) - 1) * w[k] for k in lost) / sum(w.values()),
+                diameter=max(len(p) - 1 for p in paths.values()), spread=spread,
+                monitors=need(far * rate), resolvers=need(max((total - lines[h]) * rate for h in hubs)) if hubs else 0)
+
+
+def chain_links(n, ch, end=None):
+    return {(f'x{i:02d}', f'x{i + 1:02d}'): (end if end and i in (0, n - 2) else ch) for i in range(n - 1)}
+
+
+def star_links(spokes, ch, k=1, inner=None, outer=None):
+    """a hub with chains of k exchanges on each spoke: inner channels next the hub, outer on the last link"""
+    out = {}
+    for s in range(spokes):
+        prev = 'hub'
+        for i in range(k):
+            out[(prev, f's{s}{i}')] = (outer or ch) if (i == k - 1 and k > 1) else (inner or ch)
+            prev = f's{s}{i}'
+    return out
+
+
+def tree_links(m=12, up=12, down=6):
+    """a tandem of four directions, a sub-hub on each, three chains on each sub-hub: m leaves dealt
+    round the twelve chains.  A link with an exchange beyond it is 12 channels; the last is `down`"""
+    depth = [m // 12 + (1 if c < m % 12 else 0) for c in range(12)]
+    out = {}
+    for h in range(4):
+        out[('t', f'h{h}')] = up
+        for c in range(3):
+            prev = f'h{h}'
+            for i in range(depth[h * 3 + c]):
+                out[(prev, f'l{h}{c}{i}')] = down if i == depth[h * 3 + c] - 1 else 12
+                prev = f'l{h}{c}{i}'
+    return out
+
+
+def core_links(m, core=18):
+    """three tandems in a chain, five 12-channel branches off them (two, one, two), a sub-hub on each
+    branch with three chains: m leaves dealt round the fifteen chains, every link 12 channels"""
+    out = {('r0', 'r1'): core, ('r1', 'r2'): core}
+    depth = [m // 15 + (1 if c < m % 15 else 0) for c in range(15)]
+    for b, root in enumerate(('r0', 'r0', 'r1', 'r2', 'r2')):
+        out[(root, f'h{b}')] = 12
+        for c in range(3):
+            prev = f'h{b}'
+            for i in range(depth[b * 3 + c]):
+                out[(prev, f'l{b}{c}{i}')] = 12
+                prev = f'l{b}{c}{i}'
+    return out
+
+
+def two_hubs(bypass=False):
+    out = {('h0', 'h1'): 12}
+    for h in range(2):
+        for c in range(3):
+            out[(f'h{h}', f'l{h}{c}')] = 6
+    if bypass:
+        out[('l00', 'l10')] = 6            # a loop through both hubs: a leaf on each side joined directly
+    return out
+
+
+def ring_links(n, ch):
+    out = chain_links(n, ch)
+    out[(f'x{n - 1:02d}', 'x00')] = ch
+    return out
+
+
+def topo():
+    print('TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of')
+    print(f'  48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, {FLOOD_S:.2f} s over all 64')
+    print('  (exch-network.md 4); each shape is worked with its own codes, the backbone\'s from 00-17.  An exchange')
+    print('  faces four directions at most and fits eight trunk groups at most; it keeps 48 lines with two')
+    print('  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as exch-network.md 5')
+    print('  and `net` agree it may be; "pair" is the worst end-to-end loss between two exchanges, "lost" the mean.')
+
+    head = (f'  {"":34s} {"exch":>4s} {"lines":>6s} {"flood":>6s} {"worst link":>24s} {"pair":>7s} {"lost":>7s} '
+            f'{"hops":>5s} {"across":>7s} {"spread":>7s} {"mon":>4s} {"res":>4s}')
+
+    def row(label, links, straps=(), leave=0.3):
+        lk, ln, st, code = shape(links, straps)
+        p = predict(lk, ln, st, leave)
+        print(f'  {label:34s} {p["n"]:4d} {p["lines"]:6d} {p["flood"]:5.2f}E {p["worst_e"]:6.2f} E on {p["worst_ch"]:2d} ch '
+              f'{100 * p["worst_b"]:6.2f}% {100 * p["pair"]:6.2f}% {100 * p["mean"]:6.2f}% {p["hops"]:5.2f} '
+              f'{p["diameter"]:4d} hp {p["spread"]:4.0f} ms {p["monitors"]:4d} {p["resolvers"]:4d}')
+        return p
+
+    print('\n  1. Chains, 30 % of calls leaving.  "spread" is the flood crossing the network at a slow marker,')
+    print('     against the origin\'s 128 ms guard; mon and res are the monitors a block and resolvers a hub for 0.5 %.')
+    print(head)
+    for ch in (6, 12):
+        for n in (2, 3, 4, 5, 6, 8, 10, 11, 12):
+            row(f'chain of {n}, {ch} channels', chain_links(n, ch))
+    print('     A chain of 12 is 11 hops: 132 ms at a slow marker, outside the guard.')
+
+    print('\n  2. Hubs.  A hub faces four directions; a tandem gives all eight groups to trunks and keeps 12 lines.')
+    print(head)
+    row('star: hub and 4 spokes, 6 ch', star_links(4, 6))
+    row('star: tandem and 4 spokes, 12 ch', star_links(4, 12))
+    row('two hubs, six leaves (net)', two_hubs())
+    for k in (2, 3, 4, 5):
+        row(f'tandem, 4 chains of {k}, 12 ch', star_links(4, 12, k, outer=6))
+    for k in (4, 5, 6, 8):
+        row(f'tandem, 4 chains of {k}, 12 ch all', star_links(4, 12, k))
+    row('tree: tandem, 4 sub-hubs, 12 leaves', tree_links(12))
+    row('  the same, 12 ch to every leaf', tree_links(12, 12, 12))
+    row('tree: ... and 24 leaves (29)', tree_links(24))
+    row('  the same, 12 ch to every leaf', tree_links(24, 12, 12))
+    row('tree: ... and 31 leaves (36)', tree_links(31, 12, 12))
+    row('three tandems, 5 branches, 18 lv', core_links(18))
+    row('three tandems, 5 branches, 28 lv', core_links(28))
+
+    print('\n  3. The same shapes as fewer or more calls leave home.')
+    print(head)
+    for leave in (0.2, 0.5):
+        print(f'     {100 * leave:.0f} % leaving')
+        row('chain of 5, 6 channels', chain_links(5, 6), leave=leave)
+        row('chain of 8, 12 channels', chain_links(8, 12), leave=leave)
+        row('two hubs, six leaves (net)', two_hubs(), leave=leave)
+        row('tandem, 4 chains of 5, 12 ch all', star_links(4, 12, 5), leave=leave)
+        row('tree: tandem, 4 sub-hubs, 12 leaves', tree_links(12), leave=leave)
+        row('  the same, 12 ch to every leaf', tree_links(12, 12, 12), leave=leave)
+
+    print('\n  4. The largest of each family with no link over 1 %, inside the 64 codes and the 128 ms guard.')
+    print(head)
+    fams = (('chain, 6 ch', lambda n: chain_links(n, 6), range(2, 13)),
+            ('chain, 12 ch', lambda n: chain_links(n, 12), range(2, 13)),
+            ('star, 6 ch', lambda n: star_links(n, 6), range(2, 5)),
+            ('tandem, 4 chains, 12 ch', lambda k: star_links(4, 12, k), range(1, 9)),
+            ('tree, 12 ch, leaves', lambda m: tree_links(m, 12, 12), range(1, 60)),
+            ('three tandems, leaves', lambda m: core_links(m), range(1, 57)))
+    for leave in (0.2, 0.3, 0.5):
+        print(f'     {100 * leave:.0f} % leaving')
+        for label, make, sizes in fams:
+            best = None
+            for z in sizes:
+                lk, ln, st, _ = shape(make(z))
+                p = predict(lk, ln, st, leave)
+                if p['worst_b'] <= 0.01 and p['spread'] <= G_ORIGIN:
+                    best = z
+            if best:
+                row(f'{label}: {best}', make(best), leave=leave)
+            else:
+                print(f'  {label}: none')
+
+    print('\n  5. Rings.  A link strapped with n carries calls between its own two ends only (exch-network.md 3.3).')
+    print(head)
+    for n in (4, 6, 8):
+        row(f'chain of {n}, 6 channels', chain_links(n, 6))
+        row(f'ring of {n}, one link strapped', ring_links(n, 6), [(f'x{n - 1:02d}', 'x00')])
+    row('two hubs, six leaves (net)', two_hubs())
+    row('  and a strapped leaf-to-leaf link', two_hubs(True), [('l00', 'l10')])
+
+    print(f'\n  6. The same families under SS0 (ex-ss0.md), whose seizure lasts only until the claim,')
+    print(f'     taken as {SS0_HOLD:.1f} s against the pulse flood\'s 2.0-3.8 s, and which needs no monitor and no guard.')
+    print(f'  {"":34s} {"pulse flood":>28s} {"SS0":>28s}')
+    print(f'  {"":34s} {"exch":>5s} {"lines":>6s} {"worst":>7s} {"across":>8s} {"exch":>5s} {"lines":>6s} {"worst":>7s} {"PDD":>8s}')
+    for label, make, sizes in fams:
+        best = {}
+        for h in (None, SS0_HOLD):
+            for z in sizes:
+                lk, ln, st, _ = shape(make(z))
+                p = predict(lk, ln, st, 0.3, h)
+                if p['worst_b'] <= 0.01 and (h or p['spread'] <= G_ORIGIN):
+                    best[h] = (z, p)
+        if None in best and SS0_HOLD in best:
+            (z1, p1), (z2, p2) = best[None], best[SS0_HOLD]
+            print(f'  {label:34s} {p1["n"]:5d} {p1["lines"]:6d} {100 * p1["worst_b"]:6.2f}% {p1["spread"]:5.0f} ms '
+                  f'{p2["n"]:5d} {p2["lines"]:6d} {100 * p2["worst_b"]:6.2f}% {T_ID + T_MARK + p2["diameter"] * (SS0_HOP + A_RISE) + T_MARK:5.0f} ms')
+    print('     SS0\'s "across" is post-dial delay, the caller\'s last pulse to ringback at the far end:')
+    print(f'     {T_ID:.0f} ms to recognise the digit and {SS0_HOP + A_RISE:.0f} ms a hop, against the flood\'s 133 ms whatever the distance.')
+
+    print('\n  7. Run call by call, 12 hours, smooth demand, 30 % leaving, three registers; monitors a block and')
+    print('     resolvers a hub three of each unless the row says.  The worst link is the one that refused most.')
+    print(f'  {"":34s} {"calls":>6s} {"worst link":>22s} {"network calls lost / 1 000":>28s} {"hops":>5s} '
+          f'{"flood held":>11s} {"ringback":>9s}')
+    print(f'  {"":34s} {"an hr":>6s} {"":>22s} {"no trunk":>9s} {"no claim":>9s} {"pools":>8s} {"":>5s} {"a leg":>11s} {"network":>9s}')
+    runs = (('chain of 6, 6 channels', chain_links(6, 6), (), 3),
+            ('star: hub and 4 spokes, 6 ch', star_links(4, 6), (), 3),
+            ('two hubs, six leaves (net)', two_hubs(), (), 3),
+            ('  and a strapped leaf-to-leaf link', two_hubs(True), [('l00', 'l10')], 3),
+            ('tree: tandem, 4 sub-hubs, 12 leaves', tree_links(12), (), 3),
+            ('  the same, four of each pool', tree_links(12), (), 4),
+            ('tree, 24 leaves, 12 ch, five', tree_links(24, 12, 12), (), 5),
+            ('three tandems, 28 leaves, five', core_links(28), (), 5),
+            ('ring of 6, one link strapped', ring_links(6, 6), [('x05', 'x00')], 3),
+            ('ring of 6, NO strap', ring_links(6, 6), (), 3),
+            ('ring of 4, NO strap', ring_links(4, 6), (), 3))
+    for label, links, straps, pools in runs:
+        lk, ln, st, _ = shape(links, straps)
+        sim = Net(lk, ln, mons=pools, resolvers=pools, leave=0.3, seed=5, strapped=st)
+        hours = 12
+        net_arrivals(sim, hours, False)
+        sim.run(hours * 3600e3)
+        t = hours * 3600e3
+        w = max(sim.chan, key=lambda l: (sim.chan[l].refused / max(sim.chan[l].taken + sim.chan[l].refused, 1),
+                                         sim.chan[l].erlang(t) / sim.chan[l].n))
+        c = sim.chan[w]
+        k, nc = sim.stat, max(sim.stat['net'], 1) / 1000
+        print(f'  {label:34s} {k["calls"] / hours:6.0f} {c.erlang(t):6.2f} E on {c.n:2d} ch {100 * c.refused / max(c.taken + c.refused, 1):6.2f}%'
+              f' {k["no_trunk"] / nc:9.1f} {k["no_claim"] / nc:9.1f} {(k["no_monitor"] + k["no_resolver"]) / nc:8.1f}'
+              f' {np.mean(sim.hops):5.2f} {np.mean(sim.flood_held) / 1000:9.2f} s {np.mean(sim.complete_net) / 1000:7.2f} s')
+    print('\n  8. One call, alone, on a ring of six: channels seized 1.5 s after the handset is lifted.')
+    for label, straps in (('one link strapped', [('x05', 'x00')]), ('NO strap', ())):
+        lk, ln, st, code = shape(ring_links(6, 6), straps)
+        sim = Net(lk, ln, leave=1.0, seed=2, strapped=st)
+        sim.at(0.0, sim.arrive, code['x00'])
+        sim.run(1500.0)
+        print(f'     {label:20s} {sum(p.used for p in sim.chan.values()):3d} of {sum(p.n for p in sim.chan.values())}')
+    print('     An unstrapped ring sends every flood round and round until the links are full, and holds them')
+    print('     until the code is dialled: about two seconds of a whole ring for every call that leaves.')
+
+TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):

@@ -29,7 +29,7 @@ TANDEM -- N codecs of mf8-spec 12.1 in analog tandem, 7 talkers x 12 s.
     ... through a transit exchange                         2      1
   64 kbps data                                        cannot      0
 
-  [tandem: 467 s]
+  [tandem: 88 s]
 
 FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8 blocks.
   2048 frames a run, random data on every fitted port.
@@ -74,7 +74,7 @@ FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8
   8. A tie block: highway 7 of group X crossed to highway 7 of group Y, same clock, no framer.
      8 junctors, C and A: 0 errors at a delay of exactly 2 frames (one per fabric)
 
-  [fabric: 238 s]
+  [fabric: 51 s]
 
 CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.
   00 idle (never fitted), 01 dial tone, 02 cannot-complete tone, 03-05 registers; subscribers 20-77.
@@ -607,7 +607,77 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
                  10         10    1.33          2      52.30                  8.58         48.43         40.48
                  10         10    1.33          3      17.34                  3.79         14.29          8.99
 
-  [calls: 166 s]
+  19. The minimum exchange (mvp-ex.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.
+      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;
+      then 20 dials 0 (no operator), 9 (no outside line), 25 (an empty slot) and 20 (itself).
+         0.000  20 hears silence, free
+         0.000  21 hears silence, free
+         0.106  marker: register 03 -> 20, dial tone from nowhere
+         0.106  20 hears silence
+         1.988  marker: 20 <-> 21
+         1.988  21 hears voice 20
+         1.989  20 hears ringback
+         1.989  21 hears voice 20, is being rung
+         3.488  20 hears voice 21
+         3.488  21 hears voice 20
+         6.000  20 hears silence
+         6.266  port 21 releases itself (M fell)
+         6.266  20 hears ringback
+         6.266  21 hears silence, is being rung, free
+         6.267  20 hears silence
+         6.267  21 hears silence, free
+         6.284  port 20 releases itself (E fell)
+         6.284  20 hears silence, free
+         6.290  marker: register 03 -> 20, dial tone from nowhere
+         6.290  20 hears silence
+         7.246  port 03 releases itself (E fell)
+         7.267  port 20 releases itself (M fell)
+         7.267  20 hears silence, free
+         8.002  marker: register 03 -> 21, dial tone from nowhere
+         8.002  21 hears silence
+        10.788  marker: 21 <-> 20
+        10.788  20 hears voice 21
+        10.789  20 hears voice 21, is being rung
+        10.789  21 hears ringback
+        12.288  20 hears voice 21
+        12.288  21 hears voice 20
+        15.000  20 hears silence
+        15.266  port 21 releases itself (M fell)
+        15.266  20 hears ringback
+        15.266  21 hears silence, is being rung, free
+        15.267  20 hears silence
+        15.267  21 hears silence, free
+        15.284  port 20 releases itself (E fell)
+        15.284  20 hears silence, free
+        15.290  marker: register 03 -> 20, dial tone from nowhere
+        15.290  20 hears silence
+        16.746  port 03 releases itself (E fell)
+        16.767  port 20 releases itself (M fell)
+        16.767  20 hears silence, free
+        18.002  marker: register 03 -> 20, dial tone from nowhere
+        18.002  20 hears silence
+        19.888  marker: 20 -> cannot-complete (no free class 2)
+        21.367  port 20 releases itself (M fell)
+        21.367  20 hears silence, free
+        21.506  marker: register 03 -> 20, dial tone from nowhere
+        21.506  20 hears silence
+        23.288  marker: 20 -> cannot-complete (no free class 3)
+        24.767  port 20 releases itself (M fell)
+        24.767  20 hears silence, free
+        25.002  marker: register 03 -> 20, dial tone from nowhere
+        25.002  20 hears silence
+        27.288  marker: 20 -> cannot-complete (25 is unequipped)
+        28.767  port 20 releases itself (M fell)
+        28.767  20 hears silence, free
+        29.002  marker: register 03 -> 20, dial tone from nowhere
+        29.002  20 hears silence
+        31.788  marker: 20 -> cannot-complete (20 busy)
+        33.267  port 20 releases itself (M fell)
+        33.267  20 hears silence, free
+     end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 18 ms;  overheard another call 0 ms
+
+
+  [calls: 62 s]
 
 ANNOUNCE -- a recorded message as a ROM of CVSD bits: no codec on the card.
   message 4.0 s + 0.25 s of silence each end = 288000 bits = 36000 bytes (crc32 020b1b95); 8 kB a second, so 8 s fills a 64 kB part.
@@ -632,7 +702,7 @@ ANNOUNCE -- a recorded message as a ROM of CVSD bits: no codec on the card.
      2.2 s                        -33.5                    0.0
      3.0 s                        -75.7                    0.0
 
-  [announce: 6 s]
+  [announce: 5 s]
 
 ALINE -- digits as serial characters on A: start, data bits, stop; seized is mark.
   A is sampled once a superframe (8 kHz) and crosses each trunk through a 2 ms RC and a Schmitt gate.
@@ -727,58 +797,444 @@ FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and
      keypad                 4              0.000          0.032   0.032           0.000    0.023   0.023
 
   5. No sender: the junctors listen to the CALLER from the first digit, and his own remaining digits
-     go down the flood live.  The first digit is the district's, the same at every exchange flooded, so
-     nobody needs it again.  What must hold: every monitor is ready before his next digit begins.
-      hops |  dial: ready after his last pulse, ms  margin at 500 / 800 ms between digits |  keypad: ready after key release, ms  margin at a 200 ms gap
-         1 |                                   265                              235 / 535 |                                    9                     191
-         3 |                                   279                              221 / 521 |                                   23                     177
-         7 |                                   307                              193 / 493 |                                   51                     149
-     A monitor that is not ready refuses to claim (128 ms of make not seen; or a tone already present):
-     the call fails and is redialled; it is never a wrong number.
-     Post-dial delay to exchange 23: dial 133 ms after his last pulse, against 493 with a sender; keypad: connected 42 ms into the last tone.
+     go down the flood live.  The first digit is shared by everything the flood can reach, so nobody needs
+     it again.  What must hold: the whole flood is up before his next digit begins.  The origin makes sure:
+     it abandons a call whose next break comes within 128 ms of its seizure (monitor, below).
+     Ready 258 ms after his last pulse = digit recognised 128 + seizure 2 + guard 128, whatever the hop count.
+      hops  the flood itself takes, ms  at a slow marker, 10 ms a hop  inside the guard
+         1                           7                             12              True
+         3                          21                             36              True
+         7                          49                             84              True
+        10                          70                            120              True
+     Margin for a dial: 242 ms at 500 ms between digits, 542 ms at 800.  A caller who beats it is
+     abandoned to cannot-complete: a failed call, never a wrong number.
+     Post-dial delay to the third exchange: 133 ms after his last pulse, against 493 with a sender.
 
-  6. Live, no sender: 2144 dials 2 3 5 5.  The origin acts on the first digit; exchange 23 on the second.
+  6. Live, no sender: 2144 dials 2 3 5 5.  The origin bank acts on the first digit; bank 23 on the second.
      2 3 5 5, 800 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          2            1160 origin 21: seize the flood                1439               1960        521
+          2            1160 origin 21: seize the flood                1418               1960        542
           3            2220 -                           
           5            3480 -                           
           5            4740 -                           
-     the far phone rings 133 ms after the last pulse;  smallest margin 521 ms
+     the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
 
      2 3 5 5, 500 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          2            1160 origin 21: seize the flood                1439               1660        221
+          2            1160 origin 21: seize the flood                1418               1660        242
           3            1920 -                           
           5            2880 -                           
           5            3840 -                           
-     the far phone rings 133 ms after the last pulse;  smallest margin 221 ms
+     the far phone rings 133 ms after the last pulse;  smallest margin 242 ms
 
-  7. Live, no sender: 1 8 3 2 3 5 5 -- long distance.  Each digit is acted on by one level, which patches
-     the call into the next flood before the following digit.  Area codes begin with 8 or 9, which no
-     exchange digit can be (they are 1-7 pulses, or ten), so a monitor knows a toll call by its first digit.
-     1 8 3 2 3 5 5, 800 ms between digits
+  7. Live, no sender, out of the exchange: 1, then 8 for another exchange of this area or 9 for another
+     area.  Each digit is acted on by one level, which patches the call into the next flood before the
+     following digit.  8 and 9 can never be a bank digit (that is 1-7 pulses, or ten), so a monitor
+     knows such a call by the first digit it hears.
+     1 8 3 1 4 7  (exchange 3, bank 1, line 47), 800 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          1            1060 origin: not my district: seize              1339               1860        521
-          8            2620 district toll gateway: claim              2892               3420        528
-          3            3680 area 83 gateway: claim                    3952               4480        528
-          2            4640 district 2 gateway: claim                 4919               5440        521
-          3            5700 exchange 23: claim                        5958               6500        542
-          5            6960 -                           
-          5            8220 -                           
-     the far phone rings 133 ms after the last pulse;  smallest margin 521 ms
+          1            1060 origin bank 21: not a home call: seize              1318               1860        542
+          8            2620 exchange 2's gateway bank: claim, onto MF8              2878               3420        542
+          3            3680 exchange 3's gateway bank: claim, into its ties              3938               4480        542
+          1            4540 bank 31: claim                            4798               5340        542
+          4            5700 -                           
+          7            7160 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
 
-     1 8 3 2 3 5 5, 500 ms between digits
+     1 8 3 1 4 7  (exchange 3, bank 1, line 47), 500 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          1            1060 origin: not my district: seize              1339               1560        221
-          8            2320 district toll gateway: claim              2592               2820        228
-          3            3080 area 83 gateway: claim                    3352               3580        228
-          2            3740 district 2 gateway: claim                 4019               4240        221
-          3            4500 exchange 23: claim                        4758               5000        242
-          5            5460 -                           
-          5            6420 -                           
-     the far phone rings 133 ms after the last pulse;  smallest margin 221 ms
+          1            1060 origin bank 21: not a home call: seize              1318               1560        242
+          8            2320 exchange 2's gateway bank: claim, onto MF8              2578               2820        242
+          3            3080 exchange 3's gateway bank: claim, into its ties              3338               3580        242
+          1            3640 bank 31: claim                            3898               4140        242
+          4            4500 -                           
+          7            5660 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 242 ms
+
+     1 9 5 3 1 4 7  (area 5, exchange 3, bank 1, line 47), 800 ms between digits
+      digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
+          1            1060 origin bank 21: not a home call: seize              1318               1860        542
+          9            2720 exchange 2's gateway bank: claim, onto MF8              2978               3520        542
+          5            3980 area 5's gateway: claim, into its area              4238               4780        542
+          3            5040 exchange 3's gateway bank: claim, into its ties              5298               5840        542
+          1            5900 bank 31: claim                            6158               6700        542
+          4            7060 -                           
+          7            8520 -                           
+     the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
 
 
   [flood: 0 s]
+
+MONITOR -- which rules keep a live flood from ever claiming a wrong number.
+  A chain: an origin and 7 exchanges whose exchange digits are 1..7.  A dial at 10 pps +-10 %, 60/40; the
+  trigger digit, the exchange digit (1-7, or ten pulses for an exchange that is not there) and one more.
+  The origin seizes 130 ms after the trigger's last pulse; each exchange patches the seizure onward 3-10 ms
+  after its M rises; A crosses every hop through the trunk's A path (aline 1).  A claim cuts the onward patch.
+  1500 calls a row.  FALSE = an exchange other than the one dialled claimed the call.
+
+  a monitor counts                              origin guard  pause between digits  line BER |  right %  no claim %  FALSE
+  from whenever it attaches, after 128 ms of make          none            140-900 ms     0e+00 |     49.5        44.1     97
+  from whenever it attaches, after 128 ms of make          none            450-900 ms     0e+00 |     68.2        29.9     29
+  only a seizure whose rise it saw                      none            140-900 ms     0e+00 |     81.9        17.9      4
+  only a seizure whose rise it saw                      none            450-900 ms     0e+00 |     81.5        18.5      0
+  from whenever it attaches, after 128 ms of make        128 ms            140-900 ms     0e+00 |     49.9        47.7     36
+  from whenever it attaches, after 128 ms of make        128 ms            450-900 ms     0e+00 |     70.4        28.9     11
+  only a seizure whose rise it saw                    128 ms            140-900 ms     0e+00 |     70.8        29.2      0
+  only a seizure whose rise it saw                    128 ms            140-900 ms     1e-02 |     71.4        28.6      0
+  only a seizure whose rise it saw                    128 ms            450-900 ms     0e+00 |     83.7        16.3      0
+  only a seizure whose rise it saw                    128 ms            450-900 ms     1e-02 |     82.6        17.4      0
+
+  "No claim" is the safe failure: the origin times out and returns cannot-complete.  In the rows where a
+  monitor must have seen the rise, one monitor in five was busy at the seizure; with the origin guard, a caller
+  whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse
+  register can read (register.md 3.2): below it two digits run together, flood or no flood.
+
+  How many monitors a trunk block needs: one is wanted for ~1.1 s by every call in the district (flood 3).
+   calls an hour in the district  erlang |  1 busy %  2 busy %  3 busy %
+                             150   0.046 |      4.38      0.10      0.00
+                             576   0.176 |     14.97      1.30      0.08
+                            1500   0.458 |     31.43      6.72      1.02
+
+  [monitor: 103 s]
+
+TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for its first half.
+  Every delay in every trial drawn on its own between 0.35 x typical and the data-sheet maximum
+  (74HC, 4.5 V, -40..85 C); 400000 trials; the figure is the WORST seen.  Times from the start of the cell.
+
+  1. A highway bit at a listener's capture flip-flop: card or RBT mux -> commutator -> driver -> mainboard
+     -> the listening block's receiver -> the port's highway select.
+       valid by    252 ns        (typical 165)
+
+  2. The capture clock: a '138 enabled while HCLK is low, addressed by the slot count DELAYED A QUARTER
+     CELL, so its address only ever moves while it is disabled; the port's '151 picks one line, W clocks.
+       address settled    368 ns before the enable, and moves    415 ns after the disable
+       capture clock rises at    994 - 1099 ns
+       set-up at the flip-flop    752 ns;  hold    927 ns
+
+  3. The same decoder addressed by the count as it stands: at the turn of the cell the new address can
+     arrive before the disable does, and the NEXT port's line pulses low with nothing settled.
+       in 9.6 % of trials; wider than 8 ns in 4.4 %; worst 45 ns.  Typical parts: -18 ns, no pulse.
+       It is only a hazard across the spread, which is exactly the kind not to build on.
+
+  4. No re-timing flip-flop.  Every capture is at the middle of some cell, so nothing a card is given
+     changes within half a cell of the frame edge, where every card samples (RX_CLK = TX_CLK here).
+       a source in slot 7: C_RX settled    820 ns before the card samples
+       a source in slot 0: C_RX moves      979 ns after it
+     A bit sent in frame f is sampled at the edge that begins f+1 whatever the two slots: one frame,
+     as `fabric` 1 measured, which already models the card as sampling at that edge.
+
+  5. The economy form: C in the first half of the cell and A in the second on ONE highway wire, captured
+     on the two edges of a strobe that is high for the middle half (the '151 gives both senses).
+       C: set-up    256 ns, hold    390 ns;   A: set-up    293 ns, hold    423 ns
+
+  [timing: 0 s]
+
+CONFER -- a conference bridge with no codec in it.  CVSD bits cannot be added, but they can be switched:
+  each leg watches its caller's bits for speech, one leg holds the floor, and every other leg sends its
+  caller the floor-holder's bits as they stand; the holder's own caller hears FILL.
+  Speech detector: runs of three equal bits counted over a 16 ms window (1024 bits); "spoke" = the count
+  reached a threshold.  No decoder, no RC: a shift register, two gates, a counter.
+
+  1. Windows reaching the threshold, % of all 16 ms windows.  Speech: talkers 1-4, 12 s each with
+     their own pauses, plus room noise 45 dB below nominal speech; for speech the % of windows in which the
+     talker's own 16 ms rms is within 30 dB of nominal is given alongside, as what "talking" means.
+     source                                   4 or more   8 or more  16 or more  32 or more   talking
+     speech +0 dB re nominal                       69.0        66.0        60.4        50.2      73.5
+     speech -10 dB re nominal                      52.7        46.5        37.8        23.5      64.1
+     speech -20 dB re nominal                      27.9        19.8        10.0         2.5      43.9
+     speech -30 dB re nominal                       4.3         1.4         0.4         0.0      21.7
+     room noise alone, -20 dB                    100.00      100.00       99.97       16.70
+     room noise alone, -30 dB                     34.43        0.10        0.00        0.00
+     room noise alone, -40 dB                      0.00        0.00        0.00        0.00
+     FILL (an idle leg)                            0.00        0.00        0.00        0.00
+     -> threshold 8: a counter's Q3.  Room noise 30 dB down reaches it once in a thousand windows, 40 dB
+        down never; speech 20 dB down reaches it in a window in five, which the hangover (2) holds between.
+
+  2. Three callers, 14 s, room noise 45 dB down in every microphone.  A speaks 0.5-4.5 s; B says "mm-hm"
+     at 2.6-3.0 s while A talks, then answers at 4.6 s, 100 ms after A stops, until 8.5 s; C speaks
+     9.0-13.0 s, and A talks over C from 10.5 to 12.0 s.  Legs in slot order A, B, C.
+
+     "switched" is the change of floor against the word's onset, the first sample within 20 dB of nominal:
+     negative is before it.
+      hangover  B's mm-hm heard   B's answer: switched   C's start: switched  A over C heard  floor changes
+         64 ms               0%                   7 ms                 -8 ms              0%              3
+        128 ms               0%                   7 ms                 -8 ms              0%              3
+        256 ms               0%                 135 ms                 -8 ms              0%              3
+        512 ms               0%                 423 ms                 -8 ms              0%              3
+
+     At 128 ms, every change of floor.  The listener's decoder was following the old holder (or FILL); from
+     the switch it follows the new one.  Compared with the new holder's bits decoded all along:
+           at   floor     switched  peak, heard / all along  error below -30 dB after
+       0.544s  - -> A        -2 ms                   0.0 dB                    0.0 ms
+       4.608s  A -> B         7 ms                  -1.0 dB                    3.8 ms
+       8.992s  B -> C        -8 ms                  -0.0 dB                    0.0 ms
+
+     A:  71.9 % of its speech carried; what the others heard against its own decode, 20 ms clear of a switch:  97.5 dB
+     B:  90.5 % of its speech carried; what the others heard against its own decode, 20 ms clear of a switch:  84.2 dB
+     C: 100.0 % of its speech carried; what the others heard against its own decode, 20 ms clear of a switch: 243.3 dB
+     exch/out/confer_heard.wav is what a caller who does not hold the floor hears.
+
+  3. Two at once.  The holder talks for 5 s; from 1 s to 4 s another caller talks over it.  Every ordered pair
+     of talkers 1-7, the interrupter's speech taken from 0, 3 and 6 s into its recording: 126 cases.
+     Counted over the 3 s of double talk, from the detector's windows alone (the bits pass as in 2).
+      hangover  floor changes, mean  most  interrupter carried  holder cut off
+         64 ms                  3.6     8                  61%             34%
+        128 ms                  2.2     5                  54%             38%
+        256 ms                  1.1     3                  41%             34%
+        512 ms                  0.5     3                  26%             28%
+
+  4. The switch itself.  The listener's decoder has followed the old holder and is switched, at a window's
+     end, to the new one's bits; against the new holder decoded all along.  400 switches of talkers 1-7 each way:
+       as the bridge does it   the old holder's detector silent for the 128 ms before; the new holder spoke
+       if it did not wait      both spoke in the window that ends at the switch
+                                                                   median     95 %    worst
+     as the bridge does it    error below -30 dB re nominal after  16.1 ms  24.7 ms  27.6 ms
+                              largest error, re nominal           -1.4 dB  13.0 dB  18.6 dB
+                              peak in 20 ms, heard / all along    -0.8 dB  -0.1 dB   3.6 dB
+     if it did not wait       error below -30 dB re nominal after  14.4 ms  22.0 ms  26.4 ms
+                              largest error, re nominal            1.0 dB  12.7 dB  17.8 dB
+                              peak in 20 ms, heard / all along     0.1 dB  14.0 dB  26.2 dB
+
+  [confer: 72 s]
+
+SS0 -- the number on a common channel: one SEIZE a link, forward only; A carries everything else.
+  Arithmetic from the constants of `flood`, not a simulation of the gates:
+    a message is 18 bits at 1000 baud, 18 ms, and waits up to 1 ms for the TICK;
+    a hop hunts onward in 5 ms (a flood hop, 7 ms, less its A path) and writes in 2 ms:
+    26 ms a hop.  Register ID 128 ms; A rise 1.5 ms and fall 2.0 ms a hop; release 256 ms.
+
+  1. Post-dial delay, the caller's last pulse to ringback, by hops from the origin to the owner.
+      hops  live flood ms   SS0 ms
+         1            132      160
+         2            133      187
+         3            134      214
+         4            136      242
+         5            138      270
+         6            139      297
+         7            140      324
+
+  2. Trunk held by calls that do not use it, erlangs on each link of 21 = 22 = 23 = 24.  Every exchange
+     48 lines x 3 calls an hour, the network share spread evenly over the other three, rotary dials.
+     Every exchange originates here, where `flood` 4 sent every call from 21.
+     20% of calls leave
+         link  flood: local calls  network calls   total     SS0
+        21-22               0.162          0.021   0.183   0.002
+        22-23               0.162          0.014   0.176   0.002
+        23-24               0.162          0.019   0.181   0.002
+     50% of calls leave
+         link  flood: local calls  network calls   total     SS0
+        21-22               0.101          0.053   0.154   0.006
+        22-23               0.101          0.034   0.135   0.004
+        23-24               0.101          0.049   0.150   0.006
+
+  3. A message against line errors.  Each x sample (one line bit a superframe) wrong with probability p,
+     independently.  A data bit is the majority of the middle 1, 3 or 5 of its 8 samples; odd parity
+     over the 16 data bits; a bad stop bit discards.  Per million messages: LOST, discarded, so the call
+     fails; WRONG, an even number of data bits wrong and accepted -- an upper bound on a wrong number.
+       line p  samples  bit error  lost / 1e6  wrong / 1e6
+        1e-04        1    1.0e-04      1697.4       1.1982
+        1e-04        3    3.0e-08         0.5       0.0000
+        1e-04        5    1.0e-11         0.0       0.0000
+        1e-03        1    1.0e-03     16746.5     118.2143
+        1e-03        3    3.0e-06        51.0       0.0011
+        1e-03        5    1.0e-08         0.2       0.0000
+        1e-02        1    1.0e-02    146720.1   10336.6783
+        1e-02        3    3.0e-04      5043.3      10.6090
+        1e-02        5    9.9e-06       167.4       0.0116
+        3e-02        1    3.0e-02    334786.5   69387.4872
+        3e-02        3    2.6e-03     43234.8     807.5089
+        3e-02        5    2.6e-04      4368.9       7.9566
+
+  4. The bearer.  Erlangs a direction carries at 1 % blocking (Erlang B), by voice channels left:
+      channels  erlang
+             5    1.36
+             6    1.91
+            10    4.46
+            12    5.88
+     The S lane's x bit costs no channel.  Channel 6 given over costs 6 -> 5 a link, 12 -> 10 a doubled direction.
+
+  [ss0: 0 s]
+
+NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, the claim,
+  the registers and the channels.  Two hubs of four directions, three leaves each; 12 channels
+  between the hubs and 6 to every leaf; 30 lines at a hub, 48 at a leaf, 348 in all.
+  A line makes 3 calls an hour and holds one 48 s.  Dial 10 pps, 0.5-0.9 s between digits.
+  Local calls are h s and touch no trunk; the rest are 1 e b h s and open a flood.
+  Bursty is the same mean in bursts: 30 s at 8x the rate, every 300 s, an office at a shift change.
+
+  1. What a caller waits for.  Dial tone is the register; ringback is everything.
+                               calls  waited for              dial tone, ms        lift to ringback, s
+                               an hr  a register    mean    95 %    99 %   worst    local  network    worst
+  smooth, 30 % leaving          1053        0.0 %     6.1     9.5     9.9    1119     2.33     4.82     6.40
+  bursty, 30 % leaving          1047        1.2 %    14.7     9.7    10.0    5601     2.34     4.82     9.05
+  bursty, 50 % leaving          1047        1.5 %    19.1     9.7   248.8    4190     2.35     4.82     8.58
+  bursty, 30 %, 2 registers     1047        6.8 %    78.7   180.6  2123.6    7404     2.39     4.89    13.03
+  bursty, 30 %, 1 register      1047       34.3 %   966.7  5523.7 13247.9   35919     3.25     5.71    38.21
+
+  2. What failed, per 1 000 calls.  A caller turned away waits a scan and asks again, so
+     only the last five columns are calls that did not go through.
+                               no trunk  no monitor  no resolver  no claim  called busy
+  smooth, 30 % leaving              0.2         0.0          0.3       0.2         75.0
+  bursty, 30 % leaving              3.3         0.0          0.3       1.8         96.3
+  bursty, 50 % leaving             19.3         0.2          0.8       7.9         84.8
+  bursty, 30 %, 2 registers         2.8         0.0          0.1       1.0         93.3
+  bursty, 30 %, 1 register          1.9         0.0          0.2       0.9         93.7
+
+  3. The links: erlangs, and the calls that found no free channel.
+                                   a leaf link, 6 ch      hub to hub, 12 ch   flood held for nothing
+  smooth, 30 % leaving             1.25 E    0.13 %      2.57 E    0.00 %          1.98 s a leg
+  bursty, 30 % leaving             1.26 E    0.25 %      2.46 E    0.00 %          1.98 s a leg
+  bursty, 50 % leaving             1.87 E    2.12 %      3.78 E    0.12 %          1.99 s a leg
+  bursty, 30 %, 2 registers        1.24 E    0.59 %      2.45 E    0.00 %          1.98 s a leg
+  bursty, 30 %, 1 register         1.34 E    0.26 %      2.61 E    0.00 %          1.98 s a leg
+
+  4. The pools, erlangs and the % of the calls that wanted one and found none free.
+                                  hub resolvers hub registers  leaf registers     leaf monitors
+     A register turned away is a caller waiting a scan, counted in 1; the others are calls lost.
+  smooth, 30 % leaving           0.14 E   0.1 %       0.08 E          0.13 E    0.09 E   0.0 %
+  bursty, 30 % leaving           0.13 E   0.1 %       0.08 E          0.13 E    0.09 E   0.0 %
+  bursty, 50 % leaving           0.22 E   0.1 %       0.09 E          0.14 E    0.14 E   0.0 %
+  bursty, 30 %, 2 registers      0.14 E   0.0 %       0.07 E          0.13 E    0.09 E   0.0 %
+  bursty, 30 %, 1 register       0.14 E   0.0 %       0.08 E          0.13 E    0.09 E   0.0 %
+
+  5. The 5 s rule (exch-network.md 4).  1 % of network callers dial the key and stop.
+                               they were  trunks held, s   without the rule
+  smooth, 30 % leaving                42            5.26              10.26
+  bursty, 30 % leaving                28            5.26              10.26
+  bursty, 50 % leaving                55            5.26              10.26
+  bursty, 30 %, 2 registers           33            5.26              10.26
+  bursty, 30 %, 1 register            26            5.26              10.26
+
+  6. Against the arithmetic of exch-network.md 5, with these codes' own floods (0.19 E a link):
+     at 30 % leaving a leaf link is predicted 1.28 E and 0.17 % blocking.  **Bursts leave
+     the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.
+
+  [net: 6 s]
+
+TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of
+  48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, 2.73 s over all 64
+  (exch-network.md 4); each shape is worked with its own codes, the backbone's from 00-17.  An exchange
+  faces four directions at most and fits eight trunk groups at most; it keeps 48 lines with two
+  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as exch-network.md 5
+  and `net` agree it may be; "pair" is the worst end-to-end loss between two exchanges, "lost" the mean.
+
+  1. Chains, 30 % of calls leaving.  "spread" is the flood crossing the network at a slow marker,
+     against the origin's 128 ms guard; mon and res are the monitors a block and resolvers a hub for 0.5 %.
+                                     exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
+  chain of 2, 6 channels                2     96  0.05E   1.20 E on  6 ch   0.13%   0.13%   0.13%  1.00    1 hp   12 ms    2    0
+  chain of 3, 6 channels                3    144  0.08E   1.23 E on  6 ch   0.14%   0.28%   0.19%  1.33    2 hp   24 ms    2    0
+  chain of 4, 6 channels                4    192  0.11E   1.64 E on  6 ch   0.53%   0.84%   0.51%  1.67    3 hp   36 ms    2    0
+  chain of 5, 6 channels                5    240  0.14E   1.86 E on  6 ch   0.91%   2.15%   1.22%  2.00    4 hp   48 ms    3    0
+  chain of 6, 6 channels                6    288  0.17E   2.24 E on  6 ch   1.89%   4.67%   2.55%  2.33    5 hp   60 ms    3    0
+  chain of 8, 6 channels                8    384  0.24E   2.87 E on  6 ch   4.52%  15.03%   7.90%  3.00    7 hp   84 ms    3    0
+  chain of 10, 6 channels              10    480  0.29E   3.49 E on  6 ch   8.17%  32.50%  17.03%  3.67    9 hp  108 ms    3    0
+  chain of 11, 6 channels              11    528  0.32E   3.77 E on  6 ch  10.10%  43.07%  22.81%  4.00   10 hp  120 ms    3    0
+  chain of 12, 6 channels              12    576  0.35E   4.12 E on  6 ch  12.57%  53.93%  29.08%  4.33   11 hp  132 ms    3    0
+  chain of 2, 12 channels               2     96  0.05E   1.20 E on 12 ch   0.00%   0.00%   0.00%  1.00    1 hp   12 ms    2    0
+  chain of 3, 12 channels               3    132  0.07E   1.15 E on 12 ch   0.00%   0.00%   0.00%  1.36    2 hp   24 ms    2    0
+  chain of 4, 12 channels               4    168  0.09E   1.44 E on 12 ch   0.00%   0.00%   0.00%  1.71    3 hp   36 ms    2    0
+  chain of 5, 12 channels               5    204  0.12E   1.59 E on 12 ch   0.00%   0.00%   0.00%  2.06    4 hp   48 ms    2    0
+  chain of 6, 12 channels               6    240  0.14E   1.87 E on 12 ch   0.00%   0.00%   0.00%  2.40    5 hp   60 ms    3    0
+  chain of 8, 12 channels               8    312  0.19E   2.33 E on 12 ch   0.00%   0.00%   0.00%  3.08    7 hp   84 ms    3    0
+  chain of 10, 12 channels             10    384  0.23E   2.79 E on 12 ch   0.00%   0.01%   0.00%  3.75    9 hp  108 ms    3    0
+  chain of 11, 12 channels             11    420  0.25E   3.00 E on 12 ch   0.01%   0.02%   0.01%  4.09   10 hp  120 ms    3    0
+  chain of 12, 12 channels             12    456  0.27E   3.26 E on 12 ch   0.01%   0.04%   0.02%  4.42   11 hp  132 ms    3    0
+     A chain of 12 is 11 hops: 132 ms at a slow marker, outside the guard.
+
+  2. Hubs.  A hub faces four directions; a tandem gives all eight groups to trunks and keeps 12 lines.
+                                     exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
+  star: hub and 4 spokes, 6 ch          5    228  0.12E   1.24 E on  6 ch   0.15%   0.29%   0.24%  1.63    2 hp   28 ms    2    2
+  star: tandem and 4 spokes, 12 ch      5    204  0.11E   1.15 E on 12 ch   0.00%   0.00%   0.00%  1.71    2 hp   28 ms    2    2
+  two hubs, six leaves (net)            8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.27%  2.14    3 hp   44 ms    3    3
+  tandem, 4 chains of 2, 12 ch          9    372  0.22E   1.29 E on  6 ch   0.17%   0.35%   0.16%  2.56    4 hp   52 ms    3    3
+  tandem, 4 chains of 3, 12 ch         13    516  0.31E   1.35 E on  6 ch   0.22%   0.44%   0.15%  3.43    6 hp   76 ms    3    3
+  tandem, 4 chains of 4, 12 ch         17    660  0.41E   1.44 E on  6 ch   0.30%   0.64%   0.19%  4.29    8 hp  100 ms    4    4
+  tandem, 4 chains of 5, 12 ch         21    804  0.49E   1.52 E on  6 ch   0.38%   1.03%   0.36%  5.14   10 hp  124 ms    4    4
+  tandem, 4 chains of 4, 12 ch all     17    636  0.39E   3.35 E on 12 ch   0.01%   0.04%   0.03%  4.28    8 hp  100 ms    4    4
+  tandem, 4 chains of 5, 12 ch all     21    780  0.48E   4.09 E on 12 ch   0.08%   0.21%   0.16%  5.12   10 hp  124 ms    4    4
+  tandem, 4 chains of 6, 12 ch all     25    924  0.58E   4.84 E on 12 ch   0.27%   0.88%   0.63%  5.96   12 hp  148 ms    4    4
+  tandem, 4 chains of 8, 12 ch all     33   1212  0.78E   6.33 E on 12 ch   1.56%   6.53%   4.58%  7.63   16 hp  196 ms    5    5
+  tree: tandem, 4 sub-hubs, 12 leaves   17    708  0.41E   1.49 E on  6 ch   0.34%   0.74%   0.56%  3.07    4 hp   60 ms    4    4
+    the same, 12 ch to every leaf      17    636  0.37E   3.33 E on 12 ch   0.01%   0.03%   0.02%  3.15    4 hp   60 ms    4    4
+  tree: ... and 24 leaves (29)         29   1140  0.71E   5.94 E on 12 ch   1.07%   3.50%   2.26%  4.15    6 hp   84 ms    4    4
+    the same, 12 ch to every leaf      29   1068  0.66E   5.56 E on 12 ch   0.71%   1.41%   1.08%  4.18    6 hp   84 ms    4    4
+  tree: ... and 31 leaves (36)         36   1320  0.83E   7.40 E on 12 ch   3.58%   7.07%   3.96%  4.81    8 hp  108 ms    5    5
+  three tandems, 5 branches, 18 lv     26    936  0.57E   5.24 E on 12 ch   0.47%   0.52%   0.24%  4.34    7 hp  104 ms    4    4
+  three tandems, 5 branches, 28 lv     36   1296  0.81E   5.91 E on 12 ch   1.04%   2.38%   1.57%  5.02    8 hp  116 ms    5    5
+
+  3. The same shapes as fewer or more calls leave home.
+                                     exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
+     20 % leaving
+  chain of 5, 6 channels                5    240  0.09E   1.24 E on  6 ch   0.15%   0.34%   0.20%  2.00    4 hp   48 ms    2    0
+  chain of 8, 12 channels               8    312  0.13E   1.55 E on 12 ch   0.00%   0.00%   0.00%  3.08    7 hp   84 ms    3    0
+  two hubs, six leaves (net)            8    348  0.13E   0.86 E on  6 ch   0.02%   0.05%   0.04%  2.14    3 hp   44 ms    3    3
+  tandem, 4 chains of 5, 12 ch all     21    780  0.32E   2.72 E on 12 ch   0.00%   0.01%   0.00%  5.12   10 hp  124 ms    3    3
+  tree: tandem, 4 sub-hubs, 12 leaves   17    708  0.28E   0.99 E on  6 ch   0.05%   0.10%   0.08%  3.07    4 hp   60 ms    3    3
+    the same, 12 ch to every leaf      17    636  0.25E   2.22 E on 12 ch   0.00%   0.00%   0.00%  3.15    4 hp   60 ms    3    3
+     50 % leaving
+  chain of 5, 6 channels                5    240  0.23E   3.11 E on  6 ch   5.82%  14.12%   8.04%  2.00    4 hp   48 ms    3    0
+  chain of 8, 12 channels               8    312  0.32E   3.88 E on 12 ch   0.05%   0.13%   0.07%  3.08    7 hp   84 ms    3    0
+  two hubs, six leaves (net)            8    348  0.33E   2.14 E on  6 ch   1.59%   3.26%   2.54%  2.14    3 hp   44 ms    3    3
+  tandem, 4 chains of 5, 12 ch all     21    780  0.80E   6.81 E on 12 ch   2.35%   7.35%   5.28%  5.12   10 hp  124 ms    5    5
+  tree: tandem, 4 sub-hubs, 12 leaves   17    708  0.69E   2.48 E on  6 ch   2.73%   7.95%   6.10%  3.07    4 hp   60 ms    4    4
+    the same, 12 ch to every leaf      17    636  0.62E   5.56 E on 12 ch   0.70%   1.40%   1.08%  3.15    4 hp   60 ms    4    4
+
+  4. The largest of each family with no link over 1 %, inside the 64 codes and the 128 ms guard.
+                                     exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
+     20 % leaving
+  chain, 6 ch: 7                        7    336  0.13E   1.67 E on  6 ch   0.57%   1.72%   0.92%  2.67    6 hp   72 ms    3    0
+  chain, 12 ch: 11                     11    420  0.17E   2.00 E on 12 ch   0.00%   0.00%   0.00%  4.09   10 hp  120 ms    3    0
+  star, 6 ch: 4                         5    228  0.08E   0.83 E on  6 ch   0.02%   0.04%   0.03%  1.63    2 hp   28 ms    2    2
+  tandem, 4 chains, 12 ch: 5           21    780  0.32E   2.72 E on 12 ch   0.00%   0.01%   0.00%  5.12   10 hp  124 ms    3    3
+  tree, 12 ch, leaves: 38              43   1572  0.67E   5.87 E on 12 ch   1.00%   1.51%   0.98%  5.35    9 hp  120 ms    4    4
+  three tandems, leaves: 39            47   1692  0.73E   5.42 E on 12 ch   0.60%   1.24%   0.71%  5.76    9 hp  128 ms    5    5
+     30 % leaving
+  chain, 6 ch: 5                        5    240  0.14E   1.86 E on  6 ch   0.91%   2.15%   1.22%  2.00    4 hp   48 ms    3    0
+  chain, 12 ch: 11                     11    420  0.25E   3.00 E on 12 ch   0.01%   0.02%   0.01%  4.09   10 hp  120 ms    3    0
+  star, 6 ch: 4                         5    228  0.12E   1.24 E on  6 ch   0.15%   0.29%   0.24%  1.63    2 hp   28 ms    2    2
+  tandem, 4 chains, 12 ch: 5           21    780  0.48E   4.09 E on 12 ch   0.08%   0.21%   0.16%  5.12   10 hp  124 ms    4    4
+  tree, 12 ch, leaves: 24              29   1068  0.66E   5.56 E on 12 ch   0.71%   1.41%   1.08%  4.18    6 hp   84 ms    4    4
+  three tandems, leaves: 27            35   1260  0.79E   5.86 E on 12 ch   0.98%   2.18%   1.44%  4.96    8 hp  116 ms    5    5
+     50 % leaving
+  chain, 6 ch: none
+  chain, 12 ch: 11                     11    420  0.42E   5.00 E on 12 ch   0.35%   1.33%   0.69%  4.09   10 hp  120 ms    4    0
+  star, 6 ch: none
+  tandem, 4 chains, 12 ch: 4           17    636  0.65E   5.59 E on 12 ch   0.73%   1.94%   1.43%  4.28    8 hp  100 ms    4    4
+  tree, 12 ch, leaves: 12              17    636  0.62E   5.56 E on 12 ch   0.70%   1.40%   1.08%  3.15    4 hp   60 ms    4    4
+  three tandems, leaves: 13            21    756  0.75E   5.80 E on 12 ch   0.93%   2.10%   1.37%  3.95    6 hp   92 ms    5    5
+
+  5. Rings.  A link strapped with n carries calls between its own two ends only (exch-network.md 3.3).
+                                     exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
+  chain of 4, 6 channels                4    192  0.11E   1.64 E on  6 ch   0.53%   0.84%   0.51%  1.67    3 hp   36 ms    2    0
+  ring of 4, one link strapped          4    192  0.11E   1.26 E on  6 ch   0.16%   0.18%   0.10%  1.33    2 hp   24 ms    2    0
+  chain of 6, 6 channels                6    288  0.17E   2.24 E on  6 ch   1.89%   4.67%   2.55%  2.33    5 hp   60 ms    3    0
+  ring of 6, one link strapped          6    288  0.17E   2.01 E on  6 ch   1.23%   2.78%   1.39%  2.07    4 hp   48 ms    3    0
+  chain of 8, 6 channels                8    384  0.24E   2.87 E on  6 ch   4.52%  15.03%   7.90%  3.00    7 hp   84 ms    3    0
+  ring of 8, one link strapped          8    384  0.24E   2.70 E on  6 ch   3.71%  11.87%   5.89%  2.79    6 hp   72 ms    3    0
+  two hubs, six leaves (net)            8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.27%  2.14    3 hp   44 ms    3    3
+    and a strapped leaf-to-leaf link    8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.22%  2.06    3 hp   44 ms    3    3
+
+  6. Run call by call, 12 hours, smooth demand, 30 % leaving, three registers; monitors a block and
+     resolvers a hub three of each unless the row says.  The worst link is the one that refused most.
+                                      calls             worst link   network calls lost / 1 000  hops  flood held  ringback
+                                      an hr                         no trunk  no claim    pools             a leg   network
+  chain of 6, 6 channels                872   2.14 E on  6 ch   1.15%       1.0      18.7      0.3  2.35      2.13 s    4.96 s
+  star: hub and 4 spokes, 6 ch          689   1.30 E on  6 ch   0.16%       1.2       0.8      0.4  1.63      1.96 s    4.80 s
+  two hubs, six leaves (net)           1055   1.18 E on  6 ch   0.13%       1.3       1.3      0.5  2.14      2.05 s    4.88 s
+    and a strapped leaf-to-leaf link   1055   1.18 E on  6 ch   0.13%       0.8       1.9      0.5  2.06      2.05 s    4.88 s
+  tree: tandem, 4 sub-hubs, 12 leaves   2147   1.39 E on  6 ch   0.43%       2.2       4.7      8.4  3.06      2.16 s    4.97 s
+    the same, four of each pool        2147   1.39 E on  6 ch   0.35%       2.6       1.4      0.3  3.05      2.16 s    4.98 s
+  tree, 24 leaves, 12 ch, five         3234   5.14 E on 12 ch   0.55%       0.0       7.2      0.5  4.17      2.32 s    5.12 s
+  three tandems, 28 leaves, five       3906   5.86 E on 12 ch   0.95%       0.0       9.4      0.5  5.00      2.34 s    5.14 s
+  ring of 6, one link strapped          872   1.88 E on  6 ch   0.90%       1.3      10.3      0.3  2.07      2.13 s    4.96 s
+  ring of 6, NO strap                   872   1.66 E on  6 ch   9.71%      67.5      32.3     32.0  1.81      2.14 s    4.97 s
+  ring of 4, NO strap                   580   1.38 E on  6 ch  12.65%      52.0      20.3     35.0  1.34      2.04 s    4.86 s
+
+  7. One call, alone, on a ring of six: channels seized 1.5 s after the handset is lifted.
+     one link strapped      6 of 36
+     NO strap              36 of 36
+     An unstrapped ring sends every flood round and round until the links are full, and holds them
+     until the code is dialled: about two seconds of a whole ring for every call that leaves.
+
+  [topo: 33 s]
 
