@@ -1,32 +1,30 @@
 # The exchange — features are lines
 
-Operator, outside line, tones, recorded announcements, conference, even the
-registers: each is a card in a channel slot with a class mark, and the marker
-reaches it by hunting the class (`exch-marker.md` §3) or by its number. This is
+Operator, outside line, tones, recorded announcements, a radio anyone may
+listen to, a conference: each is a card in a channel slot with a class mark,
+and the marker reaches it by hunting the class (`exch-marker.md` §3) or by its
+number. This is
 how the Bell System built such things — as trunk circuits — except that what is
 switched here is CVSD.
 
 > **Status: proposed.** Measured in simulation: every card's *behaviour as a
-> port* (`exch.py calls`) and the announcement's bit stream and seams
-> (`exch.py announce`); `exch.log` is the run. None of the cards has a circuit
-> yet, and nothing has been on a bench.
+> port* (`exch.py calls`), the announcement's bit stream and seams
+> (`exch.py announce`), and the conference bridge's speech detector, floor and
+> switch (`exch.py confer`); `exch.log` is the run. Sources (§6) and the
+> conference bridge (§7) add two classes, which are **proposed with the class
+> codes of `exch-fabric.md` §3.5 and not yet in `exch-marker.md` or the `calls`
+> model**. None of the cards has a circuit yet, and nothing has been on a bench.
 
 ---
 
-## 1. Register (class 7)
+## 1. The register is not a line
 
-A register is a line too. It sits in a channel slot, the marker points its latch
-at the caller, and it **hears the caller through the ordinary fabric**: his dial
-pulses, on its own `A_RX`. Finding a free register is a class hunt, and that
-hunt is the pool. There is no sender (`exch-network.md` §4).
-
-| | |
-|---|---|
-| Pulses | `register.md` §4 on `A_RX`, without its line-select '151: ≈ 9 packages, all 74HC |
-| DTMF | not fitted. It would be a second writer to the same store (`register.md` §7), good for local calls only |
-| To the marker | a ribbon: digit code, digit count, strobe |
-| Releases | by itself: its E is the caller's hook (`exch-marker.md` §5.1) |
-| Octal | three AND gates on the store's output (`exch-protocol.md` §5) |
+It was, while registers had to hear tones. **All-pulse, a register needs only the
+caller's hook**, and that is on the M highway for the reading: `register.md` §4
+as it stands, its line-select '151 replaced by the marker's kind of probe,
+≈ 10 packages, all 74HC, no port (`exch-marker.md` §4). A DTMF receiver would be a
+second writer to the same store (`register.md` §7) and would need the caller's
+`C` — a port again; it is not fitted.
 
 ---
 
@@ -39,6 +37,9 @@ the marker writes only the listener's latch, and any number may listen.
 
 `RBT`, the ringback bit stream, comes from the same kind of card, which drives a
 backplane line as well as its port (`exch-marker.md` §5).
+
+Dial tone is at port 10 and cannot-complete at 14 (`exch-protocol.md` §5). Both
+are in block 1.
 
 ---
 
@@ -73,18 +74,23 @@ address counter on the right half of `FILL` — one gate — and all three seams
 exact. A doubled bit is the slip of `mf8-backplane.md` §7 and as harmless.
 
 An image cut out of running speech, with no silence round it, starts the far
-decoder cold. The error against the same bits decoded in place peaked between
-−75.7 and −33.2 dB re speech rms at four cut points and was below −30 dB from
-the first sample: with a 1 ms integrator the decoder has almost no memory to be
-wrong about.
+decoder cold. At four cut points the error against the same bits decoded in
+place peaked between −75.7 and −33.2 dB re speech rms, below −30 dB from the
+first sample. Four were too few. The conference bridge's switch (§7.2) is the
+same cold start, measured at 400 instants inside words: the speech fades in over
+16 ms median, 28 ms worst, without a pop. The memory is the syllabic filter's,
+not the 1 ms integrator's. Record the silence.
 
 ---
 
 ## 4. Operator (class 2) and the console
 
-**The operator is a phone** on any line card with the class jumper moved. 0 hunts
-class 2 in fixed order, so a second position and a night announcement are just
-more class-2 cards further along (`exch-marker.md` §3).
+**The operator is a phone at port 04**, on a line card whose word says operator
+(`ex-extensions.md` §2.2). 0 hunts class 2 in fixed order
+from 00, and 04 is the first class-2 port the hunt meets. So a second position
+and a night announcement are just more class-2 cards further along, in any of
+the line slots (`exch-marker.md` §3). The operator is not at 00 because a
+cleared latch listens there (`exch-protocol.md` §5).
 
 **The console is separate, and optional**: a busy-lamp field — '259s and LEDs off
 the M and `BUSY` highways — and keys that drive the marker's control bus by
@@ -110,42 +116,232 @@ tone comes back on `C`, and the caller dials on in band.
 
 ---
 
-## 6. Conference (class 1): meet-me
+## 6. Sources: a port anyone may listen to
 
-A leg card is one slot, one number, one codec pair. It answers when rung and
-stays while its caller does. Neighbouring legs share an analog party bus; each
-leg sends the sum less its own decoder's output. There is no marker logic and no
-recall: **callers dial a leg.** Three callers, three legs: each connects, and
-each leg releases when its caller hangs up (`exch.py calls` 14).
+A radio, a speaking clock, a looping weather message: a card that talks, never
+listens, and may be heard by any number of callers at once. **The fabric already
+does this.** Any number of latches may point at one slot, at no cost and bit for
+bit (`exch.py fabric` 3: 63 ports listening to one). The dial and cannot-complete tones
+are such ports now. The marker's part is one rule, the one it already applies to
+a tone:
 
-This is the one place a codec tandem is paid: `exch-protocol.md` §2's first
-tandem, for every party.
+```
+ the called port is a source   one write: the caller listens to it.
+                               No free test; the source is never BUSY and its latch is never written
+```
+
+`exch-marker.md` §2 does exactly that for classes 5 and 6, so a radio whose word
+says class 6, at 75, is dialled as 75 today. What it lacks is a class of its own: at
+class 6 it would also be hunted as cannot-complete if the card at 14 were
+pulled. **Proposed: one class, *source*, for everything that talks and never
+listens, the two tones included.** The marker reaches dial tone and
+cannot-complete by their fixed addresses, 10 and 14, not by a hunt, so no source
+is ever hunted and the class means only "one write" (`exch-fabric.md` §3.5).
+
+| | |
+|---|---|
+| The card | whatever makes the sound, into one encoder half of `mf8-spec.md` §12.1: a receiver for a radio. A recording needs no codec: §3's ROM player, looping. `A_TX` tied low |
+| A caller | dials its number and hears it at once. It is never rung, because a source listens to nobody and its E is never high. The caller leaves by hanging up, and the source never learns anyone called |
+| How many | no limit. Each listener costs its own latch, which it had anyway. From another exchange, `1 e b h s` as usual: each distant listener holds one trunk channel |
+| `A_TX` low | a listener never sees answer and is never released by the source: a dead radio gives silence, not a cleared call. A source cannot hold M high to say it is alive, because M high on an idle port is a seizure to the scanner |
+| A looping message | callers join mid-message. A message that must start from the beginning for each caller is §3's announcement card at a line class: it answers when rung and takes one caller at a time |
+| A speaking clock | a ROM of words and a time-of-day counter that picks them. That is a card, and none of the exchange's business. The words for 60 minutes do not fit §3's 8 s: a 512 kB part holds 64 s |
 
 ---
 
-## 7. Data and foreign codecs (class 1)
+## 7. Conference: a bridge with no codec in it
+
+**CVSD bits cannot be added.** Summing needs every party decoded, summed and
+encoded again. That is a codec pair on every leg, a codec tandem for every party
+(−4.8 dB, `exch-protocol.md` §2), and every open microphone's noise in the sum.
+The meet-me bridge first written here was that. **Bits can be switched.** One
+party talks at a time. The bridge chooses who, and every other party receives
+that party's bits exactly as sent: no codec, no tandem, and no added noise
+however many legs are open. This is a voice-switched speakerphone, done on the
+bit streams.
+
+### 7.1 How it works
+
+```
+ legs      cards in line slots, class conference, joined by a ribbon: the party bus.  Each is an ordinary
+           port.  Its caller listens to it and it listens to its caller: a two-way connection
+ detector  on the caller's bits: runs of three equal bits, counted over a 16 ms window (TICK / 16).
+           8 or more in a window = the caller SPOKE
+ silent    8 windows, 128 ms, without speaking
+ floor     one leg at a time.  The holder keeps it until it is silent AND another leg has spoken; then the
+           first leg in slot order that spoke takes it.  No holder yet: the first leg to speak
+ bus       DATA  the holder's C_RX, driven by the holder alone      HELD  a leg holds the floor
+           KEEP  the holder is not silent                            ASK   a leg other than the holder spoke
+           PRI   a daisy chain in slot order
+ C_TX      HELD and not mine → DATA;  otherwise FILL.  The holder's own caller hears silence
+ A_TX      = A_RX: a leg answers the moment it is called and drops when its caller does
+```
+
+**Why runs of three.** A CVSD encoder sends three equal bits in a row when its
+step is too small for the signal it follows. The density of those runs is what
+drives the decoder's syllabic filter (the law's run length is 3), so it is the
+loudness of the signal, read from the bits without decoding them. The detector
+is a shift register, two gates and a counter.
+
+**Why the floor stays with the last talker.** The floor passes only when
+someone else talks, so a holder's own next word after a pause is never clipped,
+and a silent bridge does not switch at all. It also protects against echo: a
+listener whose line echoes the holder's voice "speaks" only while the holder
+does, and the floor never passes while the holder is talking. With only one
+direction ever open, there is no loop through two hybrids to sing.
+
+### 7.2 Measured
+
+`exch.py confer`, with talkers of this repository's own test set and room noise
+45 dB below nominal speech in every microphone.
+
+**The detector.** Percentage of 16 ms windows whose count reaches 8:
+
+| | windows reaching 8 | "talking": 16 ms rms within 30 dB of nominal |
+|---|---|---|
+| speech at nominal | 66.0 % | 73.5 % |
+| 10 dB down | 46.5 % | 64.1 % |
+| 20 dB down | 19.8 % | 43.9 % |
+| 30 dB down | 1.4 % | 21.7 % |
+| room noise alone, 20 dB down | **100 %** | |
+| room noise alone, 30 dB down | 0.10 % | |
+| room noise alone, 40 dB down, or `FILL` | 0 | |
+
+**The hangover.** A three-party conversation: B says "mm-hm" while A talks,
+then answers 100 ms after A stops. Separately, all 126 ordered pairs of seven
+talkers, each with one talking over the other for 3 s:
+
+| silent after | B's "mm-hm" heard | B's answer switched, after its onset | floor changes in 3 s of double talk (mean / most) | interrupter carried | holder cut off |
+|---|---|---|---|---|---|
+| 64 ms | 0 | 7 ms | 3.6 / 8 | 61 % | 34 % |
+| **128 ms** | **0** | **7 ms** | **2.2 / 5** | **54 %** | **38 %** |
+| 256 ms | 0 | 135 ms | 1.1 / 3 | 41 % | 34 % |
+| 512 ms | 0 | 423 ms | 0.5 / 3 | 26 % | 28 % |
+
+A reply loses whatever is left of the hangover when it begins, counted from the
+last speaker's last loud window, plus up to one window to detect it. At 128 ms,
+a reply 100 ms after A stopped lost 7 ms; at 256 ms, it lost 135 ms. The price
+of 128 ms is in double talk, where the floor changes about twice in 3 s instead
+of once. 128 ms is also the silence counter's Q3; 256 ms would need a fifth bit.
+
+**The switch.** At the switch, the listener's decoder stops following one
+talker and starts following another from the state the first left it in. Over
+400 switches between talkers 1–7:
+
+| | back within −30 dB of the new talker's own decode, after | peak in 20 ms, heard ÷ own decode |
+|---|---|---|
+| **as the bridge does it**: the old holder silent for 128 ms | 16.1 ms median, 27.6 ms worst | −0.8 dB median, **+3.6 dB worst** |
+| if the floor passed while both were talking | 14.4 ms median, 26.4 ms worst | +0.1 dB median, **+26.2 dB worst** |
+
+**The hangover is also what keeps the switch clean.** After 128 ms of the old
+holder's silence the decoder has relaxed to its smallest step. The new talker
+fades in over about 16 ms and nothing pops. A switch between two talkers in full
+voice would leave the decoder with the first talker's step, and the result would
+be a pop up to 26 dB above the speech. At a word's start (the usual case in the
+conversation) the switch was clean within 4 ms. Clear of a switch, what the
+other parties heard was the holder's own decode, with any difference 84 dB or
+more below it.
+
+### 7.3 The circuit, sketched
+
+| per leg | parts |
+|---|---|
+| the caller's last three bits; all equal | 74HC164, ½ 74HC86, ¼ 74HC02 |
+| window: TICK ÷ 16; the runs in it, Q3 = spoke | 74HC393 |
+| silence: windows since spoke, Q3 = 128 ms, held there | ½ 74HC393 |
+| spoke latch; the floor | 74HC74 |
+| `DATA` three-state; `HELD`, `KEEP`, `ASK` open-drain | 74HC125 |
+| take and let go, the priority chain, the `C_TX` select | 74HC00, 74HC08 |
+
+**≈ 9 packages a leg, all 74HC: no codec and no analog part.** Every leg
+divides the same bussed `TICK` from `RESET`, so all windows end together, and
+take and let-go are decided on the same edge from the same bus state. A leg
+whose caller hangs up drops the floor with its `A_RX`.
+
+### 7.4 The marker's part
+
+- **Class *conference*** (`exch-fabric.md` §3.5), in the leg's word, and **`/ANS`
+  tied low** on the leg, so that it does not ring: E reaches the leg steadily,
+  not in the ring cadence, and the caller hears no ringback. A leg that rang in
+  cadence would take up to 4 s to answer, with ringback in the caller's ear the
+  whole time.
+- **A bridge is a hunt group: a run of adjacent legs on one ribbon, and its
+  number is its first leg's.** It is the hunt group of `ex-extensions.md` §2.4:
+  every leg but the last sets the overflow bit of its word. Dialling any leg
+  takes the first free leg from that one onward, in slot order, until a leg that
+  is not free has the bit clear. No free leg → cannot-complete. **An exchange may
+  have several bridges**, each a conference of its own, and two may sit side by
+  side. A block boundary does not end a run, because 37 and 40 are adjacent in
+  scan order.
+- **A bridge is reached only by its number.** No key is special to it: 8 stays a
+  spare first key, and gives cannot-complete.
+- **Across the network a bridge is dialled like any line**, `1 e b h s` from
+  anywhere. If 55 on exchange 26 is a bridge, line 24 of exchange 25 dials
+  `1 2 6 5 5`: the flood, exchange 26's claim on `2 6`, its register's `h s` = 55,
+  then the same hunt. Each remote party holds one trunk channel on every link
+  between it and the bridge.
+- **The marker's part of the hunt** uses the free-running scanner, as every hunt
+  does. A flip-flop is set when the scanner reaches the dialled port (a 74HC688
+  comparing the scanner with the digit store), and cleared at a port that is not
+  free and has its overflow bit clear. The first free port while it is set is
+  taken: **≈ 2 packages**, and at most two scans, 16 ms. It is the same hunt for
+  every kind of group.
+- **A bigger bridge is more legs in its run.** There is no sum to clip and no
+  noise to add, so its size is set by the ribbon and the line slots its legs
+  take, not by the audio. Two six-leg bridges take twelve of the 48 line slots.
+- **Nothing hunts onward unless its card says so.** Dialling a busy phone must
+  not ring its neighbour, so a port overflows only if its word's overflow bit is
+  set. A sales desk or a pool of data ports is a group in the same way
+  (`ex-extensions.md` §2.4).
+
+### 7.5 What it is not
+
+- **Two at once.** The bridge picks one. An interrupter gets through only in the
+  holder's pauses, in 54 % of its speech. Laughter and cross-talk come out as
+  one voice at a time.
+- **The holder hears nobody** while holding, not even someone trying to cut in.
+  Sending the holder the previous holder's bits would need a second `DATA` line;
+  not proposed.
+- **A quiet caller**, 30 dB down, reaches the threshold in 1.4 % of windows and
+  will seldom get the floor.
+- **A caller in noise 20 dB below speech** never falls silent. Once that leg has
+  the floor it keeps it, until that caller hangs up or the operator clears the
+  leg's latch from the console. A limit on how long one leg may hold the floor
+  would cure it; not modelled.
+
+---
+
+## 8. Data and foreign codecs
 
 A data card is a line. A call to it is set up like any other and the fabric
 passes its bits exactly (`exch-protocol.md` §4). In-band tones sit in the stream
 until answer; E rising — `DSR` — marks it. A terminal can dial by pulsing `DTR`
-into a pulse register (`exch-marker.md` §7). A phone that dials a data port
-hears noise; nothing prevents it.
+(`exch-marker.md` §7). Under the marker as it stands a phone that dials a data
+port hears noise, and nothing prevents it. **Proposed: a class of its own, *data
+line*** (`ex-extensions.md` §2.2, §2.4). The marker will not connect a data line
+to a voice port, or the reverse, and gives cannot-complete. A run of data ports
+with their overflow bits set is a pool with one number. The check is made inside
+one exchange: a call from another exchange arrives on a trunk.
 
 A card facing another codec transcodes on the card: the FXS card already does,
 and a DNVT card is two codecs back to back.
 
 ---
 
-## 8. Not measured
+## 9. Not measured
 
-- **Every circuit here.** Oscillators, the ROM player, the leg card's summing bus,
-  the console.
+- **Every circuit here.** Oscillators, the ROM player, the conference leg and its
+  bus, the console.
 - **Tone levels and twist** through the encoder half; `subscriber-line.md` §5
   measured DTMF through the codec, not these tones.
 - **A ROM image's start against a free-running `FILL`** in gates; the seam table is
   the bit streams, not the counter's start logic.
-- **The conference bus**: levels, the number of legs it carries before the sum
-  clips, and singing through two hybrids when analog phones join.
+- **The conference with real phones**: handset levels, room noise and echo from
+  real hybrids, rather than the test set's talkers with added noise; and how
+  people take to a half-duplex meeting.
+- **The two new classes in the marker.** Sources and conference legs are
+  proposed here and in `exch-fabric.md` §3.5. The `calls` model still has a
+  conference leg as a line and tones as classes 5 and 6.
 - **A CO's ring cadence ANDed with `RING_CAD`** at the operator's phone: the phone
   rings only when both are on. Feed the operator's ring from E alone when the
   caller is class 3, or accept it.

@@ -1,96 +1,172 @@
-# The exchange — trunks and the network
+# The exchange — tie trunks and the network
 
-How exchanges are joined by MF8, how a line on another exchange is dialled
-directly, and what that costs. A standalone exchange carries none of this:
-everything here is on trunk blocks and one optional network card.
+An exchange is one 64 × 64 fabric: 48 lines, an operator, and **two groups of six
+tie trunks** — four groups at the busy centre of a network (`exch-protocol.md`
+§5). A network is such exchanges joined by those trunks — a handful on a chain,
+a score around a hub, sixty-four codes in all — in which a line on another
+exchange is dialled directly with `1` and its four-digit number. This document is how: nobody routes, nobody sends; the call is
+**flooded, heard, and dropped in by its owner**. A standalone exchange carries
+none of it.
 
-> **Status: analysis.** Decided: **all pulse, no DTMF; the flood carries the caller's
-> own dial pulses, live; no sender inside a district.** A call floods as soon as
-> its first digit is in. The timing in §3.1, §4 and §4.1 is `exch.py flood` —
-> arithmetic from measured constants (the register's windows, the trunk's A path),
-> **not a simulation of the gates**. **§4.1 — how `1` is handled with no sender —
-> is a proposal**: it fixes what an area code may begin with, which had been left
-> TBD. A register-sender and serial characters on A were worked out and set aside
-> (§8). §5 quotes a scratch simulation. The flood, the monitors, the claim and
-> every sequence of §3 are **unmodelled**: `exch.py net` does not exist yet.
+> **Status: analysis.** Decided: **all pulse; the flood carries the caller's own dial
+> pulses, live; no sender.** The monitor's two rules are measured
+> (`exch-monitor.md`). The timing in §3.1 and §4 is `exch.py flood` — arithmetic
+> from measured constants, **not a simulation of the gates** — and §5's link
+> loads are Erlang arithmetic. **`exch.py net` runs a network of eight exchanges
+> call by call** in milliseconds — the flood, the monitors, the claim, the
+> resolvers, the registers and the channels — and §5.1 is its run. It models the
+> timing and the pools, not the gates.
 
 ---
 
-## 1. One block, three populations
+## 1. Tie trunks
 
-| population | fitted | ports |
-|---|---|---|
-| **line** | eight channel cards | 8 |
-| **trunk** | one MF8 trunk card; class 4 set once for the block | 6, on slots **1, 2, 3, 5, 6, 7** — the '151 map of `mf8-spec.md` §10. The highway is the MF8 frame with F and S handed back; slots 0 and 4 stay channel slots |
-| **tie** | a crossover to a co-located group's tie block: the NRZ highway itself, same clock | 8 junctors, class 4, bit-exact at 2 frames (`exch-protocol.md` §4) |
+A port's latch points only at one of the 64 ports of its own exchange, so a call
+to another exchange crosses a **tie trunk: a pair of ports, one in each exchange,
+back to back**, with no channel card behind either.
 
-| a trunk block | |
+```
+ exchange 22                                                exchange 23
+ line 47 ── listens to ─▶ T                            T′ ◀─ listens to ── line 25
+ T ─────── listens to ─▶ line 47                       T′ ── listens to ─▶ line 25
+
+            T's C_RX, A_RX ──────────────────────────▶ T′'s C_TX, A_TX
+            T's C_TX, A_TX ◀────────────────────────── T′'s C_RX, A_RX
+```
+
+What T hears from its fabric, T′ says into its own, and the reverse — `C` and `A`
+both. To line 25, port T′ *is* the caller: its slot carries their voice and its A
+is their hook, so 25 rings by the hotline rule and the release rule runs through
+the pair untouched. To each fabric a trunk port is a port like any other: class
+trunk, a `BUSY` bit, its own release detectors. It holds no digits and decides
+nothing.
+
+| | |
 |---|---|
-| Transmit | in the exchange's clock. The trunk card needs a strap to take 4.096 MHz and frame sync from the clock card instead of owning the crystal |
+| Ports | **01–03, 05–07 and 11–13, 15–17**: two groups of six, one MF8 link each. A channel's slot is its bit position on the wire, C1–C3 at 1–3 and C4–C6 at 5–7, so one 3-bit number is its C bit, its A bit's superframe state and its port (`exch-protocol.md` §5). Slots 0 and 4, F and S on the wire, are ports of their own: idle and the operator in block 0, the two tones in block 1. **21–23, 25–27 and 31–33, 35–37 may be two groups more**, at the cost of twelve lines |
+| Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`ex-extensions.md` §2.2). An MF8 trunk card on a tie trunk sends one word to its six channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `exch-terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
+| The link | an MF8 pair each way — or, between exchanges in one rack, copper: a tie card at each end crosses the ports over and gives them their class and words; same clock, bit-exact, one frame more delay (`exch-protocol.md` §4). Or any other carrier that does what §1.1 asks |
+| The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`exch-terminal.md`) |
+| Transmit | in the exchange's clock. The trunk card takes 4.096 MHz and frame sync from the clock card instead of owning the crystal (a strap) |
 | Receive | each link is its own clock domain. The crossing of `mf8-backplane.md` §2 moves here: two '174s for the six `C`, the §14 RC and Schmitt gate for `A` |
-| Trunk down | `MUTE` clears the A '259, every M falls, calls release themselves. **`MUTE` must also force the block's `BUSY` highway to 1**, or a dead trunk hunts as free |
-| Guard | `exch-marker.md` §5.2's settle term already holds a released junctor busy for ~0.6 s |
-| Glare | the two ends of a link hunt it in opposite order (a strap); residual glare joins two callers to each other |
+| Trunk down | `MUTE` clears the A '259, every M falls, calls release themselves. **`MUTE` must also force the block's `BUSY` highway to 1**, or a dead trunk hunts as free. The trunk card also stops sending its words, which keeps a dead trunk from being hunted on any carrier (§1.1); `BUSY` is what keeps callers off a subscriber terminal's dead lines (`exch-terminal.md` §2) |
+| Guard | `exch-marker.md` §5.2's settle term already holds a released trunk busy for ~0.6 s |
+| Glare | the two ends of a link hunt it in opposite order: the word's `g` bit, set at one end, has the marker take the last free trunk facing that way and not the first. Residual glare joins two callers to each other |
 
-A group past 64 ports is another exchange to the numbering plan, reached over a
-tie block exactly as a remote one is reached over MF8.
+Two directions make an exchange a node in **a chain or a ring**; a pair of
+exchanges may point both directions at each other. Doubling a direction is for
+the middle of a chain, where everyone's traffic crosses (§5). **Three or four
+directions make an exchange a hub**: a star, or a tree of chains and stars
+(§3.2).
+
+### 1.1 Trunks that are not MF8
+
+A trunk is any port of class trunk that sends a direction word. The exchange
+cares about what is behind it in four ways only:
+
+| | what the carrier must do |
+|---|---|
+| **A** | carry a level each way, and dial pulses with it: a monitor or a register must still see every break of 8 ms or more (`register.md` §2). The flood's timing allows about 2 ms of A path a hop (§4) |
+| **C** | carry 64 kbps each way bit for bit, crossed into the exchange's clock on the card as MF8's trunk card does. Or carry voice band, with a codec pair on the card: a tandem of about 2 dB, and no data (`exch-protocol.md` §2) |
+| **Link down** | stop sending its word, so that its port reads unequipped and is never hunted, and let A fall, so that a call in progress releases |
+| **The word** | class trunk, its direction and its glare bit (`ex-extensions.md` §2.2), and `/ANS` tied low |
+
+So a direction may be carried by an MF8 card's six channels, the usual case; by
+a copper tie card between exchanges in one room; by a single-channel card, one
+trunk over a pair or two, for example two CVSD line interfaces back to back
+(`subscriber-line.md`), not designed; or by a voice-band card, such as the E&M
+card of `mf8-spec.md` §12.1 on a leased circuit or a radio. Any mix of them may
+face one way.
+
+**One channel carries little.** At 1 % blocking one channel carries 0.01 E, two
+carry 0.15 E and six 1.91 E, and every call in the network floods every link for
+1.2–1.7 s (§4). A direction of one channel suits a few lines at the far end of a
+network, or tops up a direction. It is not a route for an exchange's traffic.
 
 ---
 
 ## 2. Numbers
 
-**One jumper: a standalone exchange dials `h s`; a networked one dials `e e h s`
-for every number, its own included** — the small-town conversion.
+**A line is dialled `h s` from its own exchange, and `1 e b h s` from anywhere.**
+Nothing is strapped for it: an exchange with no network card gives
+cannot-complete for `1`, and otherwise parses the same digits.
 
 ```
- standalone    4 7           line 47
- networked     3 2 4 7       exchange 32's line 47 — the same digits from anywhere, 32 included
-               3 2 0         exchange 32's operator          3 2 9   its outside line
- long distance 1 8 3 3 2 4 7 another district or area — §4.1, proposed
+ local         4 7           line 47 of this exchange.  No trunk is touched
+ network       1 2 3 4 7     exchange 23's line 47: the same digits from anywhere, 23 included
+               1 2 3 0       exchange 23's operator            1 2 3 9   its outside line
+ reserved      1 8 …, 1 9 …             out of the network (§6)
 ```
 
-- **Exchange codes are 20–77**, octal as dialled: 48 codes. A code is never an
-  address; it is compared with jumpers on the network card, which say **who the
-  exchange is and never where anything is**.
-- **Read `e e` as district and exchange** from the start: neighbours share a first
-  digit. It costs nothing now and is what §6 needs later.
-- The length is uniform across a network, because a monitor must know what the
-  first digit it hears stands for.
-- Against a one-digit code: one more key a call, one or two packages, the '670
-  exactly full — and 48 codes instead of 6. **The argument for two digits is
-  growth at a site**: every further group of 64 takes a code.
+- **`1` is the network's key, and it is the digit the flood consumes** (§3). It
+  says only "this call leaves", which the origin alone needs to know, so nothing
+  is lost with it. It is one pulse: the shortest digit there is.
+- **`e b` is the exchange's code, both digits 0–7**: 00–77, octal as a line's
+  number is, sixty-four of them. It is never an address, only compared with
+  jumpers, which say **who an exchange is and never where anything is**. Both
+  digits go down the flood live, and a monitor claims a call only when both are
+  its own.
+- **By convention 00–17 are the backbone's**: tandems and hubs, the exchanges that
+  are mostly trunks. Ordinary exchanges take 20–77. A network's codes then read
+  as an exchange's ports do, where 00–17 are trunks and services and 20–77 are
+  lines (`exch-protocol.md` §5), and a planner sees which codes are which. Nothing
+  enforces it: all sixty-four are assignable.
+- **8 and 9 stay special in both places of the code.** `1` followed by either, or
+  `1 e` followed by either, is reserved, and cannot-complete today. After the key
+  a 0 or a 1 is only a digit: the operator and the key are first keys.
+- **A local call never floods**, and its number is the same whether the exchange
+  stands alone or not. Joining a network changes nobody's number.
+- **Give the codes of fewest pulses to the busiest exchanges.** A flood lasts until
+  `e` and `b` have both been dialled, so each pulse of an exchange's code adds
+  0.1 s to the flood of every call made to it (§4). A 1 is one pulse and a 0 is
+  ten: 11 is the cheapest code, 2.0 s of flood, and 00 the dearest, 3.8 s. The
+  convention suits this. A tandem has a dozen lines and is seldom called, so the
+  0 series costs little there.
+- **An exchange's own code works from inside it**, at the cost of a flood: the
+  origin's register sees its own `e b`, releases the trunks and carries on
+  locally.
 
 ---
 
-## 3. Flood, monitor, claim
+## 3. Flood, monitor, claim — the **pulse flood**
 
-Nobody routes, and nobody sends. **The origin opens a flood on the first digit,
-the caller's own pulses go down it, every exchange hears them, and the owner
-drops the call in.** A transit needs no matrix and no route table, because it never has to know where a call is going
+The protocol of this section is the **pulse flood**: the caller's own dial pulses,
+flooded live down every trunk, heard by every exchange, and claimed by the one
+they name.
+
+**The origin opens a flood on the key `1`, the caller's own pulses go down
+it, every exchange hears them, and the owner drops the call in.** A transit needs
+no matrix and no route table, because it never has to know where a call is going
 in order to pass it on.
 
 ```
- origin    the FIRST digit is in, and it is the home district's — or it is 1 (§4.1).  0 and 9 are
-           local hunts; any other first digit is cannot-complete.  Seize one free class-4 port
-           in EACH trunk block, all listening to the CALLER: his remaining digits go down the
-           flood as he dials them.  The origin's register goes on counting: its own exchange
-           digit → release the junctors, carry on locally.  Else, when the last digit is in and
-           a junctor has claimed: point the caller at it, release the rest, free the register.
-           No claim 2 s after the last digit → class 6
- seizure   at every exchange it reaches: M rises on a class-4 port → the marker patches it to a
-           free class-4 port in every OTHER trunk block — any channel to any channel — and a
-           monitor listens.  A block strapped NO-FORWARD is skipped: that is how a ring or a mesh
-           is made a tree
- e         the first digit a monitor hears is the exchange digit (the district's was the trigger,
-           and every exchange flooded shares it).  Ours → CLAIM: re-point the incoming junctor
-           into the local fabric with the latch's CLAIM bit set, clear the onward patches, and
-           read on — h s, or 0, or 9: the junctor is now simply a line HERE.
-           Not ours → the monitor lets go.  A monitor that did not see 128 ms of steady make
-           before the first break never claims
- claim     a trunk port with CLAIM set sends backward A = 1, steadily, until release.  Wherever
-           the call fanned out — an origin with two links, a transit with three — the first
-           onward junctor whose M rises is the way: point the backward path at it, release the rest
- release   A falls through every patch at once; each port clears itself (exch-marker.md 5)
+ origin    the FIRST digit is in, and it is 1.  (0 and 9 are local hunts, and 2–7 begins a local
+           number: none of them touches a trunk.)
+           Seize one free trunk in EVERY direction the exchange has, all listening to the CALLER:
+           their remaining digits go down the flood as they dial them.  The register holds the
+           trunks it seized (§3.2), and goes on counting:
+           our own e b → release the trunks, carry on locally.  An e or a b of 8 or 9 →
+           reserved: release the trunks, cannot-complete.  Else, when a trunk has claimed, release the
+           others; when the last digit is in, point the caller at the one that claimed and free
+           the register.  No claim 2 s after the last digit → cannot-complete.
+           b not in 5 s after the key → release the trunks, cannot-complete: a caller who stops,
+           or a key that was never dialled at all (§4)
+ seizure   at every exchange it reaches: M rises on a trunk → the marker hunts a free trunk in
+           every OTHER direction the exchange has — any channel to any channel — and a monitor
+           listens.  One found: patch it, two latches, and forget.  Two or three: fan out (§3.2).
+           A seizure is never forwarded INTO a strapped link, nor forwarded ONWARD from one:
+           that is how a ring is kept from circling (§3.3)
+ e, b      the first two digits a monitor hears are e and b (1 was the trigger, and said nothing a
+           monitor needs).  e not ours → the monitor lets go at once.  e ours → it reads on.
+           b ours → CLAIM: re-point the incoming trunk into the local fabric with the latch's
+           CLAIM bit set, clear the onward patch or every leg of a fan-out, fetch a register,
+           and read on — h s, or 0, or 9: the trunk is now simply a line HERE.
+           b not ours → the monitor lets go.
+           A monitor counts only a seizure whose rise it saw, and the origin abandons a call
+           whose next break comes within 128 ms of its seizure  (exch-monitor.md §3)
+ claim     a trunk port with CLAIM set sends backward A = 1, steadily, until release.  An origin
+           or a hub that seized several keeps the one whose M rises and releases the others
+ release   A falls through every patch at once; each port clears itself (exch-marker.md §5)
 ```
 
 **The claim is a level, not a wink.** Release is on a *fall* of M or E. A wink is
@@ -101,187 +177,342 @@ what the rule already expects; no port changes. It costs the difference between
 another exchange is answered at claim, and a data card's `DSR` rises at claim.
 Local calls keep true answer supervision.
 
-**Geography is nowhere.** A fan-out point learns the way from the claim, not from
-jumpers saying which arm each code lies on.
+**Geography is nowhere.** The origin learns the way from the claim, not from
+jumpers saying which group each code lies behind.
 
-### 3.1 Worked: 2144 dials 2355 on the chain 21 ═ 22 ═ 23 ═ 24
+**A transit with no free onward trunk** cannot forward, and the origin would wait
+out its 2 s. It hears `b` like everyone else, so it may **claim the call in order
+to refuse it** — trunk to its own cannot-complete tone, `CLAIM` set — and the
+caller gets the tone at once.
 
-A dial at 10 pps, 0.8 s between digits (`exch.py flood` 6; milliseconds from
-lifting the handset):
+### 3.1 Worked: line 44 of exchange 22 dials 1 2 4 5 5 on the chain 22 ═ 23 ═ 24 ═ 25
+
+A dial at 10 pps, 0.8 s between digits; milliseconds from lifting the handset.
+The times are arithmetic on the constants `exch.py flood` uses (a digit recognised
+128 ms after its last pulse, a marker action 2, a hop of the flood 7, the A path
+1.5 up and 2 down a hop, a release 256). The model's own run, `flood` 6, is of
+the earlier plan, in which `e` was the key and a monitor read one digit.
 
 ```
-      0   21   44 lifts
-     10   21   register attached; dial tone
-   1000   21   44 dials 2: its last pulse ends at 1160
-   1290   21   the first digit is in, and is the district's: seize a junctor toward 22,
-               listening to the caller
-   1297   22   M rises on the junctor: patched to a free channel toward 23; monitor on
-   1304   23   M rises: patched to a free channel toward 24; monitor on
-   1311   24   M rises: nowhere to forward; monitor on
-   1439   24   the last monitor has seen its 128 ms of make: the flood is ready
-   1960   21   44 dials 3 — 521 ms after the flood was ready; last pulse ends at 2220
-   2350   22   "3" is not mine: monitor lets go; the patch stays
-   2353   23   "3" is mine: CLAIM — junctor → local fabric; the patch toward 24 cleared; backward A = 1
-   2353   24   "3" is not mine: monitor lets go
-   2356   21   backward A rises on the junctor
-   2611   24   its port has released itself: link 23–24 is free again
-   3020   21   44 dials 5, then 5: the last pulse ends at 4740
-   4870   21   its own register has the last digit: caller 44 ↔ junctor; register freed
-   4873   23   has 5 5: junctor ↔ line 55; 55 rings; ringback goes back in band
-   4873   21   44 hears 23's ringback            post-dial delay 133 ms
+      0   22   44 lifts
+     10   22   register attached; dial tone
+   1000   22   44 dials 1: its one pulse ends at 1060
+   1190   22   the first digit is in, and is 1: seize a trunk toward 23, listening to the caller
+   1197   23   M rises on the trunk: patched to a free trunk toward 24; monitor on
+   1204   24   M rises: patched to a free trunk toward 25; monitor on
+   1211   25   M rises: nowhere to forward; monitor on
+   1318   22   the origin's guard ends: a break before this would have abandoned the call
+   1860   22   44 dials 2 — 542 ms after the guard; last pulse ends at 2020
+   2150        "2" is every monitor's e on this chain: all three read on
+   2820   22   44 dials 4: last pulse ends at 3180
+   3310   23   "4" is not my b: monitor lets go; the patch stays
+   3313   24   "4" is my b: CLAIM — trunk → local fabric; the patch toward 25 cleared; backward A = 1
+   3313   25   "4" is not my b: monitor lets go
+   3316   22   backward A rises on the trunk
+   3571   25   its port has released itself: link 24–25 is free again
+   3980   22   44 dials 5, then 5: the last pulse ends at 5700
+   5830   22   its own register has the last digit: caller 44 ↔ trunk; register freed
+   5833   24   has 5 5: trunk ↔ line 55; 55 rings; ringback goes back in band
+   5833   22   44 hears 24's ringback            post-dial delay 133 ms
 ```
 
-**What is held, and for how long.** From the first digit to the claim — 1.06 s
-here, the time it takes a human to dial the next digit — the call holds a channel on all three links
-and a monitor at 22, 23 and 24. **From the claim on
-it holds 21–22 channel 3 and 22–23 channel 1 and nothing else**: link 23–24 was
-released by the owner clearing its onward patch, 24 holds nothing, and 22 holds
-two patched ports — no register, no marker, no state beyond two latches. The
-channel numbers differ from link to link because each node chose its own (§5).
+**What is held, and for how long.** From the key to the claim — 2.1 s here, the
+time it takes to dial `e` and `b` — the call holds a trunk on all three links and
+a monitor at 23, 24 and 25. **From the claim on it holds one trunk on 22–23 and
+one on 23–24 and nothing else**: link 24–25 was released by the owner clearing
+its onward patch, 25 holds nothing, and 23 holds two patched ports — no register,
+no marker, nothing but two latches. The channels differ from link to link because
+each exchange chose its own (§7). An exchange whose `e` is not the one dialled
+frees its monitor a digit sooner, at 2150 here. Its patch stays until the claim.
 
-**Busy** is the owner's to say: 23 points the junctor at its class 6 and the
-caller hears 23's tone through the same path. **Release** from either end is A
+**A local call holds nothing.** 44 dialling `4 7` never touches a trunk, and no
+other exchange hears of it.
+
+**Busy** is the owner's to say: 24 points the trunk at its cannot-complete tone and
+the caller hears it through the same path. **Release** from either end is A
 falling through every patch at once; each port clears itself 256 ms later, and
-55, if still off-hook, gets 23's dial tone.
+55, if still off-hook, gets 24's dial tone.
 
-**From the middle**, 2244 dialling 2455 seizes a channel toward 21 *and* one
-toward 23. 21 hears 24, lets go; 24 claims; backward A rises on the arm toward
-23; the origin keeps that arm and releases the other.
-
-**A refinement, not yet in §3:** a transit that finds no free onward channel
-cannot forward, and the origin would wait out its 2 s. It hears the code like
-everyone else, so it can **claim the call in order to refuse it** — junctor to
-its own class 6, `CLAIM` set — and the caller gets a busy tone at once.
+**From the middle**, a line of 23 dialling `1 2 5 5 5` seizes a trunk toward 22
+*and* one toward 24. 22 hears a `b` of 5 and lets go; 25 claims; backward A rises
+on the trunk toward 24; the origin keeps it and releases the other.
 
 | the network card | |
 |---|---|
-| Holds | the 2 / 4-digit jumper; the own-code jumpers, one comparator used twice through a '157; the forward-on-seizure sequence; the seize and await-claim sequence; **a pending-claim store — the junctor seized in each trunk block, 2 × '174** — used only where a call fans out |
-| Not fitted | two-digit dialling, no class 4: the standalone exchange |
-| **The cost is the flood** | every call floods, local ones included, from its first digit until the exchange digit is heard — about a second on **every link** and at **every exchange's** monitors (§4). It cannot be seized later: the second digit is the one the monitors need. Fine for a handful of exchanges; past 20–30, §6 |
+| Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its 128 ms guard; at a hub, **the fan-out resolvers** (§3.2). The trunks an origin seized are held by its register |
+| Not fitted | `1` gives cannot-complete, and the trunk ports are empty: the standalone exchange |
+
+### 3.2 Hubs: three or four directions
+
+A transit on a chain forwards into its one other direction: two latches, and it
+holds nothing. A hub forwards into two or three. Any number of trunks may listen
+to the incoming one, so the caller's pulses go down every leg at once. But the
+incoming trunk can listen to only one port, and which leg will claim is not known
+until the claim comes back. Latches cannot be read back, so the hub remembers the
+call until then, in a **resolver**:
+
+```
+ seizure            one scan finds a free trunk in each other direction.  Each leg listens to the incoming
+                    trunk.  The incoming trunk listens to idle, BUSY set, so backward A stays 0: no claim
+                    yet.  A resolver takes the incoming trunk's address and the legs'
+ a leg's M rises    that branch has claimed.  The incoming trunk listens to that leg, and backward A rises
+                    toward the origin.  The other legs are pointed at idle: each releases itself 256 ms later,
+                    and its link with it.  The resolver is free, and the call is a patch of two latches, as
+                    on a chain
+ ours               the hub's monitor claims, as any owner does, and every leg is pointed at idle
+ no claim           a local call elsewhere, a wrong number, a caller who hangs up: forward A falls, the
+                    incoming trunk releases itself, and every leg with it.  The resolver frees itself when
+                    the incoming trunk reads BUSY = 0, which dial pulses never cause
+ no resolver free   patch into the first direction found, as a chain would: the call reaches that branch
+                    only
+```
+
+| | |
+|---|---|
+| **A resolver** | the incoming trunk's address and three legs', in 4 × 74HC574, and a flip-flop: **≈ 4½ packages** |
+| **Seeing the claim** | the scanner visits every port every 8 ms. At each visit a counter runs the stored leg addresses, the resolvers' and the registers', past one shared 74HC688 while the probe reads M, well inside the 125 µs visit: **≈ 3 packages**, shared |
+| **The origin** | its register holds the trunks it seized, one 74HC574 a direction the exchange has: two at an exchange on a chain. This replaces the network card's two '174, which held only one pending network call at a time |
+| **How many** | every call dialled with `1` anywhere in the network passes the hub, for 2.2–3.2 s, the time `e` and `b` take. With 30 % of calls leaving, eight exchanges of 48 lines put 0.26 E on the hub's resolvers: two are all busy 2.6 % of the time, three 0.2 %. Twenty put 0.64 E: three 2.3 %, four 0.4 %. **Three at a hub, four at the centre of a score of exchanges** |
+| **The marker** | the direction steers the origin's scan (the word's two bits pick which of four found registers takes a free trunk); a transit latches the incoming trunk's direction and hunts the others; and the resolver's states: **≈ 4 packages** |
+| **Timing** | a hub adds up to three writes to the flood's hop, about 4 ms, and up to one scan and a write to the claim's way back, 10 ms. The origin's 128 ms guard covers ten hops at a slow marker's 12 ms, and a hub counts as a hop and a third. **No exchange should be more than about eight hops from another**: a hub with four chains of four is eight across |
+| **Loops** | a tree of chains and stars needs no strap. A ring anywhere, through a hub or not, is broken by strapping one of its links (§3.3) |
+| **Monitors** | two a trunk block, as everywhere: a flood reaches a hub on one block |
+
+**What it costs.** Every networked exchange pays the marker's ≈ 4, the shared
+comparator's ≈ 3 and a '574 a direction in each register. A hub adds its
+resolvers: ≈ 14 for three. Nothing is added to the fabric, the ports or the
+release rule, and after the claim a call through a hub is two latches like any
+other.
+
+### 3.3 Rings: the strap belongs to a link, not to an exchange
+
+A flood must not go round in circles. Left alone, a seizure sent round a ring
+comes back to the exchange that made it, which forwards it again, and the call
+eats a channel of every link at each turn until the links are full.
+
+**The strap is the `n` bit of a trunk port's word** (`ex-extensions.md` §2.2),
+set on every channel of one link, at both ends. It says:
+
+```
+ a strapped link   a seizure is never forwarded INTO it, and a seizure that arrives ON it is never
+                   forwarded onward.  An origin may still seize it, and the far end may still claim:
+                   the link carries calls between its own two ends, and no others
+```
+
+**The links without the bit must form a tree**: one strapped link breaks a ring,
+and a mesh needs one in every independent cycle. Both ends should be strapped.
+One end alone breaks the cycle just as well, because a seizure that arrives on a
+strapped port is not forwarded either way, but then the unstrapped end floods
+into a link that goes nowhere, and wastes a channel on every call.
+
+**What it costs at the two ends.** A call from one end of the strapped link to
+the other reaches it twice: once on the link, once the long way round. Both
+monitors match, so the far exchange claims twice. The direct copy is a hop away
+and the long one many, so the direct copy always claims first, the caller gets
+it, and the origin releases the long way as soon as it does. The second claim
+finds the called line busy — it is ringing for the first — and points its trunk
+at cannot-complete for the few hundred milliseconds before the release reaches
+it. No caller hears it. Everywhere else in the ring, every exchange sees the
+call once.
+
+**Why not strap an exchange.** An exchange strapped to forward nothing, which is
+what this document said before, breaks a ring only for calls that do not begin
+there. Its own calls go out both ways, meet at the far side and come back to it,
+so every other exchange in the ring sees the same call twice, on two trunks, and
+if one of them owns the call it claims on both. The first claim wins and the
+second gives cannot-complete, which is a race no caller should be in.
+
+**A ring is also a spare.** Move the strap to a link that has failed and the ring
+is a chain again, with every exchange still reachable. That is a jumper, or a
+switch on the trunk card, at each end of two links.
+
+---
 
 ---
 
 ## 4. What the network speaks: the caller's own dial pulses
 
-**Decided: all pulse, no DTMF, live.** The junctors listen to the caller; his hook
-is their forward A; every monitor is the pulse register of `register.md` §4
-reading its own `A_RX`. One signalling system, all 74HC, nothing sent twice.
+**All pulse, live.** The trunks listen to the caller; the caller's hook is their forward A;
+a monitor reads two digits of it. One signalling system, all 74HC, nothing sent
+twice.
 
 | | |
 |---|---|
-| What is consumed | the first digit only, and it is the trigger: the home district's digit, shared by every exchange the flood can reach, so no monitor needs it |
-| A monitor | a register from the pool (class 7), or a pulse counter and the digit compare on the trunk block. **It claims only if it saw 128 ms of steady make before the first break**, so a monitor that attaches late can never count half a digit |
-| Pulses as they arrive | a CVSD line card's hook detector shortens a break by 6.1 ms (`register.md` §1); the trunk's A path by 0.5 ms a hop (`mf8-cards.md` §5). A 60 ms break is 50 ms after seven hops, against an 8 ms window. The 6.16 ms correction of `register.md` §1.3 is optional |
+| What is consumed | the first digit only, and it is the trigger: `1`, which says only that the call leaves, so no monitor needs it |
+| A monitor | its own small circuit on the trunk block, **not a register from the pool**: `exch-monitor.md`. It reads `e` and `b`, claims or lets go, and on a claim the marker fetches a register for `h s` |
+| What keeps it from ever claiming a wrong number | **a monitor counts only a seizure whose rise it saw; the origin abandons a call whose next break comes within 128 ms of its seizure.** Measured for the first digit a monitor hears: 0 false claims in 1 500 calls with both, 4 to 97 without (`exch-monitor.md` §5). Both hazards act on the first digit heard; the second is not yet in the model |
+| Pulses as they arrive | a CVSD line card's hook detector shortens a break by 6.1 ms (`register.md` §1); the trunk's A path by 0.5 ms a hop (`mf8-cards.md` §5); a copper tie not at all. A 60 ms break is 50 ms after seven hops, against an 8 ms window |
 | Against the release rule | the longest dial break, 103 ms, against the shortest release, 204 ms: `exch.py calls` 15b |
 | Post-dial delay | **133 ms after the last pulse**, whatever the hop count |
+| A key and nothing after it | **the origin releases its trunks 5 s after the key** if `b` has not arrived. The register keeps its own 10 s for the caller (`exch-marker.md` §6). Without the rule an accidental key, or a caller who stops to think, would hold a channel on every link for the register's whole 10 s. A slow dial reaching the code 77 needs 3.8 s, so 5 s leaves margin |
+| An accidental key | one break of 8 ms or more, then 128 ms of unbroken make, on a line with a register attached. Nothing digital makes one: a CVSD line's hook detector gave **0 false events** against noise to sd 0.8 and impulses to 1000/s (`subscriber-line.md` §5), and A across MF8 gave **0 spurious transitions in 60 s to a line error rate of 1e−1** (`mf8-cards.md` §5). What is left is the subscriber's own instrument — a hook flash, a worn dial contact — as in any exchange. Contact bounce is caught by the origin's guard, which abandons on a break within 128 ms of the seizure. **It would take about 13 an hour across the network to add 0.01 E to a link** |
 | Also | a data card places a network call by pulsing `DTR` |
 
-**What must hold: the flood is ready before the caller's next digit.** The digit
-recognised (128 ms), the seizure, the flood, the monitors' 128 ms of make
-(`exch.py flood` 5):
+**What must hold: the flood is up before the caller's next digit.** The digit
+recognised (128 ms), the seizure (2), the origin's guard (128): **ready 258 ms
+after the caller's last pulse, whatever the hop count** (`exch.py flood` 5). The flood
+itself takes 7 ms a hop — 49 ms across seven, 84 at a slow marker — well inside
+the guard. A dial leaves 242 ms of margin at 0.5 s between digits and 542 at
+0.8 s. A caller who beats it is abandoned to cannot-complete: a failed call,
+**never a wrong number**.
 
-| hops | ready after the caller's last pulse | margin at 500 ms between digits | at 800 ms |
-|---|---|---|---|
-| 1 | 265 ms | 235 ms | 535 ms |
-| 3 | 279 ms | 221 ms | 521 ms |
-| 7 | 307 ms | 193 ms | 493 ms |
-
-A caller who beats it gets a failed call, **never a wrong number**: the monitor
-that was not ready refuses to claim, nobody claims, and the origin returns
-class 6.
-
-**What it costs: every call floods**, because the first digit cannot say whether
-a call is local. The origin learns that from the second, carries on locally and
-releases the junctors. A local call, 2144 to 2155 (`exch.py flood` 3, 4): every
-link and a monitor at every exchange held 1.1 s for nothing; with 4 exchanges ×
-48 lines × 3 calls an hour, **0.19 erlang of pure signalling on each 6-channel
-link and at each monitor pool**. Fine for a handful of exchanges. It is also why
-monitors should be a pulse counter on the trunk block and not registers from the
-subscribers' pool.
-
-### 4.1 Long distance: `1`, without a sender — proposed
-
-**`1` is handled exactly as the district digit is: it is the trigger, it carries
-nothing the network needs, and consuming it costs nothing.** What makes that
-work is that the digits which follow say what kind of call it is, to a monitor
-with no memory and nothing sent to it:
-
-- **An exchange digit is 0–7: one to seven pulses, or ten.** Eight and nine
-  pulses are never an exchange digit. **So an area code begins with 8 or 9**, and
-  a monitor that hears 8 or 9 first knows a toll call; every ordinary exchange
-  lets go, and the district's toll gateway — a monitor with a strap — claims.
-  (It is the trick NANP used, the other way round. The compare is on the
-  counter's four bits, not the octal value, since 8, 9 and ten all read octal 0.)
-- **Each digit is acted on by exactly one level, which patches the call into the
-  next flood before the following digit.** That is the same forward-and-claim as
-  §3, with the same margin — 265 to 307 ms needed, 500 to 800 available — once
-  per level (`exch.py flood` 7, `1 8 3 2 3 5 5`, 0.8 s between digits):
-
-| digit | its last pulse | acted on by | next flood ready | next digit begins | margin |
-|---|---|---|---|---|---|
-| 1 | 1060 | the origin: not my district — seize | 1339 | 1860 | 521 ms |
-| 8 | 2620 | the district's toll gateway: claim, patch into toll plane 8 | 2892 | 3420 | 528 ms |
-| 3 | 3680 | area 83's gateway: claim, patch into its area | 3952 | 4480 | 528 ms |
-| 2 | 4640 | district 2's gateway: claim, patch into its district | 4919 | 5440 | 521 ms |
-| 3 | 5700 | exchange 23: claim | 5958 | 6500 | 542 ms |
-| 5 5 | 8220 | exchange 23's register: line 55 | | | rings 133 ms later |
-
-  At 0.5 s between digits every margin is still 221 ms or more.
-- **A gateway is a monitor with a strap and a second trunk block**, nothing else:
-  no store, no sender, no matrix. It holds two patched ports for the call.
-
-**What it fixes, now:** area codes are `8x` and `9x` (16 if the second digit stays
-octal) — they are compared, never addresses, so nothing in the fabric cares;
-**anything outside the home district is dialled `1` + the whole number**, the home
-area's code included, and a bare first digit 2–7 that is not the home district is
-cannot-complete; the origin's register expects three more digits after the
-district's and six after 1.
-
-| if that is too much to fix | what it costs | what it buys |
-|---|---|---|
-| **A pulse delay** — the junctors listen to the caller's A through a shift register on the register card: 128 bits at 250 Hz, one CD4517-class part and half a '393, 0.5 s. A gateway needs 1.5 s, two parts | ≈ 2 packages, 0.5 s a level | **no digit is ever consumed**: every monitor hears the number exactly as dialled, area codes can be plain octal, a bare other-district digit works, and the race with the caller's finger is gone |
-| **A register-sender** at the origin and at every gateway | ≈ 6–7 packages each (§8), a second '670 for seven digits, 0.5 s a level | the same, machine-paced, plus any dialling speed |
-
-### 4.2 The ledger: what doing without a sender costs
-
-Three different things were ruled out along the way, and they are not the same
-decision:
-
-| ruled out | why | still right? |
-|---|---|---|
-| memory parts in the exchange logic | the level of technology | yes — and a register-sender never needed one: it is '670s and counters |
-| translators, route matrices, any knowledge of where things are | flood and claim makes them unnecessary | **yes. This is the design's best idea, and it does not depend on the sender either way**: a sender can speak into a flood as well as a caller can |
-| storing and re-sending at every hop | 12–21 s across a chain, and a sender in every transit | yes — a transit stays two patched ports |
-| **a sender at the origin** | ≈ 6–7 packages a register | **only for one district of dial phones** |
-
-What the last one has cost, as it came out question by question:
-
-| without a sender | with one at the origin (and at a gateway) |
-|---|---|
-| **every call floods**, local ones included, because the junctors must be up before the second digit: 0.19 E of pure signalling on each link of the four-exchange example | the origin knows a call is local before it seizes anything: 0.03 E |
-| the flood must beat the caller's finger: 265–307 ms against his pause. `register.md` §3 accepted pauses of 250 ms | machine-paced: a guard the sender always keeps |
-| **the numbering plan serves the signalling**: every exchange in a flood shares a first digit; area codes must begin 8 or 9; anything outside the district is `1` + the whole number; a bare other-district digit cannot be dialled | the number is heard whole, so it can be anything: plain octal area codes, any district dialled directly |
-| every level of a long-distance call is another race with the finger | one re-origination a level, 0.5 s each |
-| a monitor at every exchange is held at human speed, ~1 s a call | ~0.4 s, and only for calls that leave the exchange |
-| **no keypad phone can ever place a network call**: a converter is a sender | any phone: the register converts |
-| nothing | ≈ 7 packages × 2–3 registers an exchange, a second '670; post-dial delay 0.49 s instead of 0.13 s |
-
-This is the pressure that took the telephone network from direct control to
-register-senders, at the same points: numbering tied to trunking, common
-equipment held at the speed of a finger, one kind of telephone. Small offices
-lived with it for decades, and a single district of dial phones can too — there
-the left column costs nothing that is wanted. **Past that, the sender is the
-cheaper of the two.** The two do not mix inside one flood, because a monitor must
-know whether the first digit it hears is the exchange digit or the first of the
-whole number: that is one jumper on the monitor's compare, and it is worth
-reserving now.
+**What it costs: every call that leaves floods the whole network**, from the key
+until `e` and `b` have both been dialled. One trunk on every link, and a resolver
+at every hub, are held for that long: **2.0 s for the code 11 up to 3.8 s for 00,
+0.1 s a pulse, 2.7 s on average over the sixty-four** (the 1.1 s that
+`exch.py flood` 3 gives for one digit of one pulse heard, 0.86 s for a second,
+and 0.1 s for each pulse more). A monitor whose `e` is not the one dialled is free after the first
+digit, 1.5 s on average. **A local call costs nothing**: under the earlier plan,
+in which every number began with a shared `e`, every call flooded, local ones
+too.
 
 ---
 
-## 5. Why a transit chooses its own channel
+## 5. How many exchanges a link will carry
 
-The first version of the flood hard-wired channel *k* through every node, so a
-call needed the same *k* free on every link while its origin chose *k* seeing
+A direction of six channels carries 1.9 erlang at 1 % blocking; **of twelve, 5.9 —
+three times the calls for twice the trunks.** In a chain the middle link carries
+everyone's traffic across it, and the flood adds its own. 48 lines an
+exchange at 0.08 E a line and 3 calls a line an hour, calls spread evenly over
+the other exchanges, and every call that leaves flooding every link for 2.7 s
+(§4); erlangs on the busiest link (traffic + flood) and calls blocked there:
+
+| exchanges | | 20 % of calls leave | 30 % | 50 % |
+|---|---|---|---|---|
+| 2 | one link | 0.77 + 0.04 E, 0.0 % | 1.15 + 0.06, 0.1 % | 1.92 + 0.11, 1.3 % |
+| 3 | chain | 0.77 + 0.06, 0.0 % | 1.15 + 0.10, 0.2 % | 1.92 + 0.16, 1.4 % |
+| 3 | triangle | 0.38 + 0.06, 0.0 % | 0.58 + 0.10, 0.0 % | 0.96 + 0.16, 0.1 % |
+| 4 | chain | 1.02 + 0.09, 0.1 % | 1.54 + 0.13, 0.6 % | 2.56 + 0.21, 4.0 % |
+| 5 | chain | 1.15 + 0.11, 0.2 % | 1.73 + 0.16, 1.0 % | 2.88 + 0.27, 6.1 % |
+| 6 | chain | 1.38 + 0.13, 0.4 % | 2.07 + 0.19, 2.0 % | 3.46 + 0.32, 10.1 % |
+
+The same busiest link, six channels against twelve (traffic and flood together):
+
+| exchanges in a chain | 30 % of calls leave | 50 % |
+|---|---|---|
+| 4 | 1.66 E: 0.6 % → 0.00 % | 2.77 E: 4.0 % → 0.00 % |
+| 5 | 1.89 E: 1.0 % → 0.00 % | 3.15 E: 6.1 % → 0.01 % |
+| 6 | 2.27 E: 2.0 % → 0.00 % | 3.78 E: 10.1 % → 0.04 % |
+
+**Doubling the trunks at the centre is what lets a chain of six carry busy
+traffic**, and it costs the central exchanges twelve lines each (36, not 48).
+A doubled centre needs its edges doubled too: in a longer chain the links just
+outside a doubled core carry nearly as much as the core, and become the
+bottleneck.
+
+**A star does the same with less.** Five exchanges of 48 lines, `b` from 2:
+
+| | busiest link, 30 % of calls leave | 50 % | MF8 links | trunk ports | line slots given up | links a call crosses |
+|---|---|---|---|---|---|---|
+| chain | 1.0 % | 6.1 % | 4 | 48 | 0 | 2.0 |
+| chain, the middle two links doubled | 0.19 % | 1.72 % | 6 | 72 | 24 | 2.0 |
+| star: a hub and four spokes (§3.2) | 0.19 % | 1.72 % | 4 | 48 | 12 | 1.6 |
+
+A spoke's link carries one exchange's traffic, as a chain's end link does, so the
+star blocks exactly as the doubled chain does, with a third fewer trunks, two MF8
+links fewer and half the lines given up, all of them at the hub. It also fits a
+plant that radiates from a centre.
+
+### 5.1 Measured: eight exchanges, call by call
+
+`exch.py net` runs two hubs of four directions with three leaves each — 12
+channels between the hubs, 6 to every leaf, 30 lines at a hub and 48 at a leaf,
+348 in all — for twelve hours. A line makes 3 calls an hour and holds one 48 s;
+30 % leave home. **Bursty** is the same calls arriving together: 30 s at eight
+times the rate, every 5 minutes, an office at a shift change.
+
+| | calls an hour | leaf link, 6 ch | hub link, 12 ch | flood held a leg | dial tone, mean / 99 % / worst | lift to ringback, local / network |
+|---|---|---|---|---|---|---|
+| smooth, 30 % leaving | 1 053 | 1.25 E, 0.13 % | 2.57 E, 0.00 % | 1.98 s | 6 ms / 10 ms / 1.1 s | 2.33 s / 4.82 s |
+| bursty, 30 % | 1 047 | 1.26 E, 0.25 % | 2.46 E, 0.00 % | 1.98 s | 15 ms / 10 ms / 5.6 s | 2.34 s / 4.82 s |
+| bursty, 50 % | 1 047 | 1.87 E, 2.12 % | 3.78 E, 0.12 % | 1.99 s | 19 ms / 249 ms / 4.2 s | 2.35 s / 4.82 s |
+| bursty, 30 %, two registers | 1 047 | 1.24 E, 0.59 % | 2.45 E, 0.00 % | 1.98 s | 79 ms / 2.1 s / 7.4 s | 2.39 s / 4.89 s |
+| bursty, 30 %, one register | 1 047 | 1.34 E, 0.26 % | 2.61 E, 0.00 % | 1.98 s | 1.0 s / 13.2 s / 35.9 s | 3.25 s / 5.71 s |
+
+The hubs are 11 and 12, backbone codes, and the leaves 21–23 and 31–33 (§2). The
+model dials each call's own code, so these floods are short ones: the codes are
+cheap.
+
+- **§5's arithmetic holds.** Worked with these codes' own floods it predicts
+  1.28 E and 0.17 % on a leaf link at 30 % leaving, and 2.58 E on the hub link;
+  the run gives 1.25 E and 0.13 %, and 2.57 E. The flood is held 2.0 s a leg
+  against 2.2 s by arithmetic, the difference being this model's pauses,
+  0.5–0.9 s against 0.8 s.
+- **Bursts do not move the erlangs.** The same calls arrive, in a different
+  order. What they move is what a caller waits for: dial tone's mean more than
+  doubles and its worst case goes from 1.1 s to 5.6 s, while every link and pool
+  reads the same.
+- **Bursts fall on the registers, and nowhere else.** Three at a 48-line leaf
+  carry them: 1.2 % of callers wait a scan for one. Two, and 6.8 % wait, with
+  one caller in a hundred waiting 2 s. One, and a third of all callers wait,
+  1 in 100 for 13 s. **Fit three.**
+- **The pools built for the flood are barely touched**: a hub's resolvers reach
+  0.14 E and turn away 0.1 % of the calls that want one; a leaf's monitors 0.09 E
+  and 0.0 %. Three of each is generous, two would do at this size.
+- **At 50 % leaving the leaf links are the constraint**, 2.12 % blocked against
+  0.12 % on the doubled hub link. Twelve channels to each leaf, or fewer calls
+  leaving home.
+- **What a caller hears**, whatever the load: 2.3 s from lifting to ringback on a
+  local call, 4.8 s on a network call to these codes, of which most is dialling
+  five digits at 10 pps. The claim itself is 133 ms, as §4 has it.
+
+---
+
+**A hub with four directions of twelve channels is a tandem switch.** It gives
+every block to a trunk group: eight groups, two facing each way, and twelve lines
+left at slots 0 and 4 of blocks 2–7 (`exch-protocol.md` §5). Each direction is a
+chain of *k* exchanges of 48 lines. With 30 % of calls leaving, erlangs on each
+link of a branch from the hub outward, and calls blocked there on six channels
+and on twelve:
+
+| *k* | exchanges | flood a link | hub to 1st | 1st to 2nd | 2nd to 3rd | 3rd to 4th | 4th to 5th |
+|---|---|---|---|---|---|---|---|
+| 1 | 4 | 0.13 E | 1.28 E: 0.2 % / 0.00 % | | | | |
+| 2 | 8 | 0.26 | 2.23: 1.9 % / 0.00 % | 1.41: 0.3 % / 0.00 % | | | |
+| 3 | 12 | 0.39 | 3.21: 6.4 % / 0.01 % | 2.48: 2.7 % / 0.00 % | 1.54: 0.4 % / 0.00 % | | |
+| 4 | 16 | 0.51 | 4.20: 13 % / 0.09 % | 3.51: 8.3 % / 0.02 % | 2.66: 3.5 % / 0.00 % | 1.67: 0.6 % / 0.00 % | |
+| 5 | 20 | 0.64 | 5.19: 21 % / 0.45 % | 4.52: 16 % / 0.17 % | 3.73: 9.8 % / 0.04 % | 2.82: 4.3 % / 0.00 % | 1.79: 0.8 % / 0.00 % |
+
+**Twenty full exchanges work around one hub** with twelve channels on every link
+but the outermost, where six will do. The hub wants four resolvers (§3.2) and
+each exchange's trunk blocks three monitors (`exch-monitor.md` §4).
+
+**`Topology.md` takes this further**: chains, stars, trees and a split centre,
+the largest of each, and rings. **What sets the limit is the flood, not the
+numbering.** The flood's share — the
+second figure above — is every call that leaves, anywhere, held on every link for
+2.7 s. Thirty-six full exchanges would put 1.2 E of it on every link: more than
+half of what six channels carry, and a fifth of twelve. **The sixty-four codes are
+more than full exchanges can use**: the largest network `Topology.md` finds is 47
+exchanges and 1 700 lines, with a fifth of calls leaving. Past that the way on
+is SS0 (`ex-ss0.md`), whose message floods for a third of a second, or a second
+network reached through `1 8` or `1 9` (§6). A pair can put both groups between
+them (twelve channels, no blocking to speak of). **Closing a chain into a ring**
+puts a link between its two ends and takes their traffic off every link between
+(§3.3): at five exchanges and 30 % leaving the busiest link falls from 1.89 E to
+1.60 E, 1.0 % blocking to 0.5 %, and the new link carries 0.45 E. At 50 % it is
+3.15 E to 2.67 E, 6.1 % to 3.5 %. The gain is that one pair's traffic and no
+more, because the flood, and so the call, goes one way round: the strapped link
+carries only calls between its own two ends.
+
+---
+
+## 6. Out of the network: `1 8`, `1 9` — reserved
+
+`1` followed by 8 or 9 is reserved, and returns cannot-complete today. No `e`
+can be either, so a monitor knows such a call by the first digit it hears and
+lets go, and only a gateway exchange would claim it. One way to do that
+with no sender was worked through under the earlier plan and is kept here, not
+adopted: each digit is claimed by one level in turn, with the same 258 ms and the
+same guard (`exch.py flood` 7). The alternatives are a pulse delay (≈ 2 packages:
+no digit is ever consumed) or a register-sender (§9).
+
+---
+
+## 7. Why a transit chooses its own channel
+
+The first version of the flood hard-wired channel *k* through every exchange, so
+a call needed the same *k* free on every link while its origin chose *k* seeing
 only its own. A scratch simulation — a chain of 8, 6 channels a link, uniform
 traffic, 150 000 calls a cell, % blocked for all calls / calls of 4+ hops:
 
@@ -293,22 +524,12 @@ traffic, 150 000 calls a cell, % blocked for all calls / calls of 4+ hops:
 | 4 E | 2.21 / 3.60 | **16.1 / 31.0** | 2.61 / 4.62 |
 
 The damage is the blind choice, not continuity. Since seizure comes before the
-number, a transit can patch to any free onward channel with its ordinary fabric,
+number, a transit can patch to any free onward trunk with its ordinary fabric,
 and blocking becomes the first column. Not in `exch.log`; `net` reproduces it.
 
 ---
 
-## 6. Past the flood: districts, and areas
-
-Flooding fails by load, not by logic: every call reaches every exchange in the
-domain. Past 20–30 exchanges a domain is split, and **§4.1 is how domains are
-joined** — a gateway is a monitor with a strap, and each level of the number is
-claimed by the level that owns it. Nothing in an exchange changes when its
-district gains a gateway.
-
----
-
-## 7. Clocking
+## 8. Clocking
 
 Plesiochronous, ±20 ppm crystals. Slips add per hop: one crossing measured
 34.6 dB at 20 ppm, 33.2 at 100 and 20.7 at 1000 against the clean decode, the
@@ -316,85 +537,67 @@ codec itself 25.3 (`mf8-backplane.md` §7, under the codec law of that date).
 ±20 ppm is up to 40 between neighbours, so seven crossings are at most
 280 ppm-equivalent: between the measured rows, expected above the codec, and for
 `net` to score. **Voice and async oversampled data cross MF8; synchronous data
-and G.711 pass inside an exchange and over ties, not across MF8.** The clock card
-keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
+and G.711 pass inside an exchange and over copper ties, not across MF8.** The
+clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
 
 ---
 
-## 8. Considered and set aside
+## 9. Considered and set aside
 
-**Serial characters on A — measured, and set aside as a second signalling
-system.** Seized is mark; a character is a start bit, data bits, a stop bit.
-**Measured** (`exch.py aline`): A as the trunk carries it — sampled once a
-superframe, line errors on the S bit, `mf8-spec.md` §14's 2 ms RC and Schmitt
-gate at every hop. Each hop shortens a space by **0.5 ms** and delays it by
-**2 ms** (a 16 ms space arrives as 15.5, 14.5 and 12.5 ms after 1, 3 and 7
-hops). Character errors in 4 000, three data bits, characters back to back:
-
-| bit | four digits | 1 hop: clean / 1e−2 / 6e−2 | 3 hops | 7 hops |
-|---|---|---|---|---|
-| 2 ms | 40 ms | 1675 / 1683 / 2091 | — | — |
-| 4 ms | 80 ms | **0 / 0** / 39 | 2291 / … | — |
-| 8 ms | 160 ms | 0 / 0 / 0 | **0 / 0** / 5 | 0 / 2230 / 3127 |
-| **16 ms** | **320 ms** | 0 / 0 / 0 | 0 / 0 / 0 | **0 / 0** / 8 |
-| 32 ms | 640 ms | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
-
-**16 ms a bit — sixteen ticks of the 1 kHz tick — crosses a chain of eight clean
-at a line error rate of 1e−2**, where the trunk's framer is already in trouble.
-A whole four-digit number takes the time of three dial pulses. With four data
-bits at 16 ms: 0 / 0 / 0 over 7 hops, 384 ms.
-
-| | 3 data bits | 4 data bits |
-|---|---|---|
-| Carries | octal: `e e`, `h`, `s` — and 0 in the *h* place, the operator | the register's own code: 0–9, `*`, `#` |
-| Does not carry | **9**: another exchange's outside line would have to go as the otherwise meaningless *h* = 1, a translation at both ends | — |
-| Character | 5 bits, 80 ms | 6 bits, 96 ms |
-| Sender | the three AND gates of `exch-protocol.md` §5 first | **the store's word goes on the wire as it is** |
-| Longest space, against the 204 ms release | 64 ms | 80 ms |
-
-It is faster than pulses (0.32 s a number against about 2 s of sending) and its
-monitor is smaller, but it is a second system to build and to debug, and it needs the
-sender that live dialling does without. If the flood's load ever matters more than its simplicity, this
-is the measured way to shorten it.
-
-- **A pulse register-sender** — the origin repeats the number into the flood at
-  20 pps, keeping pace with the caller (`exch.py flood` 1–4): post-dial delay
-  0.49 s against 0.13 s live. Circuit: two '4017 from the 1 kHz tick for the
-  50 ms period and its 30 / 20 split; a '193 loaded from the '670 and counted down
-  a pulse at a time; half a '393 for 200 ms between digits, which is also the
-  guard; the other half as the digit pointer; a '74 for run and phase; an '86 to
-  compare the read pointer with the write pointer, so a digit goes as soon as it
-  is in; a '00. **≈ 6–7 packages, all 74HC, no trim** — about two thirds of the
-  register it sits beside. Set aside because inside a district nothing needs
-  repeating (§4), and across districts §4.1 does without it.
-- **An in-band DTMF sender** — the original plan: a tone generator and an encoder
-  half in every register-sender, and every monitor a DTMF register. Replaced by
-  the caller's own pulses: all digital, and indifferent to what `C` carries.
-- **Hop-by-hop dialling** — a route code and a dial tone at every exchange: no
-  network card, but numbers depend on where they are dialled from and a middle
-  exchange needs the caller to name a link.
-- **Direction jumpers** — eight a site, which arm each code lies on. Replaced by
-  the claim level.
-- **Hubs that finish** a call with a sender and a matrix code → link. Not needed
-  once a fan-out resolves on the claim. If the flood ever costs too much this is
-  the way back, **and as a line**: a dialler card, two ports back to back in bits,
-  that takes a whole number and dials out of its second port like a subscriber.
-- **Hard-wired pass-through** of channel *k*: §5.
-- **64-slot 4.096 Mbps super-highways**: non-blocking to 512 ports, 74AC-class,
-  and no fourth digit.
+- **A register-sender** — the origin repeats the number into the flood at 20 pps,
+  keeping pace with the caller (`exch.py flood` 1–4): post-dial delay 0.49 s
+  against 0.13 s live. ≈ 6–7 packages, all 74HC: two '4017 for the 50 ms period,
+  a '193 counted down a pulse at a time, a '393 for the pause and the digit
+  pointer, a '74, an '86, a '00. It would let the origin know a call is local
+  before seizing anything (0.03 E of flood a link instead of 0.19), free the
+  numbering plan, and serve keypad phones. Set aside because for a handful of
+  dial-phone exchanges nothing needs repeating.
+- **Serial characters on A** — measured (`exch.py aline`): start, data, stop, at
+  16 ms a bit, cross seven hops with 0 errors in 4 000 at a line error rate of
+  1e−2, a four-digit number in 0.32 s. Each hop shortens a space by 0.5 ms and
+  delays it 2 ms. Set aside as a second signalling system that needs the sender.
+- **An in-band DTMF sender** — the original plan; replaced by pulses.
+- **Hop-by-hop dialling**, **route jumpers** saying which exchanges lie behind
+  which direction, **hubs that finish a call with a sender and a matrix**, **a wink for the claim** — each replaced by something in
+  §3 that needs no knowledge of where anything is.
+- **`e` as the key** — every number dialled `e b h s`, its own exchange's
+  included, with `e` shared by every exchange and consumed to open the flood. It
+  allowed six exchanges, and every call flooded, local ones too: 0.35 E a link at
+  six exchanges, against 0.19 E now. Replaced by the key `1`, local numbers of two
+  digits and a monitor that reads two digits.
+- **Making one exchange bigger than 64 ports** — `exch-protocol.md` §3.1.
 
 ---
 
-## 9. Not measured
+## 10. Not measured
 
-- **Everything in §3.** Claims and fan-out resolution, a late monitor, a ring's
-  NO-FORWARD strap, own code dialled from inside, `e e 9`, glare, a trunk down in
-  mid-call, and the flood's real load on links and monitors against calling rate.
-- **§4's and §4.1's timing as gates.** It is arithmetic on measured constants: the
-  monitors' 128 ms rule, the claim and a gateway's patch are not simulated.
+- **Everything in §3 as gates.** Fan-out resolution at a middle origin, the
+  strapped link of §3.3 and the double claim at its ends, own code dialled from
+  inside, `1 e b 9`, glare, a trunk down
+  in mid-call, and the flood's real load against calling rate.
+- **The gates of §3.** `net` models the timing, the pools and the channels, not
+  the circuits: a monitor is a thing that is taken and given back, not a pulse
+  counter, and a resolver is a count. The fan-out's writes, the hub's re-point
+  and the two-digit compare are still to be drawn.
+- **§4's timing.** Arithmetic on measured constants; only the monitor's rules are
+  simulated, and those for one digit heard. **`exch.py flood` and `monitor` still
+  run the earlier plan**, in which the first digit `e` was the key and a monitor
+  read `b` alone. §3.1's timeline and §4–§5's flood figures are worked from their
+  constants for `1 e b h s`, and are to be re-run.
+- **An accidental `1`.** One pulse is the easiest digit to make by fumbling the
+  hook. It costs a flood and a cannot-complete, never a wrong number, since a
+  claim needs two more digits to match. How often it happens is a counter on a
+  working exchange.
+- **§5's loads.** Erlang arithmetic with even calling; a real community is not
+  even.
 - **How fast people really dial.** The margins rest on 0.5–0.8 s between digits;
-  `register.md` §3 tested its register down to 0.25 s, which would beat the flood.
-- **The serial receiver as gates**; §8 is the waveform and an ideal mid-bit
-  sampler on the 8 kHz mark.
+  `register.md` §3 tested its register down to 0.25 s, which the guard would
+  abandon.
 - **Seven slips in a row**, at 20, 40 and 100 ppm.
 - **The trunk card's external-clock strap**, and the block's clock crossing.
+- **The hub** (§3.2): the resolver, the shared comparator's run through the
+  stored legs, a claim that races a release, and a star's timing, all as gates.
+  `net` models a two-hub tree (§5.1), and `topo` a chain, a star, two trees and
+  rings with and without a strap (`Topology.md`).
+- **Trunks that are not MF8** (§1.1): no single-channel or voice-band trunk card
+  has been sketched.

@@ -1,7 +1,10 @@
 # The exchange — internal protocol and fabric
 
 What passes between a card and the switch, and how the switch is built so that
-it grows eight ports at a time in 74HC with no memory part anywhere. The marker
+it grows eight ports at a time in 74HC with no memory part anywhere. **An exchange
+is one 64 × 64 crossbar**: 48 lines, an operator and two groups of tie trunks —
+four groups and 36 lines at the busy centre of a network.
+More lines are more exchanges (`exch-network.md`), not a bigger one. The marker
 that sets it is `exch-marker.md`; the cards that are its features are
 `exch-features.md`; trunks and the network are `exch-network.md`.
 
@@ -23,7 +26,7 @@ A port is what an MF8 channel slot already is (`mf8-backplane.md` §3):
 | `A` | one level | signalling. `A_TX` is the M lead — off-hook, ringing present, `DTR`. `A_RX` is the E lead — ring, close the loop, `DSR` |
 | clocks | `TX_CLK` 64 kHz, `TX_OCT` 8 kHz | **one clock domain for the whole exchange** |
 
-**Every MF8 card is an exchange card, unchanged.** The exchange adds three pins
+**Every MF8 card is an exchange card, unchanged.** The exchange uses two pins
 the backplane had reserved (§5). Voice band exists only on cards that face
 analog things.
 
@@ -86,7 +89,7 @@ port, and the fabric grows a block at a time without touching what is installed.
 ```
  block h:  C_TX[0..7] ─▶ 74HC151 ─▶ HC[h]  512 kbps NRZ, this block its only driver ─────┐
            A_TX[0..7] ─▶ 74HC151 ─▶ HA[h]                                                │  to every block
-           BUSY, TYPE0-2 ─▶ 4 × '151 ─▶ HB[h], HT0-2[h]   to the marker only             │
+           BUSY, the word ─▶ 2 × '151 ─▶ PB[1:0]          to the marker only             │
                      ▲ slot counter, '393, reset by SYNC                                 ▼
  port p:   latch 74HC273 [ highway(3) | slot(3) | BUSY | CLAIM ] ◀── marker: PORT, SRC, WR
            HC[0..7] ─▶ '151 (highway) ─▶ D ─[ FF, clocked at mid-cell when slot strobe ]─[ FF, frame edge ]─▶ C_RX[p]
@@ -102,26 +105,44 @@ port, and the fabric grows a block at a time without touching what is installed.
   itself. An absent block's wire is pulled to `FILL` and its `A` wire to 0, as an
   empty MF8 slot is (§12.3).
 - **Per port, space then time.** One '151 picks the highway, a second picks one
-  of eight shared slot strobes, a flip-flop captures at mid-cell. A second
-  flip-flop re-times at the frame edge, so a card sees `C_RX` change on one edge
-  only, whatever slot its source sits in; cards sample it on the opposite phase,
-  half a frame from any change.
+  of eight shared slot strobes, a flip-flop captures at mid-cell. Cards sample
+  `C_RX` at the frame edge, which is half a cell from any capture, so a bit is
+  one frame late whatever the two slots. (The re-timing flip-flop drawn above
+  turned out not to be needed: `exch-fabric.md` §3.4.)
 - **Any number of ports may listen to one port.** That costs nothing, and it is
   what makes a tone a line.
-- **The latch never grows.** A port only ever listens inside its own group of
-  64; larger numbers are routing, not addresses (`exch-network.md`).
+- **It is a 64 × 64 crossbar with one-way crosspoints**: every port can listen to
+  any of 64 sources, one crosspoint held for each listener by its latch — 4 096 of
+  them, built as eight highways in space by eight slots in time. One stage, so
+  there is exactly one path between two ports and it is always free: the marker
+  never hunts inside the fabric. A conversation is two crosspoints.
+- **The latch never grows.** A port only ever listens inside its own exchange; the
+  digits in front of `h s` name an exchange, not an address (`exch-network.md`).
 
 **16 or 32 ports is mechanical, not architectural**: two or four highways on one
 backplane. Sixteen ports, four switch cards and a supply are 21 slots — one
 84 HP subrack at 4 HP.
 
-**Cost, estimated.** Per port: the '273, two '151 for `C` (highway, strobe) and
-one more highway '151 for `A`, a '74 pair, and the supervision of
-`exch-marker.md` §5 — about 5 packages. Per block: counter, six commutating
-'151s, drivers, write decode — about 10. **≈ 50 packages a block of eight**, on
-two Eurocards, beside ≈ 80 for the eight line cards it serves. The
+**Cost.** `exch-fabric.md` is the parts list: 5 packages a port for the crosspoint
+and about 3¼ for its supervision, 13 shared by a block — **≈ 80 packages a block
+of eight**, beside ≈ 80 for the eight line cards it serves. (An earlier figure of
+50 here left out most of the supervision.) The
 selector-per-line sketched in `register.md` §6 is 2 packages a port at eight
 lines and 10 at sixty-four: it does not grow.
+
+### 3.1 Past 64 ports: more exchanges, not a bigger one
+
+**Decided: the exchange stays a 64 × 64 crossbar**, and a larger system is several
+of them joined by tie trunks and the flood (`exch-network.md`). Four ways of
+making one fabric bigger were worked through and set aside as too complex for
+what they bought:
+
+| | what it was | why not |
+|---|---|---|
+| banks joined by junctors, a rack marker, a shared service highway | several 64-port fabrics in one rack as one exchange | a fifth of all ports become junctors at 100 lines and a third at 1000; registers cannot be pooled; tie wiring, a tandem stage, a marker that hunts paths |
+| 64-slot highways at 4.096 Mbps | a rack of 512 ports behind one '151 | a 244 ns cell is outside comfortable 74HC |
+| allocated talk slots, 16 to a highway at 1.024 Mbps | a port holds a slot only while it is in a call, so a listener need only reach the slots in use | a second rate; ≈ 8 packages a port against 5 |
+| the same in MF8's own frame at 512 kbps, highways pooled in fours | one rate, sixteen banks in one stage | ≈ 11 packages a port: four to six packages a line more than anything else here |
 
 ---
 
@@ -135,11 +156,11 @@ select, slot strobe, capture, re-time — with random data on every fitted port.
 | every source slot to every listening slot, `C` and `A` | 4 096 pairs, **0 errors, delay exactly 1 frame** for all of them |
 | 1 to 8 blocks fitted, random maps, 85 % of slots filled | 2.1 M bits a row, **0 errors**; a port listening to an empty slot or an absent block receives `FILL` and `A` = 0 |
 | fan-out, 63 ports on one source | identical streams, 0 errors |
-| a cleared latch | listens to port 00, which is never fitted: `FILL`, `A` = 0, decoding at −48.3 dB re nominal speech |
+| a cleared latch | listens to port 00, which is never fitted (§5): `FILL`, `A` = 0, decoding at −48.3 dB re nominal speech |
 | octets, a source sending bytes on `TX_OCT` | 255 of 255 right when the listener frames on **`RX_OCT` = `TX_OCT` + 1 frame**; 253 of 255 wrong if it does not |
-| an MF8 frame as a block's highway (`mf8.build` / `mf8.framer`) | bit-exact on the right ports; after a slipped line bit the framer re-frames once and **no channel lands on the wrong port**; 45 bits are wrong across the six, all in the 15 frames before the framer let go |
+| an MF8 frame as a block's highway, its channels on slots 1–3 and 5–7 as §5 has them (`mf8.build` / `mf8.framer`) | bit-exact on the right ports; after a slipped line bit the framer re-frames once and **no channel lands on the wrong port**; 45 bits are wrong across the six, all in the 15 frames before the framer let go |
 | `A` through the S bit | 0 errors |
-| a tie between two groups' highways | 0 errors at exactly 2 frames, one per fabric |
+| a copper tie between two exchanges | 0 errors at exactly 2 frames, one per fabric |
 
 Because the delay is one frame for every pair, the octet phase survives any
 connection: a DS0 stays a DS0 through the switch, and data passes bit-exact.
@@ -168,21 +189,80 @@ are its port address** — highway, slot — three bits each, straight into the 
 they are ever an address.
 
 ```
- first key   0  operator      1  long distance (reserved)      2–7  a number
-             8  spare         9  outside line
- ports       00–77.  00 is never fitted: it is the silence a cleared latch listens to.
-             00–17 are never subscriber-dialled, because 0 and 1 mean something in that
-             position: they hold tones, registers and the first trunk block.
-             Subscribers are 20–77: 48 lines a group.
+ first key   0  operator      1  the network: 1 e b h s             2–7  a local number, h s
+             8  spare: cannot-complete      9  outside line
+
+ 00          idle: never fitted; the silence a cleared latch listens to
+ 01–03       tie trunks, group 0: channels 1–3 of one MF8 link
+ 04          the operator
+ 05–07       tie trunks, group 0: channels 4–6
+ 10          dial tone
+ 11–13       tie trunks, group 1: channels 1–3
+ 14          cannot-complete tone
+ 15–17       tie trunks, group 1: channels 4–6
+ 20–77       the 48 lines.  An outside line, a second operator's position, an announcement,
+             a radio or a conference leg is a card in one of these slots that says so in its word
+ 21–23 25–27 optionally, tie trunks, group 2  }  a busy exchange at the centre of a network:
+ 31–33 35–37 optionally, tie trunks, group 3  }  24 trunks and 36 lines
+ h1–h3 h5–h7 in any block 2–7, instead: a subscriber terminal, six lines over an MF8 link
+             (exch-terminal.md)
 ```
 
-How a number is parsed, and the four-digit form a networked exchange uses, are
-`exch-marker.md` §2 and `exch-network.md` §3.
+A group is named by its block. Which way it faces, N, S, E or W, is in its
+ports' words, set by jumpers on its trunk card (`exch-network.md` §1). Any group
+may face any way, and two groups facing the same way are one direction of twelve
+channels. **Any block may hold a trunk group.** A tandem exchange at the centre
+of a star gives all eight to trunks: four directions of twelve channels, and
+twelve lines left at slots 0 and 4 of blocks 2–7 (`exch-network.md` §5). A single-channel trunk card may sit in any slot and face any way
+(`exch-network.md` §1.1).
 
-**Three reserved pins become the class mark.** `TYPE0`, `TYPE1` and the unused
-`RAI` pin of `mf8-backplane.md` §8 carry a 3-bit class set by a jumper on the
-card; an empty slot reads 000. The block commutates them onto three more
-highways that only the marker reads. Nothing in the fabric uses them.
+Ports 00–17 are never dialled, because 0 and 1 mean something as a first digit.
+Registers and monitors take no ports: a pulse register reads its caller's hook
+from the M highway through a probe (`exch-marker.md` §4), and a monitor reads a
+trunk's A on the trunk block (`exch-monitor.md`).
+
+**A link's channels sit where they are on the wire.** MF8 sends channel C*n*'s
+bit at frame position 1–3 or 5–7, with F at 0 and S at 4, and its A bit at the
+superframe state of the same number (`mf8-spec.md` §2). A trunk port takes that
+number as its slot. So one 3-bit address picks a channel's C bit in the frame,
+its A bit in the superframe, its input on the trunk card's frame mux and '259,
+and its port, and the trunk card is wired straight across. Slots 0 and 4, which
+are F and S on the wire, are ports of their own. In block 0 they are idle and
+the operator. In block 1 they are the two tones. In a block of lines they are
+two more lines.
+
+**A cleared latch listens to 00, and 00 is never fitted.** A port that releases
+clears its '273 to zeros, which is highway 0, slot 0: `FILL` and A = 0, the
+silence of an empty slot. Nothing that talks may sit there. If the operator
+were at 00, every idle phone would ring whenever the operator lifted, because
+on-hook with E high is the ring condition. A phone off-hook with a cleared
+latch, one waiting for a register for example, would also hear the operator's
+calls. So the operator is at 04. The latch holds port numbers as they are: the
+slot select is wired in order, and `SRC` carries the number as dialled.
+
+How a number is parsed, and the form `1 e b h s` — the network's key, the
+exchange's code, then the line — that reaches a line on any exchange, are
+`exch-marker.md` §2 and `exch-network.md` §2–3.
+
+**Two reserved pins say what a port is.** `mf8-backplane.md` §8 reserved
+`TYPE0`, `TYPE1` and `RAI` in the channel slot and connects none of them. The
+exchange uses the first two (`ex-extensions.md` §2):
+
+- **The word, on a12**: eight bits, one a frame, every octet. It carries the
+  port's class and its options (a trunk's direction, a restricted line, a hunt
+  group), or the port it is nailed to. The block commutates it onto one wire that
+  only the marker reads, and the marker's scanner reads the whole word at each
+  visit. **A plain line card ties the pin to ground**, which reads all ones and
+  means a line with no options: no part and no jumper. An empty slot reads all
+  zeros, unequipped.
+- **`/ANS`, on a13**: the one thing the port's own gates need to know, which is
+  whether the port rings. A phone's card leaves it open. A trunk, an outside
+  line, a conference leg and any card that answers at once tie it low.
+
+A card only ever pulls the two pins to ground, so it works unchanged in an MF8
+shelf. **Whatever sits behind a port says everything the exchange needs to know
+about it**: a card for its port, a trunk card for each of its six channels.
+Nothing in the fabric uses the word.
 
 ---
 
