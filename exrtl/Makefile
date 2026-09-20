@@ -16,8 +16,9 @@ TB_two    := tb/mvp_site.v tb/tb_two.v
 TB_trunk  := tb/trunk_site.v tb/bitpath.v tb/tb_trunk.v
 TB_net    := tb/net_site.v tb/bitpath.v tb/tb_net.v
 TB_chain  := tb/net_site.v tb/bitpath.v tb/tb_chain.v
+TB_monitor := tb/tb_monitor.v
 
-SIMS   := fabric mvp two trunk net chain
+SIMS   := fabric mvp two trunk net chain monitor
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 

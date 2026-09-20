@@ -37,8 +37,8 @@ rack, and the module boundaries are the connectors.
                                                               exch-network.md 3)
  pulse_reg         the register: no port, no class, reads its caller's hook off
                    the M highway through its own probe        (register.md 4)
- monitor           the seeker, on a trunk block: the only part of the network
-                   that reads a digit it was not sent         (exch-monitor.md)
+ monitor           the seeker, a POOL on each trunk block: the only part of the
+                   network that reads a digit it was not sent (exch-monitor.md)
    pulse_rx        register.md 2's three windows off one timer, shared by both
 
  line_card         a card that plugs into a channel slot -- OUTSIDE exch_top, because
@@ -70,6 +70,7 @@ make two      two exchanges, own crystals 100 ppm apart, both making calls
 make trunk    two exchanges tied by one MF8 link, calls patched across it
 make net      the same two exchanges, calls DIALLED: local, and the pulse flood
 make chain    three exchanges, 22 = 23 = 24, and a call that transits 23
+make monitor  the seeker's pool and the three terms of its seizure rule
 make iv       the whole suite again under Icarus, as the reference
 make trunk-ppm  the link with the two crystals 100 ppm apart
 make lint     verilator, the whole exchange fitted
@@ -163,6 +164,20 @@ And one of timing: **a hop cost about three scans** until the forwarder was made
 to sweep from where the seizure was seen rather than from port 63. Two now, of
 which one is the marker's own detection latency — inherent to a scanned marker,
 and worth holding against `exch-network.md` §3.1's 7 ms hop.
+
+**The pool is the thing §4 is really about.** Its sizing table -- two a block to
+four exchanges, three to twenty, four to thirty-six -- is the loss to callers
+whose calls this exchange owns, and none of it exists with a single cell. The
+monitor is now a pool: one scanner over the block's eight slots, a cell each
+with its own timer, and a seizure that finds none free going **unwatched here,
+for good**. The exchange still passes the call on; it just cannot be the one
+that owns it.
+
+`make monitor` drives the eight M and `BUSY` lines directly, because the
+interesting cases cannot be reached from a system test: two seizures on one
+block would need two callers dialling at once, and one register serves one
+caller. So §4's whole Erlang argument is untestable end to end until the
+register is a pool too.
 
 ### What the serial bus demands of a marker
 

@@ -29,7 +29,8 @@ module net_site #(
     parameter integer RING_ON = 200, RING_OFF = 400,
     parameter integer T_A = 4,
     parameter integer HIT = 1, ID = 16, CLR = 32,
-    parameter integer T_GUARD = 16, T_CLAIM = 250
+    parameter integer T_GUARD = 16, T_CLAIM = 250,
+    parameter integer NMON = 2                   // cells in each block's pool (4)
 )(
     input         clk,
     input         rst_n,
@@ -158,18 +159,18 @@ module net_site #(
         .busy(r_busy), .port(), .cnt(r_cnt), .dig_stb(r_stb), .gone(r_gone), .brk(r_brk));
 
     // A monitor on each block that holds trunks (exch-monitor.md 4).
-    monitor #(.OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0),
+    monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0),
               .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon0 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
         .m(tk_a_tx), .busy(pbusy[7:0]), .chan_mask(8'b1110_1110),
-        .claim(mc0), .claim_port(mp0), .held(mh0));
+        .claim(mc0), .claim_port(mp0), .held(mh0), .all_busy());
 
     generate if (HAS_TRUNK1) begin : mon1
-        monitor #(.OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd1),
+        monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd1),
                   .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon1 (
             .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
             .m(t1_a_tx), .busy(pbusy[15:8]), .chan_mask(8'b1110_1110),
-            .claim(mc1), .claim_port(mp1), .held(mh1));
+            .claim(mc1), .claim_port(mp1), .held(mh1), .all_busy());
     end else begin : nomon1
         assign mc1 = 1'b0; assign mp1 = 6'd0; assign mh1 = 1'b0;
     end endgenerate

@@ -1,28 +1,46 @@
-// monitor -- the seeker.  exch-monitor.md.
+// monitor -- the seeker, as a POOL.  exch-monitor.md.
 //
 // The only part of the network that reads a digit it was not sent, so it is the
 // part that must never be wrong.  It sits on a block that holds trunks and
-// reads its trunk ports' M lines directly; it never touches the fabric.
+// reads its trunk ports' M and BUSY lines directly; it never touches the fabric.
 //
 //   idle      the trunk's M is low
-//   seized    M rises, AND THE MONITOR SAW IT RISE    -> count this seizure
+//   seized    M rises, AND A MONITOR SAW IT RISE      -> count this seizure
 //   counting  register.md 2's windows, on that M
-//   decide    first digit is our e   -> read one more
+//   decide    first digit is our e   -> read one digit more
 //             second is our b        -> CLAIM
 //             either 8 or 9          -> reserved: let go
 //             anything else          -> let go, at once
 //   done      nothing more until the trunk releases
 //
-// Rule 1 -- "only a seizure whose rise it saw" -- is what keeps a monitor that
-// attached late, in the pause BETWEEN two digits, from counting b as e and h as
-// b.  It is true by construction here: the scanner keeps a bit per slot of what
-// M was at the last visit, and a rise is M high now and low then.  The scanner
-// steps on the 8 kHz octet mark, so a seizure is caught within 1 ms of its
-// rise, in which no pulse can fit.  Rule 2, the origin's 128 ms guard, is the
-// marker's.
+// A POOL, NOT ONE A CHANNEL (4).  One scanner steps the block's eight slots on
+// the 8 kHz octet mark; a fresh seizure goes to whichever cell is free, and if
+// none is, "the seizure goes unwatched here, for good" -- the exchange still
+// passes the call on, it just cannot be the one that owns it.  4 sizes the pool:
+// two a block to four exchanges, three to twenty, four to thirty-six, five
+// beyond, and the figure is the loss to callers whose calls this exchange owns.
+//
+// THE SEIZURE RULE HAS THREE TERMS, not the two of 4, and the third is needed
+// as soon as an exchange has outgoing trunks of its own:
+//
+//   M high now, M low at the last visit, and BUSY low AT THE LAST VISIT.
+//
+// Rule 1 -- "only a seizure whose rise it saw" -- is the second term, and it is
+// what keeps a monitor that attached late, in the pause BETWEEN two digits,
+// from counting b as e and h as b.  The third term tells an arriving seizure
+// from a CLAIM COMING BACK: backward A rising on this exchange's own outgoing
+// trunk satisfies the first two exactly, and without the third a monitor is
+// held for the whole of every call the exchange transits.  It must be BUSY as
+// of the last visit and not BUSY now, because this scanner covers eight slots
+// while the marker's covers sixty-four ports: the marker reaches an incoming
+// seizure first about one time in eight, and a live BUSY test throws those
+// away.  The two cases differ in ORDER, not in state -- this exchange writes
+// BUSY before the far end's answer raises M -- so the last visit is what
+// separates them.
 `timescale 1ns/1ps
 
 module monitor #(
+    parameter integer NMON = 2,              // cells in the pool (4)
     parameter [2:0]   OWN_E = 3'd0,
     parameter [2:0]   OWN_B = 3'd0,
     parameter [2:0]   BLOCK = 3'd0,          // which block these eight slots are
@@ -38,76 +56,104 @@ module monitor #(
 
     output reg       claim,                  // one pulse: this port is ours
     output reg [5:0] claim_port,
-    output reg       held                    // a seizure is being counted
+    output           held,                   // any cell counting
+    output           all_busy                // a seizure now would go unwatched
 );
     localparam IDLE = 2'd0, WANT_E = 2'd1, WANT_B = 2'd2, DONE = 2'd3;
 
-    reg [2:0] scan;
-    reg [7:0] seen;                          // M at the last visit, a bit a slot
-    reg [7:0] seen_b;                        // and BUSY at the last visit
-    reg [1:0] st;
-    reg [2:0] slot;
-    reg [9:0] low_ms;
+    reg  [2:0]          scan;
+    reg  [7:0]          seen, seen_b;
+    reg  [NMON-1:0]     c_held;
+    reg  [3*NMON-1:0]   c_slot;
+    reg  [2*NMON-1:0]   c_st;
+    reg  [10*NMON-1:0]  c_low;
 
-    wire [3:0] d_cnt;
-    wire       d_stb, d_clr;
+    wire [NMON-1:0]     d_stb, d_clr;
+    wire [4*NMON-1:0]   d_cnt;
 
-    pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_rx (
-        .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k), .arm(held), .m(m[slot]),
-        .cnt(d_cnt), .dig_stb(d_stb), .clear(d_clr), .counting(), .brk_stb());
+    assign held     = |c_held;
+    assign all_busy = &c_held;
 
-    // e and b are 0-7 and a dialled 0 is ten pulses; 8 and 9 are reserved.
-    wire [2:0] val = (d_cnt == 4'd10) ? 3'd0 : d_cnt[2:0];
-    wire       bad = (d_cnt == 4'd8) || (d_cnt == 4'd9) || (d_cnt > 4'd10);
+    // A fresh seizure: the three terms above.
+    wire fresh = chan_mask[scan] && m[scan] && !seen[scan] && !seen_b[scan];
+
+    // Which cell takes it -- the first free one.  None free, and the seizure
+    // goes unwatched here, for good.
+    integer j;
+    reg [NMON-1:0] take;
+    always @* begin
+        take = {NMON{1'b0}};
+        for (j = 0; j < NMON; j = j + 1)
+            if (!c_held[j] && take == {NMON{1'b0}}) take[j] = 1'b1;
+    end
+
+    genvar g;
+    generate for (g = 0; g < NMON; g = g + 1) begin : seeker
+        pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_rx (
+            .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
+            .arm(c_held[g]), .m(m[c_slot[g*3 +: 3]]),
+            .cnt(d_cnt[g*4 +: 4]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
+            .counting(), .brk_stb());
+    end endgenerate
+
+    integer k;
+    reg [3:0] n;
+    reg [2:0] v;
+    reg       bad;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            scan <= 0; seen <= 0; seen_b <= 0; st <= IDLE; slot <= 0; held <= 0;
-            claim <= 0; claim_port <= 0; low_ms <= 0;
+            scan <= 0; seen <= 0; seen_b <= 0;
+            c_held <= 0; c_slot <= 0; c_st <= 0; c_low <= 0;
+            claim <= 0; claim_port <= 0;
         end else begin
             claim <= 1'b0;
 
             if (oct_stb) begin
-                // a fresh seizure is M high now and low at the last visit
-                // A fresh seizure is M high, and M low AND BUSY low AT THE LAST
-                // VISIT.  The BUSY term is what tells a seizure arriving from a
-                // CLAIM coming back: when this exchange seizes or patches a
-                // trunk it writes BUSY first and the far end's answer raises M
-                // long after, so the claim's rise always finds BUSY already set.
-                // It must be BUSY as of the last visit and not BUSY now: the
-                // monitor steps a slot every 125 us and the marker a port every
-                // 125 us, so the marker reaches an incoming seizure first about
-                // one time in eight, and reading BUSY live loses those.
-                if (st == IDLE && chan_mask[scan] && m[scan] && !seen[scan]
-                    && !seen_b[scan]) begin
-                    slot <= scan; held <= 1'b1; st <= WANT_E;
-                end
+                if (fresh)
+                    for (k = 0; k < NMON; k = k + 1)
+                        if (take[k]) begin
+                            c_held[k]           <= 1'b1;
+                            c_slot[k*3 +: 3]    <= scan;
+                            c_st  [k*2 +: 2]    <= WANT_E;
+                            c_low [k*10 +: 10]  <= 10'd0;
+                        end
                 seen[scan]   <= m[scan];
                 seen_b[scan] <= busy[scan];
-                scan <= scan + 1'b1;
+                scan         <= scan + 1'b1;
             end
 
-            if (held) begin
-                if (d_stb) begin
-                    case (st)
-                    WANT_E:  if (bad || val != OWN_E) begin held <= 0; st <= IDLE; end
-                             else st <= WANT_B;
-                    WANT_B:  if (bad || val != OWN_B) begin held <= 0; st <= IDLE; end
-                             else begin
-                                 claim <= 1'b1; claim_port <= {BLOCK, slot};
-                                 st <= DONE;                 // it reads two digits and no more
-                             end
+            for (k = 0; k < NMON; k = k + 1) if (c_held[k]) begin
+                n   = d_cnt[k*4 +: 4];
+                // e and b are 0-7 and a dialled 0 is ten pulses; 8 and 9 reserved
+                v   = (n == 4'd10) ? 3'd0 : n[2:0];
+                bad = (n == 4'd8) || (n == 4'd9) || (n > 4'd10);
+
+                if (d_stb[k]) begin
+                    case (c_st[k*2 +: 2])
+                    WANT_E: if (bad || v != OWN_E) begin
+                                c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE;
+                            end else c_st[k*2 +: 2] <= WANT_B;
+                    WANT_B: if (bad || v != OWN_B) begin
+                                c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE;
+                            end else begin
+                                claim      <= 1'b1;
+                                claim_port <= {BLOCK, c_slot[k*3 +: 3]};
+                                c_st[k*2 +: 2] <= DONE;   // two digits and no more
+                            end
                     default: ;
                     endcase
                 end
-                // the trunk releasing frees the monitor: M low for 256 ms
+
+                // the trunk releasing frees the cell: M low for 256 ms
                 if (tick_1k) begin
-                    if (m[slot]) low_ms <= 0;
-                    else if (low_ms == CLR[9:0]) begin
-                        held <= 1'b0; st <= IDLE; low_ms <= 0;
-                    end else low_ms <= low_ms + 1'b1;
+                    if (m[c_slot[k*3 +: 3]]) c_low[k*10 +: 10] <= 10'd0;
+                    else if (c_low[k*10 +: 10] == CLR[9:0]) begin
+                        c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE;
+                        c_low[k*10 +: 10] <= 10'd0;
+                    end else c_low[k*10 +: 10] <= c_low[k*10 +: 10] + 1'b1;
                 end
-                if (d_clr) begin held <= 1'b0; st <= IDLE; end
+                if (d_clr[k]) begin c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE; end
             end
         end
     end
