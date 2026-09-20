@@ -1,6 +1,6 @@
 # verilog — the exchange in Verilog
 
-A register-transfer model of the exchange of [`exchange/docs`](../exchange/docs): the
+A register-transfer model of the exchange of [`exchange/`](../exchange/): the
 8 × 8 fabric, the ports that supervise themselves, and the clock card, in
 synthesisable Verilog. It is built the way the 74HC design is built — a '151 is
 a `mux8`, a '273 is the port's `addr` register, the block has no address and no

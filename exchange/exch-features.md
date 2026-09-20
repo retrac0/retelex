@@ -35,11 +35,32 @@ mutes the encoder's **input**, not its output, so the off periods are the codec'
 own `1010` and nothing clicks. `A_TX` is tied low. A tone card is never busy:
 the marker writes only the listener's latch, and any number may listen.
 
-`RBT`, the ringback bit stream, comes from the same kind of card, which drives a
-backplane line as well as its port (`exch-marker.md` §5).
+`RBT`, the ringback bit stream, comes from **the same card with one part added**:
+⅛ of a 74HC244 and 33 Ω from the encoder's own node, out of the rear connector
+and punched to the `RBT` conductor in the wiring field. `C_TX` is untouched, so
+the card keeps its own channel as well (`tone-card.md` §1, §5). `RBT` is carried
+with the clock card's shelf-wide references and is the one of them the clock card
+does not drive (`exch-mainboard.md` §2.1); with no ringback card fitted it sits
+at `FILL` and a caller hears silence while the far phone rings (`mvp-ex.md`).
+
+**Which port it sits at is free**, because nothing is ever switched to it: the
+tone reaches a caller through the called port's cell, not through a connection
+(`exch-marker.md` §5). A slot with no port circuit costs least; slot 0 or 4 of a
+block fitted as trunk group 2 or 3 — ports 20, 24, 30, 34 — costs nothing and is
+dialable as a test line (`tone-card.md` §5.1).
 
 Dial tone is at port 10 and cannot-complete at 14 (`exch-protocol.md` §5). Both
 are in block 1.
+
+**Which tones, and a fourth.** `tone-plan.md` settles the frequencies and
+cadences, and proposes **busy at port 11** — free wherever block 1 is not a trunk
+group, never dialable because 1 is a first key — so that busy and
+cannot-complete differ in timbre as well as speed instead of sharing one tone.
+It is another *source* reached by address, not another class, and the marker
+already computes the free test that steers it. It also specifies the generator
+as a tolerance both an oscillator card and a ROM card meet, and measures why the
+cadence trick above **must not** be used at a warble rate: a square there costs
+23 dB and fifty spurious lines (`sim/tones.py warble`).
 
 ---
 

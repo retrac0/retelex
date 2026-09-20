@@ -355,7 +355,7 @@ would loop the link back on itself. A transmitter needs the six ports' `C_RX`,
 which are private to each port and appear on no highway; `HA[h]` is wrong the
 same way, carrying the far end's M where the transmitter needs each port's
 `A_RX`. `exch-network.md` §1's own drawing has it right, and so does
-[mf8_trunk_card.v](../../verilog/rtl/mf8_trunk_card.v), which takes `port_c_rx`
+[mf8_trunk_card.v](../verilog/rtl/mf8_trunk_card.v), which takes `port_c_rx`
 and `port_a_rx` in and drives `port_c_tx` and `port_a_tx` out.
 
 The sentence looks like `exch-fabric.md` §1.1's "the commutator is, part for

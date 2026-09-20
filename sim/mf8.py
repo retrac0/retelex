@@ -1,7 +1,7 @@
 """
 Reference model and validation battery for the 8-bit superframe carrier.
 
-This is the design mf8/docs/mf8-spec.md specifies.  It is mf8/docs/mfspec.md's frame
+This is the design mf8/mf8-spec.md specifies.  It is mf8/mfspec.md's frame
 with the header replaced, because the original header was measured broken in
 three independent ways (mf8-spec.md 1):
 

@@ -1,7 +1,7 @@
 """
 MF8 end to end: six talkers, real CVSD, over a real line, in both line codes.
 
-This closes mf8/docs/mf8-spec.md 13's first two gaps -- "audio end to end through
+This closes mf8/mf8-spec.md 13's first two gaps -- "audio end to end through
 this frame" and "anything about impulse noise".  Everything upstream of here
 (mf8.py) is bit level: it shows the framer holds, and has never listened to a
 channel or put a waveform on a wire.

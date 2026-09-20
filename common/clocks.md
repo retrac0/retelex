@@ -12,7 +12,7 @@ line card in an exchange gets its 128 kHz — which is the question that made th
 list worth writing.
 
 > **Status: proposed. Nothing here is newly measured.** The chain is
-> `mf8-spec.md` §9.1's and [clock_card.v](../../verilog/rtl/clock_card.v)'s, read
+> `mf8-spec.md` §9.1's and [clock_card.v](../verilog/rtl/clock_card.v)'s, read
 > against each other; the rates are arithmetic off the 4.096 MHz both of them
 > start from. §4's derivation is one inverter that has never been built, and its
 > phase wants a scope at bring-up.

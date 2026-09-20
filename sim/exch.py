@@ -1,5 +1,5 @@
 """
-The exchange of exchange/docs: a fabric of 8-slot highways, a marker that hunts ports
+The exchange of exchange/: a fabric of 8-slot highways, a marker that hunts ports
 by class in fixed order, and features that are lines.
 
     tandem    why the fabric switches bits and not voice band: N codecs in tandem

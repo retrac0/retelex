@@ -1,0 +1,19 @@
+TONES -- call-progress tones as looped CVSD, and what generates them
+  64 kbps, mf8-spec.md 12.1 law, level = NOMINAL_RMS 0.15, 8 kB ROM grid = 7.8125 Hz
+
+IMAGE -- the ROM, as the card holds it.
+  8192 addresses, one byte each.  Bit 0 is plane A, bit 1 plane B, the rest spare.
+  A plane is the same image for two tones; what separates them is the cadence gate,
+  which is a counter tap and not in the ROM at all (common/tone-plan.md 4.2).
+
+  bit plane serves                     burned lines                SNR       ones
+    0 A     dial and ringback          398+422+445               36.4   4095/8192
+    1 B     busy and cannot-complete   484+602+719               34.2   4096/8192
+
+  8192 bytes -> verilog/rtl/tone_rom.hex
+  Each plane is DC balanced to within a bit, so nothing in the decoder drifts:
+    plane A: 4095 ones of 8192  (-0.02 % from balance)
+    plane B: 4096 ones of 8192  (+0.00 % from balance)
+
+----------------------------------------------------------------------------------------------------
+

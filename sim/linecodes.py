@@ -1,8 +1,8 @@
 """
-Line-code measurements for the MF8 carrier.  Backs mf8/docs/line-codes.md and
-mf8/docs/frame-rate.md.
+Line-code measurements for the MF8 carrier.  Backs mf8/line-codes.md and
+mf8/frame-rate.md.
 
-Everything runs on the mf8 frame (mf8.py, mf8/docs/mf8-spec.md).  Audio lives in
+Everything runs on the mf8 frame (mf8.py, mf8/mf8-spec.md).  Audio lives in
 mf8_line.py, which carries six talkers through the whole chain; this file is
 the line itself -- which code, how it fails, and what the rate costs.
 

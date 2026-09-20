@@ -49,12 +49,12 @@ General purpose architecture.  Chains, stars and rings are possible.
 ## Layout
 
 ```
-common/docs/     the cards, and everything that belongs to neither shelf
-mf8/docs/        the MF8 carrier: frame, line, backplane
-exchange/docs/   the exchange, and exchange/README.md
-verilog/         the exchange in Verilog: rtl/, tb/, Makefile
-sim/             every model, and the committed run beside each
-falstad/         the voice path as Falstad circuits
+common/     the cards, and everything that belongs to neither shelf
+mf8/        the MF8 carrier: frame, line, backplane
+exchange/   the exchange
+verilog/    the exchange in Verilog: rtl/, tb/, Makefile
+sim/        every model, and the committed run beside each
+falstad/    the voice path as Falstad circuits
 ```
 
 A card plugs into an MF8 shelf or an exchange block unchanged, so its
@@ -67,30 +67,32 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 
 | | |
 |---|---|
-| [common/docs/channel-cards.md](common/docs/channel-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; each card's pins; signalling through the A bit, measured |
-| [common/docs/common-cards.md](common/docs/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one strap, a tone card that puts a whole shelf on fast busy, and the connectors |
-| [common/docs/clocks.md](common/docs/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from |
-| [common/docs/subscriber-line.md](common/docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
-| [common/docs/subscriber-adapter.md](common/docs/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
-| [common/docs/circuit-review.md](common/docs/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
+| [common/channel-cards.md](common/channel-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; each card's pins; signalling through the A bit, measured |
+| [common/common-cards.md](common/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one strap, and the connectors |
+| [common/clocks.md](common/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from |
+| [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
+| [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
+| [common/tone-plan.md](common/tone-plan.md) | the tone plan: four tones in two timbres — the Australian warble for *progressing*, the old Bell buzz for *stop* — why a warble is one oscillator and not three, eight ROM planes as two switchable standards, and the analog card beside it |
+| [common/tone-card.md](common/tone-card.md) | the tone card: one generator holding a whole shelf on fast busy — a plain 2 × 16 channel card, the backplane strap field that lets one slot feed the others, and the only card in the set that drives and never listens |
+| [common/circuit-review.md](common/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 
 **mf8/** — the carrier
 
 | | |
 |---|---|
-| [mf8/docs/mf8-spec.md](mf8/docs/mf8-spec.md) | MF8 specification — frame, header, framer, cards, line code, circuits |
-| [mf8/docs/mf8-backplane.md](mf8/docs/mf8-backplane.md) | remote MF8 unit backplane — modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip |
-| [mf8/docs/mf8-pico.md](mf8/docs/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
-| [mf8/docs/line-codes.md](mf8/docs/line-codes.md) | nine line codes explored; differential Manchester against AMI |
-| [mf8/docs/frame-rate.md](mf8/docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
-| [mf8/docs/mfspec.md](mf8/docs/mfspec.md) | the predecessor this design replaced the header of |
+| [mf8/mf8-spec.md](mf8/mf8-spec.md) | MF8 specification — frame, header, framer, cards, line code, circuits |
+| [mf8/mf8-backplane.md](mf8/mf8-backplane.md) | remote MF8 unit backplane — modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip |
+| [mf8/mf8-pico.md](mf8/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
+| [mf8/line-codes.md](mf8/line-codes.md) | nine line codes explored; differential Manchester against AMI |
+| [mf8/frame-rate.md](mf8/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
+| [mf8/mfspec.md](mf8/mfspec.md) | the predecessor this design replaced the header of |
 
 **exchange/**, **verilog/**, **falstad/**
 
 | | |
 |---|---|
-| [exchange/](exchange/README.md) | **the exchange**: 64 line expandable exchange using the pulse flood protocol. Twenty-two documents in [exchange/docs/](exchange/docs/) |
-| [exchange/docs/register.md](exchange/docs/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
+| [exchange/](exchange/README.md) | **the exchange**: 64 line expandable exchange using the pulse flood protocol. Twenty-two documents in [exchange/](exchange/) |
+| [exchange/register.md](exchange/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
 | [verilog/](verilog/README.md) | the exchange as a register-transfer model: `rtl/`, `tb/` and the benches the Makefile runs |
 | [falstad/](falstad/README.md) | the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model |
 
@@ -110,6 +112,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | `falstad/sim.mjs` | runs a circuit in falstad.com's simulator in headless Chromium and records every labeled node, for that check |
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
+| `tones.py` | call-progress tones as looped CVSD: the shortest seamless loop, what ROM depth buys, eight tone plans compared, five ways to make a warble, and the cadence as a binary divide. Renders the plan to `sim/out/` |
 | `exch.py` | the exchange: the fabric cell by cell, calls a millisecond at a time, the flood across a network, traffic. `exchange/README.md` lists its twenty runs |
 
 ```
@@ -121,6 +124,7 @@ python3 sim/mf8_render.py     listenable renders   (mf8_render.log; wavs in out/
 python3 sim/subline.py        subscriber line      (subline.log)
 python3 sim/cvsd_law.py       the codec law        (cvsd_law.log)
 python3 sim/tolerance.py      codec tolerances     (tolerance.log)
+python3 sim/tones.py          call-progress tones   (tones.log; wavs in sim/out/)
 python3 sim/falstad_cvsd.py   Falstad prototypes   (falstad_cvsd.log; falstad/*.txt)
 ```
 
@@ -145,7 +149,7 @@ Settled: the frame, the header, the framer, and that the carrier is transparent 
 six talkers through the whole chain in both line codes add **+0.00 dB**.
 
 Not settled, and not settleable here: **the impulse rate on the target loops.**
-The curve is measured (`impulse_sweep.py`, `mf8/docs/line-codes.md` §4.5): each
+The curve is measured (`impulse_sweep.py`, `mf8/line-codes.md` §4.5): each
 impulse costs differential Manchester about 0.77 breaks and AMI about 0.14, so
 differential Manchester reaches one click a second at 1.3 impulses/s and AMI at
 about 8. AMI holds that advantage until it collapses outright between 800 and 900

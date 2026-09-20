@@ -1,4 +1,4 @@
-// exch_defs.vh -- the exchange's fixed geometry.  exchange/docs/exch-protocol.md 5.
+// exch_defs.vh -- the exchange's fixed geometry.  exchange/exch-protocol.md 5.
 `ifndef EXCH_DEFS_VH
 `define EXCH_DEFS_VH
 

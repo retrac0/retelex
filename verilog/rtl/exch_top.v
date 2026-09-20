@@ -1,5 +1,5 @@
 // exch_top -- ONE exchange: the clock card, the mainboard and eight blocks.
-// exchange/docs/exch-protocol.md 3, exch-fabric.md, exch-mainboard.md.
+// exchange/exch-protocol.md 3, exch-fabric.md, exch-mainboard.md.
 //
 // This is the exchange logic and nothing else -- mvp-ex.md 1's "= 70 packages".
 // Cards are not in here: the module's edge is the channel-slot pins of
@@ -19,6 +19,10 @@ module exch_top #(
     parameter [23:0]  SHUNT        = 24'o76543210,                  // the shunt field
     parameter [7:0]   SHUNT_FITTED = BLOCK_FITTED,
     parameter         RBT_IS_FILL  = 1'b1,                          // no ringback card
+    // A tone card drives RBT and /RING_CAD off its rear connector
+    // (common/tone-plan.md 4.3-4.4, exchange/exch-mainboard.md 2.1).  With these
+    // clear the clock card keeps both, which is the exchange as it was.
+    parameter         TONE_CARD    = 1'b0,
     parameter integer T_RISE       = 1024,                          // 16 ms in frames
     parameter integer T_FALL       = 16384,                         // 256 ms in frames
     parameter integer RING_ON      = 128000,                        // 2 s
@@ -31,6 +35,10 @@ module exch_top #(
     input      [63:0]    c_tx,
     input      [63:0]    a_tx,           // M
     input      [63:0]    word,
+
+    // ---- the two bus conductors a tone card drives, when one is fitted ----
+    input                rbt_in,         // the ringback bit stream
+    input                ring_cad_n_in,  // the ring cadence, LOW while ringing
     output     [63:0]    c_rx,
     output     [63:0]    a_rx,           // E, in the ring cadence while the port rings
 
@@ -55,20 +63,27 @@ module exch_top #(
     output               tx_oct,
     output               rx_oct,
     output               fill,
-    output               ring_cad_n,
+    output               ring_cad_n,     // the conductor as it ends up: card, or clock card
     output               tick_1k
 );
     wire       cap_stb;
     wire [7:0]  hc_from_block, ha_from_block, blk_to_block;
     wire [63:0] blk_dec;
     wire [7:0] pb_busy_b, pb_word_b;
+    wire       ring_cad_n_clk;
 
     clock_card #(.RING_ON(RING_ON), .RING_OFF(RING_OFF)) u_clk (
         .clk(clk), .rst_n(rst_n),
         .tick(tick), .hclk(hclk), .hb(hb), .slot(slot), .slotq(slotq),
         .cap_stb(cap_stb), .tx_clk(tx_clk), .frame_stb(frame_stb),
         .tx_oct(tx_oct), .rx_oct(rx_oct), .fill(fill),
-        .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
+        .ring_cad_n(ring_cad_n_clk), .tick_1k(tick_1k));
+
+    // The clock card keeps a PULL on /RING_CAD, not a driver, once a tone card
+    // owns it: undriven and pulled high no phone would ever ring, so it is
+    // pulled LOW and a shelf with no tone card rings continuously instead
+    // (common/tone-plan.md 4.3).
+    assign ring_cad_n = TONE_CARD ? ring_cad_n_in : ring_cad_n_clk;
 
     // The ribbon, and the shunt field at every tap.
     mainboard #(.SHUNT(SHUNT), .SHUNT_FITTED(SHUNT_FITTED & BLOCK_FITTED)) u_mb (
@@ -76,7 +91,7 @@ module exch_top #(
         .hc_from_block(hc_from_block), .ha_from_block(ha_from_block),
         .blk_dec(blk_dec), .hc(hc), .ha(ha), .blk_to_block(blk_to_block));
 
-    wire rbt = RBT_IS_FILL ? fill : 1'b0;
+    wire rbt = TONE_CARD ? rbt_in : (RBT_IS_FILL ? fill : 1'b0);
 
     genvar h;
     generate for (h = 0; h < `NB; h = h + 1) begin : blocks

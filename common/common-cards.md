@@ -84,7 +84,7 @@ lines, and the property that matters is unchanged.
 
 ### 1.3 What each card does with each pin
 
-The four cards of this document, the tone card of §6, and the exchange's
+The four cards of this document, the tone card of `tone-card.md`, and the exchange's
 baseband trunk card (`exch-basebandcard.md` §3.5), which is the same socket and
 the same argument. ● = the card uses the pin; ○ = only where the optional '165
 is fitted; — = no connection on the card.
@@ -112,7 +112,7 @@ is fitted; — = no connection on the card.
 
 The detail behind each column is in that card's own document: `channel-cards.md`
 §2.4 for the CVSD line card, §3.7 for both POTS populations, §4 for the data
-card, `mf8-spec.md` §12.1 for E&M, §6 here for the tone card, and
+card, `mf8-spec.md` §12.1 for E&M, `tone-card.md` §4 for the tone card, and
 `exch-basebandcard.md` §3.5 for the baseband trunk card. The last four rows are the rails, which §3 gives
 again with the current each one draws.
 
@@ -227,7 +227,7 @@ right about different codes, and `ex-groups.md` §2.1's table is the proof:
 All ones is a **constant**, not a class field, and it is what a grounded pin
 produces. Class 001 is for a card that shifts a word because it has something
 else to say. The open item closes with no change to either document, and
-[line_card.v](../../verilog/rtl/line_card.v)'s `WORD` parameter can take `8'hFF` for a
+[line_card.v](../verilog/rtl/line_card.v)'s `WORD` parameter can take `8'hFF` for a
 plain line.
 
 **So, card by card:**
@@ -319,52 +319,27 @@ off-hook closes the loop through E, and the CO's dial tone comes back on `C`
 
 ---
 
-## 6. A fifth card: the tone card, and a whole shelf on fast busy
+## 6. A fifth card: the tone card
 
-Not one of the four, and worth having. **One tone generator can hold every
-channel of an MF8 shelf on a tone, so that every phone at the far end hears fast
-busy the moment it is lifted** — the difference between a dead telephone and a
-telephone that says no.
+**Moved to `tone-card.md`.** One generator holding every channel of a shelf on
+fast busy — the difference between a dead telephone and a telephone that says no
+— outgrew a section here, and what it grew into is not what stood here: it is a
+**plain 2 × 16 channel card**, in either shelf, plus a passive strap field on the
+MF8 backplane that lets one slot's `C_TX` reach the others' `C_RX`.
 
-**Where it goes: the gateway slot.** A channel slot reaches its own `C_TX` and no
-other, so a channel card cannot do this without a backplane modification. The
-gateway slot already can: it is the trunk-card slot mirrored, carrying all six
-`C_TX[n]` and `A_TX[n]` as *its* outputs, on a 2 × 32, with a drive rule already
-written — **drive only a slot that holds no card, every output released at
-power-up** (`mf8-backplane.md` §8, `mf8-pico.md` §3). No new bus signal is needed
-and the shelf is not touched.
+What stood here put it in the gateway slot. That was wrong, and worth recording:
+the gateway drives `C_TX[n]` and `A_TX[n]` — what a channel card sends *toward
+the trunk* — and only into a slot that holds no card (`mf8-pico.md` §3). A phone
+hears `C_RX[n]`, which comes off the trunk card's '259. **So a gateway tone card
+reaches the exchange, not the phones on its own shelf**, and only for slots with
+no card and therefore no phone in them. The drive rule, the six enables and the
+`/OE` RC were all machinery for standing in for absent channel cards, which is
+the Pico adapter's job and not this one.
 
-**One encoder serves all six.** Each channel's bit is sampled in its own cell from
-the same T-domain stream, so six `C_TX` pins take one output and there is nothing
-per-channel to build. `A_TX` is held low on all six — which is what every source
-does (`exch-features.md` §6) — so nothing rings, nothing is ever answered, and no
-call is held up. A listener leaves by going on-hook.
-
-**What the far end hears.** A station card off-hook passes `C_RX` to its phone
-(`channel-cards.md` §2.3's rule), so the tone arrives the instant the handset lifts;
-on-hook the phone hears `FILL`, which is silence, and with `A_RX` at 0 it never
-rings. Nothing else at that shelf needs to know.
-
-**The generator** is `exch-features.md` §2's: a tuned oscillator pair into one
-encoder half of `mf8-spec.md` §12.1, with the cadence muting the encoder's
-**input**, not its output, so the off periods are the codec's own `1010` and
-nothing clicks. Fast busy is the cannot-complete tone at its own cadence. Or
-`exch-features.md` §3's ROM player instead, and the shelf speaks a sentence: 8 s
-of CVSD fills a 64 kB part, and no codec is needed at all.
-
-**Uses.** A shelf whose exchange or whose link is out of service; a terminal being
-commissioned; a shelf deliberately barred outside hours.
-
-**One generator, two carriers.** On a 2 × 16 channel card it is one port, in
-either shelf, and in an exchange that is exactly `exch-features.md` §2's tone
-card — class *source*, never busy, any number of listeners. On a 2 × 32 gateway
-card it is six channels of one MF8 shelf. Same schematic, two boards, because the
-connectors differ.
-
-**The one hazard** is the drive rule: an enabled gateway output and a fitted card
-on the same slot fight. Six enables, one a slot, and an RC on the '244's `/OE` so
-that the card comes up released — the hardware form of `mf8-pico.md` §3's
-"powers up with every output released".
+What the card takes from this document is unchanged: the channel socket of §1,
+the `/ANS` and word rules of §2, and — for the strap field — the `FILL` pull-up
+idiom of `mf8-backplane.md` §6. It keeps its column in §1.3's matrix, because it
+plugs into the same socket as the other four.
 
 ---
 
@@ -479,6 +454,8 @@ conductors at all and the wiring field can be re-punched without touching it.
 | `ex-extensions.md` §2.1 | its "a card built for the exchange works unchanged in an MF8 shelf" now holds in both directions, and §2 here says what it costs |
 | `mf8-backplane.md` §8, the trunk and gateway slots | given pins (§7.2), which they never had. **Its "row *a* signals, row *c* power" does not hold there** — the signal set is 33 and row *a* is 32 — so `LOCK` and `CD` move to row *c*. The two slots also need different keying, which §8 does not mention |
 | `channel-cards.md` §2, §3; `subscriber-line.md` §1 | the subscriber pair leaves by a second rear connector (§7.3), which no document had. The backplane carries no line conductors |
+| §6, the tone card | **moved to `tone-card.md`**, and **corrected**: the gateway-slot population it described cannot reach the phones on its own shelf, and is replaced by the plain channel card plus `tone-card.md` §4's strap field |
+| `mf8-backplane.md` §6, §8 | **owed a change they do not carry**: `tone-card.md` §4's tone bus, its 4.7 kΩ to `FILL`, the per-slot `C_RX` select and the shelf-wide `MUTE` select are a backplane modification specified in neither |
 
 ---
 
@@ -500,15 +477,12 @@ conductors at all and the wiring field can be re-punched without touching it.
 - **The FXO strap's 5 s constant** (§5): `exch-features.md` §5 measured that 5 s
   works against a 2 s / 4 s cadence and did not sweep it. A CO with a longer
   silent interval would want more.
-- **The tone card** (§6): no circuit, and the hardware release-at-power-up has
-  only ever existed as firmware. What a shelf full of fast busy sounds like
-  through `channel-cards.md` §2.3's rule at the instant of lifting has not been
-  rendered.
+- **The tone card**: its own open items moved with it to `tone-card.md` §7.
 - **§1.3's matrix is an assignment too.** Every ● and — is read off the card's
   own description, not off a board. Two columns are the least sure: the E&M
   card has never had a pin list of its own (`mf8-spec.md` §12.1 describes an
-  engine and two leads), and the tone card's channel-slot population (§6) is
-  one paragraph.
+  engine and two leads), and the tone card's channel-slot population is worked
+  no further than `tone-card.md` §4.
 - **A recovered clock has no pin out of a channel slot** (§1.4). It costs
   `exch-basebandcard.md` §3.2's bit-exact case, which is the one case that
   carries synchronous 64 kb/s data between exchanges. Either a wire off the

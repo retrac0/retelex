@@ -1,5 +1,5 @@
 """
-The subscriber line of common/docs/subscriber-line.md, and the register of exchange/docs/register.md.
+The subscriber line of common/subscriber-line.md, and the register of exchange/register.md.
 
 One phone on two pairs, 64 kbps CVSD each way in differential Manchester at
 128 kBaud.  Hook and ring are held bit patterns; a dial pulse is the on-hook

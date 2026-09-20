@@ -1,8 +1,16 @@
 // con_site -- a standalone exchange with TWO masters on cable B: the marker and
 // the operator's console.  ex-console.md.
 //
+//   block 0   the OPERATOR'S PHONE at 04, on a plain line card: a line in every
+//             respect, and the only port of block 0 that is fitted (00 is never
+//             fitted, and 01-03, 05-07 are a trunk group's channels)
 //   block 1   dial tone at 10, cannot-complete at 14
 //   blocks 2-3  sixteen line cards, 20-37
+//   block 7   a RING SOURCE at 75: the sink's converse.  A_TX tied HIGH, no
+//             word, /ANS low -- an off-hook port that is not a caller, because
+//             the marker seizes nothing that sends no class.  A port pointed at
+//             it RINGS (on-hook with E up is the ring condition) and, once
+//             answered, is HELD: its E never falls, so it never releases itself
 //   block 7   two SINKS at 76 and 77: a port with nothing to say.  M tied low,
 //             /ANS low, NO WORD -- so to the marker it is an empty slot, never
 //             hunted, never a call request, and cannot-complete if dialled;
@@ -23,7 +31,7 @@ module con_site #(
     parameter         NAIVE = 1'b0,
     parameter integer T_RISE = 64, T_FALL = 2048,
     parameter integer RING_ON = 200, RING_OFF = 400,
-    parameter integer HIT = 1, ID = 16, CLR = 32,
+    parameter integer HIT = 1, ID = 16, CLR = 32, NODIG = 2000,
     parameter integer NREG = 3,
     parameter integer CON_DIV = 64,              // the console shifts at 64 kHz
     parameter integer CON_WAIT = 32
@@ -39,12 +47,17 @@ module con_site #(
     output [1:0]  sink_rx,
 
     // the console's panel
-    input         key_write, key_release, key_hold, key_arm,
+    input         key_write, key_release, key_probe, key_hold, key_arm,
+    input         sw_both,
     input  [5:0]  sw_dst, sw_src,
     input         sw_bsy, sw_clm,
     output        con_busy, con_done,
     output [5:0]  watch_src,
     output        watch_bsy, watch_clm, watch_seen,
+    output        hook_dst, hook_src,
+    output        sup_busy_dst, sup_busy_src,
+    output [7:0]  sup_word_dst, sup_word_src,
+    output        sup_seen,
 
     // for a testbench: cable B as a listener sees it, and who is driving
     output        b_sdata, b_sclk, b_wr,
@@ -59,11 +72,13 @@ module con_site #(
     output        wr_bsy, wr_clm
 );
     localparam PDT = 6'o10, PNG = 6'o14;
-    localparam PS0 = 6'o76, PS1 = 6'o77;
-    localparam [63:0] LINE_PORTS = 64'h0000_0000_FFFF_0000;
+    localparam PS0 = 6'o76, PS1 = 6'o77, PRS = 6'o75;
+    localparam POP = 6'o04;                              // the operator's phone
+    localparam [63:0] LINE_PORTS = 64'h0000_0000_FFFF_0000 | (64'd1 << POP);
     localparam [63:0] SINKS      = 64'hC000_0000_0000_0000;
-    localparam [63:0] PF = LINE_PORTS | SINKS | 64'h0000_0000_0000_1100;
-    localparam [7:0]  BF = 8'b1000_1110;
+    localparam [63:0] RSRC       = 64'd1 << PRS;
+    localparam [63:0] PF = LINE_PORTS | SINKS | RSRC | 64'h0000_0000_0000_1100;
+    localparam [7:0]  BF = 8'b1000_1111;
 
     wire [63:0] c_tx, a_tx, word, c_rx, a_rx;
     wire [2:0]  slot, slotq, tick;
@@ -123,10 +138,17 @@ module con_site #(
     assign c_tx[PS1] = fill;  assign a_tx[PS1] = 1'b0;  assign word[PS1] = 1'b0;
     assign sink_rx   = {c_rx[PS1], c_rx[PS0]};
 
+    // ---- the ring source: three ties -------------------------------------
+    // A_TX high, /ANS low (PORT_RINGS clears it), and no word.  The card's own
+    // C_TX is FILL in an exchange -- silence, or a looping "please hold"
+    // (exch-features.md 3); here the testbench drives it with a pattern, so
+    // that a party parked on it can be told apart from a party hearing nothing.
+    assign c_tx[PRS] = tx[PRS];  assign a_tx[PRS] = 1'b1;  assign word[PRS] = 1'b0;
+
     // every slot no card drives: C pulled to FILL, A and the word to 0
     genvar q;
     generate for (q = 0; q < 64; q = q + 1)
-        if (!LINE_PORTS[q] && !SINKS[q] && q != PDT && q != PNG) begin : empty
+        if (!LINE_PORTS[q] && !SINKS[q] && !RSRC[q] && q != PDT && q != PNG) begin : empty
             assign c_tx[q] = fill; assign a_tx[q] = 1'b0; assign word[q] = 1'b0;
         end
     endgenerate
@@ -141,7 +163,7 @@ module con_site #(
 
     genvar gr;
     generate for (gr = 0; gr < NREG; gr = gr + 1) begin : regs
-        pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(2000)) u_reg (
+        pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG)) u_reg (
             .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
             .ha(ha), .attach(r_attach[gr]), .attach_port(r_port),
             .release_it(r_release[gr]), .restart(r_restart[gr]),
@@ -169,13 +191,21 @@ module con_site #(
 
     console #(.DIV(CON_DIV), .WAIT(NAIVE ? 0 : CON_WAIT)) u_con (
         .clk(clk), .rst_n(rst_n),
-        .key_write(key_write), .key_release(key_release),
-        .key_hold(key_hold), .key_arm(key_arm),
+        .key_write(key_write), .key_release(key_release), .key_probe(key_probe),
+        .key_hold(key_hold), .key_arm(key_arm), .sw_both(sw_both),
         .sw_dst(sw_dst), .sw_src(sw_src), .sw_bsy(sw_bsy), .sw_clm(sw_clm),
         .busy(con_busy), .done(con_done),
         .con_n(con_n), .oe(con_oe),
         .sdata(cn_sdata), .sclk(cn_sclk), .wr(cn_wr),
         .bus_sdata(b_sdata), .bus_sclk(b_sclk), .bus_wr(b_wr),
         .watch_src(watch_src), .watch_bsy(watch_bsy),
-        .watch_clm(watch_clm), .watch_seen(watch_seen));
+        .watch_clm(watch_clm), .watch_seen(watch_seen),
+        // cable A, and the probe bus: what the console can read
+        .ha(ha), .slotq(slotq), .tick(tick),
+        .frame_stb(frame_stb), .tx_oct(tx_oct),
+        .hook_dst(hook_dst), .hook_src(hook_src),
+        .pb_busy(pb_busy), .pb_word(pb_word),
+        .sup_busy_dst(sup_busy_dst), .sup_busy_src(sup_busy_src),
+        .sup_word_dst(sup_word_dst), .sup_word_src(sup_word_src),
+        .sup_seen(sup_seen));
 endmodule

@@ -5,7 +5,7 @@
 # the network testbench is 3 s of model time, which is minutes under Icarus and
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
 RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v \
-         rtl/source_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
+         rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
          rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v
@@ -27,8 +27,10 @@ TB_traffic := tb/net_site.v tb/tb_traffic.v
 TB_stats  := tb/tb_stats.v
 TB_console := tb/con_site.v tb/bitpath.v tb/tb_console.v
 TB_panel  := tb/tb_panel.v
+TB_tone   := tb/tb_tone.v
+TB_tonex  := tb/tb_tonex.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 

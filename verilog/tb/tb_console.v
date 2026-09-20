@@ -17,6 +17,13 @@
 //   5  SERVICE OBSERVING: a sink pointed at each party of a call, the call
 //      checked bit for bit across the writes; the observation ending itself
 //   6  HOLD: the marker stopped, and a call carrying on without it
+//   7  CONNECTING TWO LINES by hand: the pair (WRITE + BOTH, two crossed words
+//      in one tenure), what rings and what does not, the ring source at 75, and
+//      the operator's own phone at 04 used as one -- set up, supervised and
+//      dropped out of, with the register hazard that lifting first leaves
+//   8  SUPERVISION: what the console can READ -- the hook of either end off
+//      cable A, and BUSY and the card's word off the probe bus after a PROBE
+//      word, which writes nothing
 //
 // NAIVE = 1 builds /CON as first written -- a '244 enable and nothing else --
 // runs part 1 only, and is there to be measured against (`make console-naive`).
@@ -32,6 +39,8 @@ module tb_console #(
     localparam integer BRK = 12, MK = 8, PAUSE = 60;     // ms: a dial, at the same eighth
     localparam integer DT_WAIT = 600;
     localparam [5:0]   PDT = 6'o10, PNG = 6'o14, SK0 = 6'o76, SK1 = 6'o77;
+    localparam integer NODIG_MS = 600;                   // the register's no-digit timeout: 10 s
+                                                         // in the exchange, at the bench's scale
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -39,25 +48,32 @@ module tb_console #(
     reg  [63:0] hook = 0, tx = 0;
     wire [63:0] rx, e, pbusy;
     wire [1:0]  sink_rx;
-    reg         key_write = 0, key_release = 0, key_hold = 0, key_arm = 0;
+    reg         key_write = 0, key_release = 0, key_probe = 0, key_hold = 0, key_arm = 0;
+    reg         sw_both = 0;
     reg  [5:0]  sw_dst = 0, sw_src = 0;
     reg         sw_bsy = 0, sw_clm = 0;
     wire        con_busy, con_done, w_bsy, w_clm, w_seen;
     wire [5:0]  w_src;
+    wire        hook_dst, hook_src, sup_busy_dst, sup_busy_src, sup_seen;
+    wire [7:0]  sup_word_dst, sup_word_src;
     wire        b_sdata, b_sclk, b_wr, con_n, con_oe, mk_drv, fs, tick_1k, dt_bit, ng_bit;
     localparam integer NREG = 6;                         // enough that dial tone is never waiting for a register
     wire [NREG-1:0] regs;
     wire        wq_ovf, wr_stb, wr_bsy, wr_clm;
     wire [5:0]  wr_dst, wr_src;
 
-    con_site #(.NAIVE(NAIVE), .T_RISE(T_RISE), .T_FALL(T_FALL), .NREG(NREG)) S (
+    con_site #(.NAIVE(NAIVE), .T_RISE(T_RISE), .T_FALL(T_FALL), .NREG(NREG),
+               .NODIG(NODIG_MS)) S (
         .clk(clk), .rst_n(rst_n), .hook(hook), .tx(tx), .rx(rx), .e(e),
         .sink_rx(sink_rx),
-        .key_write(key_write), .key_release(key_release),
-        .key_hold(key_hold), .key_arm(key_arm),
+        .key_write(key_write), .key_release(key_release), .key_probe(key_probe),
+        .key_hold(key_hold), .key_arm(key_arm), .sw_both(sw_both),
         .sw_dst(sw_dst), .sw_src(sw_src), .sw_bsy(sw_bsy), .sw_clm(sw_clm),
         .con_busy(con_busy), .con_done(con_done),
         .watch_src(w_src), .watch_bsy(w_bsy), .watch_clm(w_clm), .watch_seen(w_seen),
+        .hook_dst(hook_dst), .hook_src(hook_src),
+        .sup_busy_dst(sup_busy_dst), .sup_busy_src(sup_busy_src),
+        .sup_word_dst(sup_word_dst), .sup_word_src(sup_word_src), .sup_seen(sup_seen),
         .b_sdata(b_sdata), .b_sclk(b_sclk), .b_wr(b_wr),
         .con_n(con_n), .con_oe(con_oe), .mk_drv(mk_drv),
         .frame_stb(fs), .tick_1k(tick_1k), .dt_bit(dt_bit), .ng_bit(ng_bit),
@@ -70,6 +86,7 @@ module tb_console #(
     // anything that hears a line can say WHICH line.  The two sinks send
     // nothing and are decoded the same way.
     localparam [7:0] NONE = 8'hFF;
+    localparam [5:0] POP = 6'o04, PRS = 6'o75;     // the operator's phone; the ring source
     reg  [3:0] txbit [0:63];
     reg [15:0] shift [0:63];
     reg  [7:0] heard [0:63], cand [0:63], hage [0:63];
@@ -77,6 +94,11 @@ module tb_console #(
     function [7:0] nm(input integer port); nm = {2'b00, port[5:0]}; endfunction
     function       is_line(input integer q); is_line = (q >= 16 && q < 32); endfunction
     function       is_sink(input integer q); is_sink = (q == 62 || q == 63); endfunction
+    // the operator's phone talks and hears like any line; the ring source only talks
+    function       is_tx(input integer q);
+        is_tx = is_line(q) || (q == POP) || (q == PRS); endfunction
+    function       is_ear(input integer q);
+        is_ear = is_line(q) || is_sink(q) || (q == POP); endfunction
 
     // A name counts when it arrives twice running, and lapses 200 frames after
     // the last good one.  ONE assignment to `hage` a pass: written as a reset
@@ -87,13 +109,13 @@ module tb_console #(
     integer q;
     reg     rxb, hit;
     always @(posedge clk) if (fs) begin
-        for (q = 16; q < 64; q = q + 1) if (is_line(q) || is_sink(q)) begin
-            if (is_line(q)) begin
+        for (q = 0; q < 64; q = q + 1) if (is_tx(q) || is_ear(q)) begin
+            if (is_tx(q)) begin
                 txbit[q] <= txbit[q] + 4'd1;
                 tx[q]    <= (txbit[q] < 4'd8) ? 1'b1 : nm(q) >> (4'd15 - txbit[q]);
             end
             rxb = is_sink(q) ? sink_rx[q - 62] : rx[q];
-            shift[q] <= {shift[q][14:0], rxb};
+            shift[q] <= {shift[q][14:0], is_ear(q) ? rxb : 1'b0};
             hit = 1'b0;
             if (shift[q][15:8] == 8'hFF && !shift[q][7]) begin
                 hit = (cand[q] == shift[q][7:0]);
@@ -122,7 +144,8 @@ module tb_console #(
     reg        sclk_d = 0, wr_d = 0, conn_d = 1;
     integer    wr_len = 0, mk_since = 0, cn_since = 0;
     integer    n_mk_said = 0, n_mk_lost = 0, n_mk_mangled = 0;
-    integer    n_cn_said = 0, n_cn_bad = 0;
+    integer    n_cn_said = 0, n_cn_bad = 0, n_probe_wrote = 0;
+    reg        cn_isprobe = 1'b0;
     integer    n_runt = 0, n_contend = 0, n_mid = 0, n_mid_wr = 0;
     integer    lw_src [0:63], lw_bsy [0:63];
     real       lw_t [0:63];
@@ -155,7 +178,13 @@ module tb_console #(
         end
         if (con_done) begin
             n_cn_said = n_cn_said + 1;
-            if (cn_since == 0 || cn_word != cn_expect) n_cn_bad = n_cn_bad + 1;
+            // a PROBE pulses no WR at all: nothing may have been written
+            if (cn_isprobe) n_probe_wrote = n_probe_wrote + cn_since;
+            else if (cn_since == 0 || cn_word != cn_expect) begin
+                n_cn_bad = n_cn_bad + 1;
+                if (!running) $display("     BAD WORD: saw %h expected %h  since %0d  t %0.3f ms",
+                                       cn_word, cn_expect, cn_since, $realtime / NS);
+            end
             cn_since = 0;
         end
 
@@ -284,17 +313,39 @@ module tb_console #(
     end
 
     // ---- the operator -----------------------------------------------------
-    task con_word(input rel, input [5:0] dst, input [5:0] src, input bsy);
+    // kind: 0 WRITE, 1 RELEASE, 2 PROBE.  `both` is the toggle: the key runs
+    // twice in one tenure, the second word with the port fields crossed, so
+    // `cn_expect` -- what the blocks must hold when the tenure ends -- is the
+    // crossed one.
+    localparam K_WRITE = 0, K_REL = 1, K_PROBE = 2;
+    real t_ten0 = 0, t_ten = 0;
+    task con_key(input integer kind, input both,
+                 input [5:0] dst, input [5:0] src, input bsy);
         begin
             @(negedge clk);
-            sw_dst = dst; sw_src = src; sw_bsy = bsy; sw_clm = 1'b0;
-            cn_expect = {1'b1, 1'b0, dst, rel ? 8'h00 : {src, bsy, 1'b0}};
-            if (rel) key_release = 1'b1; else key_write = 1'b1;
+            sw_dst = dst; sw_src = src; sw_bsy = bsy; sw_clm = 1'b0; sw_both = both;
+            cn_isprobe = (kind == K_PROBE);
+            if (both) cn_expect = {1'b1, 1'b0, src, (kind == K_REL) ? 8'h00 : {dst, bsy, 1'b0}};
+            else      cn_expect = {1'b1, 1'b0, dst, (kind == K_REL) ? 8'h00 : {src, bsy, 1'b0}};
+            case (kind)
+                K_WRITE: key_write   = 1'b1;
+                K_REL:   key_release = 1'b1;
+                default: key_probe   = 1'b1;
+            endcase
+            t_ten0 = $realtime;
             @(negedge clk);
-            key_release = 1'b0; key_write = 1'b0;
+            key_release = 1'b0; key_write = 1'b0; key_probe = 1'b0;
             @(posedge con_done);
+            t_ten = $realtime - t_ten0;
             @(negedge clk);
+            // cn_isprobe is left as it is: the listener reads it on the clock
+            // edge AFTER con_done, and the next key sets it again.
+            sw_both = 1'b0;
         end
+    endtask
+
+    task con_word(input rel, input [5:0] dst, input [5:0] src, input bsy);
+        con_key(rel ? K_REL : K_WRITE, 1'b0, dst, src, bsy);
     endtask
 
     // Hundreds of times an operator's rate, and two in three of them timed to
@@ -369,11 +420,26 @@ module tb_console #(
         begin hook = 64'd0; repeat (ms) #(NS); end
     endtask
 
+    task wait_ring(input [5:0] p, input integer ms);      // wait for E to come up
+        integer t;
+        begin for (t = 0; t < ms && !e[p]; t = t + 1) #(NS); end
+    endtask
+
+    task wait_busy(input [5:0] p, input integer ms);
+        integer t;
+        begin for (t = 0; t < ms && !pbusy[p]; t = t + 1) #(NS); end
+    endtask
+
     reg pe = 1'b0;
     bitpath p_ab (.src_clk(clk), .src_fs(fs), .src_bit(tx[6'o20]),
                   .dst_clk(clk), .dst_fs(fs), .dst_bit(rx[6'o21]), .enable(pe));
     bitpath p_ba (.src_clk(clk), .src_fs(fs), .src_bit(tx[6'o21]),
                   .dst_clk(clk), .dst_fs(fs), .dst_bit(rx[6'o20]), .enable(pe));
+    reg poe = 1'b0;
+    bitpath p_o20 (.src_clk(clk), .src_fs(fs), .src_bit(tx[POP]),
+                   .dst_clk(clk), .dst_fs(fs), .dst_bit(rx[6'o20]), .enable(poe));
+    bitpath p_o21 (.src_clk(clk), .src_fs(fs), .src_bit(tx[POP]),
+                   .dst_clk(clk), .dst_fs(fs), .dst_bit(rx[6'o21]), .enable(poe));
     reg pse = 1'b0;
     bitpath p_s0 (.src_clk(clk), .src_fs(fs), .src_bit(tx[6'o20]),
                   .dst_clk(clk), .dst_fs(fs), .dst_bit(sink_rx[0]), .enable(pse));
@@ -578,6 +644,180 @@ module tb_console #(
         want(pbusy == 64'd0 && regs == {NREG{1'b0}} && !wq_ovf, "everything released, nothing held");
         want(n_mk_lost == 0 && n_mk_mangled == 0 && n_cn_bad == 0 && n_contend == 0 && n_runt == 0,
              "and over the whole run the bus never carried a wrong word");
+
+        // ---- 7. connecting two lines ---------------------------------------
+        $display("\n  7. Connecting two lines by hand.  WRITE + BOTH is two crossed words in ONE");
+        $display("     tenure: DST <- SRC, then SRC <- DST.");
+        con_key(K_WRITE, 1'b1, 6'o20, 6'o21, 1'b1);
+        $display("     the pair took %0.0f us, and the two writes landed %0.0f us apart",
+                 t_ten / 1000.0, (lw_t[6'o21] - lw_t[6'o20]) / 1000.0);
+        want(lw_src[6'o20] == 6'o21 && lw_src[6'o21] == 6'o20 && lw_bsy[6'o20] && lw_bsy[6'o21],
+             "both latches were written, each with the other's number");
+        #(20 * NS);
+        want(!e[6'o20] && !e[6'o21],
+             "with both phones ON HOOK, NEITHER rings: E is the other end's hook");
+        want(pbusy[6'o20] && pbusy[6'o21], "and yet both are busy: a pair held by nothing (3.3)");
+        #(150 * NS);
+        want(pbusy[6'o20] && pbusy[6'o21], "150 ms later it is still held: nothing will ever fall");
+        con_key(K_REL, 1'b1, 6'o20, 6'o21, 1'b0);
+        #(5 * NS);
+        want(!pbusy[6'o20] && !pbusy[6'o21], "RELEASE + BOTH: both ends freed in one tenure");
+
+        $display("     The ring source at 75: A_TX tied high, no word, /ANS low.");
+        con_word(1'b0, 6'o20, PRS, 1'b1);
+        wait_ring(6'o20, 50);
+        want(e[6'o20], "20 pointed at it RINGS: on hook with E up is the ring condition");
+        #(20 * NS);
+        want(heard[6'o20] == nm(PRS), "and what it hears while ringing is the source");
+        hook[6'o20] = 1'b1;
+        #(150 * NS);
+        want(pbusy[6'o20] && heard[6'o20] == nm(PRS),
+             "20 answers and is PARKED: held, because its E never falls");
+        con_word(1'b0, 6'o21, PRS, 1'b1);
+        wait_ring(6'o21, 50);
+        hook[6'o21] = 1'b1;
+        #(20 * NS);
+        want(e[6'o21] && pbusy[6'o21], "21 rung from the same source, and answered");
+        con_key(K_WRITE, 1'b1, 6'o20, 6'o21, 1'b1);
+        #(5 * NS);
+        p_ab.clear; p_ba.clear; pe = 1'b1;
+        #(30 * NS);
+        pe = 1'b0;
+        want(heard[6'o20] == nm(6'o21) && heard[6'o21] == nm(6'o20),
+             "WRITE + BOTH hands them to each other: a call the operator made");
+        paths_ok(0);
+        hook[6'o20] = 1'b0;
+        for (k = 0; k < 200 && !(lw_src[6'o21] == PDT); k = k + 1) #(NS);
+        want(lw_src[6'o21] == PDT,
+             "20 hangs up and 21 is released by the ordinary rule: dial tone");
+        all_down(200);
+        want(pbusy == 64'd0 && regs == {NREG{1'b0}}, "nothing held");
+
+        $display("     The operator's phone at 04, used as the ring source -- PATCHED FIRST.");
+        con_key(K_WRITE, 1'b1, 6'o20, POP, 1'b1);
+        #(20 * NS);
+        want(!e[6'o20], "nothing rings yet: the operator's phone is on the hook");
+        hook[POP] = 1'b1;
+        wait_ring(6'o20, 50);
+        want(e[6'o20], "the operator LIFTS, and that is what rings 20");
+        #(30 * NS);
+        want(regs == {NREG{1'b0}} && lw_src[POP] == 6'o20,
+             "and the marker gives him no register: his own latch is busy already");
+        hook[6'o20] = 1'b1;
+        #(20 * NS);
+        want(heard[6'o20] == nm(POP) && heard[POP] == nm(6'o20), "20 answers: they are talking");
+        con_word(1'b0, 6'o21, POP, 1'b1);
+        wait_ring(6'o21, 50);
+        want(e[6'o21], "the second leg, which his phone could not have dialled: 21 rings");
+        hook[6'o21] = 1'b1;
+        #(5 * NS);
+        p_o20.clear; p_o21.clear; poe = 1'b1;
+        #(30 * NS);
+        poe = 1'b0;
+        p_o20.report("the operator heard by 20"); p_o21.report("the operator heard by 21");
+        chk = chk + 2;
+        if (p_o20.best_err != 0) errs = errs + 1;
+        if (p_o21.best_err != 0) errs = errs + 1;
+        con_key(K_WRITE, 1'b1, 6'o20, 6'o21, 1'b1);
+        #(5 * NS);
+        p_ab.clear; p_ba.clear; pe = 1'b1;
+        #(30 * NS);
+        pe = 1'b0;
+        want(heard[6'o20] == nm(6'o21) && heard[6'o21] == nm(6'o20), "and then to each other");
+        paths_ok(0);
+        con_word(1'b1, POP, 6'd0, 1'b0);
+        #(20 * NS);
+        want(heard[6'o20] == nm(6'o21) && heard[6'o21] == nm(6'o20) && pbusy[6'o20] && pbusy[6'o21],
+             "RELEASE 04: the operator drops out and the call stands without him");
+        for (k = 0; k < 300 && lw_src[POP] != PDT; k = k + 1) #(NS);
+        want(lw_src[POP] == PDT,
+             "his own phone, off hook with a cleared latch, is a call request: dial tone");
+        all_down(300);
+        want(pbusy == 64'd0 && regs == {NREG{1'b0}}, "everyone hangs up: nothing held");
+
+        $display("     LIFTED FIRST, which is the hazard.");
+        hook[POP] = 1'b1;
+        wait_busy(POP, 200);
+        want(lw_src[POP] == PDT && regs != {NREG{1'b0}},
+             "lifted with an idle latch he is a caller like any other: dial tone, and a register");
+        con_key(K_WRITE, 1'b1, 6'o22, POP, 1'b1);
+        wait_ring(6'o22, 50);
+        want(e[6'o22] && regs != {NREG{1'b0}},
+             "the console patches him to 22 anyway -- and the register is STILL attached");
+        t0 = $realtime;
+        for (k = 0; k < NODIG_MS + 300 && regs != {NREG{1'b0}}; k = k + 1) #(NS);
+        $display("     the register let go %0.0f ms after the lift, at its own no-digit timeout",
+                 ($realtime - t0) / NS);
+        want(regs == {NREG{1'b0}} && lw_src[POP] == 6'o22 && heard[6'o22] == nm(POP),
+             "it goes with an EVENT word, which writes nothing: the patch survives it");
+        all_down(300);
+
+        $display("     The cure: make-busy on his own line first (part 4's write, used on purpose).");
+        con_word(1'b0, POP, 6'o00, 1'b1);
+        hook[POP] = 1'b1;
+        #(150 * NS);
+        want(regs == {NREG{1'b0}} && lw_src[POP] == 6'o00,
+             "M rising on a port that is already busy is not a call request: no register");
+        con_key(K_WRITE, 1'b1, 6'o22, POP, 1'b1);
+        wait_ring(6'o22, 50);
+        want(e[6'o22], "and the console can ring 22 from it");
+        hook[6'o22] = 1'b1;
+        #(20 * NS);
+        want(heard[6'o22] == nm(POP) && heard[POP] == nm(6'o22), "22 answers: they are talking");
+        all_down(300);
+        want(pbusy == 64'd0 && regs == {NREG{1'b0}},
+             "and the make-busy goes with the handset: M rose and fell, which is a release");
+
+        // ---- 8. supervision -------------------------------------------------
+        $display("\n  8. What the console can READ.  The wheels are on 20 and 21.");
+        @(negedge clk); sw_dst = 6'o20; sw_src = 6'o21;
+        #(2 * NS);
+        want(!hook_dst && !hook_src, "both phones on hook: both lamps out");
+        t0 = $realtime;
+        hook[6'o20] = 1'b1;
+        while (!hook_dst) @(posedge clk);
+        $display("     20 lifts: the hook lamp follows %0.0f us later -- cable A, no tenure, no marker",
+                 ($realtime - t0) / 1000.0);
+        want(hook_dst && !hook_src, "and only that one");
+        key_hold = 1'b1;
+        #(5 * NS);
+        hook[6'o21] = 1'b1;
+        #(5 * NS);
+        want(hook_src, "with the marker STOPPED, the other lamp follows too: the hook is cable A's");
+        key_hold = 1'b0;
+        all_down(300);
+
+        $display("     PROBE: BUSY and the card's word, off the probe bus, writing nothing.");
+        k = n_probe_wrote;
+        con_key(K_PROBE, 1'b0, 6'o20, 6'o21, 1'b0);
+        $display("     a probe of one port took %0.0f us", t_ten / 1000.0);
+        want(sup_seen && !sup_busy_dst && sup_word_dst == 8'h01,
+             "20 free: BUSY clear, and the card's word is a line");
+        con_key(K_PROBE, 1'b0, 6'o70, 6'o21, 1'b0);
+        want(sup_word_dst == 8'h00, "70, an empty slot in a fitted block: no word at all");
+        con_key(K_PROBE, 1'b0, SK0, 6'o21, 1'b0);
+        want(sup_word_dst == 8'h00 && !sup_busy_dst, "76, a sink: no word either -- an empty slot to the marker");
+        @(negedge clk); sw_dst = PRS;
+        #(2 * NS);
+        con_key(K_PROBE, 1'b0, PRS, 6'o21, 1'b0);
+        want(sup_word_dst == 8'h00 && !sup_busy_dst && hook_dst,
+             "75, the ring source: no word, not busy -- and its M is HIGH, which is why it is safe");
+        call(6'o20, 6'o21);
+        con_key(K_PROBE, 1'b1, 6'o20, 6'o21, 1'b0);
+        $display("     a probe of both ends took %0.0f us", t_ten / 1000.0);
+        want(sup_busy_dst && sup_busy_src && sup_word_dst == 8'h01 && sup_word_src == 8'h01,
+             "PROBE + BOTH, on a call: both ends busy, both lines, one tenure");
+        want(hook_dst && hook_src, "and both off hook, off cable A at the same time");
+        want(n_probe_wrote == k, "and not one WR pulsed: a probe writes nothing");
+        want(heard[6'o20] == nm(6'o21) && heard[6'o21] == nm(6'o20), "the call has not noticed");
+        all_down(300);
+        want(pbusy == 64'd0 && regs == {NREG{1'b0}} && !wq_ovf, "nothing held");
+        if (n_mk_lost || n_mk_mangled || n_cn_bad || n_contend || n_runt || n_probe_wrote)
+            $display("     lost %0d  mangled %0d  console bad %0d  contend %0d  runt %0d  probe wrote %0d",
+                     n_mk_lost, n_mk_mangled, n_cn_bad, n_contend, n_runt, n_probe_wrote);
+        want(n_mk_lost == 0 && n_mk_mangled == 0 && n_cn_bad == 0 && n_contend == 0 && n_runt == 0
+             && n_probe_wrote == 0,
+             "and over parts 3-8 the bus never carried a wrong word");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
         $finish;

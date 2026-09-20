@@ -1,7 +1,7 @@
 """
 The impulse-noise falloff curve for the MF8 link, measured precisely.
 
-mf8/docs/line-codes.md 4 placed differential Manchester's impulse cliff "between 1
+mf8/line-codes.md 4 placed differential Manchester's impulse cliff "between 1
 and 10 events per second" from four points (0, 10, 100, 1000/s).  This sweeps a
 log grid of impulse rates in both line codes, with enough independent runs per
 point to put error bars on it, and fits the curve.

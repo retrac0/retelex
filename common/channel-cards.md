@@ -318,7 +318,7 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 | a1 | `TX_CLK` | ● | ● | the encoder's clock. The engine's T half runs on it and only on it (§3.2) |
 | a2 | `TX_HB` | — | — | nothing on this card encodes a line. Its line is analog and the only modulation on the board is the codec |
 | a3 | `TX_OCT` | ○ | ● | loads the word '165, which the FXO always carries (class 100, *outside line*) and the FXS carries only where the line is more than a plain line |
-| a4 | `FILL` | — | — | **the engine's own `1010` at silence is the idle**, so the card needs no fill pattern. That is the same property the tone card of `common-cards.md` §6 leans on |
+| a4 | `FILL` | — | — | **the engine's own `1010` at silence is the idle**, so the card needs no fill pattern. That is the same property the tone card leans on (`tone-card.md` §3) |
 | a5 | `C_TX[n]` | ● | ● | the encoder out, in T |
 | a6 | `A_TX[n]` | ● | ● | **FXS:** loop current flowing — the 10–15 mA opto of §3.4, the phone is off-hook. **FXO:** ringing present, and *which* ringing is §5 of `common-cards.md`'s OFFICE / SEIZE strap: raw in the CO's cadence, or held 5 s and ORed with the loop closed. The strap is on this pin's meaning, not on a pin of its own |
 | a7 | `RX_CLK` | ● | ● | **the decoder's clock.** The decoder is in R and the encoder in T, and the two never meet (§3.2) — which is why this card reads a7 where the CVSD line card does not (§2.4) |
