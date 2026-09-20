@@ -27,7 +27,7 @@ module tb_mvp;
     reg        cw_req = 0, cw_bsy = 0, cw_clm = 0;
     reg  [5:0] cw_dst = 0, cw_src = 0;
     wire       cw_busy, sdata, sclk, wr;
-    ctl_write u_con (.clk(clk), .rst_n(rst_n), .req(cw_req), .strobe(1'b1),
+    ctl_write u_con (.clk(clk), .rst_n(rst_n), .req(cw_req), .strobe(1'b1), .g(1'b1),
                      .dst(cw_dst), .src(cw_src), .bsy(cw_bsy), .clm(cw_clm),
                      .busy(cw_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
     wire         frame_stb, fill, ring_cad_n;

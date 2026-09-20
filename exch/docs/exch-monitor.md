@@ -91,19 +91,35 @@ which is as long as the shortest break that counts. So it steps on the 8 kHz
 octet mark, as the marker's scanner does. The measured rows do not depend on the
 figure: a monitor given the seizure counts from the rise.)
 
-**2. The origin abandons a call whose next break comes within 128 ms of its
-seizure.** The flood takes time to spread: 7 ms a hop, 12 at a slow marker. A
+**2. The origin abandons a call whose next break comes within *the guard* of its
+seizure. The guard is a strap, and 128 ms is one setting of it (§3.5).** The flood takes time to spread: 7 ms a hop, 12 at a slow marker. A
 caller whose next digit begins before the last exchange is patched in has their
 first pulse or two swallowed at the far end, where the monitor — which *did* see
 its rise — counts a digit short. Only the origin can know: it sees both its own
 seizure and the caller's next break. One tap on a counter: if the break comes
 inside the guard, release the trunks and give cannot-complete. 128 ms covers ten
-hops at the slow figure.
+hops at the slow figure, 256 ms twenty-one and 512 ms forty-two, and which tap an
+exchange is strapped for is the one number in the protocol that says how big the
+network is (§3.5).
+
+**What the guard is counting is the marker, not the carrier.** A trunk on a
+leased circuit, a radio or anything with a buffer is tens of milliseconds long,
+and it costs the guard **nothing** — because the seizure that opens the flood and
+the pulses that follow it are *the same wire*. An exchange seven hops out behind a
+80 ms carrier is patched in 600 ms later in absolute time, and the first break of
+`e` reaches it 600 ms later too; it still sees the rise first. The two delays
+cancel exactly (§5.1). What does not cancel is the part of each hop where the
+signal **restarts**: the marker's 3–10 ms of reading M and writing the onward
+latch, which is what the flood's 7 ms a hop is mostly made of. Add to it any delay
+the carrier *loses* between the seizure and the next digit — a buffer draining, a
+link re-timing — because that moves the pulses forward against a rise that has
+already gone by, and it costs a millisecond of guard for a millisecond of wander.
 
 Together they make the budget `exch-network.md` §4 uses: the digit recognised
-(128 ms), the seizure (2), the guard (128) — **the flood is ready 258 ms after
-the caller's last pulse, whatever the hop count**, against the 500–800 ms a dial
-takes between digits.
+(128 ms), the seizure (2), and the guard — **the flood is ready 130 ms plus the
+tap after the caller's last pulse, whatever the hop count.** That is 258 ms at
+128, 386 at 256 and 642 at 512, against the 720 ms a telephone to ES 201 187
+gives at its fastest (`register.md` §2).
 
 ### 3.3 A claim coming back is not a seizure
 
@@ -142,6 +158,64 @@ A claim must therefore be **held until the marker acknowledges it**, and the
 marker must take one at a time. It is also what §3.3 of `exch-network.md`
 already assumes: a ring delivers a call to its owner twice, and relies on the
 second claim being processed and finding the line busy.
+
+### 3.5 Setting the guard
+
+**The guard is a strap, and it is the only number in the protocol that says how
+big the network is.** An exchange's other jumpers say *who it is* — `e` and `b`,
+its own code, and nothing anywhere says where anything is. This one says how far
+the flood has to travel, it is the same value at every exchange in one network,
+and it is set by whoever plans the network and not by the exchange.
+
+It is one tap on the counter the seize-and-await-claim sequence already runs on,
+so the choice costs no parts. What each tap is worth (`exch.py big` §7):
+
+| tap | covers, at a slow marker's 12 ms a hop | the longest chain whose flood fits it | the largest network the shape rules allow, 30 % of calls leaving |
+|---|---|---|---|
+| **128 ms** | 10 hops | 11 exchanges | 63 exchanges, 756 lines, 12 a piece |
+| **256 ms** | 21 hops | 22 exchanges | **64 exchanges, 1 428 lines, 22 a piece** |
+| 512 ms | 42 hops | 43 exchanges | the same 64 and 1 428 |
+
+**256 ms fills the sixty-four codes and nearly doubles the lines. 512 buys
+nothing more in size**, because past 256 what stops the search is the traffic on
+the centre and the four directions an exchange has, and neither of those is a
+timer. What 512 buys instead is room for a carrier that wanders (§5.1).
+
+**What the guard has to cover** is every hop's *marker* — 12 ms at a slow one,
+4 ms more at a hub, a hub counting as a hop and a third — plus any delay a
+carrier loses between the seizure and the next digit, a millisecond for a
+millisecond. **Not** a carrier's own transmission delay, which cancels (§5.1).
+
+**What bounds it:**
+
+| | |
+|---|---|
+| above | the caller's own pause less the 130 ms the digit and the seizure take. A telephone to ES 201 187 gives at least 720 ms, so **590 ms**, and 512 is the last tap under it |
+| below | nothing. 128 ms is right for a network of pairs and a short chain, and there is no reason to go under it |
+| and *not* | the earliest a claim can come back. The marker reads M rising on a trunk it seized inside the guard as glare and not as a claim (`ex-counters.md` §9), so the guard must stay clear of a real one — and it does at every tap, because a caller the guard has not already abandoned has a pause of at least the tap plus 130 ms and must dial two digits before anyone can claim: **twice the tap and 378 ms more** |
+
+**What a longer tap costs is the fast caller.** 128 ms gives cannot-complete to
+anyone dialling with under 258 ms between digits, 256 ms to anyone under 386, and
+512 ms to anyone under 642. All three are inside what a conforming telephone
+does and none is inside what a worn dial, a non-conforming instrument or an
+operator's practised hand might. **That is the trade rule 2 exists to make** — a
+failed call in place of a chance of a wrong number — and a longer tap makes it
+more often. A local call, `h s`, never floods and is never touched by it.
+
+**Everything else stays where it is.** The guard is the only timer in the
+protocol that is a function of the hop count:
+
+| | why it does not move with it |
+|---|---|
+| `HIT` 8 ms, `ID` 128 ms, `CLR` 256 ms | a register's and a monitor's own windows, local to one exchange, set by the dial's envelope (`register.md` §2) |
+| the origin's 2 s wait for a claim | the claim crosses forward and back at about 1.5 ms a hop: **600 hops** of room on a pair, 22 behind a 40 ms carrier |
+| the 5 s rule (`exch-network.md` §4) | sized on a slow dial reaching the code `77` in 3.8 s; distance is not in it |
+| the release detectors, the trunk's 0.6 s settle, the register's 10 s | all local to one exchange |
+| the A path | shortens a break 0.5 ms a hop against a 45 ms margin: **91 hops** |
+
+**In parts:** the sequence counts on the 1 kHz tick already, and 128, 256 and
+512 ms are three adjacent stages of that counter. A three-way jumper field beside
+the code jumpers and one '151, or three links and none.
 
 ---
 
@@ -238,12 +312,65 @@ call.**
   claims are all callers whose next digit began before the flood was complete.
 - **Both rules: none**, at any pause a pulse register can read at all, clean or
   at a line error rate of 1e−2.
-- *No claim* is the safe failure — the origin times out and returns
-  cannot-complete. In the rows that need the rise seen, one monitor in five was
-  made busy on purpose, and that is most of it; with the guard, callers pausing
-  under 258 ms are abandoned as well.
-- 140 ms is the floor for **any** pulse register: below it two digits run
-  together (`register.md` §3.2), flood or no flood.
+
+### 5.1 A carrier that is not a pair
+
+`exch-network.md` §1.1 allows a carrier "about 2 ms of A path a hop", which a
+copper pair and an MF8 link are inside and a leased circuit, a radio, a mux or a
+jitter buffer are not. The same model with a **constant one-way delay** added to
+every hop, both rules on, a pause of 140–900 ms and the 128 ms guard throughout;
+1 000 calls a row:
+
+| carrier a hop | the flood is up at | right | no claim | **false** |
+|---|---|---|---|---|
+| 0 ms | 46 ms | 73.3 % | 26.7 % | **0** |
+| 10 ms | 116 ms | 70.8 % | 29.2 % | **0** |
+| 20 ms | 186 ms | 72.1 % | 27.9 % | **0** |
+| 40 ms | 326 ms | 70.5 % | 29.5 % | **0** |
+| 80 ms | 606 ms | 72.2 % | 27.8 % | **0** |
+| **160 ms** | **1 166 ms** | 72.8 % | 27.2 % | **0** |
+
+**Delay costs the guard nothing, at any depth.** The flood taking 1.17 s to cross
+seven hops changes no outcome, because every break the caller makes is 1.12 s late
+at the far end as well. A hop's contribution to the guard is the part where the
+signal *restarts* — the marker's own 3–10 ms — and not the part where it travels.
+
+**Delay that the carrier loses between the seizure and the next digit does cost
+it, one for one.** A buffer draining or a link re-timing moves the pulses forward
+against a rise that has gone by. The same model with that wander added per hop, on
+top of the marker:
+
+| wander a hop | the flood is up at | false, guard 128 ms | matched tap | false | abandoned, a dial of 140–900 | abandoned, 720–900 |
+|---|---|---|---|---|---|---|
+| 0 ms | 46 ms | **0** | 128 ms | 0 | 17 % | **0 %** |
+| 5 ms | 80 ms | **0** | 128 ms | 0 | 16 % | **0 %** |
+| 10 ms | 116 ms | **0** | 128 ms | 0 | 16 % | **0 %** |
+| 20 ms | 186 ms | **1** | 256 ms | 0 | 32 % | **0 %** |
+| 40 ms | 326 ms | **23** | 512 ms | 0 | 69 % | **0 %** |
+
+**And in the gates.** `exrtl`'s `make chain-delay` is three exchanges with 20 ms
+of carrier on every link — 160 ms in the world, because that bench dials eight
+times fast and its guard is 16 ms and not 128. The flood is up **40 ms after the
+seizure against a 16 ms guard**, two and a half times over it, and every check
+passes: the seizure is forwarded, both monitors catch it, 24 claims, 23 lets go
+because 4 is not its `b`, the line rings, answers and releases. Nothing in the
+marker or the monitor is aware of the delay line at all.
+
+**The guard has four taps of headroom and they are free**, and §3.5 is what each
+one is worth. What §5.1 adds to it is the budget: the tap must cover the
+marker's own hop *and this wander*, and nothing of the carrier's length.
+
+**None of which is the reason to keep a carrier short.** The guard does not care,
+and the origin's 2 s wait for a claim allows nearly a second of round trip. What
+does care is **echo**: `mf8-cards.md` §3.3 has no canceller and no suppressor in
+the design at all, on the grounds that the round trip is "under 0.1 ms plus 5 µs
+per km" and echo is objectionable above 20–30 ms. That is still true for a CVSD
+subscriber at each end, which is four-wire; it stops being true the moment either
+end is an analog FXS or FXO card, and **one 15 ms hop is 30 ms of round trip.**
+
+**Which tap to strap, what it buys and what it costs, is §3.5.** The guard is the
+only timer in the protocol that is a function of the hop count, and a carrier's
+length is not in it; its wander is.
 
 ---
 
@@ -291,7 +418,9 @@ the compare is all four bits. 8 and 9 are never jumpered, so neither can match.
   Schmitt gate; the model gives a pooled monitor the rise or nothing.
 - **A slow marker.** The guard assumes no exchange takes more than about 12 ms to
   patch a seizure onward. A marker held up longer than that is a partial count at
-  every exchange beyond it, and nothing here detects it.
+  every exchange beyond it, and nothing here detects it. It is now the whole of
+  what the guard's tap is sized on (§3.5), and the 12 ms is still an assumption
+  about parts and not a measurement — `exrtl` measures 3–10 ms, and is not 74HC.
 - **Copper ties.** Between exchanges in one rack a trunk is a crossover with no
   A-path RC, so pulses arrive undistorted and a hop is a frame; the model used
   the MF8 figures throughout, which are the worse.

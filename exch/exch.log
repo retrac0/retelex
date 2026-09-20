@@ -29,7 +29,7 @@ TANDEM -- N codecs of mf8-spec 12.1 in analog tandem, 7 talkers x 12 s.
     ... through a transit exchange                         2      1
   64 kbps data                                        cannot      0
 
-  [tandem: 88 s]
+  [tandem: 72 s]
 
 FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8 blocks.
   2048 frames a run, random data on every fitted port.
@@ -74,7 +74,7 @@ FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8
   8. A tie block: highway 7 of group X crossed to highway 7 of group Y, same clock, no framer.
      8 junctors, C and A: 0 errors at a delay of exactly 2 frames (one per fabric)
 
-  [fabric: 51 s]
+  [fabric: 41 s]
 
 CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.
   00 idle (never fitted), 01 dial tone, 02 cannot-complete tone, 03-05 registers; subscribers 20-77.
@@ -689,7 +689,7 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 18 ms;  overheard another call 0 ms
 
 
-  [calls: 51 s]
+  [calls: 54 s]
 
 ANNOUNCE -- a recorded message as a ROM of CVSD bits: no codec on the card.
   message 4.0 s + 0.25 s of silence each end = 288000 bits = 36000 bytes (crc32 020b1b95); 8 kB a second, so 8 s fills a 64 kB part.
@@ -750,7 +750,7 @@ ALINE -- digits as serial characters on A: start, data bits, stop; seized is mar
 
   For scale: one dial pulse at 10 pps is 100 ms; the octal digit 0 is ten of them.
 
-  [aline: 19 s]
+  [aline: 16 s]
 
 FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and claimed.
   Arithmetic from measured constants, not a simulation of the gates:
@@ -901,13 +901,55 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
   whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse
   register can read (register.md 3.2): below it two digits run together, flood or no flood.
 
+  A CARRIER THAT IS NOT A PAIR.  exch-network.md 1.1 allows a carrier "about 2 ms of A path
+  a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a
+  jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that
+  eats the origin's guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, 1000 calls a row.
+
+   carrier a hop  the flood is up at |   right %  no claim %  FALSE
+            0 ms               46 ms |      73.3        26.7      0
+            5 ms               80 ms |      69.1        30.9      0
+           10 ms              116 ms |      70.8        29.2      0
+           20 ms              186 ms |      72.1        27.9      0
+           40 ms              326 ms |      70.5        29.5      0
+           80 ms              606 ms |      72.2        27.8      0
+          160 ms             1166 ms |      72.8        27.2      0
+
+  IT DOES NOT.  A constant delay moves the whole of the caller's hook -- the seizure that
+  opens the flood AND the pulses that follow it -- by the same amount, because they are the
+  same wire.  An exchange seven hops out is patched in 600 ms later in absolute time and
+  still sees the rise before the first break of `e`, because the break is 600 ms later too.
+  **The two delays cancel exactly, and the guard never sees the carrier at all.**
+
+  What DOES eat the guard is delay the carrier LOSES between the seizure and the next
+  digit -- a buffer draining, a link re-timing -- because that moves the pulses forward
+  against a rise that has already gone by.  A millisecond of it costs a millisecond of
+  guard, exactly as the marker's own forwarding does.  Per hop, on top of the marker:
+
+    wander a hop   spread |          guard 128 ms          |       guard matched to the spread       
+                   over 7 |   right %  no claim %  FALSE |    tap  a dial of 140-900        of 720-900
+                          |                              |         FALSE   abandoned  FALSE  abandoned
+            0 ms    46 ms |      71.7        28.3      0 |  128 ms      0      17 %      0       0 %
+            2 ms    60 ms |      70.5        29.5      0 |  128 ms      0      15 %      0       0 %
+            5 ms    80 ms |      72.8        27.2      0 |  128 ms      0      16 %      0       0 %
+           10 ms   116 ms |      72.8        27.2      0 |  128 ms      0      16 %      0       0 %
+           20 ms   186 ms |      73.1        26.8      1 |  256 ms      0      32 %      0       0 %
+           40 ms   326 ms |      66.5        31.2     23 |  512 ms      0      69 %      0       0 %
+
+  The guard must be at least the spread or it is not a guarantee, and no more than the
+  caller's own pause less the 130 ms the digit and the seizure take.  A phone to
+  ES 201 187 gives at least 720 ms (register.md 2), so the guard may go to 590 ms -- the
+  512 ms tap, four taps up from 128 on the counter it already has.  At 7 hops that is
+  67 ms a hop of wander against the present tap's 12.  It is free in parts and it costs
+  the callers who dial faster than the tap allows: every one of those gets cannot-complete.
+
   How many monitors a trunk block needs: one is wanted for ~1.1 s by every call in the district (flood 3).
    calls an hour in the district  erlang |  1 busy %  2 busy %  3 busy %
                              150   0.046 |      4.38      0.10      0.00
                              576   0.176 |     14.97      1.30      0.08
                             1500   0.458 |     31.43      6.72      1.02
 
-  [monitor: 103 s]
+  [monitor: 213 s]
 
 TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for its first half.
   Every delay in every trial drawn on its own between 0.35 x typical and the data-sheet maximum
@@ -940,6 +982,43 @@ TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for
        C: set-up    256 ns, hold    390 ns;   A: set-up    293 ns, hold    423 ns
 
   [timing: 0 s]
+
+MAINBOARD -- what a ribbon costs the fabric.  Eight blocks a quarter metre apart on one cable;
+  5.1 ns/m, 105 ohm, 49 pF/m.  The same 400000 draws as `timing`, with the clock's own flight added.
+
+  1. The clock travels down the same cable as the data, so most of the flight cancels.
+     Data reaches listener b at  dly(a) + flight(a,b); b's strobe at  dly(b).  The loss is the difference,
+     and it is ZERO whenever the driver is nearer the clock card than the listener.
+       clock card at one end       worst loss  17.9 ns   (block 7 driving, block 0 listening)
+       clock card in the middle    worst loss   8.9 ns   (block 7 driving, block 3 listening)
+       clock card at the far end   worst loss  17.9 ns   (block 0 driving, block 7 listening)
+     Hold is never worse than with no cable at all: the same term that shortens set-up lengthens hold.
+
+  2. The worst pair on the worst placement (18 ns), against `timing` 4's figures:
+       set-up at the capture flip-flop    725 ns   (no cable: 743)
+       hold                               933 ns   (no cable: 915)
+     The data's own flight is already inside the 12 ns `wire` term of §4; the clock's was not.
+
+  3. The §3.2 hazard is untouched.  HCLK and SLOTQ leave the clock card together and arrive together:
+     their skew is conductor to conductor in one ribbon, under 0.1 ns/m, not the 5 ns/m of the cable.
+       address settled    367 ns before the enable, as it was
+
+  4. The line itself, and why the cure for an edge is to slow it down.
+     2 m, 8 taps: 193 pF, one way 10.2 ns, round trip 20.4 ns.  A '244 alone gives a 17 ns edge,
+          33 ohm in series: edge   31 ns,  1.6 % of a cell   <- slower than the round trip: no ringing to settle
+         100 ohm in series: edge   59 ns,  3.0 % of a cell   <- slower than the round trip: no ringing to settle
+         220 ohm in series: edge  110 ns,  5.7 % of a cell   <- slower than the round trip: no ringing to settle
+         a clock line draws C.V.f = 0.49 mA at 512 kHz, 0.99 mA at 1.024 MHz
+     4 m, 8 taps: 290 pF, one way 20.4 ns, round trip 40.8 ns.  A '244 alone gives a 26 ns edge,
+          33 ohm in series: edge   47 ns,  2.4 % of a cell   <- slower than the round trip: no ringing to settle
+         100 ohm in series: edge   89 ns,  4.6 % of a cell   <- slower than the round trip: no ringing to settle
+         220 ohm in series: edge  166 ns,  8.5 % of a cell   <- slower than the round trip: no ringing to settle
+         a clock line draws C.V.f = 0.74 mA at 512 kHz, 1.49 mA at 1.024 MHz
+
+  Nothing here is near a limit.  The cure for the edges is to SLOW them: the budget is three quarters
+  of a microsecond and the line is ten nanoseconds long, so a series resistor spends what it likes.
+
+  [mainboard: 0 s]
 
 CONFER -- a conference bridge with no codec in it.  CVSD bits cannot be added, but they can be switched:
   each leg watches its caller's bits for speech, one leg holds the floor, and every other leg sends its
@@ -1007,7 +1086,7 @@ CONFER -- a conference bridge with no codec in it.  CVSD bits cannot be added, b
                               largest error, re nominal            1.0 dB  12.7 dB  17.8 dB
                               peak in 20 ms, heard / all along     0.1 dB  14.0 dB  26.2 dB
 
-  [confer: 72 s]
+  [confer: 66 s]
 
 SS0 -- the number on a common channel: one SEIZE a link, forward only; A carries everything else.
   Arithmetic from the constants of `flood`, not a simulation of the gates:
@@ -1121,7 +1200,7 @@ NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, t
      at 30 % leaving a leaf link is predicted 1.28 E and 0.17 % blocking.  **Bursts leave
      the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.
 
-  [net: 6 s]
+  [net: 8 s]
 
 TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of
   48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, 2.73 s over all 64
@@ -1226,7 +1305,20 @@ TOPO -- what shapes of network the protocol carries, and how large.  A line make
   two hubs, six leaves (net)            8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.27%  2.14    3 hp   44 ms    3    3
     and a strapped leaf-to-leaf link    8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.22%  2.06    3 hp   44 ms    3    3
 
-  6. Run call by call, 12 hours, smooth demand, 30 % leaving, three registers; monitors a block and
+  6. The same families under SS0 (ex-ss0.md), whose seizure lasts only until the claim,
+     taken as 0.4 s against the pulse flood's 2.0-3.8 s, and which needs no monitor and no guard.
+                                                      pulse flood                          SS0
+                                      exch  lines   worst   across  exch  lines   worst      PDD
+  chain, 6 ch                            5    240   0.91%    48 ms     5    240   0.70%   242 ms
+  chain, 12 ch                          11    420   0.01%   120 ms    12    456   0.01%   434 ms
+  star, 6 ch                             5    228   0.15%    28 ms     5    228   0.10%   187 ms
+  tandem, 4 chains, 12 ch               21    780   0.08%   124 ms    33   1212   0.80%   572 ms
+  tree, 12 ch, leaves                   29   1068   0.71%    84 ms    30   1104   0.66%   324 ms
+  three tandems, leaves                 35   1260   0.98%   116 ms    39   1404   0.99%   380 ms
+     SS0's "across" is post-dial delay, the caller's last pulse to ringback at the far end:
+     128 ms to recognise the digit and 28 ms a hop, against the flood's 133 ms whatever the distance.
+
+  7. Run call by call, 12 hours, smooth demand, 30 % leaving, three registers; monitors a block and
      resolvers a hub three of each unless the row says.  The worst link is the one that refused most.
                                       calls             worst link   network calls lost / 1 000  hops  flood held  ringback
                                       an hr                         no trunk  no claim    pools             a leg   network
@@ -1242,11 +1334,251 @@ TOPO -- what shapes of network the protocol carries, and how large.  A line make
   ring of 6, NO strap                   872   1.66 E on  6 ch   9.71%      67.5      32.3     32.0  1.81      2.14 s    4.97 s
   ring of 4, NO strap                   580   1.38 E on  6 ch  12.65%      52.0      20.3     35.0  1.34      2.04 s    4.86 s
 
-  7. One call, alone, on a ring of six: channels seized 1.5 s after the handset is lifted.
+  8. One call, alone, on a ring of six: channels seized 1.5 s after the handset is lifted.
      one link strapped      6 of 36
      NO strap              36 of 36
      An unstrapped ring sends every flood round and round until the links are full, and holds them
      until the code is dialled: about two seconds of a whole ring for every call that leaves.
 
-  [topo: 33 s]
+  [topo: 30 s]
+
+TRAFFIC -- demand that is not smooth, and the same network at peak and off peak.
+  Every line is a SOURCE here, not a Poisson stream: it hangs up, waits, and lifts again,
+  so the offered load falls as the exchange fills.  That is what `make traffic-net` has in the
+  gates -- a line is a state machine there and there is no other kind of caller -- and this
+  runs on the same clock as the RTL bench: the dial and the register's three windows eight
+  times life, the marker's 8 ms scan and its 7 ms hop untouched.
+
+  The network: 8 exchanges, two hubs on one link with three leaves each, six channels
+  every link, 12 lines an exchange, 96 in all.  Three registers, three monitor cells a
+  block, three resolvers.  30 % of calls leave home; a conversation averages 0.5 s.
+  Phase 1 is 10 s, measured after 6 s of warm-up -- a phase begins with every
+  line on hook, which is not a state the network is ever in otherwise, and the warm-up is
+  twice the longer idle so that what is measured is a network in its stride.  Off peak a line
+  waits 3000 ms between calls and at peak 1500 ms.  `make traffic-net` runs the same two
+  phases in the gates.  2 to 4 are not tied to that and run 240 s, because a 1 % loss is
+  not a measurement over a few hundred seizures.
+
+  1. The same network in the gates and here.  `make traffic-net` is the RTL column.
+                    calls/s  talked  hub link   the 3 spoke links  registers  monitors  resolvers  dial tone
+                    offered                 E E, lowest to highest     mean E    mean E     mean E   mean, ms
+  off peak             16.7     118      3.11   2.12   2.17   2.23       0.77      0.46       0.97       16.2
+    in the gates       20.9     114      2.48   2.33   2.47   2.81       1.50      0.30       0.85       32.6
+  peak                 29.8     162      4.55   3.26   3.53   3.73       1.33      0.69       1.38       47.2
+    in the gates       33.1     121      3.10   2.77   3.17   3.66       2.05      0.33       1.24       68.6
+     off peak: every link taken together is 15.88 E here -- 0.951 E for each call a second offered, and 20.04 E / 0.959 in the gates
+     peak    : every link taken together is 24.83 E here -- 0.833 E for each call a second offered, and 26.41 E / 0.798 in the gates
+     Erlangs are what both models measure the same way: a channel-millisecond is a
+     channel-millisecond.  Loss is not -- the RTL counts the marker's own "every trunk
+     this way is busy" event, which is raised when an ORIGIN hunts and finds none, and
+     `Pool.refused` here is every seizure turned away, a transit's forward included.
+
+     And the same again at TEN exchanges: the two hubs with two spokes each, and each
+     spoke two deep, so that every spoke has a TRANSIT on it and the link next the hub
+     carries the whole spoke past it.  `make traffic-deep` is the RTL column.
+                    calls/s  talked  hub link  next the hub  the far link  registers  resolvers  dial tone
+  off peak             21.8     129      3.73   3.07   3.94          2.73       0.77       1.18       16.8
+    in the gates       26.0     110      3.97   3.69   4.26          4.10       1.58       1.34       39.1
+  peak                 39.1     167      5.01   4.04   4.38          3.89       1.35       1.69       28.8
+    in the gates       39.2     144      3.76   3.59   4.11          3.78       2.04       1.26       70.9
+     off peak: every link taken together is 26.80 E here -- 1.232 E for each call a second offered, and 35.59 E / 1.369 in the gates
+     peak    : every link taken together is 36.45 E here -- 0.932 E for each call a second offered, and 34.59 E / 0.882 in the gates
+     A spoke's two links are the one next the hub, which carries the transit's own lines
+     AND the exchange behind it, and the one beyond, which carries one exchange.
+
+     Every link of the eight, both phases.  Erlang B is on the erlangs the run carried.
+  link       phase       erlang  high  Erlang B   refused
+  21 = 22  off peak      3.11     6     5.86 %     4.65 %
+  21 = 22  peak          4.55     6    15.78 %    24.05 %
+  21 = 23  off peak      2.23     5     1.85 %     0.00 %
+  21 = 23  peak          3.53     6     8.44 %     2.86 %
+  21 = 24  off peak      2.17     6     1.68 %     0.00 %
+  21 = 24  peak          3.26     6     6.70 %     4.62 %
+  21 = 25  off peak      2.12     6     1.51 %     0.00 %
+  21 = 25  peak          3.73     6     9.82 %     6.25 %
+  22 = 26  off peak      2.14     5     1.59 %     0.00 %
+  22 = 26  peak          3.26     6     6.71 %     7.04 %
+  22 = 27  off peak      2.36     6     2.29 %     0.00 %
+  22 = 27  peak          3.23     6     6.52 %     3.08 %
+  22 = 31  off peak      1.74     5     0.69 %     0.00 %
+  22 = 31  peak          3.28     6     6.84 %     1.59 %
+
+  2. Four ways the same mean can arrive.  Smooth is Poisson.  Bursty is the network
+     going hot and cold together -- 1 s at 8x the rate in every 6 s.  Herd is a flash
+     crowd: 33 % of every line in the network lifts inside 300 ms, and they all dial
+     the SAME exchange -- not only when the calls come but where they go.
+  arrivals     phase      calls/s               busiest link          registers            dial tone, ms
+                          offered       E E a call/s blocked   mean E    waited     mean    95 %   worst
+  smooth       off peak       8.4    1.97      0.236   0.68 %     0.39     25.1 %      8.7     9.8     582
+  smooth       peak          28.8    4.57      0.159  26.44 %     1.32     78.8 %     35.5   207.4     953
+  bursty       off peak       4.7    1.10      0.236   0.00 %     0.22      8.5 %      6.8     9.7     182
+  bursty       peak          17.5    3.45      0.197  13.77 %     0.82     71.1 %     25.7   146.8    1024
+  herd         off peak      10.4    2.03      0.195  41.59 %     0.49     42.7 %     11.9    10.0     594
+  herd         peak          30.1    4.70      0.156  36.85 %     1.39     82.4 %     43.8   258.9    1199
+     "waited" is the share of callers the scanner had to come back to, which is dial tone
+     late and not a call lost (exch-marker.md 6).  42 herds were let loose.
+
+     A BURST DOES NOT OFFER THE SAME CALLS, and that is not the model being wrong.  The
+     cold rate is set so the mean over the cycle is the smooth one, which is exact for
+     arrivals out of nowhere; but a line that is off hook cannot lift, and at 8x the rate the
+     hot idle is shorter than a call, so the lines themselves are the limit.  `net`, whose
+     callers arrive from nowhere, cannot show this: it is what makes a line a source.
+     "E a call/s" is the link's erlangs divided by the calls a second that produced them,
+     so the three may be read against each other at the load each one managed to offer.
+
+     Where each model falls.  The flood is on every link whatever the shape of the demand;
+     what moves is which link, and how long a caller waits for a register.
+  arrivals                 busiest link   every link           monitors          resolvers
+  smooth       21 = 22            4.57 E      25.39 E       0.71 E   3.3 %       1.46 E  10.9 %
+  bursty       21 = 22            3.45 E      18.22 E       0.52 E   2.6 %       1.04 E   7.7 %
+  herd         21 = 22            4.70 E      26.78 E       0.75 E   4.3 %       1.49 E  17.3 %
+
+  3. The same arrivals, three holding-time laws of the same mean.  Erlang B is insensitive
+     to the law in theory; nothing in this exchange has read Erlang.
+  holding         sd/mean  calls/s         worst link   Erlang B   every link
+  exponential        1.00     28.8    4.55 E  27.93 %     15.81 %      25.13 E
+  constant           0.00     28.9    4.62 E  27.05 %     16.32 %      25.47 E
+  two-class 9:1      1.55     28.6    4.58 E  27.73 %     16.01 %      25.70 E
+
+  4. Peak against off peak, as a sweep: the same network, the idle between a line's calls
+     cut step by step.  "offered" is what the lines managed to offer, not what was asked.
+   idle, ms  calls/s         worst link   Erlang B       lost  no trunk          registers  talked
+                             E  refused                a call /1000 net   mean E    waited        
+      12000      4.2      1.05    0.00 %      0.06 %      12.3 %       0.0     0.20      0.0 %     881
+       8000      6.3      1.58    0.21 %      0.44 %      15.2 %       0.0     0.30     12.6 %    1275
+       6000      8.3      2.08    2.18 %      1.43 %      19.6 %       0.0     0.40     15.2 %    1609
+       4000     12.1      2.91    4.55 %      4.75 %      23.4 %       1.1     0.59     38.0 %    2228
+       3000     15.8      3.29    9.07 %      6.92 %      28.5 %       8.8     0.74     54.8 %    2709
+       2000     22.7      4.11   19.07 %     12.53 %      38.2 %      38.5     1.06     72.8 %    3365
+       1500     29.2      4.46   26.81 %     15.13 %      43.0 %      61.5     1.33     80.3 %    3998
+       1000     40.3      4.96   37.87 %     18.87 %      53.0 %     107.4     1.79     89.2 %    4548
+        700     51.9      5.23   43.40 %     20.88 %      61.1 %     170.3     2.22     93.7 %    4836
+     "lost a call" counts every caller who did not talk -- the called line busy, no trunk,
+     no claim, dial tone given up on -- so most of it is the called line, not the network.
+
+  [traffic: 6 s]
+
+BIG -- how near sixty-four exchanges the pulse flood will go, and what shape gets there.
+  The rules are Topology.md 1: four directions an exchange, eight trunk groups, the flood
+  sees a tree, sixty-four codes, and the whole flood inside the origin's 128 ms guard at a
+  slow marker (12 ms a hop and 4 more at a hub).  Erlang B on a tree throughout,
+  3 calls an hour of 48 s a line, and every call that leaves floods every link for
+  2.73 s on average over the sixty-four codes.  "lines" is what the shape is worked at, after
+  the trunk groups have taken their slots and the cap in the label has taken the rest.
+
+  1. A tandem-chain backbone with spokes on it.  A tandem in the MIDDLE of the chain has
+     two directions left after the backbone and two trunk groups, so it carries two spokes
+     of six channels or one of twelve; an end of the chain has three directions and four
+     groups.  That asymmetry is the whole of what a backbone costs.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  2 tandems, 3 spokes (2 in the middle)     8    312    39  0.18E   2.32 E on 12  0.00%   0.00%    3 hp   44 ms    3    3
+  3 tandems, 3 spokes (2 in the middle)    11    420    38  0.25E   2.82 E on 12  0.00%   0.01%    4 hp   60 ms    3    3
+  4 tandems, 3 spokes (2 in the middle)    14    528    37  0.31E   3.72 E on 12  0.04%   0.05%    5 hp   76 ms    3    3
+  5 tandems, 3 spokes (2 in the middle)    17    636    37  0.37E   4.31 E on 12  0.11%   0.26%    6 hp   92 ms    4    4
+  3 tandems, 18 ch backbone, 3 and 1       10 exchanges -- more than eight trunk groups
+  4 tandems, 18 ch backbone, 3 and 1       12 exchanges -- more than eight trunk groups
+  5 tandems, 18 ch backbone, 3 and 1       14 exchanges -- more than eight trunk groups
+     A chain of tandems is four hops across and spends nothing on depth.  What it cannot do
+     is grow: each tandem carries two or three exchanges and there is no room for more.
+
+  2. LONG SPOKES: a branch of 1 after the first level is a chain hanging off the tandem.
+     Depth is free in trunks and dear in hops, and the link next the tandem carries the
+     whole spoke past it.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  2 tandems, 3 spokes 2 deep               14    528    37  0.31E   3.72 E on 12  0.04%   0.04%    5 hp   68 ms    3    3
+  2 tandems, 3 spokes 3 deep               20    744    37  0.45E   5.15 E on 12  0.42%   0.43%    7 hp   92 ms    4    4
+  2 tandems, 3 spokes 4 deep               26    960    36  0.60E   6.59 E on 12  1.96%   2.06%    9 hp  116 ms    4    4
+  2 tandems, 3 spokes 5 deep               32   1176    36  0.74E   8.03 E on 12  5.22%   5.76%   11 hp  140 ms    5    5
+  3 tandems, 3 spokes 2 deep               19    708    37  0.43E   4.61 E on 12  0.19%   0.39%    6 hp   84 ms    4    4
+  3 tandems, 3 spokes 3 deep               27    996    36  0.62E   6.42 E on 12  1.69%   3.38%    8 hp  108 ms    4    4
+  3 tandems, 3 spokes 4 deep               35   1284    36  0.82E   8.24 E on 12  5.83%  11.50%   10 hp  132 ms    5    5
+  3 tandems, 3 spokes 5 deep               43   1572    36  1.03E  10.06 E on 12 12.21%  23.77%   12 hp  156 ms    5    5
+     Ten hops is the guard, and a chain of that length on one link is its own bottleneck.
+
+  3. Spokes that BRANCH: a sub-hub on each spoke and leaves on that, and a level more
+     under those.  The same exchanges in half the hops, and the traffic divided over more
+     links next the tandem.  48-line exchanges first, to show where that stops.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  1 tandem, 4 x 3                          17    708    41  0.41E   1.49 E on  6  0.34%   0.74%    4 hp   60 ms    4    4
+  1 tandem, 4 x 3 x 3                      53   2148    40  1.43E  11.20 E on 12 16.70%  35.05%    6 hp   92 ms    6    6
+  2 tandems, 3 x 3                         26   1068    41  0.65E   7.32 E on 12  3.39%   4.80%    5 hp   76 ms    4    4
+  2 tandems, 3 x 3 x 2                     62   2472    39  1.67E  16.75 E on 12 36.55%  54.31%    7 hp  108 ms    7    7
+  3 tandems, 3 and 2, x 3 x 2              83 exchanges -- more than 64 exchanges
+
+  4. FULLY CONNECTED tandems.  Of the k(k-1)/2 links between k tandems only the k-1 of a
+     chain may carry the flood, because the flood must see a tree; every other one is
+     STRAPPED, and a strapped link carries calls between its own two ends only
+     (exch-network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:
+     Read the pairs: each is the SAME eight trunk groups at each tandem, spent on a chain
+     of wide links or on a mesh of narrow ones.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  3 tandems chained, 12 ch, 2 spokes        9    348    38  0.20E   2.30 E on 12  0.00%   0.00%    4 hp   60 ms    3    3
+    fully connected, 6 ch, 2 spokes         9    360    40  0.20E   2.29 E on  6  2.05%   4.05%    4 hp   60 ms    3    3
+    fully connected, 12 ch: 2 groups more    9    324    36  0.18E   2.09 E on 12  0.00%   0.00%    4 hp   60 ms    3    3
+  4 tandems chained, 12 ch, 1 spoke         8    312    39  0.18E   2.32 E on 12  0.00%   0.00%    5 hp   68 ms    3    3
+    fully connected, 6 ch, 1 spoke          8    312    39  0.17E   2.00 E on  6  1.21%   2.06%    5 hp   68 ms    3    3
+  5 tandems chained, 12 ch, no spokes       5    204    40  0.12E   1.59 E on 12  0.00%   0.00%    4 hp   48 ms    2    0
+    fully connected, 6 ch, no spokes        5    180    36  0.10E   0.31 E on  6  0.00%   0.00%    1 hp   12 ms    2    0
+  6 tandems fully connected, 6 ch           6 exchanges -- more than four directions
+     Wherever there is anything BEHIND a hub, the mesh spends directions and trunk groups
+     and moves no traffic worth the name: the only calls a strapped tandem-to-tandem link
+     can carry are the twelve lines at one end calling the twelve at the other.  Capacity
+     between hubs is bought in CHANNELS on the tree, not in links off it.
+     The last pair is the exception that shows why.  With NOTHING behind them, the hubs
+     ARE the traffic, every pair has a direct link and no call is ever forwarded -- and
+     the mesh is better than the chain by a factor of five.  Five is also where it stops:
+     a sixth exchange would want a fifth direction, and any exchange hung off one of the
+     five turns every one of those links back into a strap that nothing may cross.
+
+  5. What actually reaches sixty-four codes: SMALLER EXCHANGES.  Both the traffic and the
+     flood on every link are proportional to the LINES in the network and not to the
+     exchanges, so the way to sixty-four is exchanges that are not full.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  2 tandems, 3 x 3 x 2, 48 lines an ex     62   2472    39  1.67E  16.75 E on 12 36.55%  54.31%    7 hp  108 ms    7    7
+  2 tandems, 3 x 3 x 2, 36 lines an ex     62   2040    32  1.38E  13.82 E on 12 26.81%  37.17%    7 hp  108 ms    6    6
+  2 tandems, 3 x 3 x 2, 24 lines an ex     62   1392    22  0.94E   9.43 E on 12  9.84%  11.74%    7 hp  108 ms    5    5
+  2 tandems, 3 x 3 x 2, 18 lines an ex     62   1068    17  0.72E   7.24 E on 12  3.21%   3.60%    7 hp  108 ms    5    5
+  2 tandems, 3 x 3 x 2, 12 lines an ex     62    744    12  0.50E   5.04 E on 12  0.36%   0.40%    7 hp  108 ms    4    4
+  2 tandems, 3 x 3 x 2,  8 lines an ex     62    496     8  0.34E   3.36 E on 12  0.02%   0.02%    7 hp  108 ms    3    3
+
+  6. The largest network with no link over 1 %, inside the guard and the sixty-four codes,
+     searched over backbones of 1-5 tandems, trees of up to three levels, and line caps.
+                                         exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
+  20 %: 3 tandems 12 ch, 2 x 3 x 2, 24 lines   63   1428    22  0.65E   5.82 E on 12  0.94%   2.05%    8 hp  124 ms    4    4
+  30 %: 3 tandems 12 ch, 2 x 3 x 2, 12 lines   63    756    12  0.51E   1.35 E on  6  0.22%   0.86%    8 hp  124 ms    4    4
+  50 %: 3 tandems 12 ch, 2 x 3 x 2, 8 lines   63    504     8  0.57E   5.12 E on 12  0.41%   1.59%    8 hp  124 ms    4    4
+     The count of exchanges is what is maximised, and the lines only break a tie, so these
+     are the shapes that fill the numbering plan rather than the ones that carry the most.
+
+  7. What the GUARD'S TAP buys.  The flood has to cross the network inside the origin's
+     guard (exch-monitor.md 3, rule 2), which is one tap on a counter -- 128 ms today, and
+     12 ms a hop at a slow marker with 4 more at a hub.  It may go as far as the caller's
+     own pause less the 130 ms the digit and the seizure take: a phone to ES 201 187 gives
+     720 ms (register.md 2), so 590 ms, and 512 is the last tap under it.  A carrier's own
+     delay is NOT in this budget (exch-monitor.md 5.1); wander is.
+
+      tap             a chain of 12 ch |          the largest network at 30 % leaving
+            hops  exchanges what stops it |  exch  lines  a/ex        worst link  hops  spread
+    128ms     10         11   the guard |    63    756    12   1.35 E on  6  0.22%    8 hp  124 ms
+    256ms     21         22   the guard |    64   1428    22   5.60 E on 12  0.74%    9 hp  140 ms
+    512ms     42         43   the guard |    64   1428    22   5.60 E on 12  0.74%    9 hp  140 ms
+     "hops" is the longest chain whose flood fits the tap, whatever it would carry -- the
+     timer alone.  The network beside it has both constraints on, and past 128 ms the guard
+     stops being the one that binds: what stops the search then is the traffic on the
+     centre and the four directions an exchange has, neither of which is a timer.
+
+  8. Those run call by call with `net`'s engine -- the flood, the monitors, the claim, the
+     resolvers and the registers -- five monitor cells a block and five resolvers a hub,
+     at the busy hour of 3 calls a line and then at TWICE it, which is a network built for
+     one community and given two.  6 hours of each.
+                                  calls/h  calls            worst link lost / 1 000 network calls  hops  ringback
+                                   a line  an hr                        no trunk  no claim   pools         network
+  20 % leaving, 24 lines an exchange        3   4333   5.63 E on 12 ch  0.70%       0.8       5.9     0.0  5.38    5.37 s
+  20 % leaving, 24 lines an exchange        6   8615   8.83 E on 12 ch 11.57%       2.1     111.8     6.1  5.34    5.34 s
+  30 % leaving, 12 lines an exchange        3   2293   1.38 E on  6 ch  0.42%       0.0       3.9     0.0  5.27    5.34 s
+  30 % leaving, 12 lines an exchange        6   4580   7.33 E on 12 ch  4.04%       0.5      63.2     1.4  5.26    5.34 s
+  50 % leaving, 8 lines an exchange        3   1524   1.51 E on  6 ch  0.48%       0.0       6.3     0.0  5.31    5.35 s
+  50 % leaving, 8 lines an exchange        6   3054   8.09 E on 12 ch  7.40%       0.2      99.2     0.4  5.26    5.34 s
+
+  [big: 69 s]
 

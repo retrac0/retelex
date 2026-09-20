@@ -31,10 +31,10 @@ module tb_trunk;
     reg        rqa = 0, rqb = 0;
     reg  [5:0] dsta = 0, srca = 0, dstb = 0, srcb = 0;
     wire       bsya, bsyb, sda, scka, wr_a, sdb, sckb, wr_b;
-    ctl_write ca (.clk(clk_a), .rst_n(rst_n), .req(rqa), .strobe(1'b1),
+    ctl_write ca (.clk(clk_a), .rst_n(rst_n), .req(rqa), .strobe(1'b1), .g(1'b1),
                   .dst(dsta), .src(srca), .bsy(1'b1), .clm(1'b0),
                   .busy(bsya), .sdata(sda), .sclk(scka), .wr(wr_a));
-    ctl_write cb (.clk(clk_b), .rst_n(rst_n), .req(rqb), .strobe(1'b1),
+    ctl_write cb (.clk(clk_b), .rst_n(rst_n), .req(rqb), .strobe(1'b1), .g(1'b1),
                   .dst(dstb), .src(srcb), .bsy(1'b1), .clm(1'b0),
                   .busy(bsyb), .sdata(sdb), .sclk(sckb), .wr(wr_b));
 

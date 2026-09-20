@@ -42,6 +42,11 @@ module pulse_reg #(
     output reg [2:0]  ndig,          // digits in the store since the last restart
     output reg [15:0] digits,        // the store: slot 0 in [3:0], as pulse counts
     output reg        gone,          // CLR, or no digit at all
+    // WHICH of the two.  The marker treats them alike -- the register is free
+    // and the call is over either way -- and only ex-counters.md 9's event word
+    // wants to tell them apart, so this is one conductor on the ribbon that
+    // already carries the digits.
+    output reg        nodig,
     output            brk            // a break just counted (exch-network.md 3's guard)
 );
     // the probe: a listener's two selects and a flip-flop, at mid-cell
@@ -63,8 +68,9 @@ module pulse_reg #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             busy <= 0; port <= 0; ndig <= 0; digits <= 0; gone <= 0; idle_ms <= 0;
+            nodig <= 0;
         end else begin
-            gone <= 1'b0;
+            gone <= 1'b0; nodig <= 1'b0;
             if (attach && !busy) begin
                 busy <= 1'b1; port <= attach_port; idle_ms <= 0;
                 ndig <= 3'd0; digits <= 16'd0;
@@ -88,7 +94,8 @@ module pulse_reg #(
                 if (p_clr) begin gone <= 1'b1; busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0; end
                 if (tick_1k && !p_counting) begin
                     if (idle_ms == NODIG[15:0]) begin
-                        gone <= 1'b1; busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0;
+                        gone <= 1'b1; nodig <= 1'b1;
+                        busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0;
                     end
                     else idle_ms <= idle_ms + 1'b1;
                 end

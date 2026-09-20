@@ -65,6 +65,8 @@ module net_site #(
     output        ring_cad_n,
     output        dt_bit, ng_bit,
     output        mon_held,
+    output [3:0]  mon_busy,     // per direction: at least one cell of its pool held
+    output [3:0]  mon_full,     // per direction: EVERY cell held -- a seizure now goes unwatched
     output        got_claim,
     output [3:0]  dirs_held,     // which directions a call of OURS still holds a trunk in
     output [3:0]  fan_legs,      // which directions a fan-out THROUGH here is holding
@@ -75,7 +77,10 @@ module net_site #(
     output [15:0] n_defer,       // callers put off a scan by a claim in the same cycle
     output        wr_stb,        // the last latch write the marker sent
     output [5:0]  wr_dst, wr_src,
-    output        wr_bsy, wr_clm
+    output        wr_bsy, wr_clm,
+    // ex-counters.md 9: five counter cards on the ribbon, strapped for the
+    // marker's event words.  { glare, nodig, notrunk, waitreg, any }
+    output [79:0] ev_cnt
 );
     localparam PDT = 6'o10, PNG = 6'o14;        // dial tone, cannot-complete
 
@@ -157,7 +162,7 @@ module net_site #(
     end endgenerate
 
     // ---- one MF8 trunk card a direction ----------------------------------
-    wire [3:0]     mc_v, mh_v;
+    wire [3:0]     mc_v, mh_v, mf_v;
     wire [4*6-1:0] mp_v;
     wire [3:0]     mack_v;
 
@@ -191,11 +196,12 @@ module net_site #(
                 .m(t_a_tx[g*8 +: 8]), .busy(pbusy[B*8 +: 8]),
                 .chan_mask(8'b1110_1110),
                 .claim(mc_v[g]), .claim_port(mp_v[g*6 +: 6]),
-                .claim_ack(mack_v[g]), .held(mh_v[g]), .all_busy(), .cells());
+                .claim_ack(mack_v[g]), .held(mh_v[g]), .all_busy(mf_v[g]), .cells());
         end else begin : absent
             assign mc_v[g] = 1'b0;
             assign mp_v[g*6 +: 6] = 6'd0;
             assign mh_v[g] = 1'b0;
+            assign mf_v[g] = 1'b0;
             assign t_c_tx[g*8 +: 8] = 8'h00;
             assign t_a_tx[g*8 +: 8] = 8'h00;
             assign t_word[g*8 +: 8] = 8'h00;
@@ -213,6 +219,7 @@ module net_site #(
     // ---- common control --------------------------------------------------
     // The registers: a pool, found by the marker's scanner (exch-marker.md 4, 6).
     wire [NREG-1:0]    r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
+    wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
     wire [16*NREG-1:0] r_digits;
     wire [5:0]         r_port;
@@ -226,7 +233,7 @@ module net_site #(
             .release_it(r_release[gr]), .restart(r_restart[gr]),
             .busy(r_busy[gr]), .port(),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
-            .gone(r_gone[gr]), .brk(r_brk[gr]));
+            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
     end endgenerate
 
     // Up to four pools, one marker.  The selection is REGISTERED and holds
@@ -254,6 +261,37 @@ module net_site #(
     end
     assign mack_v  = {4{mack}} & sel;
     assign mon_held = |mh_v;
+    assign mon_busy = mh_v;
+    assign mon_full = mf_v;
+
+    // ---- counter cards, ex-counters.md 1 and 9 --------------------------
+    // Cards that only listen: sdata, sclk, wr and nothing else.  The event
+    // strap is BSY = 0 with CLM = 1, which no latch write ever carries, and the
+    // code is in SRC.  The card cannot see G and does not need to.
+    wire [15:0] ev_any_c, ev_wait_c, ev_ntrk_c, ev_ndig_c, ev_glare_c;
+    assign ev_cnt = {ev_glare_c, ev_ndig_c, ev_ntrk_c, ev_wait_c, ev_any_c};
+
+    stats #(.SRC(6'o00), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o77), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_any (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(1'b0), .count(ev_any_c), .match());
+    stats #(.SRC(6'o01), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_wait (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(1'b0), .count(ev_wait_c), .match());
+    stats #(.SRC(6'o02), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_ndig (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(1'b0), .count(ev_ndig_c), .match());
+    stats #(.SRC(6'o04), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_glare (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(1'b0), .count(ev_glare_c), .match());
+    // all four directions at once: the two low bits strapped to Pi
+    stats #(.SRC(6'o10), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o03), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_ntrk (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(1'b0), .count(ev_ntrk_c), .match());
 
     marker #(.NREG(NREG), .NRES(NRES), .OWN_E(OWN_E), .OWN_B(OWN_B),
              .DIALTONE(PDT), .NOGO(PNG),
@@ -265,7 +303,7 @@ module net_site #(
         .sdata(sdata), .sclk(sclk), .wr(wr),
         .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
         .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
-        .reg_gone(r_gone), .reg_brk(r_brk),
+        .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk),
         .reg_release(r_release),
         .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),
         .any_claimed(got_claim), .dirs_held(dirs_held),

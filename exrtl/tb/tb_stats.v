@@ -12,6 +12,13 @@
 //   D  an inbound call claimed here        CLAIM, off, a connect PAIR
 //   E  an inbound call with no register    1 cannot-complete, CLM set
 //
+// Then ex-counters.md 9's EVENT WORD: a word with G = 0, which writes to no
+// block at all, carrying an event code in SRC with BSY = 0 and CLM = 1.  The
+// card cannot see G -- bits 15-8 fall out of the end unread -- so it counts one
+// exactly as it counts a write, and the question this bench answers is whether
+// a strap can be sure which it counted.  It can: no latch write the marker
+// makes carries CLM without BSY.
+//
 // The interesting negative result is C against D: the write that completes an
 // OUTBOUND call (marker.v 562) and the second write of an INBOUND one
 // (marker.v 555) are the same sixteen bits -- DST a line, SRC a trunk, BSY 1,
@@ -28,12 +35,13 @@ module tb_stats;
     localparam [2:0] TRUNK_BLK = 3'd5;
 
     // ---- the marker's serialiser, driven by hand ------------------------
-    reg        w_req = 0, w_bsy = 0, w_clm = 0;
+    reg        w_req = 0, w_bsy = 0, w_clm = 0, w_g = 1;
     reg  [5:0] w_dst = 0, w_src = 0;
     wire       ser_busy, sdata, sclk, wr;
-    integer    nwrite = 0;
+    integer    nwrite = 0, nevent = 0;
 
     ctl_write u_ser (.clk(clk), .rst_n(rst_n), .req(w_req), .strobe(1'b1),
+                     .g(w_g),
                      .dst(w_dst), .src(w_src), .bsy(w_bsy), .clm(w_clm),
                      .busy(ser_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
 
@@ -77,6 +85,33 @@ module tb_stats;
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(clr), .count(c_all), .match());
 
+    // ---- and four more, strapped for ex-counters.md 9's event words ------
+    wire [15:0] c_ev, c_wait, c_ntrk, c_glare;
+
+    // ANY event: BSY = 0 with CLM = 1, the code left don't-care
+    stats #(.SRC(6'o00), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o77), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(clr), .count(c_ev), .match());
+
+    // a caller waited for a register
+    stats #(.SRC(6'o01), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_wait (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(clr), .count(c_wait), .match());
+
+    // all trunks busy -- ALL FOUR directions on one card, the two low bits on Pi
+    stats #(.SRC(6'o10), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o03), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ntrk (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(clr), .count(c_ntrk), .match());
+
+    // glare
+    stats #(.SRC(6'o04), .BSY(1'b0), .CLM(1'b1),
+            .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_glare (
+        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
+        .clr(clr), .count(c_glare), .match());
+
     // ---- checking --------------------------------------------------------
     integer errs = 0, chk = 0;
 
@@ -91,16 +126,25 @@ module tb_stats;
     endtask
 
     // one word on cable B, exactly as the marker pushes it
-    task mwrite(input [5:0] dst, input [5:0] src, input b, input c);
+    task mword(input g, input [5:0] dst, input [5:0] src, input b, input c);
         begin
             @(posedge clk);
-            w_dst <= dst; w_src <= src; w_bsy <= b; w_clm <= c; w_req <= 1'b1;
+            w_g <= g; w_dst <= dst; w_src <= src; w_bsy <= b; w_clm <= c;
+            w_req <= 1'b1;
             @(posedge clk); w_req <= 1'b0;
             @(posedge clk);
             while (ser_busy) @(posedge clk);
             repeat (16) @(posedge clk);
-            nwrite = nwrite + 1;
         end
+    endtask
+
+    task mwrite(input [5:0] dst, input [5:0] src, input b, input c);
+        begin mword(1'b1, dst, src, b, c); nwrite = nwrite + 1; end
+    endtask
+
+    // an EVENT word: G = 0, so no block writes; the code in SRC, BSY 0, CLM 1
+    task mevent(input [5:0] port, input [5:0] code);
+        begin mword(1'b0, port, code, 1'b0, 1'b1); nevent = nevent + 1; end
     endtask
 
     integer i;
@@ -153,6 +197,36 @@ module tb_stats;
         $display("       outbound  DST=o23 SRC=o51 BSY=1 CLM=0");
         $display("       inbound   DST=o24 SRC=o52 BSY=1 CLM=0");
         $display("     -- one strap cannot separate them.  ex-counters.md 3.");
+        $display("");
+
+        // ---- the event words, ex-counters.md 9 -----------------------
+        // What no write says, because nothing is written when it happens.
+        mevent(6'o25, 6'o01);                  // 25 lifted and found no register
+        mevent(6'o26, 6'o01);                  // and so did 26
+        mevent(6'o00, 6'o10);                  // all trunks busy, direction 0
+        mevent(6'o00, 6'o13);                  // ... and direction 3
+        mevent(6'o27, 6'o02);                  // 27 dialled nothing for 10 s
+        mevent(6'o51, 6'o04);                  // glare on trunk 51
+        mevent(6'o00, 6'o03);                  // the write queue overran
+
+        $display("");
+        $display("  and %0d event words -- G = 0, so no block wrote anything:", nevent);
+        want(c_ev,    16'd7, "every event (BSY 0, CLM 1, any code)");
+        want(c_wait,  16'd2, "a caller waited for a register");
+        want(c_ntrk,  16'd2, "all trunks busy -- four directions, one card");
+        want(c_glare, 16'd1, "glare");
+
+        $display("");
+        $display("     and NOT ONE of them reached a strap meant for a call:");
+        want(c_dt,  16'd3,  "dial tone given -- unchanged");
+        want(c_cc,  16'd2,  "cannot-complete given -- unchanged");
+        want(c_let, 16'd1,  "trunks let go -- unchanged");
+        want(c_trk, 16'd2,  "calls completed over a trunk -- unchanged");
+        want(c_clm, 16'd2,  "claims -- unchanged");
+        $display("");
+        $display("     The occupancy strap is the one exception, and it is");
+        $display("     honest: it asks for every word and gets every word.");
+        want(c_all, (nwrite + nevent), "every word on the bus");
         $display("");
 
         // ---- the reset key ------------------------------------------

@@ -1,20 +1,14 @@
-# 8-bit superframe carrier — specification
+# Six-channel TDM digital voice carrier over differential Manchester
 
-Six 64 kbps channels and a sub-commutated signalling channel in an 8-bit frame,
-over one twisted pair in discrete 74HC logic. A channel slot is a DS0: 64 kbps
-and octet-aligned, so it takes a CVSD voice card, a synchronous data card, or a
+Six 64 kbps channels with a sub-commutated signalling channel in an 8-bit frame.
+This is over one twisted pair each way.  It is implemented with discrete 74HC logic.  
+
+A channel slot is a DS0: 64 kbps and octet-aligned, so 
+it takes a CVSD voice card, a synchronous data card, or a
 G.711 PCM stream.
 
 Every number here was measured by `mf8.py` unless it is marked as analysis.
 §15 lists what has not been measured.
-
-> **Status: proposed, validated at the frame layer.** This is `mfspec.md`'s frame
-> with the header replaced. The original header was measured broken in three
-> independent ways (this document §§4.1–4.3) and none of those failures
-> survives here. The physical layer is this document's unchanged, and is not
-> re-measured; `line-codes.md` records the one open question about it.
-
----
 
 ## 1. What changed from `mfspec.md`, and why
 

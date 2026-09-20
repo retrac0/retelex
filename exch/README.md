@@ -47,6 +47,8 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-monitor.md](docs/exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
 | [docs/ex-extensions.md](docs/ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class, its options (restricted lines, hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
 | [docs/ex-groups.md](docs/ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number**, so a hunt group, a second operator's position, cover and a bank of call-in lines are jumpers on the members' cards, in any slots; a **secondary word** on the slot's last spare pin for the port that needs a class *and* a number, and the trade of what goes in which word; the conference bridge as a group, and **a group with a bridge in it**: extensions that ring together, where whoever answers is in and a phone lifted later joins, with nothing remembering the call |
+| [docs/ex-observers.md](docs/ex-observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
+| [docs/ex-traffic.md](docs/ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `exrtl`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
 | [docs/ex-ss0.md](docs/ex-ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
 
 ## Tool
@@ -59,13 +61,15 @@ python3 exch/exch.py calls      one exchange, a millisecond at a time
 python3 exch/exch.py announce   a message as a ROM of CVSD bits
 python3 exch/exch.py aline      serial characters on A over 1–7 trunk hops
 python3 exch/exch.py flood      the timing of a flooded call, with a sender and live (arithmetic, not a simulation)
-python3 exch/exch.py monitor    which rules keep a flood from ever claiming a wrong number
+python3 exch/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
 python3 exch/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
 python3 exch/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
 python3 exch/exch.py confer     a conference with no codec: the speech detector, the floor, the switch
 python3 exch/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
 python3 exch/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
 python3 exch/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
+python3 exch/exch.py traffic    demand that is not smooth: bursts, herds, peak against off peak, and the RTL run beside it
+python3 exch/exch.py big        how near sixty-four exchanges the flood goes: tandem chains, meshed hubs, long spokes
 ```
 
 It imports `audio`, `cvsd` and `mf8` from the repository root and reads the
@@ -106,6 +110,32 @@ links alone and fall on the registers. **`topo` runs the other shapes**
 works only with one of its links strapped. The `monitor` and `flood` models still run
 the earlier numbering, in which the first digit of every number was the key and a
 monitor compared one digit; the two-digit monitor is to be run. `1 8` and `1 9`, out of the network, are reserved.
+
+**Checked against the gates, and three things it changed** (`ex-traffic.md`).
+`exrtl`'s `make traffic-net` runs the same eight exchanges in RTL under the same
+demand on the same clock, and `traffic` runs it here; where they agree, `big`
+carries the shapes out to the sixty-four codes. What came of it: **Erlang B is
+right to about 1 % on a link and optimistic past it**, because a flood is a
+seizure on every link of the network at one instant and a saturated register pool
+lets callers out in clumps; **a flash crowd is worse than a burst and worst off
+peak**, because a burst is only *when* the calls come and a crowd is *where they
+go* — 42 % of seizures refused against 0.68 % for the same erlangs; and **the
+holding-time law does not matter**, which is Erlang's insensitivity holding call
+by call. The flood's own failure mode is `no claim` and not `no trunk`: a call
+blocked on any link between the caller and the owner is dialled in full and then
+times out, so **twice the busy hour costs seventeen times the calls**.
+
+**How large, with the line count free** (`ex-traffic.md` §8). Both the traffic on
+a link and the flood on it go with the *lines* in the network and not the
+exchanges, so the way to fill the numbering plan is exchanges that are not full:
+**63 of the 64 codes**, on three tandems in a chain with a tree under each, eight
+hops and 124 ms of the origin's 128 ms guard — and what stops it is the guard,
+not the codes. **The guard is one tap on a counter**, and the next one up (256 ms)
+fills all sixty-four codes with 1 428 lines; past that what stops the search is
+the traffic on the centre and the four directions an exchange has, neither of
+which is a timer (`exch-monitor.md` §3.5). A **fully connected core of hubs buys nothing**: the flood must
+see a tree, so every link off it is a strap, and a strap carries its own two ends
+only.
 
 Decided: **the port map** (`exch-protocol.md` §5). A trunk's channels sit on
 slots 1–3 and 5–7, where they are on the wire. 00 is idle, and a cleared latch

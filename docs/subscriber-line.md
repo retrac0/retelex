@@ -29,22 +29,22 @@ bit strobe from the line and the decoder runs on it (`phy.py`'s original
 premise). Everything a frame would have carried — hook state, ringing — is the
 stream itself.
 
-### 1.1 The phantom — between the pairs, not within one
+### 1.1 DC phantom power
 
 The 48 V goes in at the line-side centre tap of the downstream pair's
 transformer and returns through the centre tap of the upstream pair's
-(`mf8-cards.md` §2.1). Each pair, both wires together, is one conductor of the
-DC circuit:
+(`mf8-cards.md` §2.1). Each pair, both wires together, works as one conductor 
+of the DC circuit:
 
 ```
- exchange                                          phone
+ exchange                                            phone
  −48 V ─┬─ centre tap ═══ downstream pair ═══ centre tap ─┐
         │    (both wires carry the DC together)           │  the phone's
         │                                                 │  power supply
  return ┴─ centre tap ═══ upstream pair   ═══ centre tap ─┘
 ```
 
-**The signals never see it**, for two reasons:
+The signals are not affected by the DC bias for two reasons:
 
 - **Each pair's signal is differential**, the voltage between its two wires.
   The DC sits equally on both, so it is common mode, and the receiver's
@@ -67,7 +67,9 @@ series, twice as much.
 
 ---
 
-## 2. Signalling — two patterns the codec cannot make
+## 2. Signalling 
+
+This is based on two patterns the CVSD codec cannot make.
 
 | direction | state | on the line |
 |---|---|---|

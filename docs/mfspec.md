@@ -1,3 +1,5 @@
+NOTE: Obsolete as of 2026/9/20
+
 ## Technical Specification: 512 kbps TDM over Differential Manchester Carrier System## 1. System Overview
 This specification defines a synchronous, 8-bit Time-Division Multiplexed (TDM) carrier frame designed for implementation in discrete Transistor-Transistor Logic (TTL). The system multiplexes 6 independent 64 kbps CVSD voice channels (or general data channels), an alternating framing clock, and a sub-commutated signaling channel into a single high-speed digital stream.
 ------------------------------

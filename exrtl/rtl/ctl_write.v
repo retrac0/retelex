@@ -3,13 +3,20 @@
 // The marker's whole output is one sixteen-bit word, broadcast to every block
 // at once, MSB first:
 //
-//   15    G        guard, always 1; ANDed into WR at every block
+//   15    G        guard; ANDed into WR at every block.  See `g` below
 //   14    -        spare
 //   13-8  DST      where to write: the block, then the port in it
 //   7-0   SRC,BSY,CLM   what to write -- the port's '273 verbatim
 //
 // Both the marker and the operator's console drive one of these; the bus is
 // multi-master and the word is the same either way.
+//
+// `g` is the guard bit, and it is 1 for every word that is meant to write.  A
+// word with g = 0 writes to NO block -- the guard is ANDed into WR at every one
+// of them -- but it still shifts through every '164 and it still pulses WR, so
+// a card that only LISTENS sees it exactly as it sees a real write.  That is
+// the EVENT WORD of ex-counters.md 9: the marker reporting something that no
+// latch write would have carried.
 //
 // `strobe` low shifts the word and does NOT pulse WR.  That is how the marker
 // steers the PROBE: /BLK is the block's own '138 decoding DST[5:3], so the
@@ -27,6 +34,7 @@ module ctl_write #(
     input            rst_n,
     input            req,              // one pulse: send this word
     input            strobe,           // pulse WR at the end (0 = point the probe only)
+    input            g,                // the guard bit: 0 = an event word, writes nothing
     input      [5:0] dst,
     input      [5:0] src,
     input            bsy,
@@ -53,8 +61,8 @@ module ctl_write #(
         IDLE: begin
             sclk <= 1'b0; wr <= 1'b0;
             if (req) begin
-                w     <= {1'b1, 1'b0, dst, src, bsy, clm};
-                sdata <= 1'b1;                       // G, the MSB, goes out first
+                w     <= {g, 1'b0, dst, src, bsy, clm};
+                sdata <= g;                          // G, the MSB, goes out first
                 n     <= 5'd16; d <= 3'd0;
                 do_wr <= strobe; busy <= 1'b1; st <= SHIFT;
             end else busy <= 1'b0;

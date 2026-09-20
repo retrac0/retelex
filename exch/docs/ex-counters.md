@@ -11,7 +11,8 @@ clock, and no connection to the marker at all.
 
 This document is the peg-count half of `ex-extensions.md` §4, built that way.
 The usage half — erlangs by sampling `BUSY` on the probe — is not this card
-(§5).
+(§5). **§9 is what makes the other half of §4's list countable at all**: the
+marker says the things no latch write says, in a word that writes nothing.
 
 > **Status: proposed; the counting measured in RTL.** `exrtl/rtl/stats.v` is the
 > card and `exrtl/tb/tb_stats.v` drives `ctl_write` with the exact sequence of
@@ -21,6 +22,11 @@ The usage half — erlangs by sampling `BUSY` on the probe — is not this card
 > bench. §3's negative result — that an outbound and an inbound completion are
 > the same sixteen bits — is measured, and it is the reason the fourth strap is
 > not the one first asked for.
+>
+> **§9, the event word, is built**: `marker.v` sends one for each of five
+> occasions, `ctl_write.v` carries the guard bit, and `tb_stats.v` and
+> `tb_stress.v` measure both halves of the claim — that a plain strap counts
+> them, and that not one of them reaches a strap meant for a call.
 
 ---
 
@@ -125,6 +131,9 @@ counter that is tolerable; for a route it would not be.
 
 **`DST` is unread**, so no strap can ask *which port was written*. That wants a
 second '164 and a second '688 — a different strap field, not a different card.
+It is also why §9's event word can carry a port in `DST` for free: this card
+cannot see it, and the cards that can (`ex-observers.md` §5, §6) are looking at
+the whole word anyway.
 
 ---
 
@@ -202,3 +211,141 @@ counts land, so the chain is wider than one '161.
   domain and in the card is the '161's asynchronous clear.
 - **LED current** and whether sixteen at 0.2-inch pitch is actually readable in
   groups of four at arm's length in a rack.
+
+---
+
+## 9. The event word: the marker says what no write says
+
+`ex-extensions.md` §4 asks for counts this card cannot reach, and they have one
+thing in common — **nothing is written when they happen**:
+
+| | why there is no write |
+|---|---|
+| a caller waited for a register | the marker does nothing at all. The caller waits and the scanner comes round again |
+| all trunks busy, a count a direction | the hunt finds nothing. The only write is the caller's cannot-complete, and it says neither *why* nor *which way* |
+| a register gave up with no digit | the register frees itself on its own timeout (`register.md` §2) |
+| glare | the design **tolerates** it — `exch-network.md` §1, "residual glare joins two callers to each other" — so there is nothing to undo and nothing to write |
+| the write queue overran | a model part (`marker.v`), and the one thing a bench most wants to know did not happen |
+
+§4 above says no call ever *ends* on the bus, and that is the architecture. This
+is not that. These are occasions the marker **knows about at the instant they
+happen** and merely had no way to mention.
+
+### 9.1 One bit makes the channel
+
+Bit 15 is the guard: `G`·`WR` at every block's write decoder
+(`exch-mainboard.md` §2.3.1), so **a word that does not carry it cannot write.**
+That is a safety rule, and it is also a second channel on the same wire.
+
+```
+ G  spare   DST         SRC        BSY  CLM
+ 1    0     the port    the source   b    c     a latch write.  One block writes its latch
+ 0    0     a port      a CODE       0    1     an EVENT.  No block writes anything at all
+```
+
+- **Nothing at a block changes.** Not a gate, not a strap, not a conductor. The
+  word shifts through the same two '164 and is refused by the same quarter
+  package that already refuses a word with a bad guard.
+- **This card cannot tell the difference, and that is the point.** §1: bits 15–8
+  fall out of the end unread, so a G = 0 word clocks the '688 and the '161 chain
+  exactly as a write does. **A plain strap counts an event.**
+- **`BSY` = 0 with `CLM` = 1 is what keeps the two apart.** Every write the
+  marker makes that sets `CLM` also sets `BSY` — a claim is a *seized* trunk —
+  so that combination is one no latch write ever carries. Sixty-four codes live
+  under it, in `SRC`, and a strap for one of them can never count a call. §9.4
+  measures both halves of that.
+- **`DST` is free.** Nothing writes, so the field can say which port the event is
+  about. This card cannot read it (§4) and does not need to; `ex-observers.md`
+  §5 and §6 can, so the same word is a count here and a diagnosis there.
+- **A console cannot send one.** Its word comes off two '165 with `G` wired high
+  (`ex-console.md` §1). The converse of "a console cannot send a word the marker
+  could not have sent" is now true as well, and it means **an operator cannot
+  fabricate a count**.
+
+### 9.2 Five codes of sixty-four
+
+| `SRC` | event | `DST` | when |
+|---|---|---|---|
+| `o01` | **a caller waited for a register** | the caller | a call request found the pool full. **Once an occasion**, not once a scan: a flip-flop, set on the refusal and cleared when the next register is handed out, so a spell that outlasts several callers counts one |
+| `o02` | **no digit dialled** | the caller | the register's own timeout fired rather than CLR. One conductor on the ribbon that already runs from the register to the marker says which |
+| `o03` | the write queue overran | — | a model part. In 74HC the sequencer holds until its word is away and there is no queue; the code is spent anyway, because a bench that cannot see this is not measuring what it thinks |
+| `o04` | **glare** | the trunk | M rose on a trunk we seized, **inside the origin's 128 ms guard**. A claim cannot come back that fast — the far end must hear `e b h s` first, which is seconds — so it is the other end seizing the same channel. Counting it changes nothing about what happens |
+| `o10`–`o13` | **all trunks busy**, one a direction | — | the hunt saw a trunk facing that way and none of them free. A direction with **no** trunks fitted is not congestion and is not counted, which is one more flip-flop a direction in the hunt |
+
+`o00` is left free so that *no event* and *an event* are not the same code.
+`o05`–`o07` and `o14`–`o77` are unspent.
+
+### 9.3 What it costs
+
+| | |
+|---|---|
+| the bus | 31 µs at 512 kHz, the same as any word, on an occasion that happens a handful of times an hour |
+| the probe | **an event steers `/BLK` exactly as a write does**, so it dirties the probe and costs the same repeated visit (`exch-rtl.md`, "steering the probe costs a visit"). Setting `DST` to the block the scanner is already on would make it free; carrying the port is worth more than one visit in a 9 ms scan |
+| a call | **nothing.** An event is pushed only when the sequencer has room to spare and is simply dropped when it has not, so no caller ever waits behind a diagnostic. The counts are therefore **lower bounds**, and the occasion they would drop is the busiest one — which is what `o03` is for |
+| the marker | the guard becomes a bit of the sequencer's word instead of a tie to Vcc; four flip-flops for "a trunk faces this way at all", one for the register spell, one for the overrun |
+| a register | one conductor for `o02` |
+
+### 9.4 Measured
+
+**`exrtl/tb/tb_stats.v`**, the same bench that replays `marker.v`'s five calls,
+now sends seven event words after them:
+
+| | |
+|---|---|
+| every event (`BSY` 0, `CLM` 1, code don't-care) | 7 of 7 |
+| a caller waited for a register | 2 |
+| all trunks busy — **all four directions on one card**, the two low bits strapped to `P`ᵢ | 2 |
+| glare | 1 |
+| **the five straps meant for calls** — dial tone, cannot-complete, trunks let go, calls over a trunk, claims | **unchanged, every one** |
+| the occupancy strap | 25: every word on the bus, which is what it asks for and the one strap that is not fooled because it is not trying to be |
+
+**`exrtl/tb/tb_stress.v`**, forty-eight callers and real traffic, carries five
+such cards on each exchange's ribbon. It checks the invariant the whole scheme
+rests on — over the run, **no latch write carried `CLM` without `BSY`**, not
+once, either exchange — and the event codes account for every event word the
+cards counted. What they counted is the point:
+
+| the run | registers | callers who waited out dial tone | **`o01`, the pool was full** |
+|---|---|---|---|
+| `make stress`, 5.4 s of traffic | 8 | 0 | **7** |
+| `make stress-overload`, the same traffic | 2 | 94 | **21** |
+
+**Seven occasions on which the pool filled and not one caller noticed**, on a
+run where every other instrument in the exchange says nothing happened: that is
+the count `ex-extensions.md` §4 asked for and the one no listener could get. And
+21 against 94 is the definition working as §9.2 states it — a spell is one
+count, however many callers queue behind it.
+
+No `o10`–`o13`, `o02`, `o03` or `o04` in either run: a single exchange with its
+trunks idle, nobody left off-hook for ten seconds, and a queue that never
+overran. **Those four are unexercised**, and §9.5 says so.
+
+### 9.5 Not measured
+
+- **The circuit.** Nothing is drawn. In 74HC the change is where `G` comes from
+  and a handful of flip-flops; none of it has been laid out with the sequencer's
+  own states.
+- **Bit 14.** `exch-mainboard.md` §7 leaves parity over bits 13–0 open. An event
+  word would carry it like any other and nothing here changes — but the two have
+  never been thought about together, and bit 14 is the only place a *third*
+  kind of word could ever come from.
+- **The occasion flip-flop's edges.** `o01` counts a spell, and what ends a spell
+  is "a register was handed out" — including one handed to an *inbound claim*
+  rather than to the caller who waited. Defensible, arbitrary, and unmeasured
+  against a real busy hour.
+- **`o04` as a definition of glare.** It is *M inside the guard*, which is
+  reasoned from the claim taking seconds and not from a measurement of a real
+  collision; the stress bench makes line glare likely and trunk glare only
+  possible.
+- **Four of the five codes have never fired in a real run.** `tb_stats` sends
+  them by hand and the straps count them; nothing has yet driven `marker.v` into
+  sending `o02`, `o03`, `o04` or `o10`–`o13`. The trunk ones want the pair run
+  with every channel seized, and `o04` wants a collision built on purpose.
+- **A hub's congestion.** `o10`–`o13` are the *origin's* hunt. The forwarder at
+  a hub looks for its own free trunk in every other direction and, finding none
+  that way, simply does not fan out there; nothing counts it. It is the same
+  event one layer along and it wants its own code, which the code space has
+  plenty of.
+- **What an operator does with a count of glare**, which is the honest question
+  about the whole of §9: it is a number to put in a log book, and the design does
+  not act on any of them.

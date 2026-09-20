@@ -133,6 +133,7 @@ module con_site #(
 
     // ---- common control ----------------------------------------------------
     wire [NREG-1:0]    r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
+    wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
     wire [16*NREG-1:0] r_digits;
     wire [5:0]         r_port;
@@ -146,7 +147,7 @@ module con_site #(
             .release_it(r_release[gr]), .restart(r_restart[gr]),
             .busy(r_busy[gr]), .port(),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
-            .gone(r_gone[gr]), .brk(r_brk[gr]));
+            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
     end endgenerate
 
     marker #(.NREG(NREG), .NRES(1), .DIALTONE(PDT), .NOGO(PNG),
@@ -158,7 +159,7 @@ module con_site #(
         .sdata(mk_sdata), .sclk(mk_sclk), .wr(mk_wr),
         .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
         .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
-        .reg_gone(r_gone), .reg_brk(r_brk), .reg_release(r_release),
+        .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk), .reg_release(r_release),
         .mon_claim(1'b0), .mon_port(6'd0), .mon_ack(),
         .any_claimed(), .dirs_held(), .fan_legs(), .res_used(),
         .wq_ovf(wq_ovf), .n_defer(),

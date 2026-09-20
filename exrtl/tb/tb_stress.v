@@ -63,6 +63,7 @@ module tb_stress #(
     wire [NREG-1:0] rg_a, rg_b;
     wire        ov_a, ov_b;
     wire [15:0] df_a, df_b;
+    wire [79:0] ev_a, ev_b;              // { glare, nodig, notrunk, waitreg, any }
     wire        ws_a, ws_b, wb_a, wb_b, wc_a, wc_b;
     wire [5:0]  wd_a, wd_b, wr_a, wr_b;
     wire        a2b, b2a, lk_a, lk_b, fs_a, fs_b, rc_a, rc_b;
@@ -80,7 +81,7 @@ module tb_stress #(
        .frame_stb(fs_a), .ring_cad_n(rc_a), .dt_bit(), .ng_bit(),
        .mon_held(), .got_claim(), .dirs_held(),
        .fan_legs(), .res_used(), .port_busy(pb_a),
-       .regs_busy(rg_a), .wq_ovf(ov_a), .n_defer(df_a),
+       .regs_busy(rg_a), .wq_ovf(ov_a), .n_defer(df_a), .ev_cnt(ev_a),
        .wr_stb(ws_a), .wr_dst(wd_a), .wr_src(wr_a), .wr_bsy(wb_a), .wr_clm(wc_a));
 
     generate if (PAIR) begin : two
@@ -94,12 +95,13 @@ module tb_stress #(
            .frame_stb(fs_b), .ring_cad_n(rc_b), .dt_bit(), .ng_bit(),
            .mon_held(), .got_claim(), .dirs_held(),
            .fan_legs(), .res_used(), .port_busy(pb_b),
-           .regs_busy(rg_b), .wq_ovf(ov_b), .n_defer(df_b),
+           .regs_busy(rg_b), .wq_ovf(ov_b), .n_defer(df_b), .ev_cnt(ev_b),
            .wr_stb(ws_b), .wr_dst(wd_b), .wr_src(wr_b), .wr_bsy(wb_b), .wr_clm(wc_b));
     end else begin : one
         assign b2a = 1'b0;
         assign rx_b = 64'd0; assign ln_b = 64'd0; assign pb_b = 64'd0;
         assign rg_b = {NREG{1'b0}}; assign ov_b = 1'b0; assign df_b = 16'd0;
+        assign ev_b = 80'd0;
         assign ws_b = 1'b0; assign wd_b = 6'd0; assign wr_b = 6'd0;
         assign wb_b = 1'b0; assign wc_b = 1'b0;
         assign lk_b = 1'b1; assign fs_b = 1'b0; assign rc_b = 1'b1;
@@ -195,6 +197,14 @@ module tb_stress #(
     integer was_try = 0, was_conn = 0, was_gave = 0, was_rung = 0, was_nodt = 0;
     integer n_sym = 0, n_glare = 0, n_self = 0, n_stuck = 0;
     integer errs = 0, chk = 0;
+
+    // ex-counters.md 9 rests on one invariant: a claim is always written BUSY,
+    // so BSY = 0 with CLM = 1 is a pattern NO latch write ever carries and an
+    // event strap can never count a call.  wr_stb is a real write and nothing
+    // else -- an event word does not raise it -- so this counts violations.
+    integer n_gclm = 0;
+    always @(posedge clk_a) if (ws_a && !wb_a && wc_a) n_gclm = n_gclm + 1;
+    always @(posedge clk_b) if (ws_b && !wb_b && wc_b) n_gclm = n_gclm + 1;
     reg     running = 1'b0;
 
     integer i, j, p, d, x, hot;
@@ -583,6 +593,30 @@ module tb_stress #(
         $display("     (a claim and a caller wanted the port bus in one cycle %0d times",
                  df_a + df_b);
         $display("      -- each one a wrong number, before the marker took to deferring)");
+
+        // ---- ex-counters.md 9: what the event words counted --------------
+        // Five counter cards on each exchange's ribbon, strapped for a word
+        // with G = 0 -- one that writes to no block.  Nothing here is checked
+        // against an expected number: the traffic is random.  What IS checked
+        // is that no such word ever reached a strap meant for a call, which is
+        // the invariant below.
+        $display("");
+        $display("  event words on the ribbon (ex-counters.md 9)%s:",
+                 PAIR ? ", A + B" : "");
+        $display("     a caller waited for a register          %0d",
+                 ev_a[31:16] + ev_b[31:16]);
+        $display("     all trunks busy, any direction          %0d",
+                 ev_a[47:32] + ev_b[47:32]);
+        $display("     a register timed out with no digit      %0d",
+                 ev_a[63:48] + ev_b[63:48]);
+        $display("     glare on a trunk this end seized        %0d",
+                 ev_a[79:64] + ev_b[79:64]);
+        $display("     every event word                        %0d",
+                 ev_a[15:0] + ev_b[15:0]);
+        want(ev_a[15:0] == ev_a[31:16] + ev_a[47:32] + ev_a[63:48] + ev_a[79:64],
+           "A's event codes account for every event word");
+        want(n_gclm == 0,
+           "no latch write carried CLM without BSY -- the event strap is safe");
         wantn($countones(pb_a & TR) == 0, $countones(pb_a & TR),
               "no trunk channel left seized");
 

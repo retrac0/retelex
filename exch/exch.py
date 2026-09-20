@@ -42,7 +42,7 @@ Usage:  python3 exch/exch.py            everything, ~20 min    (exch.log is the 
 
 The network of exch-network.md (`net`) is the second pass and is not here.
 """
-import heapq, os, sys, time, zlib
+import heapq, itertools, os, sys, time, zlib
 import numpy as np
 from scipy import signal
 
@@ -954,9 +954,21 @@ def first_digit(y, i0, steady=False):
     return None
 
 
+def delayed(level, ms):
+    """A carrier that is not a pair.  `ms` of one-way delay, constant, ahead of the A path: what
+    distance, a mux, a vocoder or a jitter buffer put between the two ends of a trunk.  A copper
+    pair and an MF8 link are under a millisecond of it (`mf8-cards.md` 5); a leased circuit, a
+    radio or anything with a buffer is tens.  Constant delay does not distort a break -- it
+    moves the whole of the caller's hook, pulses and all, later at the far end."""
+    n = int(round(ms * 8))
+    if n <= 0:
+        return level
+    return np.concatenate([np.full(n, level[0], dtype=level.dtype), level[:-n]])
+
+
 def monitor():
     rng = np.random.default_rng(11)
-    H, N = 7, 1500
+    H, N, NS = 7, 1500, 1000
     print('MONITOR -- which rules keep a live flood from ever claiming a wrong number.')
     print(f'  A chain: an origin and {H} exchanges whose exchange digits are 1..{H}.  A dial at 10 pps +-10 %, 60/40; the')
     print('  trigger digit, the exchange digit (1-7, or ten pulses for an exchange that is not there) and one more.')
@@ -970,7 +982,8 @@ def monitor():
             ev.append((t, t + 0.6 * per)); t += per
         return ev, ev[-1][1]
 
-    def trial(pause_lo, pause_hi, rise_seen, origin_guard, ber):
+    def trial(pause_lo, pause_hi, rise_seen, origin_guard, ber, carrier=0.0,
+              guard_ms=G_ORIGIN, wander=0.0):
         per = 100.0 * (1 + 0.1 * (2 * rng.random() - 1))
         e = int(rng.integers(1, 9)); e = 10 if e == 8 else e
         brk, end = dial(1000.0, 2, per)                        # the trigger digit
@@ -983,11 +996,12 @@ def monitor():
         for a, b in brk + b2 + b3:
             m[int(a * 8):int(b * 8)] = 0
         x = m.copy(); x[:int(t_sz * 8)] = 0
-        if origin_guard and b2[0][0] - t_sz < G_ORIGIN:
+        abandoned = origin_guard and b2[0][0] - t_sz < guard_ms
+        if abandoned:
             x[int(b2[0][0] * 8):] = 0                          # the origin abandons: the junctor falls and stays down
         claimers = []
         for j in range(1, H + 1):
-            y = a_path(x, 1, ber, rng)
+            y = a_path(delayed(x, carrier), 1, ber, rng)
             up = np.flatnonzero(y)
             if up.size == 0: break
             rise = int(up[0])
@@ -996,16 +1010,19 @@ def monitor():
                 got = first_digit(y, rise) if late <= T_SCAN else None
             else:
                 got = first_digit(y, rise + int(rng.uniform(0, 600) * 8), steady=True)
-            x = y.copy(); x[:rise + int(rng.uniform(3, 10) * 8)] = 0
+            # The marker's own forwarding, and any delay the carrier LOSES between the
+            # seizure and the caller's next digit: both move the onward rise later against
+            # a signal that is otherwise riding with it.
+            x = y.copy(); x[:rise + int((rng.uniform(3, 10) + wander) * 8)] = 0
             if got == j:
                 claimers.append(j)
                 # the claim: 2 ms after the digit is recognised the onward patch is cleared
                 k = first_digit_end(y, rise)
                 if k: x[k + int(T_MARK * 8):] = 0
         target = e if e <= H else None
-        if any(c != target for c in claimers): return 'false'
-        if target and not claimers: return 'none'
-        return 'right'
+        if any(c != target for c in claimers): return 'false', abandoned
+        if target and not claimers: return 'none', abandoned
+        return 'right', abandoned
 
     def first_digit_end(y, i0):
         seg = y[i0:]; e = np.flatnonzero(np.diff(seg.astype(np.int8))) + 1
@@ -1023,7 +1040,7 @@ def monitor():
         for lo, hi in ((140, 900), (450, 900)):
             for ber in (0.0, 1e-2):
                 if ber and not (rise_seen and guard): continue
-                r = [trial(lo, hi, rise_seen, guard, ber) for _ in range(N)]
+                r = [trial(lo, hi, rise_seen, guard, ber)[0] for _ in range(N)]
                 name = 'only a seizure whose rise it saw' if rise_seen else 'from whenever it attaches, after 128 ms of make'
                 print(f'  {name:44s} {"128 ms" if guard else "none":>13s} {f"{lo}-{hi} ms":>21s} {ber:9.0e} | '
                       f'{100 * r.count("right") / N:8.1f} {100 * r.count("none") / N:11.1f} {r.count("false"):6d}', flush=True)
@@ -1031,6 +1048,51 @@ def monitor():
     print('  monitor must have seen the rise, one monitor in five was busy at the seizure; with the origin guard, a caller')
     print('  whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse')
     print('  register can read (register.md 3.2): below it two digits run together, flood or no flood.')
+
+    # ---- a carrier that is not a pair -----------------------------------
+    print(f'\n  A CARRIER THAT IS NOT A PAIR.  exch-network.md 1.1 allows a carrier "about 2 ms of A path')
+    print('  a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a')
+    print('  jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that')
+    print(f'  eats the origin\'s guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.')
+    print(f'\n  {"carrier a hop":>14s} {"the flood is up at":>19s} | {"right %":>9s} {"no claim %":>11s} {"FALSE":>6s}')
+    for carrier in (0, 5, 10, 20, 40, 80, 160):
+        r = [trial(140, 900, True, True, 0.0, carrier) for _ in range(NS)]
+        o = [v[0] for v in r]
+        print(f'  {carrier:11d} ms {H * (6.5 + carrier):16.0f} ms | {100 * o.count("right") / NS:9.1f} '
+              f'{100 * o.count("none") / NS:11.1f} {o.count("false"):6d}', flush=True)
+    print('\n  IT DOES NOT.  A constant delay moves the whole of the caller\'s hook -- the seizure that')
+    print('  opens the flood AND the pulses that follow it -- by the same amount, because they are the')
+    print('  same wire.  An exchange seven hops out is patched in 600 ms later in absolute time and')
+    print('  still sees the rise before the first break of `e`, because the break is 600 ms later too.')
+    print('  **The two delays cancel exactly, and the guard never sees the carrier at all.**')
+
+    print(f'\n  What DOES eat the guard is delay the carrier LOSES between the seizure and the next')
+    print('  digit -- a buffer draining, a link re-timing -- because that moves the pulses forward')
+    print('  against a rise that has already gone by.  A millisecond of it costs a millisecond of')
+    print('  guard, exactly as the marker\'s own forwarding does.  Per hop, on top of the marker:')
+    print(f'\n  {"wander a hop":>14s} {"spread":>8s} | {"guard 128 ms":^30s} | {"guard matched to the spread":^40s}')
+    print(f'  {"":>14s} {f"over {H}":>8s} | {"right %":>9s} {"no claim %":>11s} {"FALSE":>6s} | '
+          f'{"tap":>6s} {"a dial of 140-900":>18s} {"of 720-900":>17s}')
+    print(f'  {"":>14s} {"":>8s} | {"":>9s} {"":>11s} {"":>6s} | {"":>6s} '
+          f'{"FALSE":>6s} {"abandoned":>11s} {"FALSE":>6s} {"abandoned":>10s}')
+    taps = (128, 256, 512, 1024)
+    for w in (0, 2, 5, 10, 20, 40):
+        sp = H * (6.5 + w)
+        tap = next((t for t in taps if t >= sp), taps[-1])
+        a = [trial(140, 900, True, True, 0.0, 0.0, G_ORIGIN, w) for _ in range(NS)]
+        b = [trial(140, 900, True, True, 0.0, 0.0, tap, w) for _ in range(NS)]
+        c = [trial(720, 900, True, True, 0.0, 0.0, tap, w) for _ in range(NS)]
+        oa = [v[0] for v in a]; ob = [v[0] for v in b]; oc = [v[0] for v in c]
+        print(f'  {w:11d} ms {sp:5.0f} ms | {100 * oa.count("right") / NS:9.1f} '
+              f'{100 * oa.count("none") / NS:11.1f} {oa.count("false"):6d} | {tap:4d} ms '
+              f'{ob.count("false"):6d} {100 * sum(v[1] for v in b) / NS:7.0f} % '
+              f'{oc.count("false"):6d} {100 * sum(v[1] for v in c) / NS:7.0f} %', flush=True)
+    print(f'\n  The guard must be at least the spread or it is not a guarantee, and no more than the')
+    print(f'  caller\'s own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take.  A phone to')
+    print(f'  ES 201 187 gives at least 720 ms (register.md 2), so the guard may go to {720 - T_ID - T_MARK:.0f} ms -- the')
+    print(f'  512 ms tap, four taps up from 128 on the counter it already has.  At {H} hops that is')
+    print(f'  {512 / H - 6.5:.0f} ms a hop of wander against the present tap\'s {128 / H - 6.5:.0f}.  It is free in parts and it costs')
+    print('  the callers who dial faster than the tap allows: every one of those gets cannot-complete.')
 
     print('\n  How many monitors a trunk block needs: one is wanted for ~1.1 s by every call in the district (flood 3).')
     print(f'  {"calls an hour in the district":>30s} {"erlang":>7s} | ' + ' '.join(f'{f"{k} busy %":>9s}' for k in (1, 2, 3)))
@@ -1391,6 +1453,9 @@ def mainboard():
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
 A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: mf8-cards.md 5, and `aline` 1
+A_PATH = 2.0              # what exch-network.md 1.1 allows a CARRIER a hop, one way, and what
+                          # HOP's 7 ms has in it.  A copper pair or an MF8 link is under it; a
+                          # leased circuit, a radio or anything with a buffer is not
 T_MARK = 2.0              # a marker action
 GUARD = 200.0             # seizure to the sender's first break: the flood, then T_ID of steady make at every monitor
 S_PER, S_BRK, S_PAUSE = 50.0, 30.0, 200.0     # the sender: 20 pps 60/40, 200 ms of make between digits
@@ -1722,11 +1787,47 @@ def code_hold(code):
     return 1.116 + 0.86 + 0.1 * (pulses_of(int(code[0])) - 1) + 0.1 * (pulses_of(int(code[1])) - 1)
 
 
+class Tempo:
+    """The clock a call's own timing is made on.
+
+    LIFE is the exchange as it is built.  FAST is what exrtl's system testbenches run --
+    `make stress`, `make traffic` -- where the dial and the register's three windows are eight
+    times life, so a call costs a second and a half of simulation instead of twelve and an hour
+    of offered traffic is minutes rather than a day.
+
+    WHAT DOES NOT MOVE is everything the marker's scanner sets: the 8 ms scan, the 7 ms hop, a
+    marker action, the A path.  Those are the same milliseconds in both, which is what lets the
+    two runs be read against each other -- and it makes the fast one HARDER on the common
+    control than life is, because in a call's own terms the scan is eight times as long."""
+
+    def __init__(self, name, pulse, brk, idw, gap, dt_pause, answer, busy, no_claim,
+                 timeout, fall, hold, guard):
+        self.name, self.pulse, self.brk, self.idw = name, pulse, brk, idw
+        self.gap, self.dt_pause, self.answer, self.busy = gap, dt_pause, answer, busy
+        self.no_claim, self.timeout, self.fall, self.hold = no_claim, timeout, fall, hold
+        self.guard = guard                 # the origin's guard (exch-monitor.md 3, rule 2)
+
+
+# The exchange as built: 10 pps 60/40, register.md 2's 8/128/256 ms windows, 0.5-0.9 s between
+# digits, exch-network.md 4's 5 s rule, a 256 ms release detector, a 48 s call.
+LIFE = Tempo('life', pulse=100.0, brk=60.0, idw=T_ID, gap=(500.0, 900.0),
+             dt_pause=(300.0, 1000.0), answer=(0.0, 0.0), busy=3000.0,
+             no_claim=NO_CLAIM, timeout=FLOOD_TIMEOUT, fall=T_FALL, hold=HOLD_MEAN,
+             guard=G_ORIGIN)
+# exrtl's system testbenches: every one of those eight times faster, and the conversation cut
+# to half a second.  The marker's scan, its hop and its actions are NOT in this table.
+FAST = Tempo('x8', pulse=20.0, brk=12.0, idw=16.0, gap=(60.0, 120.0),
+             dt_pause=(10.0, 40.0), answer=(16.0, 216.0), busy=375.0,
+             no_claim=250.0, timeout=625.0, fall=32.0, hold=500.0, guard=G_ORIGIN / 8)
+
+
 class Pool:
     """n of something, with the time it spends busy and the calls it turns away."""
 
     def __init__(self, n):
         self.n, self.used, self.busy, self.last, self.refused, self.taken = n, 0, 0.0, 0.0, 0, 0
+        self.hi = 0                        # the high-water mark, for reading against the RTL
+        self.t0 = 0.0                      # what a warm-up has forgotten
 
     def _mark(self, t):
         self.busy += self.used * (t - self.last); self.last = t
@@ -1735,13 +1836,22 @@ class Pool:
         self._mark(t)
         if self.used >= self.n:
             self.refused += 1; return False
-        self.used += 1; self.taken += 1; return True
+        self.used += 1; self.taken += 1
+        if self.used > self.hi:
+            self.hi = self.used
+        return True
 
     def give(self, t):
         self._mark(t); self.used -= 1
 
+    def reset(self, t):
+        """forget everything before t and keep what is held: a warm-up."""
+        self._mark(t)
+        self.busy, self.t0, self.refused, self.taken, self.hi = 0.0, t, 0, 0, self.used
+
     def erlang(self, t):
-        self._mark(t); return self.busy / t if t else 0.0
+        self._mark(t); d = t - self.t0
+        return self.busy / d if d else 0.0
 
 
 class Net:
@@ -1752,10 +1862,31 @@ class Net:
     dialled digit by digit at 10 pps; the key opens the flood, e and b go down it live, and the
     exchange whose code they are claims (exch-network.md 3)."""
 
-    def __init__(self, links, lines, regs=3, mons=3, resolvers=3, leave=0.3, seed=1, strapped=()):
+    def __init__(self, links, lines, regs=3, mons=3, resolvers=3, leave=0.3, seed=1, strapped=(),
+                 tempo=None, idle=None, holds='exp', dt_wait=None, burst=None, ports=None,
+                 link_ms=A_PATH, guard=None):
         self.rng = np.random.default_rng(seed)
-        self.t, self.q, self.seq = 0.0, [], 0
+        self.t, self.q, self.seq, self.t0 = 0.0, [], 0, 0.0
         self.lines, self.leave = lines, leave
+        # The clock the dial is on, and whether a caller is a LINE or a Poisson stream.
+        # idle = None is the arrival process of exch-network.md 5.1: calls come from nowhere at
+        # a fixed rate whatever the exchange is doing.  idle = a number makes every line a
+        # source, which is what the RTL bench has -- a line is a state machine there and there
+        # is no other kind of caller -- so the offered load falls as the exchange fills.
+        self.tp = tempo or LIFE
+        self.idle, self.finite = idle, idle is not None
+        self.holds, self.dt_wait, self.burst = holds, dt_wait, burst
+        self.ports = ports                     # the (h, s) a line may be, or None for any
+        # What the CARRIER costs a hop, one way, and the origin's guard against it.
+        # exch-network.md 1.1 allows a carrier about 2 ms of A path a hop, which is what
+        # NET_HOP's 7 ms has in it; a leased circuit, a radio or anything with a buffer
+        # has tens.  `guard` is exch-monitor.md 3's rule 2, which is what that budget is
+        # for: a break inside it and the origin abandons rather than risk a wrong number.
+        self.link_ms = link_ms
+        self.guard = self.tp.guard if guard is None else guard
+        self.is_hot = False
+        self.onhook = dict(lines)
+        self.cancel = {x: 0 for x in lines}
         self.strapped = {frozenset(l) for l in strapped}          # links whose words carry n (exch-network.md 3.3)
         self.codes = list(lines)
         self.dirs = {x: [] for x in lines}                       # exchange -> the exchanges it faces
@@ -1769,7 +1900,8 @@ class Net:
         self.busy_lines = {x: 0 for x in lines}
         self.stat = {k: 0 for k in ('calls', 'local', 'net', 'no_register', 'waited', 'no_trunk',
                                     'no_monitor', 'no_resolver', 'called_busy', 'no_claim',
-                                    'timed_out', 'done')}
+                                    'timed_out', 'done', 'no_dialtone', 'herds',
+                                    'guarded', 'late', 'wrong', 'lost_owner')}
         self.dialtone, self.complete_local, self.complete_net, self.hops = [], [], [], []
         self.flood_held, self.stopped_held = [], []
 
@@ -1785,32 +1917,123 @@ class Net:
             self.t, _, fn, a = heapq.heappop(self.q); fn(*a)
         self.t = until
 
+    # --- lines as sources ---------------------------------------------
+    # A line is a source only in the finite model.  The book to keep is that the number of wake
+    # events outstanding is the number of lines on hook: a wake takes a line, and the line puts
+    # one back when it is done with.  A herd lifts lines EARLY, so it cancels as many wakes as
+    # it forces, or the network would quietly gain callers.
+    def draw_idle(self):
+        mean = self.idle
+        if self.burst:
+            # The same mean in bursts.  A share s = up/(up+down) of the time the rate is x
+            # times what it is the rest of the time, so the cold RATE is the mean over
+            # (1-s) + x*s -- and an idle is one over a rate, so the cold IDLE is that much
+            # longer than the mean, and the hot idle is x times shorter again.
+            up, down, x = self.burst
+            mean = self.idle * (down + up * x) / (up + down)
+            if self.is_hot:
+                mean /= x
+        return float(self.rng.exponential(mean))
+
+    def draw_hold(self):
+        if self.holds == 'flat':
+            return self.tp.hold
+        if self.holds == 'two':             # nine short calls to one ten times as long
+            return self.tp.hold * (5.5 if self.rng.random() < 0.1 else 0.5)
+        return float(self.rng.exponential(self.tp.hold))
+
+    def wake(self, x, dst=None, forced=False):
+        if not forced and self.cancel[x] > 0:
+            self.cancel[x] -= 1             # this line was lifted early by a herd
+            return
+        if self.onhook[x] <= 0:
+            self.at(self.t + self.draw_idle(), self.wake, x)
+            return
+        self.onhook[x] -= 1
+        self.busy_lines[x] += 1
+        self.arrive(x, dst)
+
+    def finish(self, x):
+        """a line back on hook.  Nothing to do in the Poisson model: a caller is not a line there."""
+        if not self.finite:
+            return
+        self.busy_lines[x] -= 1
+        self.onhook[x] += 1
+        self.at(self.t + self.draw_idle(), self.wake, x)
+
+    def go_hot(self, up, down):
+        self.is_hot = not self.is_hot
+        self.at(self.t + float(self.rng.exponential(up if self.is_hot else down)), self.go_hot, up, down)
+
+    def a_herd(self, pc, spread, every):
+        """a flash crowd: a share of every line in the network lifts inside `spread`, and they all
+        dial the SAME exchange.  It is where the calls go, not only when they come."""
+        self.stat['herds'] += 1
+        dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
+        for x in self.lines:
+            # a share of EVERY line, as tb_traffic's herd is -- capped at the lines
+            # actually on hook, because the book to keep is one wake a line on hook
+            k = min(int(self.lines[x] * pc), self.onhook[x])
+            self.cancel[x] += k
+            for _ in range(k):
+                self.at(self.t + float(self.rng.uniform(0, spread)), self.wake, x,
+                        None if dst == x else dst, True)
+        self.at(self.t + float(self.rng.exponential(every)), self.a_herd, pc, spread, every)
+
+    def forget(self):
+        """a warm-up: what the network did while it was filling is not what it does."""
+        for p in (list(self.chan.values()) + list(self.reg.values())
+                  + list(self.mon.values()) + list(self.res.values())):
+            p.reset(self.t)
+        for k in self.stat:
+            self.stat[k] = 0
+        for l in (self.dialtone, self.complete_local, self.complete_net, self.hops,
+                  self.flood_held, self.stopped_held):
+            del l[:]
+        self.t0 = self.t
+
+    def start_lines(self):
+        # spread flat over one idle, which is what the RTL bench does at the top of a phase: a
+        # phase begins with every line on hook, and how they are spread decides the transient
+        for x in self.lines:
+            for _ in range(self.lines[x]):
+                self.at(float(self.rng.uniform(0, self.idle)), self.wake, x)
+
     # --- the topology ------------------------------------------------
     def hop(self, u, v):
-        return NET_HOP + (NET_HUB if len(self.dirs[u]) > 2 else 0.0)
+        return (NET_HOP - A_PATH + self.link_ms
+                + (NET_HUB if len(self.dirs[u]) > 2 else 0.0))
 
     # --- calls -------------------------------------------------------
     def digits(self, dst=None):
         """when the register has each digit, from the first digit's first break.  A local number is
         h s, h 2-7 and s 0-7.  A network number is 1 e b h s, with e b the code of the exchange called;
         a 0 is ten pulses"""
-        h, sl = int(self.rng.integers(2, 8)), int(self.rng.integers(0, 8))
+        if self.ports:
+            h, sl = self.ports[int(self.rng.integers(0, len(self.ports)))]
+        else:
+            h, sl = int(self.rng.integers(2, 8)), int(self.rng.integers(0, 8))
         number = [h, sl] if dst is None else [1, int(dst[0]), int(dst[1]), h, sl]
-        t, out = 0.0, []
+        t, out, start = 0.0, [], []
         for d in number:
-            t += (pulses_of(d) - 1) * 100 + 60
-            out.append(t + T_ID)
-            t += float(self.rng.uniform(500, 900))
+            start.append(t)                                  # this digit's first break
+            t += (pulses_of(d) - 1) * self.tp.pulse + self.tp.brk
+            out.append(t + self.tp.idw)                      # and when it is recognised
+            t += float(self.rng.uniform(*self.tp.gap))
+        self.starts = start
         return out
 
-    def arrive(self, x):
+    def arrive(self, x, want=None):
         self.stat['calls'] += 1
-        remote = self.rng.random() < self.leave and len(self.lines) > 1
-        dst = x
-        if remote:
-            dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
-            while dst == x:
+        if want is not None:
+            dst = want
+        else:
+            remote = self.rng.random() < self.leave and len(self.lines) > 1
+            dst = x
+            if remote:
                 dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
+                while dst == x:
+                    dst = self.codes[int(self.rng.integers(0, len(self.codes)))]
         self.at(self.t + float(self.rng.uniform(0, NET_SCAN)) + T_MARK, self.seize_register, x, dst, self.t)
 
     def seize_register(self, x, dst, lifted):
@@ -1818,10 +2041,13 @@ class Net:
             self.stat['no_register'] += 1
             if self.t - lifted < NET_SCAN * 1.5:
                 self.stat['waited'] += 1          # the first time this caller was turned away
+            if self.dt_wait is not None and self.t - lifted > self.dt_wait:
+                self.stat['no_dialtone'] += 1           # the caller gave up on dial tone
+                self.finish(x); return
             self.at(self.t + NET_SCAN, self.seize_register, x, dst, lifted)   # the scanner comes round again
             return
         self.dialtone.append(self.t - lifted)
-        start = self.t + float(self.rng.uniform(300, 1000))
+        start = self.t + float(self.rng.uniform(*self.tp.dt_pause))
         if dst == x:
             self.stat['local'] += 1
             d = self.digits()
@@ -1831,32 +2057,63 @@ class Net:
             d = self.digits(dst)                     # 1 e b h s
             stopped = self.rng.random() < STOPS
             self.at(start + d[0] + T_MARK, self.open_flood, x, dst, lifted,
-                    start + d[1], start + d[2], start + d[4], stopped)
+                    start + d[1], start + d[2], start + d[4], stopped,
+                    start + self.starts[1])          # and when `e`'s first break is
 
     def local_call(self, x, lifted):
         self.reg[x].give(self.t)
-        if self.rng.random() < self.busy_lines[x] / self.lines[x]:
-            self.stat['called_busy'] += 1; return
+        if self.rng.random() < self.busy_lines[x] / self.lines[x] or self.onhook[x] <= 0:
+            self.stat['called_busy'] += 1; self.finish(x); return
         self.complete_local.append(self.t - lifted)
         self.connect(x, x, [], lifted)
 
     # --- the flood ---------------------------------------------------
-    def open_flood(self, x, dst, lifted, t_e, t_b, t_last, stopped):
+    def open_flood(self, x, dst, lifted, t_e, t_b, t_last, stopped, t_break=None):
         legs, seized = [], []
         for d in self.dirs[x]:
             ch = self.chan[frozenset((x, d))]
             if ch.take(self.t):
                 legs.append(d); seized.append(frozenset((x, d)))
         if not legs:
-            self.stat['no_trunk'] += 1; self.reg[x].give(self.t); return
+            self.stat['no_trunk'] += 1; self.reg[x].give(self.t); self.finish(x); return
         call = dict(origin=x, dst=dst, lifted=lifted, t_e=t_e, t_b=t_b, t_last=t_last,
-                    held=seized, seized_at=self.t, claimed=False, stopped=stopped)
+                    held=seized, seized_at=self.t, claimed=False, stopped=stopped,
+                    t_break=t_break if t_break is not None else self.t + 1e9)
+        # exch-monitor.md 3, rule 2: the origin sees both its own seizure and the caller's
+        # next break, and abandons if the break is inside the guard -- because it cannot
+        # know how far the flood has got, and a monitor patched in mid-digit counts short.
+        if call['t_break'] < self.t + self.guard:
+            self.stat['guarded'] += 1
+            self.at(call['t_break'], self.guard_drop, call)
         for d in legs:
             self.at(self.t + self.hop(x, d), self.reaches, call, x, d, [frozenset((x, d))])
         if stopped:
-            self.at(self.t + FLOOD_TIMEOUT, self.give_up, call, True)      # the 5 s rule
+            self.at(self.t + self.tp.timeout, self.give_up, call, True)    # the 5 s rule
         else:
-            self.at(t_b + NO_CLAIM, self.give_up, call, False)
+            self.at(t_b + self.tp.no_claim, self.give_up, call, False)
+
+    def guard_drop(self, call):
+        """a break inside the guard: release the trunks and give cannot-complete."""
+        if call['claimed']:
+            return
+        call['claimed'] = True
+        self.reg[call['origin']].give(self.t)
+        for l in call['held']:
+            self.at(self.t + self.tp.fall, self.free, self.chan[l])
+        call['held'] = []
+        self.finish(call['origin'])
+
+    def read_e(self, call):
+        """What `e` a monitor patched in at this instant will count.  It saw the rise, so it
+        counts from there -- and every pulse of `e` that has already gone by is one it never
+        sees.  Returns the digit it will compare with its own jumpers, or None if the whole of
+        `e` went by before it was patched in, when it counts `b` as `e` and is lost entirely."""
+        late = self.t - call['t_break']
+        if late <= 0:
+            return int(call['dst'][0])
+        gone = int(late / self.tp.pulse) + 1          # the break in progress is gone too
+        seen = pulses_of(int(call['dst'][0])) - gone
+        return None if seen <= 0 else (0 if seen >= 10 else seen)
 
     def reaches(self, call, frm, x, path):
         """a seizure arrives at x from frm, having come by path: a monitor listens, and a transit
@@ -1865,14 +2122,23 @@ class Net:
         watched = mon.take(self.t)
         if not watched and x == call['dst'] and not call['stopped']:
             self.stat['no_monitor'] += 1
+        # Has this exchange been patched in before the caller's next break?  If not, its
+        # monitor counts a digit short, and what that costs depends on whose code it lands on.
+        e_seen = self.read_e(call) if watched else int(call['dst'][0])
+        if watched and e_seen != int(call['dst'][0]):
+            self.stat['late'] += 1
+            if x == call['dst']:
+                self.stat['lost_owner'] += 1          # the owner reads its own code wrong
+            elif e_seen is not None and x[0] == str(e_seen) and x[1] == call['dst'][1]:
+                self.stat['wrong'] += 1               # and somebody else's fits: a wrong number
         if watched and call['stopped']:
             # no digit ever comes: the monitor holds until the origin's 5 s rule releases the trunk
-            self.at(call['seized_at'] + FLOOD_TIMEOUT + T_FALL, self.free, mon)
+            self.at(call['seized_at'] + self.tp.timeout + self.tp.fall, self.free, mon)
         elif watched:
             # the monitor lets go at e if the first code digit is not this exchange's
             same_e = x[0] == call['dst'][0]
             self.at(max(self.t, call['t_b'] if same_e else call['t_e']), self.free, mon)
-            if x == call['dst']:
+            if x == call['dst'] and e_seen == int(call['dst'][0]):
                 self.at(call['t_b'] + T_MARK, self.claim, call, path)
         if call['claimed'] or path[-1] in self.strapped:
             return
@@ -1902,8 +2168,8 @@ class Net:
         for l in keep:
             rest.remove(l)
         for l in rest:
-            self.at(self.t + back + T_FALL, self.free, self.chan[l])
-            self.flood_held.append(self.t + back + T_FALL - call['seized_at'])
+            self.at(self.t + back + self.tp.fall, self.free, self.chan[l])
+            self.flood_held.append(self.t + back + self.tp.fall - call['seized_at'])
         call['held'] = keep
         self.hops.append(hops)
         self.at(max(self.t + back, call['t_last'] + T_MARK), self.answered, call, keep)
@@ -1911,10 +2177,11 @@ class Net:
     def answered(self, call, keep):
         x, dst = call['origin'], call['dst']
         self.reg[x].give(self.t)
-        if self.rng.random() < self.busy_lines[dst] / self.lines[dst]:
+        if self.rng.random() < self.busy_lines[dst] / self.lines[dst] or self.onhook[dst] <= 0:
             self.stat['called_busy'] += 1
             for l in keep:
-                self.at(self.t + 3000, self.free, self.chan[l])
+                self.at(self.t + self.tp.busy, self.free, self.chan[l])
+            self.finish(x)
             return
         self.complete_net.append(self.t - call['lifted'])
         self.connect(x, dst, keep, call['lifted'])
@@ -1928,19 +2195,31 @@ class Net:
             self.stopped_held.append(self.t + T_FALL - call['seized_at'])
         self.reg[call['origin']].give(self.t)
         for l in call['held']:
-            self.at(self.t + T_FALL, self.free, self.chan[l])
+            self.at(self.t + self.tp.fall, self.free, self.chan[l])
         call['held'] = []
+        self.finish(call['origin'])
 
     def connect(self, x, dst, keep, lifted):
         self.stat['done'] += 1
-        self.busy_lines[x] += 1; self.busy_lines[dst] += 1
-        hold = float(self.rng.exponential(HOLD_MEAN))
+        if self.finite:
+            # The called line answers.  It is taken off hook WITHOUT a wake of its own being
+            # spent, so one of its own is cancelled: the book to keep is that the wakes
+            # outstanding at an exchange are the lines on hook there, and a call that is
+            # answered would otherwise leave the network one caller richer every time.
+            self.busy_lines[dst] += 1; self.onhook[dst] -= 1; self.cancel[dst] += 1
+        else:
+            self.busy_lines[x] += 1; self.busy_lines[dst] += 1
+        wait = float(self.rng.uniform(*self.tp.answer)) if self.tp.answer[1] else 0.0
+        hold = wait + self.draw_hold()          # the called line is rung, then answers
         self.at(self.t + hold, self.release, x, dst, keep)
 
     def release(self, x, dst, keep):
-        self.busy_lines[x] -= 1; self.busy_lines[dst] -= 1
+        if self.finite:
+            self.finish(x); self.finish(dst)
+        else:
+            self.busy_lines[x] -= 1; self.busy_lines[dst] -= 1
         for l in keep:
-            self.at(self.t + T_FALL, self.free, self.chan[l])
+            self.at(self.t + self.tp.fall, self.free, self.chan[l])
 
 
 NET_HOP = 7.0             # a seizure crossing one exchange (exch-network.md 4)
@@ -1960,13 +2239,13 @@ def net_topology():
 BURST_UP, BURST_DOWN, BURST_X = 30e3, 300e3, 8.0   # 30 s of it, every 5 minutes, eight times the rate
 
 
-def net_arrivals(sim, hours, spiky):
+def net_arrivals(sim, hours, spiky, calls_h=3.0):
     """calls a line makes: 3 an hour.  Smooth is Poisson.  Bursty is the same mean in bursts -- an
     office where a meeting ends, a shift changes, a switchboard is thrown open: 30 s at eight times
     the rate, once every 5 minutes.  The two differ in when the calls come, not how many."""
     rng, end = sim.rng, hours * 3600e3
     for x, n in sim.lines.items():
-        mean = n * 3 / 3600e3                     # calls a millisecond
+        mean = n * calls_h / 3600e3               # calls a millisecond
         if not spiky:
             t = 0.0
             while t < end:
@@ -2109,17 +2388,22 @@ def predict(links, lines, straps=(), leave=0.3, hold=None):
             tree[u].append(v); tree[v].append(u)
     assert max(len(tree[x]) + sum(x in l for l in strapped) for x in lines) <= 4, 'more than four directions'
 
+    reach = {}
+
     def path(u, v):
         if frozenset((u, v)) in strapped:
             return [u, v]
-        seen, front = {u: [u]}, [u]
-        while front:
-            nxt = []
-            for x in front:
-                for y in tree[x]:
-                    if y not in seen:
-                        seen[y] = seen[x] + [y]; nxt.append(y)
-            front = nxt
+        seen = reach.get(u)
+        if seen is None:
+            seen, front = {u: [u]}, [u]
+            while front:
+                nxt = []
+                for x in front:
+                    for y in tree[x]:
+                        if y not in seen:
+                            seen[y] = seen[x] + [y]; nxt.append(y)
+                front = nxt
+            reach[u] = seen
         return seen[v]
 
     n, total = len(lines), sum(lines.values())
@@ -2360,7 +2644,571 @@ def topo():
     print('     An unstrapped ring sends every flood round and round until the links are full, and holds them')
     print('     until the code is dialled: about two seconds of a whole ring for every call that leaves.')
 
-TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'mainboard': mainboard, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo}
+
+# ------------------------------------------------------------------ traffic
+
+# The bursts and the herds, in the FAST clock `make traffic` runs on.  `net`'s figures are life:
+# 30 s of burst every 5 minutes.  Eight times faster that is 3.8 s every 38 s, which a 25 s run
+# would see once; these are the same duty cycle on a shorter turn, so a run sees a dozen.
+T_UP, T_DOWN, T_X = 1000.0, 5000.0, 8.0          # hot one second in six, at eight times the rate
+H_EVERY, H_PC, H_SPREAD = 6000.0, 0.33, 300.0    # a flash crowd: a third of the network, in 300 ms
+
+# `make traffic`: two hubs on one link, three leaves on each, six channels everywhere, twelve
+# lines an exchange.  The codes are the bench's own -- e from 2, b from 1, so that no exchange's
+# code costs ten pulses -- and the ports are the slots it fits lines in, blocks 2 and 5.
+RTL_LINES = 12
+RTL_PORTS = [(2, s) for s in range(8)] + [(5, s) for s in range(4)]
+
+
+def rtl_code(i):
+    return f'{2 + i // 7}{1 + i % 7}'
+
+
+def rtl_net(nhub=2, spoke=3, slen=1, ch=6, nline=RTL_LINES):
+    """the topology tb_traffic builds from the same three numbers: a chain of hubs, spokes on
+    each, each spoke a chain"""
+    links = {}
+    for h in range(nhub - 1):
+        links[(rtl_code(h), rtl_code(h + 1))] = ch
+    for h in range(nhub):
+        for sp in range(spoke):
+            prev = h
+            for p in range(slen):
+                idx = nhub + (h * spoke + sp) * slen + p
+                links[(rtl_code(prev), rtl_code(idx))] = ch
+                prev = idx
+    lines = {rtl_code(i): nline for i in range(nhub + nhub * spoke * slen)}
+    return links, lines
+
+
+def phase(links, lines, idle, secs, model='smooth', holds='exp', leave=0.3, seed=1,
+          regs=3, mons=3, res=3, tempo=None, ports=RTL_PORTS, dt_wait=1200.0, warm=4000.0):
+    """one phase of demand on a fresh network: every line a source, arriving by `model`.  The
+    first `warm` ms are run and then forgotten, as tb_traffic's own phases are."""
+    sim = Net(links, lines, regs=regs, mons=mons, resolvers=res, leave=leave, seed=seed,
+              tempo=tempo or FAST, idle=idle, holds=holds, dt_wait=dt_wait, ports=ports,
+              burst=(T_UP, T_DOWN, T_X) if model == 'bursty' else None)
+    sim.start_lines()
+    if model == 'bursty':
+        sim.at(float(sim.rng.exponential(T_DOWN)), sim.go_hot, T_UP, T_DOWN)
+    if model == 'herd':
+        sim.at(float(sim.rng.exponential(H_EVERY)), sim.a_herd, H_PC, H_SPREAD, H_EVERY)
+    sim.run(warm)
+    sim.forget()
+    sim.run(warm + secs * 1000.0)
+    return sim
+
+
+def per_s(sim, n):
+    """a rate over the measured part of a run, which is what is left after the warm-up"""
+    return 1000.0 * n / max(sim.t - sim.t0, 1.0)
+
+
+def link_stat(sim, u, v):
+    p = sim.chan[frozenset((u, v))]
+    return p.erlang(sim.t), 100 * p.refused / max(p.taken + p.refused, 1), p.hi
+
+
+def pooled(sim, what):
+    """the mean over every exchange of a pool's erlangs, and what it turned away"""
+    ps = list(what.values())
+    e = sum(p.erlang(sim.t) for p in ps) / len(ps)
+    ref = sum(p.refused for p in ps)
+    tk = sum(p.taken + p.refused for p in ps)
+    return e, 100 * ref / max(tk, 1)
+
+
+# What `make traffic-net` and `make traffic-deep` measured -- the same networks, the same
+# clock, the same two phases, in eight and ten whole exchanges of RTL.  `exrtl/README.md`
+# carries the runs.  A pool is quoted the way the bench quotes it: a register pool an
+# exchange, a monitor pool a trunk block, a resolver pool at every exchange that forwards.
+RTL_RUN = {
+    'off peak':      dict(calls=20.9, done=114, hub_e=2.48, sp=(2.33, 2.47, 2.81),
+                          reg=1.50, mon=0.30, res=0.85, dt=32.6, all_e=20.04),
+    'peak':          dict(calls=33.1, done=121, hub_e=3.10, sp=(2.77, 3.17, 3.66),
+                          reg=2.05, mon=0.33, res=1.24, dt=68.6, all_e=26.41),
+    'deep off peak': dict(calls=26.0, done=110, hub_e=3.97, near=(3.69, 4.26), far=4.10,
+                          reg=1.58, res=1.34, dt=39.1, all_e=35.59),
+    'deep peak':     dict(calls=39.2, done=144, hub_e=3.76, near=(3.59, 4.11), far=3.78,
+                          reg=2.04, res=1.26, dt=70.9, all_e=34.59),
+}
+
+
+def traffic():
+    print('TRAFFIC -- demand that is not smooth, and the same network at peak and off peak.')
+    print('  Every line is a SOURCE here, not a Poisson stream: it hangs up, waits, and lifts again,')
+    print('  so the offered load falls as the exchange fills.  That is what `make traffic-net` has in the')
+    print('  gates -- a line is a state machine there and there is no other kind of caller -- and this')
+    print('  runs on the same clock as the RTL bench: the dial and the register\'s three windows eight')
+    print('  times life, the marker\'s 8 ms scan and its 7 ms hop untouched.')
+    links, lines = rtl_net()
+    tot = sum(lines.values())
+    print(f'\n  The network: 8 exchanges, two hubs on one link with three leaves each, six channels')
+    print(f'  every link, {RTL_LINES} lines an exchange, {tot} in all.  Three registers, three monitor cells a')
+    print('  block, three resolvers.  30 % of calls leave home; a conversation averages 0.5 s.')
+
+    SECS, OP, PK, WARM = 10, 3000, 1500, 6000.0
+    LONG = SECS_2 = 240             # sections 2-4 are not tied to the RTL's run length
+    print(f'  Phase 1 is {SECS} s, measured after {WARM / 1000:.0f} s of warm-up -- a phase begins with every')
+    print('  line on hook, which is not a state the network is ever in otherwise, and the warm-up is')
+    print('  twice the longer idle so that what is measured is a network in its stride.  Off peak a line')
+    print(f'  waits {OP} ms between calls and at peak {PK} ms.  `make traffic-net` runs the same two')
+    print(f'  phases in the gates.  2 to 4 are not tied to that and run {LONG} s, because a 1 % loss is')
+    print('  not a measurement over a few hundred seizures.')
+
+    # ---- 1. against the RTL --------------------------------------------
+    print('\n  1. The same network in the gates and here.  `make traffic-net` is the RTL column.')
+    rows = []
+    for name, idle in (('off peak', OP), ('peak', PK)):
+        rows.append((name, phase(links, lines, idle, SECS, seed=7, warm=WARM)))
+    print(f'  {"":16s} {"calls/s":>8s} {"talked":>7s} {"hub link":>9s} {"the 3 spoke links":>19s} '
+          f'{"registers":>10s} {"monitors":>9s} {"resolvers":>10s} {"dial tone":>10s}')
+    print(f'  {"":16s} {"offered":>8s} {"":>7s} {"E":>9s} {"E, lowest to highest":>19s} '
+          f'{"mean E":>10s} {"mean E":>9s} {"mean E":>10s} {"mean, ms":>10s}')
+    for name, sim in rows:
+        he, _, _ = link_stat(sim, '21', '22')
+        sp = sorted(link_stat(sim, '21', v)[0] for v in ('23', '24', '25'))
+        re_, _ = pooled(sim, sim.reg)
+        mo, _ = pooled(sim, sim.mon)
+        rs, _ = pooled(sim, sim.res)
+        dt = np.array(sim.dialtone)
+        print(f'  {name:16s} {per_s(sim, sim.stat["calls"]):8.1f} {sim.stat["done"]:7d} '
+              f'{he:9.2f} {sp[0]:6.2f} {sp[1]:6.2f} {sp[2]:6.2f} {re_:10.2f} {mo:9.2f} '
+              f'{rs:10.2f} {dt.mean():10.1f}')
+        if name in RTL_RUN:
+            r = RTL_RUN[name]
+            print(f'  {"  in the gates":16s} {r["calls"]:8.1f} {r["done"]:7d} '
+                  f'{r["hub_e"]:9.2f} {r["sp"][0]:6.2f} {r["sp"][1]:6.2f} {r["sp"][2]:6.2f} '
+                  f'{r["reg"]:10.2f} {r["mon"]:9.2f} {r["res"]:10.2f} {r["dt"]:10.1f}')
+    for name, sim in rows:
+        tot = sum(p.erlang(sim.t) for p in sim.chan.values())
+        rate = per_s(sim, sim.stat['calls'])
+        line = (f'     {name:8s}: every link taken together is {tot:5.2f} E here'
+                f' -- {tot / rate:.3f} E for each call a second offered')
+        if name in RTL_RUN:
+            r = RTL_RUN[name]
+            line += f', and {r["all_e"]:5.2f} E / {r["all_e"] / r["calls"]:.3f} in the gates'
+        print(line)
+    print('     Erlangs are what both models measure the same way: a channel-millisecond is a')
+    print('     channel-millisecond.  Loss is not -- the RTL counts the marker\'s own "every trunk')
+    print('     this way is busy" event, which is raised when an ORIGIN hunts and finds none, and')
+    print('     `Pool.refused` here is every seizure turned away, a transit\'s forward included.')
+
+    # ---- 1b. ten exchanges, spokes two deep ----------------------------
+    print('\n     And the same again at TEN exchanges: the two hubs with two spokes each, and each')
+    print('     spoke two deep, so that every spoke has a TRANSIT on it and the link next the hub')
+    print('     carries the whole spoke past it.  `make traffic-deep` is the RTL column.')
+    dlinks, dlines = rtl_net(2, 2, 2)
+    drows = []
+    for name, idle in (('off peak', OP), ('peak', PK)):
+        # 8 s, which is what the ten-exchange RTL run is: it costs a quarter more
+        # than the eight and the phase was cut to keep it inside the afternoon
+        drows.append((name, phase(dlinks, dlines, idle, 8, seed=7, warm=WARM)))
+    print(f'  {"":16s} {"calls/s":>8s} {"talked":>7s} {"hub link":>9s} {"next the hub":>13s} '
+          f'{"the far link":>13s} {"registers":>10s} {"resolvers":>10s} {"dial tone":>10s}')
+    for name, sim in drows:
+        he, _, _ = link_stat(sim, '21', '22')
+        near = sorted(link_stat(sim, '21', v)[0] for v in ('23', '25'))
+        far = link_stat(sim, '23', '24')[0]          # the link beyond the transit
+        re_, _ = pooled(sim, sim.reg)
+        rs, _ = pooled(sim, sim.res)
+        dt = np.array(sim.dialtone)
+        print(f'  {name:16s} {per_s(sim, sim.stat["calls"]):8.1f} {sim.stat["done"]:7d} '
+              f'{he:9.2f} {near[0]:6.2f} {near[1]:6.2f} {far:13.2f} {re_:10.2f} {rs:10.2f} '
+              f'{dt.mean():10.1f}')
+        if ('deep ' + name) in RTL_RUN:
+            r = RTL_RUN['deep ' + name]
+            print(f'  {"  in the gates":16s} {r["calls"]:8.1f} {r["done"]:7d} '
+                  f'{r["hub_e"]:9.2f} {r["near"][0]:6.2f} {r["near"][1]:6.2f} {r["far"]:13.2f} '
+                  f'{r["reg"]:10.2f} {r["res"]:10.2f} {r["dt"]:10.1f}')
+    for name, sim in drows:
+        tot = sum(p.erlang(sim.t) for p in sim.chan.values())
+        rate = per_s(sim, sim.stat['calls'])
+        line = (f'     {name:8s}: every link taken together is {tot:5.2f} E here'
+                f' -- {tot / rate:.3f} E for each call a second offered')
+        if ('deep ' + name) in RTL_RUN:
+            r = RTL_RUN['deep ' + name]
+            line += f', and {r["all_e"]:5.2f} E / {r["all_e"] / r["calls"]:.3f} in the gates'
+        print(line)
+    print('     A spoke\'s two links are the one next the hub, which carries the transit\'s own lines')
+    print('     AND the exchange behind it, and the one beyond, which carries one exchange.')
+
+    print(f'\n     Every link of the eight, both phases.  Erlang B is on the erlangs the run carried.')
+    print(f'  {"link":10s} {"phase":10s} {"erlang":>7s} {"high":>5s} {"Erlang B":>9s} {"refused":>9s}')
+    for u, v in sorted({tuple(sorted(l)) for l in ((a, b) for a, b in links)}):
+        for name, sim in rows:
+            e, b, hi = link_stat(sim, u, v)
+            print(f'  {u} = {v}  {name:10s} {e:7.2f} {hi:5d} {100 * erlang_b(e, 6):8.2f} % {b:8.2f} %')
+
+    # ---- 2. the traffic models -----------------------------------------
+    print('\n  2. Four ways the same mean can arrive.  Smooth is Poisson.  Bursty is the network')
+    print(f'     going hot and cold together -- {T_UP / 1000:.0f} s at {T_X:.0f}x the rate in every {(T_UP + T_DOWN) / 1000:.0f} s.  Herd is a flash')
+    print(f'     crowd: {100 * H_PC:.0f} % of every line in the network lifts inside {H_SPREAD:.0f} ms, and they all dial')
+    print('     the SAME exchange -- not only when the calls come but where they go.')
+    print(f'  {"arrivals":12s} {"phase":9s} {"calls/s":>8s} {"busiest link":>26s} {"registers":>18s} '
+          f'{"dial tone, ms":>24s}')
+    print(f'  {"":12s} {"":9s} {"offered":>8s} {"E":>7s} {"E a call/s":>10s} {"blocked":>7s} {"mean E":>8s} {"waited":>9s} '
+          f'{"mean":>8s} {"95 %":>7s} {"worst":>7s}')
+    mrows = []
+    # Off peak here is the 6 000 ms of `net`'s own line, not the 3 000 that phase 1
+    # uses: nothing ties 2 to 4 to the RTL's phase, and a light hour is where a
+    # herd shows.  The warm-up is twice the idle throughout.
+    for model in ('smooth', 'bursty', 'herd'):
+        for nm, idle in (('off peak', 6000), ('peak', PK)):
+            sim = phase(links, lines, idle, SECS_2, model=model, seed=11,
+                        warm=2.0 * idle)
+            if nm == 'peak':
+                mrows.append((model, sim))
+            w = max(sim.chan.values(), key=lambda p: p.erlang(sim.t))
+            re_, rw = pooled(sim, sim.reg)
+            dt = np.array(sim.dialtone)
+            rate = per_s(sim, sim.stat['calls'])
+            print(f'  {model:12s} {nm:9s} {rate:8.1f} {w.erlang(sim.t):7.2f} {w.erlang(sim.t) / rate:10.3f} '
+                  f'{100 * w.refused / max(w.taken + w.refused, 1):6.2f} % {re_:8.2f} {rw:8.1f} % '
+                  f'{dt.mean():8.1f} {np.percentile(dt, 95):7.1f} {dt.max():7.0f}')
+    print('     "waited" is the share of callers the scanner had to come back to, which is dial tone')
+    print(f'     late and not a call lost (exch-marker.md 6).  {mrows[2][1].stat["herds"]} herds were let loose.')
+    print('')
+    print('     A BURST DOES NOT OFFER THE SAME CALLS, and that is not the model being wrong.  The')
+    print('     cold rate is set so the mean over the cycle is the smooth one, which is exact for')
+    print(f'     arrivals out of nowhere; but a line that is off hook cannot lift, and at {T_X:.0f}x the rate the')
+    print('     hot idle is shorter than a call, so the lines themselves are the limit.  `net`, whose')
+    print('     callers arrive from nowhere, cannot show this: it is what makes a line a source.')
+    print('     "E a call/s" is the link\'s erlangs divided by the calls a second that produced them,')
+    print('     so the three may be read against each other at the load each one managed to offer.')
+
+    print('\n     Where each model falls.  The flood is on every link whatever the shape of the demand;')
+    print('     what moves is which link, and how long a caller waits for a register.')
+    print(f'  {"arrivals":12s} {"busiest link":>24s} {"every link":>12s} {"monitors":>18s} {"resolvers":>18s}')
+    for model, sim in mrows:
+        w = max(sim.chan, key=lambda l: sim.chan[l].erlang(sim.t))
+        tot_e = sum(p.erlang(sim.t) for p in sim.chan.values())
+        me, mb = pooled(sim, sim.mon)
+        se, sb = pooled(sim, sim.res)
+        u, v = sorted(w)
+        print(f'  {model:12s} {u} = {v}{"":>8s} {sim.chan[w].erlang(sim.t):7.2f} E {tot_e:10.2f} E '
+              f'{me:10.2f} E {mb:5.1f} % {se:10.2f} E {sb:5.1f} %')
+
+    # ---- 3. the holding-time law ----------------------------------------
+    print('\n  3. The same arrivals, three holding-time laws of the same mean.  Erlang B is insensitive')
+    print('     to the law in theory; nothing in this exchange has read Erlang.')
+    print(f'  {"holding":14s} {"sd/mean":>8s} {"calls/s":>8s} {"worst link":>18s} {"Erlang B":>10s} '
+          f'{"every link":>12s}')
+    for holds, label, cv in (('exp', 'exponential', 1.00), ('flat', 'constant', 0.00),
+                             ('two', 'two-class 9:1', 1.55)):
+        sim = phase(links, lines, PK, LONG, holds=holds, seed=13, warm=2.0 * PK)
+        w = max(sim.chan.values(), key=lambda p: p.erlang(sim.t))
+        wb = max(sim.chan.values(), key=lambda p: p.refused / max(p.taken + p.refused, 1))
+        tot_e = sum(p.erlang(sim.t) for p in sim.chan.values())
+        print(f'  {label:14s} {cv:8.2f} {per_s(sim, sim.stat["calls"]):8.1f} {w.erlang(sim.t):7.2f} E '
+              f'{100 * wb.refused / max(wb.taken + wb.refused, 1):6.2f} % {100 * erlang_b(w.erlang(sim.t), 6):9.2f} % '
+              f'{tot_e:10.2f} E')
+
+    # ---- 4. peak against off peak ---------------------------------------
+    print('\n  4. Peak against off peak, as a sweep: the same network, the idle between a line\'s calls')
+    print('     cut step by step.  "offered" is what the lines managed to offer, not what was asked.')
+    print(f'  {"idle, ms":>9s} {"calls/s":>8s} {"worst link":>18s} {"Erlang B":>10s} {"lost":>10s} '
+          f'{"no trunk":>9s} {"registers":>18s} {"talked":>7s}')
+    print(f'  {"":>9s} {"":>8s} {"E":>9s} {"refused":>8s} {"":>10s} {"a call":>10s} {"/1000 net":>9s} '
+          f'{"mean E":>8s} {"waited":>9s} {"":>7s}')
+    for idle in (12000, 8000, 6000, 4000, 3000, 2000, 1500, 1000, 700):
+        sim = phase(links, lines, idle, LONG, seed=17, warm=2.0 * idle)
+        we = max(sim.chan.values(), key=lambda p: p.erlang(sim.t))
+        re_, rw = pooled(sim, sim.reg)
+        nc = max(sim.stat['net'], 1) / 1000
+        lost = 1 - sim.stat['done'] / max(sim.stat['calls'], 1)
+        print(f'  {idle:9d} {per_s(sim, sim.stat["calls"]):8.1f} {we.erlang(sim.t):9.2f} '
+              f'{100 * we.refused / max(we.taken + we.refused, 1):7.2f} % {100 * erlang_b(we.erlang(sim.t), 6):9.2f} % '
+              f'{100 * lost:9.1f} % {sim.stat["no_trunk"] / nc:9.1f} {re_:8.2f} {rw:8.1f} % {sim.stat["done"]:7d}')
+    print('     "lost a call" counts every caller who did not talk -- the called line busy, no trunk,')
+    print('     no claim, dial tone given up on -- so most of it is the called line, not the network.')
+
+
+# ------------------------------------------------------------------ big
+
+def backbone(core_k, core_ch, levels, mid=None):
+    """A backbone of `core_k` tandems in a chain, `core_ch` channels between them, and on each
+    tandem a tree of `levels` = [(branch, channels), ...] read outward.  A branch of 1 is a
+    chain, which is what a long spoke is.  `mid` caps the spokes of a tandem with backbone on
+    BOTH sides: it has one direction fewer to spare and two trunk groups more already spent."""
+    out = {}
+    for h in range(core_k - 1):
+        out[(f't{h}', f't{h + 1}')] = core_ch
+
+    def grow(parent, tag, depth, first):
+        if depth >= len(levels):
+            return
+        b, ch = levels[depth]
+        if depth == 0 and mid is not None and not first:
+            b = mid
+        for j in range(b):
+            kid = f'{tag}.{j}'
+            out[(parent, kid)] = ch
+            grow(kid, kid, depth + 1, first)
+    for h in range(core_k):
+        grow(f't{h}', f'n{h}', 0, h == 0 or h == core_k - 1)
+    return out
+
+
+def mesh_core(k, core_ch, levels, mid=None):
+    """The same, with the k tandems FULLY CONNECTED instead of chained.  The flood must see a
+    tree, so only the k-1 links of the chain may carry it and every other core link is strapped
+    (exch-network.md 3.3).  Returns the links and the straps."""
+    out = backbone(k, core_ch, levels, mid)
+    straps = []
+    for a in range(k):
+        for b in range(a + 2, k):
+            out[(f't{a}', f't{b}')] = core_ch
+            straps.append((f't{a}', f't{b}'))
+    return out, straps
+
+
+def sized(links, straps=(), cap=48, leave=0.3):
+    """what a shape costs, with every exchange capped at `cap` lines"""
+    try:
+        lk, ln, st, code = shape(links, straps)
+    except AssertionError as e:
+        return None, str(e)
+    ln = {k: min(cap, v) for k, v in ln.items()}
+    try:
+        return predict(lk, ln, st, leave), None
+    except AssertionError as e:
+        return None, str(e)
+
+
+def n_of(links):
+    return len({x for l in links for x in l})
+
+
+# The families section 6 searches.  Channels go down as a link goes outward, never up, and a
+# tandem with backbone on both sides is given `mid` spokes: these are the rules of shape, not a
+# preference, and they cut a search of half a million shapes to a few thousand.
+BIG_CH = (6, 12, 18, 24)
+
+
+def big_family():
+    for k in (1, 2, 3, 4, 5):
+        for cch in ((12,) if k == 1 else BIG_CH):
+            for b0 in (2, 3, 4):
+                for mid in (None if k <= 2 else 1, 2):
+                    if mid is not None and mid > b0:
+                        continue
+                    for depth in (1, 2, 3):
+                        for b in itertools.product((1, 2, 3), repeat=depth - 1):
+                            for ch in itertools.product((6, 12), repeat=depth):
+                                if any(ch[i] > ch[i - 1] for i in range(1, depth)):
+                                    continue
+                                lv = [(b0, ch[0])] + [(b[i - 1], ch[i]) for i in range(1, depth)]
+                                yield k, cch, lv, mid
+
+
+def big():
+    print('BIG -- how near sixty-four exchanges the pulse flood will go, and what shape gets there.')
+    print('  The rules are Topology.md 1: four directions an exchange, eight trunk groups, the flood')
+    print('  sees a tree, sixty-four codes, and the whole flood inside the origin\'s 128 ms guard at a')
+    print(f'  slow marker ({SLOW_HOP:.0f} ms a hop and {SLOW_HUB:.0f} more at a hub).  Erlang B on a tree throughout,')
+    print(f'  3 calls an hour of {HOLD_MEAN / 1000:.0f} s a line, and every call that leaves floods every link for')
+    print(f'  {FLOOD_S:.2f} s on average over the sixty-four codes.  "lines" is what the shape is worked at, after')
+    print('  the trunk groups have taken their slots and the cap in the label has taken the rest.')
+
+    head = (f'  {"":38s} {"exch":>4s} {"lines":>6s} {"a/ex":>5s} {"flood":>6s} {"worst link":>21s} '
+            f'{"pair":>7s} {"hops":>5s} {"spread":>7s} {"mon":>4s} {"res":>4s}')
+    keep = []
+
+    def row(label, links, straps=(), cap=48, leave=0.3, note=None):
+        p, why = sized(links, straps, cap, leave)
+        if p is None:
+            print(f'  {label:38s}  {n_of(links):3d} exchanges -- {why}')
+            return None
+        print(f'  {label:38s} {p["n"]:4d} {p["lines"]:6d} {p["lines"] // p["n"]:5d} {p["flood"]:5.2f}E '
+              f'{p["worst_e"]:6.2f} E on {p["worst_ch"]:2d} {100 * p["worst_b"]:5.2f}% {100 * p["pair"]:6.2f}% '
+              f'{p["diameter"]:4d} hp {p["spread"]:4.0f} ms {p["monitors"]:4d} {p["resolvers"]:4d}')
+        if note:
+            keep.append((note, links, straps, cap, leave))
+        return p
+
+    # ---- 1. a tandem chain with spokes ---------------------------------
+    print('\n  1. A tandem-chain backbone with spokes on it.  A tandem in the MIDDLE of the chain has')
+    print('     two directions left after the backbone and two trunk groups, so it carries two spokes')
+    print('     of six channels or one of twelve; an end of the chain has three directions and four')
+    print('     groups.  That asymmetry is the whole of what a backbone costs.')
+    print(head)
+    for k in (2, 3, 4, 5):
+        row(f'{k} tandems, 3 spokes (2 in the middle)', backbone(k, 12, [(3, 12)], mid=2))
+    for k in (3, 4, 5):
+        row(f'{k} tandems, 18 ch backbone, 3 and 1', backbone(k, 18, [(3, 12)], mid=1))
+    print('     A chain of tandems is four hops across and spends nothing on depth.  What it cannot do')
+    print('     is grow: each tandem carries two or three exchanges and there is no room for more.')
+
+    # ---- 2. long spokes -------------------------------------------------
+    print('\n  2. LONG SPOKES: a branch of 1 after the first level is a chain hanging off the tandem.')
+    print('     Depth is free in trunks and dear in hops, and the link next the tandem carries the')
+    print('     whole spoke past it.')
+    print(head)
+    for k in (2, 3):
+        for deep in (2, 3, 4, 5):
+            row(f'{k} tandems, 3 spokes {deep} deep',
+                backbone(k, 12, [(3, 12)] + [(1, 12)] * (deep - 1), mid=2))
+    print('     Ten hops is the guard, and a chain of that length on one link is its own bottleneck.')
+
+    # ---- 3. branching spokes -------------------------------------------
+    print('\n  3. Spokes that BRANCH: a sub-hub on each spoke and leaves on that, and a level more')
+    print('     under those.  The same exchanges in half the hops, and the traffic divided over more')
+    print('     links next the tandem.  48-line exchanges first, to show where that stops.')
+    print(head)
+    row('1 tandem, 4 x 3', backbone(1, 12, [(4, 12), (3, 6)]))
+    row('1 tandem, 4 x 3 x 3', backbone(1, 12, [(4, 12), (3, 12), (3, 6)]))
+    row('2 tandems, 3 x 3', backbone(2, 12, [(3, 12), (3, 6)]))
+    row('2 tandems, 3 x 3 x 2', backbone(2, 12, [(3, 12), (3, 12), (2, 6)]))
+    row('3 tandems, 3 and 2, x 3 x 2', backbone(3, 12, [(3, 12), (3, 12), (2, 6)], mid=2))
+
+    # ---- 4. what a fully connected core buys ----------------------------
+    print('\n  4. FULLY CONNECTED tandems.  Of the k(k-1)/2 links between k tandems only the k-1 of a')
+    print('     chain may carry the flood, because the flood must see a tree; every other one is')
+    print('     STRAPPED, and a strapped link carries calls between its own two ends only')
+    print('     (exch-network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:')
+    print('     Read the pairs: each is the SAME eight trunk groups at each tandem, spent on a chain')
+    print('     of wide links or on a mesh of narrow ones.')
+    print(head)
+    row('3 tandems chained, 12 ch, 2 spokes', backbone(3, 12, [(2, 12)]))
+    lk, st = mesh_core(3, 6, [(2, 12)])
+    row('  fully connected, 6 ch, 2 spokes', lk, st)
+    lk, st = mesh_core(3, 12, [(2, 12)])
+    row('  fully connected, 12 ch: 2 groups more', lk, st)
+    row('4 tandems chained, 12 ch, 1 spoke', backbone(4, 12, [(1, 12)]))
+    lk, st = mesh_core(4, 6, [(1, 12)])
+    row('  fully connected, 6 ch, 1 spoke', lk, st)
+    row('5 tandems chained, 12 ch, no spokes', backbone(5, 12, []))
+    lk, st = mesh_core(5, 6, [])
+    row('  fully connected, 6 ch, no spokes', lk, st)
+    lk, st = mesh_core(6, 6, [])
+    row('6 tandems fully connected, 6 ch', lk, st)
+    print('     Wherever there is anything BEHIND a hub, the mesh spends directions and trunk groups')
+    print('     and moves no traffic worth the name: the only calls a strapped tandem-to-tandem link')
+    print('     can carry are the twelve lines at one end calling the twelve at the other.  Capacity')
+    print('     between hubs is bought in CHANNELS on the tree, not in links off it.')
+    print('     The last pair is the exception that shows why.  With NOTHING behind them, the hubs')
+    print('     ARE the traffic, every pair has a direct link and no call is ever forwarded -- and')
+    print('     the mesh is better than the chain by a factor of five.  Five is also where it stops:')
+    print('     a sixth exchange would want a fifth direction, and any exchange hung off one of the')
+    print('     five turns every one of those links back into a strap that nothing may cross.')
+
+    # ---- 5. smaller exchanges -------------------------------------------
+    print('\n  5. What actually reaches sixty-four codes: SMALLER EXCHANGES.  Both the traffic and the')
+    print('     flood on every link are proportional to the LINES in the network and not to the')
+    print('     exchanges, so the way to sixty-four is exchanges that are not full.')
+    print(head)
+    for cap in (48, 36, 24, 18, 12, 8):
+        row(f'2 tandems, 3 x 3 x 2, {cap:2d} lines an ex',
+            backbone(2, 12, [(3, 12), (3, 12), (2, 6)]), cap=cap)
+
+    # ---- 6. the search --------------------------------------------------
+    print('\n  6. The largest network with no link over 1 %, inside the guard and the sixty-four codes,')
+    print('     searched over backbones of 1-5 tandems, trees of up to three levels, and line caps.')
+    print(head)
+    # Biggest first, and stop as soon as the exchanges stop going up: the count of
+    # exchanges does not depend on the line cap, so a shape smaller than one that
+    # has already passed can never win and need not be worked at all.  That is the
+    # difference between half an hour and a few seconds.
+    cands = []
+    for k, cch, lv, mid in big_family():
+        links = backbone(k, cch, lv, mid)
+        n = n_of(links)
+        if 4 <= n <= 64:
+            cands.append((-n, k, cch, lv, mid, links))
+    cands.sort(key=lambda c: c[0])
+
+    def largest(leave, guard):
+        best, bcap, bdesc = None, None, None
+        for nn, k, cch, lv, mid, links in cands:
+            if best is not None and -nn < best['n']:
+                break
+            for cap in (48, 36, 30, 24, 18, 12, 10, 8):    # the largest that fits wins
+                p, _ = sized(links, (), cap, leave)
+                if p is None:
+                    break                                  # the shape is illegal at any cap
+                if p['worst_b'] > 0.01 or p['spread'] > guard:
+                    continue
+                if best is None or (p['n'], p['lines']) > (best['n'], best['lines']):
+                    best, bcap, bdesc = p, cap, (k, cch, lv, mid)
+                break
+        return best, bcap, bdesc
+
+    for leave in (0.2, 0.3, 0.5):
+        best, bcap, bdesc = largest(leave, G_ORIGIN)
+        if best is None:
+            print(f'     {100 * leave:.0f} % leaving: none')
+            continue
+        k, cch, lv, mid = bdesc
+        shp = ' x '.join(str(b) for b, _ in lv)
+        row(f'{100 * leave:.0f} %: {k} tandem{"s" if k > 1 else ""} {cch} ch, {shp}, {bcap} lines',
+            backbone(k, cch, lv, mid), (), bcap, leave,
+            note=f'{100 * leave:.0f} % leaving, {bcap} lines an exchange')
+    print('     The count of exchanges is what is maximised, and the lines only break a tie, so these')
+    print('     are the shapes that fill the numbering plan rather than the ones that carry the most.')
+
+    # ---- 7. the guard's tap ----------------------------------------------
+    print(f"\n  7. What the GUARD'S TAP buys.  The flood has to cross the network inside the origin's")
+    print(f"     guard (exch-monitor.md 3, rule 2), which is one tap on a counter -- {G_ORIGIN:.0f} ms today, and")
+    print(f"     {SLOW_HOP:.0f} ms a hop at a slow marker with {SLOW_HUB:.0f} more at a hub.  It may go as far as the caller's")
+    print(f"     own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take: a phone to ES 201 187 gives")
+    print(f"     720 ms (register.md 2), so {720 - T_ID - T_MARK:.0f} ms, and 512 is the last tap under it.  A carrier's own")
+    print("     delay is NOT in this budget (exch-monitor.md 5.1); wander is.")
+    print(f'\n  {"tap":>7s} {"a chain of 12 ch":>28s} | {"the largest network at 30 % leaving":>44s}')
+    print(f'  {"":>7s} {"hops":>6s} {"exchanges":>10s} {"what stops it":>11s} | {"exch":>5s} {"lines":>6s} '
+          f'{"a/ex":>5s} {"worst link":>17s} {"hops":>5s} {"spread":>7s}')
+    for tap in (128, 256, 512):
+        hops = 0
+        for n in range(2, 65):
+            p, _ = sized(chain_links(n, 12), (), 48, 0.3)
+            if p is None or p['spread'] > tap:
+                break
+            hops = p['diameter']
+            stop = 'traffic' if p['worst_b'] > 0.01 else ''
+        # the longest chain the tap allows, ignoring what it would carry
+        long_p, _ = sized(chain_links(min(hops + 1, 64), 12), (), 48, 0.3)
+        best, bcap, bdesc = largest(0.3, tap)
+        why = 'the codes' if hops + 1 >= 64 else 'the guard'
+        line = f'  {tap:5.0f}ms {hops:6d} {hops + 1:10d} {why:>11s} |'
+        if best is None:
+            print(line + '   none')
+            continue
+        print(line + f' {best["n"]:5d} {best["lines"]:6d} {best["lines"] // best["n"]:5d} '
+              f'{best["worst_e"]:6.2f} E on {best["worst_ch"]:2d} {100 * best["worst_b"]:5.2f}% '
+              f'{best["diameter"]:4d} hp {best["spread"]:4.0f} ms')
+    print('     "hops" is the longest chain whose flood fits the tap, whatever it would carry -- the')
+    print('     timer alone.  The network beside it has both constraints on, and past 128 ms the guard')
+    print('     stops being the one that binds: what stops the search then is the traffic on the')
+    print('     centre and the four directions an exchange has, neither of which is a timer.')
+
+    # ---- 8. call by call -------------------------------------------------
+    print('\n  8. Those run call by call with `net`\'s engine -- the flood, the monitors, the claim, the')
+    print('     resolvers and the registers -- five monitor cells a block and five resolvers a hub,')
+    print('     at the busy hour of 3 calls a line and then at TWICE it, which is a network built for')
+    print('     one community and given two.  6 hours of each.')
+    print(f'  {"":30s} {"calls/h":>8s} {"calls":>6s} {"worst link":>21s} {"lost / 1 000 network calls":>26s} {"hops":>5s} {"ringback":>9s}')
+    print(f'  {"":30s} {"a line":>8s} {"an hr":>6s} {"":>21s} {"no trunk":>9s} {"no claim":>9s} {"pools":>7s} {"":>5s} {"network":>9s}')
+    for label, links, straps, cap, leave in keep:
+      for calls_h in (3.0, 6.0):
+        lk, ln, st, _ = shape(links, straps)
+        ln = {a: min(cap, b) for a, b in ln.items()}
+        sim = Net(lk, ln, mons=5, resolvers=5, leave=leave, seed=5, strapped=st)
+        hours = 6
+        net_arrivals(sim, hours, False, calls_h)
+        sim.run(hours * 3600e3)
+        t = hours * 3600e3
+        w = max(sim.chan, key=lambda l: (sim.chan[l].refused / max(sim.chan[l].taken + sim.chan[l].refused, 1),
+                                         sim.chan[l].erlang(t) / sim.chan[l].n))
+        c = sim.chan[w]
+        k, nc = sim.stat, max(sim.stat['net'], 1) / 1000
+        print(f'  {label:30s} {calls_h:8.0f} {k["calls"] / hours:6.0f} {c.erlang(t):6.2f} E on {c.n:2d} ch '
+              f'{100 * c.refused / max(c.taken + c.refused, 1):5.2f}% {k["no_trunk"] / nc:9.1f} '
+              f'{k["no_claim"] / nc:9.1f} {(k["no_monitor"] + k["no_resolver"]) / nc:7.1f} '
+              f'{np.mean(sim.hops):5.2f} {np.mean(sim.complete_net) / 1000:7.2f} s')
+
+
+
+TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'mainboard': mainboard, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo, 'traffic': traffic, 'big': big}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):

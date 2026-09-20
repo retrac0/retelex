@@ -30,7 +30,7 @@ Six things decide what can be built. None of them is a route table.
 | **Trunk groups** | **eight at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `exch-protocol.md` §5 |
 | **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `exch-network.md` §3.3 |
 | **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–17 are an exchange's trunks and services | `exch-network.md` §2 |
-| **The guard** | the flood must cross the whole network inside the origin's 128 ms guard. A slow marker takes 12 ms a hop, and a hub 4 ms more: **ten hops, less a third of a hop for each hub on the way** | `exch-monitor.md` §3 |
+| **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `exch-monitor.md` §3.5 |
 
 **Trunk groups cost lines.** The first two groups sit in blocks 0 and 1, whose
 slots are not lines anyway. Each group after that takes six line slots:
@@ -236,8 +236,8 @@ and the guard (`topo` 4). What stops each is in bold:
 | exchanges | **64** | the codes 00–77 |
 | neighbours of one exchange | **4** | the direction is two bits |
 | channels at one exchange | **48**, and then 12 lines | eight blocks |
-| hops across the network | **10**, less a third for each hub | the origin's 128 ms guard against a slow marker's 12 ms a hop |
-| exchanges in a line | **11** | the same |
+| hops across the network | **10**, less a third for each hub — **21 at the next tap of the guard** | the origin's 128 ms guard against a slow marker's 12 ms a hop |
+| exchanges in a line | **11**, or **22** at 256 ms | the same |
 | the largest network measured here | **47 exchanges, 1 692 lines** at a fifth of calls leaving; **35 and 1 260** at a third; **21 and 756** at a half | the flood, and the centre's 48 channels |
 | six-channel links | to **≈ 1 100 lines** in the network | the flood: 0.67 E of it on every link for each 1 000 lines |
 | monitors a block, resolvers a hub | **5** at the largest | the flood |
@@ -250,8 +250,30 @@ and the guard (`topo` 4). What stops each is in bold:
   break a hop against an 8 ms window (`mf8-cards.md` §5); the slips, which at
   eight crossings of 40 ppm are 32 dB against the codec's own 25 dB
   (`mf8-backplane.md` §7); or the wait, which is 4.8–5.3 s in every shape.
+- **The hop limit is one tap on one counter, and moving it fills the plan.** The
+  128 ms is `exch-monitor.md` §3's guard, and the only thing in the protocol that
+  is a function of the hop count at all. At the next tap up:
+
+  | the guard's tap | a chain of 12 ch | the largest network at 30 % leaving | what stops it |
+  |---|---|---|---|
+  | **128 ms** | 10 hops, 11 exchanges | 63 exchanges, 756 lines, 12 a piece | the guard |
+  | **256 ms** | 21 hops, 22 exchanges | **64 exchanges, 1 428 lines, 22 a piece** | traffic and the four directions |
+  | 512 ms | 42 hops, 43 exchanges | the same 64 and 1 428 | the same |
+
+  **256 ms fills the sixty-four codes and nearly doubles the lines**, and 512 buys
+  nothing more in size — past 256 what stops the search is the traffic on the
+  centre and the four directions an exchange has, and neither of those is a timer
+  (`exch.py big` 7). The tap may go to 590 ms, the caller's own 720 ms pause less
+  the 130 ms the digit and the seizure take, and no further.
 - **Past these limits** the way on is SS0 (§8), or a second network reached
   through `1 8` or `1 9` (`exch-network.md` §6).
+- **And smaller exchanges.** Both the traffic on a link and the flood on it are
+  proportional to the *lines* in the network, not to the exchanges, so what fills
+  the numbering plan is exchanges that are not full: `ex-traffic.md` §8 searches
+  the shapes again with a line cap and reaches **63 exchanges of 12 lines**, seven
+  or eight hops across and inside the guard. It also settles what a **fully
+  connected core of hubs** is worth — nothing, because the flood must see a tree
+  and every link off it is a strap that carries its own two ends only (§7).
 
 Run call by call at 30 % leaving with five monitors and resolvers (`topo` 7): the
 tree of twenty-nine refuses 0.55 % on its busiest link where 0.71 % was

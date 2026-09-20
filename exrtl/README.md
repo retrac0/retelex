@@ -13,7 +13,11 @@ comparator — so that the RTL and the documents can be read against each other.
 > a hub**, **four in a ring**. Every shape `exch-network.md` §3 describes now
 > runs — the flood, the transit, the fan-out of §3.2, the strap of §3.3 — and
 > the monitor pool has been put against `exch-monitor.md` §4's sizing table with
-> traffic rather than argument. Nothing has been on an FPGA.
+> traffic rather than argument. **`make traffic` builds a network of up to ten
+> whole exchanges out of three shape numbers and offers it demand that is not
+> smooth** — bursts, a flash crowd, peak against off peak — and `exch.py traffic`
+> runs the same network on the same clock, so the two are read against each other
+> (`ex-traffic.md`). Nothing has been on an FPGA.
 
 **The hierarchy is the layout.** Each module is a thing you could point at in a
 rack, and the module boundaries are the connectors.
@@ -79,12 +83,17 @@ make hub      five exchanges: four directions, a fan-out, and the resolvers
 make ring     four exchanges in a ring, and the strap that breaks it
 make erlang   the monitor pool against exch-monitor.md 4's sizing table
 make stress   a FULL exchange -- 48 lines -- under random traffic
+make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
 make iv       the whole suite again under Icarus, as the reference
+make chain-delay  the chain with 20 ms of CARRIER on every link
 make ring-open    the same ring with the strap OUT: the flood circles
 make erlang-long  the traffic run with enough calls to measure, not just check
 make stress-pair      the stress run over two exchanges, 100 ppm apart
 make stress-overload  48 callers thrashing a TWO-register exchange
 make trunk-ppm    the link with the two crystals 100 ppm apart
+make traffic-net      EIGHT exchanges, off peak and then peak, measured
+make traffic-models   the same eight, one run an arrival process and holding law
+make traffic-deep     TEN exchanges: the same two hubs, spokes two deep
 make lint     verilator, the whole exchange fitted
 make synth    yosys: what the 64-port exchange costs in cells
 ```
@@ -99,6 +108,10 @@ make synth    yosys: what the 64-port exchange costs in cells
 | `erlang-long`, 49 000 s | — | **6 min** |
 | `stress`, 5.4 s over a 56-port exchange | — | **3 min** |
 | `stress-pair`, the same over two | — | **12 min** |
+| `traffic`, 3 exchanges, 22 s of model time | — | **7 min** |
+| `traffic-models`, one of the five, 8 exchanges, 12 s | — | **32 min** |
+| `traffic-net`, 8 exchanges, 34 s | — | **58 min** |
+| `traffic-deep`, 10 exchanges, 30 s | — | **75 min** |
 
 **`erlang` is not a system test and does not pay for one.** It drives a block's
 eight M and `BUSY` lines directly, and it drops the 4.096 MHz master clock: a
@@ -269,6 +282,41 @@ it: 24's two blocks hold **one** channel after it claims, not two.
 
 The cost lands on every exchange that is not a leaf, not only on hubs: ≈ 4½
 packages a resolver, and §3.2's own erlang figures say two or three of them.
+
+### What a carrier's delay demands of the guard: nothing
+
+`exch-network.md` §1.1 allows a trunk's carrier "about 2 ms of A path a hop", and
+the origin's 128 ms guard (`exch-monitor.md` §3, rule 2) is sized on the flood
+crossing the network inside it. A leased circuit, a radio, a mux or a jitter
+buffer is tens of milliseconds a hop, which looks like it must eat that guard.
+
+**It does not, and `make chain-delay` is why.** `line_delay` puts 20 ms of
+constant one-way delay on every link of the three-exchange chain — 160 ms in the
+world, because this bench dials eight times fast and its guard is 16 ms, not 128.
+C's monitor is then patched in **40 ms after the origin seized, two and a half
+times the guard**, and all thirteen checks pass: the seizure is forwarded, both
+monitors catch it, 24 claims and 23 lets go, the line rings, answers and releases.
+
+The reason is that **the seizure and the caller's pulses are the same wire**. A
+trunk's forward A *is* the caller's hook; the flood's seizure is that signal going
+high and the dial pulses are breaks in it. Delay the wire and both move together,
+so a monitor 40 ms out in absolute time still sees the rise before the first break
+reaches it. What the guard is counting is only the part of a hop where the signal
+**restarts** — the marker reading M and writing the onward latch — which is what
+the flood's 7 ms a hop is mostly made of. `exch-monitor.md` §5.1 has it measured
+to 160 ms a hop and 1.17 s across seven, at 0 false claims in 1 000 calls, and has
+the thing that *does* cost the guard: delay the carrier **loses** between the
+seizure and the next digit.
+
+`make chain` runs the same bench at `DLY=0` and its speech checks with it; the
+bit-path comparison is skipped when there is a carrier, because it aligns over a
+few frames and a carrier is thousands of them.
+
+**The guard is a parameter here and a strap there.** `marker`'s `T_GUARD` is
+128 ms, which `exch-monitor.md` §3.5 now makes one setting of three — 128, 256 and
+512 ms, three adjacent stages of the counter the sequence already runs on — and
+the one number in the protocol that says how big the network is. The system
+testbenches pass 16, which is that 128 at their eight-times-life scaling.
 
 ### What a ring demands of the strap
 
@@ -446,6 +494,183 @@ callers, no port was stuck, and the write queue never overran. The exchange
 degrades exactly the way §6 says a pool degrades — *a caller who finds no
 register free is not refused, dial tone is late* — and it does not lock up.
 
+## A network under demand that is not smooth
+
+`make stress` asks whether a full exchange jams. `make traffic` asks a different
+question of a whole *network*: **when does it block, and does the shape of the
+demand change the answer.** There is no scenario in it. The inputs are a topology,
+an arrival process and a holding-time law; what comes out is erlangs and loss, link
+by link and pool by pool, in the gates.
+
+**The topology is arithmetic**, so the same testbench is three exchanges or ten: a
+chain of `NHUB` hubs, `SPOKE` spokes on each, each spoke a chain of `SLEN`. `NHUB=1
+SPOKE=4` is a star; `NHUB=2 SPOKE=3` is `exch-network.md` §5.1's reference shape;
+`NHUB=2 SPOKE=2 SLEN=2` is a backbone with spokes two deep and a transit on every
+one of them. A `net_site` is instantiated for each, its direction slots packed from
+0, and the link between any two is `assign lin[i] = lout[peer]` — no wires by hand.
+
+**Everything about the demand is a plusarg.** Eight exchanges take a quarter of an
+hour to verilate and compile — the exchange's combinational cone comes out as one
+C function an exchange and g++ is superlinear in it, which is what `--output-split`
+in the Makefile is for — and an hour to run. So the network is
+compiled once and `+model=`, `+holdm=`, `+secs=`, `+op=`, `+pk=`, `+warm=`,
+`+leave=`, `+seed=` decide the rest when the binary starts.
+
+| the arrival process | |
+|---|---|
+| `+model=0` **smooth** | a line's idle is exponential about the mean: Poisson arrivals, and what Erlang B assumes |
+| `+model=1` **bursty** | the same mean in bursts — the network goes hot and cold together, 1 s hot in 6 at eight times the rate |
+| `+model=2` **herd** | a flash crowd: a third of every line in the network lifts inside 300 ms and **they all dial the same exchange** |
+| `+holdm=0,1,2` | the conversation exponential, constant, or a two-class mix of nine short calls to one ten times as long |
+
+**One crystal, not eight.** Staggering the clocks costs the simulator an evaluation
+point for every exchange — the three-exchange run is 1.8× slower with them — and
+buys nothing a traffic run reads. The plesiochronous case is `make trunk-ppm` and
+`make stress-pair`; `-GSTAGGER=1` at build time is there if it is ever wanted here.
+
+**Every phase is measured after a warm-up of twice the longer idle**, because a
+phase begins with every line on hook, which is not a state the network is ever in
+otherwise: a line that has not lifted yet is a first lift still to come, whatever
+rate the run was asked for. Warm for less than an idle and the whole phase is that
+transient — thirty-six lines at 6 s between calls and about a second a call is
+5.1 calls a second, and a run warmed for 2 s offered **8.5**, every one of the extra
+being a line lifting for the first time. `exch.py traffic` warms the
+same way, which is what makes the two runs the same experiment.
+
+### A delay is a 32-bit expression
+
+The first long run of this bench was wrong and said so nowhere. `#(SECS * 1000 *
+NS)` is arithmetic on `integer`s — `NS` is 1 000 000 and `SECS` twenty — and
+2 × 10¹⁰ does not fit in 32 bits. **A twenty-second phase silently became 2.8
+seconds**, a six-second warm-up 1.7, and every erlang in the run was a real
+measurement over a window nobody chose. Nothing warns: the multiply wraps at
+elaboration, the delay is honoured, and the only sign is `$finish at 11s` at the
+foot of a run that should have been fifty-three.
+
+It is caught by comparing the calls a second against the calls: 104 lifts at
+26.6 a second is a 3.9 s phase, whatever the header says. The fix is to wait a
+millisecond at a time — `for (w = 0; w < ms; w = w + 1) #(NS)`, where the
+constant is 10⁶ and cannot wrap — and twenty thousand context switches over a
+twenty-second run cost nothing beside 4 096 clocks a millisecond. It had not
+appeared before because **nothing else in `exrtl` waits longer than two seconds
+in one `#`**: `tb_stress`'s round is `#(BURST * NS)` at 1 800 ms, which is
+1.8 × 10⁹ and inside a signed 32-bit integer — but only just. Anything past
+2 147 ms in that expression wraps the same way.
+
+### A line is rung by a cadence, and reading it as a level doubles the traffic
+
+The second thing this bench got wrong, and the one that matters if anyone writes
+another. A caller in `S_RUNG` decided whether to answer by reading `e` — and `e`
+while a line is being rung is `exch_top`'s ring cadence, which at this bench's
+`RING_ON`/`RING_OFF` is a few milliseconds high and twice that low. **Read at one
+instant it is low two thirds of the time**, so two callers in three decided the
+ringing had stopped.
+
+That alone would only have lost calls. What made it a measurement error is where
+they went: back to `S_IDLE` with the timer *already expired*, so they lifted again
+the same millisecond. **Every line rung and not answered became an extra call
+offered**, and eight exchanges asked for 8 calls a second offered 17. The load is
+not a number the bench is told; it is a number the bench has to produce, and
+nothing checks it but arithmetic — 96 lines at 6 s between calls and about a second
+a call cannot offer 17 a second, and that is the whole of how it was caught.
+
+The cure is a few cadence periods of memory (`rseen`, 40 ms) instead of a level,
+read both in `S_IDLE` to notice the ringing and in `S_RUNG` to answer it — and a
+line that finds the ringing really has stopped now **waits an idle** like any other.
+`tb_stress` reads the level the same way; there it costs answered calls and nothing
+else, because its callers are a scenario rather than a load.
+
+### What the runs say
+
+**Eight exchanges at peak**, one run for each arrival process and each
+holding-time law: 96 lines, a line lifting every 1.5 s, 8 s measured after 3 s of
+warm-up. `make traffic-models`.
+
+| | calls/s offered | talked | busiest link | registers | dial tone, mean / worst | waited a scan |
+|---|---|---|---|---|---|---|
+| smooth | 29.9 | 101 | 4.49 E of 6 | 1.91 E | 55 ms / 600 ms | 53 % |
+| **bursty** | **19.4** | 84 | 3.62 E | 1.45 E | 31 ms / 352 ms | 26 % |
+| **herd** | 38.0 | 101 | 4.65 E | 2.31 E | **141 ms / 1 197 ms** | **73 %** |
+| constant conversation | 30.2 | 104 | 3.29 E | 1.63 E | 52 ms / 829 ms | 39 % |
+| two-class conversation | 31.8 | 117 | 3.98 E | 2.18 E | 91 ms / 1 062 ms | 58 % |
+
+**And the two networks at off peak and at peak**, `make traffic-net` (eight
+exchanges) and `make traffic-deep` (ten, with a transit on every spoke): 10 s and
+8 s a phase after 6 s of warm-up, a line lifting every 3 s off peak and every 1.5 s
+at peak.
+
+| | calls/s | talked | busiest link | registers | resolvers | dial tone | every link |
+|---|---|---|---|---|---|---|---|
+| eight, off peak | 20.9 | 114 | 3.46 E of 6 | 1.50 E | 0.85 E | 33 ms | 20.04 E |
+| eight, peak | 33.1 | 121 | 4.76 E | 2.05 E | 1.24 E | 69 ms | 26.41 E |
+| ten, off peak | 26.0 | 110 | 4.26 E | 1.58 E | 1.34 E | 39 ms | 35.59 E |
+| ten, peak | 39.2 | 144 | 4.39 E | 2.04 E | 1.26 E | 71 ms | 34.59 E |
+
+**The ten-exchange network is full**: every one of its nine links is between 3.4 and
+4.4 E of six and every one reached six, and **at peak it carries less than off
+peak** — 34.59 E against 35.59 — with half again the calls offered. `ex-traffic.md`
+§4 reads it beside the model, where the two agree on erlangs for each call a second
+offered to **eight tenths of a per cent** at eight exchanges and five per cent at
+ten.
+
+Read beside `exch.py traffic` 2, which runs the same three arrival processes for
+240 s instead of 8, the two agree on what matters and the RTL adds nothing the
+model missed:
+
+| at peak | calls/s, gates / model | busiest link, gates / model |
+|---|---|---|
+| smooth | 29.9 / 28.8 | 4.49 / 4.57 E |
+| bursty | 19.4 / 17.5 | 3.62 / 3.45 E |
+| herd | 38.0 / 30.1 | 4.65 / 4.70 E |
+
+**A burst really does offer fewer calls, in the gates as in the model** — a fifth
+fewer here and a third fewer there — because a line that is off hook cannot lift
+and at eight times the rate the hot idle is shorter than a call. **A herd is the
+one that moves the link**: it raises the marker's own *all trunks this way busy*
+event from 3–17 a direction to **21–42**, and dial tone from 55 ms to 141.
+
+### And a leak: a fan-out leg with no edge left to release it
+
+**Every traffic run that offers the network a flood it cannot resolve leaves
+trunk channels held.** The bench's own jam check catches it — every line on hook,
+a second of quiet, and nothing may be `BUSY` — and it names the port and the last
+latch write the marker sent it:
+
+```
+  JAM: 2 ports still BUSY with every line on hook
+       22 port 11 (a trunk channel), last written 1795.3 ms ago: src 42 bsy 1 clm 0
+       22 port 31 (a trunk channel), last written 1795.3 ms ago: src 42 bsy 1 clm 0
+```
+
+Ports 11 and 31 are blocks 1 and 3; port 42 is block 4. **That is a hub's fan-out**
+(`exch-network.md` §3.2): a seizure arrived on the fourth direction and was patched
+out into two others, and when the call died without a claim the incoming trunk
+released and *the legs did not*. A port releases on the **fall** of one of its two
+detectors, and both of these were written after the source's A had already gone —
+so neither detector has an edge left to fall on, and the port is held until
+something writes it again.
+
+**It is the hazard `exch-rtl.md` already has, at a trunk instead of at a line.**
+`make stress` checks for it directly (`no port was written BUSY with no edge left
+to release it`) and reports it at HEAD on a line written to dial tone; this finds
+the same shape on a hub's fan-out legs and on a chain transit's patch. `make
+traffic` and `make traffic-net` therefore **report one to three held ports and
+FAIL today**, and that is the check doing its job, not the bench being wrong —
+everything else in both runs passes.
+
+The smooth and the two holding-law runs pass; the bursty and herd runs do not.
+What they have that the others have not is **floods that never resolve**: a herd
+sends a third of the network at one exchange, most of those floods find no free
+channel somewhere, and the origin times out 2 s later with the fan-out still
+pointed at it.
+
+**The two holding-time laws are NOT a result here.** Their means are equal and
+`exch.py traffic` 3 shows the link carrying 4.55, 4.62 and 4.58 E over 240 s —
+Erlang's insensitivity holding to half a per cent. Eight seconds is seventy
+network calls, and seventy samples of an exponential holding time do not have a
+stable mean; the 3.29 against 4.49 above is that and not physics. **The RTL is
+where the mechanism is checked and the model is where the statistics are.**
+
 ## The pool against `exch-monitor.md` §4, measured
 
 §4 sizes the monitor pool with Erlang B on a load it argues from three numbers:
@@ -571,9 +796,22 @@ trunk let go.
    cannot-complete. At the 0.26 E of §4 that is about one flood in a thousand —
    but that is arithmetic on the model, not a measurement, and no document
    mentions the case. `tb_hub` staggers its two floods to keep clear of it.
-3. **The register pool against `exch-marker.md` §6**, which is a *delay* table
-   and not a loss one: a caller who finds no register free is not refused, dial
-   tone is late. `tb_erlang`'s generator would want a queue and a wait time
-   where it now wants a blocked count.
-4. **SS0** (`ex-ss0.md`) against the flood, on these same networks.
-5. Nothing has been on an FPGA.
+3. **`exch-marker.md` §6's register table itself.** `make traffic` now measures
+   the *delay* — the mean, the 95th and the worst wait for dial tone, and the
+   whole distribution by how many 8 ms scans a caller waited — which is the
+   quantity §6 is really about, and it does it under network traffic rather than
+   a generator's. What is still missing is the table's own axis: a sweep of
+   `NREG` at a fixed load, to put a number a pool against a wait.
+4. **The fan-out leak above.** A hub's legs, and a chain transit's patch, can be
+   written after the call they were for has gone, and then have no edge left to
+   release on. It is `exch-rtl.md`'s hazard and the answer is the same one: either
+   the marker must not write a port whose source is already down, or a port must
+   release on a level and not only on an edge. `make traffic` reports it.
+5. **SS0** (`ex-ss0.md`) against the flood, on these same networks.
+6. **Sixteen exchanges or more**, which `tb_traffic` will build from its three
+   shape parameters and Verilator will not compile in a working day. What the
+   suite has instead is `exch.py traffic`, which is the same network and the same
+   demand in milliseconds and agrees with the gates at eight and at ten
+   (`ex-traffic.md` §§3–4), and `exch.py big`, which carries that out to the
+   sixty-four codes.
+7. Nothing has been on an FPGA.

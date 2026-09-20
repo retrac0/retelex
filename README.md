@@ -1,19 +1,27 @@
+# Retelex
+
+Retro telephone exchange.  Also retro telex exchange.  
+
 # MF8 — a six-channel digital voice carrier in discrete logic
 
 Six 64 kbps channels and a sub-commutated signalling channel in an 8-bit frame,
-over one twisted pair, built in 74HC. A channel slot is a **DS0**: 64 kbps and
-octet-aligned, so it takes a CVSD voice card, a synchronous data card, or a
+over one twisted pair, built in 74HC. A channel slot is equivalent to  **DS0**: 64 kbps
+and octet-aligned.  
+
+Works with a CVSD voice card (the normal Retelex protocol), a synchronous data card, or a
 G.711 PCM stream.
 
 ```
 [ F ][ C1 ][ C2 ][ C3 ][ S ][ C4 ][ C5 ][ C6 ]      8 bits, 15.625 µs, 64 kHz
-                                                     512 kbps, 1.024 MBaud
+                                                    512 kbps, 1.024 MBaud
 ```
 
-The superframe is 8 frames. It carries signalling (one bit per channel at
-8 kHz), it carries the framing word, **and it is the octet counter** — so at a
-64 kHz frame rate the superframe rate is 8 kHz, the PCM sample rate exactly, and
-one superframe carries one sample.
+The superframe is a sequence of 8 frames. It carries signalling (one bit per channel at
+8 kHz), it carries the framing word, **and it is the octet counter**, so at a
+64 kHz frame rate, the superframe rate is 8 kHz, the PCM sample rate exactly, and
+one superframe carries one sample.  
+
+But we don't use PCM in practice.  Though byte-boundary support does exist.
 
 # Exchange
 
@@ -40,20 +48,19 @@ General purpose architecture.  Chains, stars and rings are possible.
 
 ## Documents
 
-| | |
-|---|---|
-| [docs/mf8-spec.md](docs/mf8-spec.md) | **the specification** — frame, header, framer, cards, line code, circuits |
-| [docs/mf8-backplane.md](docs/mf8-backplane.md) | the backplane: modules, the slot interface, the three clock domains and where they meet, and the measured cost of the plesiochronous slip |
-| [docs/mf8-cards.md](docs/mf8-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; signalling through the A bit, measured |
+* [docs/mf8-spec.md](docs/mf8-spec.md) - MF8 specification - frame, header, framer, cards, line code, circuits 
+* [docs/mf8-backplane.md](docs/mf8-backplane.md) - remote MF8 unit backplane - modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip 
+* [docs/mf8-cards.md](docs/mf8-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; signalling through the A bit, measured |
 | [docs/mf8-pico.md](docs/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
-| [docs/line-codes.md](docs/line-codes.md) | nine line codes; differential Manchester against AMI, and the one question left open |
+| [docs/line-codes.md](docs/line-codes.md) | nine line codes explored; differential Manchester against AMI
 | [docs/frame-rate.md](docs/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
 | [docs/subscriber-line.md](docs/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
+| [docs/subscriber-adapter.md](docs/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
 | [docs/register.md](docs/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
 | [docs/circuit-review.md](docs/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 | [docs/mfspec.md](docs/mfspec.md) | the predecessor this design replaced the header of |
-| [falstad/](falstad/README.md) | the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model |
-| [exch/](exch/README.md) | **the exchange**: MF8's slot interface as a switched fabric — 8-slot highways, a marker that hunts ports by class, features as lines, MF8 between exchanges; its own documents, tool and log |
+* [falstad/](falstad/README.md) - the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model 
+* [exch/](exch/README.md) - **the exchange**: 64 line expandable exchange using the pulse flood protocol 
 
 ## Tools
 
@@ -111,3 +118,8 @@ differential Manchester reaches one click a second at 1.3 impulses/s and AMI at
 about 8. AMI holds that advantage until it collapses outright between 800 and 900
 impulses/s. Which matters depends on the loop, and that is a counter on a real
 pair.
+
+## Todo
+
+* Hook flash - put the call on hold!  Implemented probably in the subscriber card
+  When on hold the keypad could become available 

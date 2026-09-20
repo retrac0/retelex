@@ -44,7 +44,11 @@ module marker #(
     parameter [5:0]   DIALTONE  = 6'o10,
     parameter [5:0]   NOGO      = 6'o14,
     parameter         HAS_NET   = 1'b1,
-    parameter integer T_GUARD   = 128,      // ms: the origin's guard
+    // ms: the origin's guard (exch-monitor.md 3, rule 2).  It is a STRAP in the
+    // 74HC design -- three stages of the counter the sequence already runs on --
+    // and the one number that says how big the network is: 128 ms covers ten hops
+    // at a slow marker, 256 twenty-one, 512 forty-two (exch-monitor.md 3.5).
+    parameter integer T_GUARD   = 128,
     parameter integer T_CLAIM   = 2000,     // ms: give up waiting for a claim
     // A console is fitted on cable B (ex-console.md 2).  With none, /CON is
     // ignored and may be left unconnected.
@@ -79,6 +83,10 @@ module marker #(
     input      [16*NREG-1:0] reg_digits,
     output reg [NREG-1:0]    reg_restart,
     input      [NREG-1:0]    reg_gone,
+    // WHICH WAY a register went away.  `gone` is CLR or the no-digit timeout
+    // and the marker treats them alike; only the counter cares which, so this
+    // is one more conductor on the ribbon that already runs between them.
+    input      [NREG-1:0]    reg_nodig,
     input      [NREG-1:0]    reg_brk,
     output reg [NREG-1:0]    reg_release,
 
@@ -118,6 +126,28 @@ module marker #(
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
 
+    // ---------------- the event word (ex-counters.md 9) ------------------
+    // What a pure listener cannot see, because nothing is WRITTEN when it
+    // happens: a caller who found no register, a direction with no free trunk,
+    // a register that timed out, glare.  ex-extensions.md 4 wanted these counted
+    // and wired them into the marker; they do not have to be.
+    //
+    // A word with G = 0 writes to no block -- the guard is ANDed into WR at
+    // every one of them -- but it still shifts through every '164 and still
+    // pulses WR.  So the marker can REPORT on the bus, and the one-'164 counter
+    // card of ex-counters.md 1, which discards bits 15-8 and cannot see G,
+    // counts an event with a plain strap.
+    //
+    // BSY = 0 with CLM = 1 is the whole of the trick.  A claim is always
+    // written BUSY (every push below with c = 1 has b = 1), so that combination
+    // is one no latch write ever carries, and a strap that asks for it can
+    // never count a call.  Sixty-four codes sit under it; these are five.
+    localparam [5:0] EV_WAITREG = 6'o01,   // a caller wanting service found no register
+                     EV_NODIG   = 6'o02,   // a register gave up: no digit dialled
+                     EV_WQOVF   = 6'o03,   // the write queue overran (a model part)
+                     EV_GLARE   = 6'o04,   // a seized trunk answered inside the guard
+                     EV_NOTRUNK = 6'o10;   // + the direction: all trunks that way busy
+
     // ---------------- scanner and probe ---------------------------------
     reg [5:0] scan;
     reg       m_acc, b_acc;
@@ -150,13 +180,18 @@ module marker #(
     // sixteen-bit word on one wire.  The SAME serialiser also steers the
     // probe (see ctl_write.v).  Sixteen deep: with a pool, several calls may
     // queue their writes in one cycle.
-    reg [13:0] wq [0:15];
+    reg [14:0] wq [0:15];              // { G, CLM, BSY, SRC, DST }
     reg [3:0]  wh, wt;
     reg [1:0]  wst;
     reg        ser_req, ser_strobe;
     reg [5:0]  ser_dst, ser_src;
-    reg        ser_bsy, ser_clm;
+    reg        ser_bsy, ser_clm, ser_g;
     reg        probe_dirty;
+    reg        ser_ev;                 // the word in the serialiser is an event
+    reg        ovf_pend;               // EV_WQOVF is owed and the queue had no room
+    reg        ovf_done;               // ... and has been sent: wq_ovf is sticky
+    reg        arb;                    // a caller has been refused a register and
+                                       // none has been handed out since
     // One flip-flop: the marker has let go of cable B.  While it is set the
     // '244 is off, the write sequencer starts nothing, and no visit is
     // trusted -- the block driving PB is the one the CONSOLE's word names.
@@ -167,13 +202,27 @@ module marker #(
     wire       w_pend = (wh != wt);
 
     ctl_write u_ser (.clk(clk), .rst_n(rst_n), .req(ser_req), .strobe(ser_strobe),
+                     .g(ser_g),
                      .dst(ser_dst), .src(ser_src), .bsy(ser_bsy), .clm(ser_clm),
                      .busy(ser_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
 
     task push(input [5:0] pt, input [5:0] sr, input b, input c);
         begin
             if (wt + 4'd1 == wh) wq_ovf <= 1'b1;   // sticky: fifteen deep, not sixteen
-            wq[wt] = {c, b, sr, pt}; wt = wt + 1'b1;
+            wq[wt] = {1'b1, c, b, sr, pt}; wt = wt + 1'b1;
+        end
+    endtask
+
+    // An event goes out the same way a write does, in its turn, so nothing
+    // needs a second serialiser or a second rule.  It is pushed only when the
+    // queue has slots to spare and is simply LOST when it has not: an event
+    // must never delay a call, and the occasion it would drop is the one where
+    // the marker is busiest -- which is what EV_WQOVF is for.
+    task push_ev(input [5:0] pt, input [5:0] code);
+        begin
+            if ((wt - wh) < 4'd11) begin
+                wq[wt] = {1'b0, 1'b1, 1'b0, code, pt}; wt = wt + 1'b1;
+            end
         end
     endtask
 
@@ -184,6 +233,7 @@ module marker #(
     reg       hunt_dirs;               // the network's: a trunk in every direction
     reg [5:0] cand [0:3];
     reg [3:0] cand_ok;
+    reg [3:0] cand_any;                // a trunk faces that way AT ALL, free or not
     reg       hunt_busy;
     reg [3:0] hunt_owner;
     reg       hb;                      // the hunt was taken THIS cycle (blocking)
@@ -247,6 +297,7 @@ module marker #(
         begin
             hunt_cls <= c; hunt_dirs <= dirs;
             hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0; cand_ok <= 4'd0;
+            cand_any <= 4'd0;
             hunt_busy <= 1'b1; hunt_owner <= q[3:0];
             hb = 1'b1;
         end
@@ -318,11 +369,13 @@ module marker #(
             n_defer <= 16'd0; yield <= 1'b0;
             wr_stb <= 1'b0; wr_dst <= 0; wr_src <= 0; wr_bsy <= 0; wr_clm <= 0;
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
-            ser_bsy <= 0; ser_clm <= 0;
+            ser_bsy <= 0; ser_clm <= 0; ser_g <= 1'b1; ser_ev <= 1'b0;
+            ovf_pend <= 1'b0; ovf_done <= 1'b0; arb <= 1'b0;
             reg_attach <= 0; reg_port <= 0; reg_release <= 0; reg_restart <= 0;
             mon_ack <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0; hunt_dirs <= 0; cand_ok <= 0;
+            cand_any <= 0;
             hunt_busy <= 0; hunt_owner <= 0;
             fst <= F_IDLE; f_in <= 0; f_dir <= 0; f_cok <= 0; f_start <= 0;
             rs_busy <= {NRES{1'b0}};
@@ -336,7 +389,7 @@ module marker #(
             end
             for (i = 0; i < 4*NREG; i = i + 1) d_trunk[i] <= 6'd0;
             for (i = 0; i < 4; i = i + 1) cand[i] <= 6'd0;
-            for (i = 0; i < 16; i = i + 1) wq[i] <= 14'd0;
+            for (i = 0; i < 16; i = i + 1) wq[i] <= 15'd0;
         end else begin
             reg_attach  <= {NREG{1'b0}};
             reg_release <= {NREG{1'b0}};
@@ -378,10 +431,12 @@ module marker #(
                       if (w_pend) begin
                           ser_dst <= wq[wh][5:0];  ser_src <= wq[wh][11:6];
                           ser_bsy <= wq[wh][12];   ser_clm <= wq[wh][13];
+                          ser_g   <= wq[wh][14];   ser_ev  <= !wq[wh][14];
                           ser_strobe <= 1'b1; ser_req <= 1'b1; wst <= 2'd1;
                       end else if (probe_dirty) begin
                           ser_dst <= {scan[5:3], 3'd0}; ser_src <= 6'd0;
                           ser_bsy <= 1'b0; ser_clm <= 1'b0;
+                          ser_g   <= 1'b1;  ser_ev <= 1'b0;
                           ser_strobe <= 1'b0; ser_req <= 1'b1;
                           probe_dirty <= 1'b0; wst <= 2'd1;
                       end
@@ -390,9 +445,15 @@ module marker #(
             2'd2: if (!ser_busy) begin
                       pb_blk <= ser_dst[5:3];
                       if (ser_strobe) begin
+                          // An event word came out of the queue like any other
+                          // and it steered /BLK like any other, so it costs the
+                          // probe exactly what a write costs it.  It is not a
+                          // write: nothing reports it as one.
                           wh <= wh + 1'b1; probe_dirty <= 1'b1;
-                          wr_stb <= 1'b1; wr_dst <= ser_dst; wr_src <= ser_src;
-                          wr_bsy <= ser_bsy; wr_clm <= ser_clm;
+                          if (!ser_ev) begin
+                              wr_stb <= 1'b1; wr_dst <= ser_dst; wr_src <= ser_src;
+                              wr_bsy <= ser_bsy; wr_clm <= ser_clm;
+                          end
                       end
                       wst <= 2'd0;
                   end
@@ -412,6 +473,15 @@ module marker #(
                 yield <= 1'b0; probe_dirty <= 1'b1;
             end
 
+            // ---- the queue overran (a model part, ex-counters.md 9) -----
+            // Sticky, and owed until there is room for it: the one event that
+            // cannot be pushed when it happens, because what happened is that
+            // there was no room.
+            if (wq_ovf && !ovf_pend && !ovf_done) begin ovf_pend <= 1'b1; end
+            if (ovf_pend && (wt - wh) < 4'd11) begin
+                push_ev(6'o00, EV_WQOVF); ovf_pend <= 1'b0; ovf_done <= 1'b1;
+            end
+
             // ---- the hunt, in fixed order from 00 ----------------------
             if (visit && p_valid) begin        // a repeated visit is not a second port
                 if (hunt_arm && p_port == 6'd63) begin
@@ -420,6 +490,7 @@ module marker #(
                     if (hunt_dirs) begin
                         // A free trunk in each direction; the glare bit takes
                         // the LAST found and not the first.
+                        if (p_cls == C_TRUNK) cand_any[p_dir] <= 1'b1;
                         if (p_cls == C_TRUNK && p_free && (!cand_ok[p_dir] || p_g)) begin
                             cand[p_dir] <= p_port;
                             cand_ok[p_dir] <= 1'b1;
@@ -528,6 +599,15 @@ module marker #(
                         if (d_held[r][i] && p_port == d_trunk[r*4+i]) begin
                             claimed[r] <= 1'b1;
                             trunk[r]   <= p_port;
+                            // GLARE.  A claim cannot come back inside the
+                            // origin's guard: the far end has to hear e b h s
+                            // first, which is seconds.  M up on a trunk we
+                            // seized 128 ms ago is the OTHER end seizing the
+                            // same channel, and the two callers get each other
+                            // (exch-network.md 1: "residual glare").  The word's
+                            // g bit is what makes it rare; this counts what is
+                            // left, and changes nothing about what happens.
+                            if (guarding[r]) push_ev(p_port, EV_GLARE);
                         end
 
                 // the origin's 128 ms guard (exch-monitor.md 3, rule 2)
@@ -537,7 +617,10 @@ module marker #(
                 end
 
                 if (reg_gone[r] && mst[r] != M_IDLE) begin
-                    // the caller went away
+                    // the caller went away.  CLR is a hook down 256 ms and needs
+                    // no report; the timeout is a caller who lifted and dialled
+                    // nothing, and holds a register for the whole 10 s.
+                    if (reg_nodig[r]) push_ev(caller[r], EV_NODIG);
                     if (mst[r] == M_NET || mst[r] == M_WAITCL) drop_trunk(r);
                     if (hunt_busy && hunt_owner == r[3:0]) free_hunt;
                     mst[r] <= M_IDLE; claimed[r] <= 1'b0; guarding[r] <= 1'b0;
@@ -577,6 +660,14 @@ module marker #(
                 end
                 M_SEIZE: if (hunt_done && hunt_owner == r[3:0]) begin
                     free_hunt;
+                    // A direction that HAS trunks and had none free is
+                    // congestion, and it is worth a count whether or not some
+                    // other direction carried the call: the flood is offered to
+                    // all of them.  A direction with no trunks fitted is not
+                    // congestion, which is what cand_any is for.
+                    for (i = 0; i < 4; i = i + 1)
+                        if (cand_any[i] && !cand_ok[i])
+                            push_ev(6'o00, EV_NOTRUNK + i);
                     if (cand_ok != 4'd0) begin
                         // Seize one free trunk in EVERY direction, all listening
                         // to the CALLER: their digits go down the flood live.
@@ -662,6 +753,7 @@ module marker #(
                         rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
                     end
                 if (pick >= 0) begin
+                    arb <= 1'b0;
                     push(mon_port, 6'o00, 1'b1, 1'b1);       // CLAIM: backward A rises
                     reg_attach[pick] <= 1'b1; reg_port <= mon_port;
                     caller[pick] <= mon_port; mst[pick] <= M_LOCAL;
@@ -709,9 +801,18 @@ module marker #(
                     // out of the one thing exch-monitor.md 3 exists to stop.
                     // The caller waits a scan instead; they are waiting for
                     // dial tone anyway.
+                    // ALL REGISTERS BUSY.  The caller waits a scan and asks
+                    // again, so the refusal repeats; the flip-flop makes it one
+                    // count an OCCASION -- from the pool filling to the next
+                    // register handed out -- which is the peg count
+                    // ex-extensions.md 4 asked for and not a rate.
+                    if (!already && pick < 0 && !arb) begin
+                        arb <= 1'b1; push_ev(p_port, EV_WAITREG);
+                    end
                     if (!already && pick >= 0) begin
                         if (att) n_defer <= n_defer + 1'b1;
                         else begin
+                            arb <= 1'b0;
                             reg_attach[pick] <= 1'b1; reg_port <= p_port;
                             push(p_port, DIALTONE, 1'b1, 1'b0);
                             caller[pick] <= p_port; mst[pick] <= M_LOCAL;
