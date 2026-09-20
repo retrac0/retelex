@@ -205,7 +205,10 @@ module marker #(
                 pv <= 1'b0;                     // ... and anything here breaks it
 
             // ---- the write sequencer -----------------------------------
-            if (oct_stb && scan[2:0] == 3'd7) probe_dirty <= 1'b1;  // the block turns over
+            // A block turns over only when the scanner ACTUALLY advances.  Keyed
+            // on oct_stb alone this re-fires on every repeated visit of slot 7,
+            // and each re-point clears pv again: the scanner never leaves.
+            if (oct_stb && pv && scan[2:0] == 3'd7) probe_dirty <= 1'b1;
             ser_req <= 1'b0;
             case (wst)
             2'd0: if (!ser_busy && !ser_req) begin
@@ -231,11 +234,11 @@ module marker #(
             endcase
 
             // ---- the hunt, in fixed order from 00 ----------------------
-            if (visit) begin
+            if (visit && p_valid) begin        // a repeated visit is not a second port
                 if (hunt_arm && p_port == 6'd63) begin
                     hunt_arm <= 1'b0; hunt_run <= 1'b1;
                 end else if (hunt_run) begin
-                    if (!hunt_ok && p_valid && p_cls == hunt_cls && !p_busy && !p_m) begin
+                    if (!hunt_ok && p_cls == hunt_cls && !p_busy && !p_m) begin
                         hunt_ok <= 1'b1; hunt_port <= p_port;
                     end
                     if (p_port == 6'd63) begin hunt_run <= 1'b0; hunt_done <= 1'b1; end
