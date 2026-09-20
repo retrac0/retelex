@@ -180,11 +180,7 @@ module tb_console #(
             n_cn_said = n_cn_said + 1;
             // a PROBE pulses no WR at all: nothing may have been written
             if (cn_isprobe) n_probe_wrote = n_probe_wrote + cn_since;
-            else if (cn_since == 0 || cn_word != cn_expect) begin
-                n_cn_bad = n_cn_bad + 1;
-                if (!running) $display("     BAD WORD: saw %h expected %h  since %0d  t %0.3f ms",
-                                       cn_word, cn_expect, cn_since, $realtime / NS);
-            end
+            else if (cn_since == 0 || cn_word != cn_expect) n_cn_bad = n_cn_bad + 1;
             cn_since = 0;
         end
 

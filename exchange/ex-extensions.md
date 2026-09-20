@@ -238,7 +238,7 @@ sends it as its word (§2.2) in place of its class:
 | **Release** | nothing stops it. When a nailed pair's call ends, the release detectors clear both latches as on any call (`exch-marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The port circuit is unchanged |
 | **After `/RESET`, or a card plugged in** | the first scan writes every nail, within 8 ms. The cards are the only record of the nails, and nothing else is needed |
 | **Both ends** | each card names the other, and each port is written from its own card. A card naming a port whose card does not name it back is a one-way nail. That is right for a listener on a source, a speaker on a radio say (`exch-features.md` §6). For a phone it is dead: it lifts and nothing rings |
-| **The console** | can still point two latches at each other by hand, as bring-up step 3 does. That is a call, and it clears when it is released |
+| **The console** | can still point two latches at each other by hand, as bring-up step 3 does — one key, two crossed words in one tenure (`ex-console.md` §1, §6). **It rings nothing**: with both phones on hook the pair is held by nothing, so an operator rings each end from a source first and pairs them once both have answered. It is a call, and it clears when it is released; nothing remembers it, which is the whole difference from a nail |
 | **Counters** | a nail's writes are not calls (§4) |
 
 The nail word replaces a nail card that wrote nails from a diode matrix: a '161,

@@ -56,32 +56,43 @@ module tb_tonex;
     end
 
     // ---- what a caller at 20 hears, one frame behind the source ------------
-    reg src_d = 0;
     reg [2:0] mode = 0;
     integer errs = 0, seen1 = 0, seen0 = 0, chk = 0, i;
 
-    always @(posedge clk) if (frame_stb) begin
-        if (mode != 0) begin
-            if (c_rx[P20] !== src_d) errs = errs + 1;
-            if (src_d) seen1 = seen1 + 1; else seen0 = seen0 + 1;
-        end
-        case (mode)
-            1: src_d <= t_ctx;            // dial tone
-            2: src_d <= t_cannot;         // cannot-complete
-            3: src_d <= t_rb;             // ringback, off the RBT conductor
-            default: src_d <= fill;
-        endcase
+    // What the caller should be hearing.  Sampled at the frame edge, where every
+    // card samples C_RX, the fabric presents the source's bit in the same frame.
+    // FILL is the one thing that needs a frame of delay to compare against: it
+    // alternates every frame, so the port's capture is a full inversion of the
+    // live signal.  tb_mvp does the same.
+    reg fill_d = 0;
+    always @(posedge clk) if (frame_stb) fill_d <= fill;
+
+    wire want = (mode == 3'd1) ? t_ctx    :       // dial tone, plane A ungated
+                (mode == 3'd2) ? t_cannot :       // cannot-complete, plane B by Q14
+                (mode == 3'd3) ? t_rb     :       // ringback, off the RBT conductor
+                (mode == 3'd4) ? fill_d   : fill; // gated off: the idle pattern
+
+    always @(posedge clk) if (frame_stb) if (mode != 0) begin
+        if (c_rx[P20] !== want) errs = errs + 1;
+        if (want) seen1 = seen1 + 1; else seen0 = seen0 + 1;
     end
 
+    // frame_stb is a combinational level, not a pulse, so count frames off clk
+    // exactly as tb_mvp does rather than waiting on its edge.
+    integer fcount = 0;
+    always @(posedge clk) if (frame_stb) fcount <= fcount + 1;
+
     task wait_frames(input integer n);
-        begin for (i = 0; i < n; i = i + 1) @(posedge frame_stb); end
+        integer target;
+        begin target = fcount + n; while (fcount < target) @(posedge clk); #1; end
     endtask
 
     task wr_latch(input [5:0] pp, input [5:0] aa);
         begin
-            @(negedge clk); cw_dst = pp; cw_src = aa; cw_bsy = 0; cw_clm = 0; cw_req = 1;
-            @(negedge clk); cw_req = 0;
-            while (cw_busy) @(negedge clk);
+            @(posedge clk); #1;
+            cw_dst = pp; cw_src = aa; cw_bsy = 1; cw_clm = 0; cw_req = 1;
+            @(posedge clk); #1; cw_req = 0;
+            wait (cw_busy); wait (!cw_busy);
             wait_frames(2);
         end
     endtask
@@ -90,7 +101,7 @@ module tb_tonex;
         begin
             mode = 0; wait_frames(4);
             errs = 0; seen1 = 0; seen0 = 0; mode = m[2:0];
-            wait_frames(2000);
+            wait_frames(500);
             mode = 0;
             chk = chk + 1;
             if (errs == 0 && seen1 > 200 && seen0 > 200)
@@ -111,12 +122,18 @@ module tb_tonex;
         $display("  1. A caller pointed at each tone port hears that tone");
         wr_latch(P20, P10); stage(1, "20 -> 10: dial tone, plane A ungated");
         if (errs != 0) fails = fails + 1;
-        wr_latch(P20, P14); stage(2, "20 -> 14: cannot-complete, plane B by Q14");
+        wr_latch(P20, P14);
+        while (u_tone.cnt[14] !== 1'b1) wait_frames(64);     // into the gate's ON half
+        stage(2, "20 -> 14: cannot-complete, plane B by Q14");
+        if (errs != 0) fails = fails + 1;
+        while (u_tone.cnt[14] !== 1'b0) wait_frames(64);     // and its OFF half
+        stage(4, "20 -> 14 gated off: the caller hears FILL, not silence");
         if (errs != 0) fails = fails + 1;
 
         $display("\n  2. Ringback comes off the RBT conductor, not a port");
         atx[P20] = 1;                          // 20 lifts
         wr_latch(P20, P21); wr_latch(P21, P20);   // the hotline: 21 is on-hook and rings
+        while (u_tone.ring_gate !== 1'b1) wait_frames(64);   // into a ring burst
         stage(3, "20 -> 21 while 21 rings: the caller hears RBT");
         if (errs != 0) fails = fails + 1;
 

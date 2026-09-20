@@ -113,10 +113,26 @@ and a night announcement are just more class-2 cards further along, in any of
 the line slots (`exch-marker.md` §3). The operator is not at 00 because a
 cleared latch listens there (`exch-protocol.md` §5).
 
+**What port 04 is, exactly, is `ex-console.md` §8**: a plain line card with a
+phone on it, in the one slot of block 0 that a trunk group cannot take and a
+dial cannot reach. Nothing in the fabric or the marker knows the number — a hunt
+finds the position — so **04 is a default and not a requirement**, and §8.3 is
+the trade against giving that slot to `tone-plan.md`'s fourth tone instead.
+
 **The console is separate, and optional**: a busy-lamp field — '259s and LEDs off
 the M and `BUSY` highways — and keys that drive the marker's control bus by
 hand. **Build it first.** Fabric plus console is a working manual board, and the
 bring-up tool for everything that comes after.
+
+`ex-console.md` is the console as a master: its keys (§1), how it takes the bus
+(§2), and the four things an operator does with it — forced release (§3),
+service observing (§5), **connecting two lines** (§6), and **calling a port and
+supervising both ends** (§7). Two of those add a card to this document's list,
+both of them blank boards with no codec: the **sink** a caller is observed into
+(§5.1), and the **ring source** (§6.3) — `A_TX` tied high, no word, `/ANS` low —
+which is what an operator points an idle phone at to make it ring. It is §6's
+source with the one tie reversed, and it is safe for the reason this section
+gives: the scanner seizes a class, and a card that sends no word has none.
 
 ---
 
