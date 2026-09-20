@@ -6,7 +6,8 @@
 //             exactly how exch-protocol.md 5 lays block 1 out: the two tones sit
 //             at slots 0 and 4, which are F and S on the wire, and the six
 //             channels sit where they are on the wire either side of them
-//   block 2   two line cards, 20 and 21
+//   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
+//             whole blocks with them for a stress run
 //   block 3   a third trunk group, facing DIR2   (NDIR = 3)
 //   block 4   a fourth, facing DIR3              (NDIR = 4)
 //   common    one marker, a pool of registers, and a monitor pool on each
@@ -42,16 +43,20 @@ module net_site #(
     parameter integer T_A = 4,
     parameter integer HIT = 1, ID = 16, CLR = 32,
     parameter integer T_GUARD = 16, T_CLAIM = 250,
+    // Which ports hold line cards.  The default is the two of mvp-ex.md 1;
+    // a stress run fills whole blocks with them.
+    parameter [63:0]  LINE_PORTS = 64'h0000_0000_0003_0000,
     parameter integer NMON = 2,                  // cells in each block's pool (4)
     parameter integer NREG = 2,                  // registers in the pool
     parameter integer NRES = 2                   // resolvers: a forward is held until it resolves (3.2)
 )(
     input         clk,
     input         rst_n,
-    input         hook20, hook21,
-    input         tx20, tx21,
-    output        rx20, rx21,
-    output        e20, e21,
+    // one bit a port: the four wires a line card's subscriber side has
+    input  [63:0] hook,
+    input  [63:0] tx,
+    output [63:0] rx,
+    output [63:0] e,
     // one MF8 line pair a direction
     input  [NDIR-1:0] line_in,
     output [NDIR-1:0] line_out,
@@ -64,9 +69,15 @@ module net_site #(
     output [3:0]  dirs_held,     // which directions a call of OURS still holds a trunk in
     output [3:0]  fan_legs,      // which directions a fan-out THROUGH here is holding
     output [3:0]  res_used,      // resolvers in use
-    output [63:0] port_busy      // every port's BUSY: what is seized, and where
+    output [63:0] port_busy,     // every port's BUSY: what is seized, and where
+    output [NREG-1:0] regs_busy, // which registers are held
+    output        wq_ovf,        // the marker's write queue overran (a model part)
+    output [15:0] n_defer,       // callers put off a scan by a claim in the same cycle
+    output        wr_stb,        // the last latch write the marker sent
+    output [5:0]  wr_dst, wr_src,
+    output        wr_bsy, wr_clm
 );
-    localparam P20 = 6'o20, P21 = 6'o21, PDT = 6'o10, PNG = 6'o14;
+    localparam PDT = 6'o10, PNG = 6'o14;        // dial tone, cannot-complete
 
     // Which block each direction's trunk group sits on: 0, 1, then 3 and 4,
     // because block 2 is the lines.
@@ -83,12 +94,12 @@ module net_site #(
                              | ((NDIR >= 2) ? 64'h0000_0000_0000_EE00 : 64'd0)
                              | ((NDIR >= 3) ? 64'h0000_0000_EE00_0000 : 64'd0)
                              | ((NDIR >= 4) ? 64'h0000_00EE_0000_0000 : 64'd0);
-    localparam [63:0] PF = 64'h0000_0000_0003_0000     // the two lines
+    localparam [63:0] PF = LINE_PORTS
                          | 64'h0000_0000_0000_1100     // the two tones
                          | TRUNKS;
-    localparam [7:0]  BF = 8'b0000_0111
-                         | ((NDIR >= 3) ? 8'b0000_1000 : 8'd0)
-                         | ((NDIR >= 4) ? 8'b0001_0000 : 8'd0);
+    // A block is fitted if anything in it is.
+    localparam [7:0]  BF = {|PF[63:56], |PF[55:48], |PF[47:40], |PF[39:32],
+                            |PF[31:24], |PF[23:16], |PF[15:8],  |PF[7:0]};
 
     wire [63:0] c_tx, a_tx, word, c_rx, a_rx;
     wire [2:0]  slot, slotq, tick;
@@ -103,12 +114,11 @@ module net_site #(
 
     exch_top #(.BLOCK_FITTED(BF),
                .PORT_FITTED (PF),
-               // ONLY the lines ring: block 2 and nothing else.  A trunk port
-               // that rings chops its own forward A into the ring cadence
-               // (exch-fabric.md 3.5's A_RX gate), so a third and fourth
-               // direction up at ports 24-47 would flood a cadence instead of
-               // the caller's dial pulses.
-               .PORT_RINGS  (64'h0000_0000_00FF_0000),
+               // ONLY the lines ring.  A trunk port that rings chops its own
+               // forward A into the ring cadence (exch-fabric.md 3.5's A_RX
+               // gate), so it would flood the cadence down the link instead of
+               // the caller's dial pulses and nothing beyond could read a digit.
+               .PORT_RINGS  (LINE_PORTS),
                .RBT_IS_FILL(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL),
                .RING_ON(RING_ON), .RING_OFF(RING_OFF))
@@ -131,17 +141,20 @@ module net_site #(
     assign dt_bit = c_tx[PDT];
     assign ng_bit = c_tx[PNG];
 
-    // ---- the lines, on block 2 -------------------------------------------
-    line_card u_c20 (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
-                     .tx(tx20), .rx(rx20), .m(hook20), .e(e20),
-                     .c_tx(c_tx[P20]), .a_tx(a_tx[P20]),
-                     .c_rx(c_rx[P20]), .a_rx(a_rx[P20]),
-                     .word_pin(word[P20]), .ans_n());
-    line_card u_c21 (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
-                     .tx(tx21), .rx(rx21), .m(hook21), .e(e21),
-                     .c_tx(c_tx[P21]), .a_tx(a_tx[P21]),
-                     .c_rx(c_rx[P21]), .a_rx(a_rx[P21]),
-                     .word_pin(word[P21]), .ans_n());
+    // ---- the lines --------------------------------------------------------
+    genvar p;
+    generate for (p = 0; p < 64; p = p + 1) begin : line
+        if (LINE_PORTS[p]) begin : fitted
+            line_card u_c (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
+                           .tx(tx[p]), .rx(rx[p]), .m(hook[p]), .e(e[p]),
+                           .c_tx(c_tx[p]), .a_tx(a_tx[p]),
+                           .c_rx(c_rx[p]), .a_rx(a_rx[p]),
+                           .word_pin(word[p]), .ans_n());
+        end else begin : absent
+            assign rx[p] = 1'b0;
+            assign e[p]  = 1'b0;
+        end
+    end endgenerate
 
     // ---- one MF8 trunk card a direction ----------------------------------
     wire [3:0]     mc_v, mh_v;
@@ -192,7 +205,7 @@ module net_site #(
     // every slot no card drives: C pulled to FILL, A and the word to 0
     genvar q;
     generate for (q = 0; q < 64; q = q + 1)
-        if (!TRUNKS[q] && q != P20 && q != P21 && q != PDT && q != PNG) begin : empty
+        if (!TRUNKS[q] && !LINE_PORTS[q] && q != PDT && q != PNG) begin : empty
             assign c_tx[q] = fill; assign a_tx[q] = 1'b0; assign word[q] = 1'b0;
         end
     endgenerate
@@ -203,6 +216,7 @@ module net_site #(
     wire [3*NREG-1:0]  r_ndig;
     wire [16*NREG-1:0] r_digits;
     wire [5:0]         r_port;
+    assign regs_busy = r_busy;
 
     genvar gr;
     generate for (gr = 0; gr < NREG; gr = gr + 1) begin : regs
@@ -255,5 +269,7 @@ module net_site #(
         .reg_release(r_release),
         .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),
         .any_claimed(got_claim), .dirs_held(dirs_held),
-        .fan_legs(fan_legs), .res_used(res_used));
+        .fan_legs(fan_legs), .res_used(res_used), .wq_ovf(wq_ovf),
+        .n_defer(n_defer), .wr_stb(wr_stb), .wr_dst(wr_dst),
+        .wr_src(wr_src), .wr_bsy(wr_bsy), .wr_clm(wr_clm));
 endmodule

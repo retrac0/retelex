@@ -89,7 +89,21 @@ module marker #(
     output           any_claimed,
     output reg [3:0] dirs_held,
     output reg [3:0] fan_legs,
-    output reg [3:0] res_used
+    output reg [3:0] res_used,
+    // A MODEL diagnostic, not a part: in 74HC the sequencer holds the marker
+    // until its write is away, and there is no queue to overrun.  Here there
+    // is one, so a stress run wants to know it never did.
+    output reg       wq_ovf,
+    // How often a caller was put off a scan because a claim had the port bus
+    // that cycle.  See `att` below: these are the cycles that used to give a
+    // register the wrong port number.
+    output reg [15:0] n_defer,
+    // The last latch write that actually went out, for a console or a
+    // testbench: this is what the operator's lamps would show.
+    output reg        wr_stb,
+    output reg [5:0]  wr_dst,
+    output reg [5:0]  wr_src,
+    output reg        wr_bsy, wr_clm
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
@@ -141,7 +155,10 @@ module marker #(
                      .busy(ser_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
 
     task push(input [5:0] pt, input [5:0] sr, input b, input c);
-        begin wq[wt] = {c, b, sr, pt}; wt = wt + 1'b1; end
+        begin
+            if (wt + 4'd1 == wh) wq_ovf <= 1'b1;   // sticky: fifteen deep, not sixteen
+            wq[wt] = {c, b, sr, pt}; wt = wt + 1'b1;
+        end
     endtask
 
     // ---------------- the hunt: ONE scanner, so one hunt, with an owner --
@@ -259,6 +276,7 @@ module marker #(
 
     integer i, r, pick;
     reg [NREG-1:0] pk;                 // contexts given a caller THIS cycle (blocking)
+    reg        att;                    // a register was attached THIS cycle (blocking)
     reg        conn;                   // a call connected to p_port THIS visit (blocking)
     reg        already;
     reg [2:0]  nd;
@@ -280,7 +298,9 @@ module marker #(
             scan <= 0; m_acc <= 0; b_acc <= 0; wsr <= 0;
             p_m <= 0; p_busy <= 0; p_word <= 0; p_port <= 0; visit <= 0;
             pv <= 0; p_valid <= 0; pb_blk <= 0;
-            wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1;
+            wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1; wq_ovf <= 1'b0;
+            n_defer <= 16'd0;
+            wr_stb <= 1'b0; wr_dst <= 0; wr_src <= 0; wr_bsy <= 0; wr_clm <= 0;
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0;
             reg_attach <= 0; reg_port <= 0; reg_release <= 0; reg_restart <= 0;
@@ -307,8 +327,9 @@ module marker #(
             reg_restart <= {NREG{1'b0}};
             visit       <= 1'b0;
             mon_ack     <= 1'b0;
+            wr_stb      <= 1'b0;
             hb = 1'b0; pk = {NREG{1'b0}}; conn = 1'b0;
-            legclm = 1'b0;
+            legclm = 1'b0; att = 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -350,7 +371,11 @@ module marker #(
             2'd1: if (ser_busy) wst <= 2'd2;
             2'd2: if (!ser_busy) begin
                       pb_blk <= ser_dst[5:3];
-                      if (ser_strobe) begin wh <= wh + 1'b1; probe_dirty <= 1'b1; end
+                      if (ser_strobe) begin
+                          wh <= wh + 1'b1; probe_dirty <= 1'b1;
+                          wr_stb <= 1'b1; wr_dst <= ser_dst; wr_src <= ser_src;
+                          wr_bsy <= ser_bsy; wr_clm <= ser_clm;
+                      end
                       wst <= 2'd0;
                   end
             default: wst <= 2'd0;
@@ -612,7 +637,7 @@ module marker #(
                     claimed[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
                     hold[pick] <= 2'd3;
                     ctx_clm[pick] <= 1'b1;                   // claimed until release
-                    pk[pick] = 1'b1;
+                    pk[pick] = 1'b1; att = 1'b1;
                 end else begin
                     // no register free: claimed, cannot complete -- the caller
                     // hears it at once (exch-monitor.md 2)
@@ -621,8 +646,8 @@ module marker #(
             end
 
             // ---- a port wanting service ---------------------------------
-            // Not an `else` of the claim: a visit is one cycle wide, and pk
-            // already keeps the two from being handed the same register.
+            // Not an `else` of the claim: a visit is one cycle wide, and an
+            // arriving SEIZURE must not wait a scan for one.
             if (visit && p_valid && p_m && !p_busy) begin
                 if (p_cls == C_TRUNK) begin
                     // a seizure arriving: hold it busy, listening to idle, so
@@ -642,14 +667,28 @@ module marker #(
                         if (mst[r] != M_IDLE && caller[r] == p_port) already = 1'b1;
                         if (pick < 0 && mst[r] == M_IDLE && !reg_busy[r] && !pk[r]) pick = r;
                     end
+                    // ONE ATTACH A CYCLE.  `pk` keeps a claim and a caller
+                    // in the same cycle from being handed the same register --
+                    // but `reg_port` is ONE BUS to the whole pool, the way the
+                    // marker's port lines are one bus in 74HC, and the second
+                    // writer of it wins.  Both registers would then latch the
+                    // LINE's port: the claimed trunk's register would read the
+                    // line's dialling and connect the far caller to whatever
+                    // that line asked for -- a wrong number across the network,
+                    // out of the one thing exch-monitor.md 3 exists to stop.
+                    // The caller waits a scan instead; they are waiting for
+                    // dial tone anyway.
                     if (!already && pick >= 0) begin
-                        reg_attach[pick] <= 1'b1; reg_port <= p_port;
-                        push(p_port, DIALTONE, 1'b1, 1'b0);
-                        caller[pick] <= p_port; mst[pick] <= M_LOCAL;
-                        claimed[pick] <= 1'b0; guarding[pick] <= 1'b0;
-                        ctx_clm[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
-                        hold[pick] <= 2'd3;       // the store is the last caller's for a cycle yet
-                        pk[pick] = 1'b1;
+                        if (att) n_defer <= n_defer + 1'b1;
+                        else begin
+                            reg_attach[pick] <= 1'b1; reg_port <= p_port;
+                            push(p_port, DIALTONE, 1'b1, 1'b0);
+                            caller[pick] <= p_port; mst[pick] <= M_LOCAL;
+                            claimed[pick] <= 1'b0; guarding[pick] <= 1'b0;
+                            ctx_clm[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
+                            hold[pick] <= 2'd3;   // the store is the last caller's for a cycle yet
+                            pk[pick] = 1'b1;
+                        end
                     end
                 end
             end

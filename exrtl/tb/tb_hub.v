@@ -47,10 +47,6 @@ module tb_hub #(
     initial begin #20;  forever #122.0703 clk_c = ~clk_c; end
     initial begin #60;  forever #122.0703 clk_d = ~clk_d; end
 
-    reg  h20h=0,h21h=0,h20a=0,h21a=0,h20b=0,h21b=0,h20c=0,h21c=0,h20d=0,h21d=0;
-    reg  t20h=0,t21h=0,t20a=0,t21a=0,t20b=0,t21b=0,t20c=0,t21c=0,t20d=0,t21d=0;
-    wire r20h,r21h,r20a,r21a,r20b,r21b,r20c,r21c,r20d,r21d;
-    wire e20h,e21h,e20a,e21a,e20b,e21b,e20c,e21c,e20d,e21d;
 
     wire ha_, ah, hb_, bh, hc_, ch, hd_, dh;       // the four links, each way
     wire [3:0] lkh;
@@ -65,76 +61,86 @@ module tb_hub #(
     // what is seized at the hub, at any instant: a channel a link a call
     wire [31:0] hubchans = $countones(pbh & HUBT);
 
+    reg  [63:0] hk_h = 0, hk_a = 0, hk_b = 0, hk_c = 0, hk_d = 0;
+    reg  [63:0] tx_h = 0, tx_a = 0, tx_b = 0, tx_c = 0, tx_d = 0;
+    wire [63:0] rx_h, rx_a, rx_b, rx_c, rx_d;
+    wire [63:0] ln_h, ln_a, ln_b, ln_c, ln_d;
+
     // ---- the hub: code 21, four directions, one resolver ----------------
     net_site #(.OWN_E(3'd2), .OWN_B(3'd1), .NRES(1),
                .NDIR(4), .DIR0(W), .G0(1'b1), .DIR1(E), .G1(1'b1),
                          .DIR2(N), .G2(1'b1), .DIR3(S), .G3(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    H (.clk(clk_h), .rst_n(rst_n), .hook20(h20h), .hook21(h21h),
-       .tx20(t20h), .tx21(t21h), .rx20(r20h), .rx21(r21h), .e20(e20h), .e21(e21h),
+    H (.clk(clk_h), .rst_n(rst_n),
+       .hook(hk_h), .tx(tx_h), .rx(rx_h), .e(ln_h),
        .line_in({dh, ch, bh, ah}), .line_out({hd_, hc_, hb_, ha_}), .locked(lkh),
        .frame_stb(fsh), .ring_cad_n(rch), .dt_bit(dth), .ng_bit(ngh),
        .mon_held(mhh), .got_claim(gch), .dirs_held(dhh),
-       .fan_legs(flh), .res_used(ruh), .port_busy(pbh));
+       .fan_legs(flh), .res_used(ruh), .port_busy(pbh), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     // ---- the four leaves, one direction each ----------------------------
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(E),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    A (.clk(clk_a), .rst_n(rst_n), .hook20(h20a), .hook21(h21a),
-       .tx20(t20a), .tx21(t21a), .rx20(r20a), .rx21(r21a), .e20(e20a), .e21(e21a),
+    A (.clk(clk_a), .rst_n(rst_n),
+       .hook(hk_a), .tx(tx_a), .rx(rx_a), .e(ln_a),
        .line_in(ha_), .line_out(ah), .locked(lka),
        .frame_stb(fsa), .ring_cad_n(rca), .dt_bit(dta), .ng_bit(nga),
        .mon_held(mha), .got_claim(gca), .dirs_held(dha),
-       .fan_legs(), .res_used(), .port_busy(pba));
+       .fan_legs(), .res_used(), .port_busy(pba), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .DIR0(W),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    B (.clk(clk_b), .rst_n(rst_n), .hook20(h20b), .hook21(h21b),
-       .tx20(t20b), .tx21(t21b), .rx20(r20b), .rx21(r21b), .e20(e20b), .e21(e21b),
+    B (.clk(clk_b), .rst_n(rst_n),
+       .hook(hk_b), .tx(tx_b), .rx(rx_b), .e(ln_b),
        .line_in(hb_), .line_out(bh), .locked(lkb),
        .frame_stb(fsb), .ring_cad_n(rcb), .dt_bit(dtb), .ng_bit(ngb),
        .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb),
-       .fan_legs(), .res_used(), .port_busy(pbb));
+       .fan_legs(), .res_used(), .port_busy(pbb), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd4), .DIR0(S),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    C (.clk(clk_c), .rst_n(rst_n), .hook20(h20c), .hook21(h21c),
-       .tx20(t20c), .tx21(t21c), .rx20(r20c), .rx21(r21c), .e20(e20c), .e21(e21c),
+    C (.clk(clk_c), .rst_n(rst_n),
+       .hook(hk_c), .tx(tx_c), .rx(rx_c), .e(ln_c),
        .line_in(hc_), .line_out(ch), .locked(lkc),
        .frame_stb(fsc), .ring_cad_n(rcc), .dt_bit(dtc), .ng_bit(ngc),
        .mon_held(mhc), .got_claim(gcc), .dirs_held(dhc),
-       .fan_legs(), .res_used(), .port_busy(pbc));
+       .fan_legs(), .res_used(), .port_busy(pbc), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd5), .DIR0(N),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    D (.clk(clk_d), .rst_n(rst_n), .hook20(h20d), .hook21(h21d),
-       .tx20(t20d), .tx21(t21d), .rx20(r20d), .rx21(r21d), .e20(e20d), .e21(e21d),
+    D (.clk(clk_d), .rst_n(rst_n),
+       .hook(hk_d), .tx(tx_d), .rx(rx_d), .e(ln_d),
        .line_in(hd_), .line_out(dh), .locked(lkd),
        .frame_stb(fsd), .ring_cad_n(rcd), .dt_bit(dtd), .ng_bit(ngd),
        .mon_held(mhd), .got_claim(gcd), .dirs_held(dhd),
-       .fan_legs(), .res_used(), .port_busy(pbd));
+       .fan_legs(), .res_used(), .port_busy(pbd), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     reg path_en = 0;
-    bitpath p_a20b21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(t20a),
-                      .dst_clk(clk_b), .dst_fs(fsb), .dst_bit(r21b), .enable(path_en));
-    bitpath p_b21a20 (.src_clk(clk_b), .src_fs(fsb), .src_bit(t21b),
-                      .dst_clk(clk_a), .dst_fs(fsa), .dst_bit(r20a), .enable(path_en));
+    bitpath p_a20b21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(tx_a[6'o20]),
+                      .dst_clk(clk_b), .dst_fs(fsb), .dst_bit(rx_b[6'o21]), .enable(path_en));
+    bitpath p_b21a20 (.src_clk(clk_b), .src_fs(fsb), .src_bit(tx_b[6'o21]),
+                      .dst_clk(clk_a), .dst_fs(fsa), .dst_bit(rx_a[6'o20]), .enable(path_en));
 
     always @(posedge clk_a) if (fsa) begin
-        if (h20a) t20a <= $random; if (h21a) t21a <= $random; end
+        if (hk_a[6'o20]) tx_a[6'o20] <= $random; if (hk_a[6'o21]) tx_a[6'o21] <= $random; end
     always @(posedge clk_b) if (fsb) begin
-        if (h20b) t20b <= $random; if (h21b) t21b <= $random; end
+        if (hk_b[6'o20]) tx_b[6'o20] <= $random; if (hk_b[6'o21]) tx_b[6'o21] <= $random; end
     always @(posedge clk_c) if (fsc) begin
-        if (h20c) t20c <= $random; if (h21c) t21c <= $random; end
+        if (hk_c[6'o20]) tx_c[6'o20] <= $random; if (hk_c[6'o21]) tx_c[6'o21] <= $random; end
     always @(posedge clk_d) if (fsd) begin
-        if (h20d) t20d <= $random; if (h21d) t21d <= $random; end
+        if (hk_d[6'o20]) tx_d[6'o20] <= $random; if (hk_d[6'o21]) tx_d[6'o21] <= $random; end
     always @(posedge clk_h) if (fsh) begin
-        if (h20h) t20h <= $random; if (h21h) t21h <= $random; end
+        if (hk_h[6'o20]) tx_h[6'o20] <= $random; if (hk_h[6'o21]) tx_h[6'o21] <= $random; end
 
     integer errs = 0, chk = 0;
 
@@ -160,7 +166,7 @@ module tb_hub #(
         begin
             n = (d == 0) ? 10 : d;
             for (i = 0; i < n; i = i + 1) begin
-                h20a = 1'b0; #(BRK_NS); h20a = 1'b1; #(MK_NS);
+                hk_a[6'o20] = 1'b0; #(BRK_NS); hk_a[6'o20] = 1'b1; #(MK_NS);
             end
             #(PAUSE);
         end
@@ -171,7 +177,7 @@ module tb_hub #(
         begin
             n = (d == 0) ? 10 : d;
             for (i = 0; i < n; i = i + 1) begin
-                h20c = 1'b0; #(BRK_NS); h20c = 1'b1; #(MK_NS);
+                hk_c[6'o20] = 1'b0; #(BRK_NS); hk_c[6'o20] = 1'b1; #(MK_NS);
             end
             #(PAUSE);
         end
@@ -184,7 +190,7 @@ module tb_hub #(
             hi = 0; lo = 0;
             for (i = 0; i < n; i = i + 1) begin
                 #(FR);
-                ee  = (which == 0) ? e21b : (which == 1) ? e21d : e21h;
+                ee  = (which == 0) ? ln_b[6'o21] : (which == 1) ? ln_d[6'o21] : ln_h[6'o21];
                 cad = (which == 0) ? rcb  : (which == 1) ? rcd  : rch;
                 if (ee && !cad) hi = hi + 1;
                 if (!ee && cad) lo = lo + 1;
@@ -220,7 +226,7 @@ module tb_hub #(
         // ---- 1. a call through the hub ---------------------------------
         if (ONLY == 0 || ONLY == 1) begin
         $display("  1. A's 20 dials 1 2 3 2 1 -- exchange 23, THROUGH the hub.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(60_000_000);
         want(mhb && mhc && mhd, "B, C and D all caught it: three legs at once");
@@ -240,15 +246,15 @@ module tb_hub #(
         dial_a(2); dial_a(1);
         #(60_000_000);
         ring21(2 * (RING_ON + RING_OFF), "B's 21 rings, from a caller across the hub", 0);
-        h21b = 1; #(20_000_000);
-        want(e20a && e21b, "answered at B, and A knows");
+        hk_b[6'o21] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_b[6'o21], "answered at B, and A knows");
         path_en = 1; #(6_000_000); path_en = 0;
         p_a20b21.report("speech A20 -> B21, through the hub");
         p_b21a20.report("speech B21 -> A20, through the hub");
         chk = chk + 2;
         if (p_a20b21.best_err != 0 || p_b21a20.best_err != 0) errs = errs + 1;
-        h21b = 0; h20a = 0; #(140_000_000);
-        want(!e20a && !e21b, "released, and every leg with it");
+        hk_b[6'o21] = 0; hk_a[6'o20] = 0; #(140_000_000);
+        want(!ln_a[6'o20] && !ln_b[6'o21], "released, and every leg with it");
         nch = hubchans;
         wantn(nch == 0, nch, "nothing held at the hub");
         end
@@ -256,7 +262,7 @@ module tb_hub #(
         // ---- 2. the hub is the owner ------------------------------------
         if (ONLY == 0 || ONLY == 2) begin
         $display("\n  2. A's 20 dials 1 2 1 2 1 -- the HUB's own code.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(60_000_000);
         wantn(ruh == 4'd1, ruh, "fanned out again: a resolver, three legs");
@@ -272,9 +278,9 @@ module tb_hub #(
         dial_a(2); dial_a(1);
         #(60_000_000);
         ring21(2 * (RING_ON + RING_OFF), "the hub's own 21 rings", 2);
-        h21h = 1; #(20_000_000);
-        want(e20a && e21h, "answered at the hub");
-        h21h = 0; h20a = 0; #(140_000_000);
+        hk_h[6'o21] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_h[6'o21], "answered at the hub");
+        hk_h[6'o21] = 0; hk_a[6'o20] = 0; #(140_000_000);
         nch = hubchans;
         wantn(nch == 0, nch, "released");
         end
@@ -288,12 +294,12 @@ module tb_hub #(
         // because 25 is behind it, and would have been lost had C wanted 23.
         if (ONLY == 0 || ONLY == 3) begin
         $display("\n  3. A second flood arrives while the one resolver is held.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);                                  // A floods: three legs
         #(60_000_000);
         wantn(ruh == 4'd1, ruh, "A's flood has the resolver");
         snap("A flooded");
-        h20c = 1; #(40_000_000);
+        hk_c[6'o20] = 1; #(40_000_000);
         dial_c(1);                                  // C floods: no resolver free
         #(60_000_000);
         wantn(ruh == 4'd1, ruh, "C's flood found none free");
@@ -311,12 +317,12 @@ module tb_hub #(
         dial_a(1); dial_c(0);                       // s: A wants 21, C wants 20
         #(60_000_000);
         ring21(2 * (RING_ON + RING_OFF), "D's 21 rings, from A across the hub", 1);
-        h21d = 1; h20d = 1; #(20_000_000);
-        want(e20a && e21d, "A is answered at D's 21");
-        want(e20c && e20d, "and C at D's 20: two calls through one hub");
+        hk_d[6'o21] = 1; hk_d[6'o20] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_d[6'o21], "A is answered at D's 21");
+        want(ln_c[6'o20] && ln_d[6'o20], "and C at D's 20: two calls through one hub");
         nch = hubchans;
         wantn(nch == 4, nch, "four channels: two calls, two latches each");
-        h21d = 0; h20d = 0; h20a = 0; h20c = 0; #(160_000_000);
+        hk_d[6'o21] = 0; hk_d[6'o20] = 0; hk_a[6'o20] = 0; hk_c[6'o20] = 0; #(160_000_000);
         nch = hubchans;
         wantn(nch == 0, nch, "everything released at the hub");
         end

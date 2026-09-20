@@ -48,10 +48,6 @@ module tb_ring #(
     initial begin #80;  forever #122.0703 clk_c = ~clk_c; end
     initial begin #20;  forever #122.0703 clk_d = ~clk_d; end
 
-    reg  h20a=0,h21a=0,h20b=0,h21b=0,h20c=0,h21c=0,h20d=0,h21d=0;
-    reg  t20a=0,t21a=0,t20b=0,t21b=0,t20c=0,t21c=0,t20d=0,t21d=0;
-    wire r20a,r21a,r20b,r21b,r20c,r21c,r20d,r21d;
-    wire e20a,e21a,e20b,e21b,e20c,e21c,e20d,e21d;
 
     wire a2b, b2a, b2c, c2b, c2d, d2c, d2a, a2d;   // the four links, each way
     wire [1:0] lka, lkb, lkc, lkd;
@@ -66,66 +62,75 @@ module tb_ring #(
     wire [31:0] ringchans = $countones(pba & TR) + $countones(pbb & TR)
                           + $countones(pbc & TR) + $countones(pbd & TR);
 
+    reg  [63:0] hk_a = 0, hk_b = 0, hk_c = 0, hk_d = 0;
+    reg  [63:0] tx_a = 0, tx_b = 0, tx_c = 0, tx_d = 0;
+    wire [63:0] rx_a, rx_b, rx_c, rx_d;
+    wire [63:0] ln_a, ln_b, ln_c, ln_d;
+
     // A: 22.  Block 0 E toward B; block 1 W toward D -- the strapped link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .NDIR(2),
                .DIR0(E), .G0(1'b1), .DIR1(W), .N1(STRAP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    A (.clk(clk_a), .rst_n(rst_n), .hook20(h20a), .hook21(h21a),
-       .tx20(t20a), .tx21(t21a), .rx20(r20a), .rx21(r21a), .e20(e20a), .e21(e21a),
+    A (.clk(clk_a), .rst_n(rst_n),
+       .hook(hk_a), .tx(tx_a), .rx(rx_a), .e(ln_a),
        .line_in({d2a, b2a}), .line_out({a2d, a2b}), .locked(lka),
        .frame_stb(fsa), .ring_cad_n(rca), .dt_bit(dta), .ng_bit(nga),
        .mon_held(mha), .got_claim(gca), .dirs_held(dha),
-       .fan_legs(fla), .res_used(rua), .port_busy(pba));
+       .fan_legs(fla), .res_used(rua), .port_busy(pba), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     // B: 23.  Block 0 W toward A; block 1 E toward C.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    B (.clk(clk_b), .rst_n(rst_n), .hook20(h20b), .hook21(h21b),
-       .tx20(t20b), .tx21(t21b), .rx20(r20b), .rx21(r21b), .e20(e20b), .e21(e21b),
+    B (.clk(clk_b), .rst_n(rst_n),
+       .hook(hk_b), .tx(tx_b), .rx(rx_b), .e(ln_b),
        .line_in({c2b, a2b}), .line_out({b2c, b2a}), .locked(lkb),
        .frame_stb(fsb), .ring_cad_n(rcb), .dt_bit(dtb), .ng_bit(ngb),
        .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb),
-       .fan_legs(flb), .res_used(rub), .port_busy(pbb));
+       .fan_legs(flb), .res_used(rub), .port_busy(pbb), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     // C: 24.  Block 0 W toward B; block 1 E toward D.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd4), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    C (.clk(clk_c), .rst_n(rst_n), .hook20(h20c), .hook21(h21c),
-       .tx20(t20c), .tx21(t21c), .rx20(r20c), .rx21(r21c), .e20(e20c), .e21(e21c),
+    C (.clk(clk_c), .rst_n(rst_n),
+       .hook(hk_c), .tx(tx_c), .rx(rx_c), .e(ln_c),
        .line_in({d2c, b2c}), .line_out({c2d, c2b}), .locked(lkc),
        .frame_stb(fsc), .ring_cad_n(rcc), .dt_bit(dtc), .ng_bit(ngc),
        .mon_held(mhc), .got_claim(gcc), .dirs_held(dhc),
-       .fan_legs(flc), .res_used(ruc), .port_busy(pbc));
+       .fan_legs(flc), .res_used(ruc), .port_busy(pbc), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     // D: 25.  Block 0 W toward C; block 1 E toward A -- the strapped link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd5), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1), .N1(STRAP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
-    D (.clk(clk_d), .rst_n(rst_n), .hook20(h20d), .hook21(h21d),
-       .tx20(t20d), .tx21(t21d), .rx20(r20d), .rx21(r21d), .e20(e20d), .e21(e21d),
+    D (.clk(clk_d), .rst_n(rst_n),
+       .hook(hk_d), .tx(tx_d), .rx(rx_d), .e(ln_d),
        .line_in({a2d, c2d}), .line_out({d2a, d2c}), .locked(lkd),
        .frame_stb(fsd), .ring_cad_n(rcd), .dt_bit(dtd), .ng_bit(ngd),
        .mon_held(mhd), .got_claim(gcd), .dirs_held(dhd),
-       .fan_legs(fld), .res_used(rud), .port_busy(pbd));
+       .fan_legs(fld), .res_used(rud), .port_busy(pbd), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
     reg path_en = 0;
-    bitpath p_a20c21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(t20a),
-                      .dst_clk(clk_c), .dst_fs(fsc), .dst_bit(r21c), .enable(path_en));
-    bitpath p_a20d21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(t20a),
-                      .dst_clk(clk_d), .dst_fs(fsd), .dst_bit(r21d), .enable(path_en));
+    bitpath p_a20c21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(tx_a[6'o20]),
+                      .dst_clk(clk_c), .dst_fs(fsc), .dst_bit(rx_c[6'o21]), .enable(path_en));
+    bitpath p_a20d21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(tx_a[6'o20]),
+                      .dst_clk(clk_d), .dst_fs(fsd), .dst_bit(rx_d[6'o21]), .enable(path_en));
 
     always @(posedge clk_a) if (fsa) begin
-        if (h20a) t20a <= $random; if (h21a) t21a <= $random; end
+        if (hk_a[6'o20]) tx_a[6'o20] <= $random; if (hk_a[6'o21]) tx_a[6'o21] <= $random; end
     always @(posedge clk_c) if (fsc) begin
-        if (h20c) t20c <= $random; if (h21c) t21c <= $random; end
+        if (hk_c[6'o20]) tx_c[6'o20] <= $random; if (hk_c[6'o21]) tx_c[6'o21] <= $random; end
     always @(posedge clk_d) if (fsd) begin
-        if (h20d) t20d <= $random; if (h21d) t21d <= $random; end
+        if (hk_d[6'o20]) tx_d[6'o20] <= $random; if (hk_d[6'o21]) tx_d[6'o21] <= $random; end
 
     integer errs = 0, chk = 0, peak = 0;
 
@@ -163,7 +168,7 @@ module tb_ring #(
         begin
             n = (d == 0) ? 10 : d;
             for (i = 0; i < n; i = i + 1) begin
-                h20a = 1'b0; #(BRK_NS); h20a = 1'b1; #(MK_NS);
+                hk_a[6'o20] = 1'b0; #(BRK_NS); hk_a[6'o20] = 1'b1; #(MK_NS);
             end
             #(PAUSE);
         end
@@ -176,7 +181,7 @@ module tb_ring #(
             hi = 0; lo = 0;
             for (i = 0; i < n; i = i + 1) begin
                 #(FR);
-                ee  = (which == 0) ? e21c : e21d;
+                ee  = (which == 0) ? ln_c[6'o21] : ln_d[6'o21];
                 cad = (which == 0) ? rcc  : rcd;
                 if (ee && !cad) hi = hi + 1;
                 if (!ee && cad) lo = lo + 1;
@@ -201,7 +206,7 @@ module tb_ring #(
         if (STRAP) begin
         // ---- 1. two hops either way: the short way claims -----------------
         $display("  1. A's 20 dials 1 2 4 2 1 -- 24 is two hops either way round.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(80_000_000);
         snap("A flooded");
@@ -223,18 +228,18 @@ module tb_ring #(
         nch = ringchans;
         wantn(nch == 4, nch, "four left: A = B = C, two ports a link");
         ring21(2 * (RING_ON + RING_OFF), "24's 21 rings, two hops from A", 0);
-        h21c = 1; #(20_000_000);
-        want(e20a && e21c, "answered at 24");
+        hk_c[6'o21] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_c[6'o21], "answered at 24");
         path_en = 1; #(6_000_000); path_en = 0;
         p_a20c21.report("speech A20 -> C21, the short way round");
         chk = chk + 1; if (p_a20c21.best_err != 0) errs = errs + 1;
-        h21c = 0; h20a = 0; #(200_000_000);
+        hk_c[6'o21] = 0; hk_a[6'o20] = 0; #(200_000_000);
         nch = ringchans;
         wantn(nch == 0, nch, "everything released");
 
         // ---- 2. the far end of the strapped link, reached twice -----------
         $display("\n  2. A's 20 dials 1 2 5 2 1 -- 25, the far end of the STRAP.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(80_000_000);
         snap("A flooded");
@@ -262,20 +267,20 @@ module tb_ring #(
         nch = $countones(pba[7:0] & 8'hEE);
         wantn(nch == 1, nch, "A's held trunk is the one toward 23");
         ring21(2 * (RING_ON + RING_OFF), "25's 21 rings, from the far end of the strap", 1);
-        h21d = 1; #(20_000_000);
-        want(e20a && e21d, "answered, and no caller heard the second claim");
+        hk_d[6'o21] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_d[6'o21], "answered, and no caller heard the second claim");
         p_a20d21.clear;
         path_en = 1; #(6_000_000); path_en = 0;
         p_a20d21.report("speech A20 -> D21, the long way round");
         chk = chk + 1; if (p_a20d21.best_err != 0) errs = errs + 1;
-        h21d = 0; h20a = 0; #(200_000_000);
+        hk_d[6'o21] = 0; hk_a[6'o20] = 0; #(200_000_000);
         nch = ringchans;
         wantn(nch == 0, nch, "everything released");
 
         end else begin
         // ---- 3. the strap out: the flood goes round and round -------------
         $display("  1. A's 20 dials 1 2 4 ... with nothing to break the loop.");
-        h20a = 1; #(40_000_000);
+        hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(80_000_000);
         snap("one turn");
@@ -291,7 +296,7 @@ module tb_ring #(
         $display("     and %0d still held once it is up -- the strapped ring held 4.", nch);
         wantn(peak >= 40, peak, "the flood went round until the links were full");
         wantn(nch >= 8, nch, "and it settles at a channel on EVERY link, both ways");
-        h20a = 0; #(600_000_000);
+        hk_a[6'o20] = 0; #(600_000_000);
         nch = ringchans;
         wantn(nch == 0, nch, "and all of it releases when the caller hangs up");
         end

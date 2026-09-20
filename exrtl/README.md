@@ -78,9 +78,12 @@ make pool     two callers at once: two registers, two cells, one scanner
 make hub      five exchanges: four directions, a fan-out, and the resolvers
 make ring     four exchanges in a ring, and the strap that breaks it
 make erlang   the monitor pool against exch-monitor.md 4's sizing table
+make stress   a FULL exchange -- 48 lines -- under random traffic
 make iv       the whole suite again under Icarus, as the reference
 make ring-open    the same ring with the strap OUT: the flood circles
 make erlang-long  the traffic run with enough calls to measure, not just check
+make stress-pair      the stress run over two exchanges, 100 ppm apart
+make stress-overload  48 callers thrashing a TWO-register exchange
 make trunk-ppm    the link with the two crystals 100 ppm apart
 make lint     verilator, the whole exchange fitted
 make synth    yosys: what the 64-port exchange costs in cells
@@ -94,6 +97,8 @@ make synth    yosys: what the 64-port exchange costs in cells
 | `hub`, 5 s over five exchanges | many minutes | **2 min** |
 | `erlang`, 4 100 s of offered traffic | 2 min, at a tenth the calls | **23 s** |
 | `erlang-long`, 49 000 s | — | **6 min** |
+| `stress`, 5.4 s over a 56-port exchange | — | **3 min** |
+| `stress-pair`, the same over two | — | **12 min** |
 
 **`erlang` is not a system test and does not pay for one.** It drives a block's
 eight M and `BUSY` lines directly, and it drops the 4.096 MHz master clock: a
@@ -366,6 +371,80 @@ a slip is one bit in 10 000 frames and the 400-frame window sees none, as
 locks in 38 frames and the calls still run; what appears is **ten isolated
 wrong bits in 400**, clustered at the slips, and not a broken link. That is the
 failure mode the design was built for: a slip costs a bit, not a call.
+
+## A full exchange under load, and what it turned up
+
+Everything else in this suite drives a scenario someone thought of. `make
+stress` fits every block — **48 lines**, the two tones and six trunk channels,
+which is the whole 64-port exchange — and lets forty-eight callers loose on it
+with no scenario at all. `make stress-pair` does the same on two exchanges tied
+by one MF8 link **100 ppm apart**, with a quarter of the calls crossing it, and
+`make stress-overload` gives the same forty-eight callers a TWO-register
+exchange, where almost nothing completes and the only question is whether
+anything jams.
+
+**The callers do not behave.** One in ten hangs up in the middle of dialling;
+one in ten dials into block 1, which is the network key followed by nothing; one
+in ten dials its own number; one in twenty lifts and never dials; one in five
+flashes the hook in the middle of a call; one in ten lifts again before its own
+port has finished releasing; and a third of them dial the same four numbers, to
+make glare likely rather than merely possible. They do wait for dial tone,
+because a register pool means dial tone is late and a caller who dials into a
+register nobody gave them is testing nothing.
+
+**Two invariants do the work, and neither needs to know what the call was.**
+
+- **Every line says who it is listening to.** Each one transmits its own name —
+  eight ones, then a zero, its exchange and its port — so the bench can read
+  off the whole connection graph, frame by frame, and hold it to three rules:
+  *i hears j implies j hears i*; *no two lines hear the same line*, which is two
+  callers patched to one line; and *no port hears itself*. A patch is allowed
+  forty milliseconds to settle before any of it counts.
+- **Nothing may be held when nobody is calling.** The traffic runs in rounds: a
+  burst, then every line on hook and a gap longer than any release detector. At
+  the end of the gap no port may be BUSY, no register busy, no trunk channel
+  seized. A leak shows as a number that ratchets up round on round. During a
+  round, a port that has been BUSY for 300 ms *and* on hook for 300 ms *and*
+  with its E dead for 300 ms is reported where it stands, with the last latch
+  write the marker sent it.
+
+  **All three of those, or the check is worthless.** Written with only the last
+  two it fires the instant a port is written to ring: the line has been on hook
+  and its E dead since long before the write, and the cadence takes a few
+  milliseconds to appear. That version reported seven jams in one round and
+  every one of them was a call being set up correctly.
+
+**What it found, and the answer is a bus.** The marker tells a register which
+port to listen to on `reg_port` — one set of lines to the whole pool, the way a
+74HC marker's port lines are one bus. Two things hand out a register: a
+monitor's **claim** ("this call is ours: give it a register and the trunk's
+port") and a **line lifting** ("give it a register and its own port"). A mask
+already stopped them being handed the *same* register. But both wrote
+`reg_port`, and the second writer won, so **both registers latched the line's
+port number**. The claimed trunk's register would then count the line's dialling
+and the marker would connect the far caller to whatever that line asked for — a
+wrong number across the network, which is the one thing `exch-monitor.md` §3
+exists to stop.
+
+The rule is **one attach a cycle**: a caller who lifts in the same cycle as a
+claim waits a scan, and they are waiting for dial tone anyway. An arriving trunk
+*seizure* is not deferred, because it needs no register. The marker counts the
+deferrals, so the cost of the rule is measured and not assumed.
+
+It is a load-dependent race and not a one-in-a-million one: a claim is a level
+held until the marker takes it, and the marker holds it off while its write
+queue is within five of full. Under load that moves the cycle on which the claim
+is taken off the tick that decided it and onto an arbitrary one — including a
+visit with a line waiting for dial tone.
+
+**And a clean result: overload does not jam it.** `make stress-overload` gives
+the same forty-eight callers a **two**-register exchange — the pool
+`exch-marker.md` §6 sizes for 0.16 E, offered something nearer ten. In two
+rounds, 199 callers lifted, **141 of them waited out dial tone and gave up**,
+and four calls got through. Nothing was left held, no line was heard by two
+callers, no port was stuck, and the write queue never overran. The exchange
+degrades exactly the way §6 says a pool degrades — *a caller who finds no
+register free is not refused, dial tone is late* — and it does not lock up.
 
 ## The pool against `exch-monitor.md` §4, measured
 

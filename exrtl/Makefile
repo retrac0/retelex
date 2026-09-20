@@ -21,8 +21,9 @@ TB_pool   := tb/net_site.v tb/bitpath.v tb/tb_pool.v
 TB_hub    := tb/net_site.v tb/bitpath.v tb/tb_hub.v
 TB_ring   := tb/net_site.v tb/bitpath.v tb/tb_ring.v
 TB_erlang := tb/tb_erlang.v
+TB_stress := tb/net_site.v tb/tb_stress.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -48,6 +49,26 @@ $(IVSIMS): iv-%: $(BUILD)
 	@iverilog $(IVFLAG) $(IVPAR_$*) -o $(BUILD)/$*.vvp $(RTL) $(TB_$*) && vvp $(BUILD)/$*.vvp
 
 iv: $(IVSIMS)
+
+# Forty-eight callers thrashing a TWO-register exchange: every caller queueing
+# for dial tone, almost nothing completing, and the question is only whether
+# anything jams.
+stress-overload: $(BUILD)
+	@mkdir -p $(BUILD)/vl/stressover
+	@verilator $(VLFLAG) -GNREG=2 -GIDLE_LO=100 -GIDLE_HI=800 -GDT_WAIT=600 \
+	    --top-module tb_stress --Mdir $(BUILD)/vl/stressover -o tb_stressover \
+	    $(RTL) $(TB_stress) > $(BUILD)/vl-stressover.log 2>&1 \
+	    || (cat $(BUILD)/vl-stressover.log; false)
+	@$(BUILD)/vl/stressover/tb_stressover 2>&1 | grep -v '^- '
+
+# The same stress run over a PAIR of exchanges, calls going both ways and
+# the two crystals 100 ppm apart.
+stress-pair: $(BUILD)
+	@mkdir -p $(BUILD)/vl/stresspair
+	@verilator $(VLFLAG) -GPAIR=1 -GPPM=100 --top-module tb_stress \
+	    --Mdir $(BUILD)/vl/stresspair -o tb_stresspair $(RTL) $(TB_stress) \
+	    > $(BUILD)/vl-stresspair.log 2>&1 || (cat $(BUILD)/vl-stresspair.log; false)
+	@$(BUILD)/vl/stresspair/tb_stresspair 2>&1 | grep -v '^- '
 
 # The traffic run with enough calls to measure a 2 % loss, not just check it.
 erlang-long: $(BUILD)
@@ -93,4 +114,4 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) ring-open erlang-long trunk-ppm lint synth clean
+.PHONY: all iv $(SIMS) $(IVSIMS) ring-open erlang-long stress-pair stress-overload trunk-ppm lint synth clean
