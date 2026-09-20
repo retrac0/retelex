@@ -42,8 +42,9 @@ its trunk ports' M lines directly — it never touches the fabric.
 
 ```
  idle      the trunk's M is low
- seized    M rises, AND THE MONITOR SAW IT RISE      → count this seizure
+ seized    M rises, AND THE MONITOR SAW IT RISE, AND THE PORT WAS NOT BUSY  → count this seizure
            (M is already high when a monitor comes free → this seizure is never counted)
+           (the port was busy at the last visit → this is a CLAIM coming back, not a seizure: §3.3)
  counting  a break of 8 ms or more is a pulse; 128 ms of make ends the digit   — register.md §2's windows
  decide    the first digit is this exchange's e       → read one digit more
            the second is this exchange's b            → CLAIM: ask the marker
@@ -68,11 +69,13 @@ one digit, if its `e` is not the one dialled, or for two.
 
 ---
 
-## 3. The two rules
+## 3. The three rules
 
 A monitor that counts a partial digit claims a call for the wrong exchange, and
 the caller gets a wrong number with no sign that anything failed. Two things can
-make a count partial, and each needs its own rule.
+make a count partial, and each needs its own rule. A third rule is not about
+partial counts at all: it is about telling a seizure from a claim, and an
+exchange with outgoing trunks of its own cannot do without it (§3.3).
 
 **1. A monitor counts only a seizure whose rise it saw.** A monitor that attaches
 late — because it was busy — may attach in the *pause between two digits*. It
@@ -101,6 +104,44 @@ Together they make the budget `exch-network.md` §4 uses: the digit recognised
 (128 ms), the seizure (2), the guard (128) — **the flood is ready 258 ms after
 the caller's last pulse, whatever the hop count**, against the 500–800 ms a dial
 takes between digits.
+
+### 3.3 A claim coming back is not a seizure
+
+**Measured in RTL, `exrtl`.** The two rules above are enough at the end of a
+chain and not enough anywhere else. When a far exchange claims, backward A
+rises — and at a transit, or at any origin that seized a trunk, that is **M
+rising on this exchange's own outgoing trunk**, which satisfies both rules
+exactly. The monitor latches it, counts a level that never pulses, and is held
+for the whole of that call.
+
+It does not misroute anything: no digit ever completes, so nothing is claimed.
+It costs a monitor. But §4 sizes the pool on a monitor being held for one digit
+or two, and a transit holds one for **every call it passes**, which is the whole
+traffic of the network. A middle-of-chain exchange runs out.
+
+**The third term is `BUSY`, and it must be `BUSY` *at the last visit*.** The two
+cases differ in order, not in state: this exchange writes `BUSY` when it seizes
+or patches a trunk, and the far end's answer raises M long afterwards, so a
+claim's rise always finds `BUSY` already set at the previous visit and a real
+seizure's never does. Reading `BUSY` live instead loses about one seizure in
+eight, because the monitor's scanner covers eight slots while the marker's
+covers sixty-four ports and the marker reaches a port first that often. `BUSY`
+is a line on the block, beside the M lines the monitor already reads, so this
+costs one more '151 input and no new connection.
+
+### 3.4 A claim is a request, not a pulse
+
+**Measured in RTL, `exrtl`.** Every monitor counts on the same 1 kHz tick, so
+two calls whose last pulse ended in the same millisecond decide **together** —
+within one pool, and between the pools of two trunk blocks. A claim offered as
+a pulse is then lost: the cell goes to *done*, the marker never hears, the trunk
+sits busy pointed at idle, and the caller times out to cannot-complete. That is
+a call this exchange owned and never took, which is the loss §4 exists to bound.
+
+A claim must therefore be **held until the marker acknowledges it**, and the
+marker must take one at a time. It is also what §3.3 of `exch-network.md`
+already assumes: a ring delivers a call to its owner twice, and relies on the
+second claim being processed and finding the line busy.
 
 ---
 
