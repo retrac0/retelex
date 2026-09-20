@@ -75,6 +75,13 @@ and only the marker reads it: what the port is, its options, which way it goes
 if it is a trunk, and what it is nailed to if it is nailed. The block keeps no
 per-port settings, so **move a card and all of it moves with the card.**
 
+> **Proposed, not applied here** (`ex-groups.md`): the word's unused quarter,
+> bit 0 and bit 7 both set, becomes *a plain line that answers to `h s`*, and a
+> call that cannot be completed at the number dialled hunts for a port that
+> answers to it. That replaces §2.4's run of adjacent `o` ports and class
+> *operator*. Pin a14 carries an optional secondary word, a number on a port
+> that already has a class, and `w` becomes the primary's case of *lifts to*.
+
 ### 2.1 The pins
 
 The MF8 backplane reserved three pins of the channel slot's row *a* and connects

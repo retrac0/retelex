@@ -330,6 +330,11 @@ another dialable block spent, and four bridges.
 
 ### 7.4 The marker's part
 
+> **Proposed, not applied here** (`ex-groups.md` §5–§6): a bridge's legs
+> *answer to* its number, so the run, its `o` bits and the marker's ≈ 2 packages
+> go. Phones that answer to a bridge's number become its extensions, which needs
+> the bridge to ring out and the second `DATA` line that §7.5 declined.
+
 - **Class *conference*** (`exch-fabric.md` §3.5), in the leg's word, and **`/ANS`
   tied low** on the leg, so that it does not ring: E reaches the leg steadily,
   not in the ring cadence, and the caller hears no ringback. A leg that rang in

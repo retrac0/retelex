@@ -54,6 +54,11 @@ a hunt group, and dialling any leg takes the first free leg of its run
 voice port. A line's options are restricted, overflow (a hunt group) and warm
 line (`ex-extensions.md` §2.4).
 
+**Proposed further** (`ex-groups.md`): a port may *answer to a number*. A
+dialled number that cannot be completed where it was dialled is hunted for among
+the ports that answer to it, 0 becomes a call to 04, and class *operator* and
+§2's overflow step go.
+
 ---
 
 ## 2. Reading a number

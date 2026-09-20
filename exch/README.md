@@ -46,6 +46,7 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-basebandcard.md](docs/exch-basebandcard.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
 | [docs/exch-monitor.md](docs/exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
 | [docs/ex-extensions.md](docs/ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class, its options (restricted lines, hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
+| [docs/ex-groups.md](docs/ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number**, so a hunt group, a second operator's position, cover and a bank of call-in lines are jumpers on the members' cards, in any slots; a **secondary word** on the slot's last spare pin for the port that needs a class *and* a number, and the trade of what goes in which word; the conference bridge as a group, and **a group with a bridge in it**: extensions that ring together, where whoever answers is in and a phone lifted later joins, with nothing remembering the call |
 | [docs/ex-ss0.md](docs/ex-ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
 
 ## Tool
@@ -142,3 +143,14 @@ the class and its options: a trunk's direction, a restricted line, a hunt group,
 a warm line, or the port it is nailed to. A plain line card says all of it with
 no part, its word pin tied to ground. The earlier class on three pins is gone,
 and with it three commutators a block. Every circuit is still to draw. Nothing has been on a bench.
+
+Proposed: **a port answers to a number** (`ex-groups.md`). A call that cannot be
+completed at the number dialled is offered to the first free port that says it
+answers to that number, which makes a hunt group, a second operator's position,
+cover and a bank of call-in lines out of jumpers on the members' cards, in any
+slots, and replaces both the run of adjacent `o` ports and class *operator*. The
+word's last unused form says it on a plain phone's card; a secondary word on the
+slot's last spare pin, a14, says it on a port that already has a class. A
+conference bridge becomes a group at no cost, and a group may hold a bridge:
+extensions that ring together and join, with nothing remembering the call.
+Nothing is measured.
