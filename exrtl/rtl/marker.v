@@ -68,9 +68,10 @@ module marker #(
     input            reg_brk,
     output reg       reg_release,
 
-    // the monitor
+    // the monitors: a claim is a request held until it is acknowledged
     input            mon_claim,
-    input      [5:0] mon_port
+    input      [5:0] mon_port,
+    output reg       mon_ack
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
@@ -225,7 +226,7 @@ module marker #(
             wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1;
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0;
-            reg_attach <= 0; reg_port <= 0; reg_release <= 0;
+            reg_attach <= 0; reg_port <= 0; reg_release <= 0; mon_ack <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0;
             mst <= M_IDLE; caller <= 0; called <= 0; trunk <= 0;
@@ -239,6 +240,7 @@ module marker #(
             reg_attach  <= 1'b0;
             reg_release <= 1'b0;
             visit       <= 1'b0;
+            mon_ack     <= 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -352,7 +354,10 @@ module marker #(
             end
 
             // ---- the monitor claims: this call is ours -----------------
-            if (mon_claim) begin
+            // One a cycle, and only with room in the write queue: the request
+            // is held until taken, so nothing is lost by waiting.
+            if (mon_claim && !mon_ack && (wt - wh) < 3'd5) begin
+                mon_ack <= 1'b1;
                 if (!reg_busy && mst == M_IDLE) begin
                     push(mon_port, 6'o00, 1'b1, 1'b1);   // CLAIM: backward A rises
                     reg_attach <= 1'b1; reg_port <= mon_port;

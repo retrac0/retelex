@@ -54,8 +54,14 @@ module monitor #(
     input      [7:0] busy,                   // and their BUSY, from the same block
     input      [7:0] chan_mask,              // which slots the trunk card owns
 
-    output reg       claim,                  // one pulse: this port is ours
-    output reg [5:0] claim_port,
+    // A claim is a REQUEST, held until the marker acknowledges it.  As a bare
+    // pulse it could be lost: every cell counts on the same 1 kHz tick, so two
+    // calls whose last pulse ended in the same millisecond strobe together, and
+    // two pools on one exchange can do the same.  A lost claim is a call this
+    // exchange owned and never took -- the one thing 4 sizes the pool to avoid.
+    output           claim,
+    output     [5:0] claim_port,
+    input            claim_ack,
     output           held,                   // any cell counting
     output           all_busy                // a seizure now would go unwatched
 );
@@ -67,12 +73,28 @@ module monitor #(
     reg  [3*NMON-1:0]   c_slot;
     reg  [2*NMON-1:0]   c_st;
     reg  [10*NMON-1:0]  c_low;
+    reg  [NMON-1:0]     c_want;              // decided to claim, not yet acknowledged
 
     wire [NMON-1:0]     d_stb, d_clr;
     wire [4*NMON-1:0]   d_cnt;
 
     assign held     = |c_held;
     assign all_busy = &c_held;
+    assign claim    = |c_want;
+
+    integer w;
+    reg [NMON-1:0] first_want;               // one-hot: the cell being presented
+    reg [2:0]      want_slot;
+    always @* begin
+        first_want = {NMON{1'b0}};
+        want_slot  = 3'd0;
+        for (w = 0; w < NMON; w = w + 1)
+            if (c_want[w] && first_want == {NMON{1'b0}}) begin
+                first_want[w] = 1'b1;
+                want_slot     = c_slot[w*3 +: 3];
+            end
+    end
+    assign claim_port = {BLOCK, want_slot};
 
     // A fresh seizure: the three terms above.
     wire fresh = chan_mask[scan] && m[scan] && !seen[scan] && !seen_b[scan];
@@ -104,10 +126,10 @@ module monitor #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             scan <= 0; seen <= 0; seen_b <= 0;
-            c_held <= 0; c_slot <= 0; c_st <= 0; c_low <= 0;
-            claim <= 0; claim_port <= 0;
+            c_held <= 0; c_slot <= 0; c_st <= 0; c_low <= 0; c_want <= 0;
         end else begin
-            claim <= 1'b0;
+            // the marker took the one being presented
+            if (claim_ack) c_want <= c_want & ~first_want;
 
             if (oct_stb) begin
                 if (fresh)
@@ -137,8 +159,7 @@ module monitor #(
                     WANT_B: if (bad || v != OWN_B) begin
                                 c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE;
                             end else begin
-                                claim      <= 1'b1;
-                                claim_port <= {BLOCK, c_slot[k*3 +: 3]};
+                                c_want[k]      <= 1'b1;   // ours: ask the marker
                                 c_st[k*2 +: 2] <= DONE;   // two digits and no more
                             end
                     default: ;
@@ -151,9 +172,12 @@ module monitor #(
                     else if (c_low[k*10 +: 10] == CLR[9:0]) begin
                         c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE;
                         c_low[k*10 +: 10] <= 10'd0;
+                        c_want[k] <= 1'b0;        // the caller gave up first
                     end else c_low[k*10 +: 10] <= c_low[k*10 +: 10] + 1'b1;
                 end
-                if (d_clr[k]) begin c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE; end
+                if (d_clr[k]) begin
+                    c_held[k] <= 1'b0; c_st[k*2 +: 2] <= IDLE; c_want[k] <= 1'b0;
+                end
             end
         end
     end

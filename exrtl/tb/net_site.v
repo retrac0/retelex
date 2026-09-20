@@ -158,26 +158,33 @@ module net_site #(
         .ha(ha), .attach(r_attach), .attach_port(r_port), .release_it(r_release),
         .busy(r_busy), .port(), .cnt(r_cnt), .dig_stb(r_stb), .gone(r_gone), .brk(r_brk));
 
-    // A monitor on each block that holds trunks (exch-monitor.md 4).
+    // Two pools, one marker.  Present block 0's request while it has one, and
+    // acknowledge only the pool that was presented, so a request on the other
+    // waits its turn rather than being dropped.
+    wire       mack;
+    wire       mclaim = mc0 | mc1;
+    wire [5:0] mport  = mc0 ? mp0 : mp1;
+    wire       ack0   = mack &  mc0;
+    wire       ack1   = mack & ~mc0;
+
+    // A monitor pool on each block that holds trunks (exch-monitor.md 4).
     monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0),
               .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon0 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
         .m(tk_a_tx), .busy(pbusy[7:0]), .chan_mask(8'b1110_1110),
-        .claim(mc0), .claim_port(mp0), .held(mh0), .all_busy());
+        .claim(mc0), .claim_port(mp0), .claim_ack(ack0), .held(mh0), .all_busy());
 
     generate if (HAS_TRUNK1) begin : mon1
         monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd1),
                   .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon1 (
             .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
             .m(t1_a_tx), .busy(pbusy[15:8]), .chan_mask(8'b1110_1110),
-            .claim(mc1), .claim_port(mp1), .held(mh1), .all_busy());
+            .claim(mc1), .claim_port(mp1), .claim_ack(ack1), .held(mh1), .all_busy());
     end else begin : nomon1
         assign mc1 = 1'b0; assign mp1 = 6'd0; assign mh1 = 1'b0;
     end endgenerate
 
     assign mon_held = mh0 | mh1;
-    wire       mclaim = mc0 | mc1;
-    wire [5:0] mport  = mc0 ? mp0 : mp1;
 
     marker #(.OWN_E(OWN_E), .OWN_B(OWN_B), .DIALTONE(PDT), .NOGO(PNG),
              .HAS_NET(1'b1), .T_GUARD(T_GUARD), .T_CLAIM(T_CLAIM)) u_mk (
@@ -189,7 +196,7 @@ module net_site #(
         .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
         .reg_cnt(r_cnt), .reg_dig_stb(r_stb), .reg_gone(r_gone), .reg_brk(r_brk),
         .reg_release(r_release),
-        .mon_claim(mclaim), .mon_port(mport));
+        .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack));
 
     assign got_claim  = u_mk.claimed;
     assign dirs_held  = u_mk.d_held;

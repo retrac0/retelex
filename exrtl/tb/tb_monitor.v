@@ -27,16 +27,20 @@ module tb_monitor;
     reg  [7:0] m = 8'h00, busy = 8'h00;
     wire       claim, held, all_busy;
     wire [5:0] claim_port;
+    // a marker: take a request a cycle after it is presented
+    reg        ack = 0;
+    always @(posedge clk) ack <= claim && !ack;
 
     monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0),
               .HIT(HIT), .ID(ID), .CLR(CLR)) dut (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
         .m(m), .busy(busy), .chan_mask(8'b1110_1110),
-        .claim(claim), .claim_port(claim_port), .held(held), .all_busy(all_busy));
+        .claim(claim), .claim_port(claim_port), .claim_ack(ack),
+        .held(held), .all_busy(all_busy));
 
     integer errs = 0, chk = 0, nclaim = 0;
     reg [7:0] claimed_slots = 0;
-    always @(posedge clk) if (claim) begin
+    always @(posedge clk) if (ack) begin
         nclaim <= nclaim + 1;
         claimed_slots <= claimed_slots | (8'd1 << claim_port[2:0]);
     end
@@ -55,6 +59,18 @@ module tb_monitor;
         begin
             for (i = 0; i < n; i = i + 1) begin
                 m[s] = 1'b0; #(BRK); m[s] = 1'b1; #(MK);
+            end
+            #(PAUSE);
+        end
+    endtask
+
+    // two slots dialled in perfect lockstep: both cells strobe on the same tick
+    task dial2(input integer s1, input integer s2, input integer n);
+        integer i;
+        begin
+            for (i = 0; i < n; i = i + 1) begin
+                m[s1] = 1'b0; m[s2] = 1'b0; #(BRK);
+                m[s1] = 1'b1; m[s2] = 1'b1; #(MK);
             end
             #(PAUSE);
         end
@@ -113,6 +129,23 @@ module tb_monitor;
         dial(6, 2); dial(6, 3);
         #(40_000_000);
         want(nclaim == 1 && claimed_slots == 8'b0100_0000, "and it claimed slot 06");
+
+        m[6] = 0; busy[6] = 0; #(60_000_000);
+
+        // ---- 5. two claims in the same clock ----------------------------
+        // Every cell counts on the same 1 kHz tick, so two calls whose last
+        // pulse ended in the same millisecond decide TOGETHER.  As a bare pulse
+        // one claim was lost -- a call this exchange owned and never took.
+        $display("\n  5. Two callers dialling in lockstep: both cells decide on the same tick.");
+        nclaim = 0; claimed_slots = 0;
+        m[1] = 1'b1; m[3] = 1'b1;               // both seize together
+        #(3_000_000);
+        want(all_busy, "both caught");
+        dial2(1, 3, 2);                         // e = 2, pulse for pulse
+        dial2(1, 3, 3);                         // b = 3: both claim AT ONCE
+        #(40_000_000);
+        want(nclaim == 2, "both claims were taken, one after the other");
+        want(claimed_slots == 8'b0000_1010, "naming slots 01 and 03");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
         $finish;
