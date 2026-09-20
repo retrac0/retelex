@@ -62,8 +62,9 @@ module marker #(
     output reg       reg_attach,
     output reg [5:0] reg_port,
     input            reg_busy,
-    input      [3:0] reg_cnt,
-    input            reg_dig_stb,
+    input      [2:0] reg_ndig,       // digits in the register's store ...
+    input     [15:0] reg_digits,     // ... and the store: levels, not strobes
+    output reg       reg_restart,    // the key, or our own code, is consumed
     input            reg_gone,
     input            reg_brk,
     output reg       reg_release,
@@ -140,9 +141,12 @@ module marker #(
     reg [3:0] cand_ok;
 
     // ---------------- the sequencer -------------------------------------
-    localparam M_IDLE=4'd0,  M_FIRST=4'd1,  M_SECOND=4'd2, M_PROBE=4'd3,
-               M_HUNTW=4'd4, M_NET_E=4'd5,  M_NET_B=4'd6,  M_NET_H=4'd7,
-               M_NET_S=4'd8, M_WAITCL=4'd9, M_SEIZE=4'd10;
+    // Two stages read digits, and each only waits for the register's store to
+    // reach a count.  The key and our own code are consumed by RESTARTING the
+    // store, so e b h s always land in slots 0-3 and a local h s in 0-1 -- a
+    // claimed trunk, an own-code call and a plain local call are one path.
+    localparam M_IDLE=4'd0, M_LOCAL=4'd1, M_PROBE=4'd2, M_HUNTW=4'd3,
+               M_SEIZE=4'd4, M_NET=4'd5, M_WAITCL=4'd6;
 
     reg [3:0]  mst;
     reg [5:0]  caller, called, trunk;
@@ -160,8 +164,15 @@ module marker #(
     reg        ctx_clm;
     reg [15:0] tmr;
 
-    wire [2:0] val  = (reg_cnt == 4'd10) ? 3'd0 : reg_cnt[2:0];
-    wire       svc  = (reg_cnt == 4'd8) || (reg_cnt == 4'd9) || (reg_cnt > 4'd10);
+    // The store, as pulse counts.  A digit's VALUE is the low three bits,
+    // forced to 000 when bit 3 is set -- three AND gates, so that a dialled 0,
+    // ten pulses, 1010, is octal 0 (exch-protocol.md 5).  8 and 9 are service
+    // digits, caught before they are ever an address.
+    wire [3:0] d0 = reg_digits[3:0],  d1 = reg_digits[7:4];
+    function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
+    function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
+    reg        f1, f2;               // how far into the store this stage has read
+    reg [1:0]  hold;                 // a restart takes a cycle to reach the register
 
     task nogo;                                     // cannot-complete, and let go
         begin
@@ -227,6 +238,7 @@ module marker #(
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0;
             reg_attach <= 0; reg_port <= 0; reg_release <= 0; mon_ack <= 0;
+            reg_restart <= 0; f1 <= 0; f2 <= 0; hold <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0;
             mst <= M_IDLE; caller <= 0; called <= 0; trunk <= 0;
@@ -239,6 +251,8 @@ module marker #(
         end else begin
             reg_attach  <= 1'b0;
             reg_release <= 1'b0;
+            reg_restart <= 1'b0;
+            if (hold != 2'd0) hold <= hold - 1'b1;
             visit       <= 1'b0;
             mon_ack     <= 1'b0;
 
@@ -338,8 +352,7 @@ module marker #(
             // ---- the claim coming back on a seized trunk ---------------
             // An origin that seized several keeps the one whose M rises.
             if (visit && p_valid && p_m && !claimed &&
-                (mst == M_NET_E || mst == M_NET_B || mst == M_NET_H ||
-                 mst == M_NET_S || mst == M_WAITCL)) begin
+                (mst == M_NET || mst == M_WAITCL)) begin
                 for (i = 0; i < 4; i = i + 1)
                     if (d_held[i] && p_port == d_trunk[i]) begin
                         claimed <= 1'b1;
@@ -361,7 +374,8 @@ module marker #(
                 if (!reg_busy && mst == M_IDLE) begin
                     push(mon_port, 6'o00, 1'b1, 1'b1);   // CLAIM: backward A rises
                     reg_attach <= 1'b1; reg_port <= mon_port;
-                    caller <= mon_port; mst <= M_FIRST; claimed <= 1'b0;
+                    caller <= mon_port; mst <= M_LOCAL; claimed <= 1'b0;
+                    f1 <= 1'b0; f2 <= 1'b0; hold <= 2'd3;
                     ctx_clm <= 1'b1;               // it stays claimed until release
                 end else begin
                     // claimed, cannot complete -- the caller hears it at once
@@ -371,8 +385,7 @@ module marker #(
 
             // ---- the caller went away ----------------------------------
             if (reg_gone && mst != M_IDLE) begin
-                if (mst == M_NET_E || mst == M_NET_B || mst == M_NET_H ||
-                    mst == M_NET_S || mst == M_WAITCL) drop_trunk;
+                if (mst == M_NET || mst == M_WAITCL) drop_trunk;
                 mst <= M_IDLE; claimed <= 1'b0; guarding <= 1'b0;
             end else if (guarding && reg_brk) begin
                 // a break inside the guard: the far monitors cannot have seen
@@ -380,41 +393,49 @@ module marker #(
                 drop_trunk; nogo;
             end
 
-            // ---- a digit ------------------------------------------------
-            else if (reg_dig_stb) begin
-                case (mst)
-                M_FIRST:
-                    if (reg_cnt == 4'd1) begin
-                        if (HAS_NET) begin
-                            push(caller, 6'o00, 1'b1, ctx_clm);  // dial tone off
-                            start_dir_hunt; mst <= M_SEIZE;
-                        end
-                        else nogo;                       // no network card fitted
-                    end
-                    else if (reg_cnt == 4'd8)  nogo;     // spare
-                    else if (reg_cnt == 4'd9)  begin start_hunt(C_OUT);  mst <= M_HUNTW; end
-                    else if (reg_cnt == 4'd10) begin start_hunt(C_OPER); mst <= M_HUNTW; end
-                    else if (svc) nogo;
-                    else begin
-                        push(caller, 6'o00, 1'b1, ctx_clm);    // dial tone off
-                        dh <= val; mst <= M_SECOND;
-                    end
-                M_SECOND: begin called <= {dh, val}; mst <= M_PROBE; end
-                M_NET_E:  if (svc) begin drop_trunk; nogo; end
-                          else begin de <= val; mst <= M_NET_B; end
-                M_NET_B:  if (svc) begin drop_trunk; nogo; end
-                          else if (de == OWN_E && val == OWN_B) begin
-                              drop_trunk; mst <= M_FIRST;      // our own code: carry on locally
-                          end else mst <= M_NET_H;
-                M_NET_H:  begin dh <= val; mst <= M_NET_S; end
-                M_NET_S:  begin mst <= M_WAITCL; tmr <= 0; end
-                default: ;
-                endcase
-            end
-
-            // ---- the states that wait ----------------------------------
+            // ---- the stages -----------------------------------------------
             else begin
                 case (mst)
+                M_LOCAL: if (hold == 2'd0) begin
+                    if (!f1 && reg_ndig >= 3'd1) begin
+                        // the first digit: a key, or the highway of a number
+                        if (d0 == 4'd1) begin
+                            if (HAS_NET) begin
+                                push(caller, 6'o00, 1'b1, ctx_clm);  // dial tone off
+                                reg_restart <= 1'b1; hold <= 2'd3;   // the key is consumed
+                                start_dir_hunt; mst <= M_SEIZE;
+                            end else nogo;                   // no network card fitted
+                        end
+                        else if (d0 == 4'd8)  nogo;          // spare
+                        else if (d0 == 4'd9)  begin start_hunt(C_OUT);  mst <= M_HUNTW; end
+                        else if (d0 == 4'd10) begin start_hunt(C_OPER); mst <= M_HUNTW; end
+                        else if (isvc(d0)) nogo;
+                        else begin
+                            push(caller, 6'o00, 1'b1, ctx_clm);      // dial tone off
+                            f1 <= 1'b1;
+                        end
+                    end else if (f1 && reg_ndig >= 3'd2) begin
+                        called <= {oct(d0), oct(d1)}; mst <= M_PROBE;
+                    end
+                end
+                M_NET: if (hold == 2'd0) begin
+                    if (!f1 && reg_ndig >= 3'd1) begin               // e
+                        if (isvc(d0)) begin drop_trunk; nogo; end    // reserved
+                        else f1 <= 1'b1;
+                    end else if (f1 && !f2 && reg_ndig >= 3'd2) begin // b
+                        if (isvc(d1)) begin drop_trunk; nogo; end
+                        else if (oct(d0) == OWN_E && oct(d1) == OWN_B) begin
+                            // our own code: release the trunks and carry on
+                            // locally.  The store restarts, and h s arrive as
+                            // any local number does.
+                            drop_trunk;
+                            reg_restart <= 1'b1; hold <= 2'd3;
+                            f1 <= 1'b0; f2 <= 1'b0; mst <= M_LOCAL;
+                        end else f2 <= 1'b1;
+                    end else if (f2 && reg_ndig >= 3'd4) begin       // h s: dialling is over
+                        mst <= M_WAITCL; tmr <= 0;
+                    end
+                end
                 M_SEIZE: if (hunt_done) begin
                              hunt_done <= 1'b0;
                              if (cand_ok != 4'd0) begin
@@ -428,7 +449,8 @@ module marker #(
                                      end
                                  d_held   <= cand_ok;
                                  trunk    <= 6'd0;
-                                 guarding <= 1'b1; tmr <= 0; mst <= M_NET_E;
+                                 guarding <= 1'b1; tmr <= 0; mst <= M_NET;
+                                 f1 <= 1'b0; f2 <= 1'b0;
                              end else nogo;              // no free trunk anywhere
                          end
                 M_HUNTW: if (hunt_done) begin
@@ -472,7 +494,10 @@ module marker #(
                                 if (!reg_busy) begin
                                     reg_attach <= 1'b1; reg_port <= p_port;
                                     push(p_port, DIALTONE, 1'b1, 1'b0);
-                                    caller <= p_port; mst <= M_FIRST;
+                                    caller <= p_port; mst <= M_LOCAL;
+                                    f1 <= 1'b0; f2 <= 1'b0;
+                                    // the store is the last caller's for a cycle yet
+                                    hold <= 2'd3;
                                     claimed <= 1'b0; guarding <= 1'b0; ctx_clm <= 1'b0;
                                 end
                             end

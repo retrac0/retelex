@@ -147,8 +147,9 @@ module net_site #(
     endgenerate
 
     // ---- common control --------------------------------------------------
-    wire       r_busy, r_stb, r_gone, r_brk, r_attach, r_release;
-    wire [3:0] r_cnt;
+    wire        r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
+    wire [2:0]  r_ndig;
+    wire [15:0] r_digits;
     wire [5:0] r_port;
     wire       mc0, mc1, mh0, mh1;
     wire [5:0] mp0, mp1;
@@ -156,7 +157,8 @@ module net_site #(
     pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(2000)) u_reg (
         .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
         .ha(ha), .attach(r_attach), .attach_port(r_port), .release_it(r_release),
-        .busy(r_busy), .port(), .cnt(r_cnt), .dig_stb(r_stb), .gone(r_gone), .brk(r_brk));
+        .restart(r_restart), .busy(r_busy), .port(),
+        .ndig(r_ndig), .digits(r_digits), .gone(r_gone), .brk(r_brk));
 
     // Two pools, one marker.  Present block 0's request while it has one, and
     // acknowledge only the pool that was presented, so a request on the other
@@ -194,7 +196,8 @@ module net_site #(
         .ha(ha), .pb_busy(pb_busy), .pb_word(pb_word),
         .sdata(sdata), .sclk(sclk), .wr(wr),
         .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
-        .reg_cnt(r_cnt), .reg_dig_stb(r_stb), .reg_gone(r_gone), .reg_brk(r_brk),
+        .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
+        .reg_gone(r_gone), .reg_brk(r_brk),
         .reg_release(r_release),
         .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack));
 
