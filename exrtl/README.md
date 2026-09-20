@@ -133,6 +133,36 @@ naming it. `ctl_write` takes a `strobe` input for that — low, it shifts the wo
 and never pulses `WR` — which is safe only because nothing reads a block's shift
 register outputs until `WR`.
 
+### What the serial bus demands of a marker
+
+Three things the RTL found in making `exch-mainboard.md` §2.3 work, none of
+them in the document yet. They are the marker's, not this model's: a 74HC
+marker on this bus needs all three.
+
+**Steering the probe costs a visit, and the cost lands on slot 0.** The word
+takes 31 µs at 512 kHz; the visit it governs takes its first `PB` sample about
+1 µs in, so **a re-point can never complete before the visit it is for**. The
+first visit of every block therefore reads the *previous* block's `BUSY` and
+word — and in the port map that is `00`, `10`, and the first line of every
+block of lines. Port 20 is slot 0 of block 2, so the MVP's own caller is the
+first thing this breaks. The marker needs a validity interlock, and a scanner
+that can **hold** for one visit and repeat the disturbed one rather than lose
+it. That is about one visit a block: a 64-port scan goes from 8 ms to 9 ms.
+
+**Once the scanner can stall, anything keyed on "a visit happened" is wrong.**
+It must be keyed on the scanner actually *advancing*. Two things that were
+correct on the parallel bus are not on this one: "a block turns over", which
+keyed on the octet mark and slot 7 — a stalled scanner sits *at* slot 7, so
+every repeated visit queued another re-point and every re-point stalled it
+again, a livelock; and the hunt's sweep, which terminates at port 63 — a
+repeated visit of port 63 ended the sweep the instant it began, so no free
+trunk was ever found.
+
+**§7's `SCLK` hazard is slightly better than written.** A stray shift corrupts
+the next write, which is one call, as the document has it. It also mis-points
+the probe — but the marker re-points at the next block boundary regardless, so
+that half self-heals within a millisecond.
+
 **A trunk is a pair of ports back to back, and nothing else.** What a trunk
 port hears from its own fabric goes out on the line; what comes in off the line
 is what that port's card says (`exch-network.md` §1). The card decides nothing
