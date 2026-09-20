@@ -34,9 +34,9 @@ module tb_pool;
     A (.clk(clk_a), .rst_n(rst_n), .hook20(h20a), .hook21(h21a),
        .tx20(t20a), .tx21(t21a), .rx20(r20a), .rx21(r21a), .e20(e20a), .e21(e21a),
        .line_in(ba), .line_out(ab), .locked(lka),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fsa), .ring_cad_n(rca), .dt_bit(dta), .ng_bit(nga),
-       .mon_held(mha), .got_claim(gca), .dirs_held(dha));
+       .mon_held(mha), .got_claim(gca), .dirs_held(dha),
+       .fan_legs(), .res_used(), .port_busy());
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .DIR0(2'd3), .G0(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -44,9 +44,9 @@ module tb_pool;
     B (.clk(clk_b), .rst_n(rst_n), .hook20(h20b), .hook21(h21b),
        .tx20(t20b), .tx21(t21b), .rx20(r20b), .rx21(r21b), .e20(e20b), .e21(e21b),
        .line_in(ab), .line_out(ba), .locked(lkb),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fsb), .ring_cad_n(rcb), .dt_bit(dtb), .ng_bit(ngb),
-       .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb));
+       .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb),
+       .fan_legs(), .res_used(), .port_busy());
 
     reg pe = 0;
     bitpath p_2020 (.src_clk(clk_a), .src_fs(fsa), .src_bit(t20a),

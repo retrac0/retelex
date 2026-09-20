@@ -11,7 +11,9 @@
 //             second is our b        -> CLAIM
 //             either 8 or 9          -> reserved: let go
 //             anything else          -> let go, at once
-//   done      nothing more until the trunk releases
+//   done      two digits and no more: the cell is freed as soon as the marker
+//             has the claim, and the slot is not attended again -- M stays high
+//             for the call, so no rise is ever seen on it
 //
 // A POOL, NOT ONE A CHANNEL (4).  One scanner steps the block's eight slots on
 // the 8 kHz octet mark; a fresh seizure goes to whichever cell is free, and if
@@ -63,7 +65,8 @@ module monitor #(
     output     [5:0] claim_port,
     input            claim_ack,
     output           held,                   // any cell counting
-    output           all_busy                // a seizure now would go unwatched
+    output           all_busy,               // a seizure now would go unwatched
+    output [NMON-1:0] cells                  // which cells are held: 4's traffic figure
 );
     localparam IDLE = 2'd0, WANT_E = 2'd1, WANT_B = 2'd2, DONE = 2'd3;
 
@@ -78,6 +81,7 @@ module monitor #(
     wire [NMON-1:0]     d_stb, d_clr;
     wire [4*NMON-1:0]   d_cnt;
 
+    assign cells    = c_held;
     assign held     = |c_held;
     assign all_busy = &c_held;
     assign claim    = |c_want;
@@ -128,8 +132,17 @@ module monitor #(
             scan <= 0; seen <= 0; seen_b <= 0;
             c_held <= 0; c_slot <= 0; c_st <= 0; c_low <= 0; c_want <= 0;
         end else begin
-            // the marker took the one being presented
-            if (claim_ack) c_want <= c_want & ~first_want;
+            // The marker took the one being presented, and with that the cell
+            // has nothing left to do: it read two digits and no more (2).  It
+            // must be FREED here and not left in `done` until the trunk
+            // releases, or the owner of a call holds a cell for the whole
+            // conversation instead of the 2.7 s 4 sizes the pool on.  Nothing
+            // can re-attach to the slot meanwhile: M stays high for the call,
+            // so `seen` stays set and no rise is ever seen.
+            if (claim_ack) begin
+                c_want <= c_want & ~first_want;
+                c_held <= c_held & ~first_want;
+            end
 
             if (oct_stb) begin
                 if (fresh)

@@ -41,9 +41,9 @@ module tb_net;
     A (.clk(clk_a), .rst_n(rst_n), .hook20(h20a), .hook21(h21a),
        .tx20(t20a), .tx21(t21a), .rx20(r20a), .rx21(r21a), .e20(e20a), .e21(e21a),
        .line_in(lb_out), .line_out(la_out), .locked(lock_a),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fs_a), .ring_cad_n(rc_a), .dt_bit(dt_a), .ng_bit(ng_a),
-       .mon_held(mh_a), .got_claim(gc_a), .dirs_held());
+       .mon_held(mh_a), .got_claim(gc_a), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy());
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .DIR0(2'd3), .G0(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL),
@@ -52,9 +52,9 @@ module tb_net;
     B (.clk(clk_b), .rst_n(rst_n), .hook20(h20b), .hook21(h21b),
        .tx20(t20b), .tx21(t21b), .rx20(r20b), .rx21(r21b), .e20(e20b), .e21(e21b),
        .line_in(la_out), .line_out(lb_out), .locked(lock_b),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fs_b), .ring_cad_n(rc_b), .dt_bit(dt_b), .ng_bit(ng_b),
-       .mon_held(mh_b), .got_claim(gc_b), .dirs_held());
+       .mon_held(mh_b), .got_claim(gc_b), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy());
 
     reg path_en = 0;
     bitpath p_a20b21 (.src_clk(clk_a), .src_fs(fs_a), .src_bit(t20a),

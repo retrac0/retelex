@@ -18,8 +18,11 @@ TB_net    := tb/net_site.v tb/bitpath.v tb/tb_net.v
 TB_chain  := tb/net_site.v tb/bitpath.v tb/tb_chain.v
 TB_monitor := tb/tb_monitor.v
 TB_pool   := tb/net_site.v tb/bitpath.v tb/tb_pool.v
+TB_hub    := tb/net_site.v tb/bitpath.v tb/tb_hub.v
+TB_ring   := tb/net_site.v tb/bitpath.v tb/tb_ring.v
+TB_erlang := tb/tb_erlang.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -36,17 +39,40 @@ $(SIMS): %: $(BUILD)
 	@$(BUILD)/vl/$*/tb_$* 2>&1 | grep -v '^- '
 
 # Icarus, the reference: `make iv-fabric`, `make iv-net`, ...
+# Icarus is ~100x slower, so the traffic run is offered a tenth of the calls
+# there: it checks that the two simulators agree, not the erlang figures.
+IVPAR_erlang := -Ptb_erlang.NCALLS=25
+
 IVSIMS := $(addprefix iv-,$(SIMS))
 $(IVSIMS): iv-%: $(BUILD)
-	@iverilog $(IVFLAG) -o $(BUILD)/$*.vvp $(RTL) $(TB_$*) && vvp $(BUILD)/$*.vvp
+	@iverilog $(IVFLAG) $(IVPAR_$*) -o $(BUILD)/$*.vvp $(RTL) $(TB_$*) && vvp $(BUILD)/$*.vvp
 
 iv: $(IVSIMS)
 
+# The traffic run with enough calls to measure a 2 % loss, not just check it.
+erlang-long: $(BUILD)
+	@mkdir -p $(BUILD)/vl/erlangl
+	@verilator $(VLFLAG) -GNCALLS=3000 --top-module tb_erlang \
+	    --Mdir $(BUILD)/vl/erlangl -o tb_erlangl $(RTL) $(TB_erlang) \
+	    > $(BUILD)/vl-erlangl.log 2>&1 || (cat $(BUILD)/vl-erlangl.log; false)
+	@$(BUILD)/vl/erlangl/tb_erlangl 2>&1 | grep -v '^- '
+
+# The ring with the strap taken out: the flood goes round and round.
+ring-open: $(BUILD)
+	@mkdir -p $(BUILD)/vl/ringopen
+	@verilator $(VLFLAG) -GSTRAP=0 --top-module tb_ring \
+	    --Mdir $(BUILD)/vl/ringopen -o tb_ringopen $(RTL) $(TB_ring) \
+	    > $(BUILD)/vl-ringopen.log 2>&1 || (cat $(BUILD)/vl-ringopen.log; false)
+	@$(BUILD)/vl/ringopen/tb_ringopen 2>&1 | grep -v '^- '
+
 # The MF8 link with the two exchanges' crystals 100 ppm apart.
+# -G takes a BARE parameter name: -Gtb_trunk.PPM=100 is not found, and with the
+# log going to /dev/null this target was silently dead from Verilator 5 on.
 trunk-ppm: $(BUILD)
 	@mkdir -p $(BUILD)/vl/trunkppm
-	@verilator $(VLFLAG) -Gtb_trunk.PPM=100 --top-module tb_trunk \
-	    --Mdir $(BUILD)/vl/trunkppm -o tb_trunkppm $(RTL) $(TB_trunk) > /dev/null 2>&1
+	@verilator $(VLFLAG) -GPPM=100 --top-module tb_trunk \
+	    --Mdir $(BUILD)/vl/trunkppm -o tb_trunkppm $(RTL) $(TB_trunk) \
+	    > $(BUILD)/vl-trunkppm.log 2>&1 || (cat $(BUILD)/vl-trunkppm.log; false)
 	@$(BUILD)/vl/trunkppm/tb_trunkppm 2>&1 | grep -v '^- '
 
 lint:
@@ -67,4 +93,4 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) trunk-ppm lint synth clean
+.PHONY: all iv $(SIMS) $(IVSIMS) ring-open erlang-long trunk-ppm lint synth clean

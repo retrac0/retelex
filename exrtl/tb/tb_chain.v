@@ -48,22 +48,22 @@ module tb_chain;
     A (.clk(clk_a), .rst_n(rst_n), .hook20(h20a), .hook21(h21a),
        .tx20(t20a), .tx21(t21a), .rx20(r20a), .rx21(r21a), .e20(e20a), .e21(e21a),
        .line_in(ba), .line_out(ab), .locked(lka),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fsa), .ring_cad_n(rca), .dt_bit(dta), .ng_bit(nga),
-       .mon_held(mha), .got_claim(gca), .dirs_held(dha));
+       .mon_held(mha), .got_claim(gca), .dirs_held(dha),
+       .fan_legs(), .res_used(), .port_busy());
 
     // B: code 23, a transit.  W toward A on block 0, E toward C on block 1.
     // The glare bit is set at one end of each link, here B's W side and C's.
-    net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .DIR0(W), .G0(1'b1),
-               .HAS_TRUNK1(1'b1), .DIR1(E),
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .NDIR(2), .DIR0(W), .G0(1'b1),
+               .DIR1(E),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
     B (.clk(clk_b), .rst_n(rst_n), .hook20(h20b), .hook21(h21b),
        .tx20(t20b), .tx21(t21b), .rx20(r20b), .rx21(r21b), .e20(e20b), .e21(e21b),
-       .line_in(ab),  .line_out(ba),  .locked(lkb0),
-       .line_in1(cb), .line_out1(bc), .locked1(lkb1),
+       .line_in({cb, ab}), .line_out({bc, ba}), .locked({lkb1, lkb0}),
        .frame_stb(fsb), .ring_cad_n(rcb), .dt_bit(dtb), .ng_bit(ngb),
-       .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb));
+       .mon_held(mhb), .got_claim(gcb), .dirs_held(dhb),
+       .fan_legs(), .res_used(), .port_busy());
 
     // C: code 24, one direction, facing W toward B
     net_site #(.OWN_E(3'd2), .OWN_B(3'd4), .DIR0(W), .G0(1'b1),
@@ -72,9 +72,9 @@ module tb_chain;
     C (.clk(clk_c), .rst_n(rst_n), .hook20(h20c), .hook21(h21c),
        .tx20(t20c), .tx21(t21c), .rx20(r20c), .rx21(r21c), .e20(e20c), .e21(e21c),
        .line_in(bc), .line_out(cb), .locked(lkc),
-       .line_in1(1'b0), .line_out1(), .locked1(),
        .frame_stb(fsc), .ring_cad_n(rcc), .dt_bit(dtc), .ng_bit(ngc),
-       .mon_held(mhc), .got_claim(gcc), .dirs_held(dhc));
+       .mon_held(mhc), .got_claim(gcc), .dirs_held(dhc),
+       .fan_legs(), .res_used(), .port_busy());
 
     reg path_en = 0;
     bitpath p_a20c21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(t20a),

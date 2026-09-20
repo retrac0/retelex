@@ -36,7 +36,7 @@ module tb_monitor;
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
         .m(m), .busy(busy), .chan_mask(8'b1110_1110),
         .claim(claim), .claim_port(claim_port), .claim_ack(ack),
-        .held(held), .all_busy(all_busy));
+        .held(held), .all_busy(all_busy), .cells());
 
     integer errs = 0, chk = 0, nclaim = 0;
     reg [7:0] claimed_slots = 0;

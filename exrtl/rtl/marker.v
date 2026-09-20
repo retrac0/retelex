@@ -27,10 +27,18 @@
 //       backward A stays 0 and nothing has claimed yet
 //   the monitor claims            -> re-point it with CLAIM set, so backward A
 //       rises, and give a register the trunk's port: it is a line here now
+//
+// and at a HUB, where there is more than one other direction (3.2):
+//
+//   a seizure arriving -> a free trunk in EVERY other direction, each listening
+//       to the incoming one; the incoming one goes on listening to idle, BUSY
+//       set, so backward A stays 0.  A RESOLVER remembers the call until a
+//       leg's M rises, because latches cannot be read back
 `timescale 1ns/1ps
 
 module marker #(
     parameter integer NREG      = 2,        // registers in the pool (exch-marker.md 6)
+    parameter integer NRES      = 1,        // resolvers, at a hub (exch-network.md 3.2)
     parameter [2:0]   OWN_E     = 3'd2,
     parameter [2:0]   OWN_B     = 3'd2,
     parameter [5:0]   DIALTONE  = 6'o10,
@@ -76,9 +84,12 @@ module marker #(
     input      [5:0] mon_port,
     output reg       mon_ack,
 
-    // for a testbench: any call claimed; every direction any call holds
+    // for a testbench: any call claimed; every direction any call holds; the
+    // legs a fan-out at this exchange is holding, and how many resolvers are in use
     output           any_claimed,
-    output reg [3:0] dirs_held
+    output reg [3:0] dirs_held,
+    output reg [3:0] fan_legs,
+    output reg [3:0] res_used
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
@@ -216,13 +227,35 @@ module marker #(
 
     // ---------------- the forwarder --------------------------------------
     // exch-network.md 3: a seizure arriving on a trunk is patched onward into
-    // every OTHER direction, and the exchange forgets it.  It runs on its own
-    // so that a transit is never held up by a call the marker is setting up.
+    // every OTHER direction, and the exchange forgets everything but the
+    // addresses, which go in a resolver.  It runs on its own so that a transit
+    // is never held up by a call the marker is setting up.
     localparam F_IDLE = 2'd0, F_RUN = 2'd2, F_GO = 2'd3;
     reg [1:0] fst;
-    reg [5:0] f_in, f_cand, f_start;
+    reg [5:0] f_in, f_start;
     reg [1:0] f_dir;
-    reg       f_ok;
+    reg [5:0] f_cand [0:3];            // a free trunk in each OTHER direction
+    reg [3:0] f_cok;
+
+    // ---------------- the resolvers (exch-network.md 3.2) ----------------
+    // A hub forwards into two or three directions.  Any number of trunks may
+    // listen to the incoming one, so the caller's pulses go down every leg at
+    // once -- but the incoming trunk can listen to only ONE port, and which
+    // leg will claim is not known until the claim comes back.  Latches cannot
+    // be read back, so the hub remembers the call until then, and that is the
+    // whole of a resolver: the incoming trunk's address and the legs'.
+    //
+    // A CHAIN TRANSIT TAKES ONE TOO, though 3.2 says it "holds nothing".  Its
+    // one leg is patched through at once and there is nothing to resolve -- but
+    // if the call turns out to be this exchange's own, its monitor must clear
+    // that onward patch (3.1), and a marker that forgot the pair cannot.
+    reg [NRES-1:0] rs_busy;
+    reg [5:0]      rs_in  [0:NRES-1];
+    reg [5:0]      rs_leg [0:4*NRES-1];
+    reg [3:0]      rs_held[0:NRES-1];
+    integer        v, rpick, nleg;
+    reg [1:0]      first;
+    reg            got, legclm;
 
     integer i, r, pick;
     reg [NREG-1:0] pk;                 // contexts given a caller THIS cycle (blocking)
@@ -234,6 +267,12 @@ module marker #(
     always @* begin
         dirs_held = 4'd0;
         for (i = 0; i < NREG; i = i + 1) dirs_held = dirs_held | d_held[i];
+        fan_legs = 4'd0;
+        res_used = 4'd0;
+        for (i = 0; i < NRES; i = i + 1) begin
+            fan_legs = fan_legs | rs_held[i];
+            res_used = res_used + {3'd0, rs_busy[i]};
+        end
     end
 
     always @(posedge clk or negedge rst_n) begin
@@ -249,7 +288,11 @@ module marker #(
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0; hunt_dirs <= 0; cand_ok <= 0;
             hunt_busy <= 0; hunt_owner <= 0;
-            fst <= F_IDLE; f_in <= 0; f_cand <= 0; f_dir <= 0; f_ok <= 0; f_start <= 0;
+            fst <= F_IDLE; f_in <= 0; f_dir <= 0; f_cok <= 0; f_start <= 0;
+            rs_busy <= {NRES{1'b0}};
+            for (i = 0; i < NRES; i = i + 1) begin rs_in[i] <= 6'd0; rs_held[i] <= 4'd0; end
+            for (i = 0; i < 4*NRES; i = i + 1) rs_leg[i] <= 6'd0;
+            for (i = 0; i < 4; i = i + 1) f_cand[i] <= 6'd0;
             f1 <= 0; f2 <= 0; claimed <= 0; guarding <= 0; ctx_clm <= 0; hdirs <= 0;
             for (i = 0; i < NREG; i = i + 1) begin
                 mst[i] <= M_IDLE; caller[i] <= 0; called[i] <= 0; trunk[i] <= 0;
@@ -265,6 +308,7 @@ module marker #(
             visit       <= 1'b0;
             mon_ack     <= 1'b0;
             hb = 1'b0; pk = {NREG{1'b0}}; conn = 1'b0;
+            legclm = 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -332,19 +376,85 @@ module marker #(
             end
 
             // ---- the forwarder ------------------------------------------
+            // One scan finds a free trunk in EACH other direction; the glare
+            // bit takes the last found and not the first.
             if (visit && p_valid && fst == F_RUN) begin
                 if (p_cls == C_TRUNK && p_free && !p_n && p_dir != f_dir &&
-                    (!f_ok || p_g)) begin
-                    f_cand <= p_port; f_ok <= 1'b1;
+                    (!f_cok[p_dir] || p_g)) begin
+                    f_cand[p_dir] <= p_port; f_cok[p_dir] <= 1'b1;
                 end
                 if (p_port == f_start) fst <= F_GO;
             end
             if (fst == F_GO) begin
-                if (f_ok) begin
-                    push(f_cand, f_in,   1'b1, 1'b0);
-                    push(f_in,   f_cand, 1'b1, 1'b0);
+                nleg = 0; first = 2'd0; got = 1'b0;
+                for (i = 0; i < 4; i = i + 1)
+                    if (f_cok[i]) begin
+                        nleg = nleg + 1;
+                        if (!got) begin first = i[1:0]; got = 1'b1; end
+                    end
+                rpick = -1;
+                for (v = 0; v < NRES; v = v + 1)
+                    if (rpick < 0 && !rs_busy[v]) rpick = v;
+
+                if (got && rpick >= 0) begin
+                    // Each leg listens to the incoming trunk, so the caller's
+                    // pulses go down every leg at once, and a resolver takes
+                    // the addresses.
+                    for (i = 0; i < 4; i = i + 1) begin
+                        if (f_cok[i]) push(f_cand[i], f_in, 1'b1, 1'b0);
+                        rs_leg[rpick*4+i] <= f_cand[i];
+                    end
+                    // ONE other direction and there is nothing to resolve: the
+                    // incoming trunk listens to that leg at once, as a chain
+                    // does, and backward A comes straight through.  More than
+                    // one, and it goes on listening to idle with BUSY set (the
+                    // write the seizure itself made), so backward A stays 0
+                    // until a leg claims -- nothing has claimed yet.
+                    //
+                    // A CHAIN TRANSIT TAKES A RESOLVER TOO, though 3.2 says it
+                    // "holds nothing": if the call turns out to be this
+                    // exchange's own, its monitor must clear the onward patch
+                    // (3.1, "the patch toward 25 cleared"), and a marker that
+                    // forgot the pair cannot -- latches cannot be read back.
+                    // The onward link and every link beyond it would stay
+                    // seized for the whole conversation.
+                    if (nleg == 1) push(f_in, f_cand[first], 1'b1, 1'b0);
+                    rs_busy[rpick] <= 1'b1;
+                    rs_in  [rpick] <= f_in;
+                    rs_held[rpick] <= f_cok;
+                end else if (got) begin
+                    // No resolver free: "patch into the first direction found,
+                    // as a chain would: the call reaches that branch only"
+                    // (3.2) -- and this exchange cannot clear it afterwards.
+                    push(f_cand[first], f_in,          1'b1, 1'b0);
+                    push(f_in,          f_cand[first], 1'b1, 1'b0);
                 end
-                fst <= F_IDLE;
+                f_cok <= 4'd0;
+                fst   <= F_IDLE;
+            end
+
+            // ---- the resolvers: which leg claimed ------------------------
+            for (v = 0; v < NRES; v = v + 1) if (rs_busy[v] && visit && p_valid) begin
+                legclm = 1'b0;
+                for (i = 0; i < 4; i = i + 1)
+                    if (rs_held[v][i] && p_port == rs_leg[v*4+i] && p_m) legclm = 1'b1;
+                if (legclm) begin
+                    // That branch has claimed.  The incoming trunk listens to
+                    // it and backward A rises toward the origin; the others are
+                    // pointed at idle, and each releases itself 256 ms later,
+                    // and its link with it.  The call is two latches now.
+                    push(rs_in[v], p_port, 1'b1, 1'b0);
+                    for (i = 0; i < 4; i = i + 1)
+                        if (rs_held[v][i] && rs_leg[v*4+i] != p_port)
+                            push(rs_leg[v*4+i], 6'o00, 1'b0, 1'b0);
+                    rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
+                end else if (p_port == rs_in[v] && !p_busy) begin
+                    // No claim: a local call elsewhere, a wrong number, a caller
+                    // who hung up.  Forward A fell, the incoming trunk released
+                    // itself and every leg with it; the resolver frees itself on
+                    // reading BUSY = 0, which dial pulses never cause.
+                    rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
+                end
             end
 
             // =========== every call in the pool, each cycle ===============
@@ -487,6 +597,14 @@ module marker #(
                 pick = -1;
                 for (r = 0; r < NREG; r = r + 1)
                     if (pick < 0 && mst[r] == M_IDLE && !reg_busy[r] && !pk[r]) pick = r;
+                // ours: the hub's monitor claims, as any owner does, and every
+                // leg of a fan-out on this trunk is pointed at idle (3.2)
+                for (v = 0; v < NRES; v = v + 1)
+                    if (rs_busy[v] && rs_in[v] == mon_port) begin
+                        for (i = 0; i < 4; i = i + 1)
+                            if (rs_held[v][i]) push(rs_leg[v*4+i], 6'o00, 1'b0, 1'b0);
+                        rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
+                    end
                 if (pick >= 0) begin
                     push(mon_port, 6'o00, 1'b1, 1'b1);       // CLAIM: backward A rises
                     reg_attach[pick] <= 1'b1; reg_port <= mon_port;
@@ -513,7 +631,7 @@ module marker #(
                     push(p_port, 6'o00, 1'b1, 1'b0);
                     if (fst == F_IDLE && !p_n) begin
                         f_in <= p_port; f_dir <= p_dir; f_start <= p_port;
-                        f_ok <= 1'b0; fst <= F_RUN;
+                        f_cok <= 4'd0; fst <= F_RUN;
                     end
                 end else if (p_cls == C_LINE || p_cls == C_OPER) begin
                     // a caller: the first free register.  None free, and the
