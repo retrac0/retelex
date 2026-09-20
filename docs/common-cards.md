@@ -7,7 +7,7 @@ socket, same pinout, same rails, same clocks, same mechanical format, and — wh
 the connector is settled — the same connector.
 
 This was already half true and never stated as a requirement. `mf8-backplane.md`
-§8 and `exch-basebandcard.md` §2.2 give the same 2 × 16 pin for pin;
+§8 and `exch-basebandcard.md` §2.2 gave the same 2 × 16 pin for pin;
 `exch-protocol.md` §1 says "a port has the same structure as an MF8 channel"; and
 `exch-terminal.md` is the consequence — a stock MF8 shelf of channel cards *is*
 six lines of an exchange, and no card in it knows. What was missing is the short
@@ -36,30 +36,150 @@ The channel socket is `mf8-backplane.md` §8's, and this is the single table, wi
 the exchange's readings of the three pins MF8 reserved folded in. It supersedes
 nothing in either document; it joins them.
 
-| pin | a — signals | in an MF8 shelf | in an exchange block | c — power |
-|---|---|---|---|---|
-| 1 | `TX_CLK` | 64 kHz, from the trunk card | 64 kHz, from the clock card via the block | `+5 V` |
-| 2 | `TX_HB` | the '4040 tap | `/SLOT[1]`, one inverter at the block (`clocks.md` §4) | `GND` |
-| 3 | `TX_OCT` | | | `+5 V` |
-| 4 | `FILL` | | | `GND` |
-| 5 | `C_TX[n]` | → the trunk card's frame mux, input *n* | → the block's `C` commutator, input *n* | `+12 V` |
-| 6 | `A_TX[n]` | → the signalling mux | → the block's `A` commutator | `GND` |
-| 7 | `RX_CLK` | recovered | **is `TX_CLK`** | `−12 V` |
-| 8 | `RX_OCT` | recovered | `TX_OCT` one frame late | `GND` |
-| 9 | `C_RX[n]` | ← the receiver's '259 | ← the port's capture flip-flop | `−48 V` (fused) |
-| 10 | `A_RX[n]` | ← the '259, raw | ← the port's supervision gate: E, chopped by the ring cadence while the port rings | `−48 RET` |
-| 11 | `MUTE` | asserted when not locked | **tied to "locked"**: a block has no link | `GND` |
-| 12 | `TYPE0` — **the word** (§2) | not connected | read by the marker's scanner | `RING` (FXS slots only, strapped) |
-| 13 | `TYPE1` — **`/ANS`** (§2) | not connected | read by the port's own gates | `RING RET` |
-| 14 | `RAI` — the secondary word (`ex-groups.md` §3.3) | not connected | a pull-up at the port; optional | `GND` |
-| 15 | key | | | key |
-| 16 | `GND` | | | `GND` |
+### 1.1 The pins
+
+Row *a* signals, row *c* power and returns. **The direction is the card's view**:
+`in` is the shelf driving the card, `out` is the card driving the shelf.
+
+| pin | a — signals | dir | in an MF8 shelf | in an exchange block | c — power |
+|---|---|---|---|---|---|
+| 1 | `TX_CLK` | in | 64 kHz, from the trunk card | 64 kHz, from the clock card via the block | `+5 V` |
+| 2 | `TX_HB` | in | the '4040 tap | `/SLOT[1]`, one inverter at the block (`clocks.md` §4) | `GND` |
+| 3 | `TX_OCT` | in | | | `+5 V` |
+| 4 | `FILL` | in | | | `GND` |
+| 5 | `C_TX[n]` | **out** | → the trunk card's frame mux, input *n* | → the block's `C` commutator, input *n* | `+12 V` |
+| 6 | `A_TX[n]` | **out** | → the signalling mux | → the block's `A` commutator | `GND` |
+| 7 | `RX_CLK` | in | recovered | **is `TX_CLK`** | `−12 V` |
+| 8 | `RX_OCT` | in | recovered | `TX_OCT` one frame late | `GND` |
+| 9 | `C_RX[n]` | in | ← the receiver's '259 | ← the port's capture flip-flop | `−48 V` (fused) |
+| 10 | `A_RX[n]` | in | ← the '259, raw | ← the port's supervision gate: E, chopped by the ring cadence while the port rings | `−48 RET` |
+| 11 | `MUTE` | in | asserted when not locked | **tied to "locked"**: a block has no link | `GND` |
+| 12 | `TYPE0` — **the word** (§2) | **out**, o.d. | not connected | read by the marker's scanner | `RING` (FXS slots only, strapped) |
+| 13 | `TYPE1` — **`/ANS`** (§2) | **out**, o.d. | not connected | read by the port's own gates | `RING RET` |
+| 14 | `RAI` — the secondary word (`ex-groups.md` §3.3) | **out**, o.d. | not connected | a pull-up at the port; optional | `GND` |
+| 15 | key | | | | key |
+| 16 | `GND` | | | | `GND` |
+
+### 1.2 A card drives four pins, and only four
+
+| class | pins | driven by | a card may |
+|---|---|---|---|
+| **common, one net across the shelf** | a1–a4, a7, a8, a11 | the trunk card's 74HC244 in MF8 (`mf8-backplane.md` §8); cable A and the block in an exchange (`exch-mainboard.md` §2.1) | **listen only.** One driver a net; a card that drove one would fight that buffer and corrupt every other slot |
+| **per slot, into the shelf** | a5, a6 | the card, 74HC totem-pole into one mux input | drive, always, from the frame it powers up in |
+| **per slot, out of the shelf** | a9, a10 | the frame receiver's '259, or the port | listen only |
+| **per slot, declarations** | a12, a13, a14 | the card, **open drain**: ¼ 74HC03, or a wire to a row-*c* ground | pull low, or leave open. **Never drive high** |
+
+**Why the two kinds of output differ.** a5 and a6 reach one mux input and
+nothing else, so a totem-pole output is right, and a pulled card is covered by
+the backplane's idle resistors. a12–a14 face a pull-up at the port
+(`exch-fabric.md` §3.5) and must read as *nothing* when the card is out,
+mid-insertion, or held off by its power-up RC (§2) — which an output that drives
+high cannot do. It is also what lets the same pin be a tied-to-ground constant
+on a plain line card and a shifted byte on the card beside it.
+
+**The per-slot count is seven, not six.** `exch-basebandcard.md` §2.1 counted six
+a slot and 48 a block, which was right before a14 carried the secondary word:
+**7 a slot, 56 a block.** The clocks and the rails are still the only common
+lines, and the property that matters is unchanged.
+
+### 1.3 What each card does with each pin
+
+The four cards of this document, the tone card of §6, and the exchange's
+baseband trunk card (`exch-basebandcard.md` §3.5), which is the same socket and
+the same argument. ● = the card uses the pin; ○ = only where the optional '165
+is fitted; — = no connection on the card.
+
+| pin | | CVSD line | FXS | FXO | data | E&M | tone | baseband |
+|---|---|---|---|---|---|---|---|---|
+| a1 | `TX_CLK` | ● | ● | ● | ● | ● | ● | ● |
+| a2 | `TX_HB` | ● | — | — | — | — | — | — |
+| a3 | `TX_OCT` | ○ | ○ | ● | ● | ○ | ○ | ● |
+| a4 | `FILL` | ● | — | — | — | — | — | — |
+| a5 | `C_TX[n]` | ● | ● | ● | ● | ● | ● | ● |
+| a6 | `A_TX[n]` | ● | ● | ● | ● | ● | low | ● |
+| a7 | `RX_CLK` | — | ● | ● | ● | ● | — | — |
+| a8 | `RX_OCT` | — | — | — | ● | — | — | — |
+| a9 | `C_RX[n]` | ● | ● | ● | ● | ● | **—** | ● |
+| a10 | `A_RX[n]` | ● | ● | ● | ● | ● | — | ● |
+| a11 | `MUTE` | ● | — | — | ● | — | — | — |
+| a12 | the word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 10 and 14 | '165 |
+| a13 | `/ANS` | open | open | low | low | open or low | low | low |
+| a14 | secondary word | ○ | ○ | ○ | ○ | ○ | ○ | — |
+| c5, c7 | `±12 V` | — | ● | ● | — | ● | ● | — |
+| c9, c10 | `−48 V` | ● | ● | — | — | — | — | — |
+| c12 | `RING` | — | ● | — | — | — | — | — |
+| | rear pins (§7.3) | 4 | 2 | 2 | — | 6 | — | 6 |
+
+The detail behind each column is in that card's own document: `mf8-cards.md`
+§2.4 for the CVSD line card, §3.7 for both POTS populations, §4 for the data
+card, `mf8-spec.md` §12.1 for E&M, §6 here for the tone card, and
+`exch-basebandcard.md` §3.5 for the baseband trunk card. The last four rows are the rails, which §3 gives
+again with the current each one draws.
+
+Five things the matrix shows that no card's own document can:
+
+- **a2 `TX_HB` has exactly one customer**, and a4 `FILL` has exactly one, and it
+  is the same card. `TX_HB` clocks the CVSD line card's differential-Manchester
+  encoder and nothing else in the set encodes a line; `FILL` is the pattern that
+  card sends downstream to an on-hook phone, and every other card's idle is its
+  own codec's `1010`. **Both are on the socket for one card**, which is why
+  `clocks.md` §4's derivation had to exist at all.
+- **a7 `RX_CLK` is the split in the set.** The four cards that hold a codec or a
+  bit pipe run their receive side in R on it; the CVSD line card and the baseband
+  card do not use it, because each resynchronizes `C_RX` into T with `TX_CLK` and
+  carries the crossing on its own flip-flops (`mf8-cards.md` §2.3,
+  `exch-basebandcard.md` §1). Those two are therefore the only cards in the set
+  that cannot tell the shelves apart at all. The other four do see the
+  difference on those two pins — recovered in MF8, `TX_CLK` in an exchange — and
+  are indifferent to it, which is `clocks.md` §5's point and not a weaker version
+  of it.
+- **No card uses more than eleven of the fourteen signal pins**, and the baseband
+  card uses eight. Nothing on this socket is oversubscribed.
+- **The tone card is the only one that drives and never listens.** a9 is the
+  pin no other card can leave open: a talking circuit, a data pipe and a trunk
+  all have to hear something. It also explains a10 and a11 in that column —
+  nothing rings it, nothing answers it, and an outage it cannot hear is an
+  outage it need not handle. In a channel slot it is one port of class
+  *source*; at ports 10 and 14 the marker reaches it by address and it needs
+  no word at all (`ex-extensions.md` §2.2).
+- **a12 and a13 are where portability was broken** and §2 is the repair; the
+  matrix is that section's answer in one column each.
+
+### 1.4 What the socket does not carry
+
+- **A clock out of a channel card.** a7 is an *input*, common to all eight slots
+  and driven by the shelf. A channel card cannot put a clock it has recovered
+  onto the backplane. On an MF8 shelf that is the trunk card's job from slot 0
+  and no channel card wants it; in an exchange it is exactly what
+  `exch-basebandcard.md` §3.2's one-clock strap needs — slaving the clock card to
+  a trunk's far-end clock — and **it has no pin**. Either that card takes a wire
+  to the clock card that is not on this connector, or the bit-exact synchronous
+  case is not available from a channel slot. **Open.**
+- **`/HUNT_INH`.** Specified in `exch-marker.md` §4 and `exch-network.md` §3.2,
+  in no signal list, driven by nothing in `exrtl`. a14 was the one spare and is
+  now the secondary word, so it has no pin at all (§9).
+- **The line.** Rows *a* and *c* are fully committed; the subscriber pair, the
+  E&M leads and the baseband card's four conductors leave by §7.3's rear
+  connector.
+- **`LOCK` and `CD`.** Trunk-card slot to the panel; no channel card needs them
+  (`mf8-backplane.md` §8, §7.2 here).
+- **Any slot ID**, in either shelf.
+
+One more that is a card gap and not a socket gap, and belongs here because the
+matrix is where it becomes visible: **`MUTE` is read by two columns of seven.** The
+CVSD line card switches an off-hook phone to `FILL` on it (`mf8-cards.md` §2.3)
+and the data card forces `RXD` to 1 (§4.1); the FXS, FXO and E&M cards leave a11
+open — the tone card has no decoder to mute — so through an outage those three
+decoders are fed the cleared '259's all-zeros,
+which a CVSD decoder integrates toward the rail rather than the `1010` that is
+silence. It is a gate and a mux input to fix, on cards that already carry both.
+**Nobody has decided it should be fixed, and nothing has been listened to.**
 
 Three properties hold in both shelves and are what make a card portable at all:
 
 - **No slot-ID pins.** A card never knows where it is (`mf8-backplane.md` §3,
   `exch-basebandcard.md` §2.1).
-- **Point to point, never a bus.** Six signals a slot, nothing shared, nothing
+- **Point to point, never a bus.** Seven signals a slot, nothing shared, nothing
   addressed, nothing contending; only the clocks and the rails are common.
 - **An unfitted slot idles by resistor**: `C_TX[n]` pulled to `FILL` through
   4.7 kΩ and `A_TX[n]` to ground, so a pulled card leaves silence and on-hook
@@ -248,7 +368,9 @@ that the card comes up released — the hardware form of `mf8-pico.md` §3's
 
 ---
 
-## 7. The connector, which is not settled
+## 7. The connectors
+
+### 7.1 The family, which is not settled
 
 `mf8-backplane.md` §8 offers "DIN 41612 half-length or 0.1-inch header" and
 chooses neither. **Whatever is chosen must be chosen once**, for both shelves and
@@ -262,7 +384,83 @@ coding pin; and the 2 × 32 the trunk and gateway slots want is the full-length
 part of the same type. The 0.1-inch header is cheaper and is the right answer for
 a first breadboard.
 
-Whichever it is, the channel socket keeps this document's §1 pinout unchanged.
+Whichever it is, the channel socket keeps §1's pinout unchanged. The two
+assignments below are pin *positions*, and survive the choice of shell.
+
+### 7.2 The trunk and gateway slot, 2 × 32
+
+**An assignment. `mf8-backplane.md` §8 specifies this slot's width and its signal
+set and has never given it pins.** Writing them out turns up one thing worth
+knowing: **the signal set is one pin too large for the rule the channel slot
+follows.**
+
+| | count |
+|---|---|
+| `C_TX[1..6]`, `A_TX[1..6]` — in to the card | 12 |
+| `C_RX[1..6]`, `A_RX[1..6]` — out of the card | 12 |
+| `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` — out, through the '244 of §8 there | 7 |
+| `LOCK`, `CD` — out, to the panel | 2 |
+| | **33** |
+
+Row *a* of a 2 × 32 holds 32, and one of those wants to be the key. So "row *a*
+signals, row *c* power" does not survive here, and the two indicator levels are
+the ones to move: they are slow DC to a lamp, they clock nothing, and
+`mf8-backplane.md` §3 already says no card needs them.
+
+| row a | | row c | |
+|---|---|---|---|
+| 1–4 | `TX_CLK`, `TX_HB`, `TX_OCT`, `FILL` | 1, 3 | `+5 V` |
+| 5–7 | `RX_CLK`, `RX_OCT`, `MUTE` | 5, 7 | `+12 V`, `−12 V` |
+| 8 | key | 8 | key |
+| 9–14 | `C_TX[1..6]` | 10, 12 | **`LOCK`, `CD`** |
+| 15–20 | `A_TX[1..6]` | 9, 11, 13 | `GND` |
+| 21–26 | `C_RX[1..6]` | 14, 16, 18 … 32 | `+5 V` and `GND` alternating, one ground in two across the per-channel half |
+| 27–32 | `A_RX[1..6]` | | |
+
+- **The line is not on this connector.** A trunk is one twisted pair each way —
+  four conductors — and leaves by §7.3's route, as a channel card's line does.
+- **`RAI` is not here either.** x is the remote alarm and it travels in the S bit
+  between trunk cards (`mf8-spec.md` §3.5); it reaches the panel as `LOCK` and
+  `CD` do, and needs no conductor of its own.
+- **The gateway slot is this table with the directions reversed**: a9–a20,
+  `C_TX[n]` and `A_TX[n]`, are the card's *outputs* there, and everything else is
+  an input. Same shell, same positions, so a trunk card and a gateway card cannot
+  be told apart by the connector — **key them differently**, or one seated in the
+  other's slot fights every channel card in the shelf.
+
+### 7.3 The line side
+
+**An assignment, and it fills a gap: no document says how a subscriber pair
+physically leaves a card.** Rows *a* and *c* of the 2 × 16 are fully committed —
+16 signals and 16 power pins, `RAI` and the key included — so the line cannot go
+there without breaking the one pinout this whole document rests on.
+
+**A second connector at the rear edge, at the opposite end from the 2 × 16**,
+into a shelf wiring field:
+
+| card | pins | |
+|---|---|---|
+| POTS converter, FXS or FXO | 2 | tip, ring |
+| CVSD subscriber line card | 4 | downstream pair, upstream pair — both carrying the 48 V phantom |
+| E&M subscriber card | 6 | audio pair each way, E, M |
+| Data card | — | none: its DTE cable is RS-422 or RS-232 and belongs on the front edge, where a person plugs it in |
+| Baseband trunk card (`exch-basebandcard.md`) | 6 | `C`, A and the link clock each way — 4 if §3.3's clock conductor is not fitted. In the RS-422 population these are three pairs each way, 12 conductors, and the card is the only one in the set whose "line" is another shelf's backplane |
+| Trunk card (§7.2) | 4 | a pair each way |
+
+Two reasons for the rear and for the far end of it:
+
+- **Creepage and clearance.** This is where `−48 V`, 90 Vrms ringing and
+  outside-plant surges meet the shelf, and `mf8-cards.md` §3.6 asks for the line
+  side and the logic side to be kept apart. Putting the two connectors at
+  opposite ends of the rear edge is the cheapest way to have that be true by
+  construction rather than by layout discipline.
+- **Where plant belongs.** Forty-eight subscriber pairs hanging off the front of
+  a subrack is not an installation. The front edge is for the data card's DTE
+  cable, for `LOCK` and `CD` if they end up as lamps on the trunk card, and for
+  nothing else.
+
+**It is per card, not per slot**, which means the backplane carries no line
+conductors at all and the wiring field can be re-punched without touching it.
 
 ---
 
@@ -275,8 +473,12 @@ Whichever it is, the channel socket keeps this document's §1 pinout unchanged.
 | `exch-basebandcard.md` §2.3, first bullet | **closed** (`clocks.md` §4). `TX_HB` = `/SLOT[1]`, one inverter a block |
 | `mf8-cards.md` §3.5 | the FXO gains §5's strap. `exch-features.md` §5's "the exchange build of the FXO card" becomes the SEIZE position of that strap, not a second board |
 | `mf8-cards.md` §4.4 | the data card is 5¼ packages, not 4, and no longer the cheapest card in the shelf |
-| `mf8-cards.md` §2.4, §3.7 | each parts list gains the word footprint: ≈ 1¼ where it is populated, a wire where it is not |
+| `mf8-cards.md` §2.5, §3.8 | each parts list gains the word footprint: ≈ 1¼ where it is populated, a wire where it is not |
+| `mf8-cards.md` §2, §3 | each card gains a pin section — **§2.4** for the CVSD line card, **§3.7** for both POTS populations — and Parts and Bring-up move down one |
+| `exch-basebandcard.md` §2.2, §3.5 | §2.2 becomes a pointer here, its table having been the second copy; **§3.5** is new and gives the baseband card's own pins, with Parts moved to §3.6 |
 | `ex-extensions.md` §2.1 | its "a card built for the exchange works unchanged in an MF8 shelf" now holds in both directions, and §2 here says what it costs |
+| `mf8-backplane.md` §8, the trunk and gateway slots | given pins (§7.2), which they never had. **Its "row *a* signals, row *c* power" does not hold there** — the signal set is 33 and row *a* is 32 — so `LOCK` and `CD` move to row *c*. The two slots also need different keying, which §8 does not mention |
+| `mf8-cards.md` §2, §3; `subscriber-line.md` §1 | the subscriber pair leaves by a second rear connector (§7.3), which no document had. The backplane carries no line conductors |
 
 ---
 
@@ -284,8 +486,16 @@ Whichever it is, the channel socket keeps this document's §1 pinout unchanged.
 
 - **Every card.** Nothing in the set has been on a bench; `mf8-cards.md` §6 and
   `mf8-spec.md` §15 hold unchanged.
-- **The connector** (§7), and with it the keying `mf8-backplane.md` §6
+- **The connector family** (§7.1), and with it the keying `mf8-backplane.md` §6
   recommends for data cards in slots 1–3.
+- **§7.2 and §7.3 are assignments**, worked from the signal lists and from where
+  high voltage has to be kept: no board, no connector in hand, nothing measured.
+  What they are good for is that the arithmetic has been done once — 33 signals
+  against 32 pins, and a line that has nowhere to go on a committed socket.
+- **Keying the trunk slot against the gateway slot** (§7.2). They are the same
+  shell with `C_TX` and `A_TX` reversed in direction, so a card in the wrong one
+  drives into six channel cards. Nothing in `mf8-backplane.md` or `mf8-pico.md`
+  prevents it today.
 - **`/SLOT[1]`'s phase against a real encoder** (`clocks.md` §7).
 - **The FXO strap's 5 s constant** (§5): `exch-features.md` §5 measured that 5 s
   works against a 2 s / 4 s cadence and did not sweep it. A CO with a longer
@@ -294,6 +504,19 @@ Whichever it is, the channel socket keeps this document's §1 pinout unchanged.
   only ever existed as firmware. What a shelf full of fast busy sounds like
   through `mf8-cards.md` §2.3's rule at the instant of lifting has not been
   rendered.
+- **§1.3's matrix is an assignment too.** Every ● and — is read off the card's
+  own description, not off a board. Two columns are the least sure: the E&M
+  card has never had a pin list of its own (`mf8-spec.md` §12.1 describes an
+  engine and two leads), and the tone card's channel-slot population (§6) is
+  one paragraph.
+- **A recovered clock has no pin out of a channel slot** (§1.4). It costs
+  `exch-basebandcard.md` §3.2's bit-exact case, which is the one case that
+  carries synchronous 64 kb/s data between exchanges. Either a wire off the
+  card's rear connector to the clock card, or that case stays an MF8
+  trunk-card one. **Undecided, and it is a decision and not a measurement.**
+- **`MUTE` on the FXS, FXO and E&M cards** (§1.4): two cards of six read a11,
+  and what the other three's decoders do through an outage has not been
+  listened to.
 - **`/HUNT_INH`**, still specified in three documents, present in no signal list
   and driven by nothing (`exch-basebandcard.md` §2.3). a14 is now the secondary
   word, so if `/HUNT_INH` is ever built it needs a different pin.

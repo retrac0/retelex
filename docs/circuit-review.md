@@ -9,7 +9,7 @@ wiring that would not work; one is a hazard the spec names but under-describes.
 
 | | where | finding | fix |
 |---|---|---|---|
-| 1 | `mf8-spec.md` §9.2, §10; `mf8-cards.md` §2.1, §2.4 | the encoder's flip-flop does not toggle on either part the drawing names | 74HC112, J = K = EN; package count unchanged |
+| 1 | `mf8-spec.md` §9.2, §10; `mf8-cards.md` §2.1, §2.5 | the encoder's flip-flop does not toggle on either part the drawing names | 74HC112, J = K = EN; package count unchanged |
 | 2 | `mf8-spec.md` §12.1; `mf8-cards.md` §3.2 | the only `Iabc` drive ever sketched cannot hold `I_min`, and `I_min` is, with the syllabic network, the tightest tolerance on the card | op-amp and PNP, ratio set by two resistors; one op-amp section per engine — §12.1 now cites it |
 | 3 | `mf8-spec.md` §9.4 | "sample, then retrigger" is three same-edge reads, not one; the bit strobe cannot be a gate on the transition pulse; none of it scales with the rate | use both edges of the dead-time pulse; no added package on the trunk card |
 | 4 | `mf8-spec.md` §12.1 | the three connections between the 5 V logic and the ±12 V engine are unspecified, and the obvious wiring of one of them has no down-step | pull-up, a differential drive from Q and /Q, one ground |
@@ -28,7 +28,7 @@ wiring that would not work; one is a hazard the spec names but under-describes.
 
 §9.2 draws `J` and `K` tied to `EN` on a part labelled "74HC74/109" and says "a
 JK wired J = K = EN toggles when EN is high". The parts lists (§10,
-`mf8-cards.md` §2.1 and §2.4) say "½ 74HC74 + ¼ 74HC00". Neither part does
+`mf8-cards.md` §2.1 and §2.5) say "½ 74HC74 + ¼ 74HC00". Neither part does
 that:
 
 - **A 74HC74 is a D flip-flop.** It has no J or K. Toggle-with-enable on a D

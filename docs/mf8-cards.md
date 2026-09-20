@@ -135,7 +135,50 @@ The phone's own `1100` on-hook pattern crosses the trunk as channel bits, as
 `subscriber-line.md` §4 notes; the far line card ignores it, because it reads
 hook state from A.
 
-### 2.4 Parts
+### 2.4 The card's pins
+
+Two connectors: the channel socket of `common-cards.md` §1, and its rear connector
+there, §7.3, for the two pairs. **This card uses nine of the fourteen signal
+pins, eleven where its optional word parts are fitted — more than anything else
+in the set — and it is the only one that needs a2 and a4.**
+
+| pin | | | what this card does with it |
+|---|---|---|---|
+| a1 | `TX_CLK` | in | `H` into the downstream encoder (§2.1), and the clock of both synchronizer stages of §2.3 — the one 74HC175 that crosses `C_RX[n]` and the receiver's latch into T |
+| a2 | `TX_HB` | in | **the downstream encoder's clock.** 128 kHz, and this card is its only customer in either shelf. Without it the card cannot be fitted at all: `clocks.md` §4 exists for this pin and this card |
+| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word '165 where that footprint is populated — an operator's position, a restricted line, a hunt group, a warm line, a nail (`ex-extensions.md` §2.2) |
+| a4 | `FILL` | in | the bus's `1010`, sent **downstream to the phone** while it is on-hook and not being rung. a data input of §2.3's ¾ 74HC157, and the reason the card carries no oscillator and no idle-pattern generator |
+| a5 | `C_TX[n]` | **out** | `Q_s`: the upstream receiver's data latch, resynchronized to `TX_CLK` |
+| a6 | `A_TX[n]` | **out** | `NOT ON_HOOK`, off §2.2's LM339 through ¼ 74HC04. Off-hook, held through dial pulses by the 4 ms RC and the violation term |
+| a7 | `RX_CLK` | — | **this card has no R domain.** Its receive side is clocked by the *loop*, recovered on the card by §2.1's interval classifier, and everything the backplane hands it crosses into T on `TX_CLK`. That is what makes it indifferent to which shelf it is in (`clocks.md` §5) |
+| a8 | `RX_OCT` | — | |
+| a9 | `C_RX[n]` | in | through two 74HC74 stages on `TX_CLK` to `C_RX_s`, then downstream to the phone while it is off-hook |
+| a10 | `A_RX[n]` | in | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`: **ring the phone.** With it asserted and the phone on-hook the card sends all-zeros downstream, which is the ringer's own detector at the far end (`subscriber-line.md` §4) |
+| a11 | `MUTE` | in | ORed into the `ON_HOOK` select, so an off-hook phone hears `1010` through an outage rather than the receiver's last latched bits (§2.3). **Two cards in the set read this pin and this is one** |
+| a12 | the word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The '165 footprint is on the board and unpopulated |
+| a13 | `/ANS` | — | **open.** The port rings in cadence and gives the caller ringback, which is what a telephone wants |
+| a14 | secondary word | ○ | open, unless the line answers to a number as well (`ex-groups.md` §3.3) |
+| c1, c3 | `+5 V` | in | all the logic |
+| c9, c10 | `−48 V`, `−48 RET` | in | **the phantom.** 48 V into the downstream centre tap through the card's own 100 mA PTC in series with the slot fuse, returned through the upstream centre tap; ≤ 40 mA to the phone (§2.1) |
+| c5, c7 | `±12 V` | — | there is no analog signal path on this card. The phone holds the codec |
+| c12 | `RING` | — | **the point of the whole design.** No ring generator, no ring relay, no ring trip, no 90 Vrms anywhere near the card: the phone's ringer is armed by a bit pattern |
+| | rear, 4 pins | | downstream pair, upstream pair, both carrying the phantom |
+
+**a2 and a4 are on the channel socket because of this card.** No other card in
+either shelf reads either: nothing else encodes a line, and every other card's
+idle is its own codec's `1010`. `clocks.md` §4 calls that "one bullet away from
+being noticed", and the matrix of `common-cards.md` §1.3 is where it stops being
+possible to miss.
+
+**a7 and a11 are the two pins that say what kind of card this is.** It ignores
+`RX_CLK` because its receive timing comes off the subscriber loop and not off the
+backplane. It reads `MUTE` because it is the one card that can act on it for
+free: the downstream path already carries a 2:1 select with `FILL` on an input,
+so muting is one more term in §2.3's `ON_HOOK` and not a gate. The cards that do
+not read it are the ones that would have to add the mux (`common-cards.md` §1.4),
+which is why they have not.
+
+### 2.5 Parts
 
 | block | parts |
 |---|---|
@@ -151,7 +194,7 @@ hook state from A.
 voltage above the 48 V feed.** The '74, '123, '86 and '08 quarter-packages
 share; the count above is what is populated.
 
-### 2.5 The phone
+### 2.6 The phone
 
 The other end of I1 is the same receiver, the same encoder and the §12.1 codec
 engine, with `subscriber-line.md` §4's phone logic: hook switch and dial
@@ -161,7 +204,7 @@ shelf, and its clocking — loop-timed from the downstream or free-running — i
 open in `subscriber-line.md` §7; `mf8-backplane.md` §7 measured that either is
 acceptable for voice.
 
-### 2.6 Bring-up
+### 2.7 Bring-up
 
 1. **Receiver alone**, from a signal generator at 128 kBaud: eye, classifier
    threshold, dead time — the §9.4 checks at the 64 kbps plug.
@@ -263,7 +306,53 @@ isolation rating, not just CTR; protection ahead of everything; and the `RING`
 bus gets the same treatment wherever it runs (`mf8-backplane.md` §8 puts it
 between ground pins, on the power row, and straps it only to FXS slots).
 
-### 3.7 Parts
+### 3.7 The card's pins
+
+Two connectors: the channel socket of `common-cards.md` §1, and its rear connector
+there, §7.3, which here is two pins — tip and ring. **One board, and the socket is
+where the two populations differ most**: the FXS takes every rail the socket
+offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
+
+| pin | | FXS | FXO | what the card does with it |
+|---|---|---|---|---|
+| a1 | `TX_CLK` | ● | ● | the encoder's clock. The engine's T half runs on it and only on it (§3.2) |
+| a2 | `TX_HB` | — | — | nothing on this card encodes a line. Its line is analog and the only modulation on the board is the codec |
+| a3 | `TX_OCT` | ○ | ● | loads the word '165, which the FXO always carries (class 100, *outside line*) and the FXS carries only where the line is more than a plain line |
+| a4 | `FILL` | — | — | **the engine's own `1010` at silence is the idle**, so the card needs no fill pattern. That is the same property the tone card of `common-cards.md` §6 leans on |
+| a5 | `C_TX[n]` | ● | ● | the encoder out, in T |
+| a6 | `A_TX[n]` | ● | ● | **FXS:** loop current flowing — the 10–15 mA opto of §3.4, the phone is off-hook. **FXO:** ringing present, and *which* ringing is §5 of `common-cards.md`'s OFFICE / SEIZE strap: raw in the CO's cadence, or held 5 s and ORed with the loop closed. The strap is on this pin's meaning, not on a pin of its own |
+| a7 | `RX_CLK` | ● | ● | **the decoder's clock.** The decoder is in R and the encoder in T, and the two never meet (§3.2) — which is why this card reads a7 where the CVSD line card does not (§2.4) |
+| a8 | `RX_OCT` | — | — | |
+| a9 | `C_RX[n]` | ● | ● | into the decoder, in R |
+| a10 | `A_RX[n]` | ● | ● | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`. **FXS:** drive the ring relay, which connects the `RING` bus and disconnects the feed while it is connected; ring trip drops it within 200 ms whatever this pin says (§3.4). **FXO:** close the loop; low opens it, and that is how dial pulses leave (§3.5) |
+| a11 | `MUTE` | — | — | **not read, and arguably should be.** See below |
+| a12 | the word | GND | '165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 100, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
+| a13 | `/ANS` | open | low | **FXS:** open, and the phone rings in cadence. **FXO:** tied low — an outside line must never be rung, and must not give its caller ringback |
+| a14 | secondary word | ○ | ○ | open, unless the port answers to a number as well (`ex-groups.md` §3.3) |
+| c1, c3 | `+5 V` | ● | ● | the logic and the engine's digital half |
+| c5, c7 | `±12 V` | ● | ● | **the analog card's rails**: LM13700, TL074, TL072, LM311, the filters and the trims (§3.2, §3.3, §3.8) |
+| c9, c10 | `−48 V`, `−48 RET` | ● | — | the battery feed through the slot's 100 mA PTC, current-limited to 25–45 mA (§3.4). The FXO takes its battery from the CO |
+| c12, c13 | `RING`, `RING RET` | ● | — | 20 Hz, ~90 Vrms, from the shelf's one generator, through the ring relay. **The backplane strap at c12 is fitted only for a slot that holds an FXS card** (`mf8-backplane.md` §8) |
+| | rear, 2 pins | | | tip and ring |
+
+**The FXS population is the only card in the set that uses every rail the socket
+offers**, and c12 exists for it alone. A block or a shelf with no FXS card needs
+no ring generator at all; the pins stay either way, because a card must be able
+to arrive (`common-cards.md` §3).
+
+**a11 `MUTE` is open on this card, in both populations, and that is a gap.** Two
+of the seven columns in `common-cards.md` §1.3 read the pin: the CVSD line card
+switches its phone to `FILL` (§2.3) and the data card forces `RXD` to 1 (§4.1). Here, while the trunk is not
+locked the receiver's '259 is cleared, so `C_RX[n]` reads a steady 0 and the
+decoder is handed all-zeros — which a CVSD integrator walks toward the rail on,
+rather than the `1010` that is silence. `A_RX[n]` reads 0 at the same time, so
+the FXS drops its ring relay and the FXO opens its loop and the call goes down
+correctly; what is wrong is only what the subscriber hears on the way. The fix
+is a gate into the decoder's input, ¼ of a package on a card that is already
+≈ 11. **Nothing has been listened to and nobody has decided it is worth the
+gate** (`common-cards.md` §9).
+
+### 3.8 Parts
 
 | block | population | parts |
 |---|---|---|
@@ -281,7 +370,7 @@ between ground pins, on the power row, and straps it only to FXS slots).
 **≈ 11 packages plus the transformer and a relay** in either population; the
 cost is the magnetics and the relay. Lay out one board and depopulate.
 
-### 3.8 Bring-up
+### 3.9 Bring-up
 
 1. **Engine looped to itself** on the card, no line: the §12.1 order — engine,
    then `Iabc`, then card to card over the backplane.
@@ -449,7 +538,14 @@ follows `DTR` with 1.5–2 ms of lag. Scratch script, not a repository tool.
 - **The ring trip time**, the loop-detect threshold and the FXO ring detector's
   integrator against a real 20 Hz generator.
 - **`MUTE` heard through a phone**: `mf8-spec.md` §15's open item, one card
-  further along.
+  further along. §3.7 sharpens it: the FXS, FXO and E&M cards leave a11 open,
+  so their decoders are handed the cleared '259's all-zeros through an outage
+  rather than `1010`, and **nothing has been listened to**. The CVSD line card
+  and the data card do read the pin.
+- **§2.4 and §3.7 are assignments.** Every pin is read off this document's own
+  description of the card against the socket of `common-cards.md` §1, which is
+  itself an assignment. No board has been laid out, no connector chosen, and
+  nothing has been probed at a socket.
 - **A CO's dial-pulse receiver** against the 0.5 ms distortion measured
   here; `subscriber-line.md` §5 measured the phone-to-exchange leg at 6.1 ms
   short with the phone muted while dialling (0.1–7.5 ms without), and the two

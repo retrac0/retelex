@@ -25,8 +25,8 @@ The short answers, before the detail:
 > **Status: proposed. Nothing here is newly measured.** §3.2's same-clock case is
 > `exch.py fabric` 8, already reported by `exch-protocol.md` §4 as "a copper tie
 > between two exchanges"; every other figure is cited from where it was measured.
-> §2's pin table is an assignment, not a measurement — it is what the documents
-> already imply, written out. §6 is a correction to `exch-mainboard.md` §2.4 and
+> §3.5's pin usage is an assignment, not a measurement — it is what the documents
+> already imply, written out, against the socket `common-cards.md` §1 now holds. §6 is a correction to `exch-mainboard.md` §2.4 and
 > is reasoning against `exrtl`, not a run. No circuit has been drawn.
 
 ---
@@ -69,7 +69,7 @@ socket.
 
 | | signals | how many |
 |---|---|---|
-| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the word, `/ANS` | 6 a slot, 48 a block |
+| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the word, `/ANS`, and the secondary word (`ex-groups.md` §3.3, added since) | **7 a slot, 56 a block** |
 | **common to all eight** | `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` | 7 |
 | **rails** | `+5 V`, `GND`, `±12 V`, `−48 V` and its return, `RING` and its return | |
 
@@ -91,35 +91,26 @@ reason a card built for one works unchanged in the other.
 
 ### 2.2 The channel socket
 
-`mf8-backplane.md` §8's 2 × 16, unchanged in its pinout, with the exchange's
-reading of the three pins MF8 reserved:
+**The pinout has left this document.** `common-cards.md` §1 is now the single
+table for the channel socket in both shelves: what stood here, with the
+direction of every pin, the drive rule, and a column for each card in the set.
+It is not repeated. Three readings this section made first, and that table
+carries:
 
-| pin | a — signals | c — power |
-|---|---|---|
-| 1 | `TX_CLK` | `+5 V` |
-| 2 | `TX_HB` — **derived at the block**, §2.3 | `GND` |
-| 3 | `TX_OCT` | `+5 V` |
-| 4 | `FILL` | `GND` |
-| 5 | `C_TX[n]` → the block's `C` commutator, input *n* | `+12 V` |
-| 6 | `A_TX[n]` → the block's `A` commutator, input *n* | `GND` |
-| 7 | `RX_CLK` — **is `TX_CLK`** (`exch-fabric.md` §3.4) | `−12 V` |
-| 8 | `RX_OCT` — `TX_OCT` one frame late, from the clock card | `GND` |
-| 9 | `C_RX[n]` ← the port's capture flip-flop | `−48 V` (fused) |
-| 10 | `A_RX[n]` ← the port's supervision gate, E in the ring cadence | `−48 RET` |
-| 11 | `MUTE` — **tied to "locked"** at every socket, §2.3 | `GND` |
-| 12 | the word (`ex-extensions.md` §2.1) | `RING` (FXS slots only, strapped) |
-| 13 | `/ANS` (`ex-extensions.md` §2.1) | `RING RET` |
-| 14 | spare, or `/HUNT_INH` — §2.3 | `GND` |
-| 15 | key | key |
-| 16 | `GND` | `GND` |
+- a2 `TX_HB` is **derived at the block** — §2.3, and now `clocks.md` §4
+- a7 `RX_CLK` **is** `TX_CLK` in an exchange (`exch-fabric.md` §3.4)
+- a11 `MUTE` is **tied to "locked"** at every socket, because a block has no link
 
-The pull-ups on a12 and a13 are at the port, not on the card
-(`exch-fabric.md` §3.5).
+One change since: a14, which §2.3 below still treats as the one spare, carries
+the secondary word of `ex-groups.md` §3.3. This card leaves it open.
+
+The pull-ups on a12, a13 and a14 are at the port, not on the card
+(`exch-fabric.md` §3.5). **What this card does with each pin is §3.5.**
 
 ### 2.3 Four things the socket needs that no document supplies
 
-- **`TX_HB`, 128 kHz, is not on cable A** and the CVSD subscriber line card
-  cannot encode without it (`mf8-cards.md` §2: differential Manchester at
+- **`TX_HB`, 128 kHz, is not on cable A** — **closed, `clocks.md` §4** — and the
+  CVSD subscriber line card cannot encode without it (`mf8-cards.md` §2: differential Manchester at
   128 kBaud, `H` = `TX_CLK`, clocked by `TX_HB`). It needs no conductor.
   `SLOT[2:0]` counts the eight cells of a frame at 512 kHz, so **`/SLOT1` is a
   128 kHz square wave rising at the frame edge and at the half-frame, and
@@ -137,9 +128,11 @@ The pull-ups on a12 and a13 are at the port, not on the card
   hunt walks on", and `exch-network.md` §3.2 has the network card driving it at a
   port whose word faces the wrong way. It is not in `exch-mainboard.md` §2.3's
   seven control signals and not in any pin list. A card that drives it needs a
-  pin (a14 is the one spare) **and** a path back to the marker, which is a third
+  pin **and** a path back to the marker, which is a third
   `PB` line — the probe bus carries `BUSY` and the word and nothing else today.
-  Nothing in `exrtl` drives it. It is a loose end this document can only name.
+  Nothing in `exrtl` drives it. **a14 was the one spare and is now the secondary
+  word** (`common-cards.md` §1), so it has no pin left either. It is a loose end
+  this document can only name, and it has got shorter of room since.
 - **The trunk socket is a different socket.** An MF8 trunk card is six ports in
   one (`ex-extensions.md` §2.1) and needs 6 × `C_RX`, 6 × `A_RX` in and
   6 × `C_TX`, 6 × `A_TX`, 6 words, 6 `/ANS` out, plus `HCLK`, `HB` and
@@ -219,7 +212,60 @@ the bit rate. Two populations, as the data card has two (`mf8-cards.md` §4.2):
   Six signals — `C`, A, clock each way — fit exactly one 26LS31 and one 26LS32,
   two packages, on three pairs each way.
 
-### 3.5 Parts
+### 3.5 The card's pins
+
+Two connectors: the channel socket of `common-cards.md` §1, and its rear connector
+there, §7.3, for the line. **The card uses eight of the fourteen signal pins and one
+rail**, which is the lightest load on the socket of anything in the set.
+
+| pin | | | what this card does with it |
+|---|---|---|---|
+| a1 | `TX_CLK` | in | **three jobs.** It re-times incoming `C` through the ½ '74 in the local-clock strap of §3.2; it shifts the word '165; and it is the waveform driven down §3.3's clock conductor, where that conductor is fitted |
+| a2 | `TX_HB` | — | nothing on this card encodes a line |
+| a3 | `TX_OCT` | in | loads the word '165, so the byte repeats every octet |
+| a4 | `FILL` | — | the port already idles to `FILL` through its own commutator input (`exch-fabric.md` §3.3), and an idle far end sends it down the line. The card generates no idle pattern |
+| a5 | `C_TX[n]` | **out** | incoming `C` off the line, re-timed: one bit a frame into the block's `C` commutator |
+| a6 | `A_TX[n]` | **out** | incoming A off the line, through the RC and ¼ '14. This is M at the port |
+| a7 | `RX_CLK` | — | see below: the card would like to *drive* this and cannot |
+| a8 | `RX_OCT` | — | |
+| a9 | `C_RX[n]` | in | straight out on the line, 64 kb/s NRZ, changing at the local frame edge |
+| a10 | `A_RX[n]` | in | straight out on the line. E as it stands, since `/ANS` is low and a trunk never rings (§4) |
+| a11 | `MUTE` | — | tied to "locked" at every socket in a block, and real only in an MF8 shelf. This card's link-down detector is its own, on a12 |
+| a12 | the word | **out**, o.d. | `0 101 d d g n` from the '165 on four jumpers: class trunk, its direction, its glare bit, its NO-FORWARD bit. Held off at power-up by the RC of `ex-extensions.md` §2.2, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
+| a13 | `/ANS` | **out** | tied low on the board. No part |
+| a14 | secondary word | — | open. A trunk answers to a direction and not to a number |
+| a16, c2, c4, c6, c8, c11, c14, c16 | `GND` | in | |
+| c1, c3 | `+5 V` | in | **the only rail.** No `±12 V`, no `−48 V`, no `RING`, nothing above 5 V anywhere on the card |
+
+**The rear connector: six pins, or four.** `C`, A and §3.3's clock, each way.
+In the 74HC population of §3.4 that is six conductors and a ground; in the
+RS-422 population it is three pairs each way, twelve conductors, one 26LS31 and
+one 26LS32. Four pins is §3.3's bottom row — the link with no clock conductor,
+which is a usable link inside one room and is not fail-safe.
+
+**a12 is where this card differs from every other card in the set.** The others
+declare something fixed — a class, or a constant from a grounded pin — and
+declare it for as long as they are seated. This one's word is conditional on a
+wire outside the shelf, and that is the whole of `ex-extensions.md` §2.2's "a
+trunk card also gates that input with *link up*, so a dead link sends nothing and
+is never hunted", on one channel instead of six. **The link-down detector is not
+a feature of the line interface; it is the enable on the word.**
+
+**a7, and the one thing the socket will not let this card do.** §3.2's top row
+wants the far end's clock slaved into the local clock card, which is what turns
+the pair synchronous and passes bit-exact 64 kb/s data. The card recovers that
+clock — it arrives on §3.3's conductor and is already in hand — and then has
+nowhere to put it: a7 `RX_CLK` is an **input**, common to all eight slots,
+driven by the block from cable A. On an MF8 shelf the same job is done from
+slot 0, where the trunk card drives a7 for the whole shelf; a channel card has no
+such pin and must not drive one. So the one-clock case needs a wire from this
+card's rear connector to the clock card's slaving input
+(`exch-network.md` §8's "a strap and a footprint"), outside this connector and
+outside the backplane. **Open**, and it is a decision rather than a measurement:
+either that wire exists, or bit-exact data between exchanges stays an MF8
+trunk-card capability and this card carries voice and async only.
+
+### 3.6 Parts
 
 | | |
 |---|---|
@@ -326,16 +372,25 @@ the block, and the cable still has ten taps however many trunks are fitted.
 
 ## 7. Not measured
 
-- **Everything in §2.** The pin assignment is what the documents imply, written
-  out; no board, no connector, no bench. `TX_HB` as `/SLOT1` is arithmetic off
-  the cell count and wants a scope against `mf8-cards.md` §2's encoder.
+- **§2 and §3.5.** The socket is `common-cards.md` §1's and is an assignment
+  there; what this card does with each pin is read off §3's own description and
+  not off a board. No connector, no bench. `TX_HB` as `/SLOT1` is arithmetic off
+  the cell count and still wants a scope against `mf8-cards.md` §2's encoder
+  (`clocks.md` §7), even though the derivation itself is now settled.
+- **The recovered clock has no pin out of a channel slot** (§3.5). a7 is an
+  input driven by the block, so §3.2's one-clock case — the row that carries
+  bit-exact synchronous data — needs a wire from this card's rear connector to
+  the clock card's slaving input, which no document has. It is a decision, not
+  a measurement, and until it is taken this card carries voice and async only.
 - **`MUTE`'s polarity** at the socket, from `mf8-spec.md` §13, and whether any
   card in an exchange should ever see it asserted.
 - **`/HUNT_INH`** (§2.3): specified in three documents, present in none of the
   signal lists, driven by nothing in `exrtl`. Either it gets a pin, a third `PB`
   line and a card that uses it, or it goes.
 - **The card.** Nothing drawn. The link-down detector's constant is unchosen; the
-  A-lead RC is named as "tens of microseconds" and not worked.
+  A-lead RC is named as "tens of microseconds" and not worked. §3.5 makes the
+  detector the enable on the word's '03, which is one gate input and has not
+  been drawn either.
 - **A dialled port whose class is trunk** (§4). Not in `exch-marker.md`, not in
   the `calls` model.
 - **Glare on a group of one** (§5): arithmetic from the offered load, not a run

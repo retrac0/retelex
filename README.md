@@ -51,7 +51,7 @@ General purpose architecture.  Chains, stars and rings are possible.
 * [docs/mf8-spec.md](docs/mf8-spec.md) - MF8 specification - frame, header, framer, cards, line code, circuits 
 * [docs/mf8-backplane.md](docs/mf8-backplane.md) - remote MF8 unit backplane - modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip 
 * [docs/mf8-cards.md](docs/mf8-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; signalling through the A bit, measured |
-* [docs/common-cards.md](docs/common-cards.md) - the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket, what a card says about itself, the FXO's one strap, and a tone card that puts a whole shelf on fast busy
+* [docs/common-cards.md](docs/common-cards.md) - the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket, what a card says about itself, the FXO's one strap, a tone card that puts a whole shelf on fast busy, and the connectors: the channel slot, the trunk and gateway 2 × 32, and where a subscriber pair leaves a card
 * [docs/clocks.md](docs/clocks.md) - every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from
 | [docs/mf8-pico.md](docs/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
 | [docs/line-codes.md](docs/line-codes.md) | nine line codes explored; differential Manchester against AMI
