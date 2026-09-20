@@ -30,6 +30,7 @@
 `timescale 1ns/1ps
 
 module marker #(
+    parameter integer NREG      = 2,        // registers in the pool (exch-marker.md 6)
     parameter [2:0]   OWN_E     = 3'd2,
     parameter [2:0]   OWN_B     = 3'd2,
     parameter [5:0]   DIALTONE  = 6'o10,
@@ -58,21 +59,26 @@ module marker #(
     output           sclk,
     output           wr,
 
-    // the register
-    output reg       reg_attach,
-    output reg [5:0] reg_port,
-    input            reg_busy,
-    input      [2:0] reg_ndig,       // digits in the register's store ...
-    input     [15:0] reg_digits,     // ... and the store: levels, not strobes
-    output reg       reg_restart,    // the key, or our own code, is consumed
-    input            reg_gone,
-    input            reg_brk,
-    output reg       reg_release,
+    // the registers, a pool.  Everything the marker learns from a register is
+    // a LEVEL valid when read -- its busy line, its store -- never an event.
+    output reg [NREG-1:0]    reg_attach,
+    output reg [5:0]         reg_port,
+    input      [NREG-1:0]    reg_busy,
+    input      [3*NREG-1:0]  reg_ndig,
+    input      [16*NREG-1:0] reg_digits,
+    output reg [NREG-1:0]    reg_restart,
+    input      [NREG-1:0]    reg_gone,
+    input      [NREG-1:0]    reg_brk,
+    output reg [NREG-1:0]    reg_release,
 
     // the monitors: a claim is a request held until it is acknowledged
     input            mon_claim,
     input      [5:0] mon_port,
-    output reg       mon_ack
+    output reg       mon_ack,
+
+    // for a testbench: any call claimed; every direction any call holds
+    output           any_claimed,
+    output reg [3:0] dirs_held
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
@@ -91,8 +97,7 @@ module marker #(
     // taken while the marker was shifting a word for another block reads that
     // other block's BUSY and word.  `pv` follows the visit and is cleared by
     // anything that makes the reading untrustworthy; only a visit that survives
-    // it may be acted on.  This interlock is new with the serial bus: the
-    // parallel bus held BLK = one-hot(scan) continuously and probing was free.
+    // it may be acted on.
     reg       pv, p_valid;
     reg [2:0] pb_blk;
 
@@ -108,12 +113,10 @@ module marker #(
     // ---------------- the write queue and the serialiser ----------------
     // The sequencer's whole output is latch writes, and a write is one
     // sixteen-bit word on one wire.  The SAME serialiser also steers the
-    // probe: /BLK is the block's own '138 on DST[5:3], so the block that
-    // answers PB is the block the shift register names.  Between writes the
-    // marker keeps a word there naming the block its scanner is visiting,
-    // shifted with strobe low so that nothing is written.
-    reg [13:0] wq [0:7];
-    reg [2:0]  wh, wt;
+    // probe (see ctl_write.v).  Sixteen deep: with a pool, several calls may
+    // queue their writes in one cycle.
+    reg [13:0] wq [0:15];
+    reg [3:0]  wh, wt;
     reg [1:0]  wst;
     reg        ser_req, ser_strobe;
     reg [5:0]  ser_dst, ser_src;
@@ -130,105 +133,109 @@ module marker #(
         begin wq[wt] = {c, b, sr, pt}; wt = wt + 1'b1; end
     endtask
 
-    // ---------------- the hunt ------------------------------------------
+    // ---------------- the hunt: ONE scanner, so one hunt, with an owner --
     reg       hunt_arm, hunt_run, hunt_done, hunt_ok;
     reg [2:0] hunt_cls;
     reg [5:0] hunt_port;
-    // exch-network.md 3: "one scan finds a free trunk in each other direction".
-    // One pass, four candidates -- not four passes.
-    reg       hunt_dirs;               // this hunt is the network's, not a class hunt
+    reg       hunt_dirs;               // the network's: a trunk in every direction
     reg [5:0] cand [0:3];
     reg [3:0] cand_ok;
+    reg       hunt_busy;
+    reg [3:0] hunt_owner;
+    reg       hb;                      // the hunt was taken THIS cycle (blocking)
 
-    // ---------------- the sequencer -------------------------------------
-    // Two stages read digits, and each only waits for the register's store to
-    // reach a count.  The key and our own code are consumed by RESTARTING the
-    // store, so e b h s always land in slots 0-3 and a local h s in 0-1 -- a
-    // claimed trunk, an own-code call and a plain local call are one path.
+    // ---------------- a call: one of these a register --------------------
+    // exch-marker.md 4 and exch-network.md 3.2 put a call's state with its
+    // REGISTER -- "a '574 a direction in a bank a register" -- and the marker
+    // is what acts on it.  Each register has a stage, its caller, the trunks
+    // it seized and whether one claimed.
     localparam M_IDLE=4'd0, M_LOCAL=4'd1, M_PROBE=4'd2, M_HUNTW=4'd3,
-               M_SEIZE=4'd4, M_NET=4'd5, M_WAITCL=4'd6;
+               M_SEIZE=4'd4, M_NET=4'd5, M_WAITCL=4'd6, M_WANT=4'd7;
 
-    reg [3:0]  mst;
-    reg [5:0]  caller, called, trunk;
-    // exch-network.md 3.2: the trunks an origin seized, "a '574 a direction in
-    // a bank a register".  On the claim it keeps the one whose M rose and
-    // releases the others.
-    reg [5:0]  d_trunk [0:3];
-    reg [3:0]  d_held;
-    reg [2:0]  dh, de;
-    reg        claimed, guarding;
-    // A claimed trunk keeps CLAIM set for the whole of the call it brought in:
-    // "a trunk port with CLAIM set sends backward A = 1, steadily, until
-    // release" (exch-network.md 3).  Every later write to this context's port
-    // carries it, or backward A drops and every patch behind it releases.
-    reg        ctx_clm;
-    reg [15:0] tmr;
+    reg [3:0]  mst     [0:NREG-1];
+    reg [5:0]  caller  [0:NREG-1];
+    reg [5:0]  called  [0:NREG-1];
+    reg [5:0]  trunk   [0:NREG-1];
+    reg [1:0]  hold    [0:NREG-1];     // a restart or attach takes a cycle to land
+    reg [15:0] tmr     [0:NREG-1];
+    reg [3:0]  d_held  [0:NREG-1];
+    reg [5:0]  d_trunk [0:4*NREG-1];
+    reg [2:0]  hcls    [0:NREG-1];     // the hunt this call is waiting to start
+    reg [NREG-1:0] hdirs;
+    reg [NREG-1:0] f1, f2, claimed, guarding, ctx_clm;
 
-    // The store, as pulse counts.  A digit's VALUE is the low three bits,
-    // forced to 000 when bit 3 is set -- three AND gates, so that a dialled 0,
-    // ten pulses, 1010, is octal 0 (exch-protocol.md 5).  8 and 9 are service
-    // digits, caught before they are ever an address.
-    wire [3:0] d0 = reg_digits[3:0],  d1 = reg_digits[7:4];
+    assign any_claimed = |claimed;
+
+    // A digit's VALUE is the low three bits, forced to 000 when bit 3 is set --
+    // three AND gates, so that a dialled 0, ten pulses, 1010, is octal 0
+    // (exch-protocol.md 5).  8 and 9 are service digits.
     function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
     function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
-    reg        f1, f2;               // how far into the store this stage has read
-    reg [1:0]  hold;                 // a restart takes a cycle to reach the register
 
-    task nogo;                                     // cannot-complete, and let go
+    task nogo(input integer q);                // cannot-complete, and let go
         begin
-            push(caller, NOGO, 1'b1, ctx_clm);
-            reg_release <= 1'b1; mst <= M_IDLE; claimed <= 1'b0; guarding <= 1'b0;
+            push(caller[q], NOGO, 1'b1, ctx_clm[q]);
+            reg_release[q] <= 1'b1; mst[q] <= M_IDLE;
+            claimed[q] <= 1'b0; guarding[q] <= 1'b0;
         end
     endtask
 
-    task drop_trunk;                    // let go of every trunk this call holds
+    task drop_trunk(input integer q);          // let go of every trunk this call holds
         integer k;
         begin
             for (k = 0; k < 4; k = k + 1)
-                if (d_held[k]) push(d_trunk[k], 6'o00, 1'b0, 1'b0);
-            d_held = 4'd0;
+                if (d_held[q][k]) push(d_trunk[q*4+k], 6'o00, 1'b0, 1'b0);
+            d_held[q] <= 4'd0;
         end
     endtask
 
-    task drop_others;                   // keep the one that claimed, release the rest
+    task drop_others(input integer q);         // keep the one that claimed
         integer k;
         begin
             for (k = 0; k < 4; k = k + 1)
-                if (d_held[k] && d_trunk[k] != trunk)
-                    push(d_trunk[k], 6'o00, 1'b0, 1'b0);
-            d_held = 4'd0;
+                if (d_held[q][k] && d_trunk[q*4+k] != trunk[q])
+                    push(d_trunk[q*4+k], 6'o00, 1'b0, 1'b0);
+            d_held[q] <= 4'd0;
         end
     endtask
 
-    task start_hunt(input [2:0] c);
+    task take_hunt(input integer q, input [2:0] c, input dirs);
         begin
-            hunt_cls <= c; hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0;
-            hunt_dirs <= 1'b0;
+            hunt_cls <= c; hunt_dirs <= dirs;
+            hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0; cand_ok <= 4'd0;
+            hunt_busy <= 1'b1; hunt_owner <= q[3:0];
+            hb = 1'b1;
         end
     endtask
 
-    task start_dir_hunt;               // the network's: a trunk in every direction
+    task free_hunt;
         begin
-            hunt_cls <= C_TRUNK; hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0;
-            hunt_dirs <= 1'b1; cand_ok <= 4'd0;
+            hunt_busy <= 1'b0; hunt_done <= 1'b0; hunt_arm <= 1'b0; hunt_run <= 1'b0;
         end
     endtask
 
     // ---------------- the forwarder --------------------------------------
     // exch-network.md 3: a seizure arriving on a trunk is patched onward into
-    // every OTHER direction, and the exchange forgets it -- no register, no
-    // digits, nothing but two latches.  It runs on its own so that a transit
-    // is never held up by a local call the marker is setting up.
-    //
-    // "A seizure is never forwarded INTO a strapped link, nor forwarded ONWARD
-    // from one" (3.3) -- the n bit, which is how a ring is kept from circling.
+    // every OTHER direction, and the exchange forgets it.  It runs on its own
+    // so that a transit is never held up by a call the marker is setting up.
     localparam F_IDLE = 2'd0, F_RUN = 2'd2, F_GO = 2'd3;
     reg [1:0] fst;
     reg [5:0] f_in, f_cand, f_start;
     reg [1:0] f_dir;
     reg       f_ok;
 
-    integer i;
+    integer i, r, pick;
+    reg [NREG-1:0] pk;                 // contexts given a caller THIS cycle (blocking)
+    reg        conn;                   // a call connected to p_port THIS visit (blocking)
+    reg        already;
+    reg [2:0]  nd;
+    reg [3:0]  dg0, dg1;
+
+    always @* begin
+        dirs_held = 4'd0;
+        for (i = 0; i < NREG; i = i + 1) dirs_held = dirs_held | d_held[i];
+    end
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             scan <= 0; m_acc <= 0; b_acc <= 0; wsr <= 0;
@@ -237,24 +244,27 @@ module marker #(
             wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1;
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0;
-            reg_attach <= 0; reg_port <= 0; reg_release <= 0; mon_ack <= 0;
-            reg_restart <= 0; f1 <= 0; f2 <= 0; hold <= 0;
+            reg_attach <= 0; reg_port <= 0; reg_release <= 0; reg_restart <= 0;
+            mon_ack <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
-            hunt_cls <= 0; hunt_port <= 0;
-            mst <= M_IDLE; caller <= 0; called <= 0; trunk <= 0;
-            d_held <= 4'd0; cand_ok <= 4'd0; hunt_dirs <= 1'b0;
-            fst <= F_IDLE; f_in <= 0; f_cand <= 0; f_dir <= 0; f_ok <= 0;
-            f_start <= 0;
-            for (i = 0; i < 4; i = i + 1) begin d_trunk[i] <= 6'd0; cand[i] <= 6'd0; end
-            dh <= 0; de <= 0; claimed <= 0; guarding <= 0; tmr <= 0; ctx_clm <= 0;
-            for (i = 0; i < 8; i = i + 1) wq[i] <= 14'd0;
+            hunt_cls <= 0; hunt_port <= 0; hunt_dirs <= 0; cand_ok <= 0;
+            hunt_busy <= 0; hunt_owner <= 0;
+            fst <= F_IDLE; f_in <= 0; f_cand <= 0; f_dir <= 0; f_ok <= 0; f_start <= 0;
+            f1 <= 0; f2 <= 0; claimed <= 0; guarding <= 0; ctx_clm <= 0; hdirs <= 0;
+            for (i = 0; i < NREG; i = i + 1) begin
+                mst[i] <= M_IDLE; caller[i] <= 0; called[i] <= 0; trunk[i] <= 0;
+                hold[i] <= 0; tmr[i] <= 0; d_held[i] <= 0; hcls[i] <= 0;
+            end
+            for (i = 0; i < 4*NREG; i = i + 1) d_trunk[i] <= 6'd0;
+            for (i = 0; i < 4; i = i + 1) cand[i] <= 6'd0;
+            for (i = 0; i < 16; i = i + 1) wq[i] <= 14'd0;
         end else begin
-            reg_attach  <= 1'b0;
-            reg_release <= 1'b0;
-            reg_restart <= 1'b0;
-            if (hold != 2'd0) hold <= hold - 1'b1;
+            reg_attach  <= {NREG{1'b0}};
+            reg_release <= {NREG{1'b0}};
+            reg_restart <= {NREG{1'b0}};
             visit       <= 1'b0;
             mon_ack     <= 1'b0;
+            hb = 1'b0; pk = {NREG{1'b0}}; conn = 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -268,21 +278,16 @@ module marker #(
                 p_m <= m_acc; p_busy <= b_acc; p_word <= wsr; p_port <= scan;
                 p_valid <= pv;
                 visit <= 1'b1;
-                // A re-point cannot finish before the visit it governs -- the
-                // word takes 31 us and the visit's first sample is 1 us in --
-                // so a disturbed visit is REPEATED, not lost.  Without this the
-                // first port of every block is never read, and 20 is the first
-                // port of block 2.  It costs the scan about one visit a block.
+                // A re-point cannot finish before the visit it governs, so a
+                // disturbed visit is REPEATED, not lost.
                 if (pv) scan <= scan + 1'b1;
-                pv    <= 1'b1;                  // a fresh visit starts trusted
+                pv    <= 1'b1;
             end
             if (ser_busy || ser_req || pb_blk != scan[5:3])
-                pv <= 1'b0;                     // ... and anything here breaks it
+                pv <= 1'b0;
 
             // ---- the write sequencer -----------------------------------
-            // A block turns over only when the scanner ACTUALLY advances.  Keyed
-            // on oct_stb alone this re-fires on every repeated visit of slot 7,
-            // and each re-point clears pv again: the scanner never leaves.
+            // A block turns over only when the scanner ACTUALLY advances.
             if (oct_stb && pv && scan[2:0] == 3'd7) probe_dirty <= 1'b1;
             ser_req <= 1'b0;
             case (wst)
@@ -292,7 +297,6 @@ module marker #(
                           ser_bsy <= wq[wh][12];   ser_clm <= wq[wh][13];
                           ser_strobe <= 1'b1; ser_req <= 1'b1; wst <= 2'd1;
                       end else if (probe_dirty) begin
-                          // point the probe: DST names the block, nothing is written
                           ser_dst <= {scan[5:3], 3'd0}; ser_src <= 6'd0;
                           ser_bsy <= 1'b0; ser_clm <= 1'b0;
                           ser_strobe <= 1'b0; ser_req <= 1'b1;
@@ -301,7 +305,7 @@ module marker #(
                   end
             2'd1: if (ser_busy) wst <= 2'd2;
             2'd2: if (!ser_busy) begin
-                      pb_blk <= ser_dst[5:3];   // this is who answers PB now
+                      pb_blk <= ser_dst[5:3];
                       if (ser_strobe) begin wh <= wh + 1'b1; probe_dirty <= 1'b1; end
                       wst <= 2'd0;
                   end
@@ -314,9 +318,8 @@ module marker #(
                     hunt_arm <= 1'b0; hunt_run <= 1'b1;
                 end else if (hunt_run) begin
                     if (hunt_dirs) begin
-                        // A free trunk in each direction.  The glare bit has one
-                        // end of a link take the LAST it finds and not the first,
-                        // so the two ends never meet in the middle.
+                        // A free trunk in each direction; the glare bit takes
+                        // the LAST found and not the first.
                         if (p_cls == C_TRUNK && p_free && (!cand_ok[p_dir] || p_g)) begin
                             cand[p_dir] <= p_port;
                             cand_ok[p_dir] <= 1'b1;
@@ -334,14 +337,9 @@ module marker #(
                     (!f_ok || p_g)) begin
                     f_cand <= p_port; f_ok <= 1'b1;
                 end
-                // one scan, from wherever the seizure was seen, back to it
                 if (p_port == f_start) fst <= F_GO;
             end
             if (fst == F_GO) begin
-                // One found: patch it, two latches, and forget.  More than one
-                // direction would fan out here, which wants the resolvers of
-                // exch-network.md 3.2; with none, 3.2 says to patch into the
-                // first direction found, as a chain would.
                 if (f_ok) begin
                     push(f_cand, f_in,   1'b1, 1'b0);
                     push(f_in,   f_cand, 1'b1, 1'b0);
@@ -349,161 +347,193 @@ module marker #(
                 fst <= F_IDLE;
             end
 
-            // ---- the claim coming back on a seized trunk ---------------
-            // An origin that seized several keeps the one whose M rises.
-            if (visit && p_valid && p_m && !claimed &&
-                (mst == M_NET || mst == M_WAITCL)) begin
-                for (i = 0; i < 4; i = i + 1)
-                    if (d_held[i] && p_port == d_trunk[i]) begin
-                        claimed <= 1'b1;
-                        trunk   <= p_port;
+            // =========== every call in the pool, each cycle ===============
+            for (r = 0; r < NREG; r = r + 1) begin
+                nd  = reg_ndig  [r*3  +: 3];
+                dg0 = reg_digits[r*16 +: 4];
+                dg1 = reg_digits[r*16 + 4 +: 4];
+
+                if (hold[r] != 2'd0) hold[r] <= hold[r] - 1'b1;
+
+                // the claim coming back: an origin keeps the trunk whose M rises
+                if (visit && p_valid && p_m && !claimed[r] &&
+                    (mst[r] == M_NET || mst[r] == M_WAITCL))
+                    for (i = 0; i < 4; i = i + 1)
+                        if (d_held[r][i] && p_port == d_trunk[r*4+i]) begin
+                            claimed[r] <= 1'b1;
+                            trunk[r]   <= p_port;
+                        end
+
+                // the origin's 128 ms guard (exch-monitor.md 3, rule 2)
+                if (guarding[r] && tick_1k) begin
+                    if (tmr[r] == T_GUARD[15:0]) guarding[r] <= 1'b0;
+                    else tmr[r] <= tmr[r] + 1'b1;
+                end
+
+                if (reg_gone[r] && mst[r] != M_IDLE) begin
+                    // the caller went away
+                    if (mst[r] == M_NET || mst[r] == M_WAITCL) drop_trunk(r);
+                    if (hunt_busy && hunt_owner == r[3:0]) free_hunt;
+                    mst[r] <= M_IDLE; claimed[r] <= 1'b0; guarding[r] <= 1'b0;
+                end else if (guarding[r] && reg_brk[r]) begin
+                    // a break inside the guard: abandon rather than risk a wrong number
+                    drop_trunk(r); nogo(r);
+                end else case (mst[r])
+                M_LOCAL: if (hold[r] == 2'd0) begin
+                    if (!f1[r] && nd >= 3'd1) begin
+                        // the first digit: a key, or the highway of a number
+                        if (dg0 == 4'd1) begin
+                            if (HAS_NET) begin
+                                push(caller[r], 6'o00, 1'b1, ctx_clm[r]);  // dial tone off
+                                // The key is consumed AT ONCE, whether or not the
+                                // scanner is free for the hunt: e b h s must land
+                                // in slots 0-3 however long the hunt is queued.
+                                reg_restart[r] <= 1'b1; hold[r] <= 2'd3;
+                                hdirs[r] <= 1'b1; mst[r] <= M_WANT;
+                            end else nogo(r);                // no network card fitted
+                        end
+                        else if (dg0 == 4'd8)  nogo(r);      // spare
+                        else if (dg0 == 4'd9)  begin hcls[r] <= C_OUT;  hdirs[r] <= 1'b0; mst[r] <= M_WANT; end
+                        else if (dg0 == 4'd10) begin hcls[r] <= C_OPER; hdirs[r] <= 1'b0; mst[r] <= M_WANT; end
+                        else if (isvc(dg0)) nogo(r);
+                        else begin
+                            push(caller[r], 6'o00, 1'b1, ctx_clm[r]);      // dial tone off
+                            f1[r] <= 1'b1;
+                        end
+                    end else if (f1[r] && nd >= 3'd2) begin
+                        called[r] <= {oct(dg0), oct(dg1)}; mst[r] <= M_PROBE;
                     end
+                end
+                M_WANT: if (!hunt_busy && !hb) begin
+                    // one scanner, so one hunt at a time: wait for it
+                    take_hunt(r, hcls[r], hdirs[r]);
+                    mst[r] <= hdirs[r] ? M_SEIZE : M_HUNTW;
+                end
+                M_SEIZE: if (hunt_done && hunt_owner == r[3:0]) begin
+                    free_hunt;
+                    if (cand_ok != 4'd0) begin
+                        // Seize one free trunk in EVERY direction, all listening
+                        // to the CALLER: their digits go down the flood live.
+                        for (i = 0; i < 4; i = i + 1)
+                            if (cand_ok[i]) begin
+                                push(cand[i], caller[r], 1'b1, 1'b0);
+                                d_trunk[r*4+i] <= cand[i];
+                            end
+                        d_held[r]   <= cand_ok;
+                        trunk[r]    <= 6'd0;
+                        guarding[r] <= 1'b1; tmr[r] <= 0; mst[r] <= M_NET;
+                        f1[r] <= 1'b0; f2[r] <= 1'b0;
+                    end else nogo(r);                        // no free trunk anywhere
+                end
+                M_HUNTW: if (hunt_done && hunt_owner == r[3:0]) begin
+                    free_hunt;
+                    if (hunt_ok) begin
+                        push(caller[r], hunt_port, 1'b1, ctx_clm[r]);
+                        push(hunt_port, caller[r], 1'b1, 1'b0);
+                        reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                    end else nogo(r);
+                end
+                M_NET: if (hold[r] == 2'd0) begin
+                    if (!f1[r] && nd >= 3'd1) begin                   // e
+                        if (isvc(dg0)) begin drop_trunk(r); nogo(r); end   // reserved
+                        else f1[r] <= 1'b1;
+                    end else if (f1[r] && !f2[r] && nd >= 3'd2) begin  // b
+                        if (isvc(dg1)) begin drop_trunk(r); nogo(r); end
+                        else if (oct(dg0) == OWN_E && oct(dg1) == OWN_B) begin
+                            // our own code: release the trunks and carry on
+                            // locally.  The store restarts, and h s arrive as
+                            // any local number does.
+                            drop_trunk(r);
+                            reg_restart[r] <= 1'b1; hold[r] <= 2'd3;
+                            f1[r] <= 1'b0; f2[r] <= 1'b0; mst[r] <= M_LOCAL;
+                        end else f2[r] <= 1'b1;
+                    end else if (f2[r] && nd >= 3'd4) begin            // h s: dialling is over
+                        mst[r] <= M_WAITCL; tmr[r] <= 0;
+                    end
+                end
+                M_PROBE: if (visit && p_valid && p_port == called[r]) begin
+                    // Two callers may finish dialling ONE number inside one
+                    // scan.  They meet at the same visit; the first takes the
+                    // line and the second must find it taken, not write over it.
+                    if (called[r] == caller[r] || p_cls == C_NONE ||
+                        p_cls == C_TRUNK || p_busy || p_m || conn) nogo(r);
+                    else begin
+                        push(caller[r], called[r], 1'b1, ctx_clm[r]);
+                        push(called[r], caller[r], 1'b1, 1'b0);
+                        reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                        conn = 1'b1;
+                    end
+                end
+                M_WAITCL: if (claimed[r]) begin
+                    drop_others(r);                          // the ones that did not claim
+                    push(caller[r], trunk[r], 1'b1, ctx_clm[r]);
+                    reg_release[r] <= 1'b1; mst[r] <= M_IDLE; claimed[r] <= 1'b0;
+                end else if (tick_1k) begin
+                    if (tmr[r] == T_CLAIM[15:0]) begin drop_trunk(r); nogo(r); end
+                    else tmr[r] <= tmr[r] + 1'b1;
+                end
+                default: ;
+                endcase
             end
 
-            // ---- the origin's 128 ms guard (exch-monitor.md 3, rule 2) --
-            if (guarding && tick_1k) begin
-                if (tmr == T_GUARD[15:0]) guarding <= 1'b0;
-                else tmr <= tmr + 1'b1;
-            end
+            // =========== work that wants a free register ==================
+            // A context given out this cycle is marked in pk at once, because
+            // its stage only changes at the clock edge: without it a claim and
+            // a call request in one cycle would both be handed the same register.
 
             // ---- the monitor claims: this call is ours -----------------
-            // One a cycle, and only with room in the write queue: the request
-            // is held until taken, so nothing is lost by waiting.
-            if (mon_claim && !mon_ack && (wt - wh) < 3'd5) begin
+            if (mon_claim && !mon_ack && (wt - wh) < 4'd10) begin
                 mon_ack <= 1'b1;
-                if (!reg_busy && mst == M_IDLE) begin
-                    push(mon_port, 6'o00, 1'b1, 1'b1);   // CLAIM: backward A rises
-                    reg_attach <= 1'b1; reg_port <= mon_port;
-                    caller <= mon_port; mst <= M_LOCAL; claimed <= 1'b0;
-                    f1 <= 1'b0; f2 <= 1'b0; hold <= 2'd3;
-                    ctx_clm <= 1'b1;               // it stays claimed until release
+                pick = -1;
+                for (r = 0; r < NREG; r = r + 1)
+                    if (pick < 0 && mst[r] == M_IDLE && !reg_busy[r] && !pk[r]) pick = r;
+                if (pick >= 0) begin
+                    push(mon_port, 6'o00, 1'b1, 1'b1);       // CLAIM: backward A rises
+                    reg_attach[pick] <= 1'b1; reg_port <= mon_port;
+                    caller[pick] <= mon_port; mst[pick] <= M_LOCAL;
+                    claimed[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
+                    hold[pick] <= 2'd3;
+                    ctx_clm[pick] <= 1'b1;                   // claimed until release
+                    pk[pick] = 1'b1;
                 end else begin
-                    // claimed, cannot complete -- the caller hears it at once
+                    // no register free: claimed, cannot complete -- the caller
+                    // hears it at once (exch-monitor.md 2)
                     push(mon_port, NOGO, 1'b1, 1'b1);
                 end
             end
 
-            // ---- the caller went away ----------------------------------
-            if (reg_gone && mst != M_IDLE) begin
-                if (mst == M_NET || mst == M_WAITCL) drop_trunk;
-                mst <= M_IDLE; claimed <= 1'b0; guarding <= 1'b0;
-            end else if (guarding && reg_brk) begin
-                // a break inside the guard: the far monitors cannot have seen
-                // the rise cleanly, so abandon rather than risk a wrong number
-                drop_trunk; nogo;
-            end
-
-            // ---- the stages -----------------------------------------------
-            else begin
-                case (mst)
-                M_LOCAL: if (hold == 2'd0) begin
-                    if (!f1 && reg_ndig >= 3'd1) begin
-                        // the first digit: a key, or the highway of a number
-                        if (d0 == 4'd1) begin
-                            if (HAS_NET) begin
-                                push(caller, 6'o00, 1'b1, ctx_clm);  // dial tone off
-                                reg_restart <= 1'b1; hold <= 2'd3;   // the key is consumed
-                                start_dir_hunt; mst <= M_SEIZE;
-                            end else nogo;                   // no network card fitted
-                        end
-                        else if (d0 == 4'd8)  nogo;          // spare
-                        else if (d0 == 4'd9)  begin start_hunt(C_OUT);  mst <= M_HUNTW; end
-                        else if (d0 == 4'd10) begin start_hunt(C_OPER); mst <= M_HUNTW; end
-                        else if (isvc(d0)) nogo;
-                        else begin
-                            push(caller, 6'o00, 1'b1, ctx_clm);      // dial tone off
-                            f1 <= 1'b1;
-                        end
-                    end else if (f1 && reg_ndig >= 3'd2) begin
-                        called <= {oct(d0), oct(d1)}; mst <= M_PROBE;
+            // ---- a port wanting service ---------------------------------
+            // Not an `else` of the claim: a visit is one cycle wide, and pk
+            // already keeps the two from being handed the same register.
+            if (visit && p_valid && p_m && !p_busy) begin
+                if (p_cls == C_TRUNK) begin
+                    // a seizure arriving: hold it busy, listening to idle, so
+                    // backward A stays 0 -- no claim yet -- and hand it to the
+                    // forwarder, unless it came in on a strapped link (3.3)
+                    push(p_port, 6'o00, 1'b1, 1'b0);
+                    if (fst == F_IDLE && !p_n) begin
+                        f_in <= p_port; f_dir <= p_dir; f_start <= p_port;
+                        f_ok <= 1'b0; fst <= F_RUN;
+                    end
+                end else if (p_cls == C_LINE || p_cls == C_OPER) begin
+                    // a caller: the first free register.  None free, and the
+                    // caller simply waits -- the scanner will be back in 8 ms.
+                    already = 1'b0;
+                    pick = -1;
+                    for (r = 0; r < NREG; r = r + 1) begin
+                        if (mst[r] != M_IDLE && caller[r] == p_port) already = 1'b1;
+                        if (pick < 0 && mst[r] == M_IDLE && !reg_busy[r] && !pk[r]) pick = r;
+                    end
+                    if (!already && pick >= 0) begin
+                        reg_attach[pick] <= 1'b1; reg_port <= p_port;
+                        push(p_port, DIALTONE, 1'b1, 1'b0);
+                        caller[pick] <= p_port; mst[pick] <= M_LOCAL;
+                        claimed[pick] <= 1'b0; guarding[pick] <= 1'b0;
+                        ctx_clm[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
+                        hold[pick] <= 2'd3;       // the store is the last caller's for a cycle yet
+                        pk[pick] = 1'b1;
                     end
                 end
-                M_NET: if (hold == 2'd0) begin
-                    if (!f1 && reg_ndig >= 3'd1) begin               // e
-                        if (isvc(d0)) begin drop_trunk; nogo; end    // reserved
-                        else f1 <= 1'b1;
-                    end else if (f1 && !f2 && reg_ndig >= 3'd2) begin // b
-                        if (isvc(d1)) begin drop_trunk; nogo; end
-                        else if (oct(d0) == OWN_E && oct(d1) == OWN_B) begin
-                            // our own code: release the trunks and carry on
-                            // locally.  The store restarts, and h s arrive as
-                            // any local number does.
-                            drop_trunk;
-                            reg_restart <= 1'b1; hold <= 2'd3;
-                            f1 <= 1'b0; f2 <= 1'b0; mst <= M_LOCAL;
-                        end else f2 <= 1'b1;
-                    end else if (f2 && reg_ndig >= 3'd4) begin       // h s: dialling is over
-                        mst <= M_WAITCL; tmr <= 0;
-                    end
-                end
-                M_SEIZE: if (hunt_done) begin
-                             hunt_done <= 1'b0;
-                             if (cand_ok != 4'd0) begin
-                                 // Seize one free trunk in EVERY direction, all
-                                 // listening to the CALLER, so their remaining
-                                 // digits go down the flood live as they dial.
-                                 for (i = 0; i < 4; i = i + 1)
-                                     if (cand_ok[i]) begin
-                                         push(cand[i], caller, 1'b1, 1'b0);
-                                         d_trunk[i] <= cand[i];
-                                     end
-                                 d_held   <= cand_ok;
-                                 trunk    <= 6'd0;
-                                 guarding <= 1'b1; tmr <= 0; mst <= M_NET;
-                                 f1 <= 1'b0; f2 <= 1'b0;
-                             end else nogo;              // no free trunk anywhere
-                         end
-                M_HUNTW: if (hunt_done) begin
-                             hunt_done <= 1'b0;
-                             if (hunt_ok) begin
-                                 push(caller,    hunt_port, 1'b1, ctx_clm);
-                                 push(hunt_port, caller,    1'b1, 1'b0);
-                                 reg_release <= 1'b1; mst <= M_IDLE;
-                             end else nogo;
-                         end
-                M_PROBE: if (visit && p_valid && p_port == called) begin
-                             if (called == caller || p_cls == C_NONE ||
-                                 p_cls == C_TRUNK || p_busy || p_m) nogo;
-                             else begin
-                                 push(caller, called, 1'b1, ctx_clm);
-                                 push(called, caller, 1'b1, 1'b0);
-                                 reg_release <= 1'b1; mst <= M_IDLE;
-                             end
-                         end
-                M_WAITCL: if (claimed) begin
-                             drop_others;               // the ones that did not claim
-                             push(caller, trunk, 1'b1, ctx_clm);
-                             reg_release <= 1'b1; mst <= M_IDLE; claimed <= 1'b0;
-                         end else if (tick_1k) begin
-                             if (tmr == T_CLAIM[15:0]) begin drop_trunk; nogo; end
-                             else tmr <= tmr + 1'b1;
-                         end
-                M_IDLE: if (visit && p_valid && p_m && !p_busy) begin
-                            if (p_cls == C_TRUNK) begin
-                                // a seizure arriving: hold it busy, listening to
-                                // idle, so backward A stays 0 -- no claim yet
-                                push(p_port, 6'o00, 1'b1, 1'b0);
-                                // and hand it to the forwarder, unless it came in
-                                // on a strapped link (exch-network.md 3.3)
-                                if (fst == F_IDLE && !p_n) begin
-                                    f_in <= p_port; f_dir <= p_dir;
-                                    f_start <= p_port;
-                                    f_ok <= 1'b0; fst <= F_RUN;
-                                end
-                            end else if (p_cls == C_LINE || p_cls == C_OPER) begin
-                                if (!reg_busy) begin
-                                    reg_attach <= 1'b1; reg_port <= p_port;
-                                    push(p_port, DIALTONE, 1'b1, 1'b0);
-                                    caller <= p_port; mst <= M_LOCAL;
-                                    f1 <= 1'b0; f2 <= 1'b0;
-                                    // the store is the last caller's for a cycle yet
-                                    hold <= 2'd3;
-                                    claimed <= 1'b0; guarding <= 1'b0; ctx_clm <= 1'b0;
-                                end
-                            end
-                        end
-                default: ;
-                endcase
             end
         end
     end

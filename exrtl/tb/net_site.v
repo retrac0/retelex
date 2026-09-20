@@ -30,7 +30,8 @@ module net_site #(
     parameter integer T_A = 4,
     parameter integer HIT = 1, ID = 16, CLR = 32,
     parameter integer T_GUARD = 16, T_CLAIM = 250,
-    parameter integer NMON = 2                   // cells in each block's pool (4)
+    parameter integer NMON = 2,                  // cells in each block's pool (4)
+    parameter integer NREG = 2                   // registers in the pool
 )(
     input         clk,
     input         rst_n,
@@ -147,18 +148,24 @@ module net_site #(
     endgenerate
 
     // ---- common control --------------------------------------------------
-    wire        r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
-    wire [2:0]  r_ndig;
-    wire [15:0] r_digits;
-    wire [5:0] r_port;
+    // The registers: a pool, found by the marker's scanner (exch-marker.md 4, 6).
+    wire [NREG-1:0]    r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
+    wire [3*NREG-1:0]  r_ndig;
+    wire [16*NREG-1:0] r_digits;
+    wire [5:0]         r_port;
     wire       mc0, mc1, mh0, mh1;
     wire [5:0] mp0, mp1;
 
-    pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(2000)) u_reg (
-        .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
-        .ha(ha), .attach(r_attach), .attach_port(r_port), .release_it(r_release),
-        .restart(r_restart), .busy(r_busy), .port(),
-        .ndig(r_ndig), .digits(r_digits), .gone(r_gone), .brk(r_brk));
+    genvar gr;
+    generate for (gr = 0; gr < NREG; gr = gr + 1) begin : regs
+        pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(2000)) u_reg (
+            .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
+            .ha(ha), .attach(r_attach[gr]), .attach_port(r_port),
+            .release_it(r_release[gr]), .restart(r_restart[gr]),
+            .busy(r_busy[gr]), .port(),
+            .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
+            .gone(r_gone[gr]), .brk(r_brk[gr]));
+    end endgenerate
 
     // Two pools, one marker.  Present block 0's request while it has one, and
     // acknowledge only the pool that was presented, so a request on the other
@@ -188,7 +195,7 @@ module net_site #(
 
     assign mon_held = mh0 | mh1;
 
-    marker #(.OWN_E(OWN_E), .OWN_B(OWN_B), .DIALTONE(PDT), .NOGO(PNG),
+    marker #(.NREG(NREG), .OWN_E(OWN_E), .OWN_B(OWN_B), .DIALTONE(PDT), .NOGO(PNG),
              .HAS_NET(1'b1), .T_GUARD(T_GUARD), .T_CLAIM(T_CLAIM)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .tick(tick), .frame_stb(frame_stb),
@@ -199,8 +206,6 @@ module net_site #(
         .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_brk(r_brk),
         .reg_release(r_release),
-        .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack));
-
-    assign got_claim  = u_mk.claimed;
-    assign dirs_held  = u_mk.d_held;
+        .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),
+        .any_claimed(got_claim), .dirs_held(dirs_held));
 endmodule

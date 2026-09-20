@@ -35,8 +35,9 @@ rack, and the module boundaries are the connectors.
  marker            scanner, probe, hunt in fixed order from 00, the number
                    parsing of 2, and the flood at both ends   (exch-marker.md,
                                                               exch-network.md 3)
- pulse_reg         the register: no port, no class, reads its caller's hook off
-                   the M highway through its own probe        (register.md 4)
+ pulse_reg         a register, one of a POOL: no port, no class, reads its
+                   caller's hook off the M highway through its own probe, and
+                   holds its own four-digit store              (register.md 4)
  monitor           the seeker, a POOL on each trunk block: the only part of the
                    network that reads a digit it was not sent (exch-monitor.md)
    pulse_rx        register.md 2's three windows off one timer, shared by both
@@ -71,6 +72,7 @@ make trunk    two exchanges tied by one MF8 link, calls patched across it
 make net      the same two exchanges, calls DIALLED: local, and the pulse flood
 make chain    three exchanges, 22 = 23 = 24, and a call that transits 23
 make monitor  the seeker's pool and the three terms of its seizure rule
+make pool     two callers at once: two registers, two cells, one scanner
 make iv       the whole suite again under Icarus, as the reference
 make trunk-ppm  the link with the two crystals 100 ppm apart
 make lint     verilator, the whole exchange fitted
@@ -134,6 +136,36 @@ register names, so the marker cannot probe a block without first shifting a word
 naming it. `ctl_write` takes a `strobe` input for that — low, it shifts the word
 and never pulses `WR` — which is safe only because nothing reads a block's shift
 register outputs until `WR`.
+
+### What a pool demands of a marker
+
+Five races, and four of them exist only because there is more than one of
+something. Every one had the same shape, and the rule is worth stating on its
+own: **an event on a wire is a race; a level that is valid when read is not.**
+
+| | |
+|---|---|
+| a claim as a one-cycle pulse | held request, acknowledged one at a time |
+| a digit as a strobe | the register's own store, read as levels |
+| the store after a restart or an attach | a hold-off, because the write takes a cycle to land; and an idle store is an EMPTY store |
+| one register offered to two callers in one cycle, since a stage only changes at the clock edge | a blocking mask of what has been given out *this* cycle |
+| one caller given two registers | skip a port some call already has as its caller |
+| two calls starting a hunt at once, with one scanner | the hunt has an owner, and a call waits in `M_WANT` for it |
+
+**And one that is not in the documents at all.** Two registers can finish
+dialling the *same* number inside one 8 ms scan. They probe the called port at
+the same visit, both see `BUSY` clear, and **both write its latch** -- one
+caller silently patched to a line that is ringing for someone else. It cannot
+happen with a single register, which is why `exch-marker.md` §3 does not mention
+it; any marker serving more than one call at a time needs the arbitration, in
+74HC as much as here. It is ordinary glare and takes the ordinary answer: the
+first takes the line, the second gets busy.
+
+`make pool` has both of A's lines dial exchange 23 in lockstep, pulse for
+pulse, which exercises all of it at once -- and in its second half has them
+dial the *same* number, checking from outside that exactly one caller is
+talking to B's line and exactly one hears B's cannot-complete tone across the
+trunk.
 
 ### What a transit demands of a monitor
 
@@ -298,9 +330,10 @@ trunk let go.
    to do without one — patch into the first direction found, as a chain would.
 2. **A ring**, to exercise the strap. The `n` bit is decoded and both halves of
    its rule are in; nothing closes a loop yet to test it.
-3. **More than one register and one monitor.** `exch-monitor.md` §4 wants two
-   monitors a block to four exchanges and three to twenty; `exch-marker.md` §6
-   wants three registers at 48 lines. Both are pools of one here.
+3. **Erlang against the sizing tables.** Both pools are parameters now
+   (`NREG`, `NMON`), so `exch-monitor.md` §4's table -- two a block to four
+   exchanges, three to twenty -- can be checked against offered traffic rather
+   than argued.
 3. **A testbench for the `SCLK` hazard** (`exch-mainboard.md` §7): a spurious
    shift puts the next write in the wrong port with the wrong source. It costs
    one call and does not persist, and it is worth watching it not persist.
