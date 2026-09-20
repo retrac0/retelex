@@ -52,7 +52,7 @@ module trunk_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(sdata), .sclk(sclk), .wr(wr),
-            .pb_busy(), .pb_word(), .hc(), .ha(),
+            .pb_busy(), .pb_word(), .port_busy(), .hc(), .ha(),
             .slot(slot), .slotq(), .tick(tick), .hclk(), .hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k());

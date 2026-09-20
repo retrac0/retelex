@@ -40,6 +40,7 @@ module exch_top #(
     input                wr,
     output               pb_busy,
     output               pb_word,
+    output     [63:0]    port_busy,      // each block's eight BUSY lines, for its monitor
 
     // ---- cable A: the clocks, and the sixteen highway conductors ---------
     output     [7:0]     hc,             // brought out so a trunk card can tap its block
@@ -93,7 +94,8 @@ module exch_top #(
                 .c_rx(c_rx[h*8 +: 8]), .a_rx(a_rx[h*8 +: 8]),
                 .blk(blk_to_block[h]), .sdata(sdata), .sclk(sclk), .wr(wr),
                 .blk_dec(blk_dec[h*8 +: 8]),
-                .pb_busy(pb_busy_b[h]), .pb_word(pb_word_b[h]));
+                .pb_busy(pb_busy_b[h]), .pb_word(pb_word_b[h]),
+                .port_busy(port_busy[h*8 +: 8]));
         end else begin : absent
             // No block in this position: it drives nothing, and the mainboard
             // pulls its column to FILL.  A cleared latch listens to port 00,
@@ -104,7 +106,8 @@ module exch_top #(
             assign a_rx[h*8 +: 8]   = 8'h00;
             assign pb_busy_b[h]     = 1'b0;
             assign pb_word_b[h]     = 1'b0;
-            assign blk_dec[h*8 +: 8] = 8'h00;
+            assign blk_dec[h*8 +: 8]   = 8'h00;
+            assign port_busy[h*8 +: 8] = 8'h00;
         end
     end endgenerate
 

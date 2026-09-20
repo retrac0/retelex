@@ -33,6 +33,7 @@ module monitor #(
     input            oct_stb,                // 8 kHz: one slot a visit, eight in a ms
     input            tick_1k,
     input      [7:0] m,                      // the block's eight ports' M, direct
+    input      [7:0] busy,                   // and their BUSY, from the same block
     input      [7:0] chan_mask,              // which slots the trunk card owns
 
     output reg       claim,                  // one pulse: this port is ours
@@ -43,6 +44,7 @@ module monitor #(
 
     reg [2:0] scan;
     reg [7:0] seen;                          // M at the last visit, a bit a slot
+    reg [7:0] seen_b;                        // and BUSY at the last visit
     reg [1:0] st;
     reg [2:0] slot;
     reg [9:0] low_ms;
@@ -60,17 +62,28 @@ module monitor #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            scan <= 0; seen <= 0; st <= IDLE; slot <= 0; held <= 0;
+            scan <= 0; seen <= 0; seen_b <= 0; st <= IDLE; slot <= 0; held <= 0;
             claim <= 0; claim_port <= 0; low_ms <= 0;
         end else begin
             claim <= 1'b0;
 
             if (oct_stb) begin
                 // a fresh seizure is M high now and low at the last visit
-                if (st == IDLE && chan_mask[scan] && m[scan] && !seen[scan]) begin
+                // A fresh seizure is M high, and M low AND BUSY low AT THE LAST
+                // VISIT.  The BUSY term is what tells a seizure arriving from a
+                // CLAIM coming back: when this exchange seizes or patches a
+                // trunk it writes BUSY first and the far end's answer raises M
+                // long after, so the claim's rise always finds BUSY already set.
+                // It must be BUSY as of the last visit and not BUSY now: the
+                // monitor steps a slot every 125 us and the marker a port every
+                // 125 us, so the marker reaches an incoming seizure first about
+                // one time in eight, and reading BUSY live loses those.
+                if (st == IDLE && chan_mask[scan] && m[scan] && !seen[scan]
+                    && !seen_b[scan]) begin
                     slot <= scan; held <= 1'b1; st <= WANT_E;
                 end
-                seen[scan] <= m[scan];
+                seen[scan]   <= m[scan];
+                seen_b[scan] <= busy[scan];
                 scan <= scan + 1'b1;
             end
 

@@ -69,6 +69,7 @@ make mvp      mvp-ex.md: absent parts read as idle, and the hotline
 make two      two exchanges, own crystals 100 ppm apart, both making calls
 make trunk    two exchanges tied by one MF8 link, calls patched across it
 make net      the same two exchanges, calls DIALLED: local, and the pulse flood
+make chain    three exchanges, 22 = 23 = 24, and a call that transits 23
 make iv       the whole suite again under Icarus, as the reference
 make trunk-ppm  the link with the two crystals 100 ppm apart
 make lint     verilator, the whole exchange fitted
@@ -132,6 +133,36 @@ register names, so the marker cannot probe a block without first shifting a word
 naming it. `ctl_write` takes a `strobe` input for that — low, it shifts the word
 and never pulses `WR` — which is safe only because nothing reads a block's shift
 register outputs until `WR`.
+
+### What a transit demands of a monitor
+
+Three findings from building the chain, all in the same place, and together they
+say that **`exch-monitor.md` §4's seizure rule is not sufficient once an exchange
+has outgoing trunks of its own**. An end of a chain never shows any of it; a
+transit shows it on every call.
+
+**A returning claim looks like a seizure.** When the far exchange claims,
+backward A rises — and at a transit that is M rising on its *outgoing* trunk,
+which satisfies "M high, and low at the last visit" exactly. A monitor is then
+held for the whole call, counting a level that never pulses. §4's Erlang tables
+size the pool on a monitor being held for one or two digits, so a chain would
+exhaust it.
+
+**Gating on `BUSY` live loses one seizure in eight.** Both scanners step on the
+8 kHz octet mark, but the monitor covers eight slots and the marker sixty-four
+ports, so the marker reaches a port first about one time in eight — and a live
+`BUSY` test throws those seizures away.
+
+**The discriminator is order, not state.** `BUSY` *as of the last visit*, on the
+same cadence as M. This exchange writes `BUSY` when it seizes or patches a
+trunk, and the far end's answer raises M long after, so a claim's rise always
+finds `BUSY` already set at the previous visit; an arriving seizure's rise never
+does. Immune to the scan race rather than subject to it.
+
+And one of timing: **a hop cost about three scans** until the forwarder was made
+to sweep from where the seizure was seen rather than from port 63. Two now, of
+which one is the marker's own detection latency — inherent to a scanned marker,
+and worth holding against `exch-network.md` §3.1's 7 ms hop.
 
 ### What the serial bus demands of a marker
 
@@ -246,11 +277,13 @@ trunk let go.
 
 ## Next
 
-1. **A third exchange**, to make a chain: that is the first configuration with a
-   **transit** in it, and transit forwarding is the one part of
-   `exch-network.md` §3 that two exchanges cannot exercise. Then a hub and its
-   resolvers (§3.2).
-2. **More than one register and one monitor.** `exch-monitor.md` §4 wants two
+1. **A hub and its resolvers** (`exch-network.md` §3.2): three or four
+   directions, a seizure fanned out into all the others at once, and the leg
+   whose M rises kept. With no resolver the marker already does what §3.2 says
+   to do without one — patch into the first direction found, as a chain would.
+2. **A ring**, to exercise the strap. The `n` bit is decoded and both halves of
+   its rule are in; nothing closes a loop yet to test it.
+3. **More than one register and one monitor.** `exch-monitor.md` §4 wants two
    monitors a block to four exchanges and three to twenty; `exch-marker.md` §6
    wants three registers at 48 lines. Both are pools of one here.
 3. **A testbench for the `SCLK` hazard** (`exch-mainboard.md` §7): a spurious

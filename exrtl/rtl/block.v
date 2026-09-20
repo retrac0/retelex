@@ -52,7 +52,8 @@ module block #(
     input             wr,
     output     [7:0]  blk_dec,       // this block's own '138 on DST[5:3], out to the shunt
     output            pb_busy,       // the probe bus, driven only while BLK[H]
-    output            pb_word
+    output            pb_word,
+    output     [7:0]  port_busy      // the eight ports' BUSY, for a monitor on this block
 );
     wire [7:0] rb, a_hw, busy_hw;
     wire       pb_busy_i, pb_word_i;
@@ -106,6 +107,8 @@ module block #(
     // In 74HC the probe bus is tri-state, one block enabled by BLK[H], pulled
     // LOW at the marker so an absent block reads as eight unequipped slots
     // (exch-mainboard.md 6).  A mux at the top does the same job here.
+    assign port_busy = busy_com;
+
     assign pb_busy = blk ? pb_busy_i : 1'b0;
     assign pb_word = blk ? pb_word_i : 1'b0;
 endmodule

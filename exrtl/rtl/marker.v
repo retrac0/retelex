@@ -96,6 +96,12 @@ module marker #(
 
     wire [7:0] wsr_next = {pb_word, wsr[7:1]};
     wire [2:0] p_cls    = p_word[2:0];
+    // A trunk's option bits (ex-extensions.md 2.2): which way its link goes,
+    // its glare bit, and whether the link is strapped (exch-network.md 3.3).
+    wire [1:0] p_dir    = p_word[4:3];
+    wire       p_g      = p_word[5];
+    wire       p_n      = p_word[6];
+    wire       p_free   = !p_busy && !p_m;
 
     // ---------------- the write queue and the serialiser ----------------
     // The sequencer's whole output is latch writes, and a write is one
@@ -104,8 +110,8 @@ module marker #(
     // answers PB is the block the shift register names.  Between writes the
     // marker keeps a word there naming the block its scanner is visiting,
     // shifted with strobe low so that nothing is written.
-    reg [13:0] wq [0:3];
-    reg [1:0]  wh, wt;
+    reg [13:0] wq [0:7];
+    reg [2:0]  wh, wt;
     reg [1:0]  wst;
     reg        ser_req, ser_strobe;
     reg [5:0]  ser_dst, ser_src;
@@ -126,6 +132,11 @@ module marker #(
     reg       hunt_arm, hunt_run, hunt_done, hunt_ok;
     reg [2:0] hunt_cls;
     reg [5:0] hunt_port;
+    // exch-network.md 3: "one scan finds a free trunk in each other direction".
+    // One pass, four candidates -- not four passes.
+    reg       hunt_dirs;               // this hunt is the network's, not a class hunt
+    reg [5:0] cand [0:3];
+    reg [3:0] cand_ok;
 
     // ---------------- the sequencer -------------------------------------
     localparam M_IDLE=4'd0,  M_FIRST=4'd1,  M_SECOND=4'd2, M_PROBE=4'd3,
@@ -134,6 +145,11 @@ module marker #(
 
     reg [3:0]  mst;
     reg [5:0]  caller, called, trunk;
+    // exch-network.md 3.2: the trunks an origin seized, "a '574 a direction in
+    // a bank a register".  On the claim it keeps the one whose M rose and
+    // releases the others.
+    reg [5:0]  d_trunk [0:3];
+    reg [3:0]  d_held;
     reg [2:0]  dh, de;
     reg        claimed, guarding;
     // A claimed trunk keeps CLAIM set for the whole of the call it brought in:
@@ -153,13 +169,52 @@ module marker #(
         end
     endtask
 
-    task drop_trunk;
-        begin push(trunk, 6'o00, 1'b0, 1'b0); end
+    task drop_trunk;                    // let go of every trunk this call holds
+        integer k;
+        begin
+            for (k = 0; k < 4; k = k + 1)
+                if (d_held[k]) push(d_trunk[k], 6'o00, 1'b0, 1'b0);
+            d_held = 4'd0;
+        end
+    endtask
+
+    task drop_others;                   // keep the one that claimed, release the rest
+        integer k;
+        begin
+            for (k = 0; k < 4; k = k + 1)
+                if (d_held[k] && d_trunk[k] != trunk)
+                    push(d_trunk[k], 6'o00, 1'b0, 1'b0);
+            d_held = 4'd0;
+        end
     endtask
 
     task start_hunt(input [2:0] c);
-        begin hunt_cls <= c; hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0; end
+        begin
+            hunt_cls <= c; hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0;
+            hunt_dirs <= 1'b0;
+        end
     endtask
+
+    task start_dir_hunt;               // the network's: a trunk in every direction
+        begin
+            hunt_cls <= C_TRUNK; hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0;
+            hunt_dirs <= 1'b1; cand_ok <= 4'd0;
+        end
+    endtask
+
+    // ---------------- the forwarder --------------------------------------
+    // exch-network.md 3: a seizure arriving on a trunk is patched onward into
+    // every OTHER direction, and the exchange forgets it -- no register, no
+    // digits, nothing but two latches.  It runs on its own so that a transit
+    // is never held up by a local call the marker is setting up.
+    //
+    // "A seizure is never forwarded INTO a strapped link, nor forwarded ONWARD
+    // from one" (3.3) -- the n bit, which is how a ring is kept from circling.
+    localparam F_IDLE = 2'd0, F_RUN = 2'd2, F_GO = 2'd3;
+    reg [1:0] fst;
+    reg [5:0] f_in, f_cand, f_start;
+    reg [1:0] f_dir;
+    reg       f_ok;
 
     integer i;
     always @(posedge clk or negedge rst_n) begin
@@ -174,8 +229,12 @@ module marker #(
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0;
             mst <= M_IDLE; caller <= 0; called <= 0; trunk <= 0;
+            d_held <= 4'd0; cand_ok <= 4'd0; hunt_dirs <= 1'b0;
+            fst <= F_IDLE; f_in <= 0; f_cand <= 0; f_dir <= 0; f_ok <= 0;
+            f_start <= 0;
+            for (i = 0; i < 4; i = i + 1) begin d_trunk[i] <= 6'd0; cand[i] <= 6'd0; end
             dh <= 0; de <= 0; claimed <= 0; guarding <= 0; tmr <= 0; ctx_clm <= 0;
-            for (i = 0; i < 4; i = i + 1) wq[i] <= 14'd0;
+            for (i = 0; i < 8; i = i + 1) wq[i] <= 14'd0;
         end else begin
             reg_attach  <= 1'b0;
             reg_release <= 1'b0;
@@ -238,18 +297,53 @@ module marker #(
                 if (hunt_arm && p_port == 6'd63) begin
                     hunt_arm <= 1'b0; hunt_run <= 1'b1;
                 end else if (hunt_run) begin
-                    if (!hunt_ok && p_cls == hunt_cls && !p_busy && !p_m) begin
+                    if (hunt_dirs) begin
+                        // A free trunk in each direction.  The glare bit has one
+                        // end of a link take the LAST it finds and not the first,
+                        // so the two ends never meet in the middle.
+                        if (p_cls == C_TRUNK && p_free && (!cand_ok[p_dir] || p_g)) begin
+                            cand[p_dir] <= p_port;
+                            cand_ok[p_dir] <= 1'b1;
+                        end
+                    end else if (!hunt_ok && p_cls == hunt_cls && p_free) begin
                         hunt_ok <= 1'b1; hunt_port <= p_port;
                     end
                     if (p_port == 6'd63) begin hunt_run <= 1'b0; hunt_done <= 1'b1; end
                 end
             end
 
+            // ---- the forwarder ------------------------------------------
+            if (visit && p_valid && fst == F_RUN) begin
+                if (p_cls == C_TRUNK && p_free && !p_n && p_dir != f_dir &&
+                    (!f_ok || p_g)) begin
+                    f_cand <= p_port; f_ok <= 1'b1;
+                end
+                // one scan, from wherever the seizure was seen, back to it
+                if (p_port == f_start) fst <= F_GO;
+            end
+            if (fst == F_GO) begin
+                // One found: patch it, two latches, and forget.  More than one
+                // direction would fan out here, which wants the resolvers of
+                // exch-network.md 3.2; with none, 3.2 says to patch into the
+                // first direction found, as a chain would.
+                if (f_ok) begin
+                    push(f_cand, f_in,   1'b1, 1'b0);
+                    push(f_in,   f_cand, 1'b1, 1'b0);
+                end
+                fst <= F_IDLE;
+            end
+
             // ---- the claim coming back on a seized trunk ---------------
-            if (visit && p_valid && p_port == trunk && p_m &&
+            // An origin that seized several keeps the one whose M rises.
+            if (visit && p_valid && p_m && !claimed &&
                 (mst == M_NET_E || mst == M_NET_B || mst == M_NET_H ||
-                 mst == M_NET_S || mst == M_WAITCL))
-                claimed <= 1'b1;
+                 mst == M_NET_S || mst == M_WAITCL)) begin
+                for (i = 0; i < 4; i = i + 1)
+                    if (d_held[i] && p_port == d_trunk[i]) begin
+                        claimed <= 1'b1;
+                        trunk   <= p_port;
+                    end
+            end
 
             // ---- the origin's 128 ms guard (exch-monitor.md 3, rule 2) --
             if (guarding && tick_1k) begin
@@ -288,7 +382,7 @@ module marker #(
                     if (reg_cnt == 4'd1) begin
                         if (HAS_NET) begin
                             push(caller, 6'o00, 1'b1, ctx_clm);  // dial tone off
-                            start_hunt(C_TRUNK); mst <= M_SEIZE;
+                            start_dir_hunt; mst <= M_SEIZE;
                         end
                         else nogo;                       // no network card fitted
                     end
@@ -318,13 +412,19 @@ module marker #(
                 case (mst)
                 M_SEIZE: if (hunt_done) begin
                              hunt_done <= 1'b0;
-                             if (hunt_ok) begin
-                                 trunk <= hunt_port;
-                                 // the trunk listens to the CALLER: their
-                                 // remaining digits go down the flood live
-                                 push(hunt_port, caller, 1'b1, 1'b0);
+                             if (cand_ok != 4'd0) begin
+                                 // Seize one free trunk in EVERY direction, all
+                                 // listening to the CALLER, so their remaining
+                                 // digits go down the flood live as they dial.
+                                 for (i = 0; i < 4; i = i + 1)
+                                     if (cand_ok[i]) begin
+                                         push(cand[i], caller, 1'b1, 1'b0);
+                                         d_trunk[i] <= cand[i];
+                                     end
+                                 d_held   <= cand_ok;
+                                 trunk    <= 6'd0;
                                  guarding <= 1'b1; tmr <= 0; mst <= M_NET_E;
-                             end else nogo;              // no free trunk
+                             end else nogo;              // no free trunk anywhere
                          end
                 M_HUNTW: if (hunt_done) begin
                              hunt_done <= 1'b0;
@@ -344,6 +444,7 @@ module marker #(
                              end
                          end
                 M_WAITCL: if (claimed) begin
+                             drop_others;               // the ones that did not claim
                              push(caller, trunk, 1'b1, ctx_clm);
                              reg_release <= 1'b1; mst <= M_IDLE; claimed <= 1'b0;
                          end else if (tick_1k) begin
@@ -355,6 +456,13 @@ module marker #(
                                 // a seizure arriving: hold it busy, listening to
                                 // idle, so backward A stays 0 -- no claim yet
                                 push(p_port, 6'o00, 1'b1, 1'b0);
+                                // and hand it to the forwarder, unless it came in
+                                // on a strapped link (exch-network.md 3.3)
+                                if (fst == F_IDLE && !p_n) begin
+                                    f_in <= p_port; f_dir <= p_dir;
+                                    f_start <= p_port;
+                                    f_ok <= 1'b0; fst <= F_RUN;
+                                end
                             end else if (p_cls == C_LINE || p_cls == C_OPER) begin
                                 if (!reg_busy) begin
                                     reg_attach <= 1'b1; reg_port <= p_port;
