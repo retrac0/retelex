@@ -1,6 +1,6 @@
 # The exchange — tie trunks and the network
 
-An exchange is one 64 × 64 fabric: 48 lines, an operator, and **two groups of six
+An exchange is one 8 × 8 fabric of 64 ports: 48 lines, an operator, and **two groups of six
 tie trunks** — four groups at the busy centre of a network (`exch-protocol.md`
 §5). A network is such exchanges joined by those trunks — a handful on a chain,
 a score around a hub, sixty-four codes in all — in which a line on another

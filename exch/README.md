@@ -3,7 +3,8 @@
 A telephone exchange in 74HC and a few tuned analog circuits, that grows eight
 ports at a time, takes every MF8 channel card unchanged, and is tied by MF8 both
 to other exchanges and to subscriber terminals. No processor, no memory part in
-the exchange logic. **An exchange is one 64 × 64 crossbar**: 48 lines (20–77),
+the exchange logic. **An exchange is one 8 × 8 fabric — eight highways by eight
+slots, 64 ports**: 48 lines (20–77),
 an operator (04) and two groups of six tie trunks (01–03 and 05–07, 11–13 and
 15–17: each channel on the slot that is its bit position on the wire). A network
 is such exchanges in a chain, a ring, a star or a tree (an exchange faces up to
@@ -86,7 +87,8 @@ latch idle at the end — once a port reads busy while a release detector is sti
 timing out, and once ringing is gated by the filtered hook. Both of those came
 out of the model, not out of the design.
 
-**Decided: the exchange stays 64 × 64, and more lines are more exchanges.** Four
+**Decided: the exchange stays 8 × 8 — 64 ports — and more lines are more
+exchanges.** Four
 ways of making one fabric bigger were worked through and set aside as too
 complex for what they bought (`exch-protocol.md` §3.1). A chain of four or five
 48-line exchanges is comfortable on six-channel links while most calls stay

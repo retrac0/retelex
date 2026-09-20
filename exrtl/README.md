@@ -1,7 +1,7 @@
 # exrtl — the exchange in Verilog
 
 A register-transfer model of the exchange of [`exch/docs`](../exch/docs): the
-64 × 64 crossbar, the ports that supervise themselves, and the clock card, in
+8 × 8 fabric, the ports that supervise themselves, and the clock card, in
 synthesisable Verilog. It is built the way the 74HC design is built — a '151 is
 a `mux8`, a '273 is the port's `addr` register, the block has no address and no
 comparator — so that the RTL and the documents can be read against each other.

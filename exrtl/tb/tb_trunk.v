@@ -7,7 +7,7 @@
 // middle of it, and exch-network.md 1's tie trunk exactly: a pair of ports,
 // back to back, holding no digits and deciding nothing.
 //
-// What this exercises: the 64 x 64 fabric at both ends, a trunk block with its
+// What this exercises: the 8 x 8 fabric at both ends, a trunk block with its
 // channels on the slots they occupy on the wire, the MF8 frame and its header,
 // differential Manchester in and out, the framer acquiring and tracking, the
 // crossing between two exchanges' clocks, and the hotline and release rules of

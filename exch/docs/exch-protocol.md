@@ -3,7 +3,7 @@
 What passes between a card and the switch, and how the switch is built so that
 it grows eight ports at a time in 74HC with no memory part anywhere. 
 
-An exchange is one 64 × 64 crossbar.
+An exchange is one 8 × 8 fabric — eight highways by eight slots — and 64 ports.
 
 More lines are more exchanges (`exch-network.md`), not a bigger one. 
 
@@ -108,9 +108,10 @@ of the previously installed parts of the exchange.
   turned out not to be needed: `exch-fabric.md` §3.4.)
 - **Any number of ports may listen to one port.** That costs nothing, and it is
   what makes a tone a line.
-- **It is a 64 × 64 crossbar with one-way crosspoints**: every port can listen to
-  any of 64 sources, one crosspoint held for each listener by its latch — 4 096 of
-  them, built as eight highways in space by eight slots in time. One stage, so
+- **It is an 8 × 8 fabric with one-way crosspoints**: eight highways in space by
+  eight slots in time, and the 64 squares are the 64 ports. Every port can listen
+  to any square, so to any of 64 sources, and its latch holds the one it has —
+  one of 4 096 pairings, never an array of them. One stage, so
   there is exactly one path between two ports and it is always free: the marker
   never hunts inside the fabric. A conversation is two crosspoints.
 - **The latch never grows.** A port only ever listens inside its own exchange; the
@@ -129,7 +130,7 @@ lines and 10 at sixty-four: it does not grow.
 
 ### 3.1 Past 64 ports: more exchanges, not a bigger one
 
-**Decided: the exchange stays a 64 × 64 crossbar**, and a larger system is several
+**Decided: the exchange stays 8 × 8 — 64 ports**, and a larger system is several
 of them joined by tie trunks and the flood (`exch-network.md`). Four ways of
 making one fabric bigger were worked through and set aside as too complex for
 what they bought:

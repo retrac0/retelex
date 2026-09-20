@@ -1,7 +1,9 @@
 # The exchange — the switching fabric, as built
 
-The fabric is a 64 × 64 crossbar with one-way
-crosspoints, made of eight 512 kbps highways (space) and eight slots (time).
+The fabric is **8 × 8** — eight 512 kbps highways (space) by eight slots (time)
+— and the 64 squares of that grid are the exchange's 64 ports. The crosspoints
+are one-way and belong to the listener, so every port can listen to any square
+and any number of ports can listen to the same one.
 
 > **Status: proposed.** The logic is `exch.py fabric` (measured: every source to
 > every listener, bit-exact, one frame). The timing is `exch.py timing`: a
@@ -16,7 +18,7 @@ crosspoints, made of eight 512 kbps highways (space) and eight slots (time).
 
 ## 1. Why this way
 
-| a 64 × 64 crossbar could be | a port costs | verdict |
+| a port that can hear any of 64 could be | a port costs | verdict |
 |---|---|---|
 | a 64-input selector a port, in gates | nine '151 for `C` and nine for `A` | no |
 | **analog crosspoint arrays with their own control memory** — MT8816, 8 × 16: 32 for a plane, 64 for `C` and `A` | no latch, no selects, no clocks at all: the streams simply pass, and an idle column is pulled to `FILL` by a resistor. About 270 small packages and 64 forty-pin ones | the serious alternative. Set aside because the array's memory is write-only: **a port cannot drop its own crosspoint**, so every release goes back to the marker as a 64-write clear of a column, and "nobody is in charge of a call" is lost; and it is an LSI holding the exchange's state, which the rules here exclude |
