@@ -10,10 +10,9 @@ module mvp_site #(
 )(
     input             clk,
     input             rst_n,
-    // the console, on cable B
-    input      [7:0]  blk,
-    input      [2:0]  port_sel,
-    input      [5:0]  src,
+    // the console, on cable B (serial)
+    input             sdata,
+    input             sclk,
     input             wr,
     // the two subscribers
     input             hook20,
@@ -40,20 +39,19 @@ module mvp_site #(
                .RING_ON(RING_ON), .RING_OFF(RING_OFF))
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
-            .blk(blk), .port_sel(port_sel), .src(src),
-            .bsy_in(1'b0), .clm_in(1'b0), .wr(wr),
+            .sdata(sdata), .sclk(sclk), .wr(wr),
             .pb_busy(), .pb_word(), .hc(), .ha(),
             .slot(), .slotq(), .hclk(), .hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k());
 
     // Two plain line cards, in slots 0 and 1 of block 2.
-    line_card u_c20 (.frame_stb(frame_stb), .tx_oct(tx_oct),
+    line_card u_c20 (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
                      .tx(tx20), .rx(rx20), .m(hook20), .e(e20),
                      .c_tx(c_tx[P20]), .a_tx(a_tx[P20]),
                      .c_rx(c_rx[P20]), .a_rx(a_rx[P20]),
                      .word_pin(word[P20]), .ans_n());
-    line_card u_c21 (.frame_stb(frame_stb), .tx_oct(tx_oct),
+    line_card u_c21 (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
                      .tx(tx21), .rx(rx21), .m(hook21), .e(e21),
                      .c_tx(c_tx[P21]), .a_tx(a_tx[P21]),
                      .c_rx(c_rx[P21]), .a_rx(a_rx[P21]),

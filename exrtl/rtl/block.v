@@ -45,25 +45,39 @@ module block #(
     output     [7:0]  c_rx,
     output     [7:0]  a_rx,
 
-    // the control bus
-    input             blk,           // BLK[H], picked off by the shunt field
-    input      [2:0]  port_sel,
-    input      [5:0]  src,
-    input             bsy_in,
-    input             clm_in,
+    // the control bus, serial (exch-mainboard.md 2.3)
+    input             blk,           // /BLK, back from this position's shunt column
+    input             sdata,
+    input             sclk,
     input             wr,
+    output     [7:0]  blk_dec,       // this block's own '138 on DST[5:3], out to the shunt
     output            pb_busy,       // the probe bus, driven only while BLK[H]
     output            pb_word
 );
     wire [7:0] rb, a_hw, busy_hw;
     wire       pb_busy_i, pb_word_i;
+
+    // Two 74HC164: sixteen bits, shifted by SCLK, with no output latch.  Nothing
+    // reads the outputs until WR, so the garbage that ripples through between
+    // writes is the same garbage the parallel bus carried between writes.
+    reg [15:0] cw;
+    reg        sclk_d;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) begin cw <= 16'd0; sclk_d <= 1'b0; end
+        else begin
+            sclk_d <= sclk;
+            if (sclk && !sclk_d) cw <= {cw[14:0], sdata};
+        end
+
+    assign blk_dec = 8'd1 << cw[13:11];        // the '138, out to the mainboard
     wire [7:0] c_mux, a_com, busy_com, word_com;
     wire [7:0] wr_dec;
 
     genvar k;
     generate for (k = 0; k < 8; k = k + 1) begin : slots
         // the write decoder: BLK[H] . WR enables, PORT[2:0] picks the latch
-        assign wr_dec[k] = blk && wr && (port_sel == k[2:0]);
+        // BLK[h].WR became /BLK . WR . G: a word without the guard cannot write
+        assign wr_dec[k] = blk && wr && cw[15] && (cw[10:8] == k[2:0]);
 
         // an unpopulated slot: C pulled to FILL, A and BUSY to 0, no word.
         // exch-fabric.md 1.1 -- exactly as an empty MF8 slot is pulled.
@@ -80,7 +94,7 @@ module block #(
             .hc(hc), .ha(ha),
             .a_tx(a_tx[k]), .c_rx(c_rx[k]), .a_rx(a_rx[k]),
             .rb(rb[k]), .a_hw(a_hw[k]), .busy_hw(busy_hw[k]),
-            .wr(wr_dec[k]), .src(src), .bsy_in(bsy_in), .clm_in(clm_in));
+            .wr(wr_dec[k]), .src(cw[7:2]), .bsy_in(cw[1]), .clm_in(cw[0]));
     end endgenerate
 
     // the four commutators, all on SLOT: C, A, BUSY and the card's word

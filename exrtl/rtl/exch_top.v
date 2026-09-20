@@ -34,12 +34,9 @@ module exch_top #(
     output     [63:0]    c_rx,
     output     [63:0]    a_rx,           // E, in the ring cadence while the port rings
 
-    // ---- cable B: the control bus (exch-mainboard.md 2.3) ----------------
-    input      [7:0]     blk,
-    input      [2:0]     port_sel,
-    input      [5:0]     src,
-    input                bsy_in,
-    input                clm_in,
+    // ---- cable B: the control bus, serial (exch-mainboard.md 2.3) --------
+    input                sdata,
+    input                sclk,
     input                wr,
     output               pb_busy,
     output               pb_word,
@@ -49,6 +46,7 @@ module exch_top #(
     output     [7:0]     ha,
     output     [2:0]     slot,
     output     [2:0]     slotq,
+    output     [2:0]     tick,           // the cell's eighths: a trunk card's encoder wants them
     output               hclk,
     output               hb,
     output               tx_clk,
@@ -60,12 +58,13 @@ module exch_top #(
     output               tick_1k
 );
     wire       cap_stb;
-    wire [7:0] hc_from_block, ha_from_block, blk_to_block;
+    wire [7:0]  hc_from_block, ha_from_block, blk_to_block;
+    wire [63:0] blk_dec;
     wire [7:0] pb_busy_b, pb_word_b;
 
     clock_card #(.RING_ON(RING_ON), .RING_OFF(RING_OFF)) u_clk (
         .clk(clk), .rst_n(rst_n),
-        .tick(), .hclk(hclk), .hb(hb), .slot(slot), .slotq(slotq),
+        .tick(tick), .hclk(hclk), .hb(hb), .slot(slot), .slotq(slotq),
         .cap_stb(cap_stb), .tx_clk(tx_clk), .frame_stb(frame_stb),
         .tx_oct(tx_oct), .rx_oct(rx_oct), .fill(fill),
         .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
@@ -74,7 +73,7 @@ module exch_top #(
     mainboard #(.SHUNT(SHUNT), .SHUNT_FITTED(SHUNT_FITTED & BLOCK_FITTED)) u_mb (
         .fill_pull({8{fill}}),
         .hc_from_block(hc_from_block), .ha_from_block(ha_from_block),
-        .blk_bus(blk), .hc(hc), .ha(ha), .blk_to_block(blk_to_block));
+        .blk_dec(blk_dec), .hc(hc), .ha(ha), .blk_to_block(blk_to_block));
 
     wire rbt = RBT_IS_FILL ? fill : 1'b0;
 
@@ -92,8 +91,8 @@ module exch_top #(
                 .hc_out(hc_from_block[h]), .ha_out(ha_from_block[h]),
                 .c_tx(c_tx[h*8 +: 8]), .a_tx(a_tx[h*8 +: 8]), .word(word[h*8 +: 8]),
                 .c_rx(c_rx[h*8 +: 8]), .a_rx(a_rx[h*8 +: 8]),
-                .blk(blk_to_block[h]), .port_sel(port_sel), .src(src),
-                .bsy_in(bsy_in), .clm_in(clm_in), .wr(wr),
+                .blk(blk_to_block[h]), .sdata(sdata), .sclk(sclk), .wr(wr),
+                .blk_dec(blk_dec[h*8 +: 8]),
                 .pb_busy(pb_busy_b[h]), .pb_word(pb_word_b[h]));
         end else begin : absent
             // No block in this position: it drives nothing, and the mainboard
@@ -105,6 +104,7 @@ module exch_top #(
             assign a_rx[h*8 +: 8]   = 8'h00;
             assign pb_busy_b[h]     = 1'b0;
             assign pb_word_b[h]     = 1'b0;
+            assign blk_dec[h*8 +: 8] = 8'h00;
         end
     end endgenerate
 

@@ -15,47 +15,52 @@ module tb_two;
     always #122.0703 clk_a = ~clk_a;
     always #122.0581 clk_b = ~clk_b;
 
-    reg  [7:0] blk_a = 0, blk_b = 0;
-    reg  [2:0] ps_a = 0,  ps_b = 0;
-    reg  [5:0] src_a = 0, src_b = 0;
-    reg        wr_a = 0,  wr_b = 0;
+    reg        rqa = 0, rqb = 0;
+    reg  [5:0] dsta = 0, srca = 0, dstb = 0, srcb = 0;
+    wire       bsya, bsyb, sda, scka, wr_a, sdb, sckb, wr_b;
+    ctl_write ca (.clk(clk_a), .rst_n(rst_n), .req(rqa), .strobe(1'b1),
+                  .dst(dsta), .src(srca), .bsy(1'b1), .clm(1'b0),
+                  .busy(bsya), .sdata(sda), .sclk(scka), .wr(wr_a));
+    ctl_write cb (.clk(clk_b), .rst_n(rst_n), .req(rqb), .strobe(1'b1),
+                  .dst(dstb), .src(srcb), .bsy(1'b1), .clm(1'b0),
+                  .busy(bsyb), .sdata(sdb), .sclk(sckb), .wr(wr_b));
     reg        h20a = 0, h21a = 0, h20b = 0, h21b = 0;
     reg  [2:0] mode_a = 0, mode_b = 0;
     wire [31:0] errs_a, errs_b, chk_a, chk_b;
     wire       fs_a, fs_b, rc_a, rc_b;
 
     mvp_site #(.T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF))
-        site_a (.clk(clk_a), .rst_n(rst_n), .blk(blk_a), .port_sel(ps_a), .src(src_a),
-                .wr(wr_a), .hook20(h20a), .hook21(h21a), .mode(mode_a),
+        site_a (.clk(clk_a), .rst_n(rst_n), .sdata(sda), .sclk(scka), .wr(wr_a), .hook20(h20a), .hook21(h21a), .mode(mode_a),
                 .errs(errs_a), .chk(chk_a), .frame_stb(fs_a), .ring_cad_n(rc_a));
 
     mvp_site #(.T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF))
-        site_b (.clk(clk_b), .rst_n(rst_n), .blk(blk_b), .port_sel(ps_b), .src(src_b),
-                .wr(wr_b), .hook20(h20b), .hook21(h21b), .mode(mode_b),
+        site_b (.clk(clk_b), .rst_n(rst_n), .sdata(sdb), .sclk(sckb), .wr(wr_b), .hook20(h20b), .hook21(h21b), .mode(mode_b),
                 .errs(errs_b), .chk(chk_b), .frame_stb(fs_b), .ring_cad_n(rc_b));
 
     // Both consoles write the same hotline, each on its own exchange's cable B.
     task hotline;
         begin
             @(posedge clk_a); #1;
-            blk_a = 8'b100; ps_a = 3'd0; src_a = 6'o21; wr_a = 1;
-            blk_b = 8'b100; ps_b = 3'd0; src_b = 6'o21; wr_b = 1;
-            @(posedge clk_a); #1; wr_a = 0; wr_b = 0; blk_a = 0; blk_b = 0;
+            dsta = 6'o20; srca = 6'o21; rqa = 1;
+            dstb = 6'o20; srcb = 6'o21; rqb = 1;
+            @(posedge clk_a); #1; rqa = 0; rqb = 0;
+            wait (bsya); wait (!bsya); wait (!bsyb);
             @(posedge clk_a); #1;
-            blk_a = 8'b100; ps_a = 3'd1; src_a = 6'o20; wr_a = 1;
-            blk_b = 8'b100; ps_b = 3'd1; src_b = 6'o20; wr_b = 1;
-            @(posedge clk_a); #1; wr_a = 0; wr_b = 0; blk_a = 0; blk_b = 0;
+            dsta = 6'o21; srca = 6'o20; rqa = 1;
+            dstb = 6'o21; srcb = 6'o20; rqb = 1;
+            @(posedge clk_a); #1; rqa = 0; rqb = 0;
+            wait (bsya); wait (!bsya); wait (!bsyb);
         end
     endtask
 
-    task both(input [2:0] mm, input integer us, input [511:0] what);
+    task both(input [2:0] mm, input integer us, input string what);
         reg [31:0] e0, e1;
         begin
             e0 = errs_a; e1 = errs_b;
             mode_a = mm; mode_b = mm;
             #(us * 1000);
             mode_a = 0; mode_b = 0;
-            $display("     %-42s  A %s   B %s", what,
+            $display("     %-52s  A %s   B %s", what,
                      (errs_a == e0) ? "ok  " : "FAIL", (errs_b == e1) ? "ok" : "FAIL");
         end
     endtask

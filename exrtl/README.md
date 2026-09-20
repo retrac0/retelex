@@ -6,11 +6,13 @@ synthesisable Verilog. It is built the way the 74HC design is built — a '151 i
 a `mux8`, a '273 is the port's `addr` register, the block has no address and no
 comparator — so that the RTL and the documents can be read against each other.
 
-> **Status: the fabric, the mainboard and the supervision run and are checked.**
-> No marker, no register, no trunks. `make fabric` reproduces `exch.py fabric`
-> 1, 3 and 4 bit for bit; `make mvp` runs `mvp-ex.md` §6.3, the manual board
-> with no marker at all; `make two` runs two whole exchanges on crystals 100 ppm
-> apart in one simulation. Nothing here has been on an FPGA.
+> **Status: an exchange that dials.** The fabric, the mainboard and its serial
+> control bus, the supervision, an MF8 trunk, and the common control — marker,
+> register and seeker — run and are checked. `make net` runs two exchanges
+> tied by one MF8 link making **dialled** calls, local and across the trunk by
+> `exch-network.md` §3's pulse flood. What is not here: a transit hop (needs a
+> third exchange), fan-out and the resolvers of §3.2, and more than one
+> register or monitor an exchange. Nothing has been on an FPGA.
 
 **The hierarchy is the layout.** Each module is a thing you could point at in a
 rack, and the module boundaries are the connectors.
@@ -27,9 +29,27 @@ rack, and the module boundaries are the connectors.
      port x8       the crosspoint: '273, three '151s, a '74 pair   (exch-fabric.md 3.2)
                    the supervision: two detectors and the gates    (exch-fabric.md 3.5)
    mux8            a 74HC151.  The whole fabric is this part used three ways
+   ctl_write       the serialiser for cable B: one 16-bit word on one wire
+                                                             (exch-mainboard.md 2.3)
+
+ marker            scanner, probe, hunt in fixed order from 00, the number
+                   parsing of 2, and the flood at both ends   (exch-marker.md,
+                                                              exch-network.md 3)
+ pulse_reg         the register: no port, no class, reads its caller's hook off
+                   the M highway through its own probe        (register.md 4)
+ monitor           the seeker, on a trunk block: the only part of the network
+                   that reads a digit it was not sent         (exch-monitor.md)
+   pulse_rx        register.md 2's three windows off one timer, shared by both
 
  line_card         a card that plugs into a channel slot -- OUTSIDE exch_top, because
                    that is where it is                       (mf8-backplane.md 8)
+ mf8_trunk_card    six channels of a block made into a tie trunk (exch-network.md 1)
+   mf8_encoder     differential Manchester: a transition a cell, two for a 0
+                                                             (mf8-spec.md 9.2)
+   mf8_decoder     the classifier: times gaps, no PLL, nothing to lose
+                                                             (mf8-spec.md 9.4)
+   mf8_framer      F = 11111110, the guard at states 0 and 4, 32 to lock,
+                   two +2/-1 counters to track               (mf8-spec.md 3, 4)
 ```
 
 `exch_top`'s edge is the 64 channel-slot pin groups and the two cables. Cards
@@ -38,13 +58,28 @@ what it is and why an MF8 trunk card can tap `hc[h]`/`ha[h]` from outside.
 
 ## Running it
 
+**Two simulators run the same testbenches.** Icarus is the reference; Verilator
+is about two orders of magnitude faster and is what to use while working. The
+network testbench is 3 s of model time: minutes under Icarus, 22 s under
+Verilator. Anything that passes under one must pass under the other.
+
 ```
 make fabric   every source to every listener, bit-exact, one frame
 make mvp      mvp-ex.md: absent parts read as idle, and the hotline
 make two      two exchanges, own crystals 100 ppm apart, both making calls
+make trunk    two exchanges tied by one MF8 link, calls patched across it
+make net      the same two exchanges, calls DIALLED: local, and the pulse flood
+make iv       the whole suite again under Icarus, as the reference
+make trunk-ppm  the link with the two crystals 100 ppm apart
 make lint     verilator, the whole exchange fitted
 make synth    yosys: what the 64-port exchange costs in cells
 ```
+
+| | Icarus | Verilator |
+|---|---|---|
+| `fabric`, 29 ms of model time | seconds | **0.28 s** |
+| `trunk`, 70 ms | ~5 s | **0.72 s** |
+| `net`, 3 s | minutes | **22 s** |
 
 ## What is decided here, and why
 
@@ -88,6 +123,25 @@ its clock as a port, so an exchange is a thing you instantiate. `make two` runs
 a pair on crystals 100 ppm apart -- the plesiochronous case `mf8-backplane.md`
 §2 assumes of any two ends of a link.
 
+**The control bus is one word on one wire.** `exch-mainboard.md` §2.3: the
+marker's whole output is sixteen bits — a guard, `DST`, and the port's '273
+verbatim — broadcast to every block, and the block that answers `WR` is the one
+its shunt column names. One consequence the RTL made plain: **`/BLK` steers the
+probe as well as the write.** The block that drives `PB` is the block the shift
+register names, so the marker cannot probe a block without first shifting a word
+naming it. `ctl_write` takes a `strobe` input for that — low, it shifts the word
+and never pulses `WR` — which is safe only because nothing reads a block's shift
+register outputs until `WR`.
+
+**A trunk is a pair of ports back to back, and nothing else.** What a trunk
+port hears from its own fabric goes out on the line; what comes in off the line
+is what that port's card says (`exch-network.md` §1). The card decides nothing
+and holds no digits. A call across it is the hotline rule of `exch-fabric.md`
+§3.5 running through the pair untouched: the far line rings because its port
+sees E, and the caller hears ringback because the far port substitutes `RBT`
+into its own highway cell — both of which `make trunk` watches happen across
+two exchanges.
+
 **A block does not know its own number.** `block`'s `H` parameter is carried so
 an instance names itself in a waveform and is read by nothing. Which highway a
 block drives is the `mainboard`'s `SHUNT` parameter -- three bits a position,
@@ -95,6 +149,27 @@ the three shunts in one silkscreened column of `exch-mainboard.md` §1. A
 position whose shunts are left out drives nothing and its column is pulled to
 `FILL`; two positions shunted onto one column read as `x`, which is what two
 '244s on one conductor are. Layout, not logic.
+
+## The link, measured
+
+`make trunk` — two exchanges, one MF8 pair each way, the console patching
+latches at both ends:
+
+| | |
+|---|---|
+| both framers acquire | **38 frames** after reset — `mf8-spec.md` §4.1 measures 37–86 |
+| re-acquire after the link is cut and restored | 33–55 frames |
+| speech, each way, each channel | **0 wrong in 400 bits**, at a delay of 3–4 frames |
+| two calls at once on channels 1 and 2 | same delay on both: no crosstalk |
+| the link cut with two calls up | squelch, both framers unlock, **every call releases itself** |
+
+**Crystal offset.** At 0 and 100 ppm the speech paths are bit-exact; at 100 ppm
+a slip is one bit in 10 000 frames and the 400-frame window sees none, as
+`mf8-backplane.md` §7 predicts. Driven far past the specification — 5 000 and
+20 000 ppm, 50× and 200× the ±100 ppm the design assumes — the framer still
+locks in 38 frames and the calls still run; what appears is **ten isolated
+wrong bits in 400**, clustered at the slips, and not a broken link. That is the
+failure mode the design was built for: a slip costs a bit, not a call.
 
 ## What it costs
 
@@ -113,12 +188,23 @@ each: **an RC, not a counter.** The RTL has to count frames to get 16 ms and
 flip-flops. Anyone putting this on an FPGA pays that; anyone building it in
 74HC does not.
 
+## Two things the RTL settled
+
+**`A out = E + CLAIM`** (`exch-fabric.md` §3.1) is the A the port hands its
+**card**, not its highway contribution. Three things agree: "2 × 74HC32" is
+eight OR gates for eight ports; backward A goes up the link, which is fed from
+`A_RX`; and the highway must go on carrying the far caller's dial pulses so that
+a register at the claiming exchange can read `h s` off them. Put it on the
+highway instead and the claim jams the register the claim itself summoned.
+
+**A claimed trunk keeps `CLAIM` for the whole call it brought in.** The marker's
+later writes to that port — dial tone off, the connect — must carry it, or
+backward A drops and every patch behind it releases itself 256 ms later. Found
+by `make net`: the call reached the far exchange, rang nothing, and the origin's
+trunk let go.
+
 ## Open, and deliberately not guessed
 
-- **`A out = E + CLAIM`** (`exch-fabric.md` §3.1). Written as `E + CLAIM` in the
-  document and implemented here as `A_TX | CLAIM`, which is identical wherever
-  `CLAIM` is never written — every block but a trunk block. Which one is meant
-  needs settling before a trunk block is modelled. Marked `FIXME` in `port.v`.
 - **The word's encoding.** `exch-protocol.md` §5 says a plain line card ties its
   word pin to ground and "reads all ones and means a line with no options",
   while `exch-fabric.md` §3.5's table gives *line* as class 001. Both cannot be
@@ -130,16 +216,13 @@ flip-flops. Anyone putting this on an FPGA pays that; anyone building it in
 
 ## Next
 
-In `mvp-ex.md` §6's order, which is the order to bring real hardware up in:
-
-1. **The marker** (`exch-marker.md`): the scanner, the probe on `HA` and `PB`,
-   the sequencer on cable B, and the hunt by class in fixed order. Then a
-   pulse register, and the MVP dials instead of being patched by hand.
-2. **The MF8 trunk card**: the transmitter of `mf8-spec.md` §10 with F and S
-   put back into its block's `HC[h]`, and the §9.4 receiver -- a classifier
-   that times gaps between transitions, with no clock and no PLL on the
-   receive path -- driving six ports' `C_TX` and `A_TX` through a '259. The
-   taps it needs are already brought out of `exch_top`.
-3. **A link between two exchanges**, which `make two` is the groundwork for:
-   two crystals, two clock domains, and the one crossing of
-   `mf8-backplane.md` §2 on the trunk card.
+1. **A third exchange**, to make a chain: that is the first configuration with a
+   **transit** in it, and transit forwarding is the one part of
+   `exch-network.md` §3 that two exchanges cannot exercise. Then a hub and its
+   resolvers (§3.2).
+2. **More than one register and one monitor.** `exch-monitor.md` §4 wants two
+   monitors a block to four exchanges and three to twenty; `exch-marker.md` §6
+   wants three registers at 48 lines. Both are pools of one here.
+3. **A testbench for the `SCLK` hazard** (`exch-mainboard.md` §7): a spurious
+   shift puts the next write in the wrong port with the wrong source. It costs
+   one call and does not persist, and it is worth watching it not persist.

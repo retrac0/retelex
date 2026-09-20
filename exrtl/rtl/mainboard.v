@@ -1,13 +1,14 @@
 // mainboard -- the passive board at each tap of the ribbon.  exch-mainboard.md.
 //
 // The cable is common: every tap sees the same conductors.  Three signals a
-// block are not -- block h drives HC[h] and HA[h] and answers to BLK[h] -- and
+// block are not -- block h drives HC[h] and HA[h] and answers to /BLK -- and
 // they come from three shunts in one silkscreened column, here the SHUNT
 // parameter, three bits a position.  Nothing in a block reads its own number.
 //
-// What this module is, physically, is the sixteen highway conductors of cable A
-// and the eight BLK conductors of cable B, plus the shunt fields that join a
-// block position to a column.
+// With the control bus serial, /BLK is not a bus at all: each block decodes
+// DST[5:3] on its own '138 and the shunt picks which of those eight lines comes
+// back as its /BLK.  So this module is the sixteen highway conductors of cable
+// A, and a purely local shunt for each position's select.
 `timescale 1ns/1ps
 `include "exch_defs.vh"
 
@@ -21,7 +22,7 @@ module mainboard #(
     input      [7:0] fill_pull,     // FILL, through 4k7 at the clock card
     input      [7:0] hc_from_block, // each position's HC_OUT driver
     input      [7:0] ha_from_block,
-    input      [7:0] blk_bus,       // BLK[0..7] as the marker drives them
+    input     [63:0] blk_dec,       // each position's own '138: eight lines each
     output     [7:0] hc,            // the cable's sixteen highway conductors
     output     [7:0] ha,
     output     [7:0] blk_to_block   // /BLK at each position
@@ -66,8 +67,11 @@ module mainboard #(
                 assign ha[c] = 1'bx;
             end
         end
+        // /BLK is not a bus any more.  Position k's shunt picks line SHUNT[k]
+        // of position k's OWN decoder, so nothing about /BLK crosses positions.
         for (k = 0; k < 8; k = k + 1) begin : position
-            assign blk_to_block[k] = SHUNT_FITTED[k] ? blk_bus[SHUNT[k*3 +: 3]] : 1'b0;
+            assign blk_to_block[k] =
+                SHUNT_FITTED[k] ? blk_dec[k*8 + SHUNT[k*3 +: 3]] : 1'b0;
         end
     endgenerate
 endmodule

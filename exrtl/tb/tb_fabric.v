@@ -15,10 +15,15 @@ module tb_fabric;
     reg  [63:0]  ctx = 0, atx = 0;
     reg  [63:0]  word = 0;
     wire [63:0]  c_rx, a_rx;
-    reg  [7:0]   blk = 0;
-    reg  [2:0]   port_sel = 0;
-    reg  [5:0]   src = 0;
-    reg          bsy_in = 0, clm_in = 0, wr = 0;
+
+    // The operator's console, on the serial control bus: the same sixteen-bit
+    // word the marker sends (exch-mainboard.md 2.3), driven by hand.
+    reg        cw_req = 0, cw_bsy = 0, cw_clm = 0;
+    reg  [5:0] cw_dst = 0, cw_src = 0;
+    wire       cw_busy, sdata, sclk, wr;
+    ctl_write u_con (.clk(clk), .rst_n(rst_n), .req(cw_req), .strobe(1'b1),
+                     .dst(cw_dst), .src(cw_src), .bsy(cw_bsy), .clm(cw_clm),
+                     .busy(cw_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
     wire         frame_stb, fill;
 
     reg  [5:0]   map [0:63];                // each port's latch, as the TB believes it
@@ -31,8 +36,7 @@ module tb_fabric;
                .T_RISE(20000), .T_FALL(20000))
     dut (.clk(clk), .rst_n(rst_n),
          .c_tx(ctx), .a_tx(atx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
-         .blk(blk), .port_sel(port_sel), .src(src),
-         .bsy_in(bsy_in), .clm_in(clm_in), .wr(wr),
+         .sdata(sdata), .sclk(sclk), .wr(wr),
          .pb_busy(), .pb_word(), .slot(), .slotq(), .hclk(), .hb(),
          .tx_clk(), .frame_stb(frame_stb), .tx_oct(), .rx_oct(),
          .fill(fill), .ring_cad_n(), .tick_1k());
@@ -67,10 +71,9 @@ module tb_fabric;
     task wr_latch(input [5:0] pp, input [5:0] aa);
         begin
             @(posedge clk); #1;
-            blk = 8'd1 << pp[5:3]; port_sel = pp[2:0]; src = aa;
-            bsy_in = 0; clm_in = 0; wr = 1;
-            @(posedge clk); #1;
-            wr = 0; blk = 0;
+            cw_dst = pp; cw_src = aa; cw_bsy = 0; cw_clm = 0; cw_req = 1;
+            @(posedge clk); #1; cw_req = 0;
+            wait (cw_busy); wait (!cw_busy);
             map[pp] = aa;
         end
     endtask

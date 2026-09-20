@@ -69,11 +69,15 @@ module port #(
     wire on = RINGS && !m && !fm;    // an on-hook port that rings -- and not one that
                                      // hung up a moment ago
     assign rb      = on && e;                             // RB = ON . E
-    assign a_rx    = e && !(on && ring_cad_n);            // ring in cadence while ON, else E
     assign busy_hw = busy || fe || (fm && !m);            // busy while either is still timing out
-    assign a_hw    = a_tx || claim;   // FIXME exch-fabric.md 3.1 writes this "A out = E + CLAIM".
-                                      // Harmless either way while CLAIM is never written, which is
-                                      // every block but a trunk block.  See the note in the README.
+    assign a_hw    = a_tx;                                // the card's M, onto the A highway
+
+    // exch-fabric.md 3.1: "Backward A on a claimed trunk: A out = E + CLAIM,
+    // 2 x 74HC32, used on trunk blocks" -- eight OR gates for eight ports.  It
+    // is the A the port hands its CARD, not what it puts on the highway: a
+    // claimed trunk must send backward A = 1 up the link while its highway goes
+    // on carrying the far caller's dial pulses for a register here to read.
+    assign a_rx    = (e || claim) && !(on && ring_cad_n);
 
     // ---- the detectors: fast up, slow down, counted in frames ---------------
     reg [14:0] cm, ce;

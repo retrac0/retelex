@@ -18,12 +18,17 @@
 `timescale 1ns/1ps
 
 module line_card #(
-    // A plain line card ties its word pin to ground, which reads all ones at
+    // exch-protocol.md 5 has a plain line card tie its word pin to ground, "which
+    // reads all ones" -- but exch-fabric.md 3.5's table gives LINE as 001, so the
+    // two cannot both be right.  Until that is settled the card sends an explicit
+    // word.  See the README.
+    // (was: ties its word pin to ground, which reads all ones at
     // the block and means "a line, no options" (exch-protocol.md 5) -- no part
     // and no jumper.  A card with options shifts a word out of a '165.
-    parameter [7:0] WORD  = 8'hFF,
+    parameter [7:0] WORD  = 8'h01,      // class 001: a line, no options
     parameter       RINGS = 1'b1      // /ANS left open: this port rings
 )(
+    input        clk,
     input        frame_stb,
     input        tx_oct,
 
@@ -49,7 +54,7 @@ module line_card #(
 
     // The word, one bit a frame, re-loaded every octet.
     reg [7:0] sr = WORD;
-    always @(posedge frame_stb)
+    always @(posedge clk) if (frame_stb)
         sr <= tx_oct ? WORD : {1'b0, sr[7:1]};
     assign word_pin = sr[0];
 endmodule
