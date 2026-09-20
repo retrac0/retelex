@@ -1,6 +1,6 @@
-# exrtl — the exchange in Verilog
+# verilog — the exchange in Verilog
 
-A register-transfer model of the exchange of [`exch/docs`](../exch/docs): the
+A register-transfer model of the exchange of [`exchange/docs`](../exchange/docs): the
 8 × 8 fabric, the ports that supervise themselves, and the clock card, in
 synthesisable Verilog. It is built the way the 74HC design is built — a '151 is
 a `mux8`, a '273 is the port's `addr` register, the block has no address and no
@@ -552,7 +552,7 @@ It is caught by comparing the calls a second against the calls: 104 lifts at
 millisecond at a time — `for (w = 0; w < ms; w = w + 1) #(NS)`, where the
 constant is 10⁶ and cannot wrap — and twenty thousand context switches over a
 twenty-second run cost nothing beside 4 096 clocks a millisecond. It had not
-appeared before because **nothing else in `exrtl` waits longer than two seconds
+appeared before because **nothing else in `verilog` waits longer than two seconds
 in one `#`**: `tb_stress`'s round is `#(BURST * NS)` at 1 800 ms, which is
 1.8 × 10⁹ and inside a signed 32-bit integer — but only just. Anything past
 2 147 ms in that expression wraps the same way.

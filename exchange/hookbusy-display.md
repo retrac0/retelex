@@ -7,9 +7,9 @@ that is one PCB design in sixteen copies. The colour stops being the carrier and
 becomes the confirmation, which costs two packages and buys back everything a
 hue judgement costs.
 
-> **Status: proposed; the decoding measured in RTL.** `exrtl/rtl/hc259.v`,
+> **Status: proposed; the decoding measured in RTL.** `verilog/rtl/hc259.v`,
 > `lamp_card.v`, `common_card.v` and `hb_panel.v` are the parts and the stack,
-> and `exrtl/tb/tb_panel.v` drives them from the real clock card and from
+> and `verilog/tb/tb_panel.v` drives them from the real clock card and from
 > `ctl_write` — 57 checks, passing under both Icarus and Verilator. §7 is what
 > it measures, and §7.2 is the one that needed measuring: the inhibit, against a
 > control stack built without it. **The mechanics and the panel are a sketch.**
@@ -307,7 +307,7 @@ anywhere in the reading of it.
 
 ## 7. Measured
 
-`exrtl/tb/tb_panel.v` drives `clock_card` and `ctl_write` and reads three
+`verilog/tb/tb_panel.v` drives `clock_card` and `ctl_write` and reads three
 stacks: the normal configuration, a control with the inhibit left out, and one
 jumpered as sixteen hook cards. 57 checks, identical under Icarus and Verilator.
 

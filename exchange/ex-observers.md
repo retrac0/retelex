@@ -21,7 +21,7 @@ and LEDs off the M and `BUSY` highways" — and §1 of this document is why that
 line is half right, which turns out to be the whole design.
 
 > **Status: proposed. Nothing measured, deliberately**: none of this is in
-> `exrtl` (§9). The parts are a sketch from the block's front end
+> `verilog` (§9). The parts are a sketch from the block's front end
 > (`exch-fabric.md` §3.1), the counter card's (`ex-counters.md` §1) and the
 > console's watch (`ex-console.md` §3.2). Every timing figure is arithmetic
 > from `exch-mainboard.md`'s own constants, not a simulation and not a bench.
@@ -103,7 +103,7 @@ is saying about itself, 64 000 times a second:
 
 | the card | its lamp is |
 |---|---|
-| a phone (`mf8-cards.md` §2) | off-hook. **Dial pulses are visible**: 10 pps, 33 ms of break, a flicker you can count |
+| a phone (`channel-cards.md` §2) | off-hook. **Dial pulses are visible**: 10 pps, 33 ms of break, a flicker you can count |
 | an FXS card | loop current |
 | an FXO card, the exchange build (`exch-features.md` §5) | ringing present, held 5 s across the cadence gap, OR the loop closed: an incoming CO call lights it *steadily* |
 | a tie trunk channel | **what the far end is sending on A** — not a hook here at all. §4 |
@@ -379,7 +379,7 @@ the cure is a ULN2803 a row and no change anywhere else.
 
 ## 9. Not measured
 
-- **None of it is in `exrtl`**, on purpose: the RTL has a marker, a console and a
+- **None of it is in `verilog`**, on purpose: the RTL has a marker, a console and a
   counter card, and these four would be listeners on the same `ctl_write` and
   highway signals the benches already carry. The busy field's row decode against
   a *running* marker — how often a row is stale, and whether the inhibit window

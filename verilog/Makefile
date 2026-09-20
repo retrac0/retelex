@@ -1,4 +1,4 @@
-# exrtl -- the exchange in Verilog.
+# verilog -- the exchange in Verilog.
 #
 # Two simulators run the same testbenches.  Icarus is the reference; Verilator
 # is about two orders of magnitude faster and is what to use while working --

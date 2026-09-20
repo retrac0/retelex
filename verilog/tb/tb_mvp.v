@@ -1,4 +1,4 @@
-// tb_mvp -- exch/docs/mvp-ex.md: the minimum that makes calls.
+// tb_mvp -- exchange/docs/mvp-ex.md: the minimum that makes calls.
 //
 // Block 2 alone, port circuits at 20 and 21, no tones, no ringback card, no
 // trunks, no marker.  Two things are checked:

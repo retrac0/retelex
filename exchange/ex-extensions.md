@@ -204,7 +204,7 @@ but the card's word and a term in a test the marker already makes.
 | `w` | **warm line**: a courtesy phone, a lift's phone, a help point | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`exch-marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
 
 A data line (class 110) is a line the marker will not connect to a voice port,
-and the reverse: the mismatch `mf8-cards.md` §1 warns is "loud, locked, not
+and the reverse: the mismatch `channel-cards.md` §1 warns is "loud, locked, not
 squelched". The check is made where both classes can be read, which is inside
 one exchange. A call from another exchange arrives on a trunk.
 
@@ -214,7 +214,7 @@ one exchange. A call from another exchange arrives on a trunk.
 
 A connection that stays when both ends hang up: a ringdown hotline between two
 phones, a private wire, a permanent data circuit. Two ports facing each other
-are already a hotline (`mf8-cards.md` §1), where either lifting rings the other
+are already a hotline (`channel-cards.md` §1), where either lifting rings the other
 and both lifted is a call. What the exchange lacks is a way to keep the pair
 after release, because the release clears both latches. A nailed-up
 connection is `mvp-ex.md` §6's bring-up step 3 made permanent, and brought up
@@ -248,7 +248,7 @@ the number of nails, and changing one is two cards' jumpers.
 ### 3.2 Ringdown
 
 A nailed pair of phones is a ringdown hotline. Nothing in it is new: it is the
-hotline rule of `mf8-cards.md` §1 under the exchange's supervision
+hotline rule of `channel-cards.md` §1 under the exchange's supervision
 (`exch-fabric.md` §3.5):
 
 ```

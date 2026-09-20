@@ -1,11 +1,20 @@
 """Band-limiting, rate conversion, alignment and objective quality metrics."""
 import numpy as np
 from scipy import signal
+import os
 import wave
+
+# The test audio and the committed runs live beside these scripts, in sim/.  A
+# bare filename means one of those, whatever directory the script was run from.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def here(path):
+    return path if os.path.isabs(path) else os.path.join(_HERE, path)
 
 
 def read_wav(path, channel=0, seconds=None, offset=0.0):
-    w = wave.open(path)
+    w = wave.open(here(path))
     fs, nch, sw = w.getframerate(), w.getnchannels(), w.getsampwidth()
     assert sw == 2, "16-bit only"
     w.setpos(int(offset * fs))
@@ -20,7 +29,7 @@ def read_wav(path, channel=0, seconds=None, offset=0.0):
 
 def write_wav(path, x, fs):
     x = np.clip(x, -1.0, 1.0)
-    w = wave.open(path, 'wb')
+    w = wave.open(here(path), 'wb')
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(int(fs))
     w.writeframes((x * 32767).astype('<i2').tobytes())
     w.close()

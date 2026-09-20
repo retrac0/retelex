@@ -1,7 +1,7 @@
 """
 MF8 end to end: six talkers, real CVSD, over a real line, in both line codes.
 
-This closes docs/mf8-spec.md 13's first two gaps -- "audio end to end through
+This closes mf8/docs/mf8-spec.md 13's first two gaps -- "audio end to end through
 this frame" and "anything about impulse noise".  Everything upstream of here
 (mf8.py) is bit level: it shows the framer holds, and has never listened to a
 channel or put a waveform on a wire.
@@ -23,10 +23,10 @@ Two measurement rules this repository learned the hard way, both applied here:
     Re-aligning per (i,j) pair maximises correlation over thousands of lags
     before measuring it and cannot come out at zero (seven-channel.md 4.1).
 
-Usage:  python3 mf8_line.py            everything, ~25 min
-        python3 mf8_line.py clean      clean line, both codes, per channel
-        python3 mf8_line.py noise      Gaussian sweep
-        python3 mf8_line.py plant      impulse and attenuation
+Usage:  python3 sim/mf8_line.py            everything, ~25 min
+        python3 sim/mf8_line.py clean      clean line, both codes, per channel
+        python3 sim/mf8_line.py noise      Gaussian sweep
+        python3 sim/mf8_line.py plant      impulse and attenuation
 """
 import sys, gc, time, numpy as np
 from scipy import signal

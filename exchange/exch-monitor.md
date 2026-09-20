@@ -123,7 +123,7 @@ gives at its fastest (`register.md` §2).
 
 ### 3.3 A claim coming back is not a seizure
 
-**Measured in RTL, `exrtl`.** The two rules above are enough at the end of a
+**Measured in RTL, `verilog`.** The two rules above are enough at the end of a
 chain and not enough anywhere else. When a far exchange claims, backward A
 rises — and at a transit, or at any origin that seized a trunk, that is **M
 rising on this exchange's own outgoing trunk**, which satisfies both rules
@@ -147,7 +147,7 @@ costs one more '151 input and no new connection.
 
 ### 3.4 A claim is a request, not a pulse
 
-**Measured in RTL, `exrtl`.** Every monitor counts on the same 1 kHz tick, so
+**Measured in RTL, `verilog`.** Every monitor counts on the same 1 kHz tick, so
 two calls whose last pulse ended in the same millisecond decide **together** —
 within one pool, and between the pools of two trunk blocks. A claim offered as
 a pulse is then lost: the cell goes to *done*, the marker never hears, the trunk
@@ -348,7 +348,7 @@ top of the marker:
 | 20 ms | 186 ms | **1** | 256 ms | 0 | 32 % | **0 %** |
 | 40 ms | 326 ms | **23** | 512 ms | 0 | 69 % | **0 %** |
 
-**And in the gates.** `exrtl`'s `make chain-delay` is three exchanges with 20 ms
+**And in the gates.** `verilog`'s `make chain-delay` is three exchanges with 20 ms
 of carrier on every link — 160 ms in the world, because that bench dials eight
 times fast and its guard is 16 ms and not 128. The flood is up **40 ms after the
 seizure against a 16 ms guard**, two and a half times over it, and every check
@@ -362,7 +362,7 @@ marker's own hop *and this wander*, and nothing of the carrier's length.
 
 **None of which is the reason to keep a carrier short.** The guard does not care,
 and the origin's 2 s wait for a claim allows nearly a second of round trip. What
-does care is **echo**: `mf8-cards.md` §3.3 has no canceller and no suppressor in
+does care is **echo**: `channel-cards.md` §3.3 has no canceller and no suppressor in
 the design at all, on the grounds that the round trip is "under 0.1 ms plus 5 µs
 per km" and echo is objectionable above 20–30 ms. That is still true for a CVSD
 subscriber at each end, which is four-wire; it stops being true the moment either
@@ -420,7 +420,7 @@ the compare is all four bits. 8 and 9 are never jumpered, so neither can match.
   patch a seizure onward. A marker held up longer than that is a partial count at
   every exchange beyond it, and nothing here detects it. It is now the whole of
   what the guard's tap is sized on (§3.5), and the 12 ms is still an assumption
-  about parts and not a measurement — `exrtl` measures 3–10 ms, and is not 74HC.
+  about parts and not a measurement — `verilog` measures 3–10 ms, and is not 74HC.
 - **Copper ties.** Between exchanges in one rack a trunk is a crossover with no
   A-path RC, so pulses arrive undistorted and a hop is a frame; the model used
   the MF8 figures throughout, which are the worse.

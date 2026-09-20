@@ -12,14 +12,14 @@ never does — **forced release** and **service observing**. The lamp field is a
 listener and is not here.
 
 > **Status: proposed; the arbitration and both functions measured in RTL.**
-> `exrtl/rtl/console.v` is the console, `marker.v` has the yield, and
-> `exrtl/tb/tb_console.v` runs sixteen lines of random traffic against a console
+> `verilog/rtl/console.v` is the console, `marker.v` has the yield, and
+> `verilog/tb/tb_console.v` runs sixteen lines of random traffic against a console
 > writing hundreds of times faster than an operator can, with a listener on the
 > bus checking every word either master believes it sent. It passes under
 > Verilator and Icarus. `make console-naive` is the control: `/CON` as first
 > written, measured losing calls (§2.1). The parts are a sketch; nothing has been
 > drawn and nothing has been on a bench. The bench runs the release detectors at
-> an eighth of their real time, as every `exrtl` bench does, and §7 says which
+> an eighth of their real time, as every `verilog` bench does, and §7 says which
 > figures scale.
 
 ---

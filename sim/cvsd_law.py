@@ -29,11 +29,11 @@ Scoring is mf8_line.py's: reconstruction filter, alignment, one gain match,
 segSNR against the band-limited source.  Talkers 1-3, 6 s each; levels are
 relative to mf8.NOMINAL_RMS; bit errors are random, at nominal level.
 
-Usage:  python3 cvsd_law.py            everything, ~20 min on 8 cores  (cvsd_law.log is the run)
-        python3 cvsd_law.py spec       the standard's patterns, and the two readings of it
-        python3 cvsd_law.py laws       against the previous law at 64 kbps; the slew
-        python3 cvsd_law.py rates      one parameter at a time at 16, 32 and 64 kbps
-        python3 cvsd_law.py dnvt       a DNVT on a 64 kbps channel
+Usage:  python3 sim/cvsd_law.py            everything, ~20 min on 8 cores  (cvsd_law.log is the run)
+        python3 sim/cvsd_law.py spec       the standard's patterns, and the two readings of it
+        python3 sim/cvsd_law.py laws       against the previous law at 64 kbps; the slew
+        python3 sim/cvsd_law.py rates      one parameter at a time at 16, 32 and 64 kbps
+        python3 sim/cvsd_law.py dnvt       a DNVT on a 64 kbps channel
 """
 import sys, numpy as np
 from multiprocessing import Pool

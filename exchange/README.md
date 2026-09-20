@@ -43,39 +43,39 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-network.md](docs/exch-network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
 | [docs/Topology.md](docs/Topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link strapped and fail without |
 | [docs/exch-terminal.md](docs/exch-terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
-| [docs/exch-rtl.md](docs/exch-rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `exrtl` does not settle |
+| [docs/exch-rtl.md](docs/exch-rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
 | [docs/exch-basebandcard.md](docs/exch-basebandcard.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
 | [docs/exch-monitor.md](docs/exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
 | [docs/ex-extensions.md](docs/ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class, its options (restricted lines, hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
 | [docs/ex-groups.md](docs/ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number**, so a hunt group, a second operator's position, cover and a bank of call-in lines are jumpers on the members' cards, in any slots; a **secondary word** on the slot's last spare pin for the port that needs a class *and* a number, and the trade of what goes in which word; the conference bridge as a group, and **a group with a bridge in it**: extensions that ring together, where whoever answers is in and a phone lifted later joins, with nothing remembering the call |
 | [docs/ex-observers.md](docs/ex-observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
-| [docs/ex-traffic.md](docs/ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `exrtl`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
+| [docs/ex-traffic.md](docs/ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
 | [docs/ex-ss0.md](docs/ex-ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
 
 ## Tool
 
 ```
-python3 exch/exch.py            everything                    (exch/exch.log is the run)
-python3 exch/exch.py tandem     N codecs in tandem
-python3 exch/exch.py fabric     the highway, cell by cell
-python3 exch/exch.py calls      one exchange, a millisecond at a time
-python3 exch/exch.py announce   a message as a ROM of CVSD bits
-python3 exch/exch.py aline      serial characters on A over 1–7 trunk hops
-python3 exch/exch.py flood      the timing of a flooded call, with a sender and live (arithmetic, not a simulation)
-python3 exch/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
-python3 exch/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
-python3 exch/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
-python3 exch/exch.py confer     a conference with no codec: the speech detector, the floor, the switch
-python3 exch/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
-python3 exch/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
-python3 exch/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
-python3 exch/exch.py traffic    demand that is not smooth: bursts, herds, peak against off peak, and the RTL run beside it
-python3 exch/exch.py big        how near sixty-four exchanges the flood goes: tandem chains, meshed hubs, long spokes
+python3 sim/exch.py            everything                    (sim/exch.log is the run)
+python3 sim/exch.py tandem     N codecs in tandem
+python3 sim/exch.py fabric     the highway, cell by cell
+python3 sim/exch.py calls      one exchange, a millisecond at a time
+python3 sim/exch.py announce   a message as a ROM of CVSD bits
+python3 sim/exch.py aline      serial characters on A over 1–7 trunk hops
+python3 sim/exch.py flood      the timing of a flooded call, with a sender and live (arithmetic, not a simulation)
+python3 sim/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
+python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
+python3 sim/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
+python3 sim/exch.py confer     a conference with no codec: the speech detector, the floor, the switch
+python3 sim/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
+python3 sim/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
+python3 sim/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
+python3 sim/exch.py traffic    demand that is not smooth: bursts, herds, peak against off peak, and the RTL run beside it
+python3 sim/exch.py big        how near sixty-four exchanges the flood goes: tandem chains, meshed hubs, long spokes
 ```
 
 It imports `audio`, `cvsd` and `mf8` from the repository root and reads the
 `talker*.wav` files there (not committed; see the root README). `announce` writes
-its image, and `confer` what a conference sounds like, to `exch/out/`, which is
+its image, and `confer` what a conference sounds like, to `sim/out/`, which is
 not committed.
 
 ## What is settled and what is not
@@ -114,7 +114,7 @@ the earlier numbering, in which the first digit of every number was the key and 
 monitor compared one digit; the two-digit monitor is to be run. `1 8` and `1 9`, out of the network, are reserved.
 
 **Checked against the gates, and three things it changed** (`ex-traffic.md`).
-`exrtl`'s `make traffic-net` runs the same eight exchanges in RTL under the same
+`verilog`'s `make traffic-net` runs the same eight exchanges in RTL under the same
 demand on the same clock, and `traffic` runs it here; where they agree, `big`
 carries the shapes out to the sixty-four codes. What came of it: **Erlang B is
 right to about 1 % on a link and optimistic past it**, because a flood is a

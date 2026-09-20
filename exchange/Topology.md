@@ -11,7 +11,7 @@ may have a loop in it.
 > `exch-network.md` §5, which `exch.py net` confirmed to two decimal places. Its
 > last parts run the shapes call by call with `net`'s engine, which models the
 > timing, the channels and the pools, **not the gates**. Traffic is the figure
-> used throughout `exch/`: a line makes 3 calls an hour of 48 s, 0.08 E a line,
+> used throughout `exchange/`: a line makes 3 calls an hour of 48 s, 0.08 E a line,
 > and the calls that leave home are spread evenly over the other exchanges. A
 > real community is not even. No network has been built.
 
@@ -247,7 +247,7 @@ and the guard (`topo` 4). What stops each is in bold:
   756 lines. The codes would bind only on a network of small exchanges — sixty
   of twenty lines each is 1 200 lines, which the centre can carry.
 - **What the limits are not set by**: the pulses, which lose 0.5 ms of a 60 ms
-  break a hop against an 8 ms window (`mf8-cards.md` §5); the slips, which at
+  break a hop against an 8 ms window (`channel-cards.md` §5); the slips, which at
   eight crossings of 40 ppm are 32 dB against the codec's own 25 dB
   (`mf8-backplane.md` §7); or the wait, which is 4.8–5.3 s in every shape.
 - **The hop limit is one tap on one counter, and moving it fills the plan.** The

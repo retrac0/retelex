@@ -265,7 +265,7 @@ BER, so it is not recorded further.)
 **Decided: x is the remote alarm.** An end holds x at 1 while its own receiver
 is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. Idle
 is x = 0, which is today's fixed guard. Between exchanges the same bit also
-carries SS0's messages (`exch/docs/ex-ss0.md`). A message holds x at 1 for 17 ms
+carries SS0's messages (`exchange/docs/ex-ss0.md`). A message holds x at 1 for 17 ms
 at most, so the one 32 ms rule serves both kinds of link. The pair itself is not
 yet written into §2–§4 or §11.
 
@@ -865,7 +865,7 @@ package-count problem.**
 A slot takes one of three cards. All use the same backplane signals: the frame
 clock, a C bit in and out, an A bit in and out, and the mute line — the slot
 interface is `mf8-backplane.md` §3. The cards themselves — the CVSD subscriber
-line card, the analog FXS/FXO card and the data card — are `mf8-cards.md`; this
+line card, the analog FXS/FXO card and the data card — are `channel-cards.md`; this
 section is the engine they share and the rules they obey.
 
 ### 12.1 CVSD voice card
@@ -928,7 +928,7 @@ setting for every family rate. At the only rate this frame runs it moves the
 card's best level down: 4.1 dB worse at nominal level (19.0 against 23.1),
 2.2 dB better at −30 dB. Slew and input level are one knob — scaling one is
 scaling the other — so in practice the card's level trims set it, against
-`mf8.NOMINAL_RMS` (`mf8-cards.md` §3.3).
+`mf8.NOMINAL_RMS` (`channel-cards.md` §3.3).
 
 **The ratio is quoted two ways, and the standard contradicts itself.** Its §5.5
 quotes the ratio between the syllabic filter's outputs at 30% and 0%
@@ -1146,27 +1146,27 @@ differential Manchester and about 8 for AMI, with AMI collapsing between 800 and
 ## 16. Reproducing
 
 ```
-python3 mf8.py            frame layer, ~15 min          (mf8.log is the run)
-python3 mf8.py word       why 11111110 and not the alternatives
-python3 mf8.py locks      false locks, every payload class and hook state
-python3 mf8.py sfphase    superframe phase, exhaustive
-python3 mf8.py guard      why the guard is at 0 and 4: four layouts, and each one's residual
-python3 mf8.py sbit       why S sits half a frame from F: every byte, every seat, both layouts
-python3 mf8.py seats      the slot rule, every byte in every seat, and the guard counter's release
-python3 mf8.py errors     line errors, acquisition, slip recovery
+python3 sim/mf8.py            frame layer, ~15 min          (mf8.log is the run)
+python3 sim/mf8.py word       why 11111110 and not the alternatives
+python3 sim/mf8.py locks      false locks, every payload class and hook state
+python3 sim/mf8.py sfphase    superframe phase, exhaustive
+python3 sim/mf8.py guard      why the guard is at 0 and 4: four layouts, and each one's residual
+python3 sim/mf8.py sbit       why S sits half a frame from F: every byte, every seat, both layouts
+python3 sim/mf8.py seats      the slot rule, every byte in every seat, and the guard counter's release
+python3 sim/mf8.py errors     line errors, acquisition, slip recovery
 
-python3 mf8_line.py       over the line, ~20 min        (mf8_line.log is the run)
-python3 impulse_sweep.py  impulse falloff, ~22 min      (impulse_sweep.log, .csv)
-python3 mf8_line.py clean clean line, both codes, per channel, isolation
-python3 mf8_line.py noise Gaussian sweep
-python3 mf8_line.py plant impulse and attenuation
+python3 sim/mf8_line.py       over the line, ~20 min        (mf8_line.log is the run)
+python3 sim/impulse_sweep.py  impulse falloff, ~22 min      (impulse_sweep.log, .csv)
+python3 sim/mf8_line.py clean clean line, both codes, per channel, isolation
+python3 sim/mf8_line.py noise Gaussian sweep
+python3 sim/mf8_line.py plant impulse and attenuation
 
-python3 cvsd_law.py       the codec law, ~20 min        (cvsd_law.log is the run)
-python3 cvsd_law.py spec  the standard's patterns, and its two readings
-python3 cvsd_law.py laws  against the previous law; the slew
-python3 cvsd_law.py rates one parameter at a time at 16, 32 and 64 kbps
-python3 cvsd_law.py dnvt  a DNVT on a 64 kbps channel
-python3 tolerance.py      codec tolerances, ~20 min     (tolerance.log is the run)
+python3 sim/cvsd_law.py       the codec law, ~20 min        (cvsd_law.log is the run)
+python3 sim/cvsd_law.py spec  the standard's patterns, and its two readings
+python3 sim/cvsd_law.py laws  against the previous law; the slew
+python3 sim/cvsd_law.py rates one parameter at a time at 16, 32 and 64 kbps
+python3 sim/cvsd_law.py dnvt  a DNVT on a 64 kbps channel
+python3 sim/tolerance.py      codec tolerances, ~20 min     (tolerance.log is the run)
 ```
 
 Caveats that affect how the numbers should be read:

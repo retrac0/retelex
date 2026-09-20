@@ -1,4 +1,4 @@
-// tb_fabric -- the RTL against `python3 exch/exch.py fabric`.
+// tb_fabric -- the RTL against `python3 sim/exch.py fabric`.
 //
 // The bare crosspoint: every source to every listener, bit-exact, one frame.
 // Supervision is configured out of the way rather than switched off -- every

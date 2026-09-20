@@ -1,7 +1,7 @@
 """
 The impulse-noise falloff curve for the MF8 link, measured precisely.
 
-docs/line-codes.md 4 placed differential Manchester's impulse cliff "between 1
+mf8/docs/line-codes.md 4 placed differential Manchester's impulse cliff "between 1
 and 10 events per second" from four points (0, 10, 100, 1000/s).  This sweeps a
 log grid of impulse rates in both line codes, with enough independent runs per
 point to put error bars on it, and fits the curve.
@@ -22,12 +22,12 @@ faster than mf8_render.py.  The physical layer is mf8_render.stream: chunked,
 with encoder, filter and slicer state carried across chunks, and verified
 bit-identical against an unchunked reference.
 
-Usage:  python3 impulse_sweep.py              the sweep, ~16 min
-        python3 impulse_sweep.py --quick      coarse grid, short runs
-        python3 impulse_sweep.py --reanalyse  rebuild the analysis from the CSV
+Usage:  python3 sim/impulse_sweep.py              the sweep, ~16 min
+        python3 sim/impulse_sweep.py --quick      coarse grid, short runs
+        python3 sim/impulse_sweep.py --reanalyse  rebuild the analysis from the CSV
 """
 import sys, time, csv, gc, numpy as np
-import mf8, mf8_render
+import audio, mf8, mf8_render
 
 RATE = 64000
 NCH = 6
@@ -172,17 +172,17 @@ def analyse(rows, log):
 def reanalyse():
     """Rebuild impulse_sweep.log from impulse_sweep.csv without re-simulating."""
     rows = []
-    with open('impulse_sweep.csv') as f:
+    with open(audio.here('impulse_sweep.csv')) as f:
         for r in csv.DictReader(f):
             rows.append(dict(code=r['code'], rate=float(r['rate_per_s']),
                              runs=int(r['runs']), impulses=float(r['impulses']),
                              lof=int(r['lof']), bps=float(r['breaks_per_s']),
                              muted=float(r['muted_frac']), se=float(r['muted_se']),
                              ms=float(r['ms_per_lof']) if r['ms_per_lof'] else float('nan')))
-    old = open('impulse_sweep.log').read()
+    old = open(audio.here('impulse_sweep.log')).read()
     head = old[:old.index('\n\nTHE CURVE, FITTED')] if '\n\nTHE CURVE, FITTED' in old \
         else old[:old.index('\n\nTHRESHOLDS')]
-    out = open('impulse_sweep.log', 'w')
+    out = open(audio.here('impulse_sweep.log'), 'w')
 
     def log(s=''):
         print(s, flush=True); out.write(s + '\n')
@@ -198,7 +198,7 @@ def main():
     rates = (1, 10, 100) if quick else RATES
     t_run = 2.0 if quick else T_RUN
     target, kmin, kmax = (20, 2, 3) if quick else (TARGET_EVENTS, K_MIN, K_MAX)
-    out = open('impulse_sweep.log' if not quick else '/dev/null', 'w')
+    out = open(audio.here('impulse_sweep.log') if not quick else '/dev/null', 'w')
 
     def log(s=''):
         print(s, flush=True); out.write(s + '\n'); out.flush()
@@ -213,7 +213,7 @@ def main():
     t0 = time.time()
     rows = sweep(rates, t_run, target, kmin, kmax, log)
     if not quick:
-        with open('impulse_sweep.csv', 'w', newline='') as f:
+        with open(audio.here('impulse_sweep.csv'), 'w', newline='') as f:
             w = csv.writer(f)
             w.writerow(['code', 'rate_per_s', 'runs', 'impulses', 'lof',
                         'breaks_per_s', 'muted_frac', 'muted_se', 'ms_per_lof'])

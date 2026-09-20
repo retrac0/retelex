@@ -1,6 +1,6 @@
 # Circuit review — four findings ahead of the breadboard
 
-Reading `mf8-spec.md` §9–§12 and `mf8-cards.md` as a wiring list for a first
+Reading `mf8-spec.md` §9–§12 and `channel-cards.md` as a wiring list for a first
 breadboard — a looped CVSD engine, then one channel over differential
 Manchester, then the multiplex — turned up four places where the documents stop
 short of a circuit that works. One is an error in the spec as written; two are
@@ -9,8 +9,8 @@ wiring that would not work; one is a hazard the spec names but under-describes.
 
 | | where | finding | fix |
 |---|---|---|---|
-| 1 | `mf8-spec.md` §9.2, §10; `mf8-cards.md` §2.1, §2.5 | the encoder's flip-flop does not toggle on either part the drawing names | 74HC112, J = K = EN; package count unchanged |
-| 2 | `mf8-spec.md` §12.1; `mf8-cards.md` §3.2 | the only `Iabc` drive ever sketched cannot hold `I_min`, and `I_min` is, with the syllabic network, the tightest tolerance on the card | op-amp and PNP, ratio set by two resistors; one op-amp section per engine — §12.1 now cites it |
+| 1 | `mf8-spec.md` §9.2, §10; `channel-cards.md` §2.1, §2.5 | the encoder's flip-flop does not toggle on either part the drawing names | 74HC112, J = K = EN; package count unchanged |
+| 2 | `mf8-spec.md` §12.1; `channel-cards.md` §3.2 | the only `Iabc` drive ever sketched cannot hold `I_min`, and `I_min` is, with the syllabic network, the tightest tolerance on the card | op-amp and PNP, ratio set by two resistors; one op-amp section per engine — §12.1 now cites it |
 | 3 | `mf8-spec.md` §9.4 | "sample, then retrigger" is three same-edge reads, not one; the bit strobe cannot be a gate on the transition pulse; none of it scales with the rate | use both edges of the dead-time pulse; no added package on the trunk card |
 | 4 | `mf8-spec.md` §12.1 | the three connections between the 5 V logic and the ±12 V engine are unspecified, and the obvious wiring of one of them has no down-step | pull-up, a differential drive from Q and /Q, one ground |
 
@@ -28,7 +28,7 @@ wiring that would not work; one is a hazard the spec names but under-describes.
 
 §9.2 draws `J` and `K` tied to `EN` on a part labelled "74HC74/109" and says "a
 JK wired J = K = EN toggles when EN is high". The parts lists (§10,
-`mf8-cards.md` §2.1 and §2.5) say "½ 74HC74 + ¼ 74HC00". Neither part does
+`channel-cards.md` §2.1 and §2.5) say "½ 74HC74 + ¼ 74HC00". Neither part does
 that:
 
 - **A 74HC74 is a D flip-flop.** It has no J or K. Toggle-with-enable on a D
@@ -281,7 +281,7 @@ line the next transition is at least 0.5 cell behind the last, and W is over by
 The behaviour is `fast.mono_decode`'s exactly — accept outside the dead time,
 call a gap long above 0.75 cell — so nothing measured over the line changes.
 
-The hook detector's violation term (`mf8-cards.md` §2.2, "`LONG · MID` at an
+The hook detector's violation term (`channel-cards.md` §2.2, "`LONG · MID` at an
 accepted edge") needs the *old* `MID`, which this scheme overwrites at DT's
 leading edge. Capture it there too: `'123 /Q · MID` into a flip-flop on the same
 edge, ¼ '08 and ½ '74 more than §2.2 lists. And the raw '123 output now expires

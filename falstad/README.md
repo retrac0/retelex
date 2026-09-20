@@ -41,7 +41,7 @@ again: all seven come back with their schematics intact.
 **A slider cannot reach inside a module.** That is why the line's three sources
 sit on the page and feed pins on `LINE`. It is also why the `R_set` and R2 sliders
 of the first version are gone: to mistrim the decoder, build a variant with
-`python3 falstad_cvsd.py link --dec-imin 1.2 -o F` (or `--dec-imax`), or edit the
+`python3 sim/falstad_cvsd.py link --dec-imin 1.2 -o F` (or `--dec-imax`), or edit the
 value inside `CVSD-DEC`.
 
 ## The line's controls
@@ -56,7 +56,7 @@ value inside `CVSD-DEC`.
 ## What the measurements say
 
 `falstad_cvsd.log`: `falstad/sim.mjs` ran each file in falstad.com's simulator,
-headless, and `python3 falstad_cvsd.py check` compared the recording with the
+headless, and `python3 sim/falstad_cvsd.py check` compared the recording with the
 Python model.
 
 | `dm_link.txt`, 100 ms, 6 400 bits | bit errors | bits lost | recovered clock, steps of 16 |
@@ -158,5 +158,5 @@ Keep these if you edit a circuit. Each fixed a measured error:
 - **Listening.** One second of audio through `cvsd_link.txt` is about 40
   minutes. For listening use `mf8_render.py`.
 
-`python3 falstad_cvsd.py` rebuilds all three files from the law and overwrites
+`python3 sim/falstad_cvsd.py` rebuilds all three files from the law and overwrites
 them, so save edited versions under another name.

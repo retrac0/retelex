@@ -10,8 +10,8 @@ the sliced uint8 waveform for differential Manchester, the decimated float32 for
 AMI.  Filter state carries across chunks; the hysteretic slicer's does not, which
 costs at most one sample per chunk boundary out of 16 M and self-heals.
 
-Usage:  python3 mf8_render.py           everything, ~20 min
-        python3 mf8_render.py --secs 5  a shorter pass
+Usage:  python3 sim/mf8_render.py           everything, ~20 min
+        python3 sim/mf8_render.py --secs 5  a shorter pass
 """
 import os, sys, gc, time, numpy as np
 from scipy import signal

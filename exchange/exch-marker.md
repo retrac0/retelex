@@ -133,7 +133,7 @@ A connection is two writes — caller listens to called, called listens to calle
 
 ## 5. Supervision: nobody is in charge of a call
 
-`mf8-cards.md` §1: two station ends facing each other are a hotline — either
+`channel-cards.md` §1: two station ends facing each other are a hotline — either
 off-hook rings the other, both off-hook is a call. **The exchange sets up
 hotlines on demand**, and everything after the two writes is done by the ports.
 

@@ -1,5 +1,5 @@
 """
-The exchange of exch/docs: a fabric of 8-slot highways, a marker that hunts ports
+The exchange of exchange/docs: a fabric of 8-slot highways, a marker that hunts ports
 by class in fixed order, and features that are lines.
 
     tandem    why the fabric switches bits and not voice band: N codecs in tandem
@@ -25,20 +25,20 @@ at the frame edge.  The exchange is modelled at the 1 kHz tick, as the marker an
 the release detectors would run: ports, latches, BUSY, class marks, cards that
 behave (phones, tones, registers, announcements, conference legs, a CO line).
 
-Usage:  python3 exch/exch.py            everything, ~20 min    (exch.log is the run)
-        python3 exch/exch.py tandem     exch-protocol.md  §2
-        python3 exch/exch.py fabric     exch-protocol.md  §4
-        python3 exch/exch.py calls      exch-marker.md    §§3-6, exch-features.md, mvp-ex.md
-        python3 exch/exch.py announce   exch-features.md  §3
-        python3 exch/exch.py aline      exch-network.md   §8
-        python3 exch/exch.py flood      exch-network.md   §4
-        python3 exch/exch.py net        exch-network.md   §5.1
-        python3 exch/exch.py topo       Topology.md
-        python3 exch/exch.py monitor    exch-monitor.md   §5
-        python3 exch/exch.py timing     exch-fabric.md    §4
-        python3 exch/exch.py mainboard  exch-mainboard.md §5
-        python3 exch/exch.py confer     exch-features.md  §7
-        python3 exch/exch.py ss0        ex-ss0.md
+Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the run)
+        python3 sim/exch.py tandem     exch-protocol.md  §2
+        python3 sim/exch.py fabric     exch-protocol.md  §4
+        python3 sim/exch.py calls      exch-marker.md    §§3-6, exch-features.md, mvp-ex.md
+        python3 sim/exch.py announce   exch-features.md  §3
+        python3 sim/exch.py aline      exch-network.md   §8
+        python3 sim/exch.py flood      exch-network.md   §4
+        python3 sim/exch.py net        exch-network.md   §5.1
+        python3 sim/exch.py topo       Topology.md
+        python3 sim/exch.py monitor    exch-monitor.md   §5
+        python3 sim/exch.py timing     exch-fabric.md    §4
+        python3 sim/exch.py mainboard  exch-mainboard.md §5
+        python3 sim/exch.py confer     exch-features.md  §7
+        python3 sim/exch.py ss0        ex-ss0.md
 
 The network of exch-network.md (`net`) is the second pass and is not here.
 """
@@ -46,7 +46,7 @@ import heapq, itertools, os, sys, time, zlib
 import numpy as np
 from scipy import signal
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 import audio, cvsd, mf8
 
@@ -369,7 +369,7 @@ class Leg(Announce):
 class COLine(Card):
     """An FXO card on a CO line.  ring: [(ms on, ms off)] bursts from the CO.
     hold=True is the exchange build: A_TX = ringing, stretched across the cadence
-    gap, OR loop closed.  hold=False is mf8-cards.md 3.5 as it stands: ringing only."""
+    gap, OR loop closed.  hold=False is channel-cards.md 3.5 as it stands: ringing only."""
     def __init__(self, ring=(), hold=True):
         super().__init__(); self.cls = EXT; self.ring = list(ring); self.hold = hold
         self.loop = 0; self.last_ring = -10 ** 9; self.answered = False
@@ -669,7 +669,7 @@ def calls():
     scene('11a. A CO line rings in: routed as 0.  The exchange FXO build holds A_TX across the cadence gap and while the loop is closed.',
           layout({0o10: COLine(ring, hold=True), 0o30: P_([(14000, 'on')], answer=8000, cls=OPER)}),
           16000, [0o10, 0o30])
-    scene('11b. The same with mf8-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.',
+    scene('11b. The same with channel-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.',
           layout({0o10: COLine(ring, hold=False), 0o30: P_([(14000, 'on')], answer=8000, cls=OPER)}),
           16000, [0o10, 0o30])
 
@@ -789,8 +789,8 @@ def announce():
     msg = np.concatenate([pad, x * w, pad])
     img = cvsd.encode(msg, P)                                # the encoder starts from rest, as the burner's would
     rom = np.packbits(img)
-    os.makedirs(os.path.join(ROOT, 'exch', 'out'), exist_ok=True)
-    rom.tofile(os.path.join(ROOT, 'exch', 'out', 'announce.bin'))
+    os.makedirs(os.path.join(ROOT, 'out'), exist_ok=True)
+    rom.tofile(os.path.join(ROOT, 'out', 'announce.bin'))
     print(f'  message {secs:.1f} s + 0.25 s of silence each end = {len(img)} bits = {rom.size} bytes '
           f'(crc32 {zlib.crc32(rom.tobytes()):08x}); 8 kB a second, so 8 s fills a 64 kB part.')
     y = audio.reconstruct(cvsd.decode(img, P), RATE)
@@ -841,7 +841,7 @@ FS_A = 8000                                   # A is one sample a superframe
 def a_path(level, hops, ber, rng):
     """A through `hops` MF8 trunks.  Each hop: the S bit carries one sample a superframe, a line
     error flips it, the receiver's '259 holds it, then mf8-spec 14's RC (2 ms) and a 74HC14
-    (0.55 / 0.35 of the swing, as mf8-cards.md 5 took them)."""
+    (0.55 / 0.35 of the swing, as channel-cards.md 5 took them)."""
     k = 1 - np.exp(-1 / (FS_A * 0.002))
     for _ in range(hops):
         x = level ^ (rng.random(level.size) < ber)
@@ -957,7 +957,7 @@ def first_digit(y, i0, steady=False):
 def delayed(level, ms):
     """A carrier that is not a pair.  `ms` of one-way delay, constant, ahead of the A path: what
     distance, a mux, a vocoder or a jitter buffer put between the two ends of a trunk.  A copper
-    pair and an MF8 link are under a millisecond of it (`mf8-cards.md` 5); a leased circuit, a
+    pair and an MF8 link are under a millisecond of it (`channel-cards.md` 5); a leased circuit, a
     radio or anything with a buffer is tens.  Constant delay does not distort a break -- it
     moves the whole of the caller's hook, pulses and all, later at the far end."""
     n = int(round(ms * 8))
@@ -1252,9 +1252,9 @@ def confer():
         got = sum(carried(f, k, a, b) * (b - a) for a, b in plan[k][1]) / tot
         print(f'     {k}: {got:5.1f} % of its speech carried; what the others heard against its own decode, 20 ms clear of a '
               f'switch: {10 * np.log10(np.sum(own[k][m] ** 2) / max(np.sum(e ** 2), 1e-30)):5.1f} dB')
-    os.makedirs(os.path.join(ROOT, 'exch', 'out'), exist_ok=True)
-    audio.write_wav(os.path.join(ROOT, 'exch', 'out', 'confer_heard.wav'), audio.resample_to(heard, RATE, 8000) * 3, 8000)
-    print('     exch/out/confer_heard.wav is what a caller who does not hold the floor hears.\n')
+    os.makedirs(os.path.join(ROOT, 'out'), exist_ok=True)
+    audio.write_wav(os.path.join(ROOT, 'out', 'confer_heard.wav'), audio.resample_to(heard, RATE, 8000) * 3, 8000)
+    print('     sim/out/confer_heard.wav is what a caller who does not hold the floor hears.\n')
 
     # 3 -- two at once, over every pair of talkers
     SECS = 12.0
@@ -1452,7 +1452,7 @@ def mainboard():
 # ------------------------------------------------------------------ flood
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
-A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: mf8-cards.md 5, and `aline` 1
+A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: channel-cards.md 5, and `aline` 1
 A_PATH = 2.0              # what exch-network.md 1.1 allows a CARRIER a hop, one way, and what
                           # HOP's 7 ms has in it.  A copper pair or an MF8 link is under it; a
                           # leased circuit, a radio or anything with a buffer is not
@@ -1550,7 +1550,7 @@ def flood():
     print('  Arithmetic from measured constants, not a simulation of the gates:')
     print(f'    register windows HIT {T_HIT} / ID {T_ID} ms (register.md 2); MT8870 StD {T_DTMF} ms; A path per hop: a fall')
     print(f'    {A_FALL} ms, a rise {A_RISE} ms (aline 1); a seizure crosses an exchange in {HOP:.0f} ms; marker action {T_MARK:.0f} ms;')
-    print(f'    sender 20 pps 60/40 with {S_PAUSE:.0f} ms between digits (register.md 3 read 20 pps; mf8-cards.md 5 carried it);')
+    print(f'    sender 20 pps 60/40 with {S_PAUSE:.0f} ms between digits (register.md 3 read 20 pps; channel-cards.md 5 carried it);')
     print(f'    guard, seizure to first break, {GUARD:.0f} ms; release {T_FALL} ms.  The caller starts dialling 1 s after dial tone.\n')
 
     print('  1. 2144 dials 2355 on 21 = 22 = 23 = 24.  A rotary caller; junctors seized when the FIRST digit is in.')
@@ -1790,7 +1790,7 @@ def code_hold(code):
 class Tempo:
     """The clock a call's own timing is made on.
 
-    LIFE is the exchange as it is built.  FAST is what exrtl's system testbenches run --
+    LIFE is the exchange as it is built.  FAST is what verilog's system testbenches run --
     `make stress`, `make traffic` -- where the dial and the register's three windows are eight
     times life, so a call costs a second and a half of simulation instead of twelve and an hour
     of offered traffic is minutes rather than a day.
@@ -1814,7 +1814,7 @@ LIFE = Tempo('life', pulse=100.0, brk=60.0, idw=T_ID, gap=(500.0, 900.0),
              dt_pause=(300.0, 1000.0), answer=(0.0, 0.0), busy=3000.0,
              no_claim=NO_CLAIM, timeout=FLOOD_TIMEOUT, fall=T_FALL, hold=HOLD_MEAN,
              guard=G_ORIGIN)
-# exrtl's system testbenches: every one of those eight times faster, and the conversation cut
+# verilog's system testbenches: every one of those eight times faster, and the conversation cut
 # to half a second.  The marker's scan, its hop and its actions are NOT in this table.
 FAST = Tempo('x8', pulse=20.0, brk=12.0, idw=16.0, gap=(60.0, 120.0),
              dt_pause=(10.0, 40.0), answer=(16.0, 216.0), busy=375.0,
@@ -2719,7 +2719,7 @@ def pooled(sim, what):
 
 
 # What `make traffic-net` and `make traffic-deep` measured -- the same networks, the same
-# clock, the same two phases, in eight and ten whole exchanges of RTL.  `exrtl/README.md`
+# clock, the same two phases, in eight and ten whole exchanges of RTL.  `verilog/README.md`
 # carries the runs.  A pool is quoted the way the bench quotes it: a register pool an
 # exchange, a monitor pool a trunk block, a resolver pool at every exchange that forwards.
 RTL_RUN = {

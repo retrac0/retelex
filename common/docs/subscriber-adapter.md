@@ -24,8 +24,8 @@ cases:
 
 | | conversion at | outside plant | in the exchange slot | status |
 |---|---|---|---|---|
-| **A** | the exchange | one analog pair | analog FXS card, `mf8-cards.md` §3 | specified |
-| **B** | the subscriber | two digital pairs | CVSD subscriber line card, `mf8-cards.md` §2 | specified; **the adapter is §2 below** |
+| **A** | the exchange | one analog pair | analog FXS card, `channel-cards.md` §3 | specified |
+| **B** | the subscriber | two digital pairs | CVSD subscriber line card, `channel-cards.md` §2 | specified; **the adapter is §2 below** |
 | **C** | a shared site | one MF8 link, then analog loops | trunk card, class *line* a channel | `exch-terminal.md` |
 
 **The choice is per line and reversible.** Pull the FXS card, push a CVSD line
@@ -36,7 +36,7 @@ numbering never find out.
 
 **A is the default.** It is one card already specified — ≈ 11 packages, a
 hybrid transformer, a ring relay, the shelf's `RING` bus, a feed bridge and ring
-trip (`mf8-cards.md` §3.4) — and it reaches further than B does. A loop at
+trip (`channel-cards.md` §3.4) — and it reaches further than B does. A loop at
 20 mA on 24 AWG is loss-limited at order 5 km; the 128 kBaud digital line is
 2× the 256 kbps reference of `frame-rate.md` §1, order 3.4 km. **B is not the
 reach option**, and it costs two pairs to the building instead of one.
@@ -47,7 +47,7 @@ whatever the subscriber's distance, so the engine sees its nominal 0.15 rms of
 full scale for everyone and DTMF keeps the margins of `subscriber-line.md` §5.
 Under A a distant subscriber arrives 6–8 dB low into an engine whose `Iabc` trim
 was set for a nominal loop. B also keeps ringing voltage and per-line analog out
-of the exchange shelf (`mf8-cards.md` §3.6), and leaves the same two pairs and
+of the exchange shelf (`channel-cards.md` §3.6), and leaves the same two pairs and
 the same exchange card able to serve a native CVSD phone or a data device by
 swapping the far-end box.
 
@@ -59,7 +59,7 @@ line plant and still gives each line a codec of its own.
 ## 2. The adapter
 
 The phone end of `subscriber-line.md` §4 with the hook switch replaced by a loop
-detector, on the analog front of `mf8-cards.md` §3.4.
+detector, on the analog front of `channel-cards.md` §3.4.
 
 ```
             ┌─ §9.4 receiver ─Q, strobe─┬─ ring detector: Q density, 4 ms RC, 0.85/0.70 ─┐
@@ -79,7 +79,7 @@ detector, on the analog front of `mf8-cards.md` §3.4.
 | Ring detector | `subscriber-line.md` §3, `X = Q` | ¼ '74, ¼ '32, ¼ LM339, 4 ms RC |
 | Downstream encoder | §9.2 | ½ '74, ¼ '00 |
 | Codec engine, both halves | §12.1 verbatim | 3 × '74, '86, '08, LM13700, TL072, LM311 |
-| Filters, trims, hybrid | `mf8-cards.md` §3.3 | TL074, TL072, 600 Ω transformer, compromise balance |
+| Filters, trims, hybrid | `channel-cards.md` §3.3 | TL074, TL072, 600 Ω transformer, compromise balance |
 | Feed, loop detect | §3.4 | feed bridge current-limited to 20 mA, sense resistor, opto into ¼ LM339 |
 | Ring relay, ring trip | §3.4, **and §3 below** | relay, DC sense, 200 ms |
 | Rule and mute | §5 below | ¼ '157, ½ '123 |

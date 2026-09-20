@@ -199,7 +199,7 @@ frame edge. It is not needed. **Every capture is in the middle of some cell, so
 nothing a card is given changes within half a cell of the frame edge — and the
 frame edge is where every card samples**, once `RX_CLK` is `TX_CLK`: the line
 card's synchroniser, the FXS card's decoder and the data card's flip-flop all
-take `C_RX` there (`mf8-cards.md`). A bit sent in frame *f* is captured during *f*
+take `C_RX` there (`channel-cards.md`). A bit sent in frame *f* is captured during *f*
 and sampled at the edge that begins *f* + 1, whatever the two slots: the one
 frame `exch.py fabric` measured, whose model already takes the card's sample at
 that edge. `RX_OCT` is `TX_OCT` a frame late, from one flip-flop on the clock

@@ -4,10 +4,10 @@
 takes that over the shapes a network may have. Both assume **smooth demand**: calls
 that arrive from nowhere at a fixed rate, spread evenly over the other exchanges.
 Real demand is neither. This document is what happens when it is not — and it is
-the first thing in `exch/` that is run **twice, in two simulators that do not share
+the first thing in `exchange/` that is run **twice, in two simulators that do not share
 a line of code**, so that the figures are the design's and not the model's.
 
-> **Status: measured, in two simulators.** `exrtl`'s `make traffic-net` is eight
+> **Status: measured, in two simulators.** `verilog`'s `make traffic-net` is eight
 > whole exchanges in RTL — the fabric, the markers, the registers, the monitors, the
 > resolvers, the MF8 links — under traffic with no scenario in it. `exch.py traffic`
 > is the same network, the same clock and the same demand in the millisecond model
@@ -31,7 +31,7 @@ a line of code**, so that the figures are the design's and not the model's.
 | what it is for | every shape, up to the sixty-four codes | whether the gates agree
 
 **The two are only comparable because the dial is scaled and the marker is not.**
-`exrtl`'s system testbenches run the dial and the register's three windows at eight
+`verilog`'s system testbenches run the dial and the register's three windows at eight
 times life — `HIT`/`ID`/`CLR` = 1/16/32 ms against `register.md` §2's 8/128/256, and
 a pulse of 20 ms against 100 — so that a call costs a second and a half of
 simulation instead of twelve. What is **not** scaled is everything the marker's
@@ -61,7 +61,7 @@ answering one. So every table below carries the calls a second each run *managed
 to offer, and the first check on any of them is arithmetic — ninety-six lines that
 wait six seconds between calls and spend about a second on each cannot offer
 seventeen calls a second, and one early run of the RTL bench that said they could
-was a bench fault and not a finding (`exrtl/README.md`).
+was a bench fault and not a finding (`verilog/README.md`).
 
 **Every phase is measured after a warm-up.** A phase begins with every line on hook,
 which is not a state the network is ever in otherwise: the first idle's worth of
@@ -245,7 +245,7 @@ hole.**
 **One column is not a comparison.** The resolvers are counted over every exchange
 that can forward in the gates — six of them here, the two hubs and the four transits
 — and over the two hubs alone in the model, because `exch.py net` still follows
-`exch-network.md` §3.2's *a chain transit holds nothing* and `exrtl` found that it
+`exch-network.md` §3.2's *a chain transit holds nothing* and `verilog` found that it
 does not (`exch-rtl.md`). The two numbers are near each other by arithmetic accident.
 
 ---
@@ -546,7 +546,7 @@ those is a timer.
 ### 8.6 And run call by call
 
 The three, with `net`'s engine — the flood, the monitors, the claim, the resolvers
-and the registers, call by call in milliseconds — at `exch/`'s busy hour of 3 calls
+and the registers, call by call in milliseconds — at `exchange/`'s busy hour of 3 calls
 a line and then at **twice** it, which is a network built for one community and
 given two. Five monitor cells a block, five resolvers a hub, six hours each:
 

@@ -14,8 +14,8 @@ The usage half — erlangs by sampling `BUSY` on the probe — is not this card
 (§5). **§9 is what makes the other half of §4's list countable at all**: the
 marker says the things no latch write says, in a word that writes nothing.
 
-> **Status: proposed; the counting measured in RTL.** `exrtl/rtl/stats.v` is the
-> card and `exrtl/tb/tb_stats.v` drives `ctl_write` with the exact sequence of
+> **Status: proposed; the counting measured in RTL.** `verilog/rtl/stats.v` is the
+> card and `verilog/tb/tb_stats.v` drives `ctl_write` with the exact sequence of
 > words `marker.v` pushes for five calls, checking what each strap field counts.
 > It passes under both Icarus and Verilator. The parts are a sketch from the
 > monitor's and the block's; nothing has been drawn and nothing has been on a
@@ -173,7 +173,7 @@ occupancy strap is the one to read weekly.
 
 ## 7. Measured
 
-`exrtl/tb/tb_stats.v` drives `ctl_write` with `marker.v`'s own `push()`
+`verilog/tb/tb_stats.v` drives `ctl_write` with `marker.v`'s own `push()`
 sequences for five calls — a local call that connects, one that does not, an
 outbound network call, an inbound call claimed here, and an inbound call with no
 register free — and reads six cards on the ribbon:
@@ -287,7 +287,7 @@ That is a safety rule, and it is also a second channel on the same wire.
 
 ### 9.4 Measured
 
-**`exrtl/tb/tb_stats.v`**, the same bench that replays `marker.v`'s five calls,
+**`verilog/tb/tb_stats.v`**, the same bench that replays `marker.v`'s five calls,
 now sends seven event words after them:
 
 | | |
@@ -299,7 +299,7 @@ now sends seven event words after them:
 | **the five straps meant for calls** — dial tone, cannot-complete, trunks let go, calls over a trunk, claims | **unchanged, every one** |
 | the occupancy strap | 25: every word on the bus, which is what it asks for and the one strap that is not fooled because it is not trying to be |
 
-**`exrtl/tb/tb_stress.v`**, forty-eight callers and real traffic, carries five
+**`verilog/tb/tb_stress.v`**, forty-eight callers and real traffic, carries five
 such cards on each exchange's ribbon. It checks the invariant the whole scheme
 rests on — over the run, **no latch write carried `CLM` without `BSY`**, not
 once, either exchange — and the event codes account for every event word the

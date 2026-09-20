@@ -15,7 +15,7 @@ list of things that stopped it being true in both directions. This document is
 that list, resolved.
 
 > **Status: proposed.** Nothing here is newly measured. §5's two behaviours are
-> `exch.py calls` 11 and `mf8-cards.md` §1 respectively, both already reported;
+> `exch.py calls` 11 and `channel-cards.md` §1 respectively, both already reported;
 > everything else is an assignment or an argument. No board has been laid out and
 > no connector has been chosen.
 
@@ -23,9 +23,9 @@ The cards, and where each is specified:
 
 | card | | signalling |
 |---|---|---|
-| **POTS subscriber / CO converter** (FXS / FXO) | `mf8-cards.md` §3 — the codec on the card, a hybrid, a loop-start line circuit | loop start, §5's strap |
-| **CVSD subscriber line card** | `mf8-cards.md` §2 — two pairs to a phone that holds its own codec | hook state from the line's own bit patterns |
-| **Data card** | `mf8-cards.md` §4 — 64 kb/s synchronous, a DS0, or async oversampled | `DTR` / `DSR` |
+| **POTS subscriber / CO converter** (FXS / FXO) | `channel-cards.md` §3 — the codec on the card, a hybrid, a loop-start line circuit | loop start, §5's strap |
+| **CVSD subscriber line card** | `channel-cards.md` §2 — two pairs to a phone that holds its own codec | hook state from the line's own bit patterns |
+| **Data card** | `channel-cards.md` §4 — 64 kb/s synchronous, a DS0, or async oversampled | `DTR` / `DSR` |
 | **E&M subscriber card** | `mf8-spec.md` §12.1 — four-wire audio, the codec engine, E and M leads | E and M, which **are** `A_RX` and `A_TX` |
 
 ---
@@ -110,7 +110,7 @@ is fitted; — = no connection on the card.
 | c12 | `RING` | — | ● | — | — | — | — | — |
 | | rear pins (§7.3) | 4 | 2 | 2 | — | 6 | — | 6 |
 
-The detail behind each column is in that card's own document: `mf8-cards.md`
+The detail behind each column is in that card's own document: `channel-cards.md`
 §2.4 for the CVSD line card, §3.7 for both POTS populations, §4 for the data
 card, `mf8-spec.md` §12.1 for E&M, §6 here for the tone card, and
 `exch-basebandcard.md` §3.5 for the baseband trunk card. The last four rows are the rails, which §3 gives
@@ -127,7 +127,7 @@ Five things the matrix shows that no card's own document can:
 - **a7 `RX_CLK` is the split in the set.** The four cards that hold a codec or a
   bit pipe run their receive side in R on it; the CVSD line card and the baseband
   card do not use it, because each resynchronizes `C_RX` into T with `TX_CLK` and
-  carries the crossing on its own flip-flops (`mf8-cards.md` §2.3,
+  carries the crossing on its own flip-flops (`channel-cards.md` §2.3,
   `exch-basebandcard.md` §1). Those two are therefore the only cards in the set
   that cannot tell the shelves apart at all. The other four do see the
   difference on those two pins — recovered in MF8, `TX_CLK` in an exchange — and
@@ -156,7 +156,7 @@ Five things the matrix shows that no card's own document can:
   to the clock card that is not on this connector, or the bit-exact synchronous
   case is not available from a channel slot. **Open.**
 - **`/HUNT_INH`.** Specified in `exch-marker.md` §4 and `exch-network.md` §3.2,
-  in no signal list, driven by nothing in `exrtl`. a14 was the one spare and is
+  in no signal list, driven by nothing in `verilog`. a14 was the one spare and is
   now the secondary word, so it has no pin at all (§9).
 - **The line.** Rows *a* and *c* are fully committed; the subscriber pair, the
   E&M leads and the baseband card's four conductors leave by §7.3's rear
@@ -167,7 +167,7 @@ Five things the matrix shows that no card's own document can:
 
 One more that is a card gap and not a socket gap, and belongs here because the
 matrix is where it becomes visible: **`MUTE` is read by two columns of seven.** The
-CVSD line card switches an off-hook phone to `FILL` on it (`mf8-cards.md` §2.3)
+CVSD line card switches an off-hook phone to `FILL` on it (`channel-cards.md` §2.3)
 and the data card forces `RXD` to 1 (§4.1); the FXS, FXO and E&M cards leave a11
 open — the tone card has no decoder to mute — so through an outage those three
 decoders are fed the cleared '259's all-zeros,
@@ -210,7 +210,7 @@ leave it unpopulated and strap a12 to a row-*c* ground instead. In an MF8 shelf
 the pin is unconnected either way: a grounded pin goes nowhere, and a populated
 '165 shifts its byte into an open circuit, harmlessly, for ever.
 
-**The word's encoding, which `exrtl/README.md` lists as open.** `exch-protocol.md`
+**The word's encoding, which `verilog/README.md` lists as open.** `exch-protocol.md`
 §5 has a plain line card tie its pin to ground and read "all ones, a line with no
 options", while `exch-fabric.md` §3.5's table gives *line* as class 001. Both are
 right about different codes, and `ex-groups.md` §2.1's table is the proof:
@@ -227,7 +227,7 @@ right about different codes, and `ex-groups.md` §2.1's table is the proof:
 All ones is a **constant**, not a class field, and it is what a grounded pin
 produces. Class 001 is for a card that shifts a word because it has something
 else to say. The open item closes with no change to either document, and
-[line_card.v](../exrtl/rtl/line_card.v)'s `WORD` parameter can take `8'hFF` for a
+[line_card.v](../../verilog/rtl/line_card.v)'s `WORD` parameter can take `8'hFF` for a
 plain line.
 
 **So, card by card:**
@@ -246,7 +246,7 @@ A card that wants a number as well as a class says it on a14, the secondary word
 unconnected in an MF8 shelf too, so that is portable by the same argument.
 
 **Cost of the decision.** The data card goes from 4 packages to 5¼ and is no
-longer the cheapest card in the shelf (`mf8-cards.md` §4.4); the FXO population
+longer the cheapest card in the shelf (`channel-cards.md` §4.4); the FXO population
 gains the same 1¼. The two line cards gain a wire.
 
 ---
@@ -289,7 +289,7 @@ card and was one bullet away from being noticed.
 
 ## 5. The one genuine split: what the FXO's `A_TX` means
 
-`mf8-cards.md` §3.5 has the FXO card send `A_TX` = *ringing present*, raw.
+`channel-cards.md` §3.5 has the FXO card send `A_TX` = *ringing present*, raw.
 `exch-features.md` §5 measured that this is wrong in an exchange: the call is set
 up on every ring burst and torn down 220 ms into every gap, the operator's phone
 rings for 2 s in 6, and the call never survives (`exch.py calls` 11). It wants
@@ -300,7 +300,7 @@ which shelf the card is in.**
 
 | strap | `A_TX` is | the far end is | why the other position fails |
 |---|---|---|---|
-| **OFFICE** | ringing present, raw, in the CO's own cadence | a station card — an FXS, a CVSD line card or an E&M card — extending the line (`mf8-cards.md` §1) | with SEIZE, the far phone answers, the FXO closes its loop, `A_TX` rises, and the far card reads that as *ring the phone*. Ring trip would drop it inside 200 ms, so every answered call would start with a 200 ms blast of ringing into the earpiece |
+| **OFFICE** | ringing present, raw, in the CO's own cadence | a station card — an FXS, a CVSD line card or an E&M card — extending the line (`channel-cards.md` §1) | with SEIZE, the far phone answers, the FXO closes its loop, `A_TX` rises, and the far card reads that as *ring the phone*. Ring trip would drop it inside 200 ms, so every answered call would start with a 200 ms blast of ringing into the earpiece |
 | **SEIZE** | ringing present held 5 s, OR the loop closed | an exchange port, which reads `A_TX` as M and releases the call on its fall (`exch-fabric.md` §3.5) | with OFFICE, `exch.py calls` 11's row: torn down 220 ms into every cadence gap |
 
 Both cases occur in both shelves. An FXO in an exchange block always faces an
@@ -341,7 +341,7 @@ does (`exch-features.md` §6) — so nothing rings, nothing is ever answered, an
 call is held up. A listener leaves by going on-hook.
 
 **What the far end hears.** A station card off-hook passes `C_RX` to its phone
-(`mf8-cards.md` §2.3's rule), so the tone arrives the instant the handset lifts;
+(`channel-cards.md` §2.3's rule), so the tone arrives the instant the handset lifts;
 on-hook the phone hears `FILL`, which is silence, and with `A_RX` at 0 it never
 rings. Nothing else at that shelf needs to know.
 
@@ -450,7 +450,7 @@ into a shelf wiring field:
 Two reasons for the rear and for the far end of it:
 
 - **Creepage and clearance.** This is where `−48 V`, 90 Vrms ringing and
-  outside-plant surges meet the shelf, and `mf8-cards.md` §3.6 asks for the line
+  outside-plant surges meet the shelf, and `channel-cards.md` §3.6 asks for the line
   side and the logic side to be kept apart. Putting the two connectors at
   opposite ends of the rear edge is the cheapest way to have that be true by
   construction rather than by layout discipline.
@@ -469,22 +469,22 @@ conductors at all and the wiring field can be re-punched without touching it.
 | document | |
 |---|---|
 | `mf8-backplane.md` §8, `exch-basebandcard.md` §2.2 | joined into §1 here. Neither is wrong; there were two copies |
-| `exrtl/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 001 is an explicit word. `line_card.v`'s `WORD` may be `8'hFF` |
+| `verilog/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 001 is an explicit word. `line_card.v`'s `WORD` may be `8'hFF` |
 | `exch-basebandcard.md` §2.3, first bullet | **closed** (`clocks.md` §4). `TX_HB` = `/SLOT[1]`, one inverter a block |
-| `mf8-cards.md` §3.5 | the FXO gains §5's strap. `exch-features.md` §5's "the exchange build of the FXO card" becomes the SEIZE position of that strap, not a second board |
-| `mf8-cards.md` §4.4 | the data card is 5¼ packages, not 4, and no longer the cheapest card in the shelf |
-| `mf8-cards.md` §2.5, §3.8 | each parts list gains the word footprint: ≈ 1¼ where it is populated, a wire where it is not |
-| `mf8-cards.md` §2, §3 | each card gains a pin section — **§2.4** for the CVSD line card, **§3.7** for both POTS populations — and Parts and Bring-up move down one |
+| `channel-cards.md` §3.5 | the FXO gains §5's strap. `exch-features.md` §5's "the exchange build of the FXO card" becomes the SEIZE position of that strap, not a second board |
+| `channel-cards.md` §4.4 | the data card is 5¼ packages, not 4, and no longer the cheapest card in the shelf |
+| `channel-cards.md` §2.5, §3.8 | each parts list gains the word footprint: ≈ 1¼ where it is populated, a wire where it is not |
+| `channel-cards.md` §2, §3 | each card gains a pin section — **§2.4** for the CVSD line card, **§3.7** for both POTS populations — and Parts and Bring-up move down one |
 | `exch-basebandcard.md` §2.2, §3.5 | §2.2 becomes a pointer here, its table having been the second copy; **§3.5** is new and gives the baseband card's own pins, with Parts moved to §3.6 |
 | `ex-extensions.md` §2.1 | its "a card built for the exchange works unchanged in an MF8 shelf" now holds in both directions, and §2 here says what it costs |
 | `mf8-backplane.md` §8, the trunk and gateway slots | given pins (§7.2), which they never had. **Its "row *a* signals, row *c* power" does not hold there** — the signal set is 33 and row *a* is 32 — so `LOCK` and `CD` move to row *c*. The two slots also need different keying, which §8 does not mention |
-| `mf8-cards.md` §2, §3; `subscriber-line.md` §1 | the subscriber pair leaves by a second rear connector (§7.3), which no document had. The backplane carries no line conductors |
+| `channel-cards.md` §2, §3; `subscriber-line.md` §1 | the subscriber pair leaves by a second rear connector (§7.3), which no document had. The backplane carries no line conductors |
 
 ---
 
 ## 9. Not measured, and open
 
-- **Every card.** Nothing in the set has been on a bench; `mf8-cards.md` §6 and
+- **Every card.** Nothing in the set has been on a bench; `channel-cards.md` §6 and
   `mf8-spec.md` §15 hold unchanged.
 - **The connector family** (§7.1), and with it the keying `mf8-backplane.md` §6
   recommends for data cards in slots 1–3.
@@ -502,7 +502,7 @@ conductors at all and the wiring field can be re-punched without touching it.
   silent interval would want more.
 - **The tone card** (§6): no circuit, and the hardware release-at-power-up has
   only ever existed as firmware. What a shelf full of fast busy sounds like
-  through `mf8-cards.md` §2.3's rule at the instant of lifting has not been
+  through `channel-cards.md` §2.3's rule at the instant of lifting has not been
   rendered.
 - **§1.3's matrix is an assignment too.** Every ● and — is read off the card's
   own description, not off a board. Two columns are the least sure: the E&M

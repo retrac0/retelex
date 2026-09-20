@@ -13,7 +13,7 @@ what is already fitted.
 > dials 0, 9, 1 and 8 — the four first keys that go nowhere on an exchange this
 > small — and then an empty number and the caller's own number. Every latch ends
 > idle; `exch.log` is the run. The package counts come from the parts lists of
-> `exch-fabric.md` §3 and §5 and `mf8-cards.md`, except the marker's, which is
+> `exch-fabric.md` §3 and §5 and `channel-cards.md`, except the marker's, which is
 > estimated by function (§2). **The model's register sits on port 03**, the
 > `calls` model's older layout (`exch-marker.md`, Status); in the design a
 > register takes no port. No circuit has been drawn, and nothing has been on a
@@ -37,7 +37,7 @@ what is already fitted.
 | Marker | scanner, probe, sequencer, and a diode matrix whose only job here is to send 0, 1 and 9 to hunts that find nothing and 8 straight to cannot-complete (§2, §4) | 15–20, estimated |
 | One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`exch-marker.md` §4) | 9 |
 | | **exchange logic** | **≈ 70** |
-| Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the shelf's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`mf8-cards.md` §2, §3) | per card |
+| Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the shelf's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`channel-cards.md` §2, §3) | per card |
 | Power | 5 V for the logic; the 48 V feed | |
 
 **Not fitted, and not missed:** blocks 0, 1 and 3–7; tone cards and the
@@ -213,5 +213,5 @@ until a card drives it.
   classes hunted anywhere. Scenario 19 fits no tone card, so only the register's
   port differs from this document, and nothing measured depends on which
   address a register holds.
-- **Power, the ring generator, protection.** As `mf8-cards.md` has them; not
+- **Power, the ring generator, protection.** As `channel-cards.md` has them; not
   looked at again here.

@@ -27,7 +27,7 @@ The short answers, before the detail:
 > between two exchanges"; every other figure is cited from where it was measured.
 > §3.5's pin usage is an assignment, not a measurement — it is what the documents
 > already imply, written out, against the socket `common-cards.md` §1 now holds. §6 is a correction to `exch-mainboard.md` §2.4 and
-> is reasoning against `exrtl`, not a run. No circuit has been drawn.
+> is reasoning against `verilog`, not a run. No circuit has been drawn.
 
 ---
 
@@ -110,7 +110,7 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
 ### 2.3 Four things the socket needs that no document supplies
 
 - **`TX_HB`, 128 kHz, is not on cable A** — **closed, `clocks.md` §4** — and the
-  CVSD subscriber line card cannot encode without it (`mf8-cards.md` §2: differential Manchester at
+  CVSD subscriber line card cannot encode without it (`channel-cards.md` §2: differential Manchester at
   128 kBaud, `H` = `TX_CLK`, clocked by `TX_HB`). It needs no conductor.
   `SLOT[2:0]` counts the eight cells of a frame at 512 kHz, so **`/SLOT1` is a
   128 kHz square wave rising at the frame edge and at the half-frame, and
@@ -118,7 +118,7 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
   down the same '163. One inverter a block, ⅙ of a '04, and its skew against
   `TX_CLK` is conductor to conductor within one ribbon, under 0.1 ns/m
   (`exch-mainboard.md` §5.2). **Reasoning, not measured**: the phase wants
-  scoping against `mf8-cards.md` §2's encoder at bring-up.
+  scoping against `channel-cards.md` §2's encoder at bring-up.
 - **`MUTE` has no driver in an exchange.** On an MF8 shelf the trunk card asserts
   it when the link is not locked (`mf8-spec.md` §13); a block has no link and no
   trunk card, so a11 is tied to "locked" at every socket. A card that reads it,
@@ -130,7 +130,7 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
   seven control signals and not in any pin list. A card that drives it needs a
   pin **and** a path back to the marker, which is a third
   `PB` line — the probe bus carries `BUSY` and the word and nothing else today.
-  Nothing in `exrtl` drives it. **a14 was the one spare and is now the secondary
+  Nothing in `verilog` drives it. **a14 was the one spare and is now the secondary
   word** (`common-cards.md` §1), so it has no pin left either. It is a loose end
   this document can only name, and it has got shorter of room since.
 - **The trunk socket is a different socket.** An MF8 trunk card is six ports in
@@ -162,7 +162,7 @@ loop has to give up its hook rule entirely (`subscriber-line.md`, and the data
 class of `ex-extensions.md` §2.2). Here it is a wire. `exch-network.md` §1.1
 allows about 2 ms of A path a hop and every break of 8 ms or more must survive;
 MF8 spends 1.5–2.0 ms of delay and shortens a break by 0.5 ms a hop
-(`mf8-cards.md` §5). **A baseband hop spends the RC and nothing else.** Set the
+(`channel-cards.md` §5). **A baseband hop spends the RC and nothing else.** Set the
 RC short — tens of microseconds, against MF8's 2 ms — and dial pulses cross it
 undistorted, which is what `exch-monitor.md` §7 already says of a copper tie:
 "a crossover with no A-path RC, so pulses arrive undistorted and a hop is a
@@ -203,7 +203,7 @@ is a choice to make knowingly, not a thing to discover.
 ### 3.4 Levels
 
 Single-ended 74HC between two racks on separate grounds is the weak point, not
-the bit rate. Two populations, as the data card has two (`mf8-cards.md` §4.2):
+the bit rate. Two populations, as the data card has two (`channel-cards.md` §4.2):
 
 - **In one rack, one ground:** 74HC with 33 Ω at the driver, as
   `mf8-backplane.md` §8 uses on 25 cm. Four conductors and a ground, or six with
@@ -277,7 +277,7 @@ trunk-card capability and this card carries voice and async only.
 | `/ANS` | tied low on the board: no part |
 | | **≈ 4½** — 74HC population, **≈ 3** |
 
-The data card is four packages and `mf8-cards.md` §4.4 calls it "the cheapest
+The data card is four packages and `channel-cards.md` §4.4 calls it "the cheapest
 card in the shelf". This ties it, and in the 74HC population beats it.
 
 ---
@@ -355,7 +355,7 @@ would loop the link back on itself. A transmitter needs the six ports' `C_RX`,
 which are private to each port and appear on no highway; `HA[h]` is wrong the
 same way, carrying the far end's M where the transmitter needs each port's
 `A_RX`. `exch-network.md` §1's own drawing has it right, and so does
-[mf8_trunk_card.v](../../exrtl/rtl/mf8_trunk_card.v), which takes `port_c_rx`
+[mf8_trunk_card.v](../../verilog/rtl/mf8_trunk_card.v), which takes `port_c_rx`
 and `port_a_rx` in and drives `port_c_tx` and `port_a_tx` out.
 
 The sentence looks like `exch-fabric.md` §1.1's "the commutator is, part for
@@ -375,7 +375,7 @@ the block, and the cable still has ten taps however many trunks are fitted.
 - **§2 and §3.5.** The socket is `common-cards.md` §1's and is an assignment
   there; what this card does with each pin is read off §3's own description and
   not off a board. No connector, no bench. `TX_HB` as `/SLOT1` is arithmetic off
-  the cell count and still wants a scope against `mf8-cards.md` §2's encoder
+  the cell count and still wants a scope against `channel-cards.md` §2's encoder
   (`clocks.md` §7), even though the derivation itself is now settled.
 - **The recovered clock has no pin out of a channel slot** (§3.5). a7 is an
   input driven by the block, so §3.2's one-clock case — the row that carries
@@ -385,7 +385,7 @@ the block, and the cable still has ten taps however many trunks are fitted.
 - **`MUTE`'s polarity** at the socket, from `mf8-spec.md` §13, and whether any
   card in an exchange should ever see it asserted.
 - **`/HUNT_INH`** (§2.3): specified in three documents, present in none of the
-  signal lists, driven by nothing in `exrtl`. Either it gets a pin, a third `PB`
+  signal lists, driven by nothing in `verilog`. Either it gets a pin, a third `PB`
   line and a card that uses it, or it goes.
 - **The card.** Nothing drawn. The link-down detector's constant is unchosen; the
   A-lead RC is named as "tens of microseconds" and not worked. §3.5 makes the
@@ -395,7 +395,7 @@ the block, and the cable still has ten taps however many trunks are fitted.
   the `calls` model.
 - **Glare on a group of one** (§5): arithmetic from the offered load, not a run
   of `exch.py net`, which has no single-channel trunk in it.
-- **§6** is reasoning against `exrtl` and `exch-network.md` §1, not a run. What
+- **§6** is reasoning against `verilog` and `exch-network.md` §1, not a run. What
   it corrects has never been built either way.
 - **The two-clock case's sampling margin.** §1 argues that a bit held for a whole
   frame and sampled once a frame is its own eye, and that the crossing is

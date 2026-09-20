@@ -1,5 +1,5 @@
 // exch_top -- ONE exchange: the clock card, the mainboard and eight blocks.
-// exch/docs/exch-protocol.md 3, exch-fabric.md, exch-mainboard.md.
+// exchange/docs/exch-protocol.md 3, exch-fabric.md, exch-mainboard.md.
 //
 // This is the exchange logic and nothing else -- mvp-ex.md 1's "= 70 packages".
 // Cards are not in here: the module's edge is the channel-slot pins of

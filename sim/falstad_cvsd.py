@@ -21,9 +21,9 @@ and three circuits made of them:
     falstad/dm_link.txt      the line code alone, on a PRBS: fast enough to watch
     falstad/cvsd_engine.txt  the codec alone, looped back on two clock sources
 
-    python3 falstad_cvsd.py                     writes all three
-    python3 falstad_cvsd.py link -o F --noise 0.8 --level-db -20 ...   one variant
-    python3 falstad_cvsd.py check run.json ...  a falstad/sim.mjs recording against the model
+    python3 sim/falstad_cvsd.py                     writes all three
+    python3 sim/falstad_cvsd.py link -o F --noise 0.8 --level-db -20 ...   one variant
+    python3 sim/falstad_cvsd.py check run.json ...  a falstad/sim.mjs recording against the model
 
 Every component value is derived from the codec law in mf8.params(64000) and the
 line-code constants of mf8-spec.md §9, so the files follow the model.  The output

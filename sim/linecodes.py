@@ -1,19 +1,19 @@
 """
-Line-code measurements for the MF8 carrier.  Backs docs/line-codes.md and
-docs/frame-rate.md.
+Line-code measurements for the MF8 carrier.  Backs mf8/docs/line-codes.md and
+mf8/docs/frame-rate.md.
 
-Everything runs on the mf8 frame (mf8.py, docs/mf8-spec.md).  Audio lives in
+Everything runs on the mf8 frame (mf8.py, mf8/docs/mf8-spec.md).  Audio lives in
 mf8_line.py, which carries six talkers through the whole chain; this file is
 the line itself -- which code, how it fails, and what the rate costs.
 
-Usage:  python3 linecodes.py            everything, ~40 min
-        python3 linecodes.py codes      nine codes, structural properties
-        python3 linecodes.py clock      zero-run bound; AMI clock, tank vs DPLL
-        python3 linecodes.py rxclock    does an AMI receiver need a local clock?
-        python3 linecodes.py polarity   tip/ring swap, both codes
-        python3 linecodes.py plant      Gaussian, impulse and attenuation
-        python3 linecodes.py impulse    impulse threshold and mitigations
-        python3 linecodes.py framerate  frame rate: reach, quality, capacity
+Usage:  python3 sim/linecodes.py            everything, ~40 min
+        python3 sim/linecodes.py codes      nine codes, structural properties
+        python3 sim/linecodes.py clock      zero-run bound; AMI clock, tank vs DPLL
+        python3 sim/linecodes.py rxclock    does an AMI receiver need a local clock?
+        python3 sim/linecodes.py polarity   tip/ring swap, both codes
+        python3 sim/linecodes.py plant      Gaussian, impulse and attenuation
+        python3 sim/linecodes.py impulse    impulse threshold and mitigations
+        python3 sim/linecodes.py framerate  frame rate: reach, quality, capacity
 """
 import sys, gc, numpy as np
 from scipy import signal

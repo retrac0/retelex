@@ -581,15 +581,15 @@ the same class of gap `frame-rate.md` §1 has on reach.
 ## 7. Reproducing
 
 ```
-python3 linecodes.py codes      nine line codes on the frame, side by side
-python3 linecodes.py clock      zero-run bound; AMI clock recovery, tank vs DPLL
-python3 linecodes.py rxclock    does an AMI receiver need a local clock?
-python3 linecodes.py polarity   tip/ring swap, both codes
-python3 linecodes.py plant      Gaussian, impulse and attenuation, swept independently
-python3 linecodes.py impulse    impulse threshold and mitigations
-python3 impulse_sweep.py        the impulse falloff curve, 23 rates, both codes
-python3 mf8_line.py             six talkers through the whole chain, both codes
-python3 mf8_render.py           15 s of every channel to out/, for listening
+python3 sim/linecodes.py codes      nine line codes on the frame, side by side
+python3 sim/linecodes.py clock      zero-run bound; AMI clock recovery, tank vs DPLL
+python3 sim/linecodes.py rxclock    does an AMI receiver need a local clock?
+python3 sim/linecodes.py polarity   tip/ring swap, both codes
+python3 sim/linecodes.py plant      Gaussian, impulse and attenuation, swept independently
+python3 sim/linecodes.py impulse    impulse threshold and mitigations
+python3 sim/impulse_sweep.py        the impulse falloff curve, 23 rates, both codes
+python3 sim/mf8_line.py             six talkers through the whole chain, both codes
+python3 sim/mf8_render.py           15 s of every channel to out/, for listening
 ```
 
 How to read the numbers:

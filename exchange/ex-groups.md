@@ -40,8 +40,8 @@ The short answers, before the detail:
   Nothing remembers the call.
 
 > **Status: proposed. Nothing here is measured.** None of it is in the `calls`
-> model or in `exrtl`. The class hunt it partly replaces is measured in `calls`
-> and built in `exrtl`, where no bench yet dials 0 or 9; the run it wholly
+> model or in `verilog`. The class hunt it partly replaces is measured in `calls`
+> and built in `verilog`, where no bench yet dials 0 or 9; the run it wholly
 > replaces was never in either. Every package count is an estimate from parts
 > the other documents already use, no circuit has been drawn, and nothing has
 > been on a bench. §6 changes the conference bridge of
@@ -54,9 +54,9 @@ The short answers, before the detail:
 
 | | written for | finds | built |
 |---|---|---|---|
-| **a class** (`exch-marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `exrtl`; measured in `calls` |
+| **a class** (`exch-marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
 | **a run** (`ex-extensions.md` §2.4, `exch-features.md` §7.4) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
-| **a direction** (`exch-network.md` §3.2) | tie trunks | a free trunk facing each way | in `exrtl`, and measured there |
+| **a direction** (`exch-network.md` §3.2) | tie trunks | a free trunk facing each way | in `verilog`, and measured there |
 
 **The class hunt cannot make a second group.** One class is one group. A bank of
 call-in lines on key 8 would be a new class, and all eight codes are taken
@@ -141,7 +141,7 @@ word". That quarter is a number:
   is nothing to pass on.
 - **The port found is taken at the visit that finds it**: the two writes are
   issued then, and not at the end of the pass, because a first-free hunt has
-  nothing to wait for. The class hunt as built in `exrtl` notes the port and
+  nothing to wait for. The class hunt as built in `verilog` notes the port and
   writes at the end of its pass, and a marker that probes a dialled port out of
   the scanner's turn (`exch-marker.md` §4) can find that port still free in
   between. What is left is two calls at one visit, and `exch-rtl.md` §2 has the
@@ -190,7 +190,7 @@ word". That quarter is a number:
 
 **Time.** The hunt is the class hunt's: up to a scan for the scanner to come
 round to 00 and a scan to go round, **two scans at most**, about 17 ms as
-`exrtl` runs (`exch-rtl.md` §2). A caller to a busy number hears the tone that
+`verilog` runs (`exch-rtl.md` §2). A caller to a busy number hears the tone that
 much later. **One scanner is one hunt at a time**, and a second call waits for
 it. At `exch-marker.md` §6's 480 calls an hour, were a third of them to hunt,
 the hunt is in use for under three seconds of the hour.
@@ -222,7 +222,7 @@ and there are two ways to sixteen.**
 
 | | what it costs |
 |---|---|
-| **two octets a visit** | no wire, and the scan doubles. A hop of the flood is two scans, about 17 ms as built (`exch-rtl.md` §2), against the origin's 128 ms guard (`exch-monitor.md` §3): it would be about 34. Every hunt, every nail's re-write and every time `exrtl` has measured moves with it. And the card must be told which octet is which, which is a new clock on the same spare pin. **Rejected** |
+| **two octets a visit** | no wire, and the scan doubles. A hop of the flood is two scans, about 17 ms as built (`exch-rtl.md` §2), against the origin's 128 ms guard (`exch-monitor.md` §3): it would be about 34. Every hunt, every nail's re-write and every time `verilog` has measured moves with it. And the card must be told which octet is which, which is a new clock on the same spare pin. **Rejected** |
 | **a second pin** | two bits a frame, side by side, in the same visit. The scan, and every measured time, stays where it is |
 
 ### 3.2 The pin, and the path
@@ -294,7 +294,7 @@ and landing nowhere, and named a14 and a third `PB` line as what a card in a
 channel slot would need in order to drive it. After this it cannot have them.
 Nothing built is lost. The only card ever proposed to drive it is the network
 card, which stands beside the marker and can reach it on a ribbon of their own
-as the registers do, and `exrtl`'s marker has no such line at all: it reads the
+as the registers do, and `verilog`'s marker has no such line at all: it reads the
 direction bits itself.
 
 ---
@@ -581,13 +581,13 @@ time. C needs B on the conference block and nowhere else.
 | `exch-mainboard.md` §2.3, §3.2, §3.3 | `PB2` on cable B pin 1, and at the block connector |
 | `exch-marker.md` §4, `exch-network.md` §3.2, `exch-basebandcard.md` §2 | `/HUNT_INH` is a wire between two cards and not a line of the bus |
 | `mf8-backplane.md` §8, `ex-observers.md` §5 | what a14 is; the watch's second '164 |
-| `exrtl` | `marker.v`: a call that fails its probe hunts, where it gave cannot-complete; the hunt's match takes a number, and takes its port at the visit; `C_OPER` goes. `block.v` and the cards: a second word. The word's layout there is its own, the class in the first three frames and no form bit (its README, "the word's encoding"), and would take this one along with the nail |
+| `verilog` | `marker.v`: a call that fails its probe hunts, where it gave cannot-complete; the hunt's match takes a number, and takes its port at the visit; `C_OPER` goes. `block.v` and the cards: a second word. The word's layout there is its own, the class in the first three frames and no form bit (its README, "the word's encoding"), and would take this one along with the nail |
 
 ---
 
 ## 9. Not measured
 
-- **All of it.** None of this is in `calls` or in `exrtl`, and the run it
+- **All of it.** None of this is in `calls` or in `verilog`, and the run it
   replaces never was either.
 - **The form's decode** beside the nail's and the all-ones detector, and the
   power-up hold-off against a byte that is now a nail or a number one time in

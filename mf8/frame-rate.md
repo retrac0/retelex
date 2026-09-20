@@ -178,7 +178,7 @@ column.
 ## 6. Reproducing
 
 ```
-python3 linecodes.py framerate
+python3 sim/linecodes.py framerate
 ```
 
 Caveats:

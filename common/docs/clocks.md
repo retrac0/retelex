@@ -12,7 +12,7 @@ line card in an exchange gets its 128 kHz — which is the question that made th
 list worth writing.
 
 > **Status: proposed. Nothing here is newly measured.** The chain is
-> `mf8-spec.md` §9.1's and [clock_card.v](../exrtl/rtl/clock_card.v)'s, read
+> `mf8-spec.md` §9.1's and [clock_card.v](../../verilog/rtl/clock_card.v)'s, read
 > against each other; the rates are arithmetic off the 4.096 MHz both of them
 > start from. §4's derivation is one inverter that has never been built, and its
 > phase wants a scope at bring-up.
@@ -67,7 +67,7 @@ exchange folded in.
 |---|---|---|---|
 | **T** — transmit | §1's chain, the local crystal | everything a card sends: `C_TX`, `A_TX`, the word, the downstream to a phone | **the only domain below a trunk card** |
 | **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `TX_OCT` one frame late (`exch-fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
-| **S** — the subscriber's own | the phone's clock, loop-timed or free-running (`subscriber-line.md` §7) | the 128 kBaud upstream pair | the same. It never reaches a backplane: the line card's receiver recovers it and re-times into T with two '74 stages (`mf8-cards.md` §2.3) |
+| **S** — the subscriber's own | the phone's clock, loop-timed or free-running (`subscriber-line.md` §7) | the 128 kBaud upstream pair | the same. It never reaches a backplane: the line card's receiver recovers it and re-times into T with two '74 stages (`channel-cards.md` §2.3) |
 
 So a channel card may see three rates and generates none of them. **In an
 exchange it sees two**, because T and R are one clock there, and a card that is
@@ -167,7 +167,7 @@ The six clock pins of the channel socket, and what is guaranteed about each in
 **The last two rows are the only clock difference between the shelves, and none
 of the common cards cares**, because each already crosses R to T with its own
 flip-flops whatever the two rates are. A data card presents `TXC` and `RXC` to its
-DTE as two clocks (`mf8-cards.md` §4.2); in an exchange they are one clock, which
+DTE as two clocks (`channel-cards.md` §4.2); in an exchange they are one clock, which
 is not a degradation but the synchronous case, and is why bit-exact 64 kb/s data
 passes inside an exchange and over copper ties (`exch-network.md` §8).
 
@@ -186,7 +186,7 @@ rate:
 
 `TX_HB`'s name says the domain, which is not the distinction — **both are T** —
 and `HB`'s says nothing at all. `LINE_HB` and `LOOP_HB` would say it. This is a
-rename across `mf8-spec.md`, `mf8-backplane.md`, `mf8-cards.md`,
+rename across `mf8-spec.md`, `mf8-backplane.md`, `channel-cards.md`,
 `exch-mainboard.md` and `exch-basebandcard.md` and is **not applied**; the names
 above stay normative until someone decides the edit is worth it.
 

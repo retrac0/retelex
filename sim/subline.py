@@ -1,5 +1,5 @@
 """
-The subscriber line of docs/subscriber-line.md, and the register of docs/register.md.
+The subscriber line of common/docs/subscriber-line.md, and the register of exchange/docs/register.md.
 
 One phone on two pairs, 64 kbps CVSD each way in differential Manchester at
 128 kBaud.  Hook and ring are held bit patterns; a dial pulse is the on-hook
@@ -20,12 +20,12 @@ between strobes, carrier detect and the violation hold run in samples, and the
 RC integrates the gated level cell by cell.  The register is modelled tick by
 tick, as the logic would run.
 
-Usage:  python3 subline.py            everything, ~7 min       (subline.log is the run)
-        python3 subline.py density    §2: how near CVSD traffic comes to either pattern
-        python3 subline.py hook       §3: the hook and ring detectors, and a dead pair
-        python3 subline.py dial       §5: dial pulses as the line card sees them
-        python3 subline.py register   register.md: dialled digits into the register
-        python3 subline.py dtmf       §5: DTMF through the codec
+Usage:  python3 sim/subline.py            everything, ~7 min       (subline.log is the run)
+        python3 sim/subline.py density    §2: how near CVSD traffic comes to either pattern
+        python3 sim/subline.py hook       §3: the hook and ring detectors, and a dead pair
+        python3 sim/subline.py dial       §5: dial pulses as the line card sees them
+        python3 sim/subline.py register   register.md: dialled digits into the register
+        python3 sim/subline.py dtmf       §5: DTMF through the codec
 """
 import sys, time, numpy as np
 from multiprocessing import Pool

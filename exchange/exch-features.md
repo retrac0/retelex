@@ -101,7 +101,7 @@ bring-up tool for everything that comes after.
 
 ## 5. External trunk (class 3): the FXO card needs one change
 
-`mf8-cards.md` §3.5's FXO card sends `A_TX` = *ringing present*. On an extended
+`channel-cards.md` §3.5's FXO card sends `A_TX` = *ringing present*. On an extended
 line that is right. On an exchange it is not (`exch.py calls` 11):
 
 | `A_TX` | a CO line rings in, the operator answers after 8 s |

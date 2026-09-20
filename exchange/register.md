@@ -18,7 +18,7 @@ as far as the register's interface to them (§6).
 ## 1. What the register is given
 
 The line card reduces the phone's upstream to one level, `ON_HOOK`
-(`mf8-cards.md` §2.2): `1100` → `Q ⊕ Q[n−2]` → 4 ms RC → comparator 0.85 / 0.70.
+(`channel-cards.md` §2.2): `1100` → `Q ⊕ Q[n−2]` → 4 ms RC → comparator 0.85 / 0.70.
 From there on, a dial pulse is a loop break like any other, and nothing in the
 register knows the line is digital. What the register does inherit is the
 detector's timing. The RC climbs from the make's density to 0.85, then falls
@@ -68,9 +68,9 @@ safety.
 
 To the register, the distortion does not matter: every window in §2 has tens
 of milliseconds to spare. It matters where pulses are passed on as pulses. On
-an extended line (`mf8-cards.md` §1), the phone's breaks cross the trunk on the
+an extended line (`channel-cards.md` §1), the phone's breaks cross the trunk on the
 A bit and an FXO card opens a CO loop with them. The phone leg takes 6.1 ms off
-every break and the A path takes 0.5 ms more (`mf8-cards.md` §5). A 60/40 dial
+every break and the A path takes 0.5 ms more (`channel-cards.md` §5). A 60/40 dial
 reaches the CO as 53/47, outside both ranges ES 201 187 allows a phone to send
 (56–64 % and 63–72 %). Whether a given CO still counts it depends on that
 CO's pulse receiver, not on a spec.
@@ -287,7 +287,7 @@ is not acceptable. This is arithmetic on assumed calling rates, not a measuremen
 
 **A sketch of the switch, not a design.** Every line's upstream is already a
 bit stream on `TX_CLK` inside the line card (`mf8-backplane.md` §2), and every
-downstream is already chosen on `TX_CLK` by the card's rule (`mf8-cards.md`
+downstream is already chosen on `TX_CLK` by the card's rule (`channel-cards.md`
 §2.3). Replace that rule's `C_RX` input with an 8:1 selector over the other
 lines' upstreams, addressed by a 3-bit latch the marker writes, and the shelf
 becomes a non-blocking switch for eight 64 kbps lines: one '151 and one '175

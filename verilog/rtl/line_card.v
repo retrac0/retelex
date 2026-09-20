@@ -1,6 +1,6 @@
 // line_card -- a subscriber card, simplified to the four signals that matter.
 //
-// The real card is mf8-cards.md's FXS card or subscriber-line.md's CVSD line
+// The real card is channel-cards.md's FXS card or subscriber-line.md's CVSD line
 // card: transformers, a 48 V phantom feed, a 128 kBaud differential-Manchester
 // driver and a hook detector.  None of that changes a single bit that reaches
 // the exchange, so for simulation the subscriber side is four wires:

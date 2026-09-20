@@ -1,7 +1,7 @@
 """
 Reference model and validation battery for the 8-bit superframe carrier.
 
-This is the design docs/mf8-spec.md specifies.  It is docs/mfspec.md's frame
+This is the design mf8/docs/mf8-spec.md specifies.  It is mf8/docs/mfspec.md's frame
 with the header replaced, because the original header was measured broken in
 three independent ways (mf8-spec.md 1):
 
@@ -26,14 +26,14 @@ Superframe, 8 frames = 125 us:
     S       0  A1  A2  A3   1  A4  A5  A6      six hook bits, two guard bits;
                                                A_n sits where C_n sits in the frame
 
-Usage:  python3 mf8.py            the whole battery
-        python3 mf8.py word       choose the F word
-        python3 mf8.py locks      false locks over every payload class
-        python3 mf8.py sfphase    superframe phase, exhaustive
-        python3 mf8.py guard      why the guard is at 0 and 4
-        python3 mf8.py sbit       why S sits half a frame from F
-        python3 mf8.py seats      the slot rule, every byte in every seat
-        python3 mf8.py errors     line errors, acquisition, resync
+Usage:  python3 sim/mf8.py            the whole battery
+        python3 sim/mf8.py word       choose the F word
+        python3 sim/mf8.py locks      false locks over every payload class
+        python3 sim/mf8.py sfphase    superframe phase, exhaustive
+        python3 sim/mf8.py guard      why the guard is at 0 and 4
+        python3 sim/mf8.py sbit       why S sits half a frame from F
+        python3 sim/mf8.py seats      the slot rule, every byte in every seat
+        python3 sim/mf8.py errors     line errors, acquisition, resync
 """
 import sys, itertools, numpy as np
 import audio, cvsd

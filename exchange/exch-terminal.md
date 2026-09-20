@@ -31,7 +31,7 @@ card serves: CVSD phones, analog phones, a data terminal, an outside line.
 **The exchange's port is an MF8 slot.** Its protocol is the slot interface: `C`
 and one signalling level each way (`exch-protocol.md` §1). An MF8 station card
 (the CVSD subscriber line card, the FXS card or the data card) puts off-hook on
-`A_TX` and reads ring from `A_RX`, whatever faces it (`mf8-cards.md` §1). A port
+`A_TX` and reads ring from `A_RX`, whatever faces it (`channel-cards.md` §1). A port
 gives it exactly that: `A_RX` is E, chopped by the ring cadence while the phone
 is on-hook (`exch-fabric.md` §3.5). A card at a terminal differs from the same
 card in a local slot by one thing only: the link, which carries `C` bit for bit
@@ -40,7 +40,7 @@ and A through an RC.
 | | a card in a local slot | the same card at a terminal |
 |---|---|---|
 | its voice | `C_TX` into the block's commutator | across the link, then through the trunk card's '174 into the commutator |
-| hook, dial pulses | M on the block's A commutator | M across the link's A: 1.5 ms later on a rise, 2.0 ms on a fall. Breaks arrive 0.5 ms short, and 10 of 10 pulses arrive at every line error rate to 6e−2 (`mf8-cards.md` §5) |
+| hook, dial pulses | M on the block's A commutator | M across the link's A: 1.5 ms later on a rise, 2.0 ms on a fall. Breaks arrive 0.5 ms short, and 10 of 10 pulses arrive at every line error rate to 6e−2 (`channel-cards.md` §5) |
 | ringing | its port's `A_RX`, in cadence | the same `A_RX`, sent as forward A: it rings in the same cadence |
 | ringback | the caller hears `RBT` from the called port's highway cell | the same, at the exchange |
 | answer, release | M rises; M or E falls for 256 ms | the same, 1.5 or 2 ms later |
@@ -128,8 +128,8 @@ card:
 | card at the terminal | toward the phone | from the phone |
 |---|---|---|
 | CVSD subscriber line card | slips: the card samples `C_RX` on its own `TX_CLK` (`mf8-backplane.md` §2) | slips at the exchange's '174 |
-| FXS card | none: its decoder runs on `RX_CLK` (`mf8-cards.md` §3.2) | slips at the exchange's '174 |
-| data card | none: the DTE takes `RX_CLK` (`mf8-cards.md` §4) | slips at the exchange's '174 |
+| FXS card | none: its decoder runs on `RX_CLK` (`channel-cards.md` §3.2) | slips at the exchange's '174 |
+| data card | none: the DTE takes `RX_CLK` (`channel-cards.md` §4) | slips at the exchange's '174 |
 
 **For voice this is enough.** A slip is inaudible (`mf8-backplane.md` §7). A call
 from a terminal across tie trunks adds the trunks' crossings to the terminal's,
@@ -173,7 +173,7 @@ synchronous data stays inside the exchange.
 
 - **Any of it as a whole.** No remote line is in the `calls` model. What exists:
   `exch.py fabric` 7 passed an MF8 frame through a block bit for bit, in one
-  clock and with no crossing; `mf8-cards.md` §5 measured the A path; and
+  clock and with no crossing; `channel-cards.md` §5 measured the A path; and
   `mf8-backplane.md` §7 measured one slip.
 - **The exchange's receive crossing, and the trunk card's clock strap**: as for
   tie trunks (`exch-network.md` §10).

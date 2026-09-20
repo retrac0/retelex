@@ -205,7 +205,7 @@ density held; scratch script, not a repository tool.
 | `mf8-backplane.md` §9 — the bus margins | M | capture `C_TX[6]` and `C_RX[6]` every frame at the fastest rate and compare with what was sent |
 | the synchronizer crossings | T | run the R domain a programmed ±100 ppm from T and count slips at the line card's crossings: one per 156 ms and nothing else |
 | `mf8.py`'s battery | C + L | every byte in every seat, every hook state, against a real framer; `LOCK` is the verdict |
-| `mf8-cards.md` §5 — the A path | T | dial pulses and ring cadence into `A_RX`, timed at the card's E lead or relay driver |
+| `channel-cards.md` §5 — the A path | T | dial pulses and ring cadence into `A_RX`, timed at the card's E lead or relay driver |
 
 The Pico's own ADC and a PWM output are a convenience for a first look at an
 engine — 12 bits in, 8–10 out — not metrology; codec scoring wants the host's
@@ -225,11 +225,11 @@ The adapter stays a bit pump: CVSD octets and A bits, no codec, so the phones
 are CVSD end to end and the one conversion to linear PCM happens once, in
 floating point, from the same model the cards are measured against. `A_RX[n]`
 rising is an incoming seizure or an answer; the daemon sets `A_TX[n]` in the
-ring cadence to ring an MF8 phone; dial pulses arrive as `mf8-cards.md` §5
+ring cadence to ring an MF8 phone; dial pulses arrive as `channel-cards.md` §5
 measured them, and DTMF in band. MF8's crystal paces the packets leaving; a
 jitter buffer with an occasional dropped or repeated 8 kHz sample absorbs
 Asterisk's clock on the way in, before the CVSD encoder, where it is inaudible.
-Against `mf8-cards.md`'s FXO-to-analog-port arrangement this is one conversion
+Against `channel-cards.md`'s FXO-to-analog-port arrangement this is one conversion
 instead of two, one card instead of six, and no analog ports at all.
 
 ---

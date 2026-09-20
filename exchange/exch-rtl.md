@@ -1,6 +1,6 @@
 # The exchange — what building it in Verilog found
 
-`exrtl/` is the exchange of these documents in synthesisable Verilog: the
+`verilog/` is the exchange of these documents in synthesisable Verilog: the
 fabric, the mainboard and its serial control bus, the supervision, MF8 trunk
 cards, and the common control — marker, registers, seekers. Eight testbenches
 run it, up to three exchanges in a chain making dialled calls over the pulse
@@ -15,7 +15,7 @@ written without disturbing them.
 
 > **Status: measured in simulation.** Every finding below made a testbench fail
 > and then pass; none is an argument. What is measured is behaviour in RTL, not
-> timing in a real part: `exrtl` has no gate delays, so it cannot see the hazard
+> timing in a real part: `verilog` has no gate delays, so it cannot see the hazard
 > of `exch-fabric.md` §3.2 and cannot confirm §4's nanoseconds. Nothing has been
 > on a bench. Package counts are untouched by all of this except where said.
 
@@ -79,7 +79,7 @@ and the other's write is overwritten.
 It is ordinary glare and takes the ordinary answer — the first takes the line,
 the second is told busy — but the hunt rules of §3 should say so, because any
 marker that serves more than one call at a time needs it, in 74HC as much as in
-RTL. In `exrtl` it is one flag, set when a connect is issued and tested by every
+RTL. In `verilog` it is one flag, set when a connect is issued and tested by every
 other call in the same cycle.
 
 ### `exch-marker.md` §4, §6 — what a pool of registers actually requires
@@ -167,7 +167,7 @@ be costed at about 170 ms of seizure propagation rather than 70.
 forget". It must also **not wait on a register**: if forwarding shares the
 marker's call sequencer, a seizure arriving while the exchange happens to be
 setting up a local call is dropped, and the flood silently fails to reach part
-of the network. In `exrtl` the forwarder is its own small machine sharing the
+of the network. In `verilog` the forwarder is its own small machine sharing the
 scanner and nothing else.
 
 ### `exch-protocol.md` §5 — the digit rule, taken literally
@@ -179,7 +179,7 @@ of 0. The document is right and exact; it is worth implementing exactly.
 
 ---
 
-## 3. What `exrtl` does not settle
+## 3. What `verilog` does not settle
 
 - **Nothing about timing in a real part.** No gate delays, so §3.2's hazard
   cannot appear and §4's nanoseconds cannot be confirmed. `exch.py timing` and

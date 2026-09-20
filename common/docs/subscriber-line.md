@@ -33,7 +33,7 @@ stream itself.
 
 The 48 V goes in at the line-side centre tap of the downstream pair's
 transformer and returns through the centre tap of the upstream pair's
-(`mf8-cards.md` §2.1). Each pair, both wires together, works as one conductor 
+(`channel-cards.md` §2.1). Each pair, both wires together, works as one conductor 
 of the DC circuit:
 
 ```

@@ -107,8 +107,8 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | `RAI` | — | — | — | — | one pin reserved for `mf8-spec.md` §3.5's seventh S bit; not connected |
 | `+5 V`, `GND` | PSU | all | | | logic |
 | `±12 V` | PSU | E&M cards, comparators | | | analog |
-| `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `mf8-cards.md` §3.4 |
-| `RING`, `RING RET` | a shelf ring generator on the PSU slot | FXS slots only, by a strap on the backplane per slot | | 20 Hz, ~90 Vrms | the ringing bus of `mf8-cards.md` §3.4; never reaches a line, data or E&M card |
+| `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `channel-cards.md` §3.4 |
+| `RING`, `RING RET` | a shelf ring generator on the PSU slot | FXS slots only, by a strap on the backplane per slot | | 20 Hz, ~90 Vrms | the ringing bus of `channel-cards.md` §3.4; never reaches a line, data or E&M card |
 
 Two things are deliberately absent. **No slot-ID pins:** slot *n*'s `C_TX`,
 `A_TX`, `C_RX` and `A_RX` are wired to input and output *n* of the trunk card's
@@ -329,7 +329,7 @@ at 200 and 20.7 at 1 000.
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
-The exchange uses two of the three reserved pins (`exch/docs/ex-extensions.md`
+The exchange uses two of the three reserved pins (`exchange/docs/ex-extensions.md`
 §2.1): a12 carries the port's word, its class and options one bit a frame, and
 a13 is `/ANS`, whether the port rings. a14 stays spare. A card only ever pulls
 the two to ground, and this shelf leaves them unconnected, so a card built for
