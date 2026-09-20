@@ -15,6 +15,29 @@ The superframe is 8 frames. It carries signalling (one bit per channel at
 64 kHz frame rate the superframe rate is 8 kHz, the PCM sample rate exactly, and
 one superframe carries one sample.
 
+# Exchange
+
+Sixty-four line exchange.  Supports MF8 trunks between exchanges.
+
+Up to 48 subscriber lines.  0x and 1x are reserved for trunk and supervisor features.
+
+Anywhere from 1 to 64 lines can be trunks.  Each exchange supports connections
+up to four different exchanges, in any number of lines.  For example,
+MF8 can be doubled so an exchange has 12 lines tying it to its neighbour.  This 
+could be done on two fronts for a total of 24 tie lines.
+
+The directions are labelled after the compass points NSEW but this is purely
+notional.
+
+Digital switching, CVSD or data.
+
+Pulse flood protocol.  Sending exchange calls all outward directions which is
+passed on by all exchanges until dropped or accepted.  Preliminary traffic
+simulation suggests this scales to about a thousand lines across a few dozen
+exchanges.
+
+General purpose architecture.  Chains, stars and rings are possible.
+
 ## Documents
 
 | | |

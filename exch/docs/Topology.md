@@ -334,7 +334,7 @@ different directions they are a loop of two, and need a strap like any other.
 
 ## 8. What SS0 would change
 
-`ex-ss0.md` is the alternative to the pulse flood: the number crosses each link
+`ex-ss0.md` is the alternative to pulse flood: the number crosses each link
 as one message on the spare bit of the MF8 frame's S lane, and A keeps
 everything else. Its seizures go the same way — every direction at the origin,
 every other direction at a hub — but they are held only until the claim comes
@@ -357,12 +357,9 @@ run call by call):
   pulse to race and no guard at all. Where traffic was the limit, it changes
   almost nothing: a six-channel chain still carries five exchanges, because a
   leaf's own traffic, not the flood, fills its link.
-- **It pays for distance in post-dial delay.** The flood's claim is 133 ms from
+- **It has more post-dial delay.** The flood's claim is 133 ms from
   any exchange to any other; SS0's message is relayed hop by hop, so the far end
   of a long network answers half a second after the caller's last pulse.
-- **It does not lift the code limit.** Sixty-four codes are sixty-four either
-  way; SS0 would carry a longer code if one were wanted, in 19 bits instead of 16
-  (`ex-ss0.md` §4).
 - **It would not run on the trunks that are not MF8.** A single-channel card, a
   voice-band circuit or a radio carries A, and the pulse flood needs nothing else
   (`exch-network.md` §1.1). SS0 needs the S lane, or a pair of its own.
@@ -371,14 +368,12 @@ run call by call):
 
 ## 9. Choosing a shape
 
-| the plant | shape | because |
-|---|---|---|
-| up to five exchanges along a road or a cable | a chain on six channels | nothing at any exchange but two trunk groups |
-| the same, six to eleven | a chain on twelve channels | traffic stops mattering; 36 lines an exchange inside it |
-| exchanges round one centre | a star, then a tandem with chains | a spoke carries only its own exchange's traffic |
-| more than twenty, or more than about 800 lines | a tree, twelve channels throughout | short, and the tandem's links are the only ones that fill |
-| the most the protocol holds | three tandems, five branches | the only shape that reaches 1 700 lines |
-| a second cable between two ends | close the ring and strap one link | that pair goes direct, and the ring is a spare |
+
+ * up to five exchanges along a road or a cable - a chain on six channels - nothing at any exchange but two trunk groups 
+ * the same, six to eleven - a chain on twelve channels - traffic stops mattering; 36 lines an exchange inside it 
+ * exchanges round one centre - a star, then a tandem with chains - a spoke carries only its own exchange's traffic 
+ * more than twenty, or more than about 800 lines - a tree, twelve channels throughout 
+ * very large networks - three tandems, five branches - the only shape that reaches 1500+ or so lines
 
 Give the backbone the codes 00–17 and ordinary exchanges 20–77, and inside each
 run hand out the codes of fewest pulses first: 11, 12, 13 before 17, and 21, 22
@@ -389,8 +384,6 @@ before 77. Every pulse of an exchange's code adds 0.1 s to every flood made to i
 
 ## 10. Not measured
 
-- **The gates.** `topo` and `net` model timing, channels and pools. The hub's
-  fan-out, its resolver and the strap as circuits are `exch-network.md` §10's.
 - **Uneven traffic.** Calls are spread evenly over the other exchanges. Real
   traffic favours neighbours, which eases the centre and leaves the flood as it
   is, since a flood goes everywhere whatever the call's destination.

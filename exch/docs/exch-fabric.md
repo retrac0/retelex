@@ -1,10 +1,7 @@
 # The exchange — the switching fabric, as built
 
-`exch-protocol.md` §3 says what the fabric is: a 64 × 64 crossbar with one-way
-crosspoints, made of eight 512 kbps highways in space and eight slots in time,
-the crosspoint held in a latch at the listening port. This document is how to
-build it: the parts, the clocks, the one hazard in it, and what goes on which
-card.
+The fabric is a 64 × 64 crossbar with one-way
+crosspoints, made of eight 512 kbps highways (space) and eight slots (time).
 
 > **Status: proposed.** The logic is `exch.py fabric` (measured: every source to
 > every listener, bit-exact, one frame). The timing is `exch.py timing`: a
@@ -27,8 +24,8 @@ card.
 
 ### 1.1 How a highway carries eight ports, and how one bit is picked off it
 
-**A highway is one wire that eight ports take turns on.** It is MF8's own line
-frame — eight bit positions to a 64 kHz frame, 512 kbps — with every position a
+A highway is one wire where eight ports take turns.  It has a close relation to 
+MF8's line frame — eight bit positions to a 64 kHz frame, 512 kbps — with every position a
 port, no line code, and the clock on a wire of its own.
 
 Every card puts out one bit a frame on its `C_TX` pin and holds it for the whole
@@ -120,8 +117,10 @@ eight puts a single '151 on each axis and runs the wires at MF8's own line rate.
 
 One clock domain. Everything below is on the mainboard or a ribbon between
 blocks; all 74HC at 5 V. **`exch-mainboard.md` is this table in full** — the
-fifty-five signals, the two cables that carry them, the pinouts, and what the
-cable costs §4's margins (18 ns of 743).
+thirty-eight signals, the two cables that carry them, the pinouts, and what the
+cable costs §4's margins (18 ns of 743). **The latch write is serial**
+(`exch-mainboard.md` §2.3): one sixteen-bit word on one wire, broadcast, in place
+of the twenty conductors this table used to list.
 
 | signal | from | what |
 |---|---|---|
@@ -133,9 +132,9 @@ cable costs §4's margins (18 ns of 743).
 | `FILL`, `RBT`, `/RING_CAD`, `TICK` | clock card, ringback card | 32 kHz idle pattern; the ringback bit stream; 2 s / 4 s, low true; 1 kHz |
 | `HC[0..7]`, `HA[0..7]` | block *h* drives wire *h* | the highways. **One driver a wire**; every block listens to all sixteen through its own receivers. `HA` is also the marker's M highway |
 | `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a nail (`ex-extensions.md` §2.2), one bit a frame. Commutated like the highways; only the marker reads them, so eight blocks share two wires |
-| `BLK[0..7]` | marker | one select a block: point to point, so a block needs no address and no comparator — "layout, not logic" |
-| `PORT[2:0]`, `SRC[5:0]`, `BSY`, `CLM`, `WR`, `/RESET` | marker, or the console | a latch write, the port numbers as dialled. `/RESET` is the one signal on the bus a glitch can hurt, and is filtered at every block (`exch-mainboard.md` §7) |
-| `/CON` | console | the console has the bus: the marker's drivers go high-impedance |
+| `SDATA`, `SCLK` | marker, or the console | the latch write as one sixteen-bit word — `DST[5:0]`, `SRC[5:0]`, `BSY`, `CLM`, a guard bit — shifted to every block at once. Two '164 take it in and a '138 turns `DST[5:3]` into the eight lines the shunt picks `/BLK` off, so a block still needs no address and no comparator: "layout, not logic" (`exch-mainboard.md` §2.3) |
+| `WR`, `/RESET` | the same | the write, gated with `/BLK` and the guard bit; and the clear. **`/RESET` is the signal on the bus a glitch can hurt most**, and is filtered at every block; `SCLK` is the one it can hurt next, and costs one call (`exch-mainboard.md` §7) |
+| `/CON` | console | the console has the bus: marker goes high-Z |
 
 ---
 
@@ -148,11 +147,14 @@ cable costs §4's margins (18 ns of 743).
 | Commutators: `C`, `A`, `BUSY`, the word | 4 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Exactly the trunk transmitter's frame mux (`mf8-spec.md` §10) without F and S |
 | Ringback substitution ahead of the `C` commutator | 2 × 74HC157 | port *k* sends `RBT` instead of its card's `C_TX` while it is being rung (§3.5) |
 | Strobe decoder | 74HC138 | addressed by `SLOTQ`; `HCLK` on an active-low enable, so line *k* is low for **the second half of cell *k*** and its falling edge is the middle of the cell |
-| Write decoder | 74HC138 | `BLK[h]`·`WR` enables; `PORT[2:0]` picks the latch to clock |
+| Write decoder | 74HC138 | `/BLK`·`WR`·`G` enables; `DST[2:0]` picks the latch to clock |
+| The control word | 2 × 74HC164 | sixteen bits, shifted by `SCLK`. No output latch: nothing reads them until `WR`. Bits 7–0 are the port's own '273, verbatim |
+| Block select | 74HC138 | `DST[5:3]` into eight lines, out to the shunt field and back as `/BLK` |
+| The guard bit | ¼ package | `G`·`WR`: a word that does not carry bit 15 cannot write |
 | Backward A on a claimed trunk: `A` out = E + `CLAIM` | 2 × 74HC32 | used on trunk blocks; harmless elsewhere, where `CLAIM` is never written |
-| Receivers: clocks, counts, `SRC`; the sixteen highways | 4 × 74HC244 | a highway drives eight receivers, not sixty-four selects |
+| Receivers: clocks, counts, the serial pair; the sixteen highways | 4 × 74HC244 | a highway drives eight receivers, not sixty-four selects. The serial bus gave nine of these back: fourteen control inputs became five |
 | Drivers: `HC[h]`, `HA[h]`, and `PB` when selected | 74HC244 | |
-| | **≈ 13** | |
+| | **≈ 15¼** | ≈ 2¼ more than the parallel control bus: three packages added, about one '244 freed |
 
 ### 3.2 A port: the crosspoint
 
@@ -178,9 +180,10 @@ next enable. One 74HC175 on the clock card, for the whole exchange.
 
 ### 3.3 A cleared latch listens to 00
 
-A port that releases clears its '273 to zeros: highway 0, slot 0, **port 00,
-which is never fitted**. It reads `FILL` and A = 0. Nothing that talks may sit
-there. If the operator were at 00, a port listening to the operator would ring
+A port that releases clears its '273 to zeros: highway 0, slot 0.  For this reason
+port 00 is never fitted. It reads `FILL` and A = 0. 
+
+If the operator were at 00, a port listening to the operator would ring
 whenever the operator lifted, and an off-hook phone waiting for a register would
 hear the operator's calls. That is why the operator is at 04
 (`exch-protocol.md` §5). The slot select is wired in order and the marker sends
@@ -275,8 +278,8 @@ Nothing in the fabric has less than three quarters of a microsecond in hand.
 | | packages |
 |---|---|
 | a port: crosspoint 5, supervision 3¼ | ≈ 8¼ |
-| a block: eight ports and §3.1 | **≈ 80** |
-| an exchange: eight blocks | ≈ 640 |
+| a block: eight ports and §3.1 | **≈ 82** |
+| an exchange: eight blocks | ≈ 655 |
 | clock card: crystal, '4040, '163, '175, `FILL`, `RING_CAD`, the 1 kHz tick, drivers | ≈ 10 |
 
 Eighty DIP packages are a double-height Eurocard, or two single ones — fabric on
@@ -300,6 +303,20 @@ wires less.** Worst-case margins are 256 to 423 ns where §4 has 750 and more
 (`exch.py timing` 5). It wants a glitch-free "middle half" from a Johnson counter
 on the clock card. Not the baseline: the saving is 9 %, and it spends the
 fabric's best property, which is that nothing in it is near a limit.
+
+**And it deletes `SLOTQ`.** The strobe window is the middle half of the cell, not
+the second half, so the address may move in the quarter either side of the cell
+edge — which is where the undelayed count moves and where §3.2's delayed one does
+not. Addressed by `SLOTQ` the decoder is *worse* than useless here: the address
+settles **121 ns after its own enable**, which is §3.2's hazard walked straight
+back in. Addressed by plain `SLOT` it settles 367 ns before the enable and moves
+431 ns after the disable — §4's margin, kept, for nothing. So the economy form
+takes the '175 off the clock card and three more conductors off the cable, and
+the count is **eleven wires, not eight**. `exch-mainboard.md` §9 says why that
+number matters more than the packages: at eight highways and no `SLOTQ` the
+fabric cable is twenty conductors, which is 1-in-1 grounding in the same 64-way,
+which is that section's own named cure for the one estimate in this design that
+could still be wrong.
 
 ---
 

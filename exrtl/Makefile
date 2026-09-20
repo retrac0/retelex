@@ -4,7 +4,7 @@
 # is about two orders of magnitude faster and is what to use while working --
 # the network testbench is 3 s of model time, which is minutes under Icarus and
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
-RTL   := rtl/mux8.v rtl/ctl_write.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v \
+RTL   := rtl/mux8.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v \
          rtl/source_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v
@@ -22,8 +22,10 @@ TB_hub    := tb/net_site.v tb/bitpath.v tb/tb_hub.v
 TB_ring   := tb/net_site.v tb/bitpath.v tb/tb_ring.v
 TB_erlang := tb/tb_erlang.v
 TB_stress := tb/net_site.v tb/tb_stress.v
+TB_stats  := tb/tb_stats.v
+TB_console := tb/con_site.v tb/bitpath.v tb/tb_console.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -43,6 +45,8 @@ $(SIMS): %: $(BUILD)
 # Icarus is ~100x slower, so the traffic run is offered a tenth of the calls
 # there: it checks that the two simulators agree, not the erlang figures.
 IVPAR_erlang := -Ptb_erlang.NCALLS=25
+# ... and the console's two traffic runs are a tenth as long.
+IVPAR_console := -Ptb_console.TRAFFIC_MS=500
 
 IVSIMS := $(addprefix iv-,$(SIMS))
 $(IVSIMS): iv-%: $(BUILD)
@@ -86,6 +90,16 @@ ring-open: $(BUILD)
 	    > $(BUILD)/vl-ringopen.log 2>&1 || (cat $(BUILD)/vl-ringopen.log; false)
 	@$(BUILD)/vl/ringopen/tb_ringopen 2>&1 | grep -v '^- '
 
+# The console's CONTROL: /CON as exch-mainboard.md 2.3 first had it -- one '244
+# enable, the marker cut off mid-word and not told.  Part 1 only; nothing is
+# asserted.  It is there to be read beside `make console`.
+console-naive: $(BUILD)
+	@mkdir -p $(BUILD)/vl/consolenaive
+	@verilator $(VLFLAG) -GNAIVE=1 --top-module tb_console \
+	    --Mdir $(BUILD)/vl/consolenaive -o tb_consolenaive $(RTL) $(TB_console) \
+	    > $(BUILD)/vl-consolenaive.log 2>&1 || (cat $(BUILD)/vl-consolenaive.log; false)
+	@$(BUILD)/vl/consolenaive/tb_consolenaive 2>&1 | grep -v '^- '
+
 # The MF8 link with the two exchanges' crystals 100 ppm apart.
 # -G takes a BARE parameter name: -Gtb_trunk.PPM=100 is not found, and with the
 # log going to /dev/null this target was silently dead from Verilator 5 on.
@@ -114,4 +128,4 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) ring-open erlang-long stress-pair stress-overload trunk-ppm lint synth clean
+.PHONY: all iv $(SIMS) $(IVSIMS) ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm lint synth clean

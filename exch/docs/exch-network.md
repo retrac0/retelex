@@ -143,8 +143,8 @@ in order to pass it on.
  origin    the FIRST digit is in, and it is 1.  (0 and 9 are local hunts, and 2–7 begins a local
            number: none of them touches a trunk.)
            Seize one free trunk in EVERY direction the exchange has, all listening to the CALLER:
-           their remaining digits go down the flood as they dial them.  The register holds the
-           trunks it seized (§3.2), and goes on counting:
+           their remaining digits go down the flood as they dial them.  The network card holds the
+           trunks seized for this register (§3.2), which goes on counting:
            our own e b → release the trunks, carry on locally.  An e or a b of 8 or 9 →
            reserved: release the trunks, cannot-complete.  Else, when a trunk has claimed, release the
            others; when the last digit is in, point the caller at the one that claimed and free
@@ -239,7 +239,8 @@ on the trunk toward 24; the origin keeps it and releases the other.
 
 | the network card | |
 |---|---|
-| Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its 128 ms guard; at a hub, **the fan-out resolvers** (§3.2). The trunks an origin seized are held by its register |
+| Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its 128 ms guard; **the trunks an origin seized**, a '574 a direction in a bank a register; the direction states and the claim comparator; at a hub, **the fan-out resolvers** (§3.2) |
+| Where the rest of it is | nowhere. **Everything the network needs is on this card.** The fabric, the ports, the registers, the marker and the release rule are the standalone exchange's, unchanged, so an exchange joins a network by plugging cards in (§3.2, `mvp-ex.md` §5) |
 | Not fitted | `1` gives cannot-complete, and the trunk ports are empty: the standalone exchange |
 
 ### 3.2 Hubs: three or four directions
@@ -270,19 +271,43 @@ call until then, in a **resolver**:
 | | |
 |---|---|
 | **A resolver** | the incoming trunk's address and three legs', in 4 × 74HC574, and a flip-flop: **≈ 4½ packages** |
-| **Seeing the claim** | the scanner visits every port every 8 ms. At each visit a counter runs the stored leg addresses, the resolvers' and the registers', past one shared 74HC688 while the probe reads M, well inside the 125 µs visit: **≈ 3 packages**, shared |
-| **The origin** | its register holds the trunks it seized, one 74HC574 a direction the exchange has: two at an exchange on a chain. This replaces the network card's two '174, which held only one pending network call at a time |
+| **Seeing the claim** | the scanner visits every port every 8 ms. At each visit a counter runs the stored leg addresses, the resolvers' and the seizure banks', past one shared 74HC688 while the probe reads M off the control bus, well inside the 125 µs visit: **≈ 3 packages**, shared, on the card |
+| **The origin** | the trunks it seized are held on the network card, one 74HC574 a direction the exchange has, in a bank a register: two '574 a bank at an exchange on a chain. The register counts the digits and says when to let go; the card holds the addresses and writes the latches. This replaces the card's two '174, which held only one pending network call at a time. **The bank is on the card and not in the register**, so joining a network does not reach into a register already fitted |
 | **How many** | every call dialled with `1` anywhere in the network passes the hub, for 2.2–3.2 s, the time `e` and `b` take. With 30 % of calls leaving, eight exchanges of 48 lines put 0.26 E on the hub's resolvers: two are all busy 2.6 % of the time, three 0.2 %. Twenty put 0.64 E: three 2.3 %, four 0.4 %. **Three at a hub, four at the centre of a score of exchanges** |
-| **The marker** | the direction steers the origin's scan (the word's two bits pick which of four found registers takes a free trunk); a transit latches the incoming trunk's direction and hunts the others; and the resolver's states: **≈ 4 packages** |
+| **The marker** | **nothing.** It hunts a class as it always did and knows nothing of directions: the card watches the same probe and pulls `/HUNT_INH` at a port whose word faces the wrong way, so the hunt walks on (`exch-marker.md` §4). The direction states — the origin's scan, a transit latching the incoming trunk's direction and hunting the others, the resolver's states — are **≈ 4 packages**, on the card |
 | **Timing** | a hub adds up to three writes to the flood's hop, about 4 ms, and up to one scan and a write to the claim's way back, 10 ms. The origin's 128 ms guard covers ten hops at a slow marker's 12 ms, and a hub counts as a hop and a third. **No exchange should be more than about eight hops from another**: a hub with four chains of four is eight across |
 | **Loops** | a tree of chains and stars needs no strap. A ring anywhere, through a hub or not, is broken by strapping one of its links (§3.3) |
 | **Monitors** | two a trunk block, as everywhere: a flood reaches a hub on one block |
 
-**What it costs.** Every networked exchange pays the marker's ≈ 4, the shared
-comparator's ≈ 3 and a '574 a direction in each register. A hub adds its
-resolvers: ≈ 14 for three. Nothing is added to the fabric, the ports or the
-release rule, and after the claim a call through a hub is two latches like any
-other.
+**What it costs, and where it sits.** Every networked exchange pays ≈ 4 for the
+direction states, ≈ 3 for the shared comparator and a '574 a direction in each
+register's bank — **and all of it is on the network card**. A hub adds its
+resolvers: ≈ 14 for three. Nothing is added to the fabric, the ports, the
+registers, the marker or the release rule, and after the claim a call through a
+hub is two latches like any other.
+
+**What the standalone exchange must carry for that to be true**, and carries
+anyway (`mvp-ex.md` §5):
+
+- **the probe on the control bus.** The scanned port's M and its word go out
+  beside `PORT`, `SRC`, `BUSY` and `WR`, on the '244s the marker already has. A
+  card that wants to watch the scan can.
+- **one pulled-up input, `/HUNT_INH`.** A hunt takes it; nothing drives it when
+  no card is fitted, which reads as *accept*, and the hunt is the plain
+  first-free-of-a-class it always was. It is the only way anything may steer a
+  hunt, and it keeps the marker from ever learning what a direction is.
+- **the diode for key `1`**, which sends it to a class-4 hunt. With no trunk
+  port fitted that hunt finds nothing and the caller gets cannot-complete
+  (§2, `mvp-ex.md` §4).
+
+**How big the card is.** The jumpers and the two sequences, ≈ 4 for the
+direction states, ≈ 3 for the comparator, and a '574 a direction in each
+register's bank — six at an exchange on a chain with three registers — is
+twenty-odd packages: **one card, on the control bus beside the marker**, not in
+a line slot. A hub has four directions to seize into but a dozen lines and one
+register, and adds ≈ 14 of resolvers: thirty-odd, **two cards**. That is the
+price of keeping it all off the marker and the registers, and it is paid only
+where it is used.
 
 ### 3.3 Rings: the strap belongs to a link, not to an exchange
 

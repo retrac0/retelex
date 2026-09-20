@@ -45,7 +45,10 @@ module marker #(
     parameter [5:0]   NOGO      = 6'o14,
     parameter         HAS_NET   = 1'b1,
     parameter integer T_GUARD   = 128,      // ms: the origin's guard
-    parameter integer T_CLAIM   = 2000      // ms: give up waiting for a claim
+    parameter integer T_CLAIM   = 2000,     // ms: give up waiting for a claim
+    // A console is fitted on cable B (ex-console.md 2).  With none, /CON is
+    // ignored and may be left unconnected.
+    parameter         HAS_CON   = 1'b0
 )(
     input            clk,
     input            rst_n,
@@ -103,7 +106,14 @@ module marker #(
     output reg        wr_stb,
     output reg [5:0]  wr_dst,
     output reg [5:0]  wr_src,
-    output reg        wr_bsy, wr_clm
+    output reg        wr_bsy, wr_clm,
+
+    // /CON, the console's REQUEST for cable B, and the marker's own '244
+    // enable.  A request and not a switch: it is honoured BETWEEN words and
+    // never inside one, so a word in flight when it falls still finishes, WR
+    // and all (ex-console.md 2).  There is no grant; the console waits instead.
+    input             con_n,
+    output            bus_oe
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
@@ -147,6 +157,12 @@ module marker #(
     reg [5:0]  ser_dst, ser_src;
     reg        ser_bsy, ser_clm;
     reg        probe_dirty;
+    // One flip-flop: the marker has let go of cable B.  While it is set the
+    // '244 is off, the write sequencer starts nothing, and no visit is
+    // trusted -- the block driving PB is the one the CONSOLE's word names.
+    reg        yield;
+    wire       con_req = HAS_CON && !con_n;
+    assign     bus_oe  = !yield;
     wire       ser_busy;
     wire       w_pend = (wh != wt);
 
@@ -299,7 +315,7 @@ module marker #(
             p_m <= 0; p_busy <= 0; p_word <= 0; p_port <= 0; visit <= 0;
             pv <= 0; p_valid <= 0; pb_blk <= 0;
             wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1; wq_ovf <= 1'b0;
-            n_defer <= 16'd0;
+            n_defer <= 16'd0; yield <= 1'b0;
             wr_stb <= 1'b0; wr_dst <= 0; wr_src <= 0; wr_bsy <= 0; wr_clm <= 0;
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0;
@@ -348,7 +364,9 @@ module marker #(
                 if (pv) scan <= scan + 1'b1;
                 pv    <= 1'b1;
             end
-            if (ser_busy || ser_req || pb_blk != scan[5:3])
+            // ... and so is a visit the console's tenure touched: from /CON
+            // falling until the marker has steered the probe again.
+            if (ser_busy || ser_req || pb_blk != scan[5:3] || yield || con_req)
                 pv <= 1'b0;
 
             // ---- the write sequencer -----------------------------------
@@ -356,7 +374,7 @@ module marker #(
             if (oct_stb && pv && scan[2:0] == 3'd7) probe_dirty <= 1'b1;
             ser_req <= 1'b0;
             case (wst)
-            2'd0: if (!ser_busy && !ser_req) begin
+            2'd0: if (!ser_busy && !ser_req && !yield && !con_req) begin
                       if (w_pend) begin
                           ser_dst <= wq[wh][5:0];  ser_src <= wq[wh][11:6];
                           ser_bsy <= wq[wh][12];   ser_clm <= wq[wh][13];
@@ -380,6 +398,19 @@ module marker #(
                   end
             default: wst <= 2'd0;
             endcase
+
+            // ---- /CON: the console has asked for cable B -----------------
+            // Let go BETWEEN words only.  A word cut short is a lost write, and
+            // a WR cut short is a runt clock into a '273; a word that finishes
+            // is neither, and the console's silence is longer than any word
+            // (ex-console.md 2).  When the console lets go, the blocks hold ITS
+            // last word, so the probe is steered again before a visit counts.
+            // After the case above, so that this `probe_dirty` is the last word.
+            if (!yield) begin
+                if (con_req && wst == 2'd0 && !ser_busy && !ser_req) yield <= 1'b1;
+            end else if (!con_req) begin
+                yield <= 1'b0; probe_dirty <= 1'b1;
+            end
 
             // ---- the hunt, in fixed order from 00 ----------------------
             if (visit && p_valid) begin        // a repeated visit is not a second port

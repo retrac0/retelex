@@ -491,7 +491,10 @@ class Exchange:
             if k == '0' or k == '9':
                 q = self.hunt(OPER if k == '0' else EXT)
                 self.connect(a, q) if q is not None else self.nogo(a, f'no free class {2 if k == "0" else 3}')
-            elif k not in '234567':
+            elif k == '1':                            # the network's key: seize a trunk.  The flood itself is
+                q = self.hunt(TRUNK)                  # exch.py net; no scenario here fits a trunk card, so the
+                self.nogo(a, 'no free class 4' if q is None else 'the flood is not modelled here')
+            elif k not in '234567':                   # hunt finds nothing, as on a standalone exchange
                 self.nogo(a, f'first key {k}')
             else:
                 return
@@ -624,7 +627,8 @@ def calls():
                   0o21: P_([(9200, 'on')], answer=1500),
                   0o22: P_([(4000, 'off')] + keys(4800, '21') + [(6500, 'on'), (7000, 'off')] + keys(7800, '22')
                            + [(9000, 'on')])}), 10500, [0o22])
-    scene('4. Numbers that are not there: 26 (empty slot), 1 (reserved), 8, 2 then 9, 03 cannot be dialled at all.',
+    scene('4. Numbers that are not there: 26 (empty slot), 1 (the network, with no network card), 8 (spare),\n'
+          '     2 then 9, and 03, which cannot be dialled at all.',
           layout({0o20: P_([(100, 'off')] + keys(900, '26') + [(2500, 'on'), (3000, 'off')] + keys(3800, '1')
                            + [(5000, 'on'), (5500, 'off')] + keys(6300, '8') + [(7500, 'on'), (8000, 'off')]
                            + keys(8800, '29') + [(10500, 'on')])}), 11500, [0o20])
@@ -761,15 +765,16 @@ def calls():
     ev1, _ = pulses(900, '21')
     ev2, _ = pulses(8800, '20')
     tries = []
-    for t0, number in ((18000, '0'), (21500, '9'), (25000, '25'), (29000, '20')):
+    for t0, number in ((18000, '0'), (21500, '9'), (25000, '1'), (28000, '8'), (31500, '25'), (36000, '20')):
         ev, end = pulses(t0 + 800, number)
         tries += [(t0, 'off')] + ev + [(end + 600, 'on')]
     scene('19. The minimum exchange (mvp-ex.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
           '      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;\n'
-          '      then 20 dials 0 (no operator), 9 (no outside line), 25 (an empty slot) and 20 (itself).',
+          '      then 20 dials the four first keys that find nothing here -- 0 (no operator), 9 (no outside line),\n'
+          '      1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).',
           layout({0o20: P_([(100, 'off')] + ev1 + [(7000, 'on'), (16500, 'on')] + tries, answer=1500),
                   0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, regs=1, tones=False),
-          33500, [0o20, 0o21])
+          40500, [0o20, 0o21])
 
 
 # ------------------------------------------------------------------ announce

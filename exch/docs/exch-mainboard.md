@@ -8,6 +8,11 @@ the two cables that carry it, what decides a block's number, what a cut or an
 absent part reads as, and the electrical argument — which turns out to be the
 easy part.
 
+**The control bus is serial** (§2.3): the marker's whole output is one sixteen-bit
+word broadcast on one wire, and the twenty-four parallel signals this document
+first listed are seven. That is the only part of §2 that is not `exch-fabric.md`
+§2 as it stands.
+
 > **Status: proposed; the timing measured by the same method as `exch-fabric.md`
 > §4.** `exch.py mainboard` adds the clock's own flight down the cable to that
 > section's 400 000 draws. The line's capacitance, edge rate and drive current
@@ -23,7 +28,7 @@ sees the same signals. Almost all of this bus wants exactly that — the clocks,
 the sixteen highways, the marker's control lines are the same at every block.
 
 **Three signals are not.** Block *h* drives highway `HC[h]` and `HA[h]` and
-answers to `BLK[h]`, and that is the whole of a block's identity: it is why
+answers to `/BLK` line *h*, and that is the whole of a block's identity: it is why
 `exch-fabric.md` §3.1 can say a block "needs no address and no comparator —
 layout, not logic". A plain daisy-chained ribbon cannot give it, because every
 tap is the same. Making a block work it out instead costs a '138 on three
@@ -31,10 +36,20 @@ strapped ID pins, eight individually-enabled tri-states for `HC` and eight for
 `HA`: **about six packages a block, forty-eight in the exchange, 7 % of the
 fabric, to buy back something the layout was giving away free.**
 
+Since §2.3 made the control bus serial, **`BLK[0..7]` is not on the cable at
+all.** Every block decodes the word's `DST[5:3]` through a '138 of its own, and the
+shunt picks one of those eight lines exactly as it used to pick one of eight
+conductors. The shunt field, its three columns and its silkscreen are unchanged,
+and the cable is now identical at every tap without exception. **That '138 is not
+the one this section has just refused**: no ID pins, no comparator, the same part
+doing the same thing in all eight blocks, and the shunt is still what says which
+line is mine. The decoder moved from the marker's end of the wire to the block's,
+and nothing learned its own name on the way.
+
 So the split is:
 
 ```
-  one continuous ribbon, identical taps  ─── 55 signals, the same at every block
+  one continuous ribbon, identical taps  ─── 38 signals, the same at every block
                         │
                   the MAINBOARD at each tap ── a passive board: the cable's header, the block's
                         │                      connector, and ONE 2x8 shunt field
@@ -58,9 +73,10 @@ nothing.**
 
 ## 2. The signals
 
-Fifty-five, in three groups by who drives them. All 74HC at 5 V.
-`exch-fabric.md` §2 is the same list; `HB`, `RX_OCT` and `/CON` are new here and
-§8 says why.
+Thirty-eight, in three groups by who drives them. All 74HC at 5 V.
+`exch-fabric.md` §2 is the same list except for §2.3, which replaces its twenty
+parallel latch-write signals with a serial word; `HB`, `RX_OCT` and `/CON` are
+new here and §8 says why.
 
 ### 2.1 From the clock card — 15
 
@@ -91,20 +107,77 @@ driver — an unfitted block, or a missing shunt — is pulled to `FILL` through
 (`mf8-backplane.md` §6), so it reads as CVSD silence rather than as noise.
 `HA` is pulled to ground: on-hook.
 
-### 2.3 The control bus — 24, multi-master
+### 2.3 The control bus — 7, multi-master
 
 Driven by the marker, or by the operator's console when it takes the bus.
 
+**The marker's whole output is one sixteen-bit word, broadcast to every block at
+once.** Twenty of the twenty-four signals this section first listed were a single
+latch write held on twenty wires; they are sixteen bits on one wire now, and the
+block that answers is the one its shunt column names.
+
 | signal | direction | what |
 |---|---|---|
-| `BLK[0..7]` | marker → mainboards | one select a block, picked off by the shunt. Enables the block's write decoder and its `PB` drivers |
-| `PORT[2:0]` | marker → blocks | which of the block's eight latches |
-| `SRC[5:0]` | marker → blocks | what to write into it: the source port, **as dialled** (`exch-protocol.md` §5) |
-| `BSY`, `CLM` | marker → blocks | the latch's other two bits: busy, and a claimed trunk's backward A |
-| `WR` | marker → blocks | the write. Gated with `BLK[h]` in the block's write decoder |
+| `SDATA` | marker or console → blocks | the word, MSB first |
+| `SCLK` | the same | shifts it. Free-running or gated, 64 kHz to 512 kHz; §2.3.2 |
+| `WR` | the same | the write. Gated with `/BLK` and the guard bit in the block's write decoder, where `BLK[h]`·`WR` used to be |
+| `/RESET` | marker or power-on → blocks | clears every latch: every port listening to 00. **The signal on this bus a glitch can hurt most** (§7) |
 | `PB[1:0]` | the selected block → marker, tri-state | `BUSY`, and the card's word one bit a frame. **Pulled LOW at the marker** (§6) |
 | `/CON` | console → marker | the console has the bus; the marker's drivers go high-impedance. One '244 enable |
-| `/RESET` | marker or power-on → blocks | clears every latch: every port listening to 00. **The only signal on the bus a glitch can hurt** (§7) |
+
+#### 2.3.1 The word
+
+| bit | field | what |
+|---|---|---|
+| 15 | `G` | guard, **always 1**. ANDed into `WR` at every block: a word that does not carry it cannot write |
+| 14 | — | spare. Parity over 13–0 if the bench asks for it (§7) |
+| 13–11 | `DST[5:3]` | the block. Into the block's '138; the shunt picks `/BLK` |
+| 10–8 | `DST[2:0]` | the port in it. The write decoder's address, unchanged |
+| 7–2 | `SRC[5:0]` | the source port, **as dialled** (`exch-protocol.md` §5) |
+| 1 | `BSY` | busy |
+| 0 | `CLM` | a claimed trunk's backward A |
+
+Both halves are port numbers as dialled — where to write, and what to write — so
+the word is `h s` twice and two flags. And **bits 7–0 are the port's 74HC273
+verbatim**: `SRC`, `BSY` and `CLM` are eight bits because the latch is eight bits.
+One shift register holds the address and the other holds exactly what lands in
+the latch, which is why sixteen was the number to aim at.
+
+`BLK[0..7]` as eight one-hot conductors was the only fat on the old bus: eight
+bits to say one of eight things. Sent as three and decoded at the block, it pays
+for `DST` and `SRC` together and leaves two bits over.
+
+#### 2.3.2 At the block: two '164, one '138, one gate
+
+| part | what |
+|---|---|
+| 2 × 74HC164 | the sixteen bits, shifted by `SCLK`. **No output latch**, so no '595: nothing reads the outputs until `WR`, and the garbage that ripples through between writes is the same garbage the parallel bus carried between writes |
+| 1 × 74HC138 | `DST[5:3]` into eight lines, out to the mainboard's `/BLK` shunt column and back as `/BLK` |
+| 1 gate | `G` · `WR`, into the write decoder's enable where `BLK[h]`·`WR` used to go |
+| | **≈ 3¼ added, about one '244 freed: net ≈ 2¼ a block.** The control bus at a block has gone from fourteen inputs to five, and `exch-fabric.md` §3.1 carries the same figure |
+
+**Broadcast, not daisy-chained.** `SDATA` and `SCLK` reach every block, all eight
+shift the same word and hold it, and only the block whose shunt matches `DST[5:3]`
+answers `WR`. Chaining the registers through the blocks instead would be a
+128-bit word and a position-dependent one — the opposite of §1's identical tap.
+
+**The shift register has no phase, only content.** Its sixteen bits are right
+whenever the marker has driven sixteen good bits in a row, so no block counts
+anything and nothing needs a frame reference. `SCLK` may therefore be free-running
+`TX_CLK` on a strap, at the cost of the control bus no longer standing up without
+cable A; it is its own conductor here so that §3's bring-up order survives.
+
+**One rule.** `WR` must not land within a set-up window of an `SCLK` edge, or the
+decoder reads the outputs while they move. At 64 kHz that window is 7.8 µs wide
+and at 512 kHz it is 977 ns, against a cable skew of 18 ns (§5.2). The marker
+pulses `WR` in the middle of an `SCLK` half-period.
+
+**Sixteen bits at 64 kHz is 250 µs**, against a write rate of a few a second and
+the marker's 125 µs port visit; at 512 kHz it is 31 µs, a quarter of a visit.
+`exch-protocol.md` §4 measured that the marker may write a latch at any instant
+and needs no synchronisation to the frame, and that is untouched: the write is
+still one strobe edge, and what it does at the worst moment is still repeat one
+bit.
 
 ### 2.4 Not on the bus
 
@@ -132,7 +205,7 @@ digits it hands the marker stay on their own short ribbon between the two
 | | conductors | signals | carries |
 |---|---|---|---|
 | **A — the fabric cable** | 64-way IDC | 31 + 1 spare | everything in §2.1 and §2.2 |
-| **B — the control cable** | 50-way IDC | 24 + 1 spare | everything in §2.3 |
+| **B — the control cable** | 16-way IDC | 7 + 1 spare | everything in §2.3 |
 
 **A ground on every other conductor**, so every signal has a ground either side
 and the cable's impedance is about 105 Ω. Both cables run the same route, in one
@@ -141,10 +214,13 @@ conductor end to end, and no buffer anywhere between the clock card and a
 block.** A repeater in the middle would add its own delay to the skew of §5, and
 the skew is the only thing the cable costs.
 
-Two cables rather than one hundred-way because of what `exch-fabric.md` §7 does
-at bring-up: the clock card and a block come up on cable A alone, and the console
-and then the marker arrive on cable B. It also puts the multi-master bus, which
-is the one with a person on the end of it, on its own cable.
+Two cables rather than one because of what `exch-fabric.md` §7 does at bring-up:
+the clock card and a block come up on cable A alone, and the console and then the
+marker arrive on cable B. It also puts the multi-master bus, which is the one with
+a person on the end of it, on its own cable. **Serialising §2.3 made that split
+nearly free** — cable B is a sixteen-way now, and the whole bus would fit one
+64-way with spares if the bring-up order were worth less than a connector. It is
+not.
 
 ### 3.1 Cable A, 64-way — odd pins signal, even pins ground
 
@@ -166,26 +242,29 @@ neighbours. The sixteen highways are bunched at the far end where the only thing
 they can disturb is each other, which costs nothing (§7). `HCLK` is at pin 3 and
 not pin 1 so that it has a ground on both sides.
 
-### 3.2 Cable B, 50-way — odd pins signal, even pins ground
+### 3.2 Cable B, 16-way — odd pins signal, even pins ground
 
-| pin | | pin | | pin | |
-|---|---|---|---|---|---|
-| 1 | spare | 19 | `SRC4` | 37 | `BLK2` |
-| 3 | **`WR`** | 21 | `SRC5` | 39 | `BLK3` |
-| 5 | `PORT0` | 23 | `BSY` | 41 | `BLK4` |
-| 7 | `PORT1` | 25 | `CLM` | 43 | `BLK5` |
-| 9 | `PORT2` | 27 | `PB0` | 45 | `BLK6` |
-| 11 | `SRC0` | 29 | `PB1` | 47 | `BLK7` |
-| 13 | `SRC1` | 31 | `/CON` | 49 | `/RESET` |
-| 15 | `SRC2` | 33 | `BLK0` | | |
-| 17 | `SRC3` | 35 | `BLK1` | | |
+| pin | | pin | |
+|---|---|---|---|
+| 1 | spare | 9 | **`WR`** |
+| 3 | `SDATA` | 11 | `PB0` |
+| 5 | **`SCLK`** | 13 | `PB1` |
+| 7 | `/RESET` | 15 | `/CON` |
+
+`SCLK` and `WR` are the two signals here whose edges matter, and `/RESET` — which
+is filtered at every block and cannot be disturbed by either — sits between
+them.
 
 ### 3.3 The block connector
 
-Fifty signals: the 47 of §2 that are common, and `HC_OUT`, `HA_OUT` and `/BLK`
-from the shunt field. On a **96-way DIN 41612, row b entirely ground**, rows a
-and c the fifty signals and `+5 V` — so every signal has a ground pin beside it
-in the connector as it had in the cable. A block in the "block mainboard" form
+Forty-eight signals: the 37 of §2 that reach a block (all of §2.1 and §2.2, and
+all of §2.3 but `/CON`, which is console to marker only), `HC_OUT`, `HA_OUT` and
+`/BLK` from the shunt field, and **the eight lines of the block's own `/BLK`
+decoder on their way out to it** (§2.3.2). On a **96-way DIN 41612, row b entirely
+ground**, rows a and c the forty-eight signals and `+5 V` — so every signal has a
+ground pin beside it in the connector as it had in the cable. The serial control
+bus cost the connector nothing: the thirteen parallel inputs it dropped pay for
+the eight decoder lines and the four that replaced them. A block in the "block mainboard" form
 of `exch-fabric.md` §5, with its eighty packages flat and eight card sockets
 standing on it, *is* the mainboard: the cable's two headers and the shunt field
 go on that board and there is no block connector at all.
@@ -203,10 +282,17 @@ go on that board and there is no block connector at all.
          #   o   o   o   o   o   o   o         a shunt in column 3 -> this is block 3
          o- -o- -o- -o- -o- -o- -o- -o         all bussed to the block's HC_OUT pin
               ... the same for HA_OUT, and for /BLK the other way ...
+              ... but /BLK's top row comes from the block's own '138 (2.3.2),
+                  not from the cable: the block drives eight, takes one back ...
               0   1   2   3   4   5   6   7    silkscreen
 ```
 
 Three shunts in one column. Set wrong, or left out, §6 says what happens.
+
+**Since §2.3 all three columns run the same way about**: `HC_OUT` and `HA_OUT`
+pick which conductor this block drives, and the `/BLK` column picks which line of
+the block's own decoder is its own. The header is the same 2 × 8, the silkscreen
+the same 0–7, and the only thing that changed is where the top row comes from.
 
 ---
 
@@ -283,8 +369,8 @@ resistor pack and a ground between every pair.
 |---|---|---|
 | **a block not fitted** | its `HC` pulled to `FILL`, its `HA` to ground, `PB` pulled low | eight ports that read unequipped, never hunted, heard as silence by anyone pointed at them. The other seven blocks are untouched |
 | **its three shunts left out** | the same | the same. **A block with no number is simply not heard**, and every port in it still listens perfectly well to everything else — which is a usable state to bring a block up in |
-| **two blocks on the same column** | two '244s on one highway, two `PB` drivers on one select | contention: a broken `1010` on that highway, garbage in both blocks' words. Caught at `exch-fabric.md` §7 step 2, which scopes exactly this pattern. Both blocks hot but not damaged |
-| **cable B unplugged at a block** | `/RESET` pulled low, `WR` and `BLK` pulled low at the block | that block clears every latch and takes no writes: every one of its ports listening to 00, silent, no call held. The clean failure |
+| **two blocks on the same column** | two '244s on one highway, two `PB` drivers on one select, and both blocks answering one `/BLK` — though each off its own decoder, so there is no contention there | contention on the highway: a broken `1010`, garbage in both blocks' words, and every write meant for one landing in both. Caught at `exch-fabric.md` §7 step 2, which scopes exactly this pattern. Both blocks hot but not damaged |
+| **cable B unplugged at a block** | `/RESET`, `WR`, `SCLK` and `SDATA` all pulled low at the block | that block clears every latch and takes no writes: every one of its ports listening to 00, silent, no call held. The clean failure, and **doubly so now** — with `SDATA` low the shift register fills with zeros, the guard bit `G` reads 0, and `WR` is inhibited even if it were to arrive |
 | **cable A unplugged at a block** | `HCLK` and `SLOT` pulled low at the block | the strobes freeze, every capture flip-flop holds its last bit, the commutator puts port *h*0 on the highway continuously. Dead and obviously dead; nothing else is hurt |
 | **the clock card pulled** | no clocks at all | the exchange stops. Nothing rings, nothing releases, every latch keeps what it had until `/RESET`. As `mf8-backplane.md` §6's "trunk card absent" |
 | **a shunt in the `/BLK` row only** | the block answers the marker but drives no highway | its ports read and write correctly and are heard as `FILL`. The confusing one, and the reason the three shunts are one column on one silkscreen |
@@ -307,8 +393,9 @@ turn and ask what one spurious edge on it does to a call in progress:
 | `PB` | nothing. The marker reads a word over a whole 125 µs visit, and re-reads it 8 ms later | nothing |
 | `FILL`, `RBT`, `TICK`, `/RING_CAD` | one wrong bit of tone, or a millisecond of cadence | nothing audible |
 | `SLOT`, `SLOTQ` | a commutator or a decoder addressed wrong for 20 ns, while the strobe decoder is disabled | nothing |
-| `SRC`, `PORT`, `BSY`, `CLM` | the marker holds them a whole cell either side of `WR` | nothing |
+| `SDATA` | nothing on its own. The word is read only at `WR`, and the marker drives the line for a whole `SCLK` period either side of each edge | nothing |
 | `WR` | **writes the latch a second time, with the same data** | nothing |
+| `SCLK` | **one extra shift: the next write goes to the wrong port, with the wrong source** | one call |
 | `HCLK` | one extra strobe: **one port captures one wrong bit** | one bit |
 | `TX_CLK` | one card samples twice, or sends one extra bit to its phone | one bit |
 | `/RESET` | **every latch in the exchange cleared: every call in progress dropped** | the exchange |
@@ -316,11 +403,37 @@ turn and ask what one spurious edge on it does to a call in progress:
 One wrong CVSD bit is the event `mf8-backplane.md` §7 measured: a transient
 30 dB below speech, settled in 1.2 ms, nine decibels below the codec's own
 error, and the same thing a plesiochronous slip does every 156 ms on every line
-of every MF8 shelf in the system. **So of fifty-five signals, fifty-four cannot
+of every MF8 shelf in the system. **So of thirty-eight signals, thirty-six cannot
 lose a call, and the worst any of them can do is what the system already does to
-itself twice a second.**
+itself twice a second.** The two that can are `/RESET`, which always could, and
+`SCLK`, which is new and costs one call where `/RESET` costs the exchange.
 
-That leaves `/RESET`, and it is not a fast signal — it comes from a pushbutton
+That leaves `SCLK` and `/RESET`.
+
+**`SCLK` is the one thing the serial bus has that the parallel one did not**, and
+it is what eighteen conductors cost. A spurious edge shifts the word by one and
+the next `WR` writes a wrong source into a wrong port: one call broken. That is
+above the line this section has held everywhere else — one CVSD bit — and well
+below `/RESET`'s, which drops every call at once. Three things bound it:
+
+- **It does not persist.** A shift register has no stored phase, only content, so
+  the next word re-aligns itself whatever happened to the last. The damage is
+  exactly one bad write, not a bus out of step.
+- **The port still recovers itself.** A wrongly-pointed port whose partner hangs
+  up clears on its own detectors (`exch-fabric.md` §3.5). Nothing is stuck and
+  nothing waits on the marker noticing.
+- **`SCLK` may be slow.** Sixteen bits at 64 kHz is 250 µs against a write rate of
+  a few a second, so it can run at `TX_CLK`'s rate: eight times fewer edges than
+  `HCLK`, and the same cure `/RESET` gets below at a shorter constant — 1 kΩ and
+  1 nF is a microsecond, 6 % of a 64 kHz edge.
+
+**Bit 14 is left spare for parity rather than spent on it.** Checking fifteen bits
+at every block is two 74HC280, sixteen packages in the exchange, against a fault
+that costs one call; bit 15's guard costs one gate and catches the misalignments
+that walk a 1 out of it. Which is right is a bench question and not an arithmetic
+one, and §9 says so.
+
+`/RESET` is not a fast signal — it comes from a pushbutton
 and a power-on RC. **Filter it at every block**: a 10 kΩ and a 100 nF into one
 gate of a '14, which each block already has for its supervision detectors
 (`exch-fabric.md` §3.5). A millisecond of time constant makes every glitch on the
@@ -354,6 +467,17 @@ whose worst case is worse than one CVSD bit.
 
 ## 9. Not measured
 
+- **The serial control bus on a bench.** §2.3 is a paper design: the two '164,
+  the '138, the guard gate and the `WR`-to-`SCLK` separation have been counted and
+  reasoned about, not scoped. **The `SCLK` glitch of §7 is the one to go looking
+  for**, and the question it settles is whether bit 14 becomes parity. Scope `WR`
+  against `SCLK` at the far end of the longest run, cold and warm.
+- **What re-drives the scanned port's `M`.** `exch-marker.md` §4 and
+  `exch-network.md` §3.2 both have the marker putting the probe's `M` and word out
+  on the control bus so a card may watch the scan. The word is `PB1`; `M` has never
+  been listed as a conductor, here or in `exch-fabric.md` §2, and §2.3 does not add
+  one. It belongs to the marker's own tap (§2.4) and wants settling in whichever of
+  the three documents owns it.
 - **Crosstalk.** With a ground between every pair the nearest aggressor is two
   conductors away, and published figures for interleaved ribbon put near-end
   coupling at one or two per cent; sixteen highways switching together at the

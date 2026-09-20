@@ -1,12 +1,12 @@
 # The exchange — internal protocol and fabric
 
 What passes between a card and the switch, and how the switch is built so that
-it grows eight ports at a time in 74HC with no memory part anywhere. **An exchange
-is one 64 × 64 crossbar**: 48 lines, an operator and two groups of tie trunks —
-four groups and 36 lines at the busy centre of a network.
-More lines are more exchanges (`exch-network.md`), not a bigger one. The marker
-that sets it is `exch-marker.md`; the cards that are its features are
-`exch-features.md`; trunks and the network are `exch-network.md`.
+it grows eight ports at a time in 74HC with no memory part anywhere. 
+
+An exchange is one 64 × 64 crossbar.
+
+More lines are more exchanges (`exch-network.md`), not a bigger one. 
+
 
 > **Status: proposed, measured in simulation.** `exch.py tandem` and
 > `exch.py fabric` are the runs (`exch.log`). The fabric is modelled cell by cell
@@ -18,17 +18,13 @@ that sets it is `exch-marker.md`; the cards that are its features are
 
 ## 1. The protocol is the slot interface
 
-A port is what an MF8 channel slot already is (`mf8-backplane.md` §3):
+A port has the same structure as an MF8 channel (`mf8-backplane.md` §3):
 
 | | each way | |
 |---|---|---|
 | `C` | 64 kbps, one bit a frame | the channel: CVSD, a DS0, anything |
 | `A` | one level | signalling. `A_TX` is the M lead — off-hook, ringing present, `DTR`. `A_RX` is the E lead — ring, close the loop, `DSR` |
 | clocks | `TX_CLK` 64 kHz, `TX_OCT` 8 kHz | **one clock domain for the whole exchange** |
-
-**Every MF8 card is an exchange card, unchanged.** The exchange uses two pins
-the backplane had reserved (§5). Voice band exists only on cards that face
-analog things.
 
 ---
 
@@ -84,22 +80,23 @@ What voice band gets right is kept another way:
 ## 3. The fabric: an 8-slot highway per block
 
 No memory part means the connection memory is flip-flops, so it lives at the
-port, and the fabric grows a block at a time without touching what is installed.
+port, and the fabric grows a block at a time without requiring modification
+of the previously installed parts of the exchange.
 
 ```
  block h:  C_TX[0..7] ─▶ 74HC151 ─▶ HC[h]  512 kbps NRZ, this block its only driver ─────┐
            A_TX[0..7] ─▶ 74HC151 ─▶ HA[h]                                                │  to every block
            BUSY, the word ─▶ 2 × '151 ─▶ PB[1:0]          to the marker only             │
                      ▲ slot counter, '393, reset by SYNC                                 ▼
- port p:   latch 74HC273 [ highway(3) | slot(3) | BUSY | CLAIM ] ◀── marker: PORT, SRC, WR
+ port p:   latch 74HC273 [ highway(3) | slot(3) | BUSY | CLAIM ] ◀── marker: one 16-bit word, then WR
            HC[0..7] ─▶ '151 (highway) ─▶ D ─[ FF, clocked at mid-cell when slot strobe ]─[ FF, frame edge ]─▶ C_RX[p]
            S[0..7]  ─▶ '151 (slot) ───────────▲                                      same pair for A ─▶ A_RX[p]
 ```
 
-- **The unit is one highway: eight ports × 64 kbps = 512 kbps**, commutated by a
+- The unit is one highway: eight ports × 64 kbps = 512 kbps, commutated by a
   '393 and a '151 — the trunk transmitter of `mf8-spec.md` §10 without the line
-  code or the framer. A cell is 1.95 µs; every margin is one
-  `mf8-backplane.md` §5 has already worked.
+  code or the framer and slightly reordered.  A cell is 1.95 µs so there is generous margin.
+  
 - **One driver per wire.** Up to eight highways run to every block as parallel
   wires. No bus turnaround, no contention, nothing faster than the MF8 line
   itself. An absent block's wire is pulled to `FILL` and its `A` wire to 0, as an
