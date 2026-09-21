@@ -2,9 +2,11 @@
 
 **Decided: the POTS subscriber/CO converter, the CVSD subscriber line card, the
 data card and the E&M subscriber card are one design each, and a card moves
-between an MF8 shelf and an exchange block with nothing changed on it.** Same
-socket, same pinout, same rails, same clocks, same mechanical format, and — when
-the connector is settled — the same connector.
+between an MF8 shelf and an exchange block with nothing changed on the circuit.**
+Same socket **pinout**, same rails, same clocks, and — when the connector is
+settled — the same connector family. **Outline:** MF8 is the **100 × 100 mm
+spacer-stack** (`mf8-psu.md`, `mf8-trunk.md`); the exchange block's card outline
+may differ so long as the pinout matches.
 
 This was already half true and never stated as a requirement. `mf8-backplane.md`
 §8 and `baseband.md` §2.2 gave the same 2 × 16 pin for pin;
@@ -187,8 +189,10 @@ Three properties hold in both shelves and are what make a card portable at all:
   behind it (`mf8-backplane.md` §6, `fabric.md` §4 — the exchange does the
   same at the commutator input).
 
-**Mechanical.** Eurocard 100 × 160 in both shelves. The exchange's card side has
-never had a size written down; it has one now, and it is MF8's.
+**Mechanical.** MF8 channel cards are **100 × 100 mm** stack layers. The exchange
+may use the same outline or a taller card behind the same pinout — portability is
+electrical. (Eurocard 100 × 160 was the earlier common assumption; superseded for
+MF8.)
 
 ---
 
@@ -425,7 +429,7 @@ into a shelf wiring field:
 
 Two reasons for the rear and for the far end of it:
 
-- **Creepage and clearance.** This is where `−48 V`, 90 Vrms ringing and
+- **Creepage and clearance.** This is where `−48 V`, ~80 Vrms ringing and
   outside-plant surges meet the shelf, and `channel-cards.md` §3.6 asks for the line
   side and the logic side to be kept apart. Putting the two connectors at
   opposite ends of the rear edge is the cheapest way to have that be true by

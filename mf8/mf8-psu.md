@@ -11,8 +11,9 @@ a Eurocard subrack with a monolithic PSU slot.
 
 > **Status: proposed.** Nothing drawn, nothing on a bench. Currents are from the
 > card specs (`channel-cards.md` §3.4, `common-cards.md` §3); converter topology
-> is an assignment. Ring amplitude here is **~80 Vrms** at 20 Hz — the same role
-> as `mf8-backplane.md` §8's "~90 Vrms", rounded to a buildable inverter target.
+> is an assignment. **MF8 form factor is the 100 × 100 spacer-stack** (decided).
+> Ring bus amplitude is **~80 Vrms** at 20 Hz — canonical for new docs; older
+> "~90 Vrms" wording means the same bus.
 
 ---
 
@@ -77,7 +78,7 @@ PSU population, not a silent rename.
 |---|---|
 | Output | **`RING` / `RING RET`**, ~80 Vrms, 20 Hz |
 | Path | boost / flyback to HV, then a **20 Hz inverter** (H-bridge or chopper) — a ring generator, not a DC buck-boost alone |
-| Cadence | gated: free-running 80 V into an idle bus is unnecessary. Enable from shelf cadence or from “any FXS relay demanding ring” |
+| Cadence | **none on this shelf.** The exchange (or far end) cadences the channel **A bit**; each FXS relay follows `A_RX` (`channel-cards.md` §3.4). The RING bus is steady 20 Hz ~80 Vrms; the phone only sees it while that relay is closed |
 | Load | REN × open-circuit voltage — tens of mA per ringer, not an amp from −48 V |
 
 Noise from this stage is why it does not share a board with the codec rails.
@@ -94,9 +95,10 @@ not by voltage count alone.
 - 15–18 V entry, protection, bulk storage  
 - **Ring inverter** (§3.2)  
 - The big **−48 V** power stage (§3.1) — a tens-of-watts chopper; keep it here  
-- Pass header toward the quiet board: bulk and/or semi-regulated feeds, returns, ring enable / cadence  
+- Pass header toward the quiet board: bulk and/or semi-regulated feeds, returns  
 
-Wall-wart and plant-facing energy land here first.
+Wall-wart and plant-facing energy land here first. The ring inverter needs no
+cadence input from the shelf (§3.2).
 
 ### 4.2 Quiet board — regulated distribution
 
@@ -121,8 +123,8 @@ no `C`/`A`.
 ## 5. Where it sits in the stack
 
 Mechanical form is the spacer-stack of 100 × 100 cards (channel layers through
-a pinheader, trunk split across Trunk-D / Trunk-A with its own pass header).
-Power is two more boards at the end:
+a pinheader **C**, trunk as Trunk-D / Trunk-A per `mf8-trunk.md`). Power is two
+more boards at the end:
 
 ```
   FXS ×6  ══ C ══  Trunk-D ══ pass ══ Trunk-A ══  Quiet PSU ══ pass ══ Noisy PSU ── 15–18 V in
@@ -172,20 +174,20 @@ two). Do not daisy-chain plant returns through channel cards into logic ground.
 
 | document | |
 |---|---|
-| `mf8-backplane.md` §8 | PSU slot becomes these two end boards; ring amplitude may be cited as ~80 Vrms here while the backplane's "~90" remains the classical figure — same bus, build target in this file |
+| `mf8-backplane.md` §8 | PSU slot becomes these two end boards; mechanical host is the 100 × 100 stack, not Eurocard slot 8 |
 | `common-cards.md` §3 | rails unchanged; supply that makes them is this document |
-| `channel-cards.md` §3.4 | FXS still expects a shelf `RING` bus and −48 feed; no card change |
-| trunk split (Trunk-D / Trunk-A) | not power; classifier on A, pass header of its own — beside this stack story, not inside it |
+| `channel-cards.md` §3.4 | FXS still expects a shelf `RING` bus and −48 feed; cadence remains on `A_RX` |
+| `mf8-trunk.md` | Trunk-D / Trunk-A split and pass pinout |
 
 ---
 
 ## 9. Not measured, and open
 
 - **Every converter.** No schematic, no magnetics, no efficiency or ripple number.  
-- **Ring open-circuit voltage and REN capacity** — ~80 Vrms is a target; confirm against the phones you actually hang on FXS.  
+- **REN capacity** at ~80 Vrms — confirm against the phones on FXS.  
 - **Whether −48's power stage is entirely on the noisy board** or split as rough + quiet post-reg — §4 allows either; pick at layout.  
-- **Cadence source** that gates the ring inverter (shelf `/RING_CAD` equivalent vs diode-OR of relay demands).  
 - **Thermal on 100 × 100** at ~50 W talk-battery class — may force a taller stack pitch, heatsink, or derating below 1 A.  
 - **Safety / creepage** for −48 and ~80 Vrms beside a 15–18 V inlet on the noisy board — still required; deriving HV from LV does not retire it.  
 - **Hot-plug** of PSU boards or channel layers with feeds live — not considered.  
-- **Exchange blocks** — out of scope; they keep per-subrack PSUs and never put −48 or `RING` on Cable A (`mainboard.md` §2.4).
+- **Channel stack header C geometry** and **gateway placement** — deferred.  
+- **Exchange blocks** — out of scope; they keep per-subrack PSUs and never put −48 or `RING` on Cable A (`exchange/mainboard.md` §2.4).

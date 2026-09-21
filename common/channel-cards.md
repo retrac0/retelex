@@ -278,7 +278,7 @@ network is for singing, not echo.
 |---|---|
 | Battery feed | from the backplane `−48 V` rail through the slot's 100 mA PTC; a feed bridge current-limited to **25–45 mA**; an inductive bridge or an electronic feed |
 | Loop detect | a sense resistor in the feed into an opto, threshold **10–15 mA**; output → `A_TX[n]` |
-| Ringing | the backplane `RING` bus, 20 Hz, ~90 Vrms, from one generator on the shelf; a ring relay driven by `A_RX_f` connects it to the line **and disconnects the feed while it is connected** |
+| Ringing | the shelf `RING` bus, 20 Hz, ~80 Vrms (`mf8-psu.md`), from the Noisy PSU; a ring relay driven by `A_RX_f` connects it to the line **and disconnects the feed while it is connected**. **Cadence is `A_RX`** — the exchange (or far MF8) drives the A bit; this shelf does not generate `/RING_CAD` |
 | Ring trip | **mandatory.** Sense the DC component through the ring path; on loop current, drop the ring relay within **200 ms**. Without it an answered phone keeps ringing |
 | Protection | gas tube, PTC, TVS ahead of everything; the ring path rated for the 250 V peak the bus carries on top of battery |
 
@@ -300,11 +300,11 @@ ringing bus that the digital line was designed to avoid.
 ### 3.6 Safety
 
 This card is where high voltage first appears in the shelf: −48 V battery,
-90 Vrms ringing, outside-plant surges. Creepage and clearance between the line
+~80 Vrms ringing, outside-plant surges. Creepage and clearance between the line
 side and the logic side; the optos are the safety barrier and are specified for
 isolation rating, not just CTR; protection ahead of everything; and the `RING`
 bus gets the same treatment wherever it runs (`mf8-backplane.md` §8 puts it
-between ground pins, on the power row, and straps it only to FXS slots).
+between ground pins, on the power row, and straps it only to FXS layers).
 
 ### 3.7 The card's pins
 
@@ -332,7 +332,7 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 | c1, c3 | `+5 V` | ● | ● | the logic and the engine's digital half |
 | c5, c7 | `±12 V` | ● | ● | **the analog card's rails**: LM13700, TL074, TL072, LM311, the filters and the trims (§3.2, §3.3, §3.8) |
 | c9, c10 | `−48 V`, `−48 RET` | ● | — | the battery feed through the slot's 100 mA PTC, current-limited to 25–45 mA (§3.4). The FXO takes its battery from the CO |
-| c12, c13 | `RING`, `RING RET` | ● | — | 20 Hz, ~90 Vrms, from the shelf's one generator, through the ring relay. **The backplane strap at c12 is fitted only for a slot that holds an FXS card** (`mf8-backplane.md` §8) |
+| c12, c13 | `RING`, `RING RET` | ● | — | 20 Hz, ~80 Vrms, from the Noisy PSU, through the ring relay. Cadence = `A_RX`. **The strap at c12 is fitted only for an FXS layer** (`mf8-backplane.md` §8) |
 | | rear, 2 pins | | | tip and ring |
 
 **The FXS population is the only card in the set that uses every rail the socket

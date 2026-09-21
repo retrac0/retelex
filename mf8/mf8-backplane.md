@@ -108,7 +108,7 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | `+5 V`, `GND` | PSU | all | | | logic |
 | `±12 V` | PSU | E&M cards, comparators | | | analog |
 | `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `channel-cards.md` §3.4 |
-| `RING`, `RING RET` | a shelf ring generator on the PSU slot | FXS slots only, by a strap on the backplane per slot | | 20 Hz, ~90 Vrms | the ringing bus of `channel-cards.md` §3.4; never reaches a line, data or E&M card |
+| `RING`, `RING RET` | shelf ring generator on the Noisy PSU (`mf8-psu.md`) | FXS layers only, by a strap per layer | | 20 Hz, ~80 Vrms | the ringing bus of `channel-cards.md` §3.4; cadence is far-end A; never reaches a line, data or E&M card |
 
 Two things are deliberately absent. **No slot-ID pins:** slot *n*'s `C_TX`,
 `A_TX`, `C_RX` and `A_RX` are wired to input and output *n* of the trunk card's
@@ -298,15 +298,21 @@ at 200 and 20.7 at 1 000.
 
 ## 8. Mechanical and electrical
 
+**Form factor (decided): 100 × 100 mm spacer-stack** — channel layers, Trunk-D /
+Trunk-A (`mf8-trunk.md`), Quiet / Noisy PSU (`mf8-psu.md`). The pin table below
+is unchanged; it is what through-header **C** must present. **C geometry and the
+gateway slot are deferred.**
+
 | | |
 |---|---|
-| Cards | Eurocard 100 × 160 mm |
-| Slots | 9: slot 0 the trunk card, slots 1–6 channels, slot 7 the gateway slot, slot 8 the power supply |
-| Connector | 2 rows × 16, DIN 41612 half-length or 0.1-inch header; assignment below |
-| Bus length | ≤ 25 cm. At 512 kHz-class edges from 74HC drivers this is electrically short; no termination |
-| Clock drivers | one 74HC244 on the trunk card for `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series at the driver against ringing |
-| Ground | one row pin in four; the −48 V return separate, joined at the supply |
-| Fusing | −48 V through a 100 mA PTC per slot |
+| Cards | **100 × 100 mm** (stack). Was: Eurocard 100 × 160 |
+| Positions | six channel layers + Trunk-D + Trunk-A + Quiet PSU + Noisy PSU (gateway deferred) |
+| Channel interconnect | roles below on a through-stack header; shell still open (`common-cards.md` §7.1) |
+| Bus length | stack ≪ 25 cm; electrically short; no termination |
+| Clock drivers | one 74HC244 on **Trunk-D** for `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series |
+| Ground | logic `GND`; `−48 RET` and `RING RET` separate, star at the PSU (`mf8-psu.md` §7) |
+| Fusing | −48 V through a 100 mA PTC per channel layer |
+| Ring | ~80 Vrms, 20 Hz; **cadence is the far A bit**, not a local cadence rail |
 
 **Channel-slot pins.** Row *a* signals, row *c* power and returns.
 
@@ -337,21 +343,16 @@ the exchange works here unchanged. The remote alarm that `mf8-spec.md` §3.5
 puts on x is between trunk cards, and reaches the panel from the trunk-card slot
 as `LOCK` and `CD` do.
 
-`RING` sits on the power row between ground pins, and the backplane strap that
-brings it to a slot is fitted only for a slot that holds an FXS card; every
-other slot's pin c12 is left open. `LOCK` and `CD` go to the panel from the
-trunk-card slot and no channel card needs them, so they are not on the channel
-pins. The trunk-card slot carries the six `C_TX`, six `A_TX`, six `C_RX` and
-six `A_RX` lines in place of the per-slot four, plus `LOCK` and `CD`, on a
-2 × 32; the PSU slot carries the rails and the ring generator's output.
+`RING` sits on the power row between ground pins, and the strap that brings it
+to a layer is fitted only for an FXS card; every other layer's pin c12 is left
+open. Cadence is not generated here: the far end's A bit opens and closes the
+FXS ring relay. `LOCK` and `CD` go to the panel from Trunk-D and no channel card
+needs them. Trunk aggregation of the six `C`/`A` pairs lives on Trunk-D facing
+C; the line leaves Trunk-A (`mf8-trunk.md`). Rails and the ring inverter are
+`mf8-psu.md`.
 
-**The gateway slot** is the trunk-card slot mirrored: the same 2 × 32 with all
-24 per-slot lines, the four clocks, `MUTE`, `LOCK` and `CD`, but `C_TX[n]` and
-`A_TX[n]` are its *outputs* and everything else its inputs. It lets one card
-stand in for any subset of the six channel cards, or listen to all of them; its
-drive rule — only into a slot that holds no card, every output released at
-power-up — and the card that uses it are `mf8-pico.md` §3. It needs no bus
-signal the other slots do not already have.
+**The gateway slot** (mirrored trunk connector, `mf8-pico.md` §3) is **deferred**
+in the stack — not placed until C geometry is settled.
 
 ---
 
