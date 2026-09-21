@@ -41,8 +41,9 @@ module marker #(
     parameter integer NRES      = 1,        // resolvers, at a hub (network.md 3.2)
     parameter [2:0]   OWN_E     = 3'd2,
     parameter [2:0]   OWN_B     = 3'd2,
-    parameter [5:0]   DIALTONE  = 6'o10,
-    parameter [5:0]   NOGO      = 6'o14,
+    parameter [5:0]   DIALTONE  = 6'o01,
+    parameter [5:0]   BUSYTONE  = 6'o02,
+    parameter [5:0]   NOGO      = 6'o03,
     parameter         HAS_NET   = 1'b1,
     // ms: the origin's guard (monitor.md 3, rule 2).  It is a STRAP in the
     // 74HC design -- three stages of the counter the sequence already runs on --
@@ -78,9 +79,11 @@ module marker #(
     // a LEVEL valid when read -- its busy line, its store -- never an event.
     output reg [NREG-1:0]    reg_attach,
     output reg [5:0]         reg_port,
+    output reg [5:0]         reg_src,        // held party loaded at attach; 00 = none
     input      [NREG-1:0]    reg_busy,
     input      [3*NREG-1:0]  reg_ndig,
     input      [16*NREG-1:0] reg_digits,
+    input      [6*NREG-1:0]  reg_held,       // each register's src, levels
     output reg [NREG-1:0]    reg_restart,
     input      [NREG-1:0]    reg_gone,
     // WHICH WAY a register went away.  `gone` is CLR or the no-digit timeout
@@ -123,8 +126,10 @@ module marker #(
     input             con_n,
     output            bus_oe
 );
+    // fabric.md 3.5 / extensions.md 2.2 — class in the word, not the old
+    // marker.md §1 renumbering.  111 is restricted (conference-as-class retired).
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
-               C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
+               C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_REST = 3'd7;
 
     // ---------------- the event word (counters.md 9) ------------------
     // What a pure listener cannot see, because nothing is WRITTEN when it
@@ -167,15 +172,40 @@ module marker #(
     reg [2:0] pb_blk;
 
     wire [7:0] wsr_next = {pb_word, wsr[7:1]};
-    wire [2:0] p_cls    = p_word[2:0];
-    // A trunk's option bits (extensions.md 2.2): which way its link goes,
-    // its glare bit, and whether the link is strapped (network.md 3.3).
-    wire [1:0] p_dir    = p_word[4:3];
-    wire       p_g      = p_word[5];
-    wire       p_n      = p_word[6];
-    // Line option P (extensions.md 2.4.1): frame 5 on an explicit class-line word.
-    wire       p_pri    = (p_cls == C_LINE) && p_word[4];
+    // extensions.md 2.2 / groups.md 2.1 — settled encoding:
+    //   frame 0 = 0, [3:1] = class, [7:4] = options     class form
+    //   frame 0 = 1, [6:1] = port,  frame 7 = 0         nail
+    //   frame 0 = 1, [6:1] = port,  frame 7 = 1         answers to h s (not all ones)
+    //   all ones                                        plain line (grounded pin)
+    //   all zeros                                       unequipped / no word
+    wire       p_plain  = &p_word;
+    wire       p_nail   = p_word[0] && !p_word[7] && !p_plain;
+    wire       p_ans    = p_word[0] &&  p_word[7] && !p_plain;  // answers to
+    wire       p_form   = !p_word[0] && !p_plain;               // explicit class word
+    wire [2:0] p_cls    = p_plain ? C_LINE :
+                          p_nail  ? C_NONE :
+                          p_ans   ? C_LINE :                    // plain line that covers
+                          p_word[0] ? C_NONE :
+                          p_word[3:1];
+    wire [5:0] p_nail_to = p_word[6:1];            // nail partner, or answers-to number
+    wire [5:0] p_ans_to  = p_word[6:1];
+    // Trunk options (frames 4–7): direction, glare, strap-inhibit.
+    wire [1:0] p_dir    = p_word[5:4];
+    wire       p_g      = p_word[6];
+    wire       p_n      = p_word[7];
+    // Line options: frame 5 is priority; frame 6 busy-out.  Overflow `o` is
+    // retired by groups.md (answers-to replaces the adjacent run).
+    wire       p_pri    = p_form && (p_cls == C_LINE) && p_word[5];
+    wire       p_bout   = p_form && p_word[6] &&
+                          (p_cls == C_LINE || p_cls == C_OPER ||
+                           p_cls == C_DATA || p_cls == C_REST);
+    wire       p_z      = p_form && (p_cls == C_REST) && p_word[4];
+    wire       p_w      = p_form && (p_cls == C_REST) && p_word[5];
+    wire       p_L      = p_form && (p_cls == C_REST) && p_word[7];
+    // Bare restricted floors to local-only (extensions.md 2.4).
+    wire       p_local  = p_form && (p_cls == C_REST) && (p_L || (!p_z && !p_L));
     wire       p_free   = !p_busy && !p_m;
+    wire       p_term   = p_free && !p_bout;               // terminating / hunt free
 
     // ---------------- the write queue and the serialiser ----------------
     // The sequencer's whole output is latch writes, and a write is one
@@ -196,6 +226,11 @@ module marker #(
                                        // none has been handed out since
     // Priority under register overload (extensions.md 2.4.1).
     reg        pwait, pwait_seen;
+    // Warm / outside-line auto-route as 0 (no register): probe 04 then answers-to.
+    reg        warm_run, warm_probe;
+    reg [5:0]  warm_from;
+    // Per-register dialling limits captured at attach from the caller's word.
+    reg [2:0]  clim     [0:NREG-1];    // {z_only, local_only, is_rest}
     // One flip-flop: the marker has let go of cable B.  While it is set the
     // '244 is off, the write sequencer starts nothing, and no visit is
     // trusted -- the block driving PB is the one the CONSOLE's word names.
@@ -235,6 +270,8 @@ module marker #(
     reg [2:0] hunt_cls;
     reg [5:0] hunt_port;
     reg       hunt_dirs;               // the network's: a trunk in every direction
+    reg       hunt_ans;                // groups.md: hunt ports that answer to hunt_num
+    reg [5:0] hunt_num;
     reg [5:0] cand [0:3];
     reg [3:0] cand_ok;
     reg [3:0] cand_any;                // a trunk faces that way AT ALL, free or not
@@ -242,13 +279,17 @@ module marker #(
     reg [3:0] hunt_owner;
     reg       hb;                      // the hunt was taken THIS cycle (blocking)
 
+    localparam [5:0] PILOT_0 = 6'o04;  // groups.md: digit 0 → call 04
+
     // ---------------- a call: one of these a register --------------------
     // marker.md 4 and network.md 3.2 put a call's state with its
     // REGISTER -- "a '574 a direction in a bank a register" -- and the marker
     // is what acts on it.  Each register has a stage, its caller, the trunks
     // it seized and whether one claimed.
     localparam M_IDLE=4'd0, M_LOCAL=4'd1, M_PROBE=4'd2, M_HUNTW=4'd3,
-               M_SEIZE=4'd4, M_NET=4'd5, M_WAITCL=4'd6, M_WANT=4'd7;
+               M_SEIZE=4'd4, M_NET=4'd5, M_WAITCL=4'd6, M_WANT=4'd7,
+               M_CONSULT=4'd8;   // operator transfer: held in reg_held, talking to called
+
 
     reg [3:0]  mst     [0:NREG-1];
     reg [5:0]  caller  [0:NREG-1];
@@ -260,6 +301,7 @@ module marker #(
     reg [5:0]  d_trunk [0:4*NREG-1];
     reg [2:0]  hcls    [0:NREG-1];     // the hunt this call is waiting to start
     reg [NREG-1:0] hdirs;
+    reg [NREG-1:0] hans;               // M_WANT should start an answers-to hunt
     reg [NREG-1:0] f1, f2, claimed, guarding, ctx_clm;
 
     assign any_claimed = |claimed;
@@ -272,7 +314,20 @@ module marker #(
 
     task nogo(input integer q);                // cannot-complete, and let go
         begin
-            push(caller[q], NOGO, 1'b1, ctx_clm[q]);
+            if (reg_held[q*6 +: 6] != 6'd0) begin
+                // transfer abandon: put the operator back on the held party
+                push(caller[q], reg_held[q*6 +: 6], 1'b1, ctx_clm[q]);
+                push(reg_held[q*6 +: 6], caller[q], 1'b1, 1'b0);
+            end else
+                push(caller[q], NOGO, 1'b1, ctx_clm[q]);
+            reg_release[q] <= 1'b1; mst[q] <= M_IDLE;
+            claimed[q] <= 1'b0; guarding[q] <= 1'b0;
+        end
+    endtask
+
+    task busy(input integer q);                // busy tone (busy-out / line busy)
+        begin
+            push(caller[q], BUSYTONE, 1'b1, ctx_clm[q]);
             reg_release[q] <= 1'b1; mst[q] <= M_IDLE;
             claimed[q] <= 1'b0; guarding[q] <= 1'b0;
         end
@@ -299,7 +354,7 @@ module marker #(
 
     task take_hunt(input integer q, input [2:0] c, input dirs);
         begin
-            hunt_cls <= c; hunt_dirs <= dirs;
+            hunt_cls <= c; hunt_dirs <= dirs; hunt_ans <= 1'b0;
             hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0; cand_ok <= 4'd0;
             cand_any <= 4'd0;
             hunt_busy <= 1'b1; hunt_owner <= q[3:0];
@@ -307,9 +362,20 @@ module marker #(
         end
     endtask
 
+    // groups.md §2: hunt the first free port that answers to `num`.
+    task take_ans_hunt(input integer q, input [5:0] num);
+        begin
+            hunt_ans <= 1'b1; hunt_num <= num; hunt_dirs <= 1'b0;
+            hunt_arm <= 1'b1; hunt_done <= 1'b0; hunt_ok <= 1'b0;
+            hunt_busy <= 1'b1; hunt_owner <= q[3:0];
+            hb = 1'b1;
+        end
+    endtask
+
     task free_hunt;
         begin
-            hunt_busy <= 1'b0; hunt_done <= 1'b0; hunt_arm <= 1'b0; hunt_run <= 1'b0;
+            hunt_busy <= 1'b0; hunt_done <= 1'b0; hunt_arm <= 1'b0;
+            hunt_run <= 1'b0; hunt_ans <= 1'b0;
         end
     endtask
 
@@ -350,9 +416,12 @@ module marker #(
     reg        att;                    // a register was attached THIS cycle (blocking)
     reg        conn;                   // a call connected to p_port THIS visit (blocking)
     reg        already;
-    reg        pri_wait_v;             // priority call request still waiting this visit
+    reg        got_reg;                // this visit's call request got a register
+    reg        pri_wait_v;             // priority still wanting this visit
     reg [2:0]  nd;
     reg [3:0]  dg0, dg1;
+    reg [5:0]  held;                   // reg_held[r] this cycle
+    reg [2:0]  lim;                    // clim[r] this cycle
 
     always @* begin
         dirs_held = 4'd0;
@@ -377,10 +446,13 @@ module marker #(
             ser_bsy <= 0; ser_clm <= 0; ser_g <= 1'b1; ser_ev <= 1'b0;
             ovf_pend <= 1'b0; ovf_done <= 1'b0; arb <= 1'b0;
             pwait <= 1'b0; pwait_seen <= 1'b0;
-            reg_attach <= 0; reg_port <= 0; reg_release <= 0; reg_restart <= 0;
+            warm_run <= 1'b0; warm_probe <= 1'b0; warm_from <= 6'd0;
+            reg_attach <= 0; reg_port <= 0; reg_src <= 0;
+            reg_release <= 0; reg_restart <= 0;
             mon_ack <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
-            hunt_cls <= 0; hunt_port <= 0; hunt_dirs <= 0; cand_ok <= 0;
+            hunt_cls <= 0; hunt_port <= 0; hunt_dirs <= 0; hunt_ans <= 0;
+            hunt_num <= 0; cand_ok <= 0;
             cand_any <= 0;
             hunt_busy <= 0; hunt_owner <= 0;
             fst <= F_IDLE; f_in <= 0; f_dir <= 0; f_cok <= 0; f_start <= 0;
@@ -388,10 +460,12 @@ module marker #(
             for (i = 0; i < NRES; i = i + 1) begin rs_in[i] <= 6'd0; rs_held[i] <= 4'd0; end
             for (i = 0; i < 4*NRES; i = i + 1) rs_leg[i] <= 6'd0;
             for (i = 0; i < 4; i = i + 1) f_cand[i] <= 6'd0;
-            f1 <= 0; f2 <= 0; claimed <= 0; guarding <= 0; ctx_clm <= 0; hdirs <= 0;
+            f1 <= 0; f2 <= 0; claimed <= 0; guarding <= 0; ctx_clm <= 0;
+            hdirs <= 0; hans <= 0;
             for (i = 0; i < NREG; i = i + 1) begin
                 mst[i] <= M_IDLE; caller[i] <= 0; called[i] <= 0; trunk[i] <= 0;
                 hold[i] <= 0; tmr[i] <= 0; d_held[i] <= 0; hcls[i] <= 0;
+                clim[i] <= 3'd0;
             end
             for (i = 0; i < 4*NREG; i = i + 1) d_trunk[i] <= 6'd0;
             for (i = 0; i < 4; i = i + 1) cand[i] <= 6'd0;
@@ -404,7 +478,8 @@ module marker #(
             mon_ack     <= 1'b0;
             wr_stb      <= 1'b0;
             hb = 1'b0; pk = {NREG{1'b0}}; conn = 1'b0;
-            legclm = 1'b0; att = 1'b0; got = 1'b0; pri_wait_v = 1'b0;
+            legclm = 1'b0; att = 1'b0; got = 1'b0;
+            got_reg = 1'b0; pri_wait_v = 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -501,7 +576,12 @@ module marker #(
                             cand[p_dir] <= p_port;
                             cand_ok[p_dir] <= 1'b1;
                         end
-                    end else if (!hunt_ok && p_cls == hunt_cls && p_free) begin
+                    end else if (hunt_ans) begin
+                        // groups.md §2: first free port that answers to hunt_num
+                        if (!hunt_ok && p_ans && p_ans_to == hunt_num && p_term) begin
+                            hunt_ok <= 1'b1; hunt_port <= p_port;
+                        end
+                    end else if (!hunt_ok && p_cls == hunt_cls && p_term) begin
                         hunt_ok <= 1'b1; hunt_port <= p_port;
                     end
                     if (p_port == 6'd63) begin hunt_run <= 1'b0; hunt_done <= 1'b1; end
@@ -533,6 +613,13 @@ module marker #(
                     // Each leg listens to the incoming trunk, so the caller's
                     // pulses go down every leg at once, and a resolver takes
                     // the addresses.
+                    //
+                    // Do not arm a leg on a dead source (traffic.md fan-out
+                    // leak): a port releases only on the FALL of a detector,
+                    // so BUSY written while f_in's M is already low sticks.
+                    // At F_GO we are not visiting f_in; the live check is the
+                    // resolver's no-claim clear below.  The push still happens
+                    // -- cascade release is the happy path when A was high.
                     for (i = 0; i < 4; i = i + 1) begin
                         if (f_cok[i]) push(f_cand[i], f_in, 1'b1, 1'b0);
                         rs_leg[rpick*4+i] <= f_cand[i];
@@ -582,10 +669,16 @@ module marker #(
                             push(rs_leg[v*4+i], 6'o00, 1'b0, 1'b0);
                     rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
                 end else if (p_port == rs_in[v] && !p_busy) begin
-                    // No claim: a local call elsewhere, a wrong number, a caller
-                    // who hung up.  Forward A fell, the incoming trunk released
-                    // itself and every leg with it; the resolver frees itself on
-                    // reading BUSY = 0, which dial pulses never cause.
+                    // No claim: forward A fell, the incoming trunk released
+                    // itself.  Cascade release through the patch is the happy
+                    // path (network.md 3.2), but only if the legs were written
+                    // while A was still high.  Clear them here the same way a
+                    // claim clears the unused ones -- otherwise a write that
+                    // landed on a dead source leaves no edge to fall on
+                    // (traffic.md fan-out leak).
+                    for (i = 0; i < 4; i = i + 1)
+                        if (rs_held[v][i])
+                            push(rs_leg[v*4+i], 6'o00, 1'b0, 1'b0);
                     rs_busy[v] <= 1'b0; rs_held[v] <= 4'd0;
                 end
             end
@@ -595,6 +688,7 @@ module marker #(
                 nd  = reg_ndig  [r*3  +: 3];
                 dg0 = reg_digits[r*16 +: 4];
                 dg1 = reg_digits[r*16 + 4 +: 4];
+                held = reg_held[r*6 +: 6];
 
                 if (hold[r] != 2'd0) hold[r] <= hold[r] - 1'b1;
 
@@ -626,19 +720,44 @@ module marker #(
                     // the caller went away.  CLR is a hook down 256 ms and needs
                     // no report; the timeout is a caller who lifted and dialled
                     // nothing, and holds a register for the whole 10 s.
+                    //
+                    // Operator transfer (register.md 6.1): src was loaded at
+                    // attach.  If we reached consult with a called party, hang-up
+                    // pairs held ↔ called and drops the operator.  If we never
+                    // connected (nodig / abandon mid-dial), put the operator
+                    // back on the held party.
                     if (reg_nodig[r]) push_ev(caller[r], EV_NODIG);
                     if (mst[r] == M_NET || mst[r] == M_WAITCL) drop_trunk(r);
                     if (hunt_busy && hunt_owner == r[3:0]) free_hunt;
+                    if (held != 6'd0 && mst[r] == M_CONSULT) begin
+                        push(held, called[r], 1'b1, 1'b0);
+                        push(called[r], held, 1'b1, 1'b0);
+                        push(caller[r], 6'o00, 1'b0, 1'b0);
+                    end else if (held != 6'd0) begin
+                        push(caller[r], held, 1'b1, 1'b0);
+                        push(held, caller[r], 1'b1, 1'b0);
+                    end
                     mst[r] <= M_IDLE; claimed[r] <= 1'b0; guarding[r] <= 1'b0;
                 end else if (guarding[r] && reg_brk[r]) begin
                     // a break inside the guard: abandon rather than risk a wrong number
                     drop_trunk(r); nogo(r);
                 end else case (mst[r])
                 M_LOCAL: if (hold[r] == 2'd0) begin
+                    lim = clim[r];
                     if (!f1[r] && nd >= 3'd1) begin
+                        // Restricted dialling limits (extensions.md 2.4), before
+                        // the ordinary first-digit decode.
+                        if (lim[2] && lim[0] && dg0 != 4'd10)
+                            nogo(r);                               // z: only 0
+                        else if (lim[2] && lim[1] &&
+                                 (dg0 == 4'd9 || dg0 == 4'd1))
+                            nogo(r);                               // local: no 9 / no flood
                         // the first digit: a key, or the highway of a number
-                        if (dg0 == 4'd1) begin
-                            if (HAS_NET) begin
+                        // A transfer consult with a held party is local only:
+                        // the network key cannot carry the held leg.
+                        else if (dg0 == 4'd1) begin
+                            if (held != 6'd0) nogo(r);
+                            else if (HAS_NET) begin
                                 push(caller[r], 6'o00, 1'b1, ctx_clm[r]);  // dial tone off
                                 // The key is consumed AT ONCE, whether or not the
                                 // scanner is free for the hunt: e b h s must land
@@ -648,8 +767,18 @@ module marker #(
                             end else nogo(r);                // no network card fitted
                         end
                         else if (dg0 == 4'd8)  nogo(r);      // spare
-                        else if (dg0 == 4'd9)  begin hcls[r] <= C_OUT;  hdirs[r] <= 1'b0; mst[r] <= M_WANT; end
-                        else if (dg0 == 4'd10) begin hcls[r] <= C_OPER; hdirs[r] <= 1'b0; mst[r] <= M_WANT; end
+                        else if (dg0 == 4'd9)  begin
+                            if (held != 6'd0) nogo(r);
+                            else begin hcls[r] <= C_OUT;  hdirs[r] <= 1'b0; mst[r] <= M_WANT; end
+                        end
+                        else if (dg0 == 4'd10) begin
+                            // groups.md: 0 → call pilot 04, then answers-to hunt
+                            if (held != 6'd0) nogo(r);
+                            else begin
+                                push(caller[r], 6'o00, 1'b1, ctx_clm[r]);
+                                called[r] <= PILOT_0; mst[r] <= M_PROBE;
+                            end
+                        end
                         else if (isvc(dg0)) nogo(r);
                         else begin
                             push(caller[r], 6'o00, 1'b1, ctx_clm[r]);      // dial tone off
@@ -659,10 +788,17 @@ module marker #(
                         called[r] <= {oct(dg0), oct(dg1)}; mst[r] <= M_PROBE;
                     end
                 end
+                M_CONSULT: ;   // waiting for hang-up / CLR -- handled in reg_gone
+
                 M_WANT: if (!hunt_busy && !hb) begin
                     // one scanner, so one hunt at a time: wait for it
-                    take_hunt(r, hcls[r], hdirs[r]);
-                    mst[r] <= hdirs[r] ? M_SEIZE : M_HUNTW;
+                    if (hans[r]) begin
+                        take_ans_hunt(r, called[r]);
+                        hans[r] <= 1'b0; mst[r] <= M_HUNTW;
+                    end else begin
+                        take_hunt(r, hcls[r], hdirs[r]);
+                        mst[r] <= hdirs[r] ? M_SEIZE : M_HUNTW;
+                    end
                 end
                 M_SEIZE: if (hunt_done && hunt_owner == r[3:0]) begin
                     free_hunt;
@@ -693,7 +829,11 @@ module marker #(
                     if (hunt_ok) begin
                         push(caller[r], hunt_port, 1'b1, ctx_clm[r]);
                         push(hunt_port, caller[r], 1'b1, 1'b0);
-                        reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                        if (held != 6'd0) begin
+                            called[r] <= hunt_port; mst[r] <= M_CONSULT;
+                        end else begin
+                            reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                        end
                     end else nogo(r);
                 end
                 M_NET: if (hold[r] == 2'd0) begin
@@ -715,16 +855,23 @@ module marker #(
                     end
                 end
                 M_PROBE: if (visit && p_valid && p_port == called[r]) begin
-                    // Two callers may finish dialling ONE number inside one
-                    // scan.  They meet at the same visit; the first takes the
-                    // line and the second must find it taken, not write over it.
-                    if (called[r] == caller[r] || p_cls == C_NONE ||
-                        p_cls == C_TRUNK || p_busy || p_m || conn) nogo(r);
-                    else begin
+                    // Probe the dialled (or pilot) port.  Free → connect.
+                    // Otherwise hunt ports that answer to that number
+                    // (groups.md §2) — replaces the adjacent `o` overflow run.
+                    if (conn)
+                        nogo(r);
+                    else if (p_term && (p_cls == C_LINE || p_cls == C_OPER ||
+                                        p_cls == C_REST || p_cls == C_SRC)) begin
                         push(caller[r], called[r], 1'b1, ctx_clm[r]);
                         push(called[r], caller[r], 1'b1, 1'b0);
-                        reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                        if (held != 6'd0) mst[r] <= M_CONSULT;
+                        else begin
+                            reg_release[r] <= 1'b1; mst[r] <= M_IDLE;
+                        end
                         conn = 1'b1;
+                    end else begin
+                        // busy, empty, trunk, self, busy-out, … → answers-to
+                        hans[r] <= 1'b1; mst[r] <= M_WANT;
                     end
                 end
                 M_WAITCL: if (claimed[r]) begin
@@ -761,7 +908,7 @@ module marker #(
                 if (pick >= 0) begin
                     arb <= 1'b0;
                     push(mon_port, 6'o00, 1'b1, 1'b1);       // CLAIM: backward A rises
-                    reg_attach[pick] <= 1'b1; reg_port <= mon_port;
+                    reg_attach[pick] <= 1'b1; reg_port <= mon_port; reg_src <= 6'd0;
                     caller[pick] <= mon_port; mst[pick] <= M_LOCAL;
                     claimed[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
                     hold[pick] <= 2'd3;
@@ -774,10 +921,38 @@ module marker #(
                 end
             end
 
+            // ---- nail first (extensions.md 3.1) -------------------------
+            // A nail with BUSY clear is rewritten every visit before any call
+            // request.  A nailed port is never free and never a caller.
+            if (visit && p_valid && p_nail && !p_busy)
+                push(p_port, p_nail_to, 1'b1, 1'b0);
+
+            // ---- warm / outside: as dialled 0 — probe 04, then answers-to
+            if (warm_run && warm_probe && visit && p_valid && p_port == PILOT_0) begin
+                if (p_term && (p_cls == C_LINE || p_cls == C_OPER ||
+                               p_cls == C_REST || p_cls == C_SRC)) begin
+                    push(warm_from, PILOT_0, 1'b1, 1'b0);
+                    push(PILOT_0, warm_from, 1'b1, 1'b0);
+                    warm_run <= 1'b0; warm_probe <= 1'b0;
+                end else if (!hunt_busy && !hb) begin
+                    take_ans_hunt(4'hF, PILOT_0);
+                    warm_probe <= 1'b0;
+                end
+            end
+            if (warm_run && !warm_probe && hunt_done && hunt_owner == 4'hF) begin
+                free_hunt;
+                if (hunt_ok) begin
+                    push(warm_from, hunt_port, 1'b1, 1'b0);
+                    push(hunt_port, warm_from, 1'b1, 1'b0);
+                end else
+                    push(warm_from, NOGO, 1'b1, 1'b0);
+                warm_run <= 1'b0;
+            end
+
             // ---- a port wanting service ---------------------------------
             // Not an `else` of the claim: a visit is one cycle wide, and an
             // arriving SEIZURE must not wait a scan for one.
-            if (visit && p_valid && p_m && !p_busy) begin
+            if (visit && p_valid && p_m && !p_busy && !p_nail) begin
                 if (p_cls == C_TRUNK) begin
                     // a seizure arriving: hold it busy, listening to idle, so
                     // backward A stays 0 -- no claim yet -- and hand it to the
@@ -787,7 +962,17 @@ module marker #(
                         f_in <= p_port; f_dir <= p_dir; f_start <= p_port;
                         f_cok <= 4'd0; fst <= F_RUN;
                     end
-                end else if (p_cls == C_LINE || p_cls == C_OPER) begin
+                end else if (p_cls == C_OUT || (p_cls == C_REST && p_w)) begin
+                    // CO ringing in, or warm restricted: as if dialled 0.
+                    already = 1'b0;
+                    for (r = 0; r < NREG; r = r + 1)
+                        if (mst[r] != M_IDLE && caller[r] == p_port) already = 1'b1;
+                    if (!already && !warm_run) begin
+                        warm_from <= p_port; warm_run <= 1'b1; warm_probe <= 1'b1;
+                        push(p_port, 6'o00, 1'b1, 1'b0);   // hold busy while routing
+                    end
+                end else if (p_cls == C_LINE || p_cls == C_OPER ||
+                             (p_cls == C_REST && !p_w)) begin
                     // a caller: the first free register.  None free, and the
                     // caller simply waits -- the scanner will be back in 8 ms.
                     // Under PWAIT, a non-priority line waits even with a free
@@ -799,22 +984,6 @@ module marker #(
                         if (mst[r] != M_IDLE && caller[r] == p_port) already = 1'b1;
                         if (pick < 0 && mst[r] == M_IDLE && !reg_busy[r] && !pk[r]) pick = r;
                     end
-                    // ONE ATTACH A CYCLE.  `pk` keeps a claim and a caller
-                    // in the same cycle from being handed the same register --
-                    // but `reg_port` is ONE BUS to the whole pool, the way the
-                    // marker's port lines are one bus in 74HC, and the second
-                    // writer of it wins.  Both registers would then latch the
-                    // LINE's port: the claimed trunk's register would read the
-                    // line's dialling and connect the far caller to whatever
-                    // that line asked for -- a wrong number across the network,
-                    // out of the one thing monitor.md 3 exists to stop.
-                    // The caller waits a scan instead; they are waiting for
-                    // dial tone anyway.
-                    // ALL REGISTERS BUSY.  The caller waits a scan and asks
-                    // again, so the refusal repeats; the flip-flop makes it one
-                    // count an OCCASION -- from the pool filling to the next
-                    // register handed out -- which is the peg count
-                    // extensions.md 4 asked for and not a rate.
                     if (!already && pick < 0 && !arb) begin
                         arb <= 1'b1; push_ev(p_port, EV_WAITREG);
                     end
@@ -822,17 +991,18 @@ module marker #(
                         if (att) n_defer <= n_defer + 1'b1;
                         else begin
                             arb <= 1'b0;
-                            reg_attach[pick] <= 1'b1; reg_port <= p_port;
+                            reg_attach[pick] <= 1'b1; reg_port <= p_port; reg_src <= 6'd0;
                             push(p_port, DIALTONE, 1'b1, 1'b0);
                             caller[pick] <= p_port; mst[pick] <= M_LOCAL;
                             claimed[pick] <= 1'b0; guarding[pick] <= 1'b0;
                             ctx_clm[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
-                            hold[pick] <= 2'd3;   // the store is the last caller's for a cycle yet
+                            hold[pick] <= 2'd3;
+                            clim[pick] <= {(p_cls == C_REST), p_local, p_z};
                             pk[pick] = 1'b1;
-                            got = 1'b1;
+                            got_reg = 1'b1;
                         end
                     end
-                    if (p_pri && !already && !got)
+                    if (p_pri && !already && !got_reg)
                         pri_wait_v = 1'b1;
                 end
             end

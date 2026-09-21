@@ -18,14 +18,11 @@
 `timescale 1ns/1ps
 
 module line_card #(
-    // protocol.md 5 has a plain line card tie its word pin to ground, "which
-    // reads all ones" -- but fabric.md 3.5's table gives LINE as 001, so the
-    // two cannot both be right.  Until that is settled the card sends an explicit
-    // word.  See the README.
-    // (was: ties its word pin to ground, which reads all ones at
-    // the block and means "a line, no options" (protocol.md 5) -- no part
-    // and no jumper.  A card with options shifts a word out of a '165.
-    parameter [7:0] WORD  = 8'h01,      // class 001: a line, no options
+    // The word's encoding is settled (common-cards.md 2, extensions.md 2.2):
+    // all ones is the constant *plain line* (pin tied to ground, no part);
+    // class 001 is an explicit word for a line that has options to say.
+    // Both are lines to the marker; they are different codes.
+    parameter [7:0] WORD  = 8'hFF,      // plain line: grounded pin reads all ones
     parameter       RINGS = 1'b1      // /ANS left open: this port rings
 )(
     input        clk,

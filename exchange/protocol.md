@@ -187,37 +187,48 @@ are its port address** — highway, slot — three bits each, straight into the 
 they are ever an address.
 
 ```
- first key   0  operator      1  the network: 1 e b h s             2–7  a local number, h s
+ first key   0  operator
+             1  standalone: a local number, 1 s
+                networked: the flood, 1 e b h s          (network card fitted, or the strap that says so)
+             2–7  a local number, h s
              8  spare: cannot-complete      9  outside line
 
  00          idle: never fitted; the silence a cleared latch listens to
- 01–03       tie trunks, group 0: channels 1–3 of one MF8 link
- 04          the operator
- 05–07       tie trunks, group 0: channels 4–6
- 10          dial tone
- 11–13       tie trunks, group 1: channels 1–3
- 14          cannot-complete tone
- 15–17       tie trunks, group 1: channels 4–6
- 20–77       the 48 lines.  An outside line, a second operator's position, an announcement,
-             a radio or a conference leg is a card in one of these slots that says so in its word
- 21–23 25–27 optionally, tie trunks, group 2  }  a busy exchange at the centre of a network:
- 31–33 35–37 optionally, tie trunks, group 3  }  24 trunks and 36 lines
- h1–h3 h5–h7 in any block 2–7, instead: a subscriber terminal, six lines over an MF8 link
-             (terminal.md)
+ 01          dial tone
+ 02          busy tone
+ 03          cannot-complete tone
+ 04–07       four ordinary line slots (full port circuits).  Nominal use:
+             04  the operator
+             05  night announcement / backup operator
+             06–07  more operators, or single-channel trunks
+             — still undialable as 0 s, because 0 is the operator key; reached by
+               hunt, warm restricted line, console, or (if trunks) direction hunt
+
+ standalone  10–77  fifty-six lines (1 is a highway digit; no trunk block)
+ networked   11–13, 15–17  first MF8 trunk group (block 1); 10 and 14 free
+             20–77  forty-eight lines
+             21–23 25–27 / 31–33 35–37 / …  further MF8 groups in blocks 2+, at
+               the cost of those lines (`network.md` §1)
+ h1–h3 h5–h7 in any trunk or line block 1–7: a subscriber terminal, six lines
+             over an MF8 link (`terminal.md`).  Not block 0: its channel
+             slots are the tones and the 04–07 bank
 ```
 
 A group is named by its block. Which way it faces, N, S, E or W, is in its
 ports' words, set by jumpers on its trunk card (`network.md` §1). Any group
 may face any way, and two groups facing the same way are one direction of twelve
-channels. **Any block may hold a trunk group.** A tandem exchange at the centre
-of a star gives all eight to trunks: four directions of twelve channels, and
-twelve lines left at slots 0 and 4 of blocks 2–7 (`network.md` §5). A single-channel trunk card may sit in any slot and face any way
-(`network.md` §1.1).
+channels. **MF8 trunk groups sit in blocks 1–7, never in block 0** — block 0 holds
+the three tones and the four-line bank. A single-channel trunk card may sit in
+any slot of those blocks, including 06–07 (`network.md` §1.1). A tandem at
+the centre of a star can still give blocks 1–7 to trunks; the twelve spare seats
+at slots 0 and 4 of those blocks remain ordinary ports (`network.md` §5).
 
-Ports 00–17 are never dialled, because 0 and 1 mean something as a first digit.
-Registers and monitors take no ports: a pulse register reads its caller's hook
-from the M highway through a probe (`marker.md` §4), and a monitor reads a
-trunk's A on the trunk block (`monitor.md`).
+**Ports 00–07 are never dialled**, because 0 is the operator key. **Ports 10–17
+are never dialled on a networked exchange**, because 1 opens the flood; on a
+standalone exchange they are ordinary lines. Registers and monitors take no
+ports: a pulse register reads its caller's hook from the M highway through a
+probe (`marker.md` §4), and a monitor reads a trunk's A on the trunk block
+(`monitor.md`).
 
 **A link's channels sit where they are on the wire.** MF8 sends channel C*n*'s
 bit at frame position 1–3 or 5–7, with F at 0 and S at 4, and its A bit at the
@@ -225,9 +236,9 @@ superframe state of the same number (`mf8-spec.md` §2). A trunk port takes that
 number as its slot. So one 3-bit address picks a channel's C bit in the frame,
 its A bit in the superframe, its input on the trunk card's frame mux and '259,
 and its port, and the trunk card is wired straight across. Slots 0 and 4, which
-are F and S on the wire, are ports of their own. In block 0 they are idle and
-the operator. In block 1 they are the two tones. In a block of lines they are
-two more lines.
+are F and S on the wire, are ports of their own: on a trunk block in 1–7 they
+are two more ports (empty, a line, a single-channel trunk, a test tone); on
+block 0 they are idle (00) and the first of the 04–07 bank (04).
 
 **A cleared latch listens to 00, and 00 is never fitted.** A port that releases
 clears its '273 to zeros, which is highway 0, slot 0: `FILL` and A = 0, the
@@ -235,8 +246,9 @@ silence of an empty slot. Nothing that talks may sit there. If the operator
 were at 00, every idle phone would ring whenever the operator lifted, because
 on-hook with E high is the ring condition. A phone off-hook with a cleared
 latch, one waiting for a register for example, would also hear the operator's
-calls. So the operator is at 04. The latch holds port numbers as they are: the
-slot select is wired in order, and `SRC` carries the number as dialled.
+calls. So the operator's home is 04, first of the four-line bank. The latch
+holds port numbers as they are: the slot select is wired in order, and `SRC`
+carries the number as dialled.
 
 How a number is parsed, and the form `1 e b h s` — the network's key, the
 exchange's code, then the line — that reaches a line on any exchange, are
@@ -247,16 +259,16 @@ exchange's code, then the line — that reaches a line on any exchange, are
 exchange uses the first two (`extensions.md` §2):
 
 - **The word, on a12**: eight bits, one a frame, every octet. It carries the
-  port's class and its options (a trunk's direction, a hunt group, priority,
-  restricted warm / `z` / `L` / `b`), or the port it is nailed to. The block
-  commutates it onto one wire that
+  port's class and its options (a trunk's direction, a hunt group,
+  restricted warm / `z` / `L` / `b`), or the port it is nailed to. Class
+  *restricted* is a class of its own. The block commutates it onto one wire that
   only the marker reads, and the marker's scanner reads the whole word at each
   visit. **A plain line card ties the pin to ground**, which reads all ones and
   means a line with no options: no part and no jumper. An empty slot reads all
   zeros, unequipped.
 - **`/ANS`, on a13**: the one thing the port's own gates need to know, which is
   whether the port rings. A phone's card leaves it open. A trunk, an outside
-  line, a conference leg and any card that answers at once tie it low.
+  line, a conference bridge leg and any card that answers at once tie it low.
 
 A card only ever pulls the two pins to ground, so it works unchanged in an MF8
 shelf. **Whatever sits behind a port says everything the exchange needs to know

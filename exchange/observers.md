@@ -290,9 +290,9 @@ operator:**
 
 **The class beside the shadow is what tells an empty slot from an idle line** —
 the one thing §4.3 says the field cannot do. Set the wheels to a dark pair of
-lamps: class 0 is an empty slot, class 1 with all ones is a plain line card, a
-nail is a nail, and no word at all is a card held off at power-up or taken out of
-service (`extensions.md` §2.2).
+lamps: class 0 is an empty slot, all ones is a plain line card, class 001 is an
+explicit line word, a nail is a nail, and no word at all is a card held off at
+power-up or taken out of service (`extensions.md` §2.2, `common-cards.md` §2).
 
 ---
 

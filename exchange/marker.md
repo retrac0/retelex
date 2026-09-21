@@ -9,14 +9,11 @@ cards it hunts for are `features.md`.
 > a millisecond at a time — ports, latches, `BUSY`, class marks, release
 > detectors with their tolerances, and cards that behave — and `exch.log` is the
 > run. The first run of that model found two faults in the rule as first written;
-> §5 has both, with the before and after. **The model predates the port map of
-> `protocol.md` §5**. It agrees on idle at 00. It still puts tones and
-> registers on an older layout (tones not at 01–03, trunks mixed into block 0),
-> where the map now has dial/busy/cannot-complete at 01–03, the operator bank at
-> 04–07, and MF8 trunks from block 1. Its scenarios also put
-> outside lines at 10–11 and operators in line slots. Nothing it measures depends
-> on which address holds what; it is to be brought in line. No circuit here has been drawn, and nothing
-> has been on a bench.
+> §5 has both, with the before and after. **The model follows the port map of
+> `protocol.md` §5**: dial/busy/cannot-complete at 01–03, registers as a pool
+> with no ports, operators hunted by class (scenarios may seat them in line
+> slots), outside lines at 10–11 on a standalone exchange. No circuit here has
+> been drawn, and nothing has been on a bench.
 
 ---
 
@@ -26,7 +23,7 @@ Every port says what it is in a **word**: eight bits that whatever sits behind
 it sends, one a frame, on one pin (`extensions.md` §2.2). A card sends it for
 its one port, and a trunk card for each of its six channels (`network.md`
 §1). The word carries a 3-bit class and four options that depend on the class: a
-trunk's direction, a hunt group, priority, a warm restricted line. Or it names the port this one
+trunk's direction, a hunt group, a warm restricted line. Or it names the port this one
 is nailed to. **Class *restricted*** is its own code (`fabric.md` §3.5), not
 an option. **A plain line card ties the pin to ground**, which reads all ones
 and means a line with no options. The marker's probe reads the word at every
@@ -55,9 +52,9 @@ conference bridge leg is an ordinary line (`conference.md` §6); class
 *conference* is retired. *Restricted* (`111`) options are `z w b L`
 (`extensions.md` §2.4): **0-only**, **warm**, **busy-inbound**,
 **local-only**; bare restricted still floors as local-only. A line's options are
-`o P b ·` — overflow, priority, busy-out, spare — with `o`/`b` in the same
-frames as restricted and as overflow on operator and data. Frame 5 is priority
-on a line and warm on restricted.
+`o · b ·` — overflow, spare, busy-out, spare — with `o`/`b` in the same
+frames as restricted and as overflow on operator and data. Frame 5 is warm
+on restricted and spare on a line.
 
 **Proposed further** (`groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
@@ -79,7 +76,6 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
              itself → class 6               not free (BUSY or busy `b`), overflow set → try next
              not free → class 6 (busy tone) else → connect
  caller      class restricted: `w` → lift as 0; `z` → only 0; else `L` or floor → no 9 / no flood
-             line `P`: under register overload, prefer (§2.4.1)   (extensions.md §2.4)
              busy `b` does not block a call request
 ```
 
@@ -250,8 +246,9 @@ A caller who finds no register free is not refused: dial tone is late. 48 lines,
 for an exchange of keypad phones, three for dials or for a busy one.** `register.md`
 §5's "one is enough" was eight lines. The table's *axis* — the same load, three
 pool sizes — is also measured in the gates: `make regs` runs the 48-line stress
-bench at a fixed idle for `NREG` = 1, 2 and 3 and reports delayed %, mean wait
-and wait > 3 s.
+bench at a fixed idle for `NREG` = 1, 2 and 3. Under that thrash, callers who
+gave up waiting for dial tone fell **120 → 100 → 73** and completed calls rose
+**9 → 12 → 18**; the pool size is what moves who gets through.
 
 ---
 

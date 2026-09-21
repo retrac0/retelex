@@ -1,15 +1,15 @@
 // tb_tonex -- the tone card plugged into the exchange.  common/tone-plan.md 4.
 //
-// One card in block 1 slot 0 serves every tone port: dial tone on its own C_TX
-// at port 10, cannot-complete and busy punched onto the C_TX nets of the vacant
-// slots at 14 and 11, and the RBT and /RING_CAD conductors off its rear
+// One card in block 0 slot 1 serves every tone port: dial tone on its own C_TX
+// at port 01, cannot-complete and busy punched onto the C_TX nets of the vacant
+// slots at 03 and 02, and the RBT and /RING_CAD conductors off its rear
 // connector (tone-plan.md 4.4).  A phone at port 20 is pointed at each in turn.
 `timescale 1ns/1ps
 `include "exch_defs.vh"
 
 module tb_tonex;
     localparam integer T_RISE = 8, T_FALL = 64, RING_ON = 64, RING_OFF = 128;
-    localparam P10 = 6'o10, P11 = 6'o11, P14 = 6'o14, P20 = 6'o20, P21 = 6'o21;
+    localparam P01 = 6'o01, P02 = 6'o02, P03 = 6'o03, P20 = 6'o20, P21 = 6'o21;
 
     reg clk = 0, rst_n = 0;
     always #122 clk = ~clk;
@@ -33,10 +33,10 @@ module tb_tonex;
         .c_tx(t_ctx), .a_tx(t_atx), .ans_n(t_ansn),
         .ringback(t_rb), .busy(t_busy), .cannot(t_cannot), .ring_cad_n(t_cadn));
 
-    // Blocks 1 and 2.  Ports 10, 11, 14 are the tone card's; 20 and 21 are phones.
-    exch_top #(.BLOCK_FITTED(8'b0000_0110),
-               .PORT_FITTED(64'h0000_0000_0003_1300),
-               .PORT_RINGS (64'hFFFF_FFFF_FFFF_ECFF),   // 10, 11, 14 never ring
+    // Blocks 0 and 2.  Ports 01, 02, 03 are the tone card's; 20 and 21 are phones.
+    exch_top #(.BLOCK_FITTED(8'b0000_0101),
+               .PORT_FITTED(64'h0000_0000_0003_000E),
+               .PORT_RINGS (64'hFFFF_FFFF_FFFF_FFF1),   // 01, 02, 03 never ring
                .RBT_IS_FILL(1'b0), .TONE_CARD(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL),
                .RING_ON(RING_ON), .RING_OFF(RING_OFF))
@@ -50,9 +50,9 @@ module tb_tonex;
 
     // the card's four outputs onto the slots they serve
     always @* begin
-        ctx[P10] = t_ctx;                 // its own port
-        ctx[P14] = t_cannot;              // punched
-        ctx[P11] = t_busy;                // punched
+        ctx[P01] = t_ctx;                 // its own port
+        ctx[P03] = t_cannot;              // punched
+        ctx[P02] = t_busy;                // punched
     end
 
     // ---- what a caller at 20 hears, one frame behind the source ------------
@@ -120,14 +120,14 @@ module tb_tonex;
         wait_frames(4); rst_n = 1; wait_frames(20);
 
         $display("  1. A caller pointed at each tone port hears that tone");
-        wr_latch(P20, P10); stage(1, "20 -> 10: dial tone, plane A ungated");
+        wr_latch(P20, P01); stage(1, "20 -> 01: dial tone, plane A ungated");
         if (errs != 0) fails = fails + 1;
-        wr_latch(P20, P14);
+        wr_latch(P20, P03);
         while (u_tone.cnt[14] !== 1'b1) wait_frames(64);     // into the gate's ON half
-        stage(2, "20 -> 14: cannot-complete, plane B by Q14");
+        stage(2, "20 -> 03: cannot-complete, plane B by Q14");
         if (errs != 0) fails = fails + 1;
         while (u_tone.cnt[14] !== 1'b0) wait_frames(64);     // and its OFF half
-        stage(4, "20 -> 14 gated off: the caller hears FILL, not silence");
+        stage(4, "20 -> 03 gated off: the caller hears FILL, not silence");
         if (errs != 0) fails = fails + 1;
 
         $display("\n  2. Ringback comes off the RBT conductor, not a port");

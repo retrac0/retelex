@@ -22,7 +22,7 @@
 `timescale 1ns/1ps
 
 module mf8_trunk_card #(
-    parameter [7:0]   WORD = 8'b0000_0101,   // class trunk, and its direction
+    parameter [7:0]   WORD = 8'b0000_1010,   // class trunk 101, form 0, dir N
     parameter integer T_A  = 128             // the A lead's RC and Schmitt: 2 ms in frames
 )(
     input            clk,

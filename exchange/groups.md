@@ -33,14 +33,11 @@ The short answers, before the detail:
 - **§6** (extensions that ring together through a bridge) and **§3–§4** (secondary
   word) are **set aside** with class 111 and the fifth `'151`.
 
-> **Status: proposed. Nothing here is measured.** None of it is in the `calls`
-> model or in `verilog`. The class hunt it partly replaces is measured in `calls`
-> and built in `verilog`, where no bench yet dials 0 or 9; the run it wholly
-> replaces was never in either. Every package count is an estimate from parts
-> the other documents already use, no circuit has been drawn, and nothing has
-> been on a bench. The conference bridge of `conference.md` — switch and
-> detector — *is* measured (`exch.py confer`); only how the marker finds a leg
-> changes here. §9 lists what is owed.
+> **Status: measured in simulation.** The answers-to form and hunt are in
+> `verilog` (`make groups`) and in `exch.py calls`. The adjacent `o` run and
+> class-*operator* hunt for digit 0 are retired in favour of this rule; digit 9
+> remains a class hunt for outside lines. Package counts are still estimates;
+> nothing has been on a bench.
 
 ---
 
@@ -48,8 +45,9 @@ The short answers, before the detail:
 
 | | written for | finds | built |
 |---|---|---|---|
-| **a class** (`marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
-| **a run** (`extensions.md` §2.4, `conference.md` §6) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
+| **a class** (`marker.md` §3) | 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
+| **answers to** (`groups.md` §2) | hunt groups, cover, digit 0 | probe the dialled port; else the first free port whose word answers to that number | in `verilog` (`make groups`); measured in `calls` |
+| **a run** (`extensions.md` §2.4, `conference.md` §6) | (retired) | from the dialled port onward, while each busy one has `o` set | no — replaced by answers-to |
 | **a direction** (`network.md` §3.2) | tie trunks | a free trunk facing each way | in `verilog`, and measured there |
 
 **The class hunt cannot make a second group.** One class is one group. A bank of
@@ -74,7 +72,7 @@ the run should become a comparison, and the question is what to compare.
 
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
-in the word. A line's options have one bit spare (frame 7; frame 5 is priority); restricted uses all four
+in the word. A line's options have two bits spare (frames 5 and 7); restricted uses all four
 (`z w b L`, with `w` = warm) (`extensions.md` §2.4).
 Spending all four of a class's option bits gives sixteen groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one

@@ -217,10 +217,10 @@ leave it unpopulated and strap a12 to a row-*c* ground instead. In an MF8 shelf
 the pin is unconnected either way: a grounded pin goes nowhere, and a populated
 '165 shifts its byte into an open circuit, harmlessly, for ever.
 
-**The word's encoding, which `verilog/README.md` lists as open.** `protocol.md`
-§5 has a plain line card tie its pin to ground and read "all ones, a line with no
-options", while `fabric.md` §3.5's table gives *line* as class 001. Both are
-right about different codes, and `groups.md` §2.1's table is the proof:
+**The word's encoding is settled.** `protocol.md` §5 has a plain line card tie
+its pin to ground and read "all ones, a line with no options", while
+`fabric.md` §3.5's table gives *line* as class 001. Both are right about
+different codes, and `groups.md` §2.1's table is the proof:
 
 ```
  frame of the octet    0    1  2  3    4  5  6  7
@@ -233,9 +233,8 @@ right about different codes, and `groups.md` §2.1's table is the proof:
 
 All ones is a **constant**, not a class field, and it is what a grounded pin
 produces. Class 001 is for a card that shifts a word because it has something
-else to say. The open item closes with no change to either document, and
-[line_card.v](../verilog/rtl/line_card.v)'s `WORD` parameter can take `8'hFF` for a
-plain line.
+else to say. [line_card.v](../verilog/rtl/line_card.v)'s default `WORD` is
+`8'hFF`; the marker maps all ones to `C_LINE` beside class 001.
 
 **So, card by card:**
 
@@ -456,7 +455,7 @@ conductors at all and the wiring field can be re-punched without touching it.
 | document | |
 |---|---|
 | `mf8-backplane.md` §8, `baseband.md` §2.2 | joined into §1 here. Neither is wrong; there were two copies |
-| `verilog/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 001 is an explicit word. `line_card.v`'s `WORD` may be `8'hFF` |
+| `verilog/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 001 is an explicit word. `line_card.v`'s default `WORD` is `8'hFF`; the marker treats both as `C_LINE` |
 | `baseband.md` §2.3, first bullet | **closed** (`clocks.md` §4). `TX_HB` = `/SLOT[1]`, one inverter a block |
 | `channel-cards.md` §3.5 | the FXO gains §5's strap. `features.md` §5's "the exchange build of the FXO card" becomes the SEIZE position of that strap, not a second board |
 | `channel-cards.md` §4.4 | the data card is 5¼ packages, not 4, and no longer the cheapest card in the shelf |

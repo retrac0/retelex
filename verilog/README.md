@@ -42,6 +42,9 @@ rack, and the module boundaries are the connectors.
                    RESOLVERS of a hub                         (marker.md,
                                                               network.md 3)
  pulse_reg         a register, one of a POOL: no port, no class, reads its
+                   caller's hook off HA through its own probe; four-digit store
+                   plus a 6-bit SRC held-party field for operator transfer
+                   (register.md 6.1)
                    caller's hook off the M highway through its own probe, and
                    holds its own four-digit store              (register.md 4)
  monitor           the seeker, a POOL on each trunk block: the only part of the
@@ -80,11 +83,16 @@ make chain    three exchanges, 22 = 23 = 24, and a call that transits 23
 make monitor  the seeker's pool and the three terms of its seizure rule
 make pool     two callers at once: two registers, two cells, one scanner
 make hub      five exchanges: four directions, a fan-out, and the resolvers
+make hub-fwd  hub scenario 4 alone: two seizures inside one forwarder sweep
 make ring     four exchanges in a ring, and the strap that breaks it
 make erlang   the monitor pool against monitor.md 4's sizing table
 make stress   a FULL exchange -- 48 lines -- under random traffic
+make regs     marker.md 6's axis: NREG = 1, 2, 3 at a fixed 48-line load
 make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
-make priority extensions.md 2.4.1: under register overload, PWAIT prefers a priority line
+make sclk     mainboard.md 7: a spurious SCLK edge mid-shift, and that it heals
+make priority  extensions.md 2.4.1: a priority lift waits out non-priority under overload
+make word     the card word: class, nail, answers-to, plain FF, zero
+make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
 make ring-open    the same ring with the strap OUT: the flood circles
@@ -337,12 +345,10 @@ by which claimed first.** §3.3 reasons that "the direct copy is a hop away and
 the long one many, so the direct copy always claims first". It may well; **the
 origin cannot tell**. It learns of a claim from its own scanner, which reaches a
 given port once in 8 ms, and one hop against three is microseconds, so both fall
-inside one visit and the **lower-numbered port wins**. Here the strapped link is
-block 1 and the long way round block 0, so the call is set up the long way:
-`make ring` counts six ports held in the ring where two would have done, and
-three links carry the conversation instead of one. Nothing is misrouted and no
-caller hears anything wrong — it costs channels, and a scanned marker cannot do
-better without a latch a trunk.
+inside one visit. Under the settled map the strapped link is block 3 and the
+long way is block 1; `make ring` keeps the strap (two ports on one link), which
+is what §3.3 wants. Nothing is misrouted and no caller hears anything wrong —
+a scanned marker cannot do better without a latch a trunk.
 
 **A trunk card must tie its `/ANS`.** A port whose card leaves `/ANS` open
 rings, and `fabric.md` §3.5's `A_RX` gate then chops that port's own
@@ -777,42 +783,36 @@ trunk let go.
 
 ## Open, and deliberately not guessed
 
-- **The word's encoding.** `protocol.md` §5 says a plain line card ties its
-  word pin to ground and "reads all ones and means a line with no options",
-  while `fabric.md` §3.5's table gives *line* as class 001. Both cannot be
-  right. The fabric uses the word for nothing, so the commutator is wired and
-  the encoding left alone until the marker is built.
 - **Detector tolerance.** `exch.py calls` draws each port's detectors ±20 % about
   256 ms, which is why `mvp.md` §3 has 21 release at 6.266 s and 20 at 6.284.
   Here they are exact, so both ports release in the same frame.
 
+**Closed: the word's encoding** (`common-cards.md` §2). All ones is the
+constant *plain line*, from a grounded pin — `line_card.v`'s default `WORD`.
+Class 001 is an explicit word for a line that has options to say. The marker
+treats both as `C_LINE` (all-ones via the 74HC30 of `extensions.md` §2.2).
+
 ## Next
 
-1. **A testbench for the `SCLK` hazard** (`mainboard.md` §7): a spurious
-   shift puts the next write in the wrong port with the wrong source. It costs
-   one call and does not persist, and it is worth watching it not persist.
-2. **Two seizures inside one sweep.** An exchange has one forwarder and a
-   forward is one scan, 8–9 ms; a seizure arriving while it is running is held
-   `BUSY` and never forwarded at all, and the origin waits out its 2 s and gives
-   cannot-complete. At the 0.26 E of §4 that is about one flood in a thousand —
-   but that is arithmetic on the model, not a measurement, and no document
-   mentions the case. `tb_hub` staggers its two floods to keep clear of it.
-3. **`marker.md` §6's register table itself.** `make traffic` now measures
-   the *delay* — the mean, the 95th and the worst wait for dial tone, and the
-   whole distribution by how many 8 ms scans a caller waited — which is the
-   quantity §6 is really about, and it does it under network traffic rather than
-   a generator's. What is still missing is the table's own axis: a sweep of
-   `NREG` at a fixed load, to put a number a pool against a wait.
-4. **The fan-out leak above.** A hub's legs, and a chain transit's patch, can be
+1. **The fan-out leak above.** A hub's legs, and a chain transit's patch, can be
    written after the call they were for has gone, and then have no edge left to
    release on. It is `rtl.md`'s hazard and the answer is the same one: either
    the marker must not write a port whose source is already down, or a port must
    release on a level and not only on an edge. `make traffic` reports it.
-5. **SS0** (`ss0.md`) against the flood, on these same networks.
-6. **Sixteen exchanges or more**, which `tb_traffic` will build from its three
+2. **SS0** (`ss0.md`) against the flood, on these same networks.
+3. **Sixteen exchanges or more**, which `tb_traffic` will build from its three
    shape parameters and Verilator will not compile in a working day. What the
    suite has instead is `exch.py traffic`, which is the same network and the same
    demand in milliseconds and agrees with the gates at eight and at ten
    (`traffic.md` §§3–4), and `exch.py big`, which carries that out to the
    sixty-four codes.
-7. Nothing has been on an FPGA.
+4. Nothing has been on an FPGA.
+
+**Measured (was Next 1–3):**
+
+| | target | what it showed |
+|---|---|---|
+| **`SCLK` hazard** | `make sclk` | A spurious edge mid-shift mangles one write; the next clean word re-aligns; an idle-time edge costs nothing (`mainboard.md` §7) |
+| **Two seizures / one sweep** | `make hub` §4, or `make hub-fwd` | Two lines at A dial `1` a hop apart: five channels at the hub (fan-out of four + one unforwarded inbound); the second origin hears cannot-complete; the first flood still completes |
+| **`NREG` vs dial-tone wait** | `make regs` | Same 48-line thrash, idle 400–1200 ms. Gave up waiting for dial tone: **120 / 100 / 73** at `NREG` = 1 / 2 / 3; callers who got dial tone: 44 / 77 / 117; completed calls: 9 / 12 / 18. The pool size moves who gets through, as `marker.md` §6 says |
+| **Answers-to hunt** | `make groups` | Digit 0 probes pilot 04, then the first free port that answers to 04. A busy number falls through to a member whose word answers to it. The adjacent `o` run is not in the marker |

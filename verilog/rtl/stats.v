@@ -36,7 +36,7 @@
 
 module stats #(
     // The strap field: the pattern, and which straps are left on Pi.
-    parameter [5:0] SRC     = 6'o14,        // NOGO: cannot-complete given
+    parameter [5:0] SRC     = 6'o03,        // NOGO: cannot-complete given
     parameter       BSY     = 1'b1,
     parameter       CLM     = 1'b0,
     parameter [5:0] SRC_ANY = 6'o00,        // 1 = that bit is don't-care

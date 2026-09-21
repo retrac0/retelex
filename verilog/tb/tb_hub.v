@@ -6,8 +6,8 @@
 //                      |  S
 //                      D  25
 //
-// H is 21, and it has four directions: W to A on block 0, E to B on block 1,
-// N to C on block 3, S to D on block 4.  A, B, C and D have one each.
+// H is 21, and it has four directions: W to A on block 1, E to B on block 3,
+// N to C on block 4, S to D on block 5.  A, B, C and D have one each.
 //
 // A transit on a chain forwards into its ONE other direction: two latches, and
 // it holds nothing.  A hub forwards into THREE, and the caller's pulses go down
@@ -24,10 +24,18 @@
 //      first is still unresolved   first direction found and that branch only --
 //                                  which completes if the called exchange is
 //                                  behind it, and is lost if it is not
+//   4. two seizures inside one     two lines at A dial 1 a hop apart; the
+//      forwarder sweep             forwarder is one scan (~8 ms); the second
+//                                  inbound is held BUSY and never forwarded --
+//                                  that origin hears cannot-complete; the first
+//                                  flood still completes
+//   5. flood abandoned, no claim   fan-out legs must clear: the resolver frees
+//                                  on the incoming's release AND clears every
+//                                  leg (traffic.md fan-out leak)
 `timescale 1ns/1ps
 
 module tb_hub #(
-    parameter integer ONLY  = 0,         // 0 = every scenario; 1, 2, 3 = just that one
+    parameter integer ONLY  = 0,         // 0 = every scenario; 1..5 = just that one
     parameter         TRACE = 1'b0
 ) ();
     localparam integer HIT = 1, ID = 16, CLR = 32;
@@ -37,8 +45,8 @@ module tb_hub #(
     localparam integer FR = 15625;
     localparam [1:0] N = 2'd0, S = 2'd1, E = 2'd2, W = 2'd3;
 
-    // the trunk channels of the hub's four blocks
-    localparam [63:0] HUBT = 64'h0000_00EE_EE00_EEEE;
+    // the trunk channels of the hub's four blocks (net_site: 1, 3, 4, 5)
+    localparam [63:0] HUBT = 64'h0000_EEEE_EE00_EE00;
 
     reg clk_h=0, clk_a=0, clk_b=0, clk_c=0, clk_d=0, rst_n=0;
     always #122.0703 clk_h = ~clk_h;
@@ -125,11 +133,20 @@ module tb_hub #(
        .fan_legs(), .res_used(), .port_busy(pbd), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    reg path_en = 0;
+    reg path_en = 0, tone_en = 0;
     bitpath p_a20b21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(tx_a[6'o20]),
                       .dst_clk(clk_b), .dst_fs(fsb), .dst_bit(rx_b[6'o21]), .enable(path_en));
     bitpath p_b21a20 (.src_clk(clk_b), .src_fs(fsb), .src_bit(tx_b[6'o21]),
                       .dst_clk(clk_a), .dst_fs(fsa), .dst_bit(rx_a[6'o20]), .enable(path_en));
+    // C's tone cards as heard at C (scenario 3); A's as heard at A's 21 (scenario 4)
+    bitpath p_ngc (.src_clk(clk_c), .src_fs(fsc), .src_bit(ngc),
+                   .dst_clk(clk_c), .dst_fs(fsc), .dst_bit(rx_c[6'o20]), .enable(tone_en));
+    bitpath p_dtc (.src_clk(clk_c), .src_fs(fsc), .src_bit(dtc),
+                   .dst_clk(clk_c), .dst_fs(fsc), .dst_bit(rx_c[6'o20]), .enable(tone_en));
+    bitpath p_nga21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(nga),
+                     .dst_clk(clk_a), .dst_fs(fsa), .dst_bit(rx_a[6'o21]), .enable(tone_en));
+    bitpath p_dta21 (.src_clk(clk_a), .src_fs(fsa), .src_bit(dta),
+                     .dst_clk(clk_a), .dst_fs(fsa), .dst_bit(rx_a[6'o21]), .enable(tone_en));
 
     always @(posedge clk_a) if (fsa) begin
         if (hk_a[6'o20]) tx_a[6'o20] <= $random; if (hk_a[6'o21]) tx_a[6'o21] <= $random; end
@@ -178,6 +195,17 @@ module tb_hub #(
             n = (d == 0) ? 10 : d;
             for (i = 0; i < n; i = i + 1) begin
                 hk_c[6'o20] = 1'b0; #(BRK_NS); hk_c[6'o20] = 1'b1; #(MK_NS);
+            end
+            #(PAUSE);
+        end
+    endtask
+
+    task dial_a21(input integer d);
+        integer n, i;
+        begin
+            n = (d == 0) ? 10 : d;
+            for (i = 0; i < n; i = i + 1) begin
+                hk_a[6'o21] = 1'b0; #(BRK_NS); hk_a[6'o21] = 1'b1; #(MK_NS);
             end
             #(PAUSE);
         end
@@ -327,9 +355,92 @@ module tb_hub #(
         wantn(nch == 0, nch, "everything released at the hub");
         end
 
+        // ---- 4. two seizures inside one forwarder sweep -----------------
+        // The forwarder is one scanner lap (~8 ms).  A seizure that arrives
+        // while fst == F_RUN is written BUSY listening to idle and never
+        // handed to the forwarder.  The two seizures must come from DIFFERENT
+        // exchanges: one marker has one hunt, so two lines at A dialling 1 a
+        // few ms apart still seize a hunt-lap apart and miss this window
+        // (they fall into scenario 3's resolver-busy path instead).  A and C
+        // hunt in parallel; a 3 ms offset keeps both arrivals inside F_RUN.
+        // Scenario 3 staggers by 60 ms and hits the resolver instead.
+        if (ONLY == 0 || ONLY == 4) begin
+        $display("\n  4. Two seizures inside one forwarder sweep.");
+        hk_a[6'o20] = 1; hk_c[6'o20] = 1; #(40_000_000);
+        fork
+            dial_a(1);
+            begin #(3_000_000); dial_c(1); end
+        join
+        begin : wait_second
+            integer t;
+            for (t = 0; t < 80 && hubchans < 5; t = t + 1)
+                #(1_000_000);
+        end
+        snap("both dialled 1");
+        wantn(ruh == 4'd1, ruh, "the first flood took the resolver");
+        wantn($countones(flh) == 3, $countones(flh),
+              "and fanned into three legs");
+        nch = hubchans;
+        // 5 = fan-out of four plus one unforwarded inbound (the race).
+        // 8 = both fanned out; 6 = resolver-busy one-leg fallback.
+        wantn(nch == 5, nch,
+              "five channels: fan-out of four, plus one unforwarded inbound");
+        want(nch != 6 && nch != 8, "not a second fan-out or the resolver fallback");
+        // A's flood finishes to B; C waits out T_CLAIM (unforwarded).
+        dial_a(2); dial_c(2);                       // e
+        dial_a(3); dial_c(3);                       // b: both want exchange 23
+        #(40_000_000);
+        want(gca, "A's first flood claimed at 23");
+        dial_a(2); dial_c(2);                       // h
+        dial_a(1); dial_c(0);                       // s: A wants 21 at B; C's is lost
+        #(60_000_000);
+        ring21(2 * (RING_ON + RING_OFF), "B's 21 rings from A's first flood", 0);
+        #(300_000_000);
+        p_ngc.clear; p_dtc.clear;
+        tone_en = 1; #(3_000_000); tone_en = 0;
+        chk = chk + 1;
+        if (p_ngc.best_errs() == 0 && p_dtc.best_errs() != 0)
+            $display("     %-54s ok", "C hears cannot-complete: the lost flood");
+        else begin
+            errs = errs + 1;
+            $display("     %-54s FAIL  (ng %0d wrong, dt %0d wrong)",
+                     "C hears cannot-complete: the lost flood",
+                     p_ngc.best_errs(), p_dtc.best_errs());
+        end
+        hk_b[6'o21] = 1; #(20_000_000);
+        want(ln_a[6'o20] && ln_b[6'o21], "A's 20 is answered at B");
+        hk_b[6'o21] = 0; hk_a[6'o20] = 0; hk_c[6'o20] = 0; #(160_000_000);
+        nch = hubchans;
+        wantn(nch == 0, nch, "everything released at the hub");
+        end
+
+        // ---- 5. abandoned flood: fan-out legs must not stick --------------
+        // traffic.md / README: when a flood dies without a claim, the incoming
+        // trunk released and the legs did not -- written after source A was
+        // already low, no edge left.  The marker now clears every leg when
+        // the resolver frees on !BUSY, so an abandon leaves nothing held.
+        if (ONLY == 0 || ONLY == 5) begin
+        $display("\n  5. A flood abandoned with no claim: fan-out legs clear.");
+        hk_a[6'o20] = 1; #(40_000_000);
+        dial_a(1);
+        #(60_000_000);
+        wantn(ruh == 4'd1, ruh, "fanned out: a resolver, three legs");
+        wantn($countones(flh) == 3, $countones(flh), "three legs held");
+        nch = hubchans;
+        wantn(nch == 4, nch, "four channels: in, and three out");
+        // Hang up before e/b -- no claim will ever come.
+        hk_a[6'o20] = 0;
+        #(400_000_000);                                 // past release + cascade
+        wantn(ruh == 4'd0, ruh, "the resolver freed on the incoming's release");
+        nch = hubchans;
+        wantn(nch == 0, nch, "no trunk channel left held -- legs cleared");
+        want(!mhb && !mhc && !mhd, "B, C and D all let go");
+        end
+
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 
-    initial begin #12_000_000_000; $display("  TIMEOUT"); $finish; end
+    initial begin #14_000_000_000; $display("  TIMEOUT"); $finish; end
 endmodule

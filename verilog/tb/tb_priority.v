@@ -17,7 +17,7 @@ module tb_priority;
     localparam integer RING_ON = 200, RING_OFF = 400;
     localparam integer NS = 1_000_000;
     // class 001, o=0, P=1, b=0, spare=0  -- extensions.md / marker.v bit map
-    localparam [7:0] WORD_PRI = 8'b0001_0001;
+    localparam [7:0] WORD_PRI = 8'b0010_0010;
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -32,7 +32,7 @@ module tb_priority;
     // ports 20, 21, 22 fitted; 22 carries the priority word
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_0007_0000),
-               .LINE_WORD_20(8'h01), .LINE_WORD_21(8'h01),
+               .LINE_WORD_20(8'hFF), .LINE_WORD_21(8'hFF),
                .LINE_WORD_22(WORD_PRI),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
@@ -48,7 +48,7 @@ module tb_priority;
        .wr_bsy(wr_bsy), .wr_clm(wr_clm));
 
     // who last got dial tone (SRC = dial-tone port, PDT = 6'o01)
-    localparam [5:0] DIALTONE = 6'o10;
+    localparam [5:0] DIALTONE = 6'o01;
     reg [5:0] last_dt = 6'h3f;
     always @(posedge clk)
         if (wr_stb && wr_bsy && !wr_clm && wr_src == DIALTONE)

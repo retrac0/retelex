@@ -146,7 +146,7 @@ in the set — and it is the only one that needs a2 and a4.**
 |---|---|---|---|
 | a1 | `TX_CLK` | in | `H` into the downstream encoder (§2.1), and the clock of both synchronizer stages of §2.3 — the one 74HC175 that crosses `C_RX[n]` and the receiver's latch into T |
 | a2 | `TX_HB` | in | **the downstream encoder's clock.** 128 kHz, and this card is its only customer in either shelf. Without it the card cannot be fitted at all: `clocks.md` §4 exists for this pin and this card |
-| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word '165 where that footprint is populated — an operator's position, a restricted phone (class 111, including warm), a hunt group, a priority line, a nail (`extensions.md` §2.2) |
+| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word '165 where that footprint is populated — an operator's position, a restricted phone (class 111, including warm), a hunt group, a nail (`extensions.md` §2.2) |
 | a4 | `FILL` | in | the bus's `1010`, sent **downstream to the phone** while it is on-hook and not being rung. a data input of §2.3's ¾ 74HC157, and the reason the card carries no oscillator and no idle-pattern generator |
 | a5 | `C_TX[n]` | **out** | `Q_s`: the upstream receiver's data latch, resynchronized to `TX_CLK` |
 | a6 | `A_TX[n]` | **out** | `NOT ON_HOOK`, off §2.2's LM339 through ¼ 74HC04. Off-hook, held through dial pulses by the 4 ms RC and the violation term |

@@ -26,10 +26,10 @@ and specifies both cards.
 
 | category | reached by | image | cadence | gate |
 |---|---|---|---|---|
-| **dial** | class 5, port 10 | **A** — 425 ∿ 25, the Australian warble | continuous | none |
+| **dial** | class 5, port 01 | **A** — 425 ∿ 25, the Australian warble | continuous | none |
 | **ringback** | the `RBT` bus | **A** | double pulse, 4.096 s | `NOR(Q17, Q15)` |
-| **busy** | class 6, port 14 | **B** — 600 ∿ 120, the old Bell buzz | 0.512 / 0.512 s | `Q15` |
-| **cannot-complete** | class 6 by address, port 11 | **B** | 0.256 / 0.256 s | `Q14` |
+| **busy** | class 6, port 02 | **B** — 600 ∿ 120, the old Bell buzz | 0.512 / 0.512 s | `Q15` |
+| **cannot-complete** | class 6 by address, port 03 | **B** | 0.256 / 0.256 s | `Q14` |
 
 `x ∿ y` is a carrier of *x* amplitude-modulated at *y*: three equally spaced
 lines. **The letters are distinct images, not ROM bits** — what has to be
@@ -50,9 +50,9 @@ error tone" — one destination for both. Splitting them needs a second source
 port, and the marker already computes the free test that would steer it. Under
 the proposed class codes both tone ports are class *source* **reached by
 address** (`extensions.md` §2.2), so a third is another address constant, not
-another class. **Port 11** is free wherever block 1 is not a trunk group, and is
-never dialable because 1 is a first key. Where block 1 *is* a trunk group, drop
-to three tones and let busy share port 14 as it does today.
+another class. **Ports 01–03** hold all three switched tones
+(`protocol.md` §5), undialable because 0 is the operator key, and clear of
+every MF8 trunk group.
 
 ---
 
@@ -199,17 +199,17 @@ A channel card reaches its own `C_TX` and no other, so three outputs leave by th
 
 | output | to | |
 |---|---|---|
-| `C_TX` on the socket | port 10 | dial tone — the card's own port |
-| rear pin 1 | port 11's `C_TX` net | cannot-complete — **slot 1 vacant** |
-| rear pin 2 | port 14's `C_TX` net | busy — **slot 4 vacant** |
+| `C_TX` on the socket | port 01 | dial tone — the card's own port |
+| rear pin 1 | port 03's `C_TX` net | cannot-complete — **slot 3 vacant** |
+| rear pin 2 | port 02's `C_TX` net | busy — **slot 2 vacant** |
 | rear pin 3 | `RBT` | ringback |
 | rear pin 4 | `/RING_CAD` | the ring cadence |
 
 **The hazard is a card seated in a punched slot**, which fights the wire.
 Mitigated by it taking two deliberate acts — the punch, and leaving the slot
 empty — and by the backplane's 4.7 kΩ pull to `FILL`, which makes a vacant slot
-benign. **Blank those two slots.** It needs block 1's slots 1 and 4 free, so it
-suits a standalone exchange or one using only trunk group 0.
+benign. **Blank slots 2 and 3 of block 0**, or seat one multi-output card at 01
+and punch the rest. Block 0 is never an MF8 trunk group (`protocol.md` §5).
 
 ---
 

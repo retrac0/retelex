@@ -1,15 +1,15 @@
 // net_site -- a whole exchange: fabric, trunks, tones, marker, registers, seekers.
 //
-//   block 0   an MF8 trunk group, six channels at 01-03, 05-07, facing DIR0
-//   block 1   dial tone at 10 and cannot-complete at 14, and -- from NDIR = 2 --
-//             a SECOND trunk group at 11-13, 15-17 facing DIR1.  That is
-//             exactly how protocol.md 5 lays block 1 out: the two tones sit
-//             at slots 0 and 4, which are F and S on the wire, and the six
-//             channels sit where they are on the wire either side of them
+//   block 0   dial tone at 01, busy at 02 (optional), cannot-complete at 03;
+//             04-07 the operator bank when fitted.  Never an MF8 trunk group.
+//   block 1   first MF8 trunk group at 11-13, 15-17 facing DIR0 (slots 0 and 4
+//             are F and S on the wire and stay free -- port 00 is silence for
+//             a cleared latch; 04 would be an operator seat on a tone-less map)
 //   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
 //             whole blocks with them for a stress run
-//   block 3   a third trunk group, facing DIR2   (NDIR = 3)
-//   block 4   a fourth, facing DIR3              (NDIR = 4)
+//   block 3   a second trunk group, facing DIR1   (NDIR = 2)
+//   block 4   a third, facing DIR2                (NDIR = 3)
+//   block 5   a fourth, facing DIR3               (NDIR = 4)
 //   common    one marker, a pool of registers, and a monitor pool on each
 //             trunk block -- "a flood reaches a hub on one block"
 //
@@ -46,11 +46,14 @@ module net_site #(
     // Which ports hold line cards.  The default is the two of mvp.md 1;
     // a stress run fills whole blocks with them.
     parameter [63:0]  LINE_PORTS = 64'h0000_0000_0003_0000,
-    // Per-port line words for 20–22 (extensions.md 2.2 / 2.4.1). Default all-ones
-    // is a grounded plain pin; an explicit class-001 word with bit 4 set is priority.
+    // Per-port line words (extensions.md 2.2 / groups.md 2.1).
+    // Default all-ones = grounded plain line.
+    // Class form: {·, b, P, ·, class, 0}; answers-to: {1, hss, 1}; nail: {0, hss, 1}.
+    parameter [7:0]   LINE_WORD_04 = 8'hFF,
     parameter [7:0]   LINE_WORD_20 = 8'hFF,
     parameter [7:0]   LINE_WORD_21 = 8'hFF,
     parameter [7:0]   LINE_WORD_22 = 8'hFF,
+    parameter [7:0]   LINE_WORD_23 = 8'hFF,
     parameter integer NMON = 2,                  // cells in each block's pool (4)
     parameter integer NREG = 2,                  // registers in the pool
     parameter integer NRES = 2                   // resolvers: a forward is held until it resolves (3.2)
@@ -87,25 +90,24 @@ module net_site #(
     // marker's event words.  { glare, nodig, notrunk, waitreg, any }
     output [79:0] ev_cnt
 );
-    localparam PDT = 6'o10, PNG = 6'o14;        // dial tone, cannot-complete
+    localparam PDT = 6'o01, PBSY = 6'o02, PNG = 6'o03;   // dial, busy, cannot-complete
 
-    // Which block each direction's trunk group sits on: 0, 1, then 3 and 4,
-    // because block 2 is the lines.
-    localparam [7:0] WORD0 = {1'b0, N0, G0, DIR0, 3'b101};   // class 101: tie trunk
-    localparam [7:0] WORD1 = {1'b0, N1, G1, DIR1, 3'b101};
-    localparam [7:0] WORD2 = {1'b0, N2, G2, DIR2, 3'b101};
-    localparam [7:0] WORD3 = {1'b0, N3, G3, DIR3, 3'b101};
+    // Which block each direction's trunk group sits on: 1, then 3, 4 and 5 —
+    // block 0 is tones + the operator bank; block 2 is the lines.
+    localparam [7:0] WORD0 = {N0, G0, DIR0, 3'b101, 1'b0};   // class 101, form 0
+    localparam [7:0] WORD1 = {N1, G1, DIR1, 3'b101, 1'b0};
+    localparam [7:0] WORD2 = {N2, G2, DIR2, 3'b101, 1'b0};
+    localparam [7:0] WORD3 = {N3, G3, DIR3, 3'b101, 1'b0};
 
     // The channel slots a trunk card drives: 1-3 and 5-7, where they are on the
-    // wire.  Slots 0 and 4 are F and S and are NOT ports -- on block 1 they are
-    // the two tone cards, and on a trunk block nothing at all, which is what
-    // keeps port 00 unfitted for "a cleared latch listens to 00" (mvp.md 2).
-    localparam [63:0] TRUNKS = 64'h0000_0000_0000_00EE
-                             | ((NDIR >= 2) ? 64'h0000_0000_0000_EE00 : 64'd0)
-                             | ((NDIR >= 3) ? 64'h0000_0000_EE00_0000 : 64'd0)
-                             | ((NDIR >= 4) ? 64'h0000_00EE_0000_0000 : 64'd0);
+    // wire.  Slots 0 and 4 are F and S — free on a trunk block.  Port 00 stays
+    // unfitted ("a cleared latch listens to 00", mvp.md 2); tones are 01-03.
+    localparam [63:0] TRUNKS = 64'h0000_0000_0000_EE00
+                             | ((NDIR >= 2) ? 64'h0000_0000_EE00_0000 : 64'd0)
+                             | ((NDIR >= 3) ? 64'h0000_00EE_0000_0000 : 64'd0)
+                             | ((NDIR >= 4) ? 64'h0000_EE00_0000_0000 : 64'd0);
     localparam [63:0] PF = LINE_PORTS
-                         | 64'h0000_0000_0000_1100     // the two tones
+                         | 64'h0000_0000_0000_000E     // tones at 01, 02, 03
                          | TRUNKS;
     // A block is fitted if anything in it is.
     localparam [7:0]  BF = {|PF[63:56], |PF[55:48], |PF[47:40], |PF[39:32],
@@ -141,10 +143,13 @@ module net_site #(
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
 
-    // ---- the tones, on block 1 -------------------------------------------
+    // ---- the tones, on block 0 -------------------------------------------
     source_card #(.SEED(16'hACE1)) u_dt (.clk(clk), .frame_stb(frame_stb),
         .tx_oct(tx_oct), .c_tx(c_tx[PDT]), .a_tx(a_tx[PDT]),
         .word_pin(word[PDT]), .ans_n());
+    source_card #(.SEED(16'hBEEF)) u_bs (.clk(clk), .frame_stb(frame_stb),
+        .tx_oct(tx_oct), .c_tx(c_tx[PBSY]), .a_tx(a_tx[PBSY]),
+        .word_pin(word[PBSY]), .ans_n());
     source_card #(.SEED(16'h1234)) u_ng (.clk(clk), .frame_stb(frame_stb),
         .tx_oct(tx_oct), .c_tx(c_tx[PNG]), .a_tx(a_tx[PNG]),
         .word_pin(word[PNG]), .ans_n());
@@ -156,10 +161,13 @@ module net_site #(
     generate for (p = 0; p < 64; p = p + 1) begin : line
         if (LINE_PORTS[p]) begin : fitted
             line_card #(.WORD(
+                (p == 6'o04) ? LINE_WORD_04 :
                 (p == 6'o20) ? LINE_WORD_20 :
                 (p == 6'o21) ? LINE_WORD_21 :
-                (p == 6'o22) ? LINE_WORD_22 : 8'hFF
-            )) u_c (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
+                (p == 6'o22) ? LINE_WORD_22 :
+                (p == 6'o23) ? LINE_WORD_23 : 8'hFF
+            )) u_c (
+                           .clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
                            .tx(tx[p]), .rx(rx[p]), .m(hook[p]), .e(e[p]),
                            .c_tx(c_tx[p]), .a_tx(a_tx[p]),
                            .c_rx(c_rx[p]), .a_rx(a_rx[p]),
@@ -178,7 +186,7 @@ module net_site #(
     genvar g, k;
     generate for (g = 0; g < 4; g = g + 1) begin : dir
         if (g < NDIR) begin : fitted
-            localparam integer B = (g == 0) ? 0 : (g == 1) ? 1 : (g == 2) ? 3 : 4;
+            localparam integer B = (g == 0) ? 1 : (g == 1) ? 3 : (g == 2) ? 4 : 5;
             localparam [7:0] W = (g == 0) ? WORD0 : (g == 1) ? WORD1 :
                                  (g == 2) ? WORD2 : WORD3;
 
@@ -220,7 +228,7 @@ module net_site #(
     // every slot no card drives: C pulled to FILL, A and the word to 0
     genvar q;
     generate for (q = 0; q < 64; q = q + 1)
-        if (!TRUNKS[q] && !LINE_PORTS[q] && q != PDT && q != PNG) begin : empty
+        if (!TRUNKS[q] && !LINE_PORTS[q] && q != PDT && q != PBSY && q != PNG) begin : empty
             assign c_tx[q] = fill; assign a_tx[q] = 1'b0; assign word[q] = 1'b0;
         end
     endgenerate
@@ -231,16 +239,17 @@ module net_site #(
     wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
     wire [16*NREG-1:0] r_digits;
-    wire [5:0]         r_port;
+    wire [6*NREG-1:0]  r_held;
+    wire [5:0]         r_port, r_src;
     assign regs_busy = r_busy;
 
     genvar gr;
     generate for (gr = 0; gr < NREG; gr = gr + 1) begin : regs
         pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(2000)) u_reg (
             .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
-            .ha(ha), .attach(r_attach[gr]), .attach_port(r_port),
+            .ha(ha), .attach(r_attach[gr]), .attach_port(r_port), .attach_src(r_src),
             .release_it(r_release[gr]), .restart(r_restart[gr]),
-            .busy(r_busy[gr]), .port(),
+            .busy(r_busy[gr]), .port(), .src(r_held[gr*6 +: 6]),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
             .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
     end endgenerate
@@ -310,8 +319,9 @@ module net_site #(
         .oct_stb(oct_stb), .tick_1k(tick_1k),
         .ha(ha), .pb_busy(pb_busy), .pb_word(pb_word),
         .sdata(sdata), .sclk(sclk), .wr(wr),
-        .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
-        .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
+        .reg_attach(r_attach), .reg_port(r_port), .reg_src(r_src), .reg_busy(r_busy),
+        .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_held(r_held),
+        .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk),
         .reg_release(r_release),
         .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),

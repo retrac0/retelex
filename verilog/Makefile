@@ -1,3 +1,6 @@
+SHELL := /bin/bash
+.SHELLFLAGS := -euo pipefail -c
+
 # verilog -- the exchange in Verilog.
 #
 # Two simulators run the same testbenches.  Icarus is the reference; Verilator
@@ -29,9 +32,12 @@ TB_console := tb/con_site.v tb/bitpath.v tb/tb_console.v
 TB_panel  := tb/tb_panel.v
 TB_tone   := tb/tb_tone.v
 TB_tonex  := tb/tb_tonex.v
+TB_sclk   := tb/tb_sclk.v
 TB_priority := tb/net_site.v tb/tb_priority.v
+TB_word   := tb/net_site.v tb/tb_word.v
+TB_groups := tb/net_site.v tb/tb_groups.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex priority
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -74,6 +80,38 @@ stress-overload: $(BUILD)
 	    $(RTL) $(TB_stress) > $(BUILD)/vl-stressover.log 2>&1 \
 	    || (cat $(BUILD)/vl-stressover.log; false)
 	@$(BUILD)/vl/stressover/tb_stressover 2>&1 | grep -v '^- '
+
+# marker.md §6's register-pool axis: the same 48-line exchange and the same
+# fixed load, swept over NREG = 1, 2, 3.  Reports dial-tone wait mean / delayed
+# / >3 s for each pool size.
+regs: $(BUILD)
+	@for n in 1 2 3; do \
+	    mkdir -p $(BUILD)/vl/regs$$n; \
+	    verilator $(VLFLAG) -GNREG=$$n -GREGS_RPT=1 \
+	        -GIDLE_LO=400 -GIDLE_HI=1200 -GDT_WAIT=2000 \
+	        -GROUNDS=3 -GBURST=4000 \
+	        --top-module tb_stress --Mdir $(BUILD)/vl/regs$$n -o tb_regs$$n \
+	        $(RTL) $(TB_stress) > $(BUILD)/vl-regs$$n.log 2>&1 \
+	        || (cat $(BUILD)/vl-regs$$n.log; false); \
+	    echo ""; echo "======== NREG=$$n ========"; \
+	    $(BUILD)/vl/regs$$n/tb_regs$$n 2>&1 | grep -v '^- '; \
+	done
+
+# Hub scenario 4 alone: two seizures inside one forwarder sweep.
+hub-fwd: $(BUILD)
+	@mkdir -p $(BUILD)/vl/hubfwd
+	@verilator $(VLFLAG) -GONLY=4 --top-module tb_hub \
+	    --Mdir $(BUILD)/vl/hubfwd -o tb_hubfwd $(RTL) $(TB_hub) \
+	    > $(BUILD)/vl-hubfwd.log 2>&1 || (cat $(BUILD)/vl-hubfwd.log; false)
+	@$(BUILD)/vl/hubfwd/tb_hubfwd 2>&1 | grep -v '^- '
+
+# Hub scenario 5: abandoned flood -- fan-out legs must clear (traffic.md leak).
+hub-leak: $(BUILD)
+	@mkdir -p $(BUILD)/vl/hubleak
+	@verilator $(VLFLAG) -GONLY=5 --top-module tb_hub \
+	    --Mdir $(BUILD)/vl/hubleak -o tb_hubleak $(RTL) $(TB_hub) \
+	    > $(BUILD)/vl-hubleak.log 2>&1 || (cat $(BUILD)/vl-hubleak.log; false)
+	@$(BUILD)/vl/hubleak/tb_hubleak 2>&1 | grep -v '^- '
 
 # The same stress run over a PAIR of exchanges, calls going both ways and
 # the two crystals 100 ppm apart.
@@ -198,4 +236,4 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep lint synth clean
+.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean

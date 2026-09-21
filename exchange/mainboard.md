@@ -452,6 +452,10 @@ below `/RESET`'s, which drops every call at once. Three things bound it:
   `HCLK`, and the same cure `/RESET` gets below at a shorter constant — 1 kΩ and
   1 nF is a microsecond, 6 % of a 64 kHz edge.
 
+**Measured** in the gates: `make sclk` injects one extra shift mid-word, sees the
+write miss its port, and shows the next clean word re-aligns — idle-time edges
+cost nothing.
+
 **Bit 14 is left spare for parity rather than spent on it.** Checking fifteen bits
 at every block is two 74HC280, sixteen packages in the exchange, against a fault
 that costs one call; bit 15's guard costs one gate and catches the misalignments

@@ -1,10 +1,9 @@
 // con_site -- a standalone exchange with TWO masters on cable B: the marker and
 // the operator's console.  console.md.
 //
-//   block 0   the OPERATOR'S PHONE at 04, on a plain line card: a line in every
-//             respect, and the only port of block 0 that is fitted (00 is never
-//             fitted, and 01-03, 05-07 are a trunk group's channels)
-//   block 1   dial tone at 10, cannot-complete at 14
+//   block 0   dial tone at 01, cannot-complete at 03; OPERATOR'S PHONE at 04
+//             on a plain line card (00 never fitted; 02 busy optional; 05-07
+//             more of the four-line bank when fitted)
 //   blocks 2-3  sixteen line cards, 20-37
 //   block 7   a RING SOURCE at 75: the sink's converse.  A_TX tied HIGH, no
 //             word, /ANS low -- an off-hook port that is not a caller, because
@@ -71,14 +70,14 @@ module con_site #(
     output [5:0]  wr_dst, wr_src,
     output        wr_bsy, wr_clm
 );
-    localparam PDT = 6'o10, PNG = 6'o14;
+    localparam PDT = 6'o01, PNG = 6'o03;
     localparam PS0 = 6'o76, PS1 = 6'o77, PRS = 6'o75;
     localparam POP = 6'o04;                              // the operator's phone
     localparam [63:0] LINE_PORTS = 64'h0000_0000_FFFF_0000 | (64'd1 << POP);
     localparam [63:0] SINKS      = 64'hC000_0000_0000_0000;
     localparam [63:0] RSRC       = 64'd1 << PRS;
-    localparam [63:0] PF = LINE_PORTS | SINKS | RSRC | 64'h0000_0000_0000_1100;
-    localparam [7:0]  BF = 8'b1000_1111;
+    localparam [63:0] PF = LINE_PORTS | SINKS | RSRC | 64'h0000_0000_0000_000A; // 01, 03
+    localparam [7:0]  BF = 8'b1000_1101;                 // blocks 0, 2, 3, 7
 
     wire [63:0] c_tx, a_tx, word, c_rx, a_rx;
     wire [2:0]  slot, slotq, tick;
@@ -158,16 +157,17 @@ module con_site #(
     wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
     wire [16*NREG-1:0] r_digits;
-    wire [5:0]         r_port;
+    wire [6*NREG-1:0]  r_held;
+    wire [5:0]         r_port, r_src;
     assign regs_busy = r_busy;
 
     genvar gr;
     generate for (gr = 0; gr < NREG; gr = gr + 1) begin : regs
         pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG)) u_reg (
             .clk(clk), .rst_n(rst_n), .slotq(slotq), .tick(tick), .tick_1k(tick_1k),
-            .ha(ha), .attach(r_attach[gr]), .attach_port(r_port),
+            .ha(ha), .attach(r_attach[gr]), .attach_port(r_port), .attach_src(r_src),
             .release_it(r_release[gr]), .restart(r_restart[gr]),
-            .busy(r_busy[gr]), .port(),
+            .busy(r_busy[gr]), .port(), .src(r_held[gr*6 +: 6]),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
             .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
     end endgenerate
@@ -179,8 +179,10 @@ module con_site #(
         .oct_stb(oct_stb), .tick_1k(tick_1k),
         .ha(ha), .pb_busy(pb_busy), .pb_word(pb_word),
         .sdata(mk_sdata), .sclk(mk_sclk), .wr(mk_wr),
-        .reg_attach(r_attach), .reg_port(r_port), .reg_busy(r_busy),
-        .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_restart(r_restart),
+        .reg_attach(r_attach), .reg_port(r_port), .reg_src(r_src),
+        .reg_busy(r_busy),
+        .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_held(r_held),
+        .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk), .reg_release(r_release),
         .mon_claim(1'b0), .mon_port(6'd0), .mon_ack(),
         .any_claimed(), .dirs_held(), .fan_legs(), .res_used(),

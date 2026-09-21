@@ -822,8 +822,8 @@ module tb_traffic #(
                         if (pb[i2][k2])
                             $display("          %0o%0o port %0o (%0s), last written %0.1f ms ago: src %0o bsy %0d clm %0d",
                                      code_e(i2), code_b(i2), k2,
-                                     (k2 == 6'o10) ? "dial tone" :
-                                     (k2 == 6'o14) ? "cannot-complete" :
+                                     (k2 == 6'o01) ? "dial tone" :
+                                     (k2 == 6'o03) ? "cannot-complete" :
                                      LP[k2] ? "a line" : "a trunk channel",
                                      ($realtime - lw_t[i2][k2]) / NS,
                                      lw_src[i2][k2], lw_bsy[i2][k2], lw_clm[i2][k2]);
@@ -957,6 +957,7 @@ module tb_traffic #(
         end
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

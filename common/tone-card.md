@@ -69,7 +69,7 @@ table: **six of the fourteen signal pins.**
 | a11 | `MUTE` | — | there is no decoder to mute. §4 is where `MUTE` matters, and it matters at the backplane, not here |
 | a12 | the word | ● / — | §5 |
 | a13 | `/ANS` | **out** | tied low: it answers at once, and must never give its listener ringback |
-| a14 | secondary word | ○ | open, unless it answers to a number as well (`groups.md` §3.3) |
+| a14 | spare | ○ | open |
 | c1, c3 | `+5 V` | in | the logic and the encoder's digital half |
 | c5, c7 | `±12 V` | in | the tuned oscillator pair and the engine of `mf8-spec.md` §12.1. **The ROM-player version needs neither rail**, because it needs no codec |
 | c9–c13 | `−48 V`, `RING` | — | nothing on this card goes near the line |
@@ -204,21 +204,20 @@ state is"). Hence the bus.
 
 ### 5.1 Which port it sits at, and whether it is dialable
 
-**There is no reserved port for it.** Blocks 0 and 1 have exactly four
-non-channel slots and all four are spoken for (`protocol.md` §5): 00 idle
-and never fitted, 04 the operator, 10 dial tone, 14 cannot-complete. Slots 1–3
-and 5–7 of those blocks are the trunk channels. So the card takes a port
-somewhere else, or no port at all:
+**There is no reserved port for it.** Block 0's switched-tone seats are spoken
+for (`protocol.md` §5): 01 dial, 02 busy, 03 cannot-complete. Ringback is
+the bus, so the card takes a port somewhere else, or no port at all:
 
 | | where | dialable? | cost |
 |---|---|---|---|
 | **no port** | any slot, with only its commutator input and no port circuit — "a source never listens, so it needs no port circuit" (`mvp.md`) | no | **≈ 5 packages saved.** The bus does not care, and neither does the caller |
-| **a trunk block's spare slot** | ports 20, 24, 30 or 34 — slot 0 or 4 of a block fitted as trunk group 2 or 3, which `protocol.md` §5 calls "two more lines" | **yes**, and 2 and 3 are valid first keys | nothing. Those two ports exist whether or not anything is in them |
-| **a line slot** | anywhere in 20–77 | yes | one subscriber number |
+| **with the dial-tone card** | same board at 01: dial on `C_TX`, ringback on the rear pin to `RBT` (`§5.2`) | no | nothing extra |
+| **a trunk block's spare slot** | slot 0 or 4 of a block 1–7 MF8 group — 10, 14, 20, 24, … | **yes** when that block's first digit is a local highway | nothing. Those ports exist whether or not anything is in them |
+| **a line slot** | anywhere in the dialable map | yes | one subscriber number |
 
-**The middle row is the natural home** on any exchange with a network, and it is
-free. Dialling it gives ringback on demand — a bench test line for the `RBT`
-conductor, the '157 substitution and a listener's decoder in one number.
+**Sharing the dial-tone card is the natural home.** Dialling a spare-slot home
+gives ringback on demand — a bench test for the `RBT` conductor, the '157
+substitution and a listener's decoder in one number.
 
 Whichever it is, `/ANS` is tied low so the port is never rung. Its own `C_TX`
 passes through unsubstituted, so what a caller hears when they dial it is the
@@ -229,15 +228,15 @@ same stream the '157s put in a ringing port's cell.
 **Not in any document, and offered as an option**: `mf8-spec.md` §12.1's card
 carries two engines off one LM13700, and a tone card populates one of them as an
 encoder and leaves the decoder half unfitted (`features.md` §2, "one encoder
-half"). Populate that half as a **second encoder** and one card at port 10 makes
-both tones — dial tone continuous on `C_TX`, ringback cadenced through the bus
+half"). Populate that half as a **second encoder** and one card at port 01 makes
+both progressing tones — dial tone continuous on `C_TX`, ringback cadenced through the bus
 driver onto `RBT`.
 
-Then the exchange's three tone cards are two, ringback needs no port and no slot
-of its own, and the only addition is a cadence gate on the second encoder's
-input. **It has not been drawn and the two engines have never been run as a
-pair**; the tone frequencies also differ between the two tones, so it is two
-oscillator pairs on one board, not one.
+Then the switched stop tones at 02 and 03 are a second card (or punches from a
+multi-output ROM card), ringback needs no port of its own, and the only addition
+is a cadence gate on the second encoder's input. **It has not been drawn and the
+two engines have never been run as a pair**; the tone frequencies also differ
+between the two tones, so it is two oscillator pairs on one board, not one.
 
 ## 6. What it says about itself
 
@@ -246,7 +245,7 @@ of fast busy needs no one's permission.
 
 **In an exchange**, it depends where it sits:
 
-- **At ports 10 and 14** the marker reaches the tone cards by address and never
+- **At ports 01–03** the marker reaches the tone cards by address and never
   reads their class (`extensions.md` §2.2), so the word needs no part at all.
 - **Anywhere else**, a '165 with class 011 *source* (`fabric.md` §3.5), so
   that the card is never busy and any number of listeners can be switched to it.

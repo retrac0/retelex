@@ -31,7 +31,7 @@ module tb_stats;
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
 
-    localparam [5:0] DIALTONE = 6'o10, NOGO = 6'o14;
+    localparam [5:0] DIALTONE = 6'o01, NOGO = 6'o03;
     localparam [2:0] TRUNK_BLK = 3'd5;
 
     // ---- the marker's serialiser, driven by hand ------------------------

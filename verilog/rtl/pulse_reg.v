@@ -34,10 +34,12 @@ module pulse_reg #(
 
     input             attach,        // the marker hands it a port number
     input      [5:0]  attach_port,
+    input      [5:0]  attach_src,     // held party; 00 = none (register.md 6.1)
     input             release_it,
     input             restart,       // begin the store again
     output reg        busy,
     output reg [5:0]  port,
+    output reg [5:0]  src,            // held party while busy; 00 if none
 
     output reg [2:0]  ndig,          // digits in the store since the last restart
     output reg [15:0] digits,        // the store: slot 0 in [3:0], as pulse counts
@@ -67,15 +69,15 @@ module pulse_reg #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            busy <= 0; port <= 0; ndig <= 0; digits <= 0; gone <= 0; idle_ms <= 0;
+            busy <= 0; port <= 0; src <= 0; ndig <= 0; digits <= 0; gone <= 0; idle_ms <= 0;
             nodig <= 0;
         end else begin
             gone <= 1'b0; nodig <= 1'b0;
             if (attach && !busy) begin
-                busy <= 1'b1; port <= attach_port; idle_ms <= 0;
+                busy <= 1'b1; port <= attach_port; src <= attach_src; idle_ms <= 0;
                 ndig <= 3'd0; digits <= 16'd0;
             end else if (release_it) begin
-                busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0;   // an idle store is empty
+                busy <= 1'b0; src <= 6'd0; ndig <= 3'd0; digits <= 16'd0;   // an idle store is empty
             end else if (busy) begin
                 // A digit completing in the very cycle of a restart belongs to
                 // the NEW store, slot 0 -- it must not be lost, and must not be
@@ -91,11 +93,11 @@ module pulse_reg #(
                     end
                     idle_ms <= 0;
                 end
-                if (p_clr) begin gone <= 1'b1; busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0; end
+                if (p_clr) begin gone <= 1'b1; busy <= 1'b0; src <= 6'd0; ndig <= 3'd0; digits <= 16'd0; end
                 if (tick_1k && !p_counting) begin
                     if (idle_ms == NODIG[15:0]) begin
                         gone <= 1'b1; nodig <= 1'b1;
-                        busy <= 1'b0; ndig <= 3'd0; digits <= 16'd0;
+                        busy <= 1'b0; src <= 6'd0; ndig <= 3'd0; digits <= 16'd0;
                     end
                     else idle_ms <= idle_ms + 1'b1;
                 end

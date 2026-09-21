@@ -1,5 +1,5 @@
-// source_card -- a card that talks and never listens: dial tone at 10,
-// cannot-complete at 14, or a radio or a clock anyone may dial
+// source_card -- a card that talks and never listens: dial tone at 01,
+// busy at 02, cannot-complete at 03, or a radio or a clock anyone may dial
 // (features.md 6, fabric.md 3.5's class "source").
 //
 // It needs no port circuit in the full design -- a source never listens -- and
@@ -10,7 +10,7 @@
 `timescale 1ns/1ps
 
 module source_card #(
-    parameter [7:0]  WORD = 8'h03,            // class 011: source
+    parameter [7:0]  WORD = 8'h06,            // class 011 source, form 0
     parameter [15:0] SEED = 16'hACE1
 )(
     input        clk,

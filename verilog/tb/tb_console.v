@@ -38,7 +38,7 @@ module tb_console #(
     localparam integer T_RISE = 64, T_FALL = 2048;       // 1 ms and 32 ms: an eighth of real
     localparam integer BRK = 12, MK = 8, PAUSE = 60;     // ms: a dial, at the same eighth
     localparam integer DT_WAIT = 600;
-    localparam [5:0]   PDT = 6'o10, PNG = 6'o14, SK0 = 6'o76, SK1 = 6'o77;
+    localparam [5:0]   PDT = 6'o01, PNG = 6'o03, SK0 = 6'o76, SK1 = 6'o77;
     localparam integer NODIG_MS = 600;                   // the register's no-digit timeout: 10 s
                                                          // in the exchange, at the bench's scale
 
@@ -787,8 +787,8 @@ module tb_console #(
         k = n_probe_wrote;
         con_key(K_PROBE, 1'b0, 6'o20, 6'o21, 1'b0);
         $display("     a probe of one port took %0.0f us", t_ten / 1000.0);
-        want(sup_seen && !sup_busy_dst && sup_word_dst == 8'h01,
-             "20 free: BUSY clear, and the card's word is a line");
+        want(sup_seen && !sup_busy_dst && sup_word_dst == 8'hFF,
+             "20 free: BUSY clear, and the card's word is a plain line (all ones)");
         con_key(K_PROBE, 1'b0, 6'o70, 6'o21, 1'b0);
         want(sup_word_dst == 8'h00, "70, an empty slot in a fitted block: no word at all");
         con_key(K_PROBE, 1'b0, SK0, 6'o21, 1'b0);
@@ -801,8 +801,9 @@ module tb_console #(
         call(6'o20, 6'o21);
         con_key(K_PROBE, 1'b1, 6'o20, 6'o21, 1'b0);
         $display("     a probe of both ends took %0.0f us", t_ten / 1000.0);
-        want(sup_busy_dst && sup_busy_src && sup_word_dst == 8'h01 && sup_word_src == 8'h01,
-             "PROBE + BOTH, on a call: both ends busy, both lines, one tenure");
+        want(sup_busy_dst && sup_busy_src &&
+             sup_word_dst == 8'hFF && sup_word_src == 8'hFF,
+             "PROBE + BOTH, on a call: both ends busy, both plain lines, one tenure");
         want(hook_dst && hook_src, "and both off hook, off cable A at the same time");
         want(n_probe_wrote == k, "and not one WR pulsed: a probe writes nothing");
         want(heard[6'o20] == nm(6'o21) && heard[6'o21] == nm(6'o20), "the call has not noticed");
@@ -816,6 +817,7 @@ module tb_console #(
              "and over parts 3-8 the bus never carried a wrong word");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

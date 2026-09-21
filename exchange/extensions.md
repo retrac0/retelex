@@ -122,7 +122,7 @@ visit (`marker.md` §4). The pin is low for a 1.
 | class `c c c` | | options `p p p p` (frames 4–7) |
 |---|---|---|
 | 000 | unequipped | |
-| 001 | line | `o P b ·` — overflow, priority, busy-out, spare (§2.4) |
+| 001 | line | `o · b ·` — overflow, spare, busy-out, spare (§2.4) |
 | 010 | operator | `o · · ·` — overflow in the same bit as a line |
 | 011 | source: a radio, a clock, a test tone (`features.md` §6) | |
 | 100 | outside line | |
@@ -132,10 +132,10 @@ visit (`marker.md` §4). The pin is low for a 1.
 
 **Bit order is shared where the marker's test is the same.** Frame 4 is overflow
 on every class that hunts (`line`, `operator`, `data`). Frame 6 is busy-out /
-busy-inbound — one terminating not-free test. Frame 5 is **not** shared: on a
-line it is priority (§2.4); on restricted it is warm. Restricted's dialling bits
-take the two slots that do not overlap: `z` in frame 4, `L` in frame 7. A
-trunk's `d d g n` does not share meaning with these and keeps its own map.
+busy-inbound — one terminating not-free test. Frame 5 is warm on restricted and
+spare on a line. Restricted's dialling bits take the two slots that do not
+overlap: `z` in frame 4, `L` in frame 7. A trunk's `d d g n` does not share
+meaning with these and keeps its own map.
 
 - **A plain line card carries no part and no jumper for this.** Its word pin is
   tied to ground, which reads all ones, and that means a line with no options.
@@ -144,7 +144,7 @@ trunk's `d d g n` does not share meaning with these and keeps its own map.
 - **The word's parts**: a 74HC165 loaded from jumpers on `TX_OCT` and shifted on
   `TX_CLK`, into ¼ 74HC03: **≈ 1¼ packages**. A line card has the footprint, and
   it is fitted when the card is to be an operator's position, restricted (class
-  111, including warm), in a hunt group, priority, busy-out / busy-inbound, or
+  111, including warm), in a hunt group, busy-out / busy-inbound, or
   nailed.
 - **Held off at power-up.** The '03's second input is an RC of about 100 ms. A
   card just plugged in sends nothing until its '165 is loading properly. Without
@@ -210,7 +210,7 @@ same frame on every class that uses them (§2.2).
 | frame | bit | | the marker |
 |---|---|---|---|
 | 4 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`conference.md` §6). Slot order inside the run decides who rings first, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow. Same bit on class *operator* and *data line* |
-| 5 | `P` | **priority** | under **register overload** — no free register in the pool — the scanner's call-request rule prefers ports with `P` set (§2.4.1). Idle, and when a register is free with no priority lift waiting, `P` is ignored: the line dials like any other. Terminating calls and hunts are unchanged |
+| 5 | `·` | **spare** | one bit free on class line |
 | 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
 | 7 | `·` | **spare** | one bit free on class line |
 
@@ -220,22 +220,6 @@ Busy-out means “this phone is not taking calls,” which is what a busy line
 already says, and it is what a hunt group needs so a member can leave the group
 without ending the run. Distinctive DND tone would be a second source and a
 second marker steer; not worth it.
-
-#### 2.4.1 Priority under overload
-
-The scanner still steps every port in fixed order from 00 (`marker.md` §3). It
-does not visit priority ports more often. **Prefer** means: when the register
-pool is empty, a lift on a line with `P` clear is **not** a call request — no
-register, no dial tone — until a register is free **and** a full revolution has
-seen no waiting priority lift. A priority lift takes the next free register in
-scanner order.
-
-| | |
-|---|---|
-| **Gate** | one sticky bit at the marker, `PWAIT`: set when the probe sees a free idle line with `P` and M high that was not given a register this visit; cleared at the scanner wrap if none was seen that revolution |
-| **Attach** | free register · call request · (`P` **or** `/PWAIT`) → hand the port to the register, as today |
-| **Overload** | every register busy. Non-priority off-hooks wait without dial tone; they are not steered to cannot-complete (that would burn the tone ports). Hang up clears them |
-| **Not this bit** | class hunts (0, 9), overflow runs, trunk direction hunts, and terminating free tests ignore `P`. Slot order inside an `o` run is still who rings first |
 
 Warm is not on class *line*. A courtesy / lift / help phone is **restricted with
 `w`** below.
@@ -441,7 +425,7 @@ hundred call-seconds, comes from.
 | test lines | a tone card; a card with only its word; a 74HC74 | line slots |
 | the word and `/ANS` | nothing on a plain line card; ≈ 1¼ on any other; two pull-ups a port; ≈ 3 at the marker | the cards, the block, the marker |
 | lines that answer at once | `/ANS` tied low on the card | the card |
-| restricted lines, hunt groups, priority, warm, busy-out | class *restricted* with `z w b L` (warm on frame 5); line `o P b ·`; shared frames for `o`/`b` only | the cards, the marker |
+| restricted lines, hunt groups, warm, busy-out | class *restricted* with `z w b L` (warm on frame 5); line `o · b ·`; shared frames for `o`/`b` only | the cards, the marker |
 | nailed-up connections | the card's word | the cards |
 | nailed hop by hop | a word of its own on each trunk card channel that may be nailed | trunk cards |
 | hotlines to another exchange | ≈ 8 on each hotline card | the card |
@@ -467,8 +451,7 @@ network.
 - **The line options in the marker**: restricted `z` / `L` (0-only; local-only,
   with local floor if both clear), overflow hunt on shared frame 4, restricted
   warm (`w`) on lift against the call-request rule, and busy `b` on shared frame 6
-  (terminating not-free / busy; outbound still a call request). **Priority `P` and
-  `PWAIT` under register overload** (§2.4.1) are in the RTL (`make priority`).
+  (terminating not-free / busy; outbound still a call request).
 - **The nail rule**: its place ahead of the call-request rule, and the 8 ms after
   a release in which a nailed port is idle.
 - **A nail now needs the scanner after every release.** With the marker stopped,

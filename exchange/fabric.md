@@ -247,6 +247,10 @@ marker reads:
 | 010 | operator | 110 | data line |
 | 011 | source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z w b L` (`extensions.md` §2.4). Conference leg as a class is retired: a bridge leg is an ordinary line |
 
+**All ones is not class 111.** It is a separate constant: a plain line card ties
+its word pin to ground and reads `11111111`, which means *line, no options*,
+with no part (`extensions.md` §2.2, `common-cards.md` §2). Class 001 is the
+same class when a card shifts an explicit word because it has options to say.
 An empty slot sends no word and reads 000. An earlier form carried the class on
 three pins and took "rings" from one of its bits, which tied the codes to the
 ringing. With the class in the word and `/ANS` on a pin, the codes are free, and
