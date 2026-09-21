@@ -86,36 +86,38 @@ lines, and the property that matters is unchanged.
 
 ### 1.3 What each card does with each pin
 
-The four cards of this document, the tone card of `tone-card.md`, and the exchange's
-baseband trunk card (`baseband.md` §3.5), which is the same socket and
-the same argument. ● = the card uses the pin; ○ = only where the optional '165
-is fitted; — = no connection on the card.
+The four cards of this document, the tone card of `tone-card.md`, the exchange's
+baseband trunk card (`baseband.md` §3.5), and the dual-tone POTS trunk
+(`pots-trunk.md` §6), which share the same socket and the same argument.
+● = the card uses the pin; ○ = only where the optional '165 is fitted; — = no
+connection on the card.
 
-| pin | | CVSD line | FXS | FXO | data | E&M | tone | baseband |
-|---|---|---|---|---|---|---|---|---|
-| a1 | `TX_CLK` | ● | ● | ● | ● | ● | ● | ● |
-| a2 | `TX_HB` | ● | — | — | — | — | — | — |
-| a3 | `TX_OCT` | ○ | ○ | ● | ● | ○ | ○ | ● |
-| a4 | `FILL` | ● | — | — | — | — | — | — |
-| a5 | `C_TX[n]` | ● | ● | ● | ● | ● | ● | ● |
-| a6 | `A_TX[n]` | ● | ● | ● | ● | ● | low | ● |
-| a7 | `RX_CLK` | — | ● | ● | ● | ● | — | — |
-| a8 | `RX_OCT` | — | — | — | ● | — | — | — |
-| a9 | `C_RX[n]` | ● | ● | ● | ● | ● | **—** | ● |
-| a10 | `A_RX[n]` | ● | ● | ● | ● | ● | — | ● |
-| a11 | `MUTE` | ● | — | — | ● | — | — | — |
-| a12 | the word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 01–03 | '165 |
-| a13 | `/ANS` | open | open | low | low | open or low | low | low |
-| a14 | spare | ○ | ○ | ○ | ○ | ○ | ○ | — |
-| c5, c7 | `±12 V` | — | ● | ● | — | ● | ● | — |
-| c9, c10 | `−48 V` | ● | ● | — | — | — | — | — |
-| c12 | `RING` | — | ● | — | — | — | — | — |
-| | rear pins (§7.3) | 4 | 2 | 2 | — | 6 | — | 6 |
+| pin | | CVSD line | FXS | FXO | data | E&M | tone | baseband | pots-t |
+|---|---|---|---|---|---|---|---|---|---|
+| a1 | `TX_CLK` | ● | ● | ● | ● | ● | ● | ● | ● |
+| a2 | `TX_HB` | ● | — | — | — | — | — | — | — |
+| a3 | `TX_OCT` | ○ | ○ | ● | ● | ○ | ○ | ● | ● |
+| a4 | `FILL` | ● | — | — | — | — | — | — | — |
+| a5 | `C_TX[n]` | ● | ● | ● | ● | ● | ● | ● | ● |
+| a6 | `A_TX[n]` | ● | ● | ● | ● | ● | low | ● | ● |
+| a7 | `RX_CLK` | — | ● | ● | ● | ● | — | — | ● |
+| a8 | `RX_OCT` | — | — | — | ● | — | — | — | — |
+| a9 | `C_RX[n]` | ● | ● | ● | ● | ● | **—** | ● | ● |
+| a10 | `A_RX[n]` | ● | ● | ● | ● | ● | — | ● | ● |
+| a11 | `MUTE` | ● | — | — | ● | — | — | — | — |
+| a12 | the word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 01–03 | '165 | '165 |
+| a13 | `/ANS` | open | open | low | low | open or low | low | low | low |
+| a14 | spare | ○ | ○ | ○ | ○ | ○ | ○ | — | — |
+| c5, c7 | `±12 V` | — | ● | ● | — | ● | ● | — | ● |
+| c9, c10 | `−48 V` | ● | ● | — | — | — | — | — | — |
+| c12 | `RING` | — | ● | — | — | — | — | — | — |
+| | rear pins (§7.3) | 4 | 2 | 2 | — | 6 | — | 6 | 2 |
 
 The detail behind each column is in that card's own document: `channel-cards.md`
 §2.4 for the CVSD line card, §3.7 for both POTS populations, §4 for the data
-card, `mf8-spec.md` §12.1 for E&M, `tone-card.md` §4 for the tone card, and
-`baseband.md` §3.5 for the baseband trunk card. The last four rows are the rails, which §3 gives
+card, `mf8-spec.md` §12.1 for E&M, `tone-card.md` §4 for the tone card,
+`baseband.md` §3.5 for the baseband trunk card, and `pots-trunk.md` §6 for the
+dual-tone POTS trunk. The last four rows are the rails, which §3 gives
 again with the current each one draws.
 
 Five things the matrix shows that no card's own document can:
@@ -126,15 +128,15 @@ Five things the matrix shows that no card's own document can:
   card sends downstream to an on-hook phone, and every other card's idle is its
   own codec's `1010`. **Both are on the socket for one card**, which is why
   `clocks.md` §4's derivation had to exist at all.
-- **a7 `RX_CLK` is the split in the set.** The four cards that hold a codec or a
-  bit pipe run their receive side in R on it; the CVSD line card and the baseband
-  card do not use it, because each resynchronizes `C_RX` into T with `TX_CLK` and
-  carries the crossing on its own flip-flops (`channel-cards.md` §2.3,
-  `baseband.md` §1). Those two are therefore the only cards in the set
-  that cannot tell the shelves apart at all. The other four do see the
-  difference on those two pins — recovered in MF8, `TX_CLK` in an exchange — and
-  are indifferent to it, which is `clocks.md` §5's point and not a weaker version
-  of it.
+- **a7 `RX_CLK` is the split in the set.** The cards that hold a codec or a
+  bit pipe run their receive side in R on it — FXS, FXO, data, E&M, and the
+  dual-tone POTS trunk; the CVSD line card and the baseband card do not use
+  it, because each resynchronizes `C_RX` into T with `TX_CLK` and carries the
+  crossing on its own flip-flops (`channel-cards.md` §2.3, `baseband.md` §1).
+  Those two are therefore the only cards in the set that cannot tell the
+  shelves apart at all. The others do see the difference on those two pins —
+  recovered in MF8, `TX_CLK` in an exchange — and are indifferent to it, which
+  is `clocks.md` §5's point and not a weaker version of it.
 - **No card uses more than eleven of the fourteen signal pins**, and the baseband
   card uses eight. Nothing on this socket is oversubscribed.
 - **The tone card is the only one that drives and never listens.** a9 is the
@@ -162,8 +164,8 @@ Five things the matrix shows that no card's own document can:
   secondary word is retired), so it could take this pin if `/HUNT_INH` is ever
   built from a channel slot (§9).
 - **The line.** Rows *a* and *c* are fully committed; the subscriber pair, the
-  E&M leads and the baseband card's four conductors leave by §7.3's rear
-  connector.
+  E&M leads, the baseband card's four conductors and the dual-tone POTS trunk's
+  tip/ring leave by §7.3's rear connector.
 - **`LOCK` and `CD`.** Trunk-card slot to the panel; no channel card needs them
   (`mf8-backplane.md` §8, §7.2 here).
 - **Any slot ID**, in either shelf.
@@ -245,6 +247,8 @@ plain line.
 | Data card | **'165**, class 110 *data line* | **tied low** | so the marker refuses to connect a phone to it (`features.md` §8) |
 | E&M, facing a station | **grounded**, or a '165 if it answers to a number | **open** | E rings it |
 | E&M, facing a PBX | **'165**, class 100 | **tied low** | a tie to a foreign switch is an outside line, not a network trunk: it carries no direction word and takes no part in the flood |
+| Baseband trunk (`baseband.md`) | **'165**, class trunk + direction | **tied low** | a copper tie; `/ANS` low so it never rings |
+| Dual-tone POTS trunk (`pots-trunk.md`) | **'165**, class trunk + direction | **tied low** | a voice-band tie on a dry pair; not an FXO |
 
 A card that needs both a class (e.g. *restricted*) and an *answers to* number
 cannot say both in one word; that combination is not offered (`groups.md`:
@@ -265,6 +269,8 @@ gains the same 1¼. The two line cards gain a wire.
 | POTS converter, FXO | yes | **yes** | no | no |
 | Data card | yes | no | no | no |
 | E&M subscriber | yes | **yes** | no | no |
+| Baseband trunk | yes | no | no | no |
+| Dual-tone POTS trunk | yes | **yes** — codec, oscillators, notches | no | no |
 
 Both shelves present all of these at every channel socket. `RING` is strapped on
 the backplane only to a slot that holds an FXS card, in both shelves, and each
@@ -425,6 +431,7 @@ into a shelf wiring field:
 | E&M subscriber card | 6 | audio pair each way, E, M |
 | Data card | — | none: its DTE cable is RS-422 or RS-232 and belongs on the front edge, where a person plugs it in |
 | Baseband trunk card (`baseband.md`) | 6 | `C`, A and the link clock each way — 4 if §3.3's clock conductor is not fitted. In the RS-422 population these are three pairs each way, 12 conductors, and the card is the only one in the set whose "line" is another shelf's backplane |
+| Dual-tone POTS trunk (`pots-trunk.md`) | 2 | tip, ring — dry pair, no feed; same leave as FXS/FXO, different circuit |
 | Trunk card (§7.2) | 4 | a pair each way |
 
 Two reasons for the rear and for the far end of it:

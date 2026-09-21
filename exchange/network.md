@@ -80,11 +80,12 @@ it is**, which is the one most carriers fail on and this one does not (§5.1 of
 | **The word** | class trunk, its direction and its glare bit (`extensions.md` §2.2), and `/ANS` tied low |
 
 So a direction may be carried by an MF8 card's six channels, the usual case; by
-a copper tie card between exchanges in one room; by a single-channel card, one
-trunk over a pair or two, for example two CVSD line interfaces back to back
-(`subscriber-line.md`), not designed; or by a voice-band card, such as the E&M
-card of `mf8-spec.md` §12.1 on a leased circuit or a radio. Any mix of them may
-face one way.
+a copper tie card between exchanges in one room (`baseband.md`); by a
+single-channel card, one trunk over a pair or two, for example two CVSD line
+interfaces back to back (`subscriber-line.md`), not designed; or by a
+voice-band card on a leased circuit or a radio — the E&M card of
+`mf8-spec.md` §12.1 on four-wire, or **`pots-trunk.md` on a dry two-wire pair
+with A as a dual tone each way**. Any mix of them may face one way.
 
 **One channel carries little.** At 1 % blocking one channel carries 0.01 E, two
 carry 0.15 E and six 1.91 E, and every call in the network floods every link for
@@ -652,5 +653,6 @@ clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
   stored legs, a claim that races a release, and a star's timing, all as gates.
   `net` models a two-hub tree (§5.1), and `topo` a chain, a star, two trees and
   rings with and without a strap (`topology.md`).
-- **Trunks that are not MF8** (§1.1): no single-channel or voice-band trunk card
-  has been sketched.
+- **Trunks that are not MF8** (§1.1): the baseband copper card is `baseband.md`;
+  the two-wire voice-band card with in-band dual-tone A is `pots-trunk.md`.
+  Neither has been on a bench; `pots-trunk.md` §9 lists what it still owes.

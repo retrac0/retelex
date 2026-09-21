@@ -52,8 +52,9 @@ line. 8 and 9 stay special in the code.
 | [terminal.md](terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
 | [rtl.md](rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
 | [baseband.md](baseband.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
+| [pots-trunk.md](pots-trunk.md) | **proposed**: one trunk over a dry two-wire POTS pair — voice-band codec and hybrid, A as a jumper-selected dual tone each way with notches out of the speech path |
 | [monitor.md](monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
-| [extensions.md](extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted*), its options (hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
+| [extensions.md](extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted* with warm), its options (hunt groups, priority, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
 | [groups.md](groups.md) | **proposed**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, a bank of call-in lines and a meet-me **conference bridge** are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and extensions-on-a-bridge are **retired** |
 | [observers.md](observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
 | [hookbusy.md](hookbusy.md) | the hook/busy display panel — 128 lamps on a card stack, merging the two observer fields |
@@ -183,9 +184,9 @@ is filtered at every block.
 Proposed: **whatever sits behind a port says everything about it**
 (`extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
 rings. One serial word, which the marker's scanner reads at every visit, carries
-the class and its options: a trunk's direction, a hunt group, a warm line, or
+the class and its options: a trunk's direction, a hunt group, priority, or
 the port it is nailed to; class *restricted* is its own code (`z w b L`: 0-only,
-reserved, busy-inbound, local-only). A plain line card
+warm, busy-inbound, local-only). A plain line card
 says all of it with no part, its word pin tied to ground. The earlier class on
 three pins is gone, and with it three commutators a block. Every circuit is
 still to draw. Nothing has been on a bench.
