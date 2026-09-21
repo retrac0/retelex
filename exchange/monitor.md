@@ -11,11 +11,9 @@ wrong.
 > with monitors that attach early, late and not at all, and counts the calls
 > claimed by the wrong exchange; `exch.log` is the run. The first rule written
 > for the monitor — "count only after 128 ms of steady make" — failed that test,
-> and §3 has the two rules that replace it. **The model runs the earlier
-> numbering**, in which the first digit was the key and a monitor compared one
-> digit. Under `1 e b h s` a monitor compares two, `e` and then `b`; the second is
-> not yet in the model (§5). The circuit of §6 is a sketch from the register's;
-> nothing has been on a bench.
+> and §3 has the two rules that replace it. **The model runs `1 e b h s`**: a
+> monitor compares both `e` and `b`. The circuit of §6 is a sketch from the
+> register's; nothing has been on a bench.
 
 ---
 
@@ -278,16 +276,16 @@ only their share.
 
 ## 5. Measured: which rules stop a wrong number
 
-**The model runs the earlier numbering**: a trigger digit, one digit compared,
-one digit more. Under `1 e b h s` the digit compared first is `e`, and `b` is
-compared after it. Both hazards below act on the first digit a monitor hears,
-whichever it is. A second compared digit adds no new way of attaching late,
-because the monitor is attached by then. It is not in the model, and is to be
-run.
+**The model runs `1 e b h s`.** A monitor compares both digits (`network.md` §3,
+`monitor.md` §2): first `e`, and if that matches this exchange it reads `b` and
+claims only on a full match; if `e` is not ours it lets the onward patch go after
+`e`. Both hazards below act on the first digit a monitor hears. A second compared
+digit does not add a new way of attaching late — the monitor is attached by then —
+but it rejects a partial count that landed on the wrong `e` before `b` is read.
 
-A chain of seven exchanges with `b` = 1–7; a dial at 10 pps ± 10 %, 60/40; the
-trigger digit, `b` (1–7, or ten pulses for an exchange that is not there), one
-digit more. The origin seizes 130 ms after the trigger's last pulse; each
+A chain of seven exchanges with codes 11–17; a dial at 10 pps ± 10 %, 60/40; the
+key `1`, then `e` and `b` (1–7, or ten pulses for a code that is not there), one
+digit more. The origin seizes 130 ms after the key's last pulse; each
 exchange patches onward 3–10 ms after its M rises; A crosses every hop through
 the trunk's A path as `exch.py aline` measured it; a claim cuts the onward patch.
 1 500 calls a row. **False = an exchange other than the one dialled claimed the
@@ -295,20 +293,21 @@ call.**
 
 | a monitor counts | origin guard | pause between digits | right | no claim | **false** |
 |---|---|---|---|---|---|
-| from whenever it attaches, after 128 ms of make | none | 140–900 ms | 49.5 % | 44.1 % | **97** |
-| the same | none | 450–900 ms | 68.2 % | 29.9 % | **29** |
-| the same | 128 ms | 140–900 ms | 49.9 % | 47.7 % | **36** |
-| the same | 128 ms | 450–900 ms | 70.4 % | 28.9 % | **11** |
-| only a seizure whose rise it saw | none | 140–900 ms | 81.9 % | 17.9 % | **4** |
-| the same | none | 450–900 ms | 81.5 % | 18.5 % | 0 |
-| **only a seizure whose rise it saw** | **128 ms** | 140–900 ms | 70.8 % | 29.2 % | **0** |
-| the same, line BER 1e−2 on every hop | 128 ms | 140–900 ms | 71.4 % | 28.6 % | **0** |
-| the same | 128 ms | 450–900 ms | 83.7 % | 16.3 % | **0** |
-| the same, line BER 1e−2 on every hop | 128 ms | 450–900 ms | 82.6 % | 17.4 % | **0** |
+| from whenever it attaches, after 128 ms of make | none | 140–900 ms | 92.9 % | 6.3 % | **12** |
+| the same | none | 450–900 ms | 96.5 % | 3.5 % | **1** |
+| the same | 128 ms | 140–900 ms | 94.5 % | 5.0 % | **7** |
+| the same | 128 ms | 450–900 ms | 96.1 % | 3.4 % | **7** |
+| only a seizure whose rise it saw | none | 140–900 ms | 98.0 % | 1.8 % | **3** |
+| the same | none | 450–900 ms | 97.7 % | 2.3 % | 0 |
+| **only a seizure whose rise it saw** | **128 ms** | 140–900 ms | 96.1 % | 3.9 % | **0** |
+| the same, line BER 1e−2 on every hop | 128 ms | 140–900 ms | 96.7 % | 3.3 % | **0** |
+| the same | 128 ms | 450–900 ms | 97.9 % | 2.1 % | **0** |
+| the same, line BER 1e−2 on every hop | 128 ms | 450–900 ms | 98.1 % | 1.9 % | **0** |
 
-- **The old rule gives wrong numbers even to a careful caller**: 29 in 1 500 at
-  human pauses, from monitors attaching between digits.
-- **Rule 1 alone is safe for a human and not for a fast one**: the four false
+- **The old rule still gives wrong numbers**, but far fewer than under one-digit
+  compare (12 in 1 500 at fast pauses against 97): a partial count must now match
+  both `e` and `b`.
+- **Rule 1 alone is safe for a human and not for a fast one**: the three false
   claims are all callers whose next digit began before the flood was complete.
 - **Both rules: none**, at any pause a pulse register can read at all, clean or
   at a line error rate of 1e−2.
@@ -323,12 +322,12 @@ every hop, both rules on, a pause of 140–900 ms and the 128 ms guard throughou
 
 | carrier a hop | the flood is up at | right | no claim | **false** |
 |---|---|---|---|---|
-| 0 ms | 46 ms | 73.3 % | 26.7 % | **0** |
-| 10 ms | 116 ms | 70.8 % | 29.2 % | **0** |
-| 20 ms | 186 ms | 72.1 % | 27.9 % | **0** |
-| 40 ms | 326 ms | 70.5 % | 29.5 % | **0** |
-| 80 ms | 606 ms | 72.2 % | 27.8 % | **0** |
-| **160 ms** | **1 166 ms** | 72.8 % | 27.2 % | **0** |
+| 0 ms | 46 ms | 96.6 % | 3.4 % | **0** |
+| 10 ms | 116 ms | 97.5 % | 2.5 % | **0** |
+| 20 ms | 186 ms | 96.8 % | 3.2 % | **0** |
+| 40 ms | 326 ms | 97.2 % | 2.8 % | **0** |
+| 80 ms | 606 ms | 96.7 % | 3.3 % | **0** |
+| **160 ms** | **1 166 ms** | 96.2 % | 3.8 % | **0** |
 
 **Delay costs the guard nothing, at any depth.** The flood taking 1.17 s to cross
 seven hops changes no outcome, because every break the caller makes is 1.12 s late
@@ -342,11 +341,11 @@ top of the marker:
 
 | wander a hop | the flood is up at | false, guard 128 ms | matched tap | false | abandoned, a dial of 140–900 | abandoned, 720–900 |
 |---|---|---|---|---|---|---|
-| 0 ms | 46 ms | **0** | 128 ms | 0 | 17 % | **0 %** |
-| 5 ms | 80 ms | **0** | 128 ms | 0 | 16 % | **0 %** |
-| 10 ms | 116 ms | **0** | 128 ms | 0 | 16 % | **0 %** |
-| 20 ms | 186 ms | **1** | 256 ms | 0 | 32 % | **0 %** |
-| 40 ms | 326 ms | **23** | 512 ms | 0 | 69 % | **0 %** |
+| 0 ms | 46 ms | **0** | 128 ms | 0 | 14 % | **0 %** |
+| 5 ms | 80 ms | **0** | 128 ms | 0 | 15 % | **0 %** |
+| 10 ms | 116 ms | **0** | 128 ms | 0 | 14 % | **0 %** |
+| 20 ms | 186 ms | **0** | 256 ms | 0 | 31 % | **0 %** |
+| 40 ms | 326 ms | **7** | 512 ms | 0 | 65 % | **0 %** |
 
 **And in the gates.** `verilog`'s `make chain-delay` is three exchanges with 20 ms
 of carrier on every link — 160 ms in the world, because that bench dials eight
@@ -410,8 +409,6 @@ the compare is all four bits. 8 and 9 are never jumpered, so neither can match.
 
 ## 7. Not measured
 
-- **The second compared digit.** `exch.py monitor` compares one digit. Two, with
-  the let-go after a first digit that is not ours, are to be run.
 - **The circuit.** A sketch; the orderings are the register's and have not been
   drawn for this.
 - **The scanner's 1 ms** against a real seizure's rise through the A path's

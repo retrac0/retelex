@@ -43,7 +43,7 @@ nothing.
 
 | | |
 |---|---|
-| Ports | **01–03, 05–07 and 11–13, 15–17**: two groups of six, one MF8 link each. A channel's slot is its bit position on the wire, C1–C3 at 1–3 and C4–C6 at 5–7, so one 3-bit number is its C bit, its A bit's superframe state and its port (`protocol.md` §5). Slots 0 and 4, F and S on the wire, are ports of their own: idle and the operator in block 0, the two tones in block 1. **21–23, 25–27 and 31–33, 35–37 may be two groups more**, at the cost of twelve lines |
+| Ports | **11–13, 15–17** first: one MF8 link on block 1. A channel's slot is its bit position on the wire, C1–C3 at 1–3 and C4–C6 at 5–7, so one 3-bit number is its C bit, its A bit's superframe state and its port (`protocol.md` §5). Slots 0 and 4 (10, 14) are free on that block. **Further groups in blocks 2+** (21–23 25–27, …) at the cost of those lines. **Block 0 is never an MF8 trunk group** — 01–03 are tones, 04–07 the operator bank; 06–07 may take single-channel trunks (`network.md` §1.1). On a standalone exchange, 1 is a highway digit and there is no trunk block |
 | Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`extensions.md` §2.2). An MF8 trunk card on a tie trunk sends one word to its six channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
 | The link | an MF8 pair each way — or, between exchanges in one rack, copper: a tie card at each end crosses the ports over and gives them their class and words; same clock, bit-exact, one frame more delay (`protocol.md` §4). Or any other carrier that does what §1.1 asks |
 | The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`terminal.md`) |
@@ -117,7 +117,8 @@ cannot-complete for `1`, and otherwise parses the same digits.
   its own.
 - **By convention 00–17 are the backbone's**: tandems and hubs, the exchanges that
   are mostly trunks. Ordinary exchanges take 20–77. A network's codes then read
-  as an exchange's ports do, where 00–17 are trunks and services and 20–77 are
+  as an exchange's ports do, where 00–07 are services, 10–17 the first trunk
+  group when networked, and 20–77 are
   lines (`protocol.md` §5), and a planner sees which codes are which. Nothing
   enforces it: all sixty-four are assignable.
 - **8 and 9 stay special in both places of the code.** `1` followed by either, or
@@ -199,8 +200,7 @@ caller gets the tone at once.
 A dial at 10 pps, 0.8 s between digits; milliseconds from lifting the handset.
 The times are arithmetic on the constants `exch.py flood` uses (a digit recognised
 128 ms after its last pulse, a marker action 2, a hop of the flood 7, the A path
-1.5 up and 2 down a hop, a release 256). The model's own run, `flood` 6, is of
-the earlier plan, in which `e` was the key and a monitor read one digit.
+1.5 up and 2 down a hop, a release 256). The model's own run is `flood` 1.
 
 ```
       0   22   44 lifts
@@ -374,7 +374,7 @@ twice.
 |---|---|
 | What is consumed | the first digit only, and it is the trigger: `1`, which says only that the call leaves, so no monitor needs it |
 | A monitor | its own small circuit on the trunk block, **not a register from the pool**: `monitor.md`. It reads `e` and `b`, claims or lets go, and on a claim the marker fetches a register for `h s` |
-| What keeps it from ever claiming a wrong number | **a monitor counts only a seizure whose rise it saw; the origin abandons a call whose next break comes within 128 ms of its seizure.** Measured for the first digit a monitor hears: 0 false claims in 1 500 calls with both, 4 to 97 without (`monitor.md` §5). Both hazards act on the first digit heard; the second is not yet in the model |
+| What keeps it from ever claiming a wrong number | **a monitor counts only a seizure whose rise it saw; the origin abandons a call whose next break comes within 128 ms of its seizure.** Measured under `1 e b h s` with both digits compared: 0 false claims in 1 500 calls with both rules, 3 to 12 without (`monitor.md` §5). Both hazards act on the first digit heard |
 | Pulses as they arrive | a CVSD line card's hook detector shortens a break by 6.1 ms (`register.md` §1); the trunk's A path by 0.5 ms a hop (`channel-cards.md` §5); a copper tie not at all. A 60 ms break is 50 ms after seven hops, against an 8 ms window |
 | Against the release rule | the longest dial break, 103 ms, against the shortest release, 204 ms: `exch.py calls` 15b |
 | Post-dial delay | **133 ms after the last pulse**, whatever the hop count |
@@ -405,9 +405,8 @@ guard is one tap on a counter with four taps of room above it. A dial leaves 242
 **What it costs: every call that leaves floods the whole network**, from the key
 until `e` and `b` have both been dialled. One trunk on every link, and a resolver
 at every hub, are held for that long: **2.0 s for the code 11 up to 3.8 s for 00,
-0.1 s a pulse, 2.7 s on average over the sixty-four** (the 1.1 s that
-`exch.py flood` 3 gives for one digit of one pulse heard, 0.86 s for a second,
-and 0.1 s for each pulse more). A monitor whose `e` is not the one dialled is free after the first
+0.1 s a pulse, 2.7 s on average over the sixty-four** (`exch.py flood` 5; `code_hold`
+in the model). A monitor whose `e` is not the one dialled is free after the first
 digit, 1.5 s on average. **A local call costs nothing**: under the earlier plan,
 in which every number began with a shared `e`, every call flooded, local ones
 too.
@@ -633,11 +632,10 @@ clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
   the circuits: a monitor is a thing that is taken and given back, not a pulse
   counter, and a resolver is a count. The fan-out's writes, the hub's re-point
   and the two-digit compare are still to be drawn.
-- **§4's timing.** Arithmetic on measured constants; only the monitor's rules are
-  simulated, and those for one digit heard. **`exch.py flood` and `monitor` still
-  run the earlier plan**, in which the first digit `e` was the key and a monitor
-  read `b` alone. §3.1's timeline and §4–§5's flood figures are worked from their
-  constants for `1 e b h s`, and are to be re-run.
+- **§4's timing.** Arithmetic on measured constants; the monitor's rules are
+  simulated under `1 e b h s` with both digits compared (`exch.py monitor`,
+  `flood`). §3.1's timeline and §4–§5's flood figures are worked from those
+  constants.
 - **An accidental `1`.** One pulse is the easiest digit to make by fumbling the
   hook. It costs a flood and a cannot-complete, never a wrong number, since a
   claim needs two more digits to match. How often it happens is a counter on a

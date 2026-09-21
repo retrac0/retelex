@@ -8,8 +8,8 @@ by class in fixed order, and features that are lines.
               hunts for 0 and 9, registers as a pool, and what each party hears
     announce  a recorded message as a ROM image of CVSD bits, and its two seams
     aline     digits as serial characters on the A bit, through one to seven trunk hops
-    flood     the timing of a network call: dial pulses on A, flooded and claimed
-    monitor   the junctor monitor: which rules keep a flood from ever claiming a wrong number
+    flood     the timing of a network call: the key 1, live pulses, e and b, the claim
+    monitor   the trunk monitor: which rules keep a flood from ever claiming a wrong number
     timing    the fabric's circuit in nanoseconds: strobes, capture, and what a card samples
     mainboard what a ribbon between the blocks costs those margins: clock skew, the line, the edges
     confer    a conference with no codec in it: the bridge switches bits to whoever is talking
@@ -25,13 +25,19 @@ at the frame edge.  The exchange is modelled at the 1 kHz tick, as the marker an
 the release detectors would run: ports, latches, BUSY, class marks, cards that
 behave (phones, tones, registers, announcements, conference legs, a CO line).
 
+A network call is dialled `1 e b h s`: the key opens a pulse flood, the caller's
+own `e` and `b` go down every trunk live, and the exchange they name claims
+(network.md 3).  Local calls are `h s` and never touch a trunk.  `net` and `topo`
+run that call by call; `flood` is the timing arithmetic; `monitor` is the two
+rules that keep a wrong exchange from ever claiming.
+
 Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the run)
         python3 sim/exch.py tandem     protocol.md  §2
         python3 sim/exch.py fabric     protocol.md  §4
         python3 sim/exch.py calls      marker.md    §§3-6, features.md, mvp.md
         python3 sim/exch.py announce   features.md  §3
-        python3 sim/exch.py aline      network.md   §8
-        python3 sim/exch.py flood      network.md   §4
+        python3 sim/exch.py aline      network.md   §9
+        python3 sim/exch.py flood      network.md   §§3.1, 4
         python3 sim/exch.py net        network.md   §5.1
         python3 sim/exch.py topo       topology.md
         python3 sim/exch.py monitor    monitor.md   §5
@@ -39,8 +45,6 @@ Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the r
         python3 sim/exch.py mainboard  mainboard.md §5
         python3 sim/exch.py confer     conference.md
         python3 sim/exch.py ss0        ss0.md
-
-The network of network.md (`net`) is the second pass and is not here.
 """
 import heapq, itertools, os, sys, time, zlib
 import numpy as np
@@ -300,13 +304,14 @@ def fabric():
 
 # ------------------------------------------------------------------ calls
 
-UNEQ, LINE, OPER, EXT, TRUNK, DIAL, NOGO, REG = range(8)
-CLASS = ['unequipped', 'line', 'operator', 'external', 'trunk', 'dial tone', 'cannot-complete', 'register']
+UNEQ, LINE, OPER, EXT, TRUNK, DIAL, BUSY, NOGO = range(8)
+CLASS = ['unequipped', 'line', 'operator', 'external', 'trunk', 'dial tone', 'busy', 'cannot-complete']
 T_FALL, T_RISE, TOL = 256, 16, 0.20          # release detector: fall, arm, RC tolerance
 T_DTMF = 40                                   # MT8870 guard: tone present this long before StD
 T_HIT, T_ID = 8, 128                          # register.md 2: a break is a pulse; a make ends the digit
 T_NODIGIT = 10000                             # register held with nothing dialled
 RING_ON, RING_OFF = 2000, 4000
+# Settled port map (protocol.md 5): 01 dial, 02 busy, 03 cannot-complete; registers take no port.
 
 
 class Card:
@@ -385,38 +390,44 @@ class COLine(Card):
     def sound(self): return 'CO line'
 
 
-class Register(Card):
-    """A register as a line: it hears the caller through its own latch."""
-    cls = REG
+class Register:
+    """A register in the common pool: no port.  It reads the caller's hook and
+    DTMF key as the marker's probe does (marker.md 4)."""
     def __init__(self):
-        super().__init__(); self.cls = REG; self.heard = 0; self.done = False
+        self.caller = None; self.heard = 0; self.done = False
         self.brk = self.make = self.count = 0
-    def step(self, ex, p, t):
-        src = ex.latch[p]
-        if not src:
-            self.brk = self.make = self.count = 0
-        elif not ex.E[p]:                                    # the caller's hook, on this port's own A_RX
+    def attach(self, caller):
+        self.caller = caller; self.heard = 0; self.done = False
+        self.brk = self.make = self.count = 0
+    def clear(self):
+        self.caller = None; self.heard = 0; self.done = False
+        self.brk = self.make = self.count = 0
+    def step(self, ex, r, t):
+        a = self.caller
+        if a is None:
+            return
+        if not ex.card[a].M:
             self.brk += 1; self.make = 0
         else:
-            if self.brk >= T_HIT: self.count += 1            # a break has just ended, and was a pulse
+            if self.brk >= T_HIT: self.count += 1
             self.brk = 0; self.make += 1
             if self.make == T_ID and self.count:
-                ex.marker_digit(p, str(self.count % 10), t); self.count = 0
-        k = ex.card[src].key if src else None
+                ex.marker_digit(r, str(self.count % 10), t); self.count = 0
+        k = ex.card[a].key
         if k is None:
             self.heard = 0; self.done = False
         else:
             self.heard += 1
             if self.heard >= T_DTMF and not self.done:
                 self.done = True
-                ex.marker_digit(p, k, t)
-    def sound(self): return 'silence'
+                ex.marker_digit(r, k, t)
 
 
 class Exchange:
-    def __init__(self, cards, seed=1, log=True, tfall=None, settle=True, ringgate=True):
+    def __init__(self, cards, regs=3, seed=1, log=True, tfall=None, settle=True, ringgate=True):
         self.card = [cards.get(p, Card()) for p in range(NP)]
         self.act = [p for p in range(NP) if type(self.card[p]) is not Card]
+        self.regs = [Register() for _ in range(regs)]
         self.settle, self.ringgate = settle, ringgate
         self.pinged = 0; self.killed = 0
         self.t_wr = [-1] * NP; self.t_fell = [[-1, -1] for _ in range(NP)]; self.was = [[0, 0] for _ in range(NP)]
@@ -427,7 +438,7 @@ class Exchange:
         self.filt = [[0, 0] for _ in range(NP)]      # filtered M, filtered E
         self.cnt = [[0, 0] for _ in range(NP)]
         self.scan = 0
-        self.calls = {}                              # register port -> [caller, digits, t of last event]
+        self.calls = {}                              # register index -> [caller, digits, t of last event]
         self.t = 0
         self.log = log; self.watch = []; self.last = {}
         self.dangle = {}; self.max_dangle = 0; self.overhear = 0; self.events = []
@@ -468,20 +479,24 @@ class Exchange:
     def nogo(self, a, why):
         n = self.hunt(NOGO, free=False)
         self.write(a, n or 0, 1); self.note(f'marker: {oc(a)} -> cannot-complete ({why})')
+    def busy_tone(self, a, why):
+        n = self.hunt(BUSY, free=False) or self.hunt(NOGO, free=False)
+        self.write(a, n or 0, 1); self.note(f'marker: {oc(a)} -> busy ({why})')
     def release_reg(self, r):
-        self.write(r, 0, 0); self.calls.pop(r, None)
+        self.regs[r].clear(); self.calls.pop(r, None)
     def request(self, p):
         if self.cls(p) == EXT:                        # a CO line ringing in: as if it had dialled 0
             o = self.hunt(OPER)
             if o is not None: self.connect(p, o)
             return
-        r = self.hunt(REG)
+        r = next((i for i, reg in enumerate(self.regs) if reg.caller is None), None)
         if r is None:
             return                                    # no dial tone yet; the scanner comes round again
         d = self.hunt(DIAL, free=False)
-        self.write(r, p, 1); self.write(p, d or 0, 1)
+        self.regs[r].attach(p)
+        self.write(p, d or 0, 1)
         self.calls[r] = [p, [], self.t]
-        self.note(f'marker: register {oc(r)} -> {oc(p)}, dial tone from {oc(d) if d else "nowhere"}')
+        self.note(f'marker: register {r} -> {oc(p)}, dial tone from {oc(d) if d else "nowhere"}')
     def marker_digit(self, r, k, t):
         if r not in self.calls: return
         a, digits, _ = self.calls[r]
@@ -504,9 +519,9 @@ class Exchange:
             else:
                 q = int(digits[0]) * 8 + int(k)
                 c = self.cls(q)
-                if c in (UNEQ, REG): self.nogo(a, f'{oc(q)} is {CLASS[c]}')
-                elif c in (DIAL, NOGO): self.write(a, q, 1)
-                elif q == a or not self.free(q): self.nogo(a, f'{oc(q)} busy')
+                if c == UNEQ: self.nogo(a, f'{oc(q)} is {CLASS[c]}')
+                elif c in (DIAL, BUSY, NOGO): self.write(a, q, 1)
+                elif q == a or not self.free(q): self.busy_tone(a, f'{oc(q)} busy')
                 else: self.connect(a, q)
         self.release_reg(r)
 
@@ -517,6 +532,8 @@ class Exchange:
             s = self.latch[p]; self.E[p] = self.card[s].M if s else 0
         for p in self.act:
             self.card[p].step(self, p, t)
+        for r, reg in enumerate(self.regs):
+            reg.step(self, r, t)
         for p in self.act:                            # the release detectors, one pair a port
             for i, v in enumerate((self.card[p].M, self.E[p])):
                 if self.was[p][i] and not v: self.t_fell[p][i] = t
@@ -534,10 +551,10 @@ class Exchange:
                         if self.t_wr[p] > self.t_fell[p][i] + 1:
                             self.killed += 1          # the marker wrote this latch AFTER the fall being timed
                     self.latch[p] = 0; self.busy[p] = 0
-        for r in [r for r in self.calls if not self.busy[r]]:
-            self.calls.pop(r)                         # the caller went away and the register let go
         for r, (a, digits, t0) in list(self.calls.items()):
-            if t - t0 > T_NODIGIT:
+            if not self.busy[a]:
+                self.release_reg(r)                   # the caller went away and the register let go
+            elif t - t0 > T_NODIGIT:
                 self.nogo(a, 'nothing dialled'); self.release_reg(r)
         for _ in range(8):                            # the scanner: 8 ports a tick, 64 in 8 ms
             p = self.scan; self.scan = (self.scan + 1) % NP
@@ -546,7 +563,7 @@ class Exchange:
                 self.request(p)
         for p in self.act:                            # who is listening to a party that is not listening back
             s = self.latch[p]
-            if s and self.cls(p) != REG and self.cls(s) in (LINE, OPER, EXT, TRUNK) and self.latch[s] != p:
+            if s and self.cls(s) in (LINE, OPER, EXT, TRUNK) and self.latch[s] != p:
                 self.dangle[p] = self.dangle.get(p, 0) + 1
                 self.max_dangle = max(self.max_dangle, self.dangle[p])
                 if self.busy[s] and self.cls(self.latch[s]) in (LINE, OPER, EXT, TRUNK) and self.card[s].M:
@@ -577,12 +594,13 @@ class Exchange:
         return not stuck
 
 
-def layout(phones, regs=3, tones=True, extra=None):
+def layout(phones, tones=True, extra=None):
+    """Cards for the settled port map: tones at 01–03 when fitted; no register ports."""
     cards = {}
     if tones:
-        cards[0o01] = Tone(DIAL, 'dial tone'); cards[0o02] = Tone(NOGO, 'cannot-complete tone')
-    for k in range(regs):
-        cards[0o03 + k] = Register()
+        cards[0o01] = Tone(DIAL, 'dial tone')
+        cards[0o02] = Tone(BUSY, 'busy tone')
+        cards[0o03] = Tone(NOGO, 'cannot-complete tone')
     cards.update(phones)
     cards.update(extra or {})
     return cards
@@ -604,15 +622,16 @@ def pulses(t, digits, pps=10.0, brk=0.60, pause=700):
 
 def calls():
     print('CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.')
-    print('  00 idle (never fitted), 01 dial tone, 02 cannot-complete tone, 03-05 registers; subscribers 20-77.')
+    print('  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04-07 operator bank;')
+    print('  registers are a pool (no ports); subscribers 20-77 (standalone may use 10-17).')
     print(f'  Release: M or E low for {T_FALL} ms (each port\'s two detectors +-{TOL:.0%}), after {T_RISE} ms high.  '
           f'Scanner: 8 ports a tick.\n')
     ok = True
 
-    def scene(title, cards, ms, watch, **kw):
+    def scene(title, cards, ms, watch, regs=3, **kw):
         nonlocal ok
         print(f'  {title}')
-        ok &= Exchange(cards, **kw).run(ms, watch)
+        ok &= Exchange(cards, regs=regs, **kw).run(ms, watch)
         print()
 
     P_ = Phone
@@ -635,9 +654,9 @@ def calls():
     scene('5. Abandoned while ringing: the called phone must stop ringing and be free.',
           layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(4000, 'on')]), 0o21: P_()}), 5500, [0o20, 0o21])
     scene('6. Abandoned while dialling: the register must let go by itself.',
-          layout({0o20: P_([(100, 'off')] + keys(900, '2') + [(1500, 'on')])}), 3000, [0o20, 0o03])
+          layout({0o20: P_([(100, 'off')] + keys(900, '2') + [(1500, 'on')])}), 3000, [0o20])
     scene('7. Permanent signal: off-hook and nothing dialled.',
-          layout({0o20: P_([(100, 'off'), (13000, 'on')])}), 14500, [0o20, 0o03])
+          layout({0o20: P_([(100, 'off'), (13000, 'on')])}), 14500, [0o20])
     scene('8. Two callers dial each other at the same instant; and a called phone that lifts 3 ms before the test.',
           layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(3000, 'on'), (4000, 'off')] + keys(4800, '23')
                            + [(7000, 'on')]),
@@ -682,8 +701,8 @@ def calls():
     scene('13. One register, two callers lifting together: the second waits for dial tone.',
           layout({0o20: P_([(100, 'off')] + keys(1500, '24') + [(6000, 'on')]),
                   0o22: P_([(102, 'off')] + keys(3500, '25') + [(6000, 'on')]),
-                  0o24: P_([(6200, 'on')], answer=1000), 0o25: P_([(6200, 'on')], answer=1000)}, regs=1),
-          7500, [0o20, 0o22])
+                  0o24: P_([(6200, 'on')], answer=1000), 0o25: P_([(6200, 'on')], answer=1000)}),
+          7500, [0o20, 0o22], regs=1)
     scene('14. Meet-me: three callers dial the three legs at 70, 71, 72.',
           layout({0o20: P_([(100, 'off')] + keys(900, '70') + [(6000, 'on')]),
                   0o22: P_([(600, 'off')] + keys(1400, '71') + [(7000, 'on')]),
@@ -720,9 +739,10 @@ def calls():
             for _ in range(9000): ex.step()
             worst = max(worst, ex.max_dangle); killed += ex.killed
             left = [p for p in range(NP) if ex.latch[p] or ex.busy[p]]
-            stuck += bool(left); other += any(ex.cls(p) != REG or p not in ex.calls for p in left)
+            stuck += bool(left); other += bool(left)
             conn += any('<->' in e and oc(c) in e for _, e in ex.events)
-            nogo += any('cannot-complete' in e and e.startswith(f'marker: {oc(c)}') for _, e in ex.events)
+            nogo += any(('cannot-complete' in e or 'busy' in e) and e.startswith(f'marker: {oc(c)}')
+                        for _, e in ex.events)
         print(f'      {"yes" if settle else "no":46s} {killed:36d} {worst:27d} {f"{conn} / {nogo}":>30s} {stuck:16d} {other:19d}')
     print('      Not idle at 9 s is always the same thing: the party left off-hook was given a register and hung up inside')
     print(f'      the detector\'s {T_RISE} ms arming time, so the register never saw E rise; the {T_NODIGIT // 1000} s no-digit timeout frees it.')
@@ -773,8 +793,8 @@ def calls():
           '      then 20 dials the four first keys that find nothing here -- 0 (no operator), 9 (no outside line),\n'
           '      1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).',
           layout({0o20: P_([(100, 'off')] + ev1 + [(7000, 'on'), (16500, 'on')] + tries, answer=1500),
-                  0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, regs=1, tones=False),
-          40500, [0o20, 0o21])
+                  0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, tones=False),
+          40500, [0o20, 0o21], regs=1)
 
 
 # ------------------------------------------------------------------ announce
@@ -929,28 +949,55 @@ def aline():
 # ------------------------------------------------------------------ monitor
 
 G_ORIGIN = 128            # the origin abandons a call whose next break comes this soon after its seizure, ms
-T_SCAN = 6                # a pooled monitor is given a seizure only within one scan of its rise, ms
+T_SCAN = 8                # a pooled monitor is given a seizure within one scan of its rise, ms
+                          # (eight slots on the 8 kHz octet mark: monitor.md 3)
 
 
-def first_digit(y, i0, steady=False):
-    """What a monitor counting from sample i0 takes as the first digit: breaks of T_HIT or more,
-    ended by T_ID of make; None if the junctor releases first.  steady: the old rule - the monitor
-    must see T_ID of unbroken make from the moment it attaches, or it is blind."""
+def count_digits(y, i0, n=1, steady=False):
+    """Digits a monitor counting from sample i0 takes: breaks of T_HIT or more, ended by T_ID of
+    make; stops early if the trunk releases.  steady: the old rule -- T_ID of unbroken make from
+    the moment it attaches, or it is blind.  Returns a list of up to n pulse counts."""
     seg = y[i0:]
     if seg.size == 0 or (steady and not seg[0]):
-        return None
+        return []
     e = np.flatnonzero(np.diff(seg.astype(np.int8))) + 1
     starts = np.concatenate([[0], e]); lens = np.diff(np.concatenate([starts, [seg.size]])) / 8.0
     vals = seg[starts]
     if steady and lens[0] < T_ID:
-        return None
-    n = 0
+        return []
+    out, pulses = [], 0
     for v, L in zip(vals, lens):
         if not v:
-            if L >= T_FALL: return None
-            if L >= T_HIT: n += 1
-        elif n and L >= T_ID:
-            return n
+            if L >= T_FALL:
+                return out
+            if L >= T_HIT:
+                pulses += 1
+        elif pulses and L >= T_ID:
+            out.append(pulses)
+            if len(out) >= n:
+                return out
+            pulses = 0
+    return out
+
+
+def first_digit(y, i0, steady=False):
+    d = count_digits(y, i0, 1, steady)
+    return d[0] if d else None
+
+
+def digit_end(y, i0, which=0):
+    """Sample index at which digit `which` (0-based) is recognised, or None."""
+    seg = y[i0:]
+    e = np.flatnonzero(np.diff(seg.astype(np.int8))) + 1
+    starts = np.concatenate([[0], e]); lens = np.diff(np.concatenate([starts, [seg.size]])) / 8.0
+    n, seen = 0, 0
+    for st, v, L in zip(starts, seg[starts], lens):
+        if not v and L >= T_HIT:
+            n += 1
+        elif v and n and L >= T_ID:
+            if seen == which:
+                return i0 + int(st) + T_ID * 8
+            seen += 1; n = 0
     return None
 
 
@@ -970,11 +1017,12 @@ def monitor():
     rng = np.random.default_rng(11)
     H, N, NS = 7, 1500, 1000
     print('MONITOR -- which rules keep a live flood from ever claiming a wrong number.')
-    print(f'  A chain: an origin and {H} exchanges whose exchange digits are 1..{H}.  A dial at 10 pps +-10 %, 60/40; the')
-    print('  trigger digit, the exchange digit (1-7, or ten pulses for an exchange that is not there) and one more.')
-    print('  The origin seizes 130 ms after the trigger\'s last pulse; each exchange patches the seizure onward 3-10 ms')
-    print('  after its M rises; A crosses every hop through the trunk\'s A path (aline 1).  A claim cuts the onward patch.')
-    print(f'  {N} calls a row.  FALSE = an exchange other than the one dialled claimed the call.\n')
+    print(f'  A chain: an origin and {H} exchanges whose codes are 11..1{H} (shared e, distinct b).  A dial at')
+    print('  10 pps +-10 %, 60/40; the key (1), then e and b (1-7, or ten pulses for a code that is not')
+    print('  there), and one more.  A monitor compares BOTH digits (network.md 3, monitor.md 2).')
+    print("  The origin seizes 130 ms after the key's last pulse; each exchange patches the seizure onward")
+    print('  3-10 ms after its M rises; A crosses every hop through the trunk\'s A path (aline 1).  A claim')
+    print(f'  cuts the onward patch.  {N} calls a row.  FALSE = an exchange other than the one dialled claimed.\n')
 
     def dial(t, n, per):
         ev = []
@@ -985,53 +1033,51 @@ def monitor():
     def trial(pause_lo, pause_hi, rise_seen, origin_guard, ber, carrier=0.0,
               guard_ms=G_ORIGIN, wander=0.0):
         per = 100.0 * (1 + 0.1 * (2 * rng.random() - 1))
+        # key 1, then e and b (1-7 or ten), then a filler digit
         e = int(rng.integers(1, 9)); e = 10 if e == 8 else e
-        brk, end = dial(1000.0, 2, per)                        # the trigger digit
+        b = int(rng.integers(1, 9)); b = 10 if b == 8 else b
+        brk, end = dial(1000.0, 1, per)                        # the key: one pulse
         t_sz = end + T_ID + T_MARK
-        p1, p2 = rng.uniform(pause_lo, pause_hi, 2)
-        b2, end2 = dial(end + p1, e, per)
-        b3, end3 = dial(end2 + p2, int(rng.integers(2, 8)), per)
-        n = int((end3 + 600) * 8)
+        p1, p2, p3 = rng.uniform(pause_lo, pause_hi, 3)
+        be, end_e = dial(end + p1, e, per)
+        bb, end_b = dial(end_e + p2, b, per)
+        bf, end_f = dial(end_b + p3, int(rng.integers(2, 8)), per)
+        n = int((end_f + 600) * 8)
         m = np.ones(n, np.uint8)
-        for a, b in brk + b2 + b3:
-            m[int(a * 8):int(b * 8)] = 0
+        for a, c in brk + be + bb + bf:
+            m[int(a * 8):int(c * 8)] = 0
         x = m.copy(); x[:int(t_sz * 8)] = 0
-        abandoned = origin_guard and b2[0][0] - t_sz < guard_ms
+        abandoned = origin_guard and be[0][0] - t_sz < guard_ms
         if abandoned:
-            x[int(b2[0][0] * 8):] = 0                          # the origin abandons: the junctor falls and stays down
+            x[int(be[0][0] * 8):] = 0                          # the origin abandons: the trunk falls
         claimers = []
         for j in range(1, H + 1):
             y = a_path(delayed(x, carrier), 1, ber, rng)
             up = np.flatnonzero(y)
-            if up.size == 0: break
+            if up.size == 0:
+                break
             rise = int(up[0])
+            own_e, own_b = 1, j                               # codes 11..1H
             if rise_seen:
-                late = rng.uniform(0, 600) if rng.random() < 0.2 else rng.uniform(0, T_SCAN)   # one monitor in five is busy
-                got = first_digit(y, rise) if late <= T_SCAN else None
+                late = rng.uniform(0, 600) if rng.random() < 0.2 else rng.uniform(0, T_SCAN)
+                got = count_digits(y, rise, 2) if late <= T_SCAN else []
             else:
-                got = first_digit(y, rise + int(rng.uniform(0, 600) * 8), steady=True)
+                got = count_digits(y, rise + int(rng.uniform(0, 600) * 8), 2, steady=True)
             # The marker's own forwarding, and any delay the carrier LOSES between the
-            # seizure and the caller's next digit: both move the onward rise later against
+            # seizure and the next digit: both move the onward rise later against
             # a signal that is otherwise riding with it.
             x = y.copy(); x[:rise + int((rng.uniform(3, 10) + wander) * 8)] = 0
-            if got == j:
+            if len(got) >= 2 and got[0] == own_e and got[1] == own_b:
                 claimers.append(j)
-                # the claim: 2 ms after the digit is recognised the onward patch is cleared
-                k = first_digit_end(y, rise)
-                if k: x[k + int(T_MARK * 8):] = 0
-        target = e if e <= H else None
-        if any(c != target for c in claimers): return 'false', abandoned
-        if target and not claimers: return 'none', abandoned
+                k = digit_end(y, rise, 1)                     # b recognised: clear the onward patch
+                if k:
+                    x[k + int(T_MARK * 8):] = 0
+        target = b if e == 1 and b <= H else None
+        if any(c != target for c in claimers):
+            return 'false', abandoned
+        if target and not claimers:
+            return 'none', abandoned
         return 'right', abandoned
-
-    def first_digit_end(y, i0):
-        seg = y[i0:]; e = np.flatnonzero(np.diff(seg.astype(np.int8))) + 1
-        starts = np.concatenate([[0], e]); lens = np.diff(np.concatenate([starts, [seg.size]])) / 8.0
-        n = 0
-        for st, v, L in zip(starts, seg[starts], lens):
-            if not v and L >= T_HIT: n += 1
-            elif v and n and L >= T_ID: return i0 + int(st) + T_ID * 8
-        return None
 
     print(f'  {"a monitor counts":44s} {"origin guard":>13s} {"pause between digits":>21s} {"line BER":>9s} | '
           f'{"right %":>8s} {"no claim %":>11s} {"FALSE":>6s}')
@@ -1039,7 +1085,8 @@ def monitor():
     for rise_seen, guard in rows:
         for lo, hi in ((140, 900), (450, 900)):
             for ber in (0.0, 1e-2):
-                if ber and not (rise_seen and guard): continue
+                if ber and not (rise_seen and guard):
+                    continue
                 r = [trial(lo, hi, rise_seen, guard, ber)[0] for _ in range(N)]
                 name = 'only a seizure whose rise it saw' if rise_seen else 'from whenever it attaches, after 128 ms of make'
                 print(f'  {name:44s} {"128 ms" if guard else "none":>13s} {f"{lo}-{hi} ms":>21s} {ber:9.0e} | '
@@ -1048,28 +1095,30 @@ def monitor():
     print('  monitor must have seen the rise, one monitor in five was busy at the seizure; with the origin guard, a caller')
     print('  whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse')
     print('  register can read (register.md 3.2): below it two digits run together, flood or no flood.')
+    print('  A second compared digit does not add a new way of attaching late -- the monitor is attached by then --')
+    print('  but it does reject a partial count that landed on the wrong e before b is ever read.')
 
     # ---- a carrier that is not a pair -----------------------------------
-    print(f'\n  A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path')
+    print('\n  A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path')
     print('  a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a')
     print('  jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that')
-    print(f'  eats the origin\'s guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.')
+    print(f"  eats the origin's guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.")
     print(f'\n  {"carrier a hop":>14s} {"the flood is up at":>19s} | {"right %":>9s} {"no claim %":>11s} {"FALSE":>6s}')
     for carrier in (0, 5, 10, 20, 40, 80, 160):
         r = [trial(140, 900, True, True, 0.0, carrier) for _ in range(NS)]
         o = [v[0] for v in r]
         print(f'  {carrier:11d} ms {H * (6.5 + carrier):16.0f} ms | {100 * o.count("right") / NS:9.1f} '
               f'{100 * o.count("none") / NS:11.1f} {o.count("false"):6d}', flush=True)
-    print('\n  IT DOES NOT.  A constant delay moves the whole of the caller\'s hook -- the seizure that')
+    print("\n  IT DOES NOT.  A constant delay moves the whole of the caller's hook -- the seizure that")
     print('  opens the flood AND the pulses that follow it -- by the same amount, because they are the')
     print('  same wire.  An exchange seven hops out is patched in 600 ms later in absolute time and')
     print('  still sees the rise before the first break of `e`, because the break is 600 ms later too.')
     print('  **The two delays cancel exactly, and the guard never sees the carrier at all.**')
 
-    print(f'\n  What DOES eat the guard is delay the carrier LOSES between the seizure and the next')
+    print('\n  What DOES eat the guard is delay the carrier LOSES between the seizure and the next')
     print('  digit -- a buffer draining, a link re-timing -- because that moves the pulses forward')
     print('  against a rise that has already gone by.  A millisecond of it costs a millisecond of')
-    print('  guard, exactly as the marker\'s own forwarding does.  Per hop, on top of the marker:')
+    print("  guard, exactly as the marker's own forwarding does.  Per hop, on top of the marker:")
     print(f'\n  {"wander a hop":>14s} {"spread":>8s} | {"guard 128 ms":^30s} | {"guard matched to the spread":^40s}')
     print(f'  {"":>14s} {f"over {H}":>8s} | {"right %":>9s} {"no claim %":>11s} {"FALSE":>6s} | '
           f'{"tap":>6s} {"a dial of 140-900":>18s} {"of 720-900":>17s}')
@@ -1087,20 +1136,21 @@ def monitor():
               f'{100 * oa.count("none") / NS:11.1f} {oa.count("false"):6d} | {tap:4d} ms '
               f'{ob.count("false"):6d} {100 * sum(v[1] for v in b) / NS:7.0f} % '
               f'{oc.count("false"):6d} {100 * sum(v[1] for v in c) / NS:7.0f} %', flush=True)
-    print(f'\n  The guard must be at least the spread or it is not a guarantee, and no more than the')
-    print(f'  caller\'s own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take.  A phone to')
+    print('\n  The guard must be at least the spread or it is not a guarantee, and no more than the')
+    print(f"  caller's own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take.  A phone to")
     print(f'  ES 201 187 gives at least 720 ms (register.md 2), so the guard may go to {720 - T_ID - T_MARK:.0f} ms -- the')
     print(f'  512 ms tap, four taps up from 128 on the counter it already has.  At {H} hops that is')
-    print(f'  {512 / H - 6.5:.0f} ms a hop of wander against the present tap\'s {128 / H - 6.5:.0f}.  It is free in parts and it costs')
+    print(f"  {512 / H - 6.5:.0f} ms a hop of wander against the present tap's {128 / H - 6.5:.0f}.  It is free in parts and it costs")
     print('  the callers who dial faster than the tap allows: every one of those gets cannot-complete.')
 
-    print('\n  How many monitors a trunk block needs: one is wanted for ~1.1 s by every call in the district (flood 3).')
-    print(f'  {"calls an hour in the district":>30s} {"erlang":>7s} | ' + ' '.join(f'{f"{k} busy %":>9s}' for k in (1, 2, 3)))
-    for calls in (150, 576, 1500):
-        a = calls * 1.1 / 3600
-        b = [1.0]
-        for k in range(1, 4): b.append(a * b[-1] / (k + a * b[-1]))
-        print(f'  {calls:30d} {a:7.3f} | ' + ' '.join(f'{100 * v:9.2f}' for v in b[1:]))
+    print('\n  How many monitors a trunk block needs (monitor.md 4): held ~1.5 s if e is not ours, ~2.7 s if it is.')
+    print(f'  {"calls an hour reaching the block":>34s} {"erlang @ 2.7 s":>14s} | ' + ' '.join(f'{f"{k} busy %":>9s}' for k in (1, 2, 3, 4)))
+    for calls in (150, 576, 1500, 3000):
+        a = calls * 2.7 / 3600
+        busy = [1.0]
+        for k in range(1, 5):
+            busy.append(a * busy[-1] / (k + a * busy[-1]))
+        print(f'  {calls:34d} {a:14.3f} | ' + ' '.join(f'{100 * v:9.2f}' for v in busy[1:]))
 
 
 # ------------------------------------------------------------------ confer
@@ -1457,166 +1507,183 @@ A_PATH = 2.0              # what network.md 1.1 allows a CARRIER a hop, one way,
                           # HOP's 7 ms has in it.  A copper pair or an MF8 link is under it; a
                           # leased circuit, a radio or anything with a buffer is not
 T_MARK = 2.0              # a marker action
-GUARD = 200.0             # seizure to the sender's first break: the flood, then T_ID of steady make at every monitor
-S_PER, S_BRK, S_PAUSE = 50.0, 30.0, 200.0     # the sender: 20 pps 60/40, 200 ms of make between digits
 
 
-def npulses(d): return int(d) or 10
+def npulses(d):
+    return int(d) or 10
 
 
-def caller(digits, how, t0=1000.0):
-    """When the origin's register has each digit.  rotary: 10 pps 60/40, 800 ms from the last
-    break to the next first break.  keypad: 100 ms tones 300 ms apart, StD 40 ms into the tone,
-    written to the same store.  Returns [(start, end of signalling, recognised)]."""
-    out = []; t = t0
+def caller(digits, pause=800.0, t0=1000.0):
+    """When the origin's register has each digit.  Rotary at 10 pps 60/40, `pause` ms from the last
+    break to the next first break.  Returns [(start, end of signalling, recognised)]."""
+    out, t = [], t0
     for d in digits:
-        if how == 'rotary':
-            end = t + (npulses(d) - 1) * 100 + 60
-            out.append((t, end, end + T_ID)); t = end + 800
-        else:
-            out.append((t, t + 100, t + T_DTMF)); t += 300
+        end = t + (npulses(d) - 1) * 100 + 60
+        out.append((t, end, end + T_ID)); t = end + pause
     return out
 
 
-def flood_call(number, own, chain, how, seize_at):
-    """chain: exchange codes in order, origin first.  seize_at: the digit (1, 2 or 4) whose arrival
-    seizes the junctors.  Returns the events and the figures of merit."""
-    dg = caller(number, how)
-    ev = [(0.0, 'lifts'), (10.0, 'register attached; dial tone'), (dg[0][0], f'dials {" ".join(number)}')]
-    code = number[:2]
+def flood_call(number, own, chain, pause=800.0):
+    """Live pulse flood of network.md 3.  `number` is the full dialled string: `hs` local, or
+    `1ebhs` for a network call.  `own` is the origin's code; `chain` is exchange codes from the
+    origin onward.  Trunks listen to the caller; monitors read e and b.  Returns events and the
+    figures of merit."""
+    dg = caller(number, pause)
+    spaced = ' '.join(number)
+    ev = [(0.0, 'lifts'), (10.0, 'register attached; dial tone'), (dg[0][0], f'dials {spaced}')]
     r = [x[2] for x in dg]
-    if code == own and seize_at >= 2:
-        t = r[3] + T_MARK
-        ev.append((t, f'own code: no flood.  Connected locally'))
-        return ev, dict(pdd=t - dg[3][1], held={}, mon={})
-    t_sz = r[seize_at - 1] + T_MARK
-    ev.append((t_sz, f'digit {seize_at} is in: seize a junctor in each trunk block, listening to the sender'))
+
+    # local: h s, never a trunk
+    if len(number) == 2:
+        t = r[-1] + T_MARK
+        ev.append((t, 'local: connected'))
+        return ev, dict(pdd=t - dg[-1][1], held={}, mon={}, reg=t - 10.0)
+
+    assert number[0] == '1' and len(number) == 5, 'network number is 1 e b h s'
+    code = number[1:3]
+    # the key is in: seize a trunk in every direction, listening to the caller
+    t_sz = r[0] + T_MARK
+    ev.append((t_sz, 'the first digit is in, and is 1: seize a trunk in every direction, listening to the caller'))
+    ev.append((t_sz + G_ORIGIN, "the origin's guard ends: a break before this would have abandoned the call"))
     J = chain.index(code) if code in chain else None
     nh = len(chain) - 1
     for j in range(1, nh + 1):
-        ev.append((t_sz + HOP * j, f'  {chain[j]}: M rises; patched onward; monitor on'))
-    # the sender: a digit goes when it is in the store, the junctors are up, and the last one is out
-    q = []; last_end = None
-    for i, d in enumerate(number):
-        start = max(r[i] + T_MARK, t_sz + GUARD, (last_end + S_PAUSE) if last_end is not None else 0)
-        end = start + (npulses(d) - 1) * S_PER + S_BRK
-        q.append((start, end)); last_end = end
-        ev.append((start, f'sender: {d}  ({npulses(d)} pulses, to {end:.0f})'))
-        if code == own and i == 1:
-            break
-    if code == own:                                    # seize_at == 1 and the call was local all along
-        t = r[1] + T_MARK
-        ev.append((t, 'own code: the origin claims its own call and releases the junctors'))
+        tip = '; nowhere to forward' if j == nh else '; patched onward'
+        ev.append((t_sz + HOP * j, f'  {chain[j]}: M rises{tip}; monitor on'))
+
+    # subsequent digits as the caller dials them
+    for i, d in enumerate(number[1:], 1):
+        ev.append((dg[i][0], f'dials {d}'))
+
+    # own code dialled as 1 e b h s: release the trunks and finish locally
+    if code == own:
+        t = r[2] + T_MARK
+        ev.append((t, 'own code: the origin claims its own call and releases the trunks'))
         rel = t + T_FALL
         ev.append((rel, 'every flooded port has released itself'))
-        t_loc = r[3] + T_MARK
+        t_loc = r[4] + T_MARK
         ev.append((t_loc, 'connected locally'))
-        return ev, dict(pdd=t_loc - dg[3][1], held={f'{chain[j-1]}-{chain[j]}': rel - (t_sz + HOP * (j - 1)) for j in range(1, nh + 1)},
-                        # the first digit is the district's and matches everywhere, so a monitor stays
-                        # until the abandoned junctor releases under it
-                        mon={chain[j]: rel - (t_sz + HOP * j) for j in range(1, nh + 1)})
-    seen = lambda i, j: q[i][1] + A_RISE * j + T_ID    # digit i recognised at hop j
+        held = {f'{chain[j - 1]}-{chain[j]}': rel - (t_sz + HOP * (j - 1)) for j in range(1, nh + 1)}
+        mon = {chain[j]: rel - (t_sz + HOP * j) for j in range(1, nh + 1)}
+        return ev, dict(pdd=t_loc - dg[4][1], held=held, mon=mon, reg=t_loc - 10.0)
+
+    # digit arrival at hop j: A rise along the path, then ID
+    seen = lambda i, j: dg[i][1] + A_RISE * j + T_ID
     mon = {}
-    for j in range(1, nh + 1):
-        k = 0 if chain[j][0] != code[0] else 1
+    # e: every monitor whose e matches reads on; the rest let go
+    e_hit = [j for j in range(1, nh + 1) if chain[j][0] == code[0]]
+    e_miss = [j for j in range(1, nh + 1) if chain[j][0] != code[0]]
+    for j in e_miss:
+        ev.append((seen(1, j), f'  {chain[j]}: e is not mine; monitor lets go'))
+        mon[chain[j]] = seen(1, j) - (t_sz + HOP * j)
+    if e_hit:
+        ev.append((seen(1, e_hit[0]), f'  e={code[0]}: monitors at '
+                   + ', '.join(chain[j] for j in e_hit) + ' read on'))
+    for j in e_hit:
         if j != J:
-            ev.append((seen(k, j), f'  {chain[j]}: digit {k + 1} is not mine; monitor lets go'))
-        mon[chain[j]] = seen(k if j != J else 3, j) - (t_sz + HOP * j)
+            ev.append((seen(2, j), f'  {chain[j]}: b is not mine; monitor lets go; the patch stays'))
+            mon[chain[j]] = seen(2, j) - (t_sz + HOP * j)
+        else:
+            mon[chain[j]] = seen(2, j) - (t_sz + HOP * j)
+
     if J is None:
-        t = q[3][1] + 2000
+        t = r[2] + 2000
         ev.append((t, 'no claim in 2 s: cannot-complete tone'))
-        return ev, dict(pdd=t - dg[3][1], held={}, mon=mon)
-    t_claim = seen(1, J) + T_MARK
+        return ev, dict(pdd=t - dg[4][1], held={}, mon=mon)
+
+    t_claim = seen(2, J) + T_MARK
     ev.append((t_claim, f'  {chain[J]}: CLAIM; onward patch cleared; backward A = 1'))
-    ev.append((t_claim + A_RISE * J, f'origin: backward A rises on the junctor'))
+    ev.append((t_claim + A_RISE * J, 'origin: backward A rises on the trunk'))
     if J < nh:
         ev.append((t_claim + A_FALL + T_FALL, f'  beyond {chain[J]}: ports have released themselves'))
-    t_conn = seen(3, J) + T_MARK
-    ev.append((t_conn, f'  {chain[J]}: has {number[2]} {number[3]}; junctor <-> line; the phone rings, RBT goes back'))
-    t_cut = max(t_claim + A_RISE * J, q[3][1] + 5) + T_MARK
-    ev.append((t_cut, 'origin: caller <-> junctor; register-sender freed'))
+    # last digits travel the claimed path: recognised at the owner after A rise
+    t_conn = seen(4, J) + T_MARK
+    ev.append((t_conn, f'  {chain[J]}: has {number[3]} {number[4]}; trunk <-> line; the phone rings, RBT goes back'))
+    t_cut = max(t_claim + A_RISE * J, dg[4][1] + A_RISE * J + T_ID) + T_MARK
+    ev.append((t_cut, 'origin: caller <-> trunk; register freed'))
     heard = max(t_cut, t_conn)
     ev.append((heard, 'caller hears ringback'))
     held = {}
     for j in range(1, nh + 1):
         if j > J:
-            held[f'{chain[j-1]}-{chain[j]}'] = t_claim + A_FALL + T_FALL - (t_sz + HOP * (j - 1))
-    return ev, dict(pdd=heard - dg[3][1], held=held, mon=mon, reg=t_cut - 10.0)
+            held[f'{chain[j - 1]}-{chain[j]}'] = t_claim + A_FALL + T_FALL - (t_sz + HOP * (j - 1))
+        else:
+            held[f'{chain[j - 1]}-{chain[j]}'] = t_claim + A_RISE * J + T_MARK - (t_sz + HOP * (j - 1))
+    flood_legs = {k: v for k, v in held.items() if chain.index(k.split('-')[1]) > J}
+    return ev, dict(pdd=heard - dg[4][1], held=held, flood_legs=flood_legs, mon=mon, reg=t_cut - 10.0)
 
 
 def flood():
-    chain = ['21', '22', '23', '24']
-    print('FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and claimed.')
+    # network.md 3.1: line 44 of 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25
+    chain = ['22', '23', '24', '25']
+    print('FLOOD -- the timing of a network call under the pulse flood (network.md 3, 4).')
     print('  Arithmetic from measured constants, not a simulation of the gates:')
-    print(f'    register windows HIT {T_HIT} / ID {T_ID} ms (register.md 2); MT8870 StD {T_DTMF} ms; A path per hop: a fall')
+    print(f'    register windows HIT {T_HIT} / ID {T_ID} ms (register.md 2); A path per hop: a fall')
     print(f'    {A_FALL} ms, a rise {A_RISE} ms (aline 1); a seizure crosses an exchange in {HOP:.0f} ms; marker action {T_MARK:.0f} ms;')
-    print(f'    sender 20 pps 60/40 with {S_PAUSE:.0f} ms between digits (register.md 3 read 20 pps; channel-cards.md 5 carried it);')
-    print(f'    guard, seizure to first break, {GUARD:.0f} ms; release {T_FALL} ms.  The caller starts dialling 1 s after dial tone.\n')
+    print(f'    origin guard {G_ORIGIN:.0f} ms (monitor.md 3); release {T_FALL} ms.  No sender: trunks listen to the caller.')
+    print('    The caller starts dialling 1 s after dial tone; 800 ms between digits.\n')
 
-    print('  1. 2144 dials 2355 on 21 = 22 = 23 = 24.  A rotary caller; junctors seized when the FIRST digit is in.')
-    ev, m = flood_call('2355', '21', chain, 'rotary', 1)
+    print('  1. Line 44 of exchange 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25 (network.md 3.1).')
+    ev, m = flood_call('12455', '22', chain)
     for t, e in sorted(ev, key=lambda x: x[0]):
         print(f'     {t:8.0f}  {e}')
-    print(f'     post-dial delay, caller\'s last pulse to ringback: {m["pdd"]:.0f} ms\n')
+    print(f"     post-dial delay, caller's last pulse to ringback: {m['pdd']:.0f} ms\n")
 
-    print('  2. The same call, by where the junctors are seized and how the caller dials.')
-    print(f'     {"caller":8s} {"seize at digit":>15s} {"post-dial delay ms":>19s} {"register-sender held s":>23s} '
-          f'{"link 23-24 held ms":>19s} {"monitor at 22 / 23 / 24 held ms":>32s}')
-    for how in ('rotary', 'keypad'):
-        for k in (1, 2, 4):
-            ev, m = flood_call('2355', '21', chain, how, k)
-            mon = ' / '.join(f'{m["mon"][c]:.0f}' for c in chain[1:])
-            print(f'     {how:8s} {k:15d} {m["pdd"]:19.0f} {m["reg"] / 1000:23.2f} {m["held"]["23-24"]:19.0f} {mon:>32s}')
+    print('  2. The same call from the middle: a line of 23 dials 1 2 5 5 5.  Seizes toward 22 and toward 24;')
+    print('     25 claims; the origin keeps that leg and releases the other.')
+    mid = ['23', '22']  # one side only for the arithmetic of the claim path; both ways noted
+    ev2, m2 = flood_call('12555', '23', ['23', '24', '25'])
+    for t, e in sorted(ev2, key=lambda x: x[0]):
+        print(f'     {t:8.0f}  {e}')
+    fl = m2.get('flood_legs') or m2['held']
+    print(f"     post-dial delay: {m2['pdd']:.0f} ms;  flood legs past the owner held "
+          f"{(max(fl.values()) if fl else 0):.0f} ms\n")
 
-    print('\n  3. A LOCAL call, 2144 dials 2155: what seizing at the first digit floods for nothing.')
-    print(f'     {"caller":8s} {"seize at digit":>15s} {"every link held ms":>19s} {"a monitor at every exchange ms":>31s} {"local post-dial delay ms":>25s}')
-    for how in ('rotary', 'keypad'):
-        for k in (1, 2):
-            ev, m = flood_call('2155', '21', chain, how, k)
-            held = max(m['held'].values()) if m['held'] else 0
-            mon = max(m['mon'].values()) if m['mon'] else 0
-            print(f'     {how:8s} {k:15d} {held:19.0f} {mon:31.0f} {max(m["pdd"], 0):25.0f}')
+    print('  3. A LOCAL call, 2244 dials 4 7: no trunk is touched.')
+    ev, m = flood_call('47', '22', chain)
+    for t, e in sorted(ev, key=lambda x: x[0]):
+        print(f'     {t:8.0f}  {e}')
+    print(f'     post-dial delay: {m["pdd"]:.0f} ms\n')
 
-    print('\n  4. The load of the flood itself.  4 exchanges x 48 lines x 3 calls an hour, a fifth of them to another')
-    print('     exchange; erlangs of pure signalling on a link the call does not use (6 channels), and of monitor')
-    print('     time at an exchange the call passes (taken as 22).')
-    print(f'     {"caller":8s} {"seize at digit":>15s} {"link: local calls":>18s} {"network calls":>14s} {"total":>7s} '
-          f'{"monitor: local":>15s} {"network":>8s} {"total":>7s}')
-    calls = 4 * 48 * 3; net = 0.2
-    for how in ('rotary', 'keypad'):
-        for k in (1, 2, 4):
-            _, ml = flood_call('2155', '21', chain, how, k)
-            _, mn = flood_call('2355', '21', chain, how, k)
-            loc = calls * (1 - net) * (max(ml['held'].values()) if ml['held'] else 0) / 3.6e6
-            nw = calls * net * mn['held']['23-24'] / 3.6e6
-            mloc = calls * (1 - net) * (ml['mon'].get('22', 0)) / 3.6e6
-            mnw = calls * net * mn['mon']['22'] / 3.6e6
-            print(f'     {how:8s} {k:15d} {loc:18.3f} {nw:14.3f} {loc + nw:7.3f} {mloc:15.3f} {mnw:8.3f} {mloc + mnw:7.3f}')
+    print("  4. Own code from inside: 2244 dials 1 2 2 5 5.  Floods, then the origin's register sees its own")
+    print('     e b, releases the trunks and carries on locally.')
+    ev, m = flood_call('12255', '22', chain)
+    for t, e in sorted(ev, key=lambda x: x[0]):
+        print(f'     {t:8.0f}  {e}')
+    held = max(m['held'].values()) if m['held'] else 0
+    print(f'     every link held {held:.0f} ms; post-dial delay {m["pdd"]:.0f} ms\n')
 
-    print('\n  5. No sender: the junctors listen to the CALLER from the first digit, and his own remaining digits')
-    print('     go down the flood live.  The first digit is shared by everything the flood can reach, so nobody needs')
-    print('     it again.  What must hold: the whole flood is up before his next digit begins.  The origin makes sure:')
-    print(f'     it abandons a call whose next break comes within {G_ORIGIN} ms of its seizure (monitor, below).')
+    print('  5. The load of the flood itself.  4 exchanges x 48 lines x 3 calls an hour; a fraction leave,')
+    print('     spread evenly; erlangs of pure signalling on a link the call does not keep (beyond the owner),')
+    print('     and of monitor time at an exchange the call passes (taken as 23).')
+    print(f'     {"leaving":>8s} {"link waste E":>13s} {"monitor at 23 E":>16s} {"flood held, code 24 s":>22s}')
+    for leave in (0.2, 0.3, 0.5):
+        _, mn = flood_call('12455', '22', chain)
+        calls = 4 * 48 * 3
+        # a network call holds the beyond-owner link until claim+release; local holds nothing
+        beyond = mn.get('flood_legs') or {k: v for k, v in mn['held'].items() if k == '24-25'}
+        waste_ms = max(beyond.values()) if beyond else 0
+        link_e = calls * leave * waste_ms / 3.6e6
+        # monitors: at 23, e matches so it holds until b
+        mon_e = calls * leave * mn['mon'].get('23', 0) / 3.6e6
+        print(f'     {leave:8.0%} {link_e:13.3f} {mon_e:16.3f} {waste_ms / 1000:22.2f}')
+
+    print('\n  6. What must hold: the flood is up before the caller\'s next digit.  The origin makes sure:')
+    print(f'     it abandons a call whose next break comes within {G_ORIGIN:.0f} ms of its seizure (monitor.md 3).')
     ready = T_ID + T_MARK + G_ORIGIN
     print(f'     Ready {ready:.0f} ms after his last pulse = digit recognised {T_ID} + seizure {T_MARK:.0f} + guard {G_ORIGIN}, whatever the hop count.')
-    print(f'     {"hops":>5s} {"the flood itself takes, ms":>27s} {"at a slow marker, 10 ms a hop":>30s} {"inside the guard":>17s}')
+    print(f'     {"hops":>5s} {"the flood itself takes, ms":>27s} {"at a slow marker, 12 ms a hop":>30s} {"inside the guard":>17s}')
     for hops in (1, 3, 7, 10):
-        print(f'     {hops:5d} {HOP * hops:27.0f} {(10 + A_FALL) * hops:30.0f} {str((10 + A_FALL) * hops < G_ORIGIN):>17s}')
+        print(f'     {hops:5d} {HOP * hops:27.0f} {(12 + A_FALL) * hops:30.0f} {str((12 + A_FALL) * hops < G_ORIGIN):>17s}')
     print(f'     Margin for a dial: {500 - ready:.0f} ms at 500 ms between digits, {800 - ready:.0f} ms at 800.  A caller who beats it is')
     print('     abandoned to cannot-complete: a failed call, never a wrong number.')
-    J = 2
-    print(f'     Post-dial delay to the third exchange: {A_RISE * J + T_ID + T_MARK:.0f} ms after his last pulse, against 493 with a sender.')
+    print(f'     Post-dial delay: {T_ID + T_MARK + A_RISE * 2:.0f} ms after the last pulse, whatever the hop count')
+    print('     (133 ms here to the third exchange); a register-sender would have cost 0.49 s (network.md 9).\n')
 
     def live(number, domains, pause, label):
-        """Live digits.  domains: [(who acts on this digit, hops the NEXT flood must cross)] for each digit
-        after the first; None = nobody acts, the digit is simply heard."""
-        dg = caller(number, 'rotary', t0=1000.0)
-        if pause != 800:                                   # re-space the digits
-            t = 1000.0; dg = []
-            for d in number:
-                end = t + (npulses(d) - 1) * 100 + 60
-                dg.append((t, end, end + T_ID)); t = end + pause
-        print(f'     {label}, {pause} ms between digits')
+        """Live digits.  domains[i] = (who acts on this digit, hops the NEXT flood must cross) or (None, 0)."""
+        dg = caller(number, pause, t0=1000.0)
+        print(f'     {label}, {pause:.0f} ms between digits')
         print(f'     {"digit":>6s} {"its last pulse":>15s} {"acted on by":28s} {"next flood ready":>17s} {"next digit begins":>18s} {"margin ms":>10s}')
         worst = 1e9
         for i, d in enumerate(number):
@@ -1624,31 +1691,32 @@ def flood():
             if who is None:
                 print(f'     {d:>6s} {dg[i][1]:15.0f} {"-":28s}')
                 continue
-            ready = dg[i][1] + T_ID + T_MARK + G_ORIGIN
+            ready_t = dg[i][1] + T_ID + T_MARK + G_ORIGIN
             nxt = dg[i + 1][0] if i + 1 < len(number) else None
-            m = nxt - ready if nxt else None
-            if m is not None: worst = min(worst, m)
-            print(f'     {d:>6s} {dg[i][1]:15.0f} {who:28s} {ready:17.0f} {nxt if nxt else 0:18.0f} {m if m is not None else 0:10.0f}')
+            margin = nxt - ready_t if nxt is not None else None
+            if margin is not None:
+                worst = min(worst, margin)
+            print(f'     {d:>6s} {dg[i][1]:15.0f} {who:28s} {ready_t:17.0f} {nxt if nxt else 0:18.0f} {margin if margin is not None else 0:10.0f}')
         heard = dg[-1][1] + A_RISE * 2 + T_ID + T_MARK
         print(f'     the far phone rings {heard - dg[-1][1]:.0f} ms after the last pulse;  smallest margin {worst:.0f} ms\n')
 
-    print('\n  6. Live, no sender: 2144 dials 2 3 5 5.  The origin bank acts on the first digit; bank 23 on the second.')
-    dom = [('origin 21: seize the flood', 3), ('exchange 23: claim', 0), (None, 0), (None, 0)]
-    dom[1] = ('exchange 23: claim', 0)
+    print('  7. Live margins on 1 2 4 5 5.  The origin acts on the key; exchange 24 claims on b.')
     for pz in (800, 500):
-        live('2355', [('origin 21: seize the flood', 3), (None, 0), (None, 0), (None, 0)], pz, '2 3 5 5')
-    print('  7. Live, no sender, out of the exchange: 1, then 8 for another exchange of this area or 9 for another')
-    print('     area.  Each digit is acted on by one level, which patches the call into the next flood before the')
-    print('     following digit.  8 and 9 can never be a bank digit (that is 1-7 pulses, or ten), so a monitor')
-    print('     knows such a call by the first digit it hears.')
-    other = [('origin bank 21: not a home call: seize', 3), ("exchange 2's gateway bank: claim, onto MF8", 7),
-             ("exchange 3's gateway bank: claim, into its ties", 3), ('bank 31: claim', 0), (None, 0), (None, 0)]
-    area = [('origin bank 21: not a home call: seize', 3), ("exchange 2's gateway bank: claim, onto MF8", 7),
-            ('area 5\'s gateway: claim, into its area', 7), ("exchange 3's gateway bank: claim, into its ties", 3),
-            ('bank 31: claim', 0), (None, 0), (None, 0)]
+        live('12455', [('origin 22: seize the flood', 3), (None, 0), ('exchange 24: claim', 0), (None, 0), (None, 0)],
+             pz, '1 2 4 5 5')
+
+    print('  8. Out of the network: 1 8 / 1 9 are reserved (network.md 6).  One way considered, not adopted:')
+    print('     each digit claimed by one level in turn, with the same guard.  8 and 9 can never be e or b,')
+    print('     so a monitor knows such a call by the first digit it hears and lets go.')
+    other = [('origin 22: seize', 3), ("gateway: claim, onto next flood", 7),
+             ("far gateway: claim, into its ties", 3), ('exchange 31: claim', 0), (None, 0), (None, 0)]
     for pz in (800, 500):
-        live('183147', other, pz, '1 8 3 1 4 7  (exchange 3, bank 1, line 47)')
-    live('1953147', area, 800, '1 9 5 3 1 4 7  (area 5, exchange 3, bank 1, line 47)')
+        live('183147', other, pz, '1 8 3 1 4 7  (reserved path, worked as successive claims)')
+    live('1953147',
+         [('origin 22: seize', 3), ("gateway: claim, onto next flood", 7),
+          ("area gateway: claim", 7), ("far gateway: claim", 3),
+          ('exchange 31: claim', 0), (None, 0), (None, 0)],
+         800, '1 9 5 3 1 4 7')
 
 
 # ------------------------------------------------------------------ ss0
@@ -1676,40 +1744,35 @@ def erlang_cap(N, gos=0.01):
     return lo
 
 
-def waste(chain, net, how='rotary', calls_h=48 * 3):
+def waste(chain, net, calls_h=48 * 3):
     """Erlangs of trunk held on each link of a chain by calls that do not use that link.  Every
     exchange originates calls_h calls an hour, a fraction net of them spread evenly over the others.
-    Live flood: both ways seized at the first digit; a local call releases them at the second, a
-    network call when the owner's monitor has read the second.  SS0: nothing until the fourth digit;
-    a SEIZE relayed hop by hop; the far way seized only from a middle exchange, until the claim.
+    Live flood: a local call holds nothing; a network call (1 e b h s) seizes every direction at the
+    key and releases unused legs when the owner claims on b.  SS0: nothing until the last digit; a
+    SEIZE relayed hop by hop; the far way seized only from a middle exchange, until the claim.
     Returns {link: [flood local calls, flood network calls, SS0]}."""
     n = len(chain)
     links = [f'{chain[i]}-{chain[i + 1]}' for i in range(n - 1)]
     out = {L: [0.0, 0.0, 0.0] for L in links}
     for o in range(n):
         sides = [[links[i] for i in range(o - 1, -1, -1)], [links[i] for i in range(o, n - 1)]]
-        dg = caller(chain[o] + '55', how); r = [x[2] for x in dg]
-        t_sz, t_rel = r[0] + T_MARK, r[1] + T_MARK
-        per = calls_h * (1 - net) / 3.6e6
-        for side in sides:
-            for j, L in enumerate(side, 1):
-                out[L][0] += per * (t_rel + A_FALL * j + T_FALL - (t_sz + HOP * (j - 1)))
+        # local calls: no flood (column 0 stays 0)
         for d in range(n):
             if d == o:
                 continue
             S, J = (0, o - d) if d < o else (1, d - o)
-            dg = caller(chain[d] + '55', how); r = [x[2] for x in dg]
+            dg = caller('1' + chain[d] + '55'); r = [x[2] for x in dg]
             per = calls_h * net / (n - 1) / 3.6e6
             t_sz = r[0] + T_MARK
-            t_claim = dg[1][1] + A_RISE * J + T_ID + T_MARK
-            t_drop = t_claim + A_RISE * J + T_MARK                 # the origin lets the other way go
+            t_claim = dg[2][1] + A_RISE * J + T_ID + T_MARK         # b recognised at the owner
+            t_drop = t_claim + A_RISE * J + T_MARK                   # the origin lets the other way go
             for s, side in enumerate(sides):
                 for j, L in enumerate(side, 1):
                     if s == S and j <= J:
                         continue                                   # the call's own path
                     down = (t_claim + A_FALL * (j - J)) if s == S else (t_drop + A_FALL * j)
                     out[L][1] += per * (down + T_FALL - (t_sz + HOP * (j - 1)))
-            t0 = r[3] + T_MARK
+            t0 = r[4] + T_MARK                                      # after h s under 1 e b h s
             t_drop = t0 + J * SS0_HOP + A_RISE * J + T_MARK
             for j, L in enumerate(sides[1 - S], 1):
                 up = t0 + (j - 1) * SS0_HOP
@@ -1736,7 +1799,7 @@ def ss0():
 
     print('\n  2. Trunk held by calls that do not use it, erlangs on each link of 21 = 22 = 23 = 24.  Every exchange')
     print('     48 lines x 3 calls an hour, the network share spread evenly over the other three, rotary dials.')
-    print('     Every exchange originates here, where `flood` 4 sent every call from 21.')
+    print('     Local calls hold nothing under the pulse flood; a network call wastes the legs past the owner.')
     for net in (0.2, 0.5):
         w = waste(['21', '22', '23', '24'], net)
         print(f'     {net:.0%} of calls leave')
@@ -1782,9 +1845,9 @@ def pulses_of(d):
 
 
 def code_hold(code):
-    """seconds a flood is held for a call to this code: until e and b are in, and the release.  The
-    1.116 s and 0.86 s are flood_call's, for a first and a second digit heard of one pulse"""
-    return 1.116 + 0.86 + 0.1 * (pulses_of(int(code[0])) - 1) + 0.1 * (pulses_of(int(code[1])) - 1)
+    """seconds a flood is held for a call to this code: from the key until e and b are in
+    (network.md 4).  2.0 s for code 11, 0.1 s a pulse of e or b, 2.7 s mean over all 64."""
+    return 2.0 + 0.1 * (pulses_of(int(code[0])) - 1) + 0.1 * (pulses_of(int(code[1])) - 1)
 
 
 class Tempo:
@@ -2104,10 +2167,12 @@ class Net:
         self.finish(call['origin'])
 
     def read_e(self, call):
-        """What `e` a monitor patched in at this instant will count.  It saw the rise, so it
-        counts from there -- and every pulse of `e` that has already gone by is one it never
-        sees.  Returns the digit it will compare with its own jumpers, or None if the whole of
-        `e` went by before it was patched in, when it counts `b` as `e` and is lost entirely."""
+        """What `e` a monitor patched in at this instant will count under `1 e b h s`.
+        It saw the rise, so it counts from there -- and every pulse of `e` that has
+        already gone by is one it never sees.  Returns the digit it will compare
+        with its own `e` jumper, or None if the whole of `e` went by before it was
+        patched in (when it would count `b` as `e` and miss the owner).  A match on
+        `e` is not a claim: the monitor then reads `b` and claims only on both."""
         late = self.t - call['t_break']
         if late <= 0:
             return int(call['dst'][0])
@@ -2117,7 +2182,8 @@ class Net:
 
     def reaches(self, call, frm, x, path):
         """a seizure arrives at x from frm, having come by path: a monitor listens, and a transit
-        forwards it on -- never into a strapped link, and never onward from one"""
+        forwards it on -- never into a strapped link, and never onward from one.
+        Claim needs both code digits: e then b (`monitor.md` 2)."""
         mon = self.mon[(x, frm)]
         watched = mon.take(self.t)
         if not watched and x == call['dst'] and not call['stopped']:
@@ -2130,12 +2196,12 @@ class Net:
             if x == call['dst']:
                 self.stat['lost_owner'] += 1          # the owner reads its own code wrong
             elif e_seen is not None and x[0] == str(e_seen) and x[1] == call['dst'][1]:
-                self.stat['wrong'] += 1               # and somebody else's fits: a wrong number
+                self.stat['wrong'] += 1               # wrong e that still fits another exchange's code
         if watched and call['stopped']:
             # no digit ever comes: the monitor holds until the origin's 5 s rule releases the trunk
             self.at(call['seized_at'] + self.tp.timeout + self.tp.fall, self.free, mon)
         elif watched:
-            # the monitor lets go at e if the first code digit is not this exchange's
+            # let go after e if e is not ours; after b if it is (then claim on a full match)
             same_e = x[0] == call['dst'][0]
             self.at(max(self.t, call['t_b'] if same_e else call['t_e']), self.free, mon)
             if x == call['dst'] and e_seen == int(call['dst'][0]):
@@ -2231,7 +2297,7 @@ def net_topology():
     leaves = {'21': '11', '22': '11', '23': '11', '31': '12', '32': '12', '33': '12'}
     links = {(v, h): 6 for v, h in leaves.items()}
     links[hubs] = 12
-    lines = {h: 30 for h in hubs}
+    lines = {h: 24 for h in hubs}
     lines.update({v: 48 for v in leaves})
     return links, lines
 
@@ -2271,7 +2337,7 @@ def net_arrivals(sim, hours, spiky, calls_h=3.0):
 def net():
     print('NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, the claim,')
     print('  the registers and the channels.  Two hubs of four directions, three leaves each; 12 channels')
-    print('  between the hubs and 6 to every leaf; 30 lines at a hub, 48 at a leaf, 348 in all.')
+    print('  between the hubs and 6 to every leaf; 24 lines at a hub, 48 at a leaf, 336 in all.')
     print('  A line makes 3 calls an hour and holds one 48 s.  Dial 10 pps, 0.5-0.9 s between digits.')
     print('  Local calls are h s and touch no trunk; the rest are 1 e b h s and open a flood.')
     print(f'  Bursty is the same mean in bursts: {BURST_UP / 1000:.0f} s at {BURST_X:.0f}x the rate, every '
@@ -2527,7 +2593,7 @@ def topo():
             row(f'chain of {n}, {ch} channels', chain_links(n, ch))
     print('     A chain of 12 is 11 hops: 132 ms at a slow marker, outside the guard.')
 
-    print('\n  2. Hubs.  A hub faces four directions; a tandem gives all eight groups to trunks and keeps 12 lines.')
+    print('\n  2. Hubs.  A hub faces four directions; a tandem gives all eight groups to trunks and keeps 6 lines.')
     print(head)
     row('star: hub and 4 spokes, 6 ch', star_links(4, 6))
     row('star: tandem and 4 spokes, 12 ch', star_links(4, 12))

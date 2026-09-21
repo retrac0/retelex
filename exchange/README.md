@@ -71,7 +71,7 @@ python3 sim/exch.py fabric     the highway, cell by cell
 python3 sim/exch.py calls      one exchange, a millisecond at a time
 python3 sim/exch.py announce   a message as a ROM of CVSD bits
 python3 sim/exch.py aline      serial characters on A over 1–7 trunk hops
-python3 sim/exch.py flood      the timing of a flooded call, with a sender and live (arithmetic, not a simulation)
+python3 sim/exch.py flood      the timing of a flooded call under 1 e b h s (arithmetic, not a simulation)
 python3 sim/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
 python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
 python3 sim/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
@@ -119,9 +119,9 @@ leaves each, against smooth and bursty demand (`network.md` §5.1). It
 confirms §5's arithmetic to two decimal places, and finds that bursts leave the
 links alone and fall on the registers. **`topo` runs the other shapes**
 (`topology.md`): the protocol holds 36 exchanges and about 1 300 lines, and a ring
-works only with one of its links strapped. The `monitor` and `flood` models still run
-the earlier numbering, in which the first digit of every number was the key and a
-monitor compared one digit; the two-digit monitor is to be run. `1 8` and `1 9`, out of the network, are reserved.
+works only with one of its links strapped. **`exch.py monitor` and `flood` run
+`1 e b h s`**: a monitor compares both `e` and `b` (and lets go after `e` when
+it is not ours). `1 8` and `1 9`, out of the network, are reserved.
 
 **Checked against the gates, and three things it changed** (`traffic.md`).
 `verilog`'s `make traffic-net` runs the same eight exchanges in RTL under the same
@@ -153,8 +153,8 @@ Decided: **the port map** (`protocol.md` §5). 00 is idle, and a cleared
 latch listens to it. 01–03 are dial, busy and cannot-complete. 04–07 are a
 four-line bank (operator, night/backup, then more positions or single-channel
 trunks). MF8 trunk groups start at block 1 when networked; standalone frees
-digit 1 so 10–77 are fifty-six lines. The `calls` model still puts tones and
-registers on the older map — nothing it measures depends on those addresses.
+digit 1 so 10–77 are fifty-six lines. The `calls` model uses this map; registers
+are a pool and take no port.
 
 Decided, and written up as a proposal: **MF8 serves subscriber terminals as well
 as trunks**, depending on need (`terminal.md`). A trunk block with its class

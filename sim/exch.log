@@ -752,124 +752,155 @@ ALINE -- digits as serial characters on A: start, data bits, stop; seized is mar
 
   [aline: 16 s]
 
-FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and claimed.
+FLOOD -- the timing of a network call under the pulse flood (network.md 3, 4).
   Arithmetic from measured constants, not a simulation of the gates:
-    register windows HIT 8 / ID 128 ms (register.md 2); MT8870 StD 40 ms; A path per hop: a fall
+    register windows HIT 8 / ID 128 ms (register.md 2); A path per hop: a fall
     2.0 ms, a rise 1.5 ms (aline 1); a seizure crosses an exchange in 7 ms; marker action 2 ms;
-    sender 20 pps 60/40 with 200 ms between digits (register.md 3 read 20 pps; mf8-cards.md 5 carried it);
-    guard, seizure to first break, 200 ms; release 256 ms.  The caller starts dialling 1 s after dial tone.
+    origin guard 128 ms (monitor.md 3); release 256 ms.  No sender: trunks listen to the caller.
+    The caller starts dialling 1 s after dial tone; 800 ms between digits.
 
-  1. 2144 dials 2355 on 21 = 22 = 23 = 24.  A rotary caller; junctors seized when the FIRST digit is in.
+  1. Line 44 of exchange 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25 (network.md 3.1).
             0  lifts
            10  register attached; dial tone
-         1000  dials 2 3 5 5
-         1290  digit 1 is in: seize a junctor in each trunk block, listening to the sender
-         1297    22: M rises; patched onward; monitor on
-         1304    23: M rises; patched onward; monitor on
-         1311    24: M rises; patched onward; monitor on
-         1490  sender: 2  (2 pulses, to 1570)
-         2350  sender: 3  (3 pulses, to 2480)
-         2610    22: digit 2 is not mine; monitor lets go
-         2612    24: digit 2 is not mine; monitor lets go
-         2613    23: CLAIM; onward patch cleared; backward A = 1
-         2616  origin: backward A rises on the junctor
-         2871    beyond 23: ports have released themselves
-         3610  sender: 5  (5 pulses, to 3840)
-         4870  sender: 5  (5 pulses, to 5100)
-         5107  origin: caller <-> junctor; register-sender freed
-         5233    23: has 5 5; junctor <-> line; the phone rings, RBT goes back
-         5233  caller hears ringback
-     post-dial delay, caller's last pulse to ringback: 493 ms
+         1000  dials 1 2 4 5 5
+         1190  the first digit is in, and is 1: seize a trunk in every direction, listening to the caller
+         1197    23: M rises; patched onward; monitor on
+         1204    24: M rises; patched onward; monitor on
+         1211    25: M rises; nowhere to forward; monitor on
+         1318  the origin's guard ends: a break before this would have abandoned the call
+         1860  dials 2
+         2150    e=2: monitors at 23, 24, 25 read on
+         2820  dials 4
+         3310    23: b is not mine; monitor lets go; the patch stays
+         3312    25: b is not mine; monitor lets go; the patch stays
+         3313    24: CLAIM; onward patch cleared; backward A = 1
+         3316  origin: backward A rises on the trunk
+         3571    beyond 24: ports have released themselves
+         3980  dials 5
+         5240  dials 5
+         5833    24: has 5 5; trunk <-> line; the phone rings, RBT goes back
+         5833  origin: caller <-> trunk; register freed
+         5833  caller hears ringback
+     post-dial delay, caller's last pulse to ringback: 133 ms
 
-  2. The same call, by where the junctors are seized and how the caller dials.
-     caller    seize at digit  post-dial delay ms  register-sender held s  link 23-24 held ms  monitor at 22 / 23 / 24 held ms
-     rotary                 1                 493                    5.10                1567               1312 / 3927 / 1302
-     rotary                 2                 493                    5.10                 987                 732 / 2867 / 722
-     rotary                 4                1733                    6.34                 987                 732 / 1587 / 722
-     keypad                 1                 645                    2.51                 987                 732 / 1587 / 722
-     keypad                 2                 945                    2.81                 987                 732 / 1587 / 722
-     keypad                 4                1545                    3.41                 987                 732 / 1587 / 722
+  2. The same call from the middle: a line of 23 dials 1 2 5 5 5.  Seizes toward 22 and toward 24;
+     25 claims; the origin keeps that leg and releases the other.
+            0  lifts
+           10  register attached; dial tone
+         1000  dials 1 2 5 5 5
+         1190  the first digit is in, and is 1: seize a trunk in every direction, listening to the caller
+         1197    24: M rises; patched onward; monitor on
+         1204    25: M rises; nowhere to forward; monitor on
+         1318  the origin's guard ends: a break before this would have abandoned the call
+         1860  dials 2
+         2150    e=2: monitors at 24, 25 read on
+         2820  dials 5
+         3410    24: b is not mine; monitor lets go; the patch stays
+         3413    25: CLAIM; onward patch cleared; backward A = 1
+         3416  origin: backward A rises on the trunk
+         4080  dials 5
+         5340  dials 5
+         5933    25: has 5 5; trunk <-> line; the phone rings, RBT goes back
+         5933  origin: caller <-> trunk; register freed
+         5933  caller hears ringback
+     post-dial delay: 133 ms;  flood legs past the owner held 2228 ms
 
-  3. A LOCAL call, 2144 dials 2155: what seizing at the first digit floods for nothing.
-     caller    seize at digit  every link held ms  a monitor at every exchange ms  local post-dial delay ms
-     rotary                 1                1116                            1109                       130
-     rotary                 2                   0                               0                       130
-     keypad                 1                 556                             549                         0
-     keypad                 2                   0                               0                         0
+  3. A LOCAL call, 2244 dials 4 7: no trunk is touched.
+            0  lifts
+           10  register attached; dial tone
+         1000  dials 4 7
+         2950  local: connected
+     post-dial delay: 130 ms
 
-  4. The load of the flood itself.  4 exchanges x 48 lines x 3 calls an hour, a fifth of them to another
-     exchange; erlangs of pure signalling on a link the call does not use (6 channels), and of monitor
-     time at an exchange the call passes (taken as 22).
-     caller    seize at digit  link: local calls  network calls   total  monitor: local  network   total
-     rotary                 1              0.143          0.050   0.193           0.142    0.042   0.184
-     rotary                 2              0.000          0.032   0.032           0.000    0.023   0.023
-     rotary                 4              0.000          0.032   0.032           0.000    0.023   0.023
-     keypad                 1              0.071          0.032   0.103           0.070    0.023   0.094
-     keypad                 2              0.000          0.032   0.032           0.000    0.023   0.023
-     keypad                 4              0.000          0.032   0.032           0.000    0.023   0.023
+  4. Own code from inside: 2244 dials 1 2 2 5 5.  Floods, then the origin's register sees its own
+     e b, releases the trunks and carries on locally.
+            0  lifts
+           10  register attached; dial tone
+         1000  dials 1 2 2 5 5
+         1190  the first digit is in, and is 1: seize a trunk in every direction, listening to the caller
+         1197    23: M rises; patched onward; monitor on
+         1204    24: M rises; patched onward; monitor on
+         1211    25: M rises; nowhere to forward; monitor on
+         1318  the origin's guard ends: a break before this would have abandoned the call
+         1860  dials 2
+         2820  dials 2
+         3110  own code: the origin claims its own call and releases the trunks
+         3366  every flooded port has released itself
+         3780  dials 5
+         5040  dials 5
+         5630  connected locally
+     every link held 2176 ms; post-dial delay 130 ms
 
-  5. No sender: the junctors listen to the CALLER from the first digit, and his own remaining digits
-     go down the flood live.  The first digit is shared by everything the flood can reach, so nobody needs
-     it again.  What must hold: the whole flood is up before his next digit begins.  The origin makes sure:
-     it abandons a call whose next break comes within 128 ms of its seizure (monitor, below).
+  5. The load of the flood itself.  4 exchanges x 48 lines x 3 calls an hour; a fraction leave,
+     spread evenly; erlangs of pure signalling on a link the call does not keep (beyond the owner),
+     and of monitor time at an exchange the call passes (taken as 23).
+      leaving  link waste E  monitor at 23 E  flood held, code 24 s
+          20%         0.076            0.068                   2.37
+          30%         0.114            0.101                   2.37
+          50%         0.189            0.169                   2.37
+
+  6. What must hold: the flood is up before the caller's next digit.  The origin makes sure:
+     it abandons a call whose next break comes within 128 ms of its seizure (monitor.md 3).
      Ready 258 ms after his last pulse = digit recognised 128 + seizure 2 + guard 128, whatever the hop count.
-      hops  the flood itself takes, ms  at a slow marker, 10 ms a hop  inside the guard
-         1                           7                             12              True
-         3                          21                             36              True
-         7                          49                             84              True
-        10                          70                            120              True
+      hops  the flood itself takes, ms  at a slow marker, 12 ms a hop  inside the guard
+         1                           7                             14              True
+         3                          21                             42              True
+         7                          49                             98              True
+        10                          70                            140             False
      Margin for a dial: 242 ms at 500 ms between digits, 542 ms at 800.  A caller who beats it is
      abandoned to cannot-complete: a failed call, never a wrong number.
-     Post-dial delay to the third exchange: 133 ms after his last pulse, against 493 with a sender.
+     Post-dial delay: 133 ms after the last pulse, whatever the hop count
+     (133 ms here to the third exchange); a register-sender would have cost 0.49 s (network.md 9).
 
-  6. Live, no sender: 2144 dials 2 3 5 5.  The origin bank acts on the first digit; bank 23 on the second.
-     2 3 5 5, 800 ms between digits
+  7. Live margins on 1 2 4 5 5.  The origin acts on the key; exchange 24 claims on b.
+     1 2 4 5 5, 800 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          2            1160 origin 21: seize the flood                1418               1960        542
-          3            2220 -                           
-          5            3480 -                           
-          5            4740 -                           
+          1            1060 origin 22: seize the flood                1318               1860        542
+          2            2020 -                           
+          4            3180 exchange 24: claim                        3438               3980        542
+          5            4440 -                           
+          5            5700 -                           
      the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
 
-     2 3 5 5, 500 ms between digits
+     1 2 4 5 5, 500 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          2            1160 origin 21: seize the flood                1418               1660        242
-          3            1920 -                           
-          5            2880 -                           
-          5            3840 -                           
+          1            1060 origin 22: seize the flood                1318               1560        242
+          2            1720 -                           
+          4            2580 exchange 24: claim                        2838               3080        242
+          5            3540 -                           
+          5            4500 -                           
      the far phone rings 133 ms after the last pulse;  smallest margin 242 ms
 
-  7. Live, no sender, out of the exchange: 1, then 8 for another exchange of this area or 9 for another
-     area.  Each digit is acted on by one level, which patches the call into the next flood before the
-     following digit.  8 and 9 can never be a bank digit (that is 1-7 pulses, or ten), so a monitor
-     knows such a call by the first digit it hears.
-     1 8 3 1 4 7  (exchange 3, bank 1, line 47), 800 ms between digits
+  8. Out of the network: 1 8 / 1 9 are reserved (network.md 6).  One way considered, not adopted:
+     each digit claimed by one level in turn, with the same guard.  8 and 9 can never be e or b,
+     so a monitor knows such a call by the first digit it hears and lets go.
+     1 8 3 1 4 7  (reserved path, worked as successive claims), 800 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          1            1060 origin bank 21: not a home call: seize              1318               1860        542
-          8            2620 exchange 2's gateway bank: claim, onto MF8              2878               3420        542
-          3            3680 exchange 3's gateway bank: claim, into its ties              3938               4480        542
-          1            4540 bank 31: claim                            4798               5340        542
+          1            1060 origin 22: seize                          1318               1860        542
+          8            2620 gateway: claim, onto next flood              2878               3420        542
+          3            3680 far gateway: claim, into its ties              3938               4480        542
+          1            4540 exchange 31: claim                        4798               5340        542
           4            5700 -                           
           7            7160 -                           
      the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
 
-     1 8 3 1 4 7  (exchange 3, bank 1, line 47), 500 ms between digits
+     1 8 3 1 4 7  (reserved path, worked as successive claims), 500 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          1            1060 origin bank 21: not a home call: seize              1318               1560        242
-          8            2320 exchange 2's gateway bank: claim, onto MF8              2578               2820        242
-          3            3080 exchange 3's gateway bank: claim, into its ties              3338               3580        242
-          1            3640 bank 31: claim                            3898               4140        242
+          1            1060 origin 22: seize                          1318               1560        242
+          8            2320 gateway: claim, onto next flood              2578               2820        242
+          3            3080 far gateway: claim, into its ties              3338               3580        242
+          1            3640 exchange 31: claim                        3898               4140        242
           4            4500 -                           
           7            5660 -                           
      the far phone rings 133 ms after the last pulse;  smallest margin 242 ms
 
-     1 9 5 3 1 4 7  (area 5, exchange 3, bank 1, line 47), 800 ms between digits
+     1 9 5 3 1 4 7, 800 ms between digits
       digit  its last pulse acted on by                   next flood ready  next digit begins  margin ms
-          1            1060 origin bank 21: not a home call: seize              1318               1860        542
-          9            2720 exchange 2's gateway bank: claim, onto MF8              2978               3520        542
-          5            3980 area 5's gateway: claim, into its area              4238               4780        542
-          3            5040 exchange 3's gateway bank: claim, into its ties              5298               5840        542
-          1            5900 bank 31: claim                            6158               6700        542
+          1            1060 origin 22: seize                          1318               1860        542
+          9            2720 gateway: claim, onto next flood              2978               3520        542
+          5            3980 area gateway: claim                       4238               4780        542
+          3            5040 far gateway: claim                        5298               5840        542
+          1            5900 exchange 31: claim                        6158               6700        542
           4            7060 -                           
           7            8520 -                           
      the far phone rings 133 ms after the last pulse;  smallest margin 542 ms
@@ -878,28 +909,31 @@ FLOOD -- the timing of a network call.  Dial pulses on A, flooded, monitored and
   [flood: 0 s]
 
 MONITOR -- which rules keep a live flood from ever claiming a wrong number.
-  A chain: an origin and 7 exchanges whose exchange digits are 1..7.  A dial at 10 pps +-10 %, 60/40; the
-  trigger digit, the exchange digit (1-7, or ten pulses for an exchange that is not there) and one more.
-  The origin seizes 130 ms after the trigger's last pulse; each exchange patches the seizure onward 3-10 ms
-  after its M rises; A crosses every hop through the trunk's A path (aline 1).  A claim cuts the onward patch.
-  1500 calls a row.  FALSE = an exchange other than the one dialled claimed the call.
+  A chain: an origin and 7 exchanges whose codes are 11..17 (shared e, distinct b).  A dial at
+  10 pps +-10 %, 60/40; the key (1), then e and b (1-7, or ten pulses for a code that is not
+  there), and one more.  A monitor compares BOTH digits (network.md 3, monitor.md 2).
+  The origin seizes 130 ms after the key's last pulse; each exchange patches the seizure onward
+  3-10 ms after its M rises; A crosses every hop through the trunk's A path (aline 1).  A claim
+  cuts the onward patch.  1500 calls a row.  FALSE = an exchange other than the one dialled claimed.
 
   a monitor counts                              origin guard  pause between digits  line BER |  right %  no claim %  FALSE
-  from whenever it attaches, after 128 ms of make          none            140-900 ms     0e+00 |     49.5        44.1     97
-  from whenever it attaches, after 128 ms of make          none            450-900 ms     0e+00 |     68.2        29.9     29
-  only a seizure whose rise it saw                      none            140-900 ms     0e+00 |     81.9        17.9      4
-  only a seizure whose rise it saw                      none            450-900 ms     0e+00 |     81.5        18.5      0
-  from whenever it attaches, after 128 ms of make        128 ms            140-900 ms     0e+00 |     49.9        47.7     36
-  from whenever it attaches, after 128 ms of make        128 ms            450-900 ms     0e+00 |     70.4        28.9     11
-  only a seizure whose rise it saw                    128 ms            140-900 ms     0e+00 |     70.8        29.2      0
-  only a seizure whose rise it saw                    128 ms            140-900 ms     1e-02 |     71.4        28.6      0
-  only a seizure whose rise it saw                    128 ms            450-900 ms     0e+00 |     83.7        16.3      0
-  only a seizure whose rise it saw                    128 ms            450-900 ms     1e-02 |     82.6        17.4      0
+  from whenever it attaches, after 128 ms of make          none            140-900 ms     0e+00 |     92.9         6.3     12
+  from whenever it attaches, after 128 ms of make          none            450-900 ms     0e+00 |     96.5         3.5      1
+  only a seizure whose rise it saw                      none            140-900 ms     0e+00 |     98.0         1.8      3
+  only a seizure whose rise it saw                      none            450-900 ms     0e+00 |     97.7         2.3      0
+  from whenever it attaches, after 128 ms of make        128 ms            140-900 ms     0e+00 |     94.5         5.0      7
+  from whenever it attaches, after 128 ms of make        128 ms            450-900 ms     0e+00 |     96.1         3.4      7
+  only a seizure whose rise it saw                    128 ms            140-900 ms     0e+00 |     96.1         3.9      0
+  only a seizure whose rise it saw                    128 ms            140-900 ms     1e-02 |     96.7         3.3      0
+  only a seizure whose rise it saw                    128 ms            450-900 ms     0e+00 |     97.9         2.1      0
+  only a seizure whose rise it saw                    128 ms            450-900 ms     1e-02 |     98.1         1.9      0
 
   "No claim" is the safe failure: the origin times out and returns cannot-complete.  In the rows where a
   monitor must have seen the rise, one monitor in five was busy at the seizure; with the origin guard, a caller
   whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse
   register can read (register.md 3.2): below it two digits run together, flood or no flood.
+  A second compared digit does not add a new way of attaching late -- the monitor is attached by then --
+  but it does reject a partial count that landed on the wrong e before b is ever read.
 
   A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path
   a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a
@@ -907,13 +941,13 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
   eats the origin's guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, 1000 calls a row.
 
    carrier a hop  the flood is up at |   right %  no claim %  FALSE
-            0 ms               46 ms |      73.3        26.7      0
-            5 ms               80 ms |      69.1        30.9      0
-           10 ms              116 ms |      70.8        29.2      0
-           20 ms              186 ms |      72.1        27.9      0
-           40 ms              326 ms |      70.5        29.5      0
-           80 ms              606 ms |      72.2        27.8      0
-          160 ms             1166 ms |      72.8        27.2      0
+            0 ms               46 ms |      96.6         3.4      0
+            5 ms               80 ms |      96.9         3.1      0
+           10 ms              116 ms |      97.5         2.5      0
+           20 ms              186 ms |      96.8         3.2      0
+           40 ms              326 ms |      97.2         2.8      0
+           80 ms              606 ms |      96.7         3.3      0
+          160 ms             1166 ms |      96.2         3.8      0
 
   IT DOES NOT.  A constant delay moves the whole of the caller's hook -- the seizure that
   opens the flood AND the pulses that follow it -- by the same amount, because they are the
@@ -929,12 +963,12 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
     wander a hop   spread |          guard 128 ms          |       guard matched to the spread       
                    over 7 |   right %  no claim %  FALSE |    tap  a dial of 140-900        of 720-900
                           |                              |         FALSE   abandoned  FALSE  abandoned
-            0 ms    46 ms |      71.7        28.3      0 |  128 ms      0      17 %      0       0 %
-            2 ms    60 ms |      70.5        29.5      0 |  128 ms      0      15 %      0       0 %
-            5 ms    80 ms |      72.8        27.2      0 |  128 ms      0      16 %      0       0 %
-           10 ms   116 ms |      72.8        27.2      0 |  128 ms      0      16 %      0       0 %
-           20 ms   186 ms |      73.1        26.8      1 |  256 ms      0      32 %      0       0 %
-           40 ms   326 ms |      66.5        31.2     23 |  512 ms      0      69 %      0       0 %
+            0 ms    46 ms |      96.6         3.4      0 |  128 ms      0      14 %      0       0 %
+            2 ms    60 ms |      97.2         2.8      0 |  128 ms      0      16 %      0       0 %
+            5 ms    80 ms |      97.8         2.2      0 |  128 ms      0      15 %      0       0 %
+           10 ms   116 ms |      97.7         2.3      0 |  128 ms      0      14 %      0       0 %
+           20 ms   186 ms |      97.1         2.9      0 |  256 ms      0      31 %      0       0 %
+           40 ms   326 ms |      94.9         4.4      7 |  512 ms      0      65 %      0       0 %
 
   The guard must be at least the spread or it is not a guarantee, and no more than the
   caller's own pause less the 130 ms the digit and the seizure take.  A phone to
@@ -943,13 +977,14 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
   67 ms a hop of wander against the present tap's 12.  It is free in parts and it costs
   the callers who dial faster than the tap allows: every one of those gets cannot-complete.
 
-  How many monitors a trunk block needs: one is wanted for ~1.1 s by every call in the district (flood 3).
-   calls an hour in the district  erlang |  1 busy %  2 busy %  3 busy %
-                             150   0.046 |      4.38      0.10      0.00
-                             576   0.176 |     14.97      1.30      0.08
-                            1500   0.458 |     31.43      6.72      1.02
+  How many monitors a trunk block needs (monitor.md 4): held ~1.5 s if e is not ours, ~2.7 s if it is.
+    calls an hour reaching the block erlang @ 2.7 s |  1 busy %  2 busy %  3 busy %  4 busy %
+                                 150          0.113 |     10.11      0.57      0.02      0.00
+                                 576          0.432 |     30.17      6.12      0.87      0.09
+                                1500          1.125 |     52.94     22.95      7.92      2.18
+                                3000          2.250 |     69.23     43.78     24.72     12.21
 
-  [monitor: 213 s]
+  [monitor: 620 s]
 
 TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for its first half.
   Every delay in every trial drawn on its own between 0.35 x typical and the data-sheet maximum
@@ -1106,17 +1141,17 @@ SS0 -- the number on a common channel: one SEIZE a link, forward only; A carries
 
   2. Trunk held by calls that do not use it, erlangs on each link of 21 = 22 = 23 = 24.  Every exchange
      48 lines x 3 calls an hour, the network share spread evenly over the other three, rotary dials.
-     Every exchange originates here, where `flood` 4 sent every call from 21.
+     Local calls hold nothing under the pulse flood; a network call wastes the legs past the owner.
      20% of calls leave
          link  flood: local calls  network calls   total     SS0
-        21-22               0.162          0.021   0.183   0.002
-        22-23               0.162          0.014   0.176   0.002
-        23-24               0.162          0.019   0.181   0.002
+        21-22               0.000          0.036   0.036   0.002
+        22-23               0.000          0.024   0.024   0.002
+        23-24               0.000          0.035   0.035   0.002
      50% of calls leave
          link  flood: local calls  network calls   total     SS0
-        21-22               0.101          0.053   0.154   0.006
-        22-23               0.101          0.034   0.135   0.004
-        23-24               0.101          0.049   0.150   0.006
+        21-22               0.000          0.091   0.091   0.006
+        22-23               0.000          0.059   0.059   0.004
+        23-24               0.000          0.087   0.087   0.006
 
   3. A message against line errors.  Each x sample (one line bit a superframe) wrong with probability p,
      independently.  A data bit is the majority of the middle 1, 3 or 5 of its 8 samples; odd parity
