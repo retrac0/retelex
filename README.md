@@ -82,6 +82,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 |---|---|
 | [mf8/mf8-spec.md](mf8/mf8-spec.md) | MF8 specification — frame, header, framer, cards, line code, circuits |
 | [mf8/mf8-backplane.md](mf8/mf8-backplane.md) | remote MF8 unit backplane — modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip |
+| [mf8/mf8-psu.md](mf8/mf8-psu.md) | MF8 shelf power: 15–18 V in, regulated −48 V talk battery and ~80 Vrms / 20 Hz ring as two converter paths, split across noisy and quiet 100 × 100 end boards |
 | [mf8/mf8-pico.md](mf8/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
 | [mf8/line-codes.md](mf8/line-codes.md) | nine line codes explored; differential Manchester against AMI |
 | [mf8/frame-rate.md](mf8/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
