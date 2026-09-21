@@ -132,7 +132,7 @@ and never knows which way a trunk faces.
 | Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's word, which a 74HC164 takes in over the visit), addressed by the scanner or by the digit store. A port probed out of the scanner's turn is read for one whole octet, up to 250 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`network.md` §3.2) |
 | Sequencer | a state counter and decode. Its whole output is latch writes on the control bus — one sixteen-bit word shifted out on `SDATA`, then `WR` (`mainboard.md` §2.3) — which is multi-master: the operator's console drives it by hand. Its hunt takes one input, `/HUNT_INH`, pulled up on the backplane: a card may reject the port the probe is on and the hunt walks on. Nothing else may steer a hunt, and with no card fitted the line reads *accept* |
 | Diode matrix | prefix key → class. Nothing else: no addresses, no translation |
-| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero is an operator transfer consult (`register.md` §6.1): the register is kept after the second leg connects, and CLR pairs held ↔ called. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network card**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2) |
+| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero would be an operator flash-transfer consult (`register.md` §6.1): deferred — transfer is console-only for now (`operator.md` §3); attaches today load `SRC` = 00. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network card**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2) |
 
 A connection is two writes — caller listens to called, called listens to caller
 — and the marker is finished with the call.
@@ -246,7 +246,10 @@ A caller who finds no register free is not refused: dial tone is late. 48 lines,
 
 4 s is a keypad; 10 s is `register.md` §5's figure for a dial. **Two registers
 for an exchange of keypad phones, three for dials or for a busy one.** `register.md`
-§5's "one is enough" was eight lines.
+§5's "one is enough" was eight lines. The table's *axis* — the same load, three
+pool sizes — is also measured in the gates: `make regs` runs the 48-line stress
+bench at a fixed idle for `NREG` = 1, 2 and 3 and reports delayed %, mean wait
+and wait > 3 s.
 
 ---
 
@@ -290,6 +293,7 @@ and each exchange's monitor — a cut-down pulse register on the trunk block,
   model; a second master on the control bus is not modelled.
 - **Partial dialling**: the 10 s timeout runs from the last digit as well as from
   seizure, and is modelled only from seizure.
-- **Operator flash transfer**: the register's `SRC` field and the marker's consult
-  / CLR pair path are in RTL (`register.md` §6.1). Flash detect on a busy
-  operator port, and filling `attach_src` from a listen-latch read-back, are not.
+- **Operator flash transfer**: deferred (`operator.md` §5). Transfer is the
+  console (`console.md` §7). The register's `SRC` field and the marker's consult
+  / CLR pair path are in RTL as hooks; flash detect and filling `attach_src`
+  are not wired (`register.md` §6.1).

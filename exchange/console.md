@@ -1,7 +1,8 @@
 # The exchange — the console: a second master on cable B
 
 `features.md` §4 has the console as "a busy-lamp field … and keys that drive
-the marker's control bus by hand", and says to build it first. `mainboard.md`
+the marker's control bus by hand", and says to build it first. The phone beside
+it is `operator.md`. `mainboard.md`
 §2.3 calls that bus multi-master and gives the console one conductor, `/CON`:
 "the console has the bus; the marker's drivers go high-impedance. One '244
 enable." `marker.md` §8 lists a second master as not modelled.
@@ -273,7 +274,9 @@ and is cleared by the far end's next seizure and release.
 
 **Out of service is the switch on the card's word** (`extensions.md` §2.2):
 no word, so the port reads unequipped, and nothing at the port can undo it.
-The console is not the tool.
+**Busy-out** that survives hang-up is the word's `b` bit (`extensions.md`
+§2.4): terminating callers hear busy; the phone can still dial out. The console
+is not the tool for either.
 
 **But it is exactly the tool for one line: the operator's own** (§7.1). A
 make-busy written on the operator's port before the handset is lifted keeps the
@@ -449,18 +452,19 @@ release time later and got dial tone, and nothing was left held.
 
 ## 7. Dialling a port from the console, and supervising both ends
 
-The operator's phone is a subscriber line (§8) and dials like one: lift, dial
-`h s`, and the marker does the rest. **That is the ordinary way to call a port,
-and the console has no part in it.** Three things it cannot do, and each is why
-this section exists:
+The operator's phone is a subscriber line (`operator.md`) and dials like one:
+lift, dial `h s`, and the marker does the rest. **That is the ordinary way to
+call a port, and the console has no part in it.** Three things the phone cannot
+do alone, and each is why this section exists:
 
 - it cannot reach a port with no number and cannot reach one with no word.
-  00–17 are never dialled (`protocol.md` §5) — a trunk channel, a tone, the
+  00–07 are never dialled (`protocol.md` §5) — a tone, the
   position at 04 itself — and a sink or a ring source answers any dial with
   cannot-complete, because a card that sends no word reads unequipped;
-- it cannot hold one call and start another. Once the operator's latch is
-  written that port is busy, and **the marker will not give a busy port a
-  register**: the second leg of a connection has to come from the console;
+- it cannot hold one call and start another **from the phone alone**. Once the
+  operator's latch is written that port is busy, and **the marker will not give
+  a busy port a register** on a plain lift: the second leg needs the console.
+  Phone flash (`register.md` §6.1) is deferred (`operator.md` §5);
 - it cannot ring a port that is busy, out of service or in a hunt group's
   shadow, which is most of what an operator is asked to do.
 
@@ -577,83 +581,61 @@ supervision packages go. A console built alone needs them.
 
 ## 8. The operator at 04
 
+**The phone is `operator.md`.** This section is only what the console needs to
+know about it: a port number on the `SRC` wheels, and that the keys and the
+handset are two different things on one desk.
+
 ### 8.1 What port 04 is
 
-**A plain line card with a phone on it, in slot 4 of block 0** — and nothing
-else. It has a port circuit, a latch, two release detectors and a `BUSY` bit
-like every other port; it rings, it answers, it can be observed, released and
-made busy from the console like every other port; and `protocol.md` §5's
-map is the only place in the exchange the number appears.
+**A plain line card with a phone on it, in slot 4 of block 0** — first of the
+four-line bank at 04–07 (`protocol.md` §5; detail in `operator.md` §2). It has a
+port circuit, a latch, two release detectors and a `BUSY` bit like every other
+port; it rings, it answers, it can be observed, released and made busy from the
+console like every other port; and the map is the only place in the exchange the
+number appears.
 
 | | |
 |---|---|
 | **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's '165 unfitted, is a line with no options |
 | **its word** | *line*, today with class *operator* so that the 0 hunt finds it (`marker.md` §1). Under `groups.md` §2 that class goes: it is a plain line, and a second position is a card that **answers to** the pilot |
 | **`/ANS`** | open. It is a phone and it rings in cadence |
-| **reached by** | **key 0 only.** 0 hunts class *operator* in fixed order from 00 and 04 is the first such port (`marker.md` §3) — and from another exchange by `1 e b 0`, which is the same key once the far monitor has claimed (`network.md` §3) |
-| **not reached by** | its own number. Ports 00–17 are never dialled, because 0 and 1 mean something as a first digit (`protocol.md` §5) |
+| **reached by** | **key 0 only** as a subscriber (`operator.md` §2) |
+| **not reached by** | its own number. Ports 00–07 are never dialled, because 0 is the operator key |
 | **to the console** | a number on the `SRC` wheels, and nothing more (§7.1) |
 | **to the fabric** | nothing at all. No block, no port circuit and no highway knows which port it is |
 
-**Why slot 4, and why block 0.** A link's channels sit where they are on the
-wire: MF8 puts F at frame position 0 and S at 4, so **slots 0 and 4 of a block
-are never trunk channels** (`protocol.md` §5). Block 0 is therefore a block
-with six channel slots and two ports that survive a trunk group — 00 and 04 —
-and 00 can never hold anything, because a cleared latch listens to 00: an
-operator there would ring every idle phone whenever the handset came up, and
-every caller waiting for a register would hear the operator's calls. **04 is the
-one port of block 0 that anything may sit in**, and giving it to the position
-costs no dialable number.
+**Why slot 4, and why block 0.** 00 must stay empty (cleared latches listen
+there). 01–03 are the three switched tones. That leaves 04–07 as four ordinary
+line seats that no MF8 trunk group can take and no subscriber can dial —
+operator, night/backup, and two more for positions or single-channel trunks.
+**04 is the default home of the position**, not a fabric requirement.
 
 **What the console needs from it: a hook that goes up.** §7 uses the operator's
 phone as §6.3's ring source, and any port whose `M` can be raised does that.
 A console with no position at all still works — that is what the ring source
-card is for — and a position in a line slot works exactly as well. **04 is a
-default, not a requirement**, and the only thing in the exchange that ties the
-operator to it is a hunt.
+card is for — and a position in a dialable line slot works exactly as well.
 
 **What is not at 04: the console.** The console is a unit on cable B with no
 port, no latch and no number; the phone is a card in a channel slot with no keys
-on it. They sit on one desk and are two different things, and either works
-without the other.
+on it (`operator.md` §1). They sit on one desk and are two different things, and
+either works without the other. **Transfer is this document's §7**; phone flash
+is deferred (`operator.md` §5).
 
 ### 8.2 More than one position, and none
 
 | | |
 |---|---|
-| a second position | another class-*operator* card in any line slot. 0's fixed order from 00 reaches 04 first, then it (`marker.md` §3) |
-| a night announcement | the same, last in slot order: an announcement card, `/ANS` low, that answers itself (`features.md` §3) |
+| a second position / night announcement | nominally 05, then 06–07, then any dialable line slot. 0's fixed order from 00 reaches 04 first (`marker.md` §3) |
 | night service | the out-of-service switch on 04's word (`extensions.md` §2.2). 04 reads unequipped, and 0 goes on down the hunt |
+| single-channel trunks at 06–07 | class trunk in the word; direction hunt finds them. They do not need an MF8 group on block 0 |
 | no position fitted | 0 gives cannot-complete. Nothing else changes: a console with a ring source needs no position, and a CO line ringing in — which is routed as 0 — gets cannot-complete too, so an exchange with incoming trunks wants one |
 
-### 8.3 Should the position have 04 at all?
+### 8.3 The bank and the tones
 
-The exchange has exactly four ports that no trunk group can take and no
-subscriber can dial: 00, 04, 10 and 14. 00 must stay empty, so there are three,
-and they are spoken for — 04 the position, 10 dial tone, 14 cannot-complete
-(`tone-card.md` §5.1 counts them the same way). Two things want another:
-`tone-plan.md`'s **fourth tone**, which is proposed at 11 and has no home on an
-exchange where block 1 is a trunk group, and the **ringback card**, which
-`tone-card.md` §5.1 settles by giving it no port at all.
-
-So the trade is worth stating, and it comes out one way:
-
-| what an undialable slot gives | a source | a position |
-|---|---|---|
-| a slot that survives a trunk group | yes — but a source is content with **no port circuit at all**, or with slot 0 or 4 of a *trunk* block, which costs nothing either (`tone-card.md` §5.1) | yes |
-| a number nobody can dial | **it does not want one**: a tone in a line slot is dialable, and `tone-card.md` §5.1 calls that a feature — a test line for the tone, the bus and the listener's decoder | yes: 0 is then the only way to a position, so the hunt's order — first position, second, night announcement — cannot be walked round by dialling a particular one |
-
-**So the position keeps 04 on an attended exchange, and an unattended one should
-give it to the fourth tone**, which is the one thing with nowhere else
-guaranteed. Moving the position costs nothing in the marker: it is found by a
-hunt, and "nothing on the marker says where anything is" (`marker.md` §1).
-
-**One trap if a source takes 04.** Under `groups.md` §2, key 0 becomes *a call
-to a pilot number*, the pilot is **probed first**, and a source found at a probe
-is connected in one write — so a tone sitting at the pilot would answer 0 with a
-tone. The pilot must then move to a port that fails the probe: 00, which is
-never fitted, or any trunk channel. Under the marker as built, which hunts a
-class, there is no such trap.
+Block 0 no longer shares seats with an MF8 trunk group. The three tone ports and
+the four-line bank are the whole of it. Moving the position off 04 still costs
+nothing in the marker — it is found by a hunt — and would only matter if
+something else wanted that undialable line seat.
 
 ---
 
@@ -732,10 +714,10 @@ own, at its own 4.096 MHz.
 - **`extensions.md` §3.1**, "the console can still point two latches at each
   other by hand… that is a call": it is a call only if a hook is up somewhere.
   §6 is what it takes, and §6.3 adds a card to the wiring field.
-- **`features.md` §4** has the console as a lamp field and keys. The keys
-  are §1, the position is §8, and "build it first" is unchanged — with a ring
-  source card and two phones, fabric plus console is a working manual board
-  before the marker exists.
+- **`features.md` §4** / **`operator.md`**: the keys are this document; the
+  phone is `operator.md`. "Build it first" is unchanged — with a ring source
+  card and two phones, fabric plus console is a working manual board before the
+  marker exists.
 - **`features.md` §6**, sources: `A_TX` is tied low there "because `M` high
   on an idle port is a seizure to the scanner". §6.3 is the exception and says
   why it is one — no word, no class, no seizure.
@@ -745,9 +727,8 @@ own, at its own 4.096 MHz.
   **A PROBE is counted by nothing**, because nothing is written. At an
   operator's rate the rest is a handful a day. If it ever matters, the spare bit
   14 could mark a console's word; it is not spent here.
-- **`tone-card.md` §5.1** counts the four undialable ports and finds all four
-  spoken for. §8.3 is the trade that frees one of them, and which exchange should
-  take it.
+- **`tone-card.md` §5.1** and `tone-plan.md`: the switched tones are at 01–03;
+  ringback stays on the bus. §8 is the operator bank beside them.
 - **`hookbusy.md`**: its busy row already follows the console's words,
   which §7.3 makes a function rather than a coincidence.
 

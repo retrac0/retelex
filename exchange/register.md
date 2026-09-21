@@ -234,9 +234,11 @@ MT8870's D.
 | HIT, ID, CLR, ID' | 2 × 74HC74 |
 | pulse count | 74HC163 |
 | store | 74HC670 |
+| held party `SRC` (§6.1) | ½ 74HC174 (six bits), or spare in a second '670 |
 | count ≠ 0, strobe and enable gating | 74HC4002, 74HC08 |
 
-**≈ 11 packages, one register for the exchange** (§5).
+**≈ 11½ packages, one register for the exchange** (§5). With the held field,
+≈ 12.
 
 ---
 
@@ -275,15 +277,51 @@ is not acceptable. This is arithmetic on assumed calling rates, not a measuremen
 
 | to the marker | |
 |---|---|
-| `LINE` | the caller, 3 bits: the finder's count, held |
+| `LINE` / `port` | the caller, six bits (was three on the eight-line sketch) |
+| `SRC` | **held party**, six bits: `00` = none; non-zero only on an operator transfer attach (§6.1) |
 | `D1`…`D4` | the store's read port, addressed by the marker |
 | `N` | digits so far |
 | `DONE` | `N` has reached the numbering plan's length. With eight lines or fewer, that is one digit |
-| `RELEASE` | CLR, or a partial-dial timeout: the caller gave up |
+| `RELEASE` / `gone` | CLR, or a partial-dial timeout: the caller gave up |
 
 | from the marker | |
 |---|---|
-| `FREE` | clears the store and `N` and restarts the finder |
+| `FREE` / `release` | clears the store, `N`, and `SRC`, and restarts the finder |
+| `attach` + `attach_port` + `attach_src` | seize the register for this caller; `attach_src` is the held party or `00` |
+
+**Parts for `SRC`.** Six bits loaded at attach and cleared when the register is
+freed: half a 74HC174, or six bits of a second '670 if one is already on the
+card for digits. **+6 bits a register**, 12–18 for a pool of two or three —
+not two dial digits. `00` means empty because port 00 is never a talking party
+(`protocol.md` §5).
+
+### 6.1 Operator transfer: `SRC` is the held party — deferred
+
+A busy operator-class port cannot get a second register by lifting
+(`operator.md` §3, `console.md` §7). **Transfer for now is console keys only**
+(`console.md` §7, measured). Phone flash — a break the length of dial digit
+`1` while the call is up, re-attaching a register with `SRC` = the held party —
+is **deferred** (`operator.md` §5). `1` at dial tone stays the network key /
+highway digit either way.
+
+The field and the marker's consult / CLR pair path are in RTL as hooks: when
+`attach_src` is non-zero, connect keeps the register (`M_CONSULT`), hang-up
+pairs held ↔ called, and abandon restores the operator to the held party.
+Transfer consult is **local only** in that first cut — a network key with
+`SRC` set is refused. **Flash detect and filling `attach_src` are not wired**;
+every attach today loads `SRC` = 00. Latches cannot be read back; a card-local
+write-shadow was the preferred future shape (`operator.md` §5), not designed
+here.
+
+**Also useful once flash is revisited**
+
+| | |
+|---|---|
+| **Consultation return** | second flash or nodig before connect: back to `SRC` (same abandon path) |
+| **Attended vs blind** | hang up after connect = attended transfer; (later) release without talk = blind |
+| **Trunk as held** | `SRC` may be a trunk port — abandon/transfer must not leave it hung; same writes |
+| **Restricted / audit** | counters can see that a connect had a non-zero `SRC` (operator-handled call) |
+| **Not call waiting** | switching between two live parties still needs more than one held field |
 
 **A sketch of the switch, not a design.** Every line's upstream is already a
 bit stream on `TX_CLK` inside the line card (`mf8-backplane.md` §2), and every

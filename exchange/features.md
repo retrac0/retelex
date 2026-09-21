@@ -104,33 +104,28 @@ memory is the syllabic filter's, not the 1 ms integrator's. Record the silence.
 
 ## 4. Operator (class 2) and the console
 
-**The operator is a phone at port 04**, on a line card whose word says operator
-(`extensions.md` §2.2). 0 hunts class 2 in fixed order from 00, and 04 is the
-first class-2 port the hunt meets. 05 is the nominal night announcement or
-backup; 06–07 take more operators or single-channel trunks
-(`protocol.md` §5). Further positions may sit in any dialable line slot
-(`marker.md` §3). The operator is not at 00 because a cleared latch
-listens there.
+**Two things on one desk** (`operator.md` §1): the **position** is a phone on a
+line card whose word says operator (`extensions.md` §2.2); the **console** is
+keys on the control bus. 0 hunts class 2 in fixed order from 00; **04 is the
+default home**, not a requirement (`operator.md` §2). 05 is the nominal night
+announcement or backup; 06–07 take more operators or single-channel trunks
+(`protocol.md` §5). Further positions may sit in any dialable line slot.
 
-**What port 04 is, exactly, is `console.md` §8**: a plain line card with a
-phone on it, first of block 0's four-line bank. Nothing in the fabric or the
-marker knows the number — a hunt finds the position — so **04 is a default and
-not a requirement**.
+**Transfer is console-only for now** (`operator.md` §3, `console.md` §7). Phone
+flash is deferred (`operator.md` §5).
 
-**The console is separate, and optional**: a busy-lamp field — '259s and LEDs off
-the M and `BUSY` highways — and keys that drive the marker's control bus by
-hand. **Build it first.** Fabric plus console is a working manual board, and the
-bring-up tool for everything that comes after.
+**The console is separate, and optional**: keys that drive the marker's control
+bus by hand, with lamp fields beside it if fitted (`observers.md`,
+`hookbusy.md` — not “off the M and `BUSY` highways”; there is no `BUSY`
+highway on the cable). **Build it first.** Fabric plus console is a working
+manual board, and the bring-up tool for everything that comes after.
 
-`console.md` is the console as a master: its keys (§1), how it takes the bus
-(§2), and the four things an operator does with it — forced release (§3),
-service observing (§5), **connecting two lines** (§6), and **calling a port and
-supervising both ends** (§7). Two of those add a card to this document's list,
-both of them blank boards with no codec: the **sink** a caller is observed into
-(§5.1), and the **ring source** (§6.3) — `A_TX` tied high, no word, `/ANS` low —
-which is what an operator points an idle phone at to make it ring. It is §6's
-source with the one tie reversed, and it is safe for the reason this section
-gives: the scanner seizes a class, and a card that sends no word has none.
+`operator.md` is the phone. `console.md` is the bus master: forced release,
+service observing, connecting two lines, calling a port and supervising both
+ends — and **transfer**. Two of those add a card to this document's list, both
+blank boards with no codec: the **sink** (`console.md` §5.1), and the **ring
+source** (`console.md` §6.3) — `A_TX` tied high, no word, `/ANS` low. A card
+that sends no word has no class, so a hunt never takes it.
 
 ---
 
