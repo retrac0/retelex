@@ -208,7 +208,7 @@ same frame on every class that uses them (§2.2).
 
 | frame | bit | | the marker |
 |---|---|---|---|
-| 4 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`exch-features.md` §7.4). Slot order is priority, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow. Same bit on class *operator* and *data line* |
+| 4 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`conference.md` §6). Slot order is priority, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow. Same bit on class *operator* and *data line* |
 | 5 | `w` | **warm line**: a courtesy phone, a lift's phone, a help point | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`exch-marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
 | 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`ex-console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
 | 7 | `·` | **spare** | one bit free on class line |
@@ -225,8 +225,8 @@ second marker steer; not worth it.
 Class *restricted* is a lobby phone or a public phone: the same free test and
 ringing as a line. The class itself is unsafe to miss — a jumper the user cannot
 clear — so dialling limits live in the options, not in clearing the class.
-Conference bridge legs remain class *line* with `/ANS` low (`exch-features.md`
-§7.4).
+Conference bridge legs remain class *line* with `/ANS` low (`conference.md`
+§6).
 
 | frame | bit | | the marker |
 |---|---|---|---|

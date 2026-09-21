@@ -37,7 +37,7 @@ Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the r
         python3 sim/exch.py monitor    exch-monitor.md   §5
         python3 sim/exch.py timing     exch-fabric.md    §4
         python3 sim/exch.py mainboard  exch-mainboard.md §5
-        python3 sim/exch.py confer     exch-features.md  §7
+        python3 sim/exch.py confer     conference.md
         python3 sim/exch.py ss0        ex-ss0.md
 
 The network of exch-network.md (`net`) is the second pass and is not here.

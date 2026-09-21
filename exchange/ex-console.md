@@ -324,7 +324,7 @@ at each:
   of a call is two sinks, one in each ear. CVSD does not mix, and this needs no
   mixing.
 - **No barge-in**, for the same reason: speaking into a call is a conference
-  bridge (`exch-features.md` §7), not a latch.
+  bridge (`conference.md`), not a latch.
 - **A port being rung is sending ringback**, so that is what its sink hears.
 - **A call over a trunk** is observed at the trunk port, which sends what the
   far party says.

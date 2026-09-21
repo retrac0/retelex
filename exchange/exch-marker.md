@@ -51,7 +51,7 @@ is not the marker's business: the card says it to the port's own gates on a pin,
 anything that talks and never listens: the two tones, reached by address rather
 than hunted, and a radio or a clock that anyone may dial (`exch-features.md`
 §6). *Data line* is a line the marker will not connect to a voice port. A
-conference bridge leg is an ordinary line (`exch-features.md` §7.4); class
+conference bridge leg is an ordinary line (`conference.md` §6); class
 *conference* is retired. *Restricted* (`111`) options are `z w b L`
 (`ex-extensions.md` §2.4): **0-only**, reserved (warm), **busy-inbound**,
 **local-only**; bare restricted still floors as local-only. A line's options are

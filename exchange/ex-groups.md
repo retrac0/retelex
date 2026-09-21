@@ -3,7 +3,7 @@
 The marker finds a port it was not given the address of in three ways, and each
 was written for one purpose. `exch-marker.md` §3 hunts a **class**, for 0 and
 for 9. `ex-extensions.md` §2.4 walks a **run** of adjacent ports marked `o`, for
-a hunt group and for a conference bridge (`exch-features.md` §7.4). And
+a hunt group and for a conference bridge (`conference.md` §6). And
 `exch-network.md` §3.2 hunts a trunk by its **direction**. A second operator's
 position, a sales desk, a pool of data ports, a bridge's legs and a bank of
 call-in lines are all one request — *the first free port of these* — and only
@@ -29,7 +29,7 @@ The short answers, before the detail:
   *answer to* a number in this plan: use a plain member beside it, or the old
   `o` run. `w` stays lifts-to-04. Pin `a14` stays spare.
 - **A bridge is a group, at no cost**: its legs answer to its number (or keep the
-  `o` run of `exch-features.md` §7.4), as ordinary lines with `/ANS` low.
+  `o` run of `conference.md` §6), as ordinary lines with `/ANS` low.
 - **§6** (extensions that ring together through a bridge) and **§3–§4** (secondary
   word) are **set aside** with class 111 and the fifth `'151`.
 
@@ -38,7 +38,7 @@ The short answers, before the detail:
 > and built in `verilog`, where no bench yet dials 0 or 9; the run it wholly
 > replaces was never in either. Every package count is an estimate from parts
 > the other documents already use, no circuit has been drawn, and nothing has
-> been on a bench. The conference bridge of `exch-features.md` §7 — switch and
+> been on a bench. The conference bridge of `conference.md` — switch and
 > detector — *is* measured (`exch.py confer`); only how the marker finds a leg
 > changes here. §9 lists what is owed.
 
@@ -49,7 +49,7 @@ The short answers, before the detail:
 | | written for | finds | built |
 |---|---|---|---|
 | **a class** (`exch-marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
-| **a run** (`ex-extensions.md` §2.4, `exch-features.md` §7.4) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
+| **a run** (`ex-extensions.md` §2.4, `conference.md` §6) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
 | **a direction** (`exch-network.md` §3.2) | tie trunks | a free trunk facing each way | in `verilog`, and measured there |
 
 **The class hunt cannot make a second group.** One class is one group. A bank of
@@ -181,7 +181,7 @@ word". That quarter is a number:
 | the comparison | a 74HC688: the word's six bits of number against the called number |
 | the called number | from the digit store, as now, or from straps for 0 and 8: a 74HC244 onto the comparator's other side. The diode matrix gives a key a class or a number, where it gave a class |
 | the form | two gates beside the nail's |
-| | **≈ 3 packages, an estimate**, in place of the ≈ 2 of `exch-features.md` §7.4's run, which is not built. The class comparator stays, for 9 and for trunks |
+| | **≈ 3 packages, an estimate**, in place of the ≈ 2 of `conference.md` §6's run, which is not built. The class comparator stays, for 9 and for trunks |
 
 **Time.** The hunt is the class hunt's: up to a scan for the scanner to come
 round to 00 and a scan to go round, **two scans at most**, about 17 ms as
@@ -217,7 +217,7 @@ the hunt is in use for under three seconds of the hour.
 
 ## 5. A bridge is a group
 
-`exch-features.md` §7.4 makes a bridge a run: adjacent legs, `o` on all but the
+`conference.md` §6 makes a bridge a run: adjacent legs, `o` on all but the
 last, its number its first leg's. **Its legs answer to its number instead.**
 
 ```
@@ -228,8 +228,8 @@ last, its number its first leg's. **Its legs answer to its number instead.**
 ```
 
 - **74 and 70 differ in one bit, and the strap that joins the party bus forces
-  it** on four legs, where it carried the overflow bits (`exch-features.md`
-  §7.3). It is still one strap, and still nothing on it can disagree with
+  it** on four legs, where it carried the overflow bits (`conference.md` §5).
+  It is still one strap, and still nothing on it can disagree with
   anything else.
 - **The marker's run goes**: its flip-flop, its comparator of the scanner
   against the digit store, its ≈ 2 packages and its rule that a run never
@@ -262,7 +262,7 @@ last, its number its first leg's. **Its legs answer to its number instead.**
 | **A. the number** (§2) | hunt groups, cover, operator's positions and night service, a bank on 8, a meet-me bridge as a group | ≈ 3 at the marker, for the ≈ 2 of the run. Cards as they are | nothing |
 
 A stands alone. A meet-me bridge needs only A (or the `o` run of
-`exch-features.md` §7.4). Secondary word and extensions-on-a-bridge are set aside.
+`conference.md` §6). Secondary word and extensions-on-a-bridge are set aside.
 
 ---
 
@@ -272,7 +272,7 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 |---|---|
 | `ex-extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class *restricted* at 111; **a14 stays spare** |
 | `exch-marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
-| `exch-features.md` §4, §7.1, §7.3–§7.4 | the operator; the party bus; what the strap carries; legs as ordinary lines |
+| `exch-features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the strap carries; legs as ordinary lines |
 | `exch-fabric.md` §3.5 | class 111 *restricted* |
 | `exch-protocol.md` §5, `exch-network.md` §2–3 | 0 and 8 as numbers; nothing of the hunt itself |
 | `mvp-ex.md`, `exch-rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no conference class; no `PB2` |
@@ -293,4 +293,4 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
   write is on the bus some words after the visit, and the port reads free until
   it lands.
 - **A meet-me bridge as *answers to*** (§5), against the `o` run already in
-  `exch-features.md` §7.4.
+  `conference.md` §6.

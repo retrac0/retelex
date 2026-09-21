@@ -114,7 +114,7 @@ translation at either end:
 - **A line**: `h` is 2–7 and `s` is 0–7, as dialled.
 - **A service key as the third digit**: `e b 0` for the operator, `e b 9` for the
   outside line, `e b 1` reserved. A conference is a number like any line
-  (`exch-features.md` §7.4). `h` is 0 or 1, which
+  (`conference.md` §6). `h` is 0 or 1, which
   no line has. `h`'s low bit and `s` together are the key's own 4-bit register
   code (`register.md` §4: 0 is `1010`, 8 is `1000`, 9 is `1001`, 1 is `0001`).
   So `e b 0` travels as `h` = 001, `s` = 010, and the far marker puts that code

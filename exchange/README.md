@@ -42,7 +42,8 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-fabric.md](exch-fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
 | [docs/exch-mainboard.md](exch-mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
 | [docs/exch-marker.md](exch-marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
-| [docs/exch-features.md](exch-features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), a conference bridge that switches bits instead of adding them (measured), data |
+| [docs/exch-features.md](exch-features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), data |
+| [docs/conference.md](conference.md) | **proposed, switch measured**: meet-me conference block — attaches to the mainboard buses, private party bus, two×4 or one×8 bit-switched bridges, no codec |
 | [docs/exch-network.md](exch-network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
 | [docs/Topology.md](Topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link strapped and fail without |
 | [docs/exch-terminal.md](exch-terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
@@ -68,7 +69,7 @@ python3 sim/exch.py flood      the timing of a flooded call, with a sender and l
 python3 sim/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
 python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
 python3 sim/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
-python3 sim/exch.py confer     a conference with no codec: the speech detector, the floor, the switch
+python3 sim/exch.py confer     conference.md: speech detector, floor, switch
 python3 sim/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
 python3 sim/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
 python3 sim/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
@@ -156,10 +157,11 @@ site. Voice needs nothing new. Synchronous data needs a loop-timed terminal,
 whose PLL is not designed.
 
 Proposed, with the switch and its detector measured: **sources**, which anyone
-may dial and any number may hear, and a **conference bridge with no codec**,
-which passes one talker's bits to everyone else and chooses the talker by
-counting runs of three in each caller's bits. Both are new classes
-(`exch-fabric.md` §3.5); neither is in the marker or the `calls` model yet.
+may dial and any number may hear, and a **conference bridge with no codec**
+(`conference.md`), which passes one talker's bits to everyone else and chooses
+the talker by counting runs of three in each caller's bits. Sources are a new
+class (`exch-fabric.md` §3.5); conference legs are ordinary lines. Neither is in
+the marker or the `calls` model yet as classes.
 
 Proposed: **the mainboard is a ribbon for what every block shares and a
 board for the three signals that are not shared** (`exch-mainboard.md`). Block *h* drives

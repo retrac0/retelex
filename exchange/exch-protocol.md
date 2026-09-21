@@ -73,7 +73,7 @@ What voice band gets right is kept another way:
 |---|---|
 | anything connects to anything | **voice on the fabric is MF8's 64 kbps CVSD.** A card facing anything else transcodes on the card: the FXS card does; a DNVT card is two codecs back to back |
 | E&M as the universal port signalling | kept exactly: `A` |
-| tones, ringing, conference, DTMF are easy | they are **lines** (`exch-features.md`) |
+| tones, ringing, conference, DTMF are easy | they are **lines** (`exch-features.md`, `conference.md`) |
 
 ---
 

@@ -232,7 +232,7 @@ card.
 true of a phone's port. It must be false of a trunk (or a caller hears ringback
 the instant they seize one, and forward A is chopped by the ring cadence), of an
 outside line, of a conference bridge leg (which would wait up to 4 s for the
-cadence before it could answer, `exch-features.md` §7.4), and of any card that
+cadence before it could answer, `conference.md` §6), and of any card that
 answers at once. Each such card ties the pin low, and a phone's card leaves it
 open (`ex-extensions.md` §2.3). The class does not enter into it: the port's
 gates never see the class at all.
