@@ -86,9 +86,9 @@ new here and §8 says why.
 | signal | rate | what |
 |---|---|---|
 | `HCLK` | 512 kHz | the cell clock, high for the first half of a cell (1 953 ns). **The one signal on the bus whose edges are load-bearing**: through each block's '138 it becomes every port's capture strobe |
-| `SLOT[2:0]` | 512 kHz | the cell number, changing at the start of the cell. Addresses every commutator, and is an MF8 trunk card's frame bit count |
+| `SLOT[2:0]` | 512 kHz | the cell number, changing at the start of the cell. Addresses every commutator. Not the MF8 unit's line-bit count (`mf8-unit.md` §5.2½) |
 | `SLOTQ[2:0]` | 512 kHz | the same count a quarter cell late, from the '175 on the 1.024 MHz tap. Addresses every strobe decoder and nothing else (`fabric.md` §3.2) |
-| `HB` | 1.024 MHz | the half-bit clock of `mf8-spec.md` §9.1. **The fastest thing on the bus**, and only a trunk card wants it (§8) |
+| `HB` | 1.024 MHz | the tap the '175 clocks `SLOTQ` from. **The fastest thing on the bus.** The MF8 unit's line `HB` is 2.048 MHz on its own crystal, not this wire (`mf8-unit.md` §5.5) |
 | `TX_CLK` | 64 kHz | the frame clock. Every card's `RX_CLK` pin is this signal |
 | `TX_OCT` | 8 kHz | the octet mark. Also the scanner's and the monitors' step |
 | `RX_OCT` | 8 kHz | `TX_OCT` one frame late, from one flip-flop on the clock card (`fabric.md` §3.4). A card's `RX_OCT` pin |
@@ -211,11 +211,13 @@ sixteen highways on 0.05-inch pitch is not worth the one cable it saves; each
 subrack takes its rails from its own PSU slot as `mf8-backplane.md` §8 has it,
 and the mainboard carries `+5 V` and ground only.
 
-**A trunk card is not on the bus either.** It taps its *own block's* `HC[h]` and
-`HA[h]`, which are already its transmitter's multiplexed frame
-(`fabric.md` §1.1), and takes `HCLK`, `HB`, `SLOT` and `TX_OCT` from the
-block. So the cable has ten taps — eight blocks, the clock card and common
-control — however many trunks are fitted.
+**The MF8 unit is not on the bus either.** It mates collect T of its block
+and commons C (`mf8-unit.md` §5). It does not tap `HC[h]` / `HA[h]`: those
+are the commutation of this block's `C_TX`, which is what just came off
+the line. The unit takes `TX_CLK`, `TX_OCT` and `FILL` from C, and owns
+the 4.096 MHz that makes line `HB` 2.048 MHz. Fabric `HB` stays 1.024 MHz
+for `SLOTQ`. So the cable has ten taps — eight blocks, the clock card and
+common control — however many trunks are fitted.
 
 **Registers, resolvers and the marker share one tap.** A register's probe reads
 its caller's hook off `HA` and regenerates its own strobes from `HCLK` and
@@ -478,14 +480,12 @@ whose worst case is worse than one CVSD bit.
 
 ## 8. Three signals this adds to `fabric.md` §2
 
-- **`HB`, 1.024 MHz.** `network.md` §1 says a trunk card in an exchange
-  "takes 4.096 MHz and frame sync from the clock card instead of owning the
-  crystal". It needs less than that. `mf8-spec.md` §9.1's chain wants only the
-  half-bit clock `HB` — 1.024 MHz at the 512 kbps rate — and the line bit clock
-  `H`, which *is* `HCLK`; and §9.4's receiver has no clock on its timing path at
-  all. **So 4.096 MHz never has to leave the clock card**, and the fastest edge
-  on the mainboard is 1.024 MHz rather than four. Worth having: it is the one
-  signal that would have wanted care.
+- **`HB`, 1.024 MHz.** Fabric `HB` clocks the '175 that makes `SLOTQ`. It is
+  not the MF8 unit's half-bit clock. That unit owns 4.096 MHz, tap Q1, line
+  `HB` 2.048 MHz, off the cable (`mf8-unit.md` §5.5). **So 4.096 MHz never
+  has to leave the clock card**, and the fastest edge on the mainboard is
+  1.024 MHz rather than four. Worth having: it is the one signal that would
+  have wanted care.
 - **`RX_OCT`.** `fabric.md` §3.4 says a card's `RX_OCT` is `TX_OCT` one
   frame late, from one flip-flop on the clock card — so it is a signal, and §2's
   table did not list it.

@@ -27,23 +27,23 @@ Six things decide what can be built. None of them is a route table.
 |---|---|---|
 | **Directions** | an exchange faces **four neighbours at most**. A direction is two bits of a trunk's word, N, S, E or W | `extensions.md` §2.2 |
 | **One neighbour a direction** | every trunk facing one way goes to the same exchange. The origin seizes one free trunk a direction, so a direction split between two neighbours would send each flood to one of them and not the other | `network.md` §3 |
-| **Trunk groups** | **eight at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `protocol.md` §5 |
+| **Trunk groups** | **seven at most**, one MF8 link of eight channels each, one a block. Two groups facing the same way are one direction of sixteen channels; three, twenty-four; four, thirty-two | `protocol.md` §5 |
 | **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `network.md` §3.3 |
 | **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–07 are an exchange's services and 10–17 its first trunk group when networked | `network.md` §2 |
 | **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `monitor.md` §3.5 |
 
 **Trunk groups cost lines.** The first trunk group sits in block 1, whose
 slots are not lines (block 0 holds tones and the operator bank). Each group
-after that takes six line slots:
+after that takes eight line slots:
 
-| trunk groups | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-|---|---|---|---|---|---|---|---|---|
-| lines left | 48 | 42 | 36 | 30 | 24 | 18 | 12 | 6 |
+| trunk groups | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|
+| lines left | 48 | 40 | 32 | 24 | 16 | 8 | 0 |
 
-An exchange with all eight is a **tandem**: 48 channels of trunk and six lines.
-Its eight groups divide among its directions as 12 + 12 + 12 + 12, as
-24 + 12 + 12, as 18 + 18 + 12 or as 24 + 24. At 1 % blocking six channels carry
-1.91 E, twelve 5.88 E, eighteen 10.44 E and twenty-four 15.30 E.
+An exchange with all seven is a **tandem**: 56 channels of trunk and the 04–07
+bank. Its seven groups divide among its directions as 16 + 16 + 16 + 8, as
+24 + 16 + 16, as 24 + 24 + 8. At 1 % blocking eight channels carry
+3.13 E, sixteen 8.88 E, twenty-four 15.30 E and thirty-two 22.05 E.
 
 ---
 
@@ -67,9 +67,9 @@ in the network lay 0.67 E on every link; at 20 %, 0.45 E; at 50 %, 1.12 E.
   them. 11, 12, 13 cost 2.0–2.2 s where 70, 77, 00 cost 3.1–3.8 s. The convention
   of `network.md` §2 — 00–17 for the backbone — puts the cheap codes where
   the traffic is, except 00 itself.
-- **A six-channel link to a 48-line leaf** carries that leaf's own 1.15 E at 30 %
-  leaving. It has room for about 0.76 E of flood before it blocks 1 %: **a
-  network of about 1 100 lines**. Past that, every link is twelve channels.
+- **An eight-channel link to a 48-line leaf** carries that leaf's own 1.15 E at 30 %
+  leaving. It has room for about 1.98 E of flood before it blocks 1 %: **a
+  network of about 2 900 lines**. Past that, every link is sixteen channels.
 - **The pools grow with the flood.** Monitors on a trunk block and resolvers at a
   hub are held for the same time by every call that leaves. For 0.5 % turned
   away: three of each to about 400 lines, four to 1 700, five beyond

@@ -1,15 +1,15 @@
-# The exchange — subscriber terminals: six lines over an MF8 link
+# The exchange — subscriber terminals: eight lines over an MF8 link
 
-A trunk block (`network.md` §1) is an MF8 trunk card on six port circuits.
+A trunk block (`network.md` §1) is an MF8 exchange unit on eight port circuits.
 It does not know what is at the far end of its link. If the far end is another
 exchange's trunk block, the link is a tie trunk. If it is a stock MF8 shelf of
-channel cards, the link is **six lines of this exchange at another site**: a
-subscriber terminal. The exchange end is the same trunk card either way, with
+channel cards, the link is **eight lines of this exchange at another site**: a
+subscriber terminal. The exchange end is the same unit either way, with
 its channels saying line and not trunk. The terminal is MF8 as it stands, and no card in it
 knows that an exchange is at the other end.
 
 Which one a site gets depends on what it needs. One phone at a distance is a
-subscriber line: two pairs to a CVSD phone (`subscriber-line.md`). Up to six at
+subscriber line: two pairs to a CVSD phone (`subscriber-line.md`). Up to eight at
 one site is a terminal on one MF8 link, and the lines can be anything a channel
 card serves: CVSD phones, analog phones, a data terminal, an outside line.
 
@@ -24,8 +24,8 @@ card serves: CVSD phones, analog phones, a data terminal, an outside line.
 
 ```
  exchange, block h                                           subscriber terminal: a stock MF8 shelf
- ports h1–h3, h5–h7 ── trunk card ═══ MF8, a pair each way ═══ trunk card ── slots C1–C6: channel cards
- ports h0, h4: local slots, cards as usual                                   CVSD line, FXS, data, FXO
+ ports h0–h7 ── MF8 unit ═══ MF8, a pair each way ═══ trunk card ── slots C0–C7: channel cards
+                                                                    CVSD line, FXS, data, FXO
 ```
 
 **The exchange's port is an MF8 slot.** Its protocol is the slot interface: `C`
@@ -55,39 +55,36 @@ fitted the same way. What differs:
 
 | | tie trunk | subscriber terminal |
 |---|---|---|
-| block | 0 or 1, and optionally 2 and 3 | any of 2–7, one link a block |
-| ports | slots 1–3 and 5–7, where the channels are on the wire (`protocol.md` §5) | the same slots, which are lines *h*1–*h*3 and *h*5–*h*7, dialled like any other line. Slots 0 and 4 stay local: lines *h*0 and *h*4 |
-| what a channel says | trunk and its direction, one word for all six, and `/ANS` tied low (`extensions.md` §2) | line: its word line tied to ground, as a plain line card's pin is, and `/ANS` open, so the port rings its phone and gives ringback. It can be set a channel at a time (§3) |
+| block | 1, and optionally 2–7 | any of 2–7, one link a block |
+| ports | slots 0–7, the whole highway (`protocol.md` §5) | the same slots, which are lines *h*0–*h*7, dialled like any other line |
+| what a channel says | trunk and its direction, one word for all eight, and `/ANS` tied low (`extensions.md` §2) | line: its word line tied to ground, as a plain line card's pin is, and `/ANS` open, so the port rings its phone and gives ringback. It can be set a channel at a time (§3) |
 | trunk card | transmits in the exchange's clock (a strap). Its receive side crosses into that clock by two '174s for `C` and the RC and Schmitt gate for A | the same card, the same straps |
 | monitors, network card | two monitors a block, and the network card hunts the class and patches it | **not fitted.** Class 1 is not the network card's. A monitor on the block would take a subscriber lifting the handset for a seizure and count their digits |
 | `CLAIM` gate | backward A on a claimed trunk | never written, and harmless (`fabric.md` §3.1) |
-| link down | `MUTE` clears the A '259: every M falls and calls release. `MUTE` forces the block's `BUSY` to 1 and stops the card's words, so a dead trunk is not hunted | the same. The six lines read on-hook, calls in progress release, and a caller dialling one of them gets cannot-complete instead of ringing a phone that cannot ring |
+| link down | `MUTE` clears A: every M falls and calls release. `MUTE_BLK` forces the block's `BUSY` to 1 and stops the card's words, so a dead trunk is not hunted | the same. The eight lines read on-hook, calls in progress release, and a caller dialling one of them gets cannot-complete instead of ringing a phone that cannot ring |
 
 **Numbers.** A terminal's lines are lines of the exchange: `h s` from inside it,
 `1 e b h s` from anywhere in a network. Nothing tells a caller that a line is remote.
-The terminal's shelf numbers its slots C1–C6 (`mf8-backplane.md` §3), so C4–C6
-are lines *h*5–*h*7. Label the terminal's slots with their line numbers.
+The terminal's shelf numbers its slots C0–C7 (`mf8-backplane.md` §3). Label the terminal's slots with their line numbers.
 
 **Capacity.** A terminal is not a trunk group. Each line has a channel of its own
 for good, so nothing is hunted across the link and nothing blocks. Blocks 2–7
-give up to six terminals and 36 lines, and the twelve slots at *h*0 and *h*4 stay
-local. A busy exchange at the centre of a network with trunk groups in
-blocks 2 and 3 has four blocks left for terminals. **Not block 0**: its channel
+give up to six terminals and 48 remote lines. **Not block 0**: its channel
 slots are tones and the 04–07 bank. On a standalone exchange, block 1 can also
 take a terminal (1 is a highway digit then); on a networked one, block 1 is the
 first trunk group.
 
-**Cost at the exchange.** The six port circuits are the ones six local cards
-would need, and so are the block's shared parts. Added: the trunk card, whose
+**Cost at the exchange.** The eight port circuits are the ones eight local cards
+would need, and so are the block's shared parts. Added: the exchange unit, whose
 transmitter is ≈ 6 packages and receiver ≈ 10 (`mf8-spec.md` §10, §11), and the
-crossing's two '174s. The six channel cards move to the terminal, together with
+crossing's two '174s. The eight channel cards move to the terminal, together with
 a ring generator for the shelf's `RING` bus if any of them is an FXS card.
 
 ---
 
 ## 3. What a channel says, a channel at a time
 
-A tie trunk's six channels all send one word, trunk and its direction
+A tie trunk's eight channels all send one word, trunk and its direction
 (`network.md` §1). A terminal's channels need not be alike:
 
 | at the terminal | its channel says | what the port does |

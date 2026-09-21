@@ -209,23 +209,23 @@ they are ever an address.
                hunt, warm restricted line, console, or (if trunks) direction hunt
 
  standalone  10–77  fifty-six lines (1 is a highway digit; no trunk block)
- networked   11–13, 15–17  first MF8 trunk group (block 1); 10 and 14 free
+ networked   10–17  first MF8 trunk group (block 1), eight channels
              20–77  forty-eight lines
-             21–23 25–27 / 31–33 35–37 / …  further MF8 groups in blocks 2+, at
+             20–27 / 30–37 / …  further MF8 groups in blocks 2+, at
                the cost of those lines (`network.md` §1)
- h1–h3 h5–h7 in any trunk or line block 1–7: a subscriber terminal, six lines
+ h0–h7 in any trunk or line block 1–7: a subscriber terminal, eight lines
              over an MF8 link (`terminal.md`).  Not block 0: its channel
              slots are the tones and the 04–07 bank
 ```
 
 A group is named by its block. Which way it faces, N, S, E or W, is in its
 ports' words, set by jumpers on its trunk card (`network.md` §1). Any group
-may face any way, and two groups facing the same way are one direction of twelve
+may face any way, and two groups facing the same way are one direction of sixteen
 channels. **MF8 trunk groups sit in blocks 1–7, never in block 0** — block 0 holds
 the three tones and the four-line bank. A single-channel trunk card may sit in
 any slot of those blocks, including 06–07 (`network.md` §1.1). A tandem at
-the centre of a star can still give blocks 1–7 to trunks; the twelve spare seats
-at slots 0 and 4 of those blocks remain ordinary ports (`network.md` §5).
+the centre of a star can still give blocks 1–7 to trunks; that is 56 channels
+and the 04–07 bank (`mf8-unit.md` §7).
 
 **Ports 00–07 are never dialled**, because 0 is the operator key. **Ports 10–17
 are never dialled on a networked exchange**, because 1 opens the flood; on a
@@ -234,15 +234,14 @@ ports: a pulse register reads its caller's hook from the M highway through a
 probe (`marker.md` §4), and a monitor reads a trunk's A on the trunk block
 (`monitor.md`).
 
-**A link's channels sit where they are on the wire.** MF8 sends channel C*n*'s
-bit at frame position 1–3 or 5–7, with F at 0 and S at 4, and its A bit at the
-superframe state of the same number (`mf8-spec.md` §2). A trunk port takes that
-number as its slot. So one 3-bit address picks a channel's C bit in the frame,
-its A bit in the superframe, its input on the trunk card's frame mux and '259,
-and its port, and the trunk card is wired straight across. Slots 0 and 4, which
-are F and S on the wire, are ports of their own: on a trunk block in 1–7 they
-are two more ports (empty, a line, a single-channel trunk, a test tone); on
-block 0 they are idle (00) and the first of the 04–07 bank (04).
+**The MF8 unit converts.** The line is a 16-bit frame at 1024 kbps, F at 0,
+S at 8, eight C and six overhead (`mf8-spec.md` §2, `mf8-unit.md` §4.2). The
+highway is still eight slots of 512 kbps NRZ. They are not the same stream.
+The unit occupies a block, presents eight cards on T, and the block's
+commutator makes that block's highway from those eight `C_TX` / `A_TX`. Slot
+*n* of the block is channel C*n* of the line — packed, so C7 is bit 9, not
+bit 8. F and S are not ports. A link's channels sit on that block's
+`h0–h7`, not "where they are on the wire."
 
 **A cleared latch listens to 00, and 00 is never fitted.** A port that releases
 clears its '273 to zeros, which is highway 0, slot 0: `FILL` and A = 0, the
@@ -276,7 +275,7 @@ exchange uses the first two (`extensions.md` §2):
 
 A card only ever pulls the two pins to ground, so it works unchanged in an MF8
 shelf. **Whatever sits behind a port says everything the exchange needs to know
-about it**: a card for its port, a trunk card for each of its six channels.
+about it**: a card for its port, a trunk card for each of its eight channels.
 Nothing in the fabric uses the word.
 
 ---

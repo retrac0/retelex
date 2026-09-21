@@ -1,14 +1,15 @@
 // tb_trunk -- two exchanges tied by one MF8 link, with calls across it.
 //
-// Each exchange has a trunk block (block 0: six channels at 01-03, 05-07) and a
-// block of lines (block 2: ports 20 and 21).  One MF8 pair each way carries the
-// six channels.  There is no marker, so the console patches the latches by hand
-// at both ends -- which is mvp.md 6.3's manual board with a trunk in the
-// middle of it, and network.md 1's tie trunk exactly: a pair of ports,
-// back to back, holding no digits and deciding nothing.
+// Each exchange has a trunk block (block 1: eight channels at 10-17, the
+// exchange unit taking that highway) and a block of lines (block 2: ports
+// 20 and 21).  One MF8 pair each way carries the eight channels.  There is
+// no marker, so the console patches the latches by hand at both ends --
+// which is mvp.md 6.3's manual board with a trunk in the middle of it, and
+// network.md 1's tie trunk exactly: a pair of ports, back to back, holding
+// no digits and deciding nothing.
 //
-// What this exercises: the 8 x 8 fabric at both ends, a trunk block with its
-// channels on the slots they occupy on the wire, the MF8 frame and its header,
+// What this exercises: the 8 x 8 fabric at both ends, an MF8 unit converting
+// the 16-bit line to eight highway slots, the 16-bit frame and its header,
 // differential Manchester in and out, the framer acquiring and tracking, the
 // crossing between two exchanges' clocks, and the hotline and release rules of
 // fabric.md 3.5 running through the trunk pair untouched.
@@ -166,9 +167,9 @@ module tb_trunk;
         wf(20);
 
         // ---- 2. a call from a line on A to a line on B ---------------------
-        $display("\n  2. A's line 20 calls B's line 20, over trunk channel 1.");
-        patch_a(6'o20, 6'o01); patch_a(6'o01, 6'o20);   // A: line 20 <-> trunk 01
-        patch_b(6'o01, 6'o20); patch_b(6'o20, 6'o01);   // B: trunk 01 <-> line 20
+        $display("\n  2. A's line 20 calls B's line 20, over trunk channel 10.");
+        patch_a(6'o20, 6'o10); patch_a(6'o10, 6'o20);   // A: line 20 <-> trunk 10
+        patch_b(6'o10, 6'o20); patch_b(6'o20, 6'o10);   // B: trunk 10 <-> line 20
         wf(10);
         h20a = 1;                                       // A's 20 lifts
         wf(T_RISE + 20);
@@ -192,11 +193,11 @@ module tb_trunk;
         wf(T_FALL + 60);
 
         // ---- 4. the other way, and a second call at the same time ---------
-        $display("\n  4. B's 20 calls A's 20 on channel 1, and B's 21 calls A's 21 on channel 2.");
-        patch_a(6'o20, 6'o01); patch_a(6'o01, 6'o20);
-        patch_b(6'o01, 6'o20); patch_b(6'o20, 6'o01);
-        patch_a(6'o21, 6'o02); patch_a(6'o02, 6'o21);
-        patch_b(6'o02, 6'o21); patch_b(6'o21, 6'o02);
+        $display("\n  4. B's 20 calls A's 20 on channel 10, and B's 21 calls A's 21 on channel 11.");
+        patch_a(6'o20, 6'o10); patch_a(6'o10, 6'o20);
+        patch_b(6'o10, 6'o20); patch_b(6'o20, 6'o10);
+        patch_a(6'o21, 6'o11); patch_a(6'o11, 6'o21);
+        patch_b(6'o11, 6'o21); patch_b(6'o21, 6'o11);
         wf(10);
         h20b = 1; h21b = 1;                             // both of B's lines lift
         wf(T_RISE + 20);
@@ -206,10 +207,10 @@ module tb_trunk;
         want(e20a && e20b && e21a && e21b, "both calls answered at once");
         p_a20b20.clear; p_b20a20.clear; p_a21b21.clear; p_b21a21.clear;
         path_en = 1; wf(400); path_en = 0;
-        p_b20a20.report("speech B20 -> A20, channel 1");
-        p_a20b20.report("speech A20 -> B20, channel 1");
-        p_b21a21.report("speech B21 -> A21, channel 2");
-        p_a21b21.report("speech A21 -> B21, channel 2");
+        p_b20a20.report("speech B20 -> A20, channel 10");
+        p_a20b20.report("speech A20 -> B20, channel 10");
+        p_b21a21.report("speech B21 -> A21, channel 11");
+        p_a21b21.report("speech A21 -> B21, channel 11");
         chk = chk + 4;
         if (p_b20a20.best_err || p_a20b20.best_err ||
             p_b21a21.best_err || p_a21b21.best_err) errs = errs + 1;

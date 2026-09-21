@@ -7,8 +7,8 @@
 //            ║             ║
 //        25  D ══ W/E ══ C  24
 //
-// The strap is the `n` bit of a trunk port's word (extensions.md 2.2), set
-// on every channel of one link, at both ends:
+// The strap is a jumper a compass direction on the network card
+// (extensions.md 2.2, STRAP_N), set on every channel of one link, at both ends:
 //
 //   a seizure is never forwarded INTO a strapped link, and a seizure that
 //   arrives ON one is never forwarded onward.  An origin may still seize it,
@@ -39,8 +39,8 @@ module tb_ring #(
     localparam integer FR = 15625;
     localparam [1:0] N = 2'd0, S = 2'd1, E = 2'd2, W = 2'd3;
 
-    // the six channels of each of an exchange's two trunk blocks (1 and 3)
-    localparam [63:0] TR = 64'h0000_0000_EE00_EE00;
+    // the eight channels of each of an exchange's two trunk blocks (1 and 3)
+    localparam [63:0] TR = 64'h0000_0000_FF00_FF00;
 
     reg clk_a=0, clk_b=0, clk_c=0, clk_d=0, rst_n=0;
     always #122.0703 clk_a = ~clk_a;
@@ -262,7 +262,7 @@ module tb_ring #(
         nch = ringchans;
         wantn(nch == 2, nch,
               "and it is the SHORT way: the strap's 1 link -- see 3.3");
-        nch = $countones(pba[31:24] & 8'hEE);
+        nch = $countones(pba[31:24] & 8'hFF);
         wantn(nch == 1, nch, "A's held trunk is the strapped one toward 25");
         ring21(2 * (RING_ON + RING_OFF), "25's 21 rings, from the far end of the strap", 1);
         hk_d[6'o21] = 1; #(20_000_000);

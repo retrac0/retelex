@@ -12,7 +12,7 @@ This was already half true and never stated as a requirement. `mf8-backplane.md`
 §8 and `baseband.md` §2.2 gave the same 2 × 16 pin for pin;
 `protocol.md` §1 says "a port has the same structure as an MF8 channel"; and
 `terminal.md` is the consequence — a stock MF8 shelf of channel cards *is*
-six lines of an exchange, and no card in it knows. What was missing is the short
+eight lines of an exchange, and no card in it knows. What was missing is the short
 list of things that stopped it being true in both directions. This document is
 that list, resolved.
 
@@ -374,18 +374,15 @@ assignments below are pin *positions*, and survive the choice of shell.
 
 ### 7.2 The trunk and gateway slot, 2 × 32
 
-**An assignment. `mf8-backplane.md` §8 specifies this slot's width and its signal
-set and has never given it pins.** Writing them out turns up one thing worth
-knowing: **the signal set is one pin too large for the rule the channel slot
-follows.**
+**The exchange unit is not this slot.** It mates collect T and commons C
+(`mf8-unit.md` §5). This 2 × 32 is the *shelf's* trunk and gateway header,
+now eight C/A pairs.
 
-| | count |
-|---|---|
-| `C_TX[1..6]`, `A_TX[1..6]` — in to the card | 12 |
-| `C_RX[1..6]`, `A_RX[1..6]` — out of the card | 12 |
-| `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` — out, through the '244 of §8 there | 7 |
-| `LOCK`, `CD` — out, to the panel | 2 |
-| | **33** |
+**An assignment, and eight C/A pairs do not fit the old 2 × 32 count.**
+Payload alone is 32 pins. The shelf trunk stays a stack header, eight
+wide (`mf8-unit.md` §5, §9). The table below is the six-channel
+arithmetic this section first wrote; it does not size the eight-channel
+header.
 
 Row *a* of a 2 × 32 holds 32, and one of those wants to be the key. So "row *a*
 signals, row *c* power" does not survive here, and the two indicator levels are
@@ -475,14 +472,14 @@ conductors at all and the wiring field can be re-punched without touching it.
 - **Every card.** Nothing in the set has been on a bench; `channel-cards.md` §6 and
   `mf8-spec.md` §15 hold unchanged.
 - **The connector family** (§7.1), and with it the keying `mf8-backplane.md` §6
-  recommends for data cards in slots 1–3.
+  recommends for data cards (not C0 and C7 together).
 - **§7.2 and §7.3 are assignments**, worked from the signal lists and from where
   high voltage has to be kept: no board, no connector in hand, nothing measured.
   What they are good for is that the arithmetic has been done once — 33 signals
   against 32 pins, and a line that has nowhere to go on a committed socket.
 - **Keying the trunk slot against the gateway slot** (§7.2). They are the same
   shell with `C_TX` and `A_TX` reversed in direction, so a card in the wrong one
-  drives into six channel cards. Nothing in `mf8-backplane.md` or `mf8-pico.md`
+  drives into eight channel cards. Nothing in `mf8-backplane.md` or `mf8-pico.md`
   prevents it today.
 - **`/SLOT[1]`'s phase against a real encoder** (`clocks.md` §7).
 - **The FXO strap's 5 s constant** (§5): `features.md` §5 measured that 5 s

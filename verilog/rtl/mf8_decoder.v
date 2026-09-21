@@ -15,15 +15,15 @@
 // intervals with a non-retriggerable and a retriggerable one-shot, and its
 // tolerance is +-13% of a cell.  Here the intervals are counted in the
 // RECEIVING exchange's own master clock, which is a different crystal from the
-// sender's: eight ticks to a cell, so the resolution is an eighth of a cell and
-// a 100 ppm offset is four orders of magnitude below it.  Same function,
-// different timebase.
+// sender's.  A line bit is four ticks of 4.096 MHz (1024 kbps), so the
+// resolution is a quarter of a cell and a 100 ppm offset is still four orders
+// of magnitude below it.  Same function, different timebase.
 `timescale 1ns/1ps
 
 module mf8_decoder #(
-    parameter integer DEAD   = 2,    // 0.25 cell, non-retriggerable
-    parameter integer THRESH = 6,    // 0.75 cell, the classifier
-    parameter integer CD_GAP = 24    // no transition for three cells: no carrier
+    parameter integer DEAD   = 1,    // 0.25 cell, non-retriggerable
+    parameter integer THRESH = 3,    // 0.75 cell, the classifier
+    parameter integer CD_GAP = 12    // no transition for three cells: no carrier
 )(
     input            clk,
     input            rst_n,

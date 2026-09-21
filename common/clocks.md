@@ -29,9 +29,9 @@ They are the same chain:
 | ÷ | rate | in MF8 | in the exchange | on the channel socket | who wants it |
 |---|---|---|---|---|---|
 | 1 | 4.096 MHz | the crystal | the crystal | — | the divider, and nothing else |
-| 2 | 2.048 MHz | half-bit clock at the 1024 kbps family rate | — | — | unused at this rate |
-| 4 | 1.024 MHz | **`HB`** — the MF8 line's half-bit clock | **`HB`**, and the tap the '175 clocks `SLOTQ` from | — | the trunk card's line encoder; the block's strobe decoder |
-| 8 | 512 kHz | the line bit rate; the framer's bit counter | **`HCLK`** the cell clock, and **`SLOT[2:0]`** | — | the framer; every commutator; every capture strobe |
+| 2 | 2.048 MHz | the MF8 unit's line `HB` (Q1) | — | — | the unit's encoder; not on the fabric (`mf8-unit.md` §5.5) |
+| 4 | 1.024 MHz | — | **`HB`**, and the tap the '175 clocks `SLOTQ` from | — | the block's strobe decoder |
+| 8 | 512 kHz | — | **`HCLK`** the cell clock, and **`SLOT[2:0]`** | — | every commutator; every capture strobe |
 | 16 | 256 kHz | — | `SLOT[0]` | — | **nobody** |
 | 32 | **128 kHz** | **`TX_HB`** — the next '4040 tap | **`/SLOT[1]`** — §4 | **a2** | the CVSD subscriber line card's downstream encoder |
 | 64 | 64 kHz | **`TX_CLK`** | **`TX_CLK`** = `/SLOT[2]` | **a1**, and **a7** as `RX_CLK` | every card, every port, everything |
@@ -39,12 +39,11 @@ They are the same chain:
 | 512 | 8 kHz | **`TX_OCT`** | **`TX_OCT`** | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's '165; the exchange's scanner and monitors |
 | 4096 | 1 kHz | — | **`TICK`** | — | the marker and the registers |
 
-**The exchange's cell is MF8's line bit.** A block commutates eight ports into
-one frame; MF8 puts eight bits into one frame; both do it at 512 kHz. That is
-not a coincidence to be admired — it is why the two shelves' dividers are the
-same divider, why a card sees the same taps in both, and why `SLOT[2:0]` is
-described in `mainboard.md` §2.1 as "an MF8 trunk card's frame bit count"
-without further comment.
+**The exchange's cell is not MF8's line bit.** A block commutates eight ports
+into one frame at 512 kHz. The MF8 unit converts that highway to a 16-bit
+line at 1024 kbps (`mf8-unit.md` §5.2½). `SLOT[2:0]` addresses the commutator
+only. A card still sees the same payload taps in both shelves (`TX_CLK`,
+`TX_OCT`, `FILL`); the line's `HB` 2.048 MHz stays on the unit.
 
 Two rates on the list are not on the socket and not on any card:
 
@@ -85,6 +84,11 @@ is the only place in the design where a rate is not a tap of §1.
 
 **Every clock a card uses comes off the socket.** No oscillator, no divider, no
 PLL on any channel card, in either shelf.
+
+The MF8 **exchange unit** is the one exception on the exchange side: it owns
+the 4.096 MHz that makes line `HB` 2.048 MHz, because that rate is not on
+the fabric cable (`mf8-unit.md` §5.5). It is a trunk function, not a
+channel card.
 
 The reason is phase, not rate. A 128 kHz divider on a line card would start on a
 random phase at power-up, and the downstream encoder's mid-bit transition would
@@ -181,7 +185,7 @@ rate:
 
 | | medium | bit rate | half-bit clock | name |
 |---|---|---|---|---|
-| the MF8 line | one pair between shelves | 512 kb/s | 1.024 MHz | `HB` |
+| the MF8 line | one pair between shelves | 1024 kb/s | 2.048 MHz | the unit's `HB` |
 | the subscriber loop | two pairs to a phone | 64 kb/s | 128 kHz | `TX_HB` |
 
 `TX_HB`'s name says the domain, which is not the distinction — **both are T** —

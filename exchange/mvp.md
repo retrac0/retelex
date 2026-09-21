@@ -175,7 +175,7 @@ until a card drives it.
 | the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `features.md` §4 |
 | outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
 | lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `terminal.md` |
-| the network | a trunk block at 11–13, 15–17 (and further groups in blocks 2+), the network card and two or three monitors a block, and the exchange's own code `e b` jumpered on the card. Local numbers in 20–77 stay `h s`; standalone had freed 1 as a highway digit, and fitting the network card makes 1 the flood again. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9` | `network.md`, `monitor.md` |
+| the network | a trunk block at 10–17 (and further groups in blocks 2+), the network card and two or three monitors a block, and the exchange's own code `e b` jumpered on the card. Local numbers in 20–77 stay `h s`; standalone had freed 1 as a highway digit, and fitting the network card makes 1 the flood again. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9` | `network.md`, `monitor.md` |
 
 ---
 

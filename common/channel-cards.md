@@ -1,6 +1,6 @@
 # MF8 channel cards — specification
 
-Three cards for the six channel slots of `mf8-backplane.md`:
+Three cards for the eight channel slots of `mf8-backplane.md`:
 
 | card | faces | the codec is | signalling |
 |---|---|---|---|
@@ -447,13 +447,14 @@ know it is happening.
 
 ### 4.3 The slot rule
 
-Two data cards may not sit three slots apart (`mf8-spec.md` §5). **Key the
-data card's connector to slots 1–3** and the rule cannot be broken: three data
-cards in 1, 2, 3 is the maximum the frame allows, and no combination of them is
-three apart. With data in 1–3 and voice in 4–6, a data card carrying the
-framing word three slots from a voice card is §5's residual — acquired by chance
-about once in 500 attempts at one skew and released by the guard counter in
-about a millisecond. It is the price of the layout, already paid.
+Two data cards may not sit in C0 and C7 together (`mf8-spec.md` §5,
+`mf8-unit.md` §4.2). **Key the data card's connector so those two end
+slots cannot both take one**, or key to C0–C6, or to C1–C7: seven data
+cards, not the pair eight apart on the wire. PCM octets are safe in
+every seat and every pair. With a data card carrying the F word in C0
+and voice in C7, the residual is §5's: acquired by chance about once in
+300 attempts at one skew and released by the guard counter in a few
+milliseconds. It is the price of eight C plus F and S opposite.
 
 ### 4.4 Parts
 

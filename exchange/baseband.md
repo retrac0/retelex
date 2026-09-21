@@ -307,7 +307,7 @@ so **moving the card moves all of it**:
   no monitor can never *own* a call arriving on that trunk. It still passes the
   flood on; it just cannot be the exchange the call is for. **Fitting this card
   in a block of lines silently changes what that block needs.**
-- **A dialable number.** MF8 trunk groups live at 11–13, 15–17 and further in
+- **A dialable number.** MF8 trunk groups live at 10–17 and further in
   blocks 2+, never dialled on a networked exchange because 1 is the flood key
   (`protocol.md` §5). A single-channel card in a line slot has a number a
   subscriber can dial. What the marker does when a dialled port's class is trunk

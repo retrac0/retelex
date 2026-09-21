@@ -1,6 +1,6 @@
 # MF8 backplane — modules, interfaces and clocking
 
-The exchange is a trunk card, six channel slots and a passive backplane. This
+The exchange is a trunk card, eight channel slots and a passive backplane. This
 document defines every interface along the chain
 
 ```
@@ -167,14 +167,14 @@ uses.
 
 | at the trunk card | in / out | domain | timing |
 |---|---|---|---|
-| `C_TX[1..6]` | in, to '151 inputs 1, 2, 3, 5, 6, 7 | T | sampled during bit `CBIT[n]` of each frame (§5) |
-| `A_TX[1..6]` | in, to the signalling '151 inputs 1, 2, 3, 5, 6, 7 | T | sampled at bit 4 of the frame at superframe state `CBIT[n]` |
+| `C_TX[0..7]` | in, to the '150 | T | sampled during that channel's C seat of each frame (§5) |
+| `A_TX[0..7]` | in, to the signalling mux | T | sampled at bit 8 of the frame at the superframe state of that C seat |
 | `TX_CLK`, `TX_HB`, `TX_OCT`, `FILL` | out | T | from the '393 chain, buffered |
 
-The signalling mux and the frame mux use the same input numbering because the
-guard sits at states 0 and 4 (`mf8-spec.md` §3.2): the S superframe mirrors the
-frame, so slot *n*'s A bit is at superframe state `CBIT[n]` as its C bit is at
-frame bit `CBIT[n]`.
+The signalling mux follows the C seats (bits 1–7 and 9), not a 3-bit `SLOT`.
+Guard pads sit at states 0 and 8 (`mf8-spec.md` §3.2). On an *exchange* the
+unit sits on collect T and this I3 is eight appearances, not a stack header
+(`mf8-unit.md` §5).
 
 ### I4, I5 — the trunk pair
 
@@ -184,8 +184,8 @@ frame bit `CBIT[n]`.
 
 | at the trunk card | in / out | domain | timing |
 |---|---|---|---|
-| `C_RX[1..6]` | out, a 74HC259 addressed by the receiver's bit counter, D = the recovered data, write = the recovered bit strobe | R | output *n* written during bit `CBIT[n]`; all six written before `RX_CLK` |
-| `A_RX[1..6]` | out, the §11 '259 addressed by the superframe counter, written at bit 4 | R | output *n* written at superframe state `CBIT[n]`; cleared while not locked |
+| `C_RX[0..7]` | out, two '174s (or a '259) written on the C seats | R | all eight written before `RX_CLK` |
+| `A_RX[0..7]` | out, the §11 '259 addressed by the superframe map, written at bit 8 | R | output *n* at the C seat's superframe state; cleared while not locked |
 | `RX_CLK`, `RX_OCT` | out | R | from the receiver's counters |
 | `MUTE`, `LOCK`, `CD` | out | R | §13 |
 

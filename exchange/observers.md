@@ -52,7 +52,7 @@ the panel's silkscreen, already laid out:
 ```
         s=0    1      2      3      4      5      6      7
   h=0   idle  DT     busy   NOGO   OPER   night  (line) (line)   block 0: tones 01-03, bank 04-07
-    1   .     trunk  trunk  trunk  .      trunk  trunk  trunk     block 1: first MF8 group when networked
+    1   trunk  trunk  trunk  trunk  trunk  trunk  trunk  trunk     block 1: first MF8 group when networked
     2   20     21     22     23     24     25     26     27       blocks 2-7: lines (or more trunks)
    ...
     7   70     71     72     73     74     75     76     77

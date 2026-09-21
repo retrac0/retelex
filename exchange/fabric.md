@@ -26,9 +26,10 @@ and any number of ports can listen to the same one.
 
 ### 1.1 How a highway carries eight ports, and how one bit is picked off it
 
-A highway is one wire where eight ports take turns.  It has a close relation to 
-MF8's line frame — eight bit positions to a 64 kHz frame, 512 kbps — with every position a
-port, no line code, and the clock on a wire of its own.
+A highway is one wire where eight ports take turns.  It is eight bit
+positions to a 64 kHz frame, 512 kbps — every position a port, no line
+code, and the clock on a wire of its own.  That is not the MF8 line.
+The line is 16 bits at 1024 kbps; the unit converts (`mf8-unit.md` §5.2½).
 
 Every card puts out one bit a frame on its `C_TX` pin and holds it for the whole
 frame (it changes at the frame edge, as on the MF8 backplane). The block's
@@ -100,18 +101,19 @@ What follows from the shape:
   by two more '151s onto wires only the marker sees, and its probe is a
   listener's two selects and a flip-flop, addressed by its scanner instead of by
   a latch.
-- **A trunk block's highway is an MF8 frame with F and S given back**: the six
-  channels are on slots 1–3 and 5–7, where they are on the wire, and slots 0 and
-  4 are ports of their own (`protocol.md` §5). The
-  commutator is, part for part, the trunk transmitter's frame mux
-  (`mf8-spec.md` §10). The trunk receiver's '259 is the same demultiplexing done
-  for all the channels at once; a port wants one bit, so it has one flip-flop
-  and a strobe instead.
+- **A trunk block's highway is this group's eight channels**, after the
+  MF8 unit has converted. The line is a 16-bit frame at 1024 kbps; the
+  highway stays eight slots of 512 kbps NRZ (`mf8-unit.md` §5.2½). The
+  commutator is only a commutator. It is not the trunk transmitter's
+  frame mux. F and S are not seats on it. A port still wants one bit, so
+  it has one flip-flop and a strobe; the unit's `'174`s present all eight
+  C bits at once (`protocol.md` §5).
 
 **Why eight by eight.** Sixty-four is the product; the split decides the parts.
 More slots on a wire means a faster wire (16 slots is 1.024 Mbps); more wires
 means a wider select at every port (16 wires is two '151s and a gate). Eight and
-eight puts a single '151 on each axis and runs the wires at MF8's own line rate.
+eight puts a single '151 on each axis and runs the wires at 512 kbps. The MF8
+unit converts that highway to a 16-bit line at 1024 kbps (`mf8-unit.md` §5.2½).
 
 ---
 

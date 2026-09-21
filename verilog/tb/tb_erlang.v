@@ -21,11 +21,11 @@
 // twenty thousand model seconds possible at all.  The windows are the REAL
 // ones: a pulse at 8 ms, a digit at 128, a caller gone at 256.
 //
-// SIX CHANNELS, NOT INFINITE SOURCES.  Erlang B assumes arrivals that do not
-// care what is already up.  A block holds six trunk channels, so at the top of
-// the table a few arrivals find no free CHANNEL and are never offered to the
-// pool at all.  Those are counted and reported separately, and left out of both
-// sides of the loss: they are an artefact of the block, not of 4's argument.
+// EIGHT CHANNELS, NOT INFINITE SOURCES.  Erlang B assumes arrivals that do not
+// care what is already up.  A block holds eight trunk channels, so at the top
+// of the table a few arrivals find no free CHANNEL and are never offered to
+// the pool at all.  Those are counted and reported separately, and left out of
+// both sides of the loss: they are an artefact of the block, not of 4's argument.
 `timescale 1ns/1ps
 
 module tb_erlang #(
@@ -63,22 +63,22 @@ module tb_erlang #(
 
     monitor #(.NMON(2), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0)) u_p2 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
-        .m(m), .busy(busyv), .chan_mask(8'b1110_1110),
+        .m(m), .busy(busyv), .chan_mask(8'b1111_1111),
         .claim(pclaim[0]), .claim_port(), .claim_ack(ack[0]),
         .held(pheld[0]), .all_busy(pfull[0]), .cells(c2));
     monitor #(.NMON(3), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0)) u_p3 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
-        .m(m), .busy(busyv), .chan_mask(8'b1110_1110),
+        .m(m), .busy(busyv), .chan_mask(8'b1111_1111),
         .claim(pclaim[1]), .claim_port(), .claim_ack(ack[1]),
         .held(pheld[1]), .all_busy(pfull[1]), .cells(c3));
     monitor #(.NMON(4), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0)) u_p4 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
-        .m(m), .busy(busyv), .chan_mask(8'b1110_1110),
+        .m(m), .busy(busyv), .chan_mask(8'b1111_1111),
         .claim(pclaim[2]), .claim_port(), .claim_ack(ack[2]),
         .held(pheld[2]), .all_busy(pfull[2]), .cells(c4));
     monitor #(.NMON(5), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0)) u_p5 (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
-        .m(m), .busy(busyv), .chan_mask(8'b1110_1110),
+        .m(m), .busy(busyv), .chan_mask(8'b1111_1111),
         .claim(pclaim[3]), .claim_port(), .claim_ack(ack[3]),
         .held(pheld[3]), .all_busy(pfull[3]), .cells(c5));
 
@@ -178,8 +178,8 @@ module tb_erlang #(
             if (nxt == 0) begin
                 nxt = 1 + $rtoi(-$ln(urand()) / lam);
                 any = 1'b0;
-                for (k = 1; k < 8; k = k + 1)
-                    if (!any && k != 4 && cst[k] == S_IDLE) begin
+                for (k = 0; k < 8; k = k + 1)
+                    if (!any && cst[k] == S_IDLE) begin
                         any = 1'b1;
                         // 4 counts a call lost when every monitor is busy AS
                         // THE SEIZURE ARRIVES: that is this sample.

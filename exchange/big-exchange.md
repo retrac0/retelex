@@ -3,9 +3,8 @@
 The exchange of these documents is **8 × 8**: eight 512 kbps highways by
 eight slots, **64 ports**, grown eight at a time. Dialled digits are octal
 `0–7`. A port is two of them, `h s`, `00–77`. A highway is eight slots at
-512 kHz, and **a highway is an MF8 trunk** with F and S given back as
-ports (`fabric.md` §1.1): six channels on slots 1–3 and 5–7, the trunk
-card tapping `HC[h]` / `HA[h]`.
+512 kHz. An MF8 group occupies a block: the unit converts a 16-bit
+1024 kbps line to that block's eight-slot highway (`mf8-unit.md` §5.2½).
 
 This document asked whether the same highways could make a larger
 exchange. They can, in 74HC. **They should not.** 128 ports is three
@@ -66,32 +65,28 @@ not built.
 
 ---
 
-## 3. One highway, one MF8 trunk
+## 3. One highway, one MF8 group
 
-This is `fabric.md` §1.1, not a new bargain:
+This is `fabric.md` §1.1 and `mf8-unit.md` §5.2½, not a new bargain:
 
-```
- bit / slot:  0     1      2      3      4     5      6      7
- MF8 line:  [ F ][ C1 ][ C2 ][ C3 ][ S ][ C4 ][ C5 ][ C6 ]
- highway:     h0    h1     h2     h3     h4    h5     h6     h7
-```
+The highway is eight slots of 512 kbps NRZ. The MF8 line is a 16-bit
+frame at 1024 kbps. They are not the same stream. The exchange unit
+occupies a block, presents eight cards on T, and the block's commutator
+makes that block's highway. One highway is one group of eight. Eight
+highways are eight groups; block 0 never takes one, so seven groups on
+this fabric (`protocol.md` §5).
 
-Eight bits at 512 kbps. F and S sit in slots 0 and 4 and come back as
-ordinary ports (00 never fitted; 04 the operator). The six channels are
-the group. The commutator is the trunk transmitter's frame mux without
-the line code. The trunk card taps `HC[h]` and `HA[h]`. Eight highways
-are eight groups, on blocks 1–7 as `protocol.md` §5 already has them,
-never sixteen.
-
-A 16-slot highway would be a 16-bit 64 kHz frame and a different trunk
-card. An 8 × 8 does not ask for one.
+A 16-slot highway would still be a different exchange — two `'151`s, a
+third octal digit, every port already fitted. An 8 × 8 does not ask for
+one. Eight payload channels over MF8 are a conversion, not a wider
+cell.
 
 ---
 
 ## 4. Verdict
 
 **The exchange is 8 × 8.** 64 ports, eight highways, 512 kHz, two octal
-digits. A highway is an MF8 trunk. Growth is another exchange, not
+digits. A highway is an MF8 group after conversion. Growth is another exchange, not
 another bit in the latch.
 
 Do not convert an 8 × 8. Do not bring up an 8 × 16 or a 16 × 8 beside it

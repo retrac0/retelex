@@ -52,7 +52,13 @@ transit could not tell which call a second message belonged to.
 
 ## 2. The bearer: the spare S bit
 
+The 16-bit frame (`mf8-unit.md` §4.2) already has six S states free at 4 kHz
+(10–15) and R as a seat of its own. **This document's x, stealing a guard
+pad, is the 8-bit predecessor.** If SS0 is adopted onto the live unit it
+sits in those spare states, and R is not x.
+
 `mf8-spec.md` §3.5 recorded two ways of freeing one of the S lane's eight states
+on the six-channel line
 and recommended the complement pair: `[x][A1][A2][A3][/x][A4][A5][A6]`. That
 frees **x, one bit a superframe: 8 kbps a link, and no voice channel spent.**
 
@@ -125,8 +131,7 @@ translation at either end:
 ## 5. At each exchange
 
 **A received `SEIZE` is a register that has finished.** Its caller is the trunk
-port at slot *chan* of the group the link serves (01–03, 05–07 or 11–13,
-15–17), and its digits come from the message. **The A lead must confirm it**: the marker acts
+port at slot *chan* of the group the link serves (10–17, 20–27, …), and its digits come from the message. **The A lead must confirm it**: the marker acts
 only if that trunk port's M is high (seized) and its latch is idle. Otherwise the
 message is discarded. M rises about 2 ms after the far end seizes, and a message
 takes 18 ms, so a genuine message always finds M up.

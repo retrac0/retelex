@@ -30,6 +30,10 @@ F + S + N channels must be a power of two, so **N = 2, 6, 14**.
 | 16 b | 14 | 32k | 512k | 1.024 M | 448k | 0.71× | 16 fr |
 | 16 b | 14 | 64k | 1024k | 2.048 M | 896k | 0.50× | 16 fr |
 
+The exchange uses that last row with **eight switched and six overhead**,
+not fourteen payload (`mf8-unit.md` §4.2, `mf8-spec.md` §2). Octet
+alignment is q[2:0] of the 16-state counter.
+
 Reach is the √f law scaled to a 256 kbps reference — the ratios
 are sound, the kilometres are not measured.
 

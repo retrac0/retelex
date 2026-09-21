@@ -1,8 +1,10 @@
 """
 Reference model and validation battery for the 8-bit superframe carrier.
 
-This is the design mf8/mf8-spec.md specifies.  It is mf8/mfspec.md's frame
-with the header replaced, because the original header was measured broken in
+This is the 8-bit six-channel predecessor battery.  The live spec is the
+16-bit eight-channel frame of mf8/mf8-spec.md and exchange/mf8-unit.md,
+measured by sim/mf8_16.py.  It is mf8/mfspec.md's frame with the header
+replaced, because the original header was measured broken in
 three independent ways (mf8-spec.md 1):
 
     mfspec                          mf8
@@ -35,8 +37,9 @@ Usage:  python3 sim/mf8.py            the whole battery
         python3 sim/mf8.py seats      the slot rule, every byte in every seat
         python3 sim/mf8.py errors     line errors, acquisition, resync
 
-The 10-bit eight-channel header of exchange/mf8-unit.md is sim/mf8_10.py.
-The 16-bit eight-channel header (8 C + 6 overhead) is sim/mf8_16.py.
+The 8-bit six-channel predecessor is this file.  The 10-bit eight-channel
+header of exchange/mf8-unit.md is sim/mf8_10.py.  The live 16-bit
+eight-channel header (8 C + 6 overhead) is sim/mf8_16.py.
 """
 import sys, itertools, numpy as np
 import audio, cvsd

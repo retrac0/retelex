@@ -1,32 +1,28 @@
 # The exchange — eight-channel MF8, split from the highway
 
-The fabric and MF8 already share one 3-bit `SLOT` counter: eight 64 kbps cells
-at 512 kbps. A trunk block's highway **is** an MF8 frame with F and S given
-back as ports (`fabric.md` §1.1). That identity is why a group is six
-channels on slots 1–3 and 5–7, why the trunk card taps `HC[h]`/`HA[h]` instead
-of sitting on the channel star (`mainboard.md` §2.4), and why those ports
-cannot move in the map.
+The fabric and MF8 used to share one 3-bit `SLOT` counter: eight 64 kbps cells
+at 512 kbps. A trunk block's highway **was** an MF8 frame with F and S given
+back as ports (`fabric.md` §1.1 as it then stood). That identity is why a group
+was six channels on slots 1–3 and 5–7, why the trunk card tapped `HC[h]`/`HA[h]`
+instead of sitting on the channel star (`mainboard.md` §2.4), and why those
+ports could not move in the map.
 
-**This document splits them.** MF8 carries eight payload channels on a line of
+**This document splits them, and that split is now the exchange.** MF8 carries eight payload channels on a line of
 its own. The exchange unit is a board that drives eight channel sockets, the
-same 2 × 16 star a line card uses. A group then occupies `h0–h7` of any block
+same 2 × 16 star a line card uses. A group occupies `h0–h7` of any block
 1–7. The fabric stays 8 × 8. Fusing the two serial streams, which looks like
 the cheap finish of what §1.1 already began, cannot give eight payload channels
 on this fabric without a new header the spec already rejected, or a wider
 highway that is a different exchange (`big-exchange.md`).
 
-> **Status: analysis, proposed, not adopted. Both headers measured.
-> Sixteen bits is the path. The board is an assignment.** The 16-bit
-> framer is `mf8_16.py`; the 10-bit lean is `mf8_10.py` (`sim/mf8_16.log`
-> and `sim/mf8_10.log` are the runs). Speech in those batteries is a
-> synthetic 300–3400 Hz talker at 0.15 rms — `speech30.wav` is not in the
-> tree. The Erlang figures are `erlang_cap` in `exch.py`; the parts are
-> counts against `mf8-spec.md` §§10–11 and `fabric.md` §3.1. §5 is what
-> `baseband.md` §3.5 is for one port: the pins, not a board that has been
-> laid out. Nothing has been on a bench. The 8 × 8 fabric, the
-> six-channel spec and the port map of `protocol.md` §5 stay as they are
-> until this is adopted. RTL, `NCH` in `mf8.py`, and the topology tables
-> are not changed here.
+> **Status: adopted.** Sixteen bits, eight payload channels, the unit on
+> T of a block. The 16-bit framer is `mf8_16.py`; the 10-bit lean is
+> `mf8_10.py` (`sim/mf8_16.log` and `sim/mf8_10.log` are the runs). Speech
+> in those batteries is a synthetic 300–3400 Hz talker at 0.15 rms —
+> `speech30.wav` is not in the tree. The Erlang figures are `erlang_cap`
+> in `exch.py`. The board in §5 is the pins, not a layout; nothing has
+> been on a bench. The live map, the RTL unit and the highway conversion
+> follow this document. `mf8.py` remains the 8-bit predecessor battery.
 
 ---
 
@@ -492,12 +488,51 @@ it. That retires `mainboard.md` §2.4's "a trunk card is not on the bus
 either": it was never on the bus in the way that sentence meant, and it
 is not on H now.
 
+### 5.2½ The conversion — 16-bit line, 8-slot highway
+
+The unit plugs into a block and **takes that block's highway**: stuffing
+T here means `HC[h]` / `HA[h]` *are* this group's eight channels, after
+the block's own `'151` has commutated them. The MF8 pair on the rear is
+not that highway. The conversion is this unit.
+
+Two serial streams share a 64 kHz frame and nothing else:
+
+```
+ highway cell (SLOT)   0        1        2        3        4        5        6        7
+                      512 kbps NRZ, C and A on two wires, no line code
+
+ MF8 bit               0  1     2  3     4  5     6  7     8  9    10 11    12 13    14 15
+ content               F  C0    C1 C2    C3 C4    C5 C6    S  C7    P  R     K0 K1    K2 K3
+                      1024 kbps, differential Manchester
+```
+
+Two line bits sit in the time of one highway cell, because 1024 kbps is
+twice 512. That is a convenience of the shared 4.096 MHz divide, not an
+identity: the line mux is a 4-bit count on the unit's `HB`, not `SLOT`.
+F, S, P, R and K never appear as ports. Slot *n* of the block is
+channel C*n* of the line, packed: C0–C6 at bits 1–7, C7 at bit 9 (S is
+opposite F, so one payload pair is eight apart).
+
+**Transmit.** Sample `C_RX[n]` / `A_RX[n]` in `TX_CLK` into a hold —
+eight parallel bits at 64 kHz, the same a line card already is. Mux
+them onto the 16-bit frame in the line domain. A is one bit a channel a
+superframe, 4 kHz; the hold is still a level.
+
+**Receive.** Demux the sixteen bits; write eight C flip-flops and eight
+A bits; re-sample C on the local frame edge (the two `'174`s). Drive
+`C_TX[n]` / `A_TX[n]`. The block's commutator then makes `HC[h]` as it
+does for any stuffing. A listener on another block who has this group
+in a latch sees eight ordinary 64 kbps squares.
+
+The fabric does not know there is an MF8 line. The line does not know
+there is a `'151`. They meet as eight `C`/`A` pairs on T.
+
 ### 5.3 T — what the unit does with each appearance
 
 Direction is the *card's* view, as `common-cards.md` §1: `out` is the
-unit driving the block. Slot *n* is line channel C*n*, bit *n*+1 of the
-frame at *n* = 0..3 and bit *n*+2 at *n* = 4..7 (S sits at bit 5; there
-is no hole in the sockets). Straight across.
+unit driving the block. Slot *n* is line channel C*n*: bits 1–7 of the
+frame at *n* = 0..6, bit 9 at *n* = 7 (S sits at bit 8; there is no hole
+in the sockets). Straight across, after the conversion of §5.2½.
 
 | T | | | what this unit does with it |
 |---|---|---|---|
@@ -815,9 +850,9 @@ including 06–07.
 
 ---
 
-## 8. What would change if this were adopted
+## 8. What adoption changed
 
-Not done here. The list is so that adoption is a set of edits, not a surprise.
+Done in the live tree. The list is the edits, not a surprise.
 
 | | |
 |---|---|
@@ -838,7 +873,7 @@ Not done here. The list is so that adoption is a set of edits, not a surprise.
 | [clocks.md](../common/clocks.md) | trunk `HB` is the unit's 2.048 MHz; fabric `HB` remains 1.024 MHz for `SLOTQ` |
 | [README.md](README.md) | 48 lines and eight trunks on block 1 when networked; six-channel figures in the opening |
 | [ss0.md](ss0.md) | S states 10–15; R is not x |
-| `mf8.py`, `mf8_trunk_card.v`, `exch.py fabric`, the trunk and net benches | after adoption; the header is `mf8_16.py`. `mf8_10.py` stays as the lean measurement |
+| `mf8.py`, `mf8_trunk_card.v`, `exch.py`, the trunk benches | the header is `mf8_16.py`; the unit converts 16-bit MF8 to eight highway slots. `mf8.py` and `mf8_10.py` stay as predecessor / lean measurement |
 
 The marker, the latch, the flood, the monitor's two rules, and class hunt do
 not change. A trunk is still a port of class trunk that sends a direction
@@ -854,7 +889,7 @@ word.
   a terminal is the obvious one; the other three are plant.
 - **Shelf mechanical**: eight 100 × 100 channel layers on the spacer-stack
   (`mf8-psu.md` §5 is drawn for six). That is the far-end shelf, not §5.
-- **Everything in §8**, until adopted.
+- **§8**, adopted: the live map, the RTL unit and the conversion of §5.2½.
 
 **Closed by `mf8_16.py`:** the F word is 0xFFFE; the guard is 0,8 = 0,1;
 0 wrong superframe phases; PCM octets hold in no pair; the only payload

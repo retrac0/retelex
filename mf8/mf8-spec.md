@@ -1,13 +1,16 @@
-# Six-channel TDM digital voice carrier over differential Manchester
+# Eight-channel TDM digital voice carrier over differential Manchester
 
-Six 64 kbps channels with a sub-commutated signalling channel in an 8-bit frame.
-This is over one twisted pair each way.  It is implemented with discrete 74HC logic.  
+Eight 64 kbps channels with a sub-commutated signalling channel in a 16-bit
+frame, plus parity, remote alarm and four condition bits. This is over one
+twisted pair each way. It is implemented with discrete 74HC logic.
 
-A channel slot is a DS0: 64 kbps and octet-aligned, so 
+A channel slot is a DS0: 64 kbps and octet-aligned, so
 it takes a CVSD voice card, a synchronous data card, or a
 G.711 PCM stream.
 
-Every number here was measured by `mf8.py` unless it is marked as analysis.
+The 8-bit six-channel predecessor is recorded by `mf8.py`. This spec is the
+16-bit eight-channel frame of `exchange/mf8-unit.md` §4.2, measured by
+`mf8_16.py` unless marked analysis.
 §15 lists what has not been measured.
 
 ## 1. What changed from `mfspec.md`, and why
@@ -32,49 +35,62 @@ replaced is the part that decides where the frame is.
 
 ## 2. Frame and superframe
 
-**Frame — 8 bits, 15.625 µs, 64 kHz:**
+**Frame — 16 bits, 15.625 µs, 64 kHz, 1024 kbps:**
 
 ```
- bit:   0     1      2      3      4     5      6      7
-      [ F ][ C1 ][ C2 ][ C3 ][ S ][ C4 ][ C5 ][ C6 ]
-      000   001    010    011   100   101    110    111    <- mux address
+ bit:  0    1  2  3  4  5  6  7     8    9   10  11  12 13 14 15
+     [ F ][ C0 C1 C2 C3 C4 C5 C6 ][ S ][ C7][ P ][ R ][ K0 K1 K2 K3 ]
 ```
 
-S sits at bit 4, half a frame from F, and not beside it. That is the one
-geometric choice in the frame, and §3.4 is why: the framing check reads F and S,
-and at a wrong bit alignment those two reads land on two other lanes 4 apart.
-With S beside F, two of the seven wrong alignments read one data card and one
-header bit, and a single data card can hold either of them open. With S
-opposite F, the header can only ever land on itself.
+S sits at bit 8, half a frame from F. Eight C, six overhead that are not
+ports. P is even parity of the other fifteen bits. R is the remote
+alarm (`MUTE` 32 ms). K0–K3 are condition levels, both ways, not
+switched. The exchange unit presents C0–C7 as eight cards; overhead
+terminates on Trunk-D (`mf8-unit.md` §4.2).
 
-**Superframe — 8 frames, 125 µs, 8 kHz:**
+**Superframe — 16 frames, 250 µs, 4 kHz:**
 
-| state | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-|---|---|---|---|---|---|---|---|---|
-| **F** | 1 | 1 | 1 | 1 | 1 | 1 | 1 | **0** |
-| **S** | **0** | A1 | A2 | A3 | **1** | A4 | A5 | A6 |
+| state | 0 | 1–7 | 8 | 9 | 10–15 |
+|---|---|---|---|---|---|
+| **F** | 1 | 1 | 1 | 1 | 1, except **0** at 15 |
+| **S** | **0** | A0–A6 | **1** | A7 | spare (SS0, or unused) |
 
 `An` is channel *n*'s signalling bit; the two fixed S bits are the guard (§3.2).
-Signalling is one bit per channel per superframe — **8 kbps per channel**.
+Signalling is one bit per channel per superframe — **4 kbps per channel**.
+PCM is q[2:0] of the same 4-bit counter: two octets a superframe, transfer
+when the low three bits are 111.
 
-The S superframe mirrors the frame: channel *n*'s signalling bit sits at the
-superframe state that is channel *n*'s bit position in the frame, so the
-signalling multiplexer and demultiplexer use the frame multiplexer's address
-map unchanged.
+The S map is wired from the C seats: A0–A6 at states 1–7, A7 at 9, matching
+C0–C6 at bits 1–7 and C7 at bit 9. The `'259` is enabled on those eight
+states, not addressed by a 3-bit `SLOT`.
 
-The superframe counter is the only phase state in the system, and it does three
-jobs: it addresses the signalling demultiplexer, it carries the framing word,
-and it is the octet counter (§6).
+The superframe counter is the only phase state in the system: it addresses
+the signalling demultiplexer, it carries the framing word, and its low
+three bits are the octet counter (§6).
 
 ---
 
 ## 3. The header
 
-### 3.1 F — the word `11111110`
+### 3.1 F — the word `1111111111111110`
 
-F carries an 8-bit word across the superframe, so **one check pins both the bit
-alignment and the superframe phase.** The word is `11111110`: one zero, at
-state 7.
+F carries a 16-bit word across the superframe, so **one check pins both the bit
+alignment and the superframe phase.** The word is `1111111111111110` (0xFFFE):
+one zero, at state 15. The 4-bit counter's wrap is the generator.
+
+```
+F = NAND(q3, q2, q1, q0)        from the superframe counter
+```
+
+`mf8_16.py word`: longest run a payload lane matches it is 16 (CVSD speech),
+3 (silence), 15 (constant 1), 18 (random), 15 (octet 0xFE) — all under the
+32 acquisition needs. Period-2 words are matched indefinitely by CVSD
+silence, as they were on eight bits. Wrong superframe phase: a rotation
+mismatches at 2 of 16, longest good run 14, **0 admissible wrong phases**
+over all 256 hook states (`mf8_16.py sfphase`).
+
+The 8-bit predecessor used `11111110`, zero at state 7. The measurements
+in the rest of this section that quote `mf8.py` are that line.
 
 Why this word and not the alternatives this project has already killed. The
 figure is the longest run of consecutive frames a payload lane can match the
@@ -100,11 +116,18 @@ F = NAND(q2, q1, q0)        one 3-input gate, from the superframe counter
 
 and the receiver forms the identical term from its own counter.
 
-### 3.2 The guard — S at states 0 and 4
+### 3.2 The guard — S at states 0 and 8
 
 F alone is not sufficient, because a data card can carry the framing word. The S
 lane supplies a second, independent condition: **S = 0 at state 0 and S = 1 at
-state 4.**
+state 8.** Half a superframe, both even, different values, and 0xFFFE is 1 at
+both, so a lane carrying the F word fails it. `mf8_16.py guard`: 0 / 4096 on
+the F word in every lane, on one data card, and on idle.
+
+The 8-bit predecessor used states 0 and 4 = `0,1` on `11111110`. That
+argument, and the `mf8.py` tables that follow, are that line. The same
+tests apply: same parity, different values, different from the F word
+there.
 
 Each part of that is load-bearing:
 
@@ -396,8 +419,18 @@ alignment. (An earlier nested-search version of §4 measured 35–176 frames her
 
 One rule, and it is measured rather than argued:
 
-> **Two data cards may not sit three slots apart: not 1 and 4, not 2 and 5, not
-> 3 and 6.**
+> **Two period-16 data cards that can carry the F word may not sit in C0 and
+> C7 together.** PCM octets are safe in every seat and every pair.
+
+Eight C plus F and S opposite forces one payload pair eight apart: C0 and
+C7, bits 1 and 9. Overhead seats cannot be held by a data card. `mf8_16.py
+seats`: one PCM card, any octet, 0 holds; two PCM cards, F word against
+every octet, no pair holds; F word in C0 and C7 together, 0 / 4096 (the
+word is 1,1 at the guard). Residual: F word in C0, voice in C7, the guard
+counter releases in 90–306 frames (mean 2.83 ms).
+
+Key the connector to C0–C6, or to C1–C7. The 8-bit predecessor's rule
+(two data cards not three apart) is below, as `mf8.py seats` measured it.
 
 A voice channel is CVSD and cannot hold a wrong alignment. A data card can carry
 anything, including the framing word — and at a wrong alignment the F check lands
@@ -586,24 +619,21 @@ is the argument for this section existing.
 
 ## 8. Rates and the family
 
-F + S + N channels must be a power of two, so **N = 2, 6, 14**.
+F + S + N channels must be a power of two, so **N = 2, 6, 14**. This spec
+takes the 16-bit family row and switches **eight** of the fourteen, with
+six overhead (`mf8-unit.md` §4.2).
 
 | frame | N | per-channel | line | baud | capacity | reach | superframe |
 |---|---|---|---|---|---|---|---|
 | 4 b | 2 | 64k | 256k | 0.512 M | 128k | **1.00×** | 4 fr |
-| **8 b** | **6** | **64k** | **512k** | **1.024 M** | **384k** | 0.71× | **8 fr** |
-| 8 b | 6 | 32k | 256k | 0.512 M | 192k | **1.00×** | 8 fr |
+| 8 b | 6 | 64k | 512k | 1.024 M | 384k | 0.71× | 8 fr |
+| **16 b** | **8 switched + 6 overhead** | **64k** | **1024k** | **2.048 M** | **512k** | 0.50× | **16 fr** |
 | 16 b | 14 | 32k | 512k | 1.024 M | 448k | 0.71× | 16 fr |
 
-**This spec is N = 6 at 64 kHz.** It is the only mode that is one-for-one with a
-DS0 (§6). Reach is the √f law scaled to `frame-rate.md` §1's reference — ratios
-sound, kilometres not measured. `frame-rate.md` analyses the choice; the short
-version is that line rate sets reach and frame length decides how it is divided,
-so 64 kbps channels are available at any reach, at two of them for 1.00× or six
-for 0.71×.
-
-Only N = 6 is specified here. The other frame lengths need their own F word and
-guard positions, and the mis-strap case between them is **not measured**.
+**This spec is eight payload channels at 64 kHz on a 16-bit 1024 kbps
+line.** It is one-for-one with a DS0 (§6). Reach is the √f law scaled to
+`frame-rate.md` §1's reference — ratios sound, kilometres not measured.
+The 8-bit N = 6 line remains the predecessor; `mf8.py` still runs it.
 
 ---
 
@@ -615,7 +645,7 @@ the line code.
 - Transition at **every** cell boundary. This is the clock.
 - An additional transition at mid-cell **iff** the data bit is 0.
 
-At 512 kbps: **1.024 MBaud**, 977 ns half-cell, 512 kHz maximum fundamental.
+At 1024 kbps: **2.048 MBaud**, 488 ns half-cell, 1.024 MHz maximum fundamental.
 Two-level, DC-free with disparity bounded at ±1 cell, polarity-blind (verified
 bit-identical under a tip/ring swap, `line-codes.md` §12), and a transition every
 bit so clock recovery never starves.
@@ -643,8 +673,8 @@ Pierce oscillator's duty cycle needs. Nothing on the card needs a faster clock.
 
 | rate jumper | line rate | HB (half-bit) | H (line bit) |
 |---|---|---|---|
-| Q1 | 1024 kbps | 2.048 MHz | 1.024 MHz |
-| **Q2** | **512 kbps — this spec** | **1.024 MHz** | **512 kHz** |
+| **Q1** | **1024 kbps — this spec** | **2.048 MHz** | **1.024 MHz** |
+| Q2 | 512 kbps | 1.024 MHz | 512 kHz |
 | Q3 | 256 kbps | 512 kHz | 256 kHz |
 | Q4 | 128 kbps | 256 kHz | 128 kHz |
 | Q5 | 64 kbps | 128 kHz | 64 kHz |
@@ -787,8 +817,8 @@ per rate**, so a rate change swaps all five and none can be left behind:
 
 | line rate | symbol rate | filter corner | classifier, 0.75 cell | dead time, 0.2 cell | carrier timeout |
 |---|---|---|---|---|---|
-| 1024 kbps | 2.048 MBaud | 2.0 MHz | 732 ns | 195 ns | 1.95 µs |
-| **512 kbps — this spec** | **1.024 MBaud** | **1.0 MHz** | **1 465 ns** | **391 ns** | **3.9 µs** |
+| **1024 kbps — this spec** | **2.048 MBaud** | **2.0 MHz** | **732 ns** | **195 ns** | **1.95 µs** |
+| 512 kbps | 1.024 MBaud | 1.0 MHz | 1 465 ns | 391 ns | 3.9 µs |
 | 256 kbps | 512 kBaud | 512 kHz | 2 930 ns | 781 ns | 7.8 µs |
 | 128 kbps | 256 kBaud | 256 kHz | 5 859 ns | 1 563 ns | 15.6 µs |
 | 64 kbps | 128 kBaud | 128 kHz | 11 719 ns | 3 125 ns | 31.3 µs |
@@ -806,20 +836,20 @@ set per direction.
                                               │
                                         ÷2 ─→ H, line bit clock
                                               │
-                            3-bit frame counter (bit position in frame)
+                            4-bit frame counter (bit position in frame)
                                               │ wrap
-                            3-bit superframe counter  q2 q1 q0
+                            4-bit superframe counter  q3 q2 q1 q0
                                      │                     │
-                          F = NAND(q2,q1,q0)        S mux address
+                          F = NAND(q3,q2,q1,q0)     S mux address
 ```
 
 | function | part | notes |
 |---|---|---|
 | Prescaler and rate tap | 74HC4040 | one per card |
-| Frame + superframe counters | 74HC393 | 3 stages each, both halves |
-| Frame mux | 74HC151 | in0 = F, in4 = S mux, in1–3 = C1–C3, in5–7 = C4–C6, addressed directly |
-| Signalling mux | 74HC151 | addressed by the superframe counter; input 0 tied low, input 4 tied high, A1–A6 on inputs 1–3 and 5–7 — the frame mux's map |
-| F generator | ⅓ 74HC10 | one 3-input NAND |
+| Frame + superframe counters | 74HC393 | 4 stages each, both halves |
+| Frame mux | 74HC150 | F, eight C, S, P, R, K0–K3; 4-bit address |
+| Signalling mux | 74HC151 / '150 | A0–A7 on the eight C seats; pads at 0 and 8 |
+| F generator | ¼ 74HC20 | 4-input NAND, wrap of the superframe counter |
 | Biphase encoder | ½ 74HC74 + ¼ 74HC00 | §8.1 |
 | Driver | 75176 | §8.1 |
 | **Total** | **≈ 6 packages** | |

@@ -34,7 +34,7 @@ module tb_monitor;
     monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(3'd0),
               .HIT(HIT), .ID(ID), .CLR(CLR)) dut (
         .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
-        .m(m), .busy(busy), .chan_mask(8'b1110_1110),
+        .m(m), .busy(busy), .chan_mask(8'b1111_1111),
         .claim(claim), .claim_port(claim_port), .claim_ack(ack),
         .held(held), .all_busy(all_busy), .cells());
 

@@ -58,12 +58,12 @@ rack, and the module boundaries are the connectors.
                    that is where it is                       (mf8-backplane.md 8)
  pulse_gen         hex buttons as pins: 10 pps on A_TX, no handset
                                                              (pulse-gen.md)
- mf8_trunk_card    six channels of a block made into a tie trunk (network.md 1)
-   mf8_encoder     differential Manchester: a transition a cell, two for a 0
+ mf8_trunk_card    eight channels of a block made into a tie trunk (mf8-unit.md 5)
+   mf8_encoder     differential Manchester: a transition a line bit, two for a 0
                                                              (mf8-spec.md 9.2)
    mf8_decoder     the classifier: times gaps, no PLL, nothing to lose
                                                              (mf8-spec.md 9.4)
-   mf8_framer      F = 11111110, the guard at states 0 and 4, 32 to lock,
+   mf8_framer      F = 0xFFFE, the guard at states 0 and 8, 32 to lock,
                    two +2/-1 counters to track               (mf8-spec.md 3, 4)
 ```
 

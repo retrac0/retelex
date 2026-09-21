@@ -23,7 +23,7 @@ no 1-prefix — one register inside, two digits, then throw it away — is
 
 Every port says what it is in a **word**: eight bits that whatever sits behind
 it sends, one a frame, on one pin (`extensions.md` §2.2). A card sends it for
-its one port, and a trunk card for each of its six channels (`network.md`
+its one port, and a trunk card for each of its eight channels (`network.md`
 §1). The word carries a 3-bit class and four options that depend on the class: a
 trunk's direction, a hunt group, a warm restricted line. Or it names the port this one
 is nailed to. **Class *restricted*** is its own code (`fabric.md` §3.5), not
@@ -40,7 +40,7 @@ is not the marker's business: the card says it to the port's own gates on a pin,
 | 1 | line: a phone, a data card, a conference bridge leg | its number | `BUSY` = 0, M = 0, settled (§5) |
 | 2 | operator | **0** | same |
 | 3 | external trunk: an FXO to a CO, a foreign PBX | **9** | same |
-| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`extensions.md` §2.2), and an MF8 trunk card sends one word to all six channels | the network card (`network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
+| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`extensions.md` §2.2), and an MF8 unit sends one word to all eight channels | the network card (`network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
 | 5 | dial tone | the marker, on seizure | always: a source, one latch write |
 | 6 | cannot-complete: busy / error tone, or a looping announcement | the marker, whenever it cannot complete | always |
 | 7 | spare in this older map. Under `fabric.md` §3.5, code **111** is *restricted* | — | — |

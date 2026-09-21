@@ -52,7 +52,7 @@ module tb_stress #(
     // lines fill blocks 2-7: ports 20-77, dialled as their own h s
     localparam [63:0] LP = 64'hFFFF_FFFF_FFFF_0000;
     localparam integer NLINE = 48;
-    localparam [63:0] TR = 64'h0000_0000_0000_EE00;     // the trunk's six channels (block 1)
+    localparam [63:0] TR = 64'h0000_0000_0000_FF00;     // the trunk's eight channels (block 1)
 
     // B runs on its own crystal: mf8-backplane.md 2's plesiochronous case, which
     // is what any two ends of a link are.  A slip should cost a bit, not a call.
@@ -72,7 +72,7 @@ module tb_stress #(
     wire        a2b, b2a, lk_a, lk_b, fs_a, fs_b, rc_a, rc_b;
 
     // A is 22 and faces E; B is 23 and faces W.  With PAIR = 0 B is not there
-    // and A's trunk card sees no carrier, so its six channels read unequipped
+    // and A's trunk card sees no carrier, so its eight channels read unequipped
     // and the key `1` finds nothing to seize: the standalone exchange.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2), .LINE_PORTS(LP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),

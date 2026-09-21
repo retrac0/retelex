@@ -2649,9 +2649,10 @@ SS0_HOLD = 0.4                            # SS0: a seizure held till the claim, 
 
 
 def lines_for(groups):
-    """lines left at an exchange with this many trunk groups: the first two sit in blocks 0 and 1,
-    which hold no lines anyway; each one more takes six line slots (protocol.md 5)"""
-    return 48 - 6 * max(0, groups - 2)
+    """lines left at an exchange with this many trunk groups: the first sits in
+    block 1, which holds no lines; each one more takes eight line slots
+    (protocol.md 5, mf8-unit.md 7). Block 0 is never an MF8 group."""
+    return max(0, 48 - 8 * max(0, groups - 1))
 
 
 BACKBONE = [f'{e}{b}' for e in (1, 0) for b in (1, 2, 3, 4, 5, 6, 7, 0)]            # 00-17, by convention
@@ -2672,10 +2673,10 @@ def shape(links, straps=()):
         code[n] = (spare[kind] or spare[not kind]).pop(0)
     groups = {n: 0 for n in names}
     for (u, v), ch in links.items():
-        groups[u] += -(-ch // 6); groups[v] += -(-ch // 6)
+        groups[u] += -(-ch // 8); groups[v] += -(-ch // 8)
     lk = {(code[u], code[v]): ch for (u, v), ch in links.items()}
     ln = {code[n]: lines_for(groups[n]) for n in names}
-    assert max(groups.values()) <= 8, 'more than eight trunk groups'
+    assert max(groups.values()) <= 7, 'more than seven trunk groups'
     return lk, ln, [(code[u], code[v]) for u, v in straps], code
 
 

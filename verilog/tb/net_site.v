@@ -2,9 +2,9 @@
 //
 //   block 0   dial tone at 01, busy at 02 (optional), cannot-complete at 03;
 //             04-07 the operator bank when fitted.  Never an MF8 trunk group.
-//   block 1   first MF8 trunk group at 11-13, 15-17 facing DIR0 (slots 0 and 4
-//             are F and S on the wire and stay free -- port 00 is silence for
-//             a cleared latch; 04 would be an operator seat on a tone-less map)
+//   block 1   first MF8 trunk group at 10-17 facing DIR0 -- the exchange unit
+//             takes the whole highway (mf8-unit.md 5).  Port 00 is silence for
+//             a cleared latch; 04 is an operator seat on a tone-less map.
 //   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
 //             whole blocks with them for a stress run
 //   block 3   a second trunk group, facing DIR1   (NDIR = 2)
@@ -100,13 +100,12 @@ module net_site #(
     localparam [7:0] WORD2 = {N2, G2, DIR2, 3'b101, 1'b0};
     localparam [7:0] WORD3 = {N3, G3, DIR3, 3'b101, 1'b0};
 
-    // The channel slots a trunk card drives: 1-3 and 5-7, where they are on the
-    // wire.  Slots 0 and 4 are F and S — free on a trunk block.  Port 00 stays
+    // The exchange unit takes all eight slots of its block.  Port 00 stays
     // unfitted ("a cleared latch listens to 00", mvp.md 2); tones are 01-03.
-    localparam [63:0] TRUNKS = 64'h0000_0000_0000_EE00
-                             | ((NDIR >= 2) ? 64'h0000_0000_EE00_0000 : 64'd0)
-                             | ((NDIR >= 3) ? 64'h0000_00EE_0000_0000 : 64'd0)
-                             | ((NDIR >= 4) ? 64'h0000_EE00_0000_0000 : 64'd0);
+    localparam [63:0] TRUNKS = 64'h0000_0000_0000_FF00
+                             | ((NDIR >= 2) ? 64'h0000_0000_FF00_0000 : 64'd0)
+                             | ((NDIR >= 3) ? 64'h0000_00FF_0000_0000 : 64'd0)
+                             | ((NDIR >= 4) ? 64'h0000_FF00_0000_0000 : 64'd0);
     localparam [63:0] PF = LINE_PORTS
                          | 64'h0000_0000_0000_000E     // tones at 01, 02, 03
                          | TRUNKS;
@@ -212,7 +211,7 @@ module net_site #(
                       .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon (
                 .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
                 .m(t_a_tx[g*8 +: 8]), .busy(pbusy[B*8 +: 8]),
-                .chan_mask(8'b1110_1110),
+                .chan_mask(8'b1111_1111),
                 .claim(mc_v[g]), .claim_port(mp_v[g*6 +: 6]),
                 .claim_ack(mack_v[g]), .held(mh_v[g]), .all_busy(mf_v[g]), .cells());
         end else begin : absent

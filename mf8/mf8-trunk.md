@@ -23,7 +23,7 @@ stack driver on D.
 
 | Board | Owns | ≈ packages |
 |---|---|---|
-| **Trunk-D** | Crystal / `4040` / `393`, frame and signalling muxes, F gen, framer **without** the classifier, C and A `259`s, `MUTE` / `LOCK` / `CD`, stack `244` + 33 Ω, empty-slot `FILL` / GND pulls | **≈ 14–16** |
+| **Trunk-D** | Crystal / `4040` / `393`, frame and signalling muxes, F gen, framer **without** the classifier, C and A holds, `MUTE` / `LOCK` / `CD`, eight C/A pairs; on an exchange, collect T + commons C | **≈ 16–20** |
 | **Trunk-A** | TX encoder + `75176` + transformer + protection; RX transformer, filter, comparator, **§9.4 classifier**, carrier detect | **≈ 6–8** + **2** transformers |
 
 Rear plant (trunk pair) leaves **Trunk-A** only (`common-cards.md` §7.3). Optional
