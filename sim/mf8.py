@@ -34,6 +34,9 @@ Usage:  python3 sim/mf8.py            the whole battery
         python3 sim/mf8.py sbit       why S sits half a frame from F
         python3 sim/mf8.py seats      the slot rule, every byte in every seat
         python3 sim/mf8.py errors     line errors, acquisition, resync
+
+The 10-bit eight-channel header of exchange/mf8-unit.md is sim/mf8_10.py.
+The 16-bit eight-channel header (8 C + 6 overhead) is sim/mf8_16.py.
 """
 import sys, itertools, numpy as np
 import audio, cvsd

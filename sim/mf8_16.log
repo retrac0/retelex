@@ -1,0 +1,150 @@
+THE F WORD — 16-bit superframe
+
+  F is a 16-bit word over the superframe.  Acquisition still wants
+  32 consecutive matches.  A payload lane whose longest run is
+  under 32 is rejected deterministically.
+
+  Longest run of consecutive frames a payload lane matches the word.
+
+  word                                       CVSD speech  CVSD silence    constant 1    constant 0        random    octet 0xFE    octet 0xAA      period-2
+  1010..  period 2                                    23          8192             1             1            12             3          8192          8192
+  0101..  period 2, other                             23          8192             1             1            12             3          8192          8192
+  0111..1  one zero at 0                              16             3            15             1            18            15             3             3
+  1111..10  one zero at 15  (wrap)                    16             3            15             1            18            15             3             3
+  1111..01  one zero at 14                            16             3            15             1            18            15             3             3
+  1111111011111110  0xFE repeated                     13             3             7             1            20          8192             3             3
+  1111..00  two zeros                                 16             2            14             2            19             8             2             2
+
+  0xFFFE is the analogue of 0xFE / 0x3FE: one zero, at the last
+  state, so a 4-bit counter wrapping at 15 is the F generator.
+
+SUPERFRAME PHASE — 16-bit word against itself
+
+  0xFFFE 1111111111111110
+
+     offset  match of 16   longest good run
+          0           16                 64
+          1           14                 14
+          2           14                 13
+          3           14                 12
+          4           14                 11
+          5           14                 10
+          6           14                  9
+          7           14                  8
+          8           14                  7
+          9           14                  8
+         10           14                  9
+         11           14                 10
+         12           14                 11
+         13           14                 12
+         14           14                 13
+         15           14                 14
+
+  wrong superframe phases admissible over all 256 hook
+  states, 0xFFFE and guard 0,8 = 0,1: 0
+
+SKEW — which two lanes the check reads at a wrong bit alignment
+
+  The check reads bit 0 as F and bit 8 as S.  At skew d it reads
+  bit d as F and bit (d+8) mod 16 as S.
+
+   skew    as F    as S  what
+      0       F       S  true alignment
+      1      C0      C7  two payload lanes, eight seats apart
+      2      C1      K0  payload or overhead, eight seats apart
+      3      C2      K1  payload or overhead, eight seats apart
+      4      C3      K2  payload or overhead, eight seats apart
+      5      C4      K3  payload or overhead, eight seats apart
+      6      C5      K4  payload or overhead, eight seats apart
+      7      C6      K5  payload or overhead, eight seats apart
+      8       S       F  header on itself
+      9      C7      C0  two payload lanes, eight seats apart
+     10      K0      C1  payload or overhead, eight seats apart
+     11      K1      C2  payload or overhead, eight seats apart
+     12      K2      C3  payload or overhead, eight seats apart
+     13      K3      C4  payload or overhead, eight seats apart
+     14      K4      C5  payload or overhead, eight seats apart
+     15      K5      C6  payload or overhead, eight seats apart
+
+  Eight C plus F and S opposite cannot avoid every C-C pair at
+  distance 8: (C0, C7) are bits 1 and 9.  Overhead occupies the
+  other six partners.  Header-on-itself is skew 8.
+
+GUARD POSITION — 16-state superframe
+
+  0 and 8 are half a superframe, both even.  A period-2 lane fails
+  0,8 = 0,1.  256 hook states × 16 skews = 4096 per cell.
+
+  layout                                 F word every  one data, worst   idle every  voice 4-run
+  0,8 = 0,1  (family analogue)               0 / 4096         0 / 4096     0 / 4096     1 in 666
+  0,8 = 1,0                                  0 / 4096         0 / 4096     0 / 4096     1 in 400
+  0,7 = 0,1  (odd, analogue of 0,5)          0 / 4096         0 / 4096     0 / 4096     1 in 266
+  0,4 = 0,1                                  0 / 4096         0 / 4096     0 / 4096     1 in 500
+  0,8 = F word there                       512 / 4096       256 / 4096     0 / 4096     1 in 400
+
+  0xFFFE is 1 at states 0 and 8, so the F word fails 0,8 = 0,1.
+
+SLOT RULES — 16-bit frame, S at bit 8, word 0xFFFE, guard 0,8 = 0,1
+
+  Payload seats C0..C7 at bits 1-7 and 9.  The only payload pair
+  eight wire-bits apart is (C0, C7).
+
+  1. PCM octets, every seat, then F word vs every octet in another.
+
+     one card, octets that hold:  C0: 0  C1: 0  C2: 0  C3: 0  C4: 0  C5: 0  C6: 0  C7: 0
+     two cards, F word vs every octet:
+       none hold
+
+  2. Named layouts.  Denominator 256 hooks × 16 skews.
+
+  layout                                                      holds
+    C0 = F word, rest idle                                 0 / 4096
+    C1 = F word, rest idle                                 0 / 4096
+    C2 = F word, rest idle                                 0 / 4096
+    C3 = F word, rest idle                                 0 / 4096
+    C4 = F word, rest idle                                 0 / 4096
+    C5 = F word, rest idle                                 0 / 4096
+    C6 = F word, rest idle                                 0 / 4096
+    C7 = F word, rest idle                                 0 / 4096
+    C0 and C7 = F word (eight apart); rest idle            0 / 4096
+    C0 = F word, C7 idle                                   0 / 4096
+    eight data cards, random content                       0 / 4096
+    eight PCM cards carrying 0xFE                          0 / 4096
+    F word in every payload seat                           0 / 4096
+
+  3. Residual: F word in C0, VOICE in C7 (eight apart).
+
+     Speech satisfies 0,8 four superframes running once in 337.
+     tracking                                    acquired  released, frames       mean  never
+     frame counter only                             24/24                 -          -     24
+     frame + guard counters                         24/24            90-306    2.83 ms      0
+
+
+LINE ERRORS — tracking, +2/-1 trip-12, 16-bit frame, guard 0,8 = 0,1
+
+   line BER  locked frames  LOF events  of which guard  off-phase  time down
+      0e+00         199953           0               0          0      0.02%
+      1e-04         199953           0               0          0      0.02%
+      1e-03         199953           0               0          0      0.02%
+      1e-02         199921           0               0          0      0.04%
+      3e-02         199857           0               0          0      0.07%
+
+RESYNC after an induced slip, every slip size
+
+   slip   frames misaligned   frames to relock
+      1                   8                  8
+      2                  10                 10
+      3                   9                  9
+      4                  24                 24
+      5                  13                 13
+      6                  14                 14
+      7                  10                 10
+      8                   7                  7
+      9                  26                 26
+     10                   5                  5
+     11                   5                  5
+     12                   5                  5
+     13                   5                  5
+     14                   5                  5
+     15                   5                  5
+

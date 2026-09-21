@@ -52,6 +52,7 @@ line. 8 and 9 stay special in the code.
 | [network.md](network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
 | [topology.md](topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link strapped and fail without |
 | [terminal.md](terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
+| [mf8-unit.md](mf8-unit.md) | **analysis, proposed, not adopted; 16-bit is the path; both headers measured; the board assigned**: split the highway from the MF8 line — eight payload channels on a 16-bit frame 0xFFFE with P, RAI, K0–K3, 1024 kbps / 2.048 MBaud, an exchange unit that mates collect T as eight cards, a group `h0–h7` on any block 1–7 (`mf8_16.py`; `mf8_10.py` the lean not taken) |
 | [rtl.md](rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
 | [baseband.md](baseband.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
 | [pots-trunk.md](pots-trunk.md) | **proposed**: one trunk over a dry two-wire POTS pair — voice-band codec and hybrid, A as a jumper-selected dual tone each way with notches out of the speech path |
@@ -84,6 +85,8 @@ python3 sim/exch.py net        eight exchanges call by call: the flood, the moni
 python3 sim/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
 python3 sim/exch.py traffic    demand that is not smooth: bursts, herds, peak against off peak, and the RTL run beside it
 python3 sim/exch.py big        how near sixty-four exchanges the flood goes: tandem chains, meshed hubs, long spokes
+python3 sim/mf8_10.py          10-bit eight-channel header (mf8-unit.md §4.1): word, phase, guard, seats, errors
+python3 sim/mf8_16.py          16-bit eight-channel header (mf8-unit.md §4.2): 8 C + 6 overhead, 0xFFFE, guard 0,8
 ```
 
 It imports `audio`, `cvsd` and `mf8` from the repository root and reads the
