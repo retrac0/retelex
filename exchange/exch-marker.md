@@ -52,10 +52,11 @@ anything that talks and never listens: the two tones, reached by address rather
 than hunted, and a radio or a clock that anyone may dial (`exch-features.md`
 §6). *Data line* is a line the marker will not connect to a voice port. A
 conference bridge leg is an ordinary line (`exch-features.md` §7.4); class
-*conference* is retired. *Restricted* (`111`) is a lobby or public phone: 9 and
-(networked) 1 give cannot-complete (`ex-extensions.md` §2.4). A line's options
-are overflow (a hunt group), warm line, and **busy-out** (`b`: terminating
-calls see not-free / busy tone; outbound unchanged); one bit is spare.
+*conference* is retired. *Restricted* (`111`) options are `z w b L`
+(`ex-extensions.md` §2.4): **0-only**, reserved (warm), **busy-inbound**,
+**local-only**; bare restricted still floors as local-only. A line's options are
+`o w b ·` — overflow, warm, busy-out, spare — with `o`/`w`/`b` in the same
+frames as restricted and as overflow on operator and data.
 
 **Proposed further** (`ex-groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
@@ -74,10 +75,10 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
                    standalone: highway 1; wait for s — 10–17 are ordinary lines
              8 * # class 6
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
-             itself → class 6               not free (BUSY or busy-out `b`), overflow set → try next
+             itself → class 6               not free (BUSY or busy `b`), overflow set → try next
              not free → class 6 (busy tone) else → connect
- caller      class restricted: 9 and (networked) 1 → class 6                 (ex-extensions.md §2.4)
-             busy-out `b` does not block a call request
+ caller      class restricted: `z` → only 0; else `L` or floor → no 9 / no flood   (ex-extensions.md §2.4)
+             busy `b` does not block a call request
 ```
 
 Whether `1` is the flood or highway 1 is the network strap: network card fitted,

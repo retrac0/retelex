@@ -74,7 +74,8 @@ the run should become a comparison, and the question is what to compare.
 
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
-in the word. A line's options have one bit spare (`ex-extensions.md` §2.4).
+in the word. A line's options have one bit spare; restricted uses all four
+(`z w b L`, with `w` reserved) (`ex-extensions.md` §2.4).
 Spending all four of a class's option bits gives sixteen groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one
 people dial. That is the tight encoding. §2 is the loose one, and it needs no

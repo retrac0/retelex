@@ -245,7 +245,7 @@ marker reads:
 | 000 | unequipped | 100 | outside line |
 | 001 | line | 101 | tie trunk. Its direction, N, S, E or W, and its glare bit are among the word's option bits |
 | 010 | operator | 110 | data line |
-| 011 | source: a radio, a clock, a test tone (`exch-features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone (`ex-extensions.md` §2.4). Conference leg as a class is retired: a bridge leg is an ordinary line |
+| 011 | source: a radio, a clock, a test tone (`exch-features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z w b L` (`ex-extensions.md` §2.4). Conference leg as a class is retired: a bridge leg is an ordinary line |
 
 An empty slot sends no word and reads 000. An earlier form carried the class on
 three pins and took "rings" from one of its bits, which tied the codes to the

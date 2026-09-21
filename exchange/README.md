@@ -177,7 +177,8 @@ Proposed: **whatever sits behind a port says everything about it**
 (`ex-extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
 rings. One serial word, which the marker's scanner reads at every visit, carries
 the class and its options: a trunk's direction, a hunt group, a warm line, or
-the port it is nailed to; class *restricted* is its own code. A plain line card
+the port it is nailed to; class *restricted* is its own code (`z w b L`: 0-only,
+reserved, busy-inbound, local-only). A plain line card
 says all of it with no part, its word pin tied to ground. The earlier class on
 three pins is gone, and with it three commutators a block. Every circuit is
 still to draw. Nothing has been on a bench.
