@@ -173,6 +173,8 @@ module marker #(
     wire [1:0] p_dir    = p_word[4:3];
     wire       p_g      = p_word[5];
     wire       p_n      = p_word[6];
+    // Line option P (extensions.md 2.4.1): frame 5 on an explicit class-line word.
+    wire       p_pri    = (p_cls == C_LINE) && p_word[4];
     wire       p_free   = !p_busy && !p_m;
 
     // ---------------- the write queue and the serialiser ----------------
@@ -192,6 +194,8 @@ module marker #(
     reg        ovf_done;               // ... and has been sent: wq_ovf is sticky
     reg        arb;                    // a caller has been refused a register and
                                        // none has been handed out since
+    // Priority under register overload (extensions.md 2.4.1).
+    reg        pwait, pwait_seen;
     // One flip-flop: the marker has let go of cable B.  While it is set the
     // '244 is off, the write sequencer starts nothing, and no visit is
     // trusted -- the block driving PB is the one the CONSOLE's word names.
@@ -346,6 +350,7 @@ module marker #(
     reg        att;                    // a register was attached THIS cycle (blocking)
     reg        conn;                   // a call connected to p_port THIS visit (blocking)
     reg        already;
+    reg        pri_wait_v;             // priority call request still waiting this visit
     reg [2:0]  nd;
     reg [3:0]  dg0, dg1;
 
@@ -371,6 +376,7 @@ module marker #(
             ser_req <= 0; ser_strobe <= 0; ser_dst <= 0; ser_src <= 0;
             ser_bsy <= 0; ser_clm <= 0; ser_g <= 1'b1; ser_ev <= 1'b0;
             ovf_pend <= 1'b0; ovf_done <= 1'b0; arb <= 1'b0;
+            pwait <= 1'b0; pwait_seen <= 1'b0;
             reg_attach <= 0; reg_port <= 0; reg_release <= 0; reg_restart <= 0;
             mon_ack <= 0;
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
@@ -398,7 +404,7 @@ module marker #(
             mon_ack     <= 1'b0;
             wr_stb      <= 1'b0;
             hb = 1'b0; pk = {NREG{1'b0}}; conn = 1'b0;
-            legclm = 1'b0; att = 1'b0;
+            legclm = 1'b0; att = 1'b0; got = 1'b0; pri_wait_v = 1'b0;
 
             // ---- probe -------------------------------------------------
             // M, BUSY and the card's word all arrive in this port's own cell:
@@ -784,6 +790,9 @@ module marker #(
                 end else if (p_cls == C_LINE || p_cls == C_OPER) begin
                     // a caller: the first free register.  None free, and the
                     // caller simply waits -- the scanner will be back in 8 ms.
+                    // Under PWAIT, a non-priority line waits even with a free
+                    // register until a full revolution finds no priority lift
+                    // still wanting one (extensions.md 2.4.1).
                     already = 1'b0;
                     pick = -1;
                     for (r = 0; r < NREG; r = r + 1) begin
@@ -809,7 +818,7 @@ module marker #(
                     if (!already && pick < 0 && !arb) begin
                         arb <= 1'b1; push_ev(p_port, EV_WAITREG);
                     end
-                    if (!already && pick >= 0) begin
+                    if (!already && pick >= 0 && (p_pri || !pwait)) begin
                         if (att) n_defer <= n_defer + 1'b1;
                         else begin
                             arb <= 1'b0;
@@ -820,9 +829,20 @@ module marker #(
                             ctx_clm[pick] <= 1'b0; f1[pick] <= 1'b0; f2[pick] <= 1'b0;
                             hold[pick] <= 2'd3;   // the store is the last caller's for a cycle yet
                             pk[pick] = 1'b1;
+                            got = 1'b1;
                         end
                     end
+                    if (p_pri && !already && !got)
+                        pri_wait_v = 1'b1;
                 end
+            end
+
+            // ---- PWAIT: accumulate, and close the revolution at 77 ------
+            if (pri_wait_v && p_port != 6'o77)
+                pwait_seen <= 1'b1;
+            if (visit && p_valid && p_port == 6'o77) begin
+                pwait <= pwait_seen | pri_wait_v;
+                pwait_seen <= 1'b0;
             end
         end
     end

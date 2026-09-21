@@ -27,7 +27,7 @@ The short answers, before the detail:
   bridge leg all say it with the parts a nail takes today.
 - **No second byte.** A port that already carries class or options cannot also
   *answer to* a number in this plan: use a plain member beside it, or the old
-  `o` run. `w` stays lifts-to-04. Pin `a14` stays spare.
+  `o` run. Warm stays on restricted (`extensions.md` §2.4). Pin `a14` stays spare.
 - **A bridge is a group, at no cost**: its legs answer to its number (or keep the
   `o` run of `conference.md` §6), as ordinary lines with `/ANS` low.
 - **§6** (extensions that ring together through a bridge) and **§3–§4** (secondary
@@ -74,8 +74,8 @@ the run should become a comparison, and the question is what to compare.
 
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
-in the word. A line's options have one bit spare; restricted uses all four
-(`z w b L`, with `w` reserved) (`extensions.md` §2.4).
+in the word. A line's options have one bit spare (frame 7; frame 5 is priority); restricted uses all four
+(`z w b L`, with `w` = warm) (`extensions.md` §2.4).
 Spending all four of a class's option bits gives sixteen groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one
 people dial. That is the tight encoding. §2 is the loose one, and it needs no
@@ -114,7 +114,7 @@ word". That quarter is a number:
 ### 2.2 The rule
 
 ```
- called = h s     from the dial · from a key · 04, for a warm line and for a CO line ringing in
+ called = h s     from the dial · from a key · 04, for a warm restricted line and for a CO line ringing in
    probe h s      as now.  Free, and a port this caller may be given → connect, two writes.  A source → one write
    otherwise      hunt, in fixed order from 00: the first free port that answers to h s → connect
    none           cannot-complete
@@ -210,8 +210,8 @@ the hunt is in use for under three seconds of the hour.
 > *lifts to* number. Conference legs were the main customer; they no longer
 > need it. Without that path: a restricted phone (class `111`) cannot also
 > *answer to* a number in the same word — use a plain cover member or the `o`
-> run; *lifts to* any number other than 04 is not offered (`w` remains
-> lifts-to-04); one phone covers one number, not two. Pin `a14` is spare again.
+> run; warm (`w`) is lift-to-operator only, not an arbitrary *lifts to*
+> number; one phone covers one number, not two. Pin `a14` is spare again.
 
 ---
 

@@ -26,7 +26,7 @@ Every port says what it is in a **word**: eight bits that whatever sits behind
 it sends, one a frame, on one pin (`extensions.md` §2.2). A card sends it for
 its one port, and a trunk card for each of its six channels (`network.md`
 §1). The word carries a 3-bit class and four options that depend on the class: a
-trunk's direction, a hunt group, a warm line. Or it names the port this one
+trunk's direction, a hunt group, priority, a warm restricted line. Or it names the port this one
 is nailed to. **Class *restricted*** is its own code (`fabric.md` §3.5), not
 an option. **A plain line card ties the pin to ground**, which reads all ones
 and means a line with no options. The marker's probe reads the word at every
@@ -53,10 +53,11 @@ than hunted, and a radio or a clock that anyone may dial (`features.md`
 §6). *Data line* is a line the marker will not connect to a voice port. A
 conference bridge leg is an ordinary line (`conference.md` §6); class
 *conference* is retired. *Restricted* (`111`) options are `z w b L`
-(`extensions.md` §2.4): **0-only**, reserved (warm), **busy-inbound**,
+(`extensions.md` §2.4): **0-only**, **warm**, **busy-inbound**,
 **local-only**; bare restricted still floors as local-only. A line's options are
-`o w b ·` — overflow, warm, busy-out, spare — with `o`/`w`/`b` in the same
-frames as restricted and as overflow on operator and data.
+`o P b ·` — overflow, priority, busy-out, spare — with `o`/`b` in the same
+frames as restricted and as overflow on operator and data. Frame 5 is priority
+on a line and warm on restricted.
 
 **Proposed further** (`groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
@@ -77,7 +78,8 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
              itself → class 6               not free (BUSY or busy `b`), overflow set → try next
              not free → class 6 (busy tone) else → connect
- caller      class restricted: `z` → only 0; else `L` or floor → no 9 / no flood   (extensions.md §2.4)
+ caller      class restricted: `w` → lift as 0; `z` → only 0; else `L` or floor → no 9 / no flood
+             line `P`: under register overload, prefer (§2.4.1)   (extensions.md §2.4)
              busy `b` does not block a call request
 ```
 
@@ -116,8 +118,8 @@ a nail is never free and never a call request (`extensions.md` §3.1).
 **Seizure is handled by class too.** M rising on a free, idle port is a call
 request. Class 1 or 2: give a free register the caller's number; point the
 caller at dial tone. Class 3 — a CO line ringing in, from a caller who cannot
-dial — **is routed as if it had dialled 0**, and so is a line whose word says
-warm line (`extensions.md` §2.4). Class 4 is the network card's, and a hunt
+dial — **is routed as if it had dialled 0**, and so is a **restricted** line
+whose word says warm (`extensions.md` §2.4). Class 4 is the network card's, and a hunt
 for one is steered by that card on `/HUNT_INH` (§4): the marker hunts the class
 and never knows which way a trunk faces.
 

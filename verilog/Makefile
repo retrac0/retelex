@@ -29,8 +29,9 @@ TB_console := tb/con_site.v tb/bitpath.v tb/tb_console.v
 TB_panel  := tb/tb_panel.v
 TB_tone   := tb/tb_tone.v
 TB_tonex  := tb/tb_tonex.v
+TB_priority := tb/net_site.v tb/tb_priority.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex priority
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 

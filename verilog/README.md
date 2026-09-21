@@ -84,6 +84,7 @@ make ring     four exchanges in a ring, and the strap that breaks it
 make erlang   the monitor pool against monitor.md 4's sizing table
 make stress   a FULL exchange -- 48 lines -- under random traffic
 make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
+make priority extensions.md 2.4.1: under register overload, PWAIT prefers a priority line
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
 make ring-open    the same ring with the strap OUT: the flood circles

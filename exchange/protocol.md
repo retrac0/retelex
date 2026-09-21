@@ -247,8 +247,9 @@ exchange's code, then the line — that reaches a line on any exchange, are
 exchange uses the first two (`extensions.md` §2):
 
 - **The word, on a12**: eight bits, one a frame, every octet. It carries the
-  port's class and its options (a trunk's direction, a restricted line, a hunt
-  group), or the port it is nailed to. The block commutates it onto one wire that
+  port's class and its options (a trunk's direction, a hunt group, priority,
+  restricted warm / `z` / `L` / `b`), or the port it is nailed to. The block
+  commutates it onto one wire that
   only the marker reads, and the marker's scanner reads the whole word at each
   visit. **A plain line card ties the pin to ground**, which reads all ones and
   means a line with no options: no part and no jumper. An empty slot reads all

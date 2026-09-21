@@ -46,6 +46,11 @@ module net_site #(
     // Which ports hold line cards.  The default is the two of mvp.md 1;
     // a stress run fills whole blocks with them.
     parameter [63:0]  LINE_PORTS = 64'h0000_0000_0003_0000,
+    // Per-port line words for 20–22 (extensions.md 2.2 / 2.4.1). Default all-ones
+    // is a grounded plain pin; an explicit class-001 word with bit 4 set is priority.
+    parameter [7:0]   LINE_WORD_20 = 8'hFF,
+    parameter [7:0]   LINE_WORD_21 = 8'hFF,
+    parameter [7:0]   LINE_WORD_22 = 8'hFF,
     parameter integer NMON = 2,                  // cells in each block's pool (4)
     parameter integer NREG = 2,                  // registers in the pool
     parameter integer NRES = 2                   // resolvers: a forward is held until it resolves (3.2)
@@ -150,7 +155,11 @@ module net_site #(
     genvar p;
     generate for (p = 0; p < 64; p = p + 1) begin : line
         if (LINE_PORTS[p]) begin : fitted
-            line_card u_c (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
+            line_card #(.WORD(
+                (p == 6'o20) ? LINE_WORD_20 :
+                (p == 6'o21) ? LINE_WORD_21 :
+                (p == 6'o22) ? LINE_WORD_22 : 8'hFF
+            )) u_c (.clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
                            .tx(tx[p]), .rx(rx[p]), .m(hook[p]), .e(e[p]),
                            .c_tx(c_tx[p]), .a_tx(a_tx[p]),
                            .c_rx(c_rx[p]), .a_rx(a_rx[p]),
@@ -309,5 +318,6 @@ module net_site #(
         .any_claimed(got_claim), .dirs_held(dirs_held),
         .fan_legs(fan_legs), .res_used(res_used), .wq_ovf(wq_ovf),
         .n_defer(n_defer), .wr_stb(wr_stb), .wr_dst(wr_dst),
-        .wr_src(wr_src), .wr_bsy(wr_bsy), .wr_clm(wr_clm));
+        .wr_src(wr_src), .wr_bsy(wr_bsy), .wr_clm(wr_clm),
+        .con_n(1'b1), .bus_oe());
 endmodule
