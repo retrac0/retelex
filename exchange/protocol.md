@@ -142,6 +142,10 @@ what they bought:
 | allocated talk slots, 16 to a highway at 1.024 Mbps | a port holds a slot only while it is in a call, so a listener need only reach the slots in use | a second rate; ≈ 8 packages a port against 5 |
 | the same in MF8's own frame at 512 kbps, highways pooled in fours | one rate, sixteen banks in one stage | ≈ 11 packages a port: four to six packages a line more than anything else here |
 
+The four rows are junctors, a 244 ns cell, allocated slots, and pooling
+highways. A bigger fabric of the same highways still costs a third octal
+digit (`big-exchange.md`). The exchange stays 8 × 8.
+
 ---
 
 ## 4. Measured: the highway, cell by cell

@@ -10,7 +10,8 @@ by class in fixed order, and features that are lines.
     aline     digits as serial characters on the A bit, through one to seven trunk hops
     flood     the timing of a network call: the key 1, live pulses, e and b, the claim
     monitor   the trunk monitor: which rules keep a flood from ever claiming a wrong number
-    timing    the fabric's circuit in nanoseconds: strobes, capture, and what a card samples
+    timing    the fabric's circuit in nanoseconds: strobes, capture, and what a card samples;
+              then the same draws at 16 and 32 slots, 74HC and a 74AC highway path
     mainboard what a ribbon between the blocks costs those margins: clock skew, the line, the edges
     confer    a conference with no codec in it: the bridge switches bits to whoever is talking
     ss0       a common signalling channel: the number as one message a link, forward only
@@ -41,7 +42,7 @@ Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the r
         python3 sim/exch.py net        network.md   §5.1
         python3 sim/exch.py topo       topology.md
         python3 sim/exch.py monitor    monitor.md   §5
-        python3 sim/exch.py timing     fabric.md    §4
+        python3 sim/exch.py timing     fabric.md    §4, big-exchange.md §2
         python3 sim/exch.py mainboard  mainboard.md §5
         python3 sim/exch.py confer     conference.md
         python3 sim/exch.py ss0        ss0.md
@@ -1503,8 +1504,17 @@ CELL = 1e9 / 512e3            # 1953.1 ns; HCLK is high for the first half of a 
 HC = {                        # 74HC at 4.5 V: (typical, maximum over -40..85 C), ns, from the data sheets' tables
     '163 clk-Q': (18, 43), '175 clk-Q': (17, 43), '138 A-Y': (15, 40), '138 E-Y': (17, 45),
     '151 S-Y': (25, 63), '151 I-Y': (19, 47), '151 I-W': (21, 50), '157 I-Y': (13, 31), '157 S-Y': (15, 38),
-    '244': (10, 28), '74 clk-Q': (16, 44), 'card clk-C_TX': (20, 50), 'wire': (2, 12)}
+    '244': (10, 28), '74 clk-Q': (16, 44), 'card clk-C_TX': (20, 50), 'wire': (2, 12),
+    '32 I-Y': (9, 22)}        # extra OR on a 16:1 or 32:1 built from '151s
 T_SU, T_H = 20.0, 5.0         # a 74HC74's set-up and hold, worst case
+# 74AC at 5.0 V ± 0.5 V, −40..85 C, 50 pF (Fairchild / ON / ST, same parts as HC).
+# Channel cards stay 74HC: 'card clk-C_TX' is never taken from this table.
+AC = {
+    '163 clk-Q': (6.5, 11), '175 clk-Q': (6.0, 9.5), '138 A-Y': (6.5, 10.5), '138 E-Y': (6.5, 11.5),
+    '151 S-Y': (8.5, 12.5), '151 I-Y': (6.0, 10.0), '151 I-W': (6.5, 10.5),
+    '157 I-Y': (5.0, 9.0), '157 S-Y': (5.5, 9.5),
+    '244': (4.0, 8.0), '74 clk-Q': (5.0, 10.0), '32 I-Y': (3.5, 7.5), 'wire': (2, 12)}
+T_SU_AC, T_H_AC = 3.0, 1.0    # a 74AC74's set-up and hold, worst case
 
 
 def timing():
@@ -1566,6 +1576,98 @@ def timing():
     print('     on the two edges of a strobe that is high for the middle half (the \'151 gives both senses).')
     print(f'       C: set-up {(capC - valid - T_SU).min():6.0f} ns, hold {(swap - capC - T_H).min():6.0f} ns;   '
           f'A: set-up {(capA - mux - T_SU).min():6.0f} ns, hold {(CELL + first_change - capA - T_H).min():6.0f} ns')
+
+    timing_scale()
+
+
+def timing_scale():
+    """The same draws as timing 1–5, at 16 highways and at 16/32 slots, 74HC and a 74AC highway path.
+
+    Gate delays do not scale with the cell.  A 16:1 is two '151s and a '32; a 32:1 is
+    two of those and another '32.  Channel cards stay 74HC even when the highway is AC.
+    """
+    N = 400000
+    print('\n  6. The same circuit at 16 highways (still 512 kbps, a cell of 1 953 ns), 16 slots (1.024 Mbps, 977 ns)')
+    print('     and 32 slots (2.048 Mbps, 488 ns).  Gate delays do not scale.  16:1 is two \'151s and a \'32;')
+    print('     32:1 is two of those and another \'32.')
+    print('     Channel cards stay 74HC.  AC, where used, is the highway path only (commutator, driver, select, capture).')
+    print('     extra_data is a \'32 after a 16:1 commutator and/or a 16:1 highway select;')
+    print('     extra_strobe is a \'32 on a 16:1 slot select.  8 × 8 is timing 1–5.\n')
+
+    def one(label, cell, fam, t_su, t_h, extra_data=0, extra_strobe=0, loss=0.0):
+        rng = np.random.default_rng(2)
+        def d(name, table=fam):
+            if name == 'card clk-C_TX':
+                t, m = HC[name]
+            else:
+                t, m = table[name]
+            return rng.uniform(0.35 * t, m, N)
+        clkX, clkY = d('244'), d('244')
+        via_card = (clkX + d('card clk-C_TX') + d('157 I-Y') + d('151 I-Y') + d('244')
+                    + d('wire') + d('244') + d('151 I-Y'))
+        via_count = d('163 clk-Q') + d('wire') + clkX + d('151 S-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+        for _ in range(extra_data):
+            g = d('32 I-Y')
+            via_card, via_count = via_card + g, via_count + g
+        valid = np.maximum(via_card, via_count)
+        first_change = np.minimum(via_card, via_count)
+        addr = cell / 4 + d('175 clk-Q') + d('wire') + d('244') + d('138 A-Y')
+        en = cell / 2 + clkY + d('138 E-Y')
+        cap = en + d('151 I-W')
+        for _ in range(extra_strobe):
+            cap = cap + d('32 I-Y')
+        q = cap + d('74 clk-Q')
+        cardclk = clkY + d('wire')
+        mux = cell / 2 + clkX + d('157 S-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
+        for _ in range(extra_data):
+            mux = mux + d('32 I-Y')
+        capC = cell / 4 + clkY + d('138 E-Y') + d('151 I-W')
+        capA = 3 * cell / 4 + clkY + d('138 E-Y') + d('151 I-Y')
+        for _ in range(extra_strobe):
+            capC, capA = capC + d('32 I-Y'), capA + d('32 I-Y')
+        swap = cell / 2 + 0.35 * (fam['244'][0] + fam['157 S-Y'][0] + fam['151 I-Y'][0]
+                                  + 2 * fam['244'][0] + fam['wire'][0] + fam['151 I-Y'][0])
+        su = (cap - valid - t_su - loss).min()
+        hd = (cell + first_change - cap - t_h + loss).min()
+        before = (cell / 2 - addr).min()
+        after = (cell / 4 - (clkY + d('138 E-Y'))).min()
+        suC = (capC - valid - t_su - loss).min()
+        hdC = (swap - capC - t_h).min()
+        suA = (capA - mux - t_su - loss).min()
+        hdA = (cell + first_change - capA - t_h + loss).min()
+        slot7 = (cell + cardclk - q - t_su).min()
+        print(f'     {label}')
+        print(f'       highway bit valid by {valid.max():.0f} ns (typical {np.median(valid):.0f})'
+              f'{f"; cable costs {loss:.0f} ns of set-up" if loss else ""}')
+        print(f'       SLOTQ settled {before:6.0f} ns before enable, moves {after:6.0f} ns after disable')
+        print(f'       capture {cap.min():.0f}–{cap.max():.0f} ns;  set-up {su:6.0f} ns;  hold {hd:6.0f} ns')
+        print(f'       economy C: set-up {suC:6.0f} ns, hold {hdC:6.0f} ns;   '
+              f'A: set-up {suA:6.0f} ns, hold {hdA:6.0f} ns')
+        print(f'       slot-last C_RX settled {slot7:6.0f} ns before the card samples')
+        return su, before, suC
+
+    one('8 × 16,  74HC: 16:1 commutator, highways still 8:1, 16:1 slots',
+        1e9 / 1.024e6, HC, T_SU, T_H, extra_data=1, extra_strobe=1)
+    one('8 × 16,  74HC, eight blocks on 2 m (clock at one end)',
+        1e9 / 1.024e6, HC, T_SU, T_H, extra_data=1, extra_strobe=1, loss=skew(-RIB_X, n=8)[0])
+    one('16 × 16, 74HC: 16:1 commutator and highway select, 16:1 slots',
+        1e9 / 1.024e6, HC, T_SU, T_H, extra_data=2, extra_strobe=1)
+    one('16 × 16, 74HC, 16 blocks on 4 m (clock at one end)',
+        1e9 / 1.024e6, HC, T_SU, T_H, extra_data=2, extra_strobe=1, loss=skew(-RIB_X, n=16)[0])
+    one('16 × 8,  74HC: 16:1 highway select, slots still 8:1',
+        1e9 / 512e3, HC, T_SU, T_H, extra_data=1)
+    one('16 × 8,  74HC, 16 blocks on 2 m (clock at one end)',
+        1e9 / 512e3, HC, T_SU, T_H, extra_data=1, loss=skew(-RIB_X, n=16)[0])
+    one('32 × 8,  74HC, 32:1 highways, slots still 8:1', 1e9 / 512e3, HC, T_SU, T_H, extra_data=2)
+    one('8 × 32,  74HC, highways still 8:1, 32:1 slots', 1e9 / 2.048e6, HC, T_SU, T_H, extra_strobe=2)
+    one('8 × 16,  74AC highway / 74HC cards',
+        1e9 / 1.024e6, AC, T_SU_AC, T_H_AC, extra_data=1, extra_strobe=1)
+    one('16 × 16, 74AC highway / 74HC cards',
+        1e9 / 1.024e6, AC, T_SU_AC, T_H_AC, extra_data=2, extra_strobe=1)
+    one('8 × 32,  74AC highway / 74HC cards, 32:1 slots',
+        1e9 / 2.048e6, AC, T_SU_AC, T_H_AC, extra_strobe=2)
+    print('\n     A negative set-up is a miss across the spread: that geometry is not 74HC.')
+    print('     SLOTQ still uses a quarter-cell tap (2.048 MHz at 16 slots, 4.096 MHz at 32).')
 
 
 # -------------------------------------------------------------- mainboard

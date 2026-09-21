@@ -40,6 +40,7 @@ line. 8 and 9 stay special in the code.
 | [mvp.md](mvp.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
 | [protocol.md](protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
 | [fabric.md](fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
+| [big-exchange.md](big-exchange.md) | **analysis**: a bigger fabric in 74HC is possible — 128 ports costs a third octal digit, and there is nothing honest to do with it; the exchange stays **8 × 8**, 64 ports, 512 kHz, a highway an MF8 trunk (`exch.py timing` 6) |
 | [mainboard.md](mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
 | [marker.md](marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
 | [mini-marker.md](mini-marker.md) | **bring-up jig**: one register inside, two-digit local calls, no card word, no 1-prefix — throw it away when the real marker is fitted (`make mini`) |
@@ -75,7 +76,7 @@ python3 sim/exch.py announce   a message as a ROM of CVSD bits
 python3 sim/exch.py aline      serial characters on A over 1–7 trunk hops
 python3 sim/exch.py flood      the timing of a flooded call under 1 e b h s (arithmetic, not a simulation)
 python3 sim/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
-python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread
+python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread; then other cell widths (`big-exchange.md` §2)
 python3 sim/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
 python3 sim/exch.py confer     conference.md: speech detector, floor, switch
 python3 sim/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
@@ -102,7 +103,9 @@ out of the model, not out of the design.
 **Decided: the exchange stays 8 × 8 — 64 ports — and more lines are more
 exchanges.** Four
 ways of making one fabric bigger were worked through and set aside as too
-complex for what they bought (`protocol.md` §3.1). A chain of four or five
+complex for what they bought (`protocol.md` §3.1). The same highway method
+with more slots or more wires still costs a third octal digit
+(`big-exchange.md`). A chain of four or five
 48-line exchanges is comfortable on six-channel links while most calls stay
 home, and twenty work around a tandem hub of four twelve-channel directions
 (`network.md` §5). What limits a network is its flood, which every call that
