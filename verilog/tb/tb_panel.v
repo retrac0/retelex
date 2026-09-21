@@ -1,4 +1,4 @@
-// tb_panel -- the hook/busy display against the two cables.  hookbusy-display.md 7.
+// tb_panel -- the hook/busy display against the two cables.  hookbusy.md 7.
 //
 // The panel is a passive listener, so it is tested the way the counter card is:
 // drive the real clock card, drive ctl_write with the words the marker
@@ -15,7 +15,7 @@
 // Part 6 is the one that needed measuring.  A '259 is TRANSPARENT while
 // addressed, and mid-word the '164 holds rippling garbage, so the row the '138
 // names walks through every block while PB is briefly undriven and reading
-// LOW.  ex-observers.md 3 claims a lamp would be wrongly CLEARED and hold that
+// LOW.  observers.md 3 claims a lamp would be wrongly CLEARED and hold that
 // until its block's next visit.  Two identical stacks run side by side here,
 // one with the INH one-shot and one without, and the control is the point:
 // without it the fault is real and it is not small.
@@ -60,7 +60,7 @@ module tb_panel;
     // THE HAND-OVER, modelled.  Whatever the '164 names is what drives PB0,
     // and mid-word the '164 ripples: the decode walks, one block's '244 turns
     // off and the next turns on, and for that instant PB is undriven.  It is
-    // pulled LOW at the marker (exch-mainboard.md 6), so an undriven instant
+    // pulled LOW at the marker (mainboard.md 6), so an undriven instant
     // reads NOT BUSY.  This is not a pathological case injected by hand -- it
     // happens on every one of the sixteen shifts of every word.
     reg [2:0] dst_d = 3'd0;
@@ -158,14 +158,14 @@ module tb_panel;
 
     initial begin
         $display("");
-        $display("  tb_panel -- hookbusy-display.md, seventeen cards on a stack");
+        $display("  tb_panel -- hookbusy.md, seventeen cards on a stack");
         $display("");
 
         repeat (8) @(posedge clk); rst_n = 1; reset_n = 1;
         settle;
 
         // ---- 1. the hook field, with no marker at all --------------------
-        // Not one word has been on cable B.  exch-fabric.md 7 step 2 is a
+        // Not one word has been on cable B.  fabric.md 7 step 2 is a
         // clock card and one block, and the hook field is fitted there.
         hook_state = PAT_A; settle;
         $display("  1. the hook field with NO marker fitted -- cable A alone");
@@ -209,7 +209,7 @@ module tb_panel;
         // Every word above has already rippled its '164 through every block
         // while PB was undriven at each hand-over.  The INH stack has been
         // blind for the 31 us of each word and has lost nothing; the control
-        // has been writing all the way through them.  ex-observers.md 3.
+        // has been writing all the way through them.  observers.md 3.
         scan;
         $display("  6. the hand-over, on every word -- INH against no INH");
         wantn(stale(lamp, PAT_D), 0,
@@ -226,7 +226,7 @@ module tb_panel;
         // ---- 7. /RESET ----------------------------------------------------
         // The one signal that clears every latch in the exchange clears all 64
         // busy lamps in the same instant -- and does not put anyone's phone
-        // down, because the hook field's /CLR is tied high (ex-observers.md 2).
+        // down, because the hook field's /CLR is tied high (observers.md 2).
         hook_state = {64{1'b1}}; settle;
         @(posedge clk); reset_n = 0; repeat (8) @(posedge clk); reset_n = 1;
         settle;

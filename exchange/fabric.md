@@ -11,7 +11,7 @@ and any number of ports can listen to the same one.
 > third of typical and the data-sheet maximum for 74HC at 4.5 V, 400 000 trials,
 > the worst reported — **not a simulation of the gates, and not a bench**. No
 > schematic has been drawn. Package counts here are a parts list by function and
-> **replace the rounder estimate of `exch-protocol.md` §3**, which left out most of
+> **replace the rounder estimate of `protocol.md` §3**, which left out most of
 > the supervision.
 
 ---
@@ -102,7 +102,7 @@ What follows from the shape:
   a latch.
 - **A trunk block's highway is an MF8 frame with F and S given back**: the six
   channels are on slots 1–3 and 5–7, where they are on the wire, and slots 0 and
-  4 are ports of their own (`exch-protocol.md` §5). The
+  4 are ports of their own (`protocol.md` §5). The
   commutator is, part for part, the trunk transmitter's frame mux
   (`mf8-spec.md` §10). The trunk receiver's '259 is the same demultiplexing done
   for all the channels at once; a port wants one bit, so it has one flip-flop
@@ -118,10 +118,10 @@ eight puts a single '151 on each axis and runs the wires at MF8's own line rate.
 ## 2. The bus
 
 One clock domain. Everything below is on the mainboard or a ribbon between
-blocks; all 74HC at 5 V. **`exch-mainboard.md` is this table in full** — the
+blocks; all 74HC at 5 V. **`mainboard.md` is this table in full** — the
 thirty-eight signals, the two cables that carry them, the pinouts, and what the
 cable costs §4's margins (18 ns of 743). **The latch write is serial**
-(`exch-mainboard.md` §2.3): one sixteen-bit word on one wire, broadcast, in place
+(`mainboard.md` §2.3): one sixteen-bit word on one wire, broadcast, in place
 of the twenty conductors this table used to list.
 
 | signal | from | what |
@@ -130,13 +130,13 @@ of the twenty conductors this table used to list.
 | `SLOT[2:0]` | clock card, a 74HC163 | the cell number; changes at the start of the cell. Addresses every commutator |
 | `SLOTQ[2:0]` | clock card, a 74HC175 on the 1.024 MHz tap | **the same count a quarter of a cell late.** Addresses every strobe decoder, and nothing else (§3.2) |
 | `TX_CLK`, `TX_OCT`, `RX_OCT` | clock card | 64 kHz frame, 8 kHz octet, as `mf8-backplane.md` §3. **A card's `RX_CLK` pin is `TX_CLK`, and its `RX_OCT` is `TX_OCT` one frame late** (§3.4), from one flip-flop here |
-| `HB` | clock card | 1.024 MHz, the half-bit clock of `mf8-spec.md` §9.1. Only a trunk card wants it, and it is the fastest thing on the bus: **4.096 MHz never leaves the clock card** (`exch-mainboard.md` §8) |
+| `HB` | clock card | 1.024 MHz, the half-bit clock of `mf8-spec.md` §9.1. Only a trunk card wants it, and it is the fastest thing on the bus: **4.096 MHz never leaves the clock card** (`mainboard.md` §8) |
 | `FILL`, `/RING_CAD`, `TICK` | clock card | 32 kHz idle pattern; 2 s / 4 s, low true; 1 kHz |
-| `RBT` | **the ringback tone card**, through a buffer on the card | the ringback bit stream. One of the shelf-wide references and carried with them, but a tuned oscillator through a CVSD encoder does not belong on the clock card, so this one conductor is driven from a tone card's rear connector and **pulled to `FILL` at the clock card when none is fitted** (`exch-mainboard.md` §2.1, `tone-card.md` §5) |
+| `RBT` | **the ringback tone card**, through a buffer on the card | the ringback bit stream. One of the shelf-wide references and carried with them, but a tuned oscillator through a CVSD encoder does not belong on the clock card, so this one conductor is driven from a tone card's rear connector and **pulled to `FILL` at the clock card when none is fitted** (`mainboard.md` §2.1, `tone-card.md` §5) |
 | `HC[0..7]`, `HA[0..7]` | block *h* drives wire *h* | the highways. **One driver a wire**; every block listens to all sixteen through its own receivers. `HA` is also the marker's M highway |
-| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a nail (`ex-extensions.md` §2.2), one bit a frame. Commutated like the highways; only the marker reads them, so eight blocks share two wires |
-| `SDATA`, `SCLK` | marker, or the console | the latch write as one sixteen-bit word — `DST[5:0]`, `SRC[5:0]`, `BSY`, `CLM`, a guard bit — shifted to every block at once. Two '164 take it in and a '138 turns `DST[5:3]` into the eight lines the shunt picks `/BLK` off, so a block still needs no address and no comparator: "layout, not logic" (`exch-mainboard.md` §2.3) |
-| `WR`, `/RESET` | the same | the write, gated with `/BLK` and the guard bit; and the clear. **`/RESET` is the signal on the bus a glitch can hurt most**, and is filtered at every block; `SCLK` is the one it can hurt next, and costs one call (`exch-mainboard.md` §7) |
+| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a nail (`extensions.md` §2.2), one bit a frame. Commutated like the highways; only the marker reads them, so eight blocks share two wires |
+| `SDATA`, `SCLK` | marker, or the console | the latch write as one sixteen-bit word — `DST[5:0]`, `SRC[5:0]`, `BSY`, `CLM`, a guard bit — shifted to every block at once. Two '164 take it in and a '138 turns `DST[5:3]` into the eight lines the shunt picks `/BLK` off, so a block still needs no address and no comparator: "layout, not logic" (`mainboard.md` §2.3) |
+| `WR`, `/RESET` | the same | the write, gated with `/BLK` and the guard bit; and the clear. **`/RESET` is the signal on the bus a glitch can hurt most**, and is filtered at every block; `SCLK` is the one it can hurt next, and costs one call (`mainboard.md` §7) |
 | `/CON` | console | the console has the bus: marker goes high-Z |
 
 ---
@@ -189,13 +189,13 @@ port 00 is never fitted. It reads `FILL` and A = 0.
 If the operator were at 00, a port listening to the operator would ring
 whenever the operator lifted, and an off-hook phone waiting for a register would
 hear the operator's calls. That is why the operator is at 04
-(`exch-protocol.md` §5). The slot select is wired in order and the marker sends
+(`protocol.md` §5). The slot select is wired in order and the marker sends
 port numbers as they are. No parts, and nothing for a latch written by hand to
 get wrong.
 
 ### 3.4 No re-timing flip-flop
 
-`exch-protocol.md` §3 had a second flip-flop to move every `C_RX` change to the
+`protocol.md` §3 had a second flip-flop to move every `C_RX` change to the
 frame edge. It is not needed. **Every capture is in the middle of some cell, so
 nothing a card is given changes within half a cell of the frame edge — and the
 frame edge is where every card samples**, once `RX_CLK` is `TX_CLK`: the line
@@ -208,23 +208,23 @@ card.
 
 ### 3.5 A port: supervision
 
-`exch-marker.md` §5, in gates. M is the card's `A_TX`; E is the captured A.
+`marker.md` §5, in gates. M is the card's `A_TX`; E is the captured A.
 
 ```
  fM, fE    M and E, each through a diode-and-two-resistor RC into a 74HC14: up in 16 ms, down in 256
  release   the fall of fM, or of fE, differentiated and squared up  →  the '273's clear
  ON      = RINGS · /M · /fM        an on-hook port that rings — and not one that hung up a moment ago.  RINGS is
-                                   the card's /ANS pin left open (ex-extensions.md §2.3)
+                                   the card's /ANS pin left open (extensions.md §2.3)
  RB      = ON · E                  being rung: send RBT instead of C_TX              (the '157 of §3.1)
  A_RX    = E · /( ON · /RING_CAD ) ring in cadence while ON; otherwise E as it stands, which is what a
                                    trunk, an outside line and a data card want
- BUSY out= BUSY + fE + fM·/M       busy while either detector is still timing out     (exch-marker.md §5.2)
+ BUSY out= BUSY + fE + fM·/M       busy while either detector is still timing out     (marker.md §5.2)
 ```
 
 | function | part |
 |---|---|
 | Two detectors: filter, its inverse, the edge | 74HC14, two RC, two CR, two diodes |
-| Pull-ups for the card's `/ANS` and word pins (`ex-extensions.md` §2.1) | two resistors |
+| Pull-ups for the card's `/ANS` and word pins (`extensions.md` §2.1) | two resistors |
 | `ON`, `RB`, `A_RX`, the in-flight term, `BUSY` out, the clear | ½ 74HC02, ¾ 74HC08, ¼ 74HC00, ⅓ 74HC4075, ⅓ 74HC4073 |
 | | **≈ 3¼** |
 
@@ -234,10 +234,10 @@ the instant they seize one, and forward A is chopped by the ring cadence), of an
 outside line, of a conference bridge leg (which would wait up to 4 s for the
 cadence before it could answer, `conference.md` §6), and of any card that
 answers at once. Each such card ties the pin low, and a phone's card leaves it
-open (`ex-extensions.md` §2.3). The class does not enter into it: the port's
+open (`extensions.md` §2.3). The class does not enter into it: the port's
 gates never see the class at all.
 
-**The class is in the card's word** (`ex-extensions.md` §2.2), which only the
+**The class is in the card's word** (`extensions.md` §2.2), which only the
 marker reads:
 
 | class | | class | |
@@ -245,7 +245,7 @@ marker reads:
 | 000 | unequipped | 100 | outside line |
 | 001 | line | 101 | tie trunk. Its direction, N, S, E or W, and its glare bit are among the word's option bits |
 | 010 | operator | 110 | data line |
-| 011 | source: a radio, a clock, a test tone (`exch-features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z w b L` (`ex-extensions.md` §2.4). Conference leg as a class is retired: a bridge leg is an ordinary line |
+| 011 | source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z w b L` (`extensions.md` §2.4). Conference leg as a class is retired: a bridge leg is an ordinary line |
 
 An empty slot sends no word and reads 000. An earlier form carried the class on
 three pins and took "rings" from one of its bits, which tied the codes to the
@@ -253,7 +253,7 @@ ringing. With the class in the word and `/ANS` on a pin, the codes are free, and
 a plain line card says both with no part: its word pin tied to ground, its `/ANS`
 pin open.
 
-This renumbers `exch-marker.md` §1's classes, adds *source*, *data line* and
+This renumbers `marker.md` §1's classes, adds *source*, *data line* and
 *restricted*, and has the marker reach the two tones by address rather than by
 hunt. It is **proposed, not yet applied there or in the `calls` model**.
 
@@ -315,7 +315,7 @@ settles **121 ns after its own enable**, which is §3.2's hazard walked straight
 back in. Addressed by plain `SLOT` it settles 367 ns before the enable and moves
 431 ns after the disable — §4's margin, kept, for nothing. So the economy form
 takes the '175 off the clock card and three more conductors off the cable, and
-the count is **eleven wires, not eight**. `exch-mainboard.md` §9 says why that
+the count is **eleven wires, not eight**. `mainboard.md` §9 says why that
 number matters more than the packages: at eight highways and no `SLOTQ` the
 fabric cable is twenty conductors, which is 1-in-1 grounding in the same 64-way,
 which is that section's own named cure for the one estimate in this design that
@@ -330,7 +330,7 @@ could still be wrong.
 2. **One block, no cards.** Every `C_TX` pulled to `FILL`: `HC[h]` is `1010`. Strobe
    line *k* low for the second half of cell *k* and at no other time — trigger on
    any edge outside it, with the block warm and cold.
-3. **The console** (`exch-features.md` §4): write a latch by hand, read `BUSY` back on
+3. **The console** (`features.md` §4): write a latch by hand, read `BUSY` back on
    the probe bus. Point port 3 at port 5; a data card's pattern in slot 5 comes
    out of slot 3 one frame late.
 4. **A cleared latch**: hold `/RESET`, and every `C_RX` is `FILL` with every `A_RX`
@@ -352,7 +352,7 @@ could still be wrong.
   any instant; the select's output may pulse and capture one wrong bit, which is
   the single bit `exch.py fabric` 6 allows for a re-point. Not analysed further.
 - **Sixteen highways across eight blocks on a ribbon or a mainboard**: worked
-  through in `exch-mainboard.md`. Loading and the series resistors are settled
+  through in `mainboard.md`. Loading and the series resistors are settled
   there — 193 pF and 100 Ω, which buys an edge three times the cable's round
   trip. **Crosstalk is still an estimate**, and is the one number there that
   would change the design if it were wrong.

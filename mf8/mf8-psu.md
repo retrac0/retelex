@@ -188,4 +188,4 @@ two). Do not daisy-chain plant returns through channel cards into logic ground.
 - **Thermal on 100 × 100** at ~50 W talk-battery class — may force a taller stack pitch, heatsink, or derating below 1 A.  
 - **Safety / creepage** for −48 and ~80 Vrms beside a 15–18 V inlet on the noisy board — still required; deriving HV from LV does not retire it.  
 - **Hot-plug** of PSU boards or channel layers with feeds live — not considered.  
-- **Exchange blocks** — out of scope; they keep per-subrack PSUs and never put −48 or `RING` on Cable A (`exch-mainboard.md` §2.4).
+- **Exchange blocks** — out of scope; they keep per-subrack PSUs and never put −48 or `RING` on Cable A (`mainboard.md` §2.4).

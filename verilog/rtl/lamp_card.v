@@ -1,10 +1,10 @@
-// lamp_card -- ONE CARD of the hook/busy display.  hookbusy-display.md 2.
+// lamp_card -- ONE CARD of the hook/busy display.  hookbusy.md 2.
 //
 // One 74HC259, eight LEDs, eight resistors, two shunt columns and a mode
 // block.  Sixteen of these stand at 0.4 inch on a pin-header stack and a
 // seventeenth -- common_card -- carries the word decode and the tap on the two
 // cables.  ONE PCB IN SIXTEEN COPIES: the card knows nothing, and two shunts
-// and a jumper say what it is.  That is exch-mainboard.md 2.1's bargain one
+// and a jumper say what it is.  That is mainboard.md 2.1's bargain one
 // level down -- "the cable is common, the board is position-wired, and the card
 // knows nothing" -- and it is why any card works in any position and one spare
 // covers eight.
@@ -18,17 +18,17 @@
 //     BUSY   PB0      LEB[h]    /RESET      once a scan      freezes
 //
 // THE TWO HALVES COME OFF DIFFERENT CABLES AND FAIL DIFFERENTLY, which is the
-// whole of ex-observers.md 1.  HA is on cable A and every tap sees all eight
+// whole of observers.md 1.  HA is on cable A and every tap sees all eight
 // highways at once, so a hook card is eight packages of nothing and is fitted
 // at bring-up step 2, before a marker exists.  BUSY is not on the cable at all:
 // a block commutates its eight ports' BUSY onto PB0, eight blocks share that
-// one wire, and only the block /BLK names drives it (exch-mainboard.md 2.2,
+// one wire, and only the block /BLK names drives it (mainboard.md 2.2,
 // "only the marker reads them, so eight blocks share two wires").  So a busy
 // card sees a moving EIGHT-PORT WINDOW, positioned by whatever the last
 // sixteen-bit word named, and what moves it is the marker's attention.
 //
 // The card carries NO GATE.  Its busy /LE arrives already gated, because the
-// common card's '138 does that with its own enables (hookbusy-display.md 3).
+// common card's '138 does that with its own enables (hookbusy.md 3).
 `timescale 1ns/1ps
 
 module lamp_card #(

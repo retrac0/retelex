@@ -1,6 +1,6 @@
 // source_card -- a card that talks and never listens: dial tone at 10,
 // cannot-complete at 14, or a radio or a clock anyone may dial
-// (exch-features.md 6, exch-fabric.md 3.5's class "source").
+// (features.md 6, fabric.md 3.5's class "source").
 //
 // It needs no port circuit in the full design -- a source never listens -- and
 // it ties /ANS low so its port never rings.  In hardware the bits are a tuned

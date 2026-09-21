@@ -1,10 +1,10 @@
 # The exchange — groups: a number in the word, and a bridge that is a group
 
 The marker finds a port it was not given the address of in three ways, and each
-was written for one purpose. `exch-marker.md` §3 hunts a **class**, for 0 and
-for 9. `ex-extensions.md` §2.4 walks a **run** of adjacent ports marked `o`, for
+was written for one purpose. `marker.md` §3 hunts a **class**, for 0 and
+for 9. `extensions.md` §2.4 walks a **run** of adjacent ports marked `o`, for
 a hunt group and for a conference bridge (`conference.md` §6). And
-`exch-network.md` §3.2 hunts a trunk by its **direction**. A second operator's
+`network.md` §3.2 hunts a trunk by its **direction**. A second operator's
 position, a sales desk, a pool of data ports, a bridge's legs and a bank of
 call-in lines are all one request — *the first free port of these* — and only
 the trunk hunt is really a different one.
@@ -48,13 +48,13 @@ The short answers, before the detail:
 
 | | written for | finds | built |
 |---|---|---|---|
-| **a class** (`exch-marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
-| **a run** (`ex-extensions.md` §2.4, `conference.md` §6) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
-| **a direction** (`exch-network.md` §3.2) | tie trunks | a free trunk facing each way | in `verilog`, and measured there |
+| **a class** (`marker.md` §3) | 0, 9 | the first free port of the class, in fixed order from 00 | in `verilog`; measured in `calls` |
+| **a run** (`extensions.md` §2.4, `conference.md` §6) | a hunt group, a bridge | from the dialled port onward, the first free port, while each busy one has `o` set | no |
+| **a direction** (`network.md` §3.2) | tie trunks | a free trunk facing each way | in `verilog`, and measured there |
 
 **The class hunt cannot make a second group.** One class is one group. A bank of
 call-in lines on key 8 would be a new class, and all eight codes are taken
-(`exch-fabric.md` §3.5).
+(`fabric.md` §3.5).
 
 **The run cannot lose a card.**
 
@@ -75,7 +75,7 @@ the run should become a comparison, and the question is what to compare.
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
 in the word. A line's options have one bit spare; restricted uses all four
-(`z w b L`, with `w` reserved) (`ex-extensions.md` §2.4).
+(`z w b L`, with `w` reserved) (`extensions.md` §2.4).
 Spending all four of a class's option bits gives sixteen groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one
 people dial. That is the tight encoding. §2 is the loose one, and it needs no
@@ -91,14 +91,14 @@ not the first free.
 
 ### 2.1 The form
 
-The word of `ex-extensions.md` §2.2 has two forms and two constants, and a
+The word of `extensions.md` §2.2 has two forms and two constants, and a
 quarter of its codes — bit 0 and bit 7 both set, short of all ones — mean "no
 word". That quarter is a number:
 
 ```
  frame of the octet    0    1  2  3    4  5  6  7
- class and options     0    c  c  c    p  p  p  p     as it is                         (ex-extensions.md §2.2)
- a nail                1    h  h  h    s  s  s  0     as it is                         (ex-extensions.md §3.1)
+ class and options     0    c  c  c    p  p  p  p     as it is                         (extensions.md §2.2)
+ a nail                1    h  h  h    s  s  s  0     as it is                         (extensions.md §3.1)
  answers to            1    h  h  h    s  s  s  1     NEW: a plain line that answers to h s
  a plain line          1    1  1  1    1  1  1  1     the pin tied to ground
  nothing               0    0  0  0    0  0  0  0     an empty slot; out of service; a link down
@@ -109,7 +109,7 @@ word". That quarter is a number:
 | **The card** | the word's parts as they are, ≈ 1¼ packages, with the number in the jumpers. It is a plain line in every other respect: class line, no options. Whether it rings is still `/ANS`, so an announcement card at the end of a hunt ties that pin low and says the rest in this form |
 | **The marker** | bit 0 set, bit 7 set, and not all ones: the nail's own decode with bit 7 taken the other way |
 | **77** | cannot be answered to in this form, which would be all ones. A group takes another number |
-| **Power-up** | a random byte is a nail or a number one time in two, where it was a nail one time in four. The hold-off of `ex-extensions.md` §2.2 already covers it, and a number held for 100 ms is harmless where a nail is not |
+| **Power-up** | a random byte is a nail or a number one time in two, where it was a nail one time in four. The hold-off of `extensions.md` §2.2 already covers it, and a number held for 100 ms is harmless where a nail is not |
 
 ### 2.2 The rule
 
@@ -126,7 +126,7 @@ word". That quarter is a number:
 
 - **"Otherwise" is every reason the probe fails**: busy, ringing, an empty slot,
   a card out of service, a trunk, the caller's own number. Each gave
-  cannot-complete at once (`exch-marker.md` §2), and now gives it one hunt later.
+  cannot-complete at once (`marker.md` §2), and now gives it one hunt later.
 - **The port that owns the number needs no word for this.** It is found by its
   address, as every port is. 04 is the operator's phone on a plain line card.
 - **A port that answers to a number keeps its own.** Dialled by its address it
@@ -138,18 +138,18 @@ word". That quarter is a number:
   issued then, and not at the end of the pass, because a first-free hunt has
   nothing to wait for. The class hunt as built in `verilog` notes the port and
   writes at the end of its pass, and a marker that probes a dialled port out of
-  the scanner's turn (`exch-marker.md` §4) can find that port still free in
-  between. What is left is two calls at one visit, and `exch-rtl.md` §2 has the
+  the scanner's turn (`marker.md` §4) can find that port still free in
+  between. What is left is two calls at one visit, and `rtl.md` §2 has the
   rule: the first takes the line and the second is told busy.
-- **A key's pilot sits in 00–07**, which nobody can dial (`exch-protocol.md`
+- **A key's pilot sits in 00–07**, which nobody can dial (`protocol.md`
   §5), so it collides with no line's number. A pilot need hold nothing: an empty
   slot fails the probe and the hunt follows. **0's pilot is 04 because the
   operator's phone is already there.**
 - **9 stays a class hunt.** An outside line needs its class in any case, for
-  ringing in (`exch-marker.md` §3), so the class hunt costs its card nothing,
+  ringing in (`marker.md` §3), so the class hunt costs its card nothing,
   and it is built. §4 has the trade.
 - **Across the network nothing changes.** `h s` means after `1 e b` what it
-  means at home (`exch-marker.md` §2), so a group, a covered number and a bridge
+  means at home (`marker.md` §2), so a group, a covered number and a bridge
   are reached from anywhere.
 
 ### 2.3 What a number gives
@@ -158,15 +158,15 @@ word". That quarter is a number:
 |---|---|
 | **a hunt group** | its members answer to the number people dial. A sales desk at 55 is the phone at 55 and two more, in any slots, that answer to 55. Any number of groups. The number may be an empty slot's, and then every member is found by the hunt |
 | **a second operator's position, and the night announcement** | lines that answer to 04. Class *operator* is not needed: its code is spare, and the first position's card carries no word at all |
-| **night service** | the operator's out-of-service switch (`ex-extensions.md` §2.2): 04 reads unequipped, and 0 goes on to whoever answers to 04 |
+| **night service** | the operator's out-of-service switch (`extensions.md` §2.2): 04 reads unequipped, and 0 goes on to whoever answers to 04 |
 | **cover** | a secretary's phone answers to 23. It rings when 23 is busy, switched out or pulled, and only then |
 | **a call-in bank on one digit** | key 8 strapped to a pilot, and the bank's lines answer to it |
-| **a message at the end** | an announcement card (`exch-features.md` §3), `/ANS` low, that answers to the number and sits after the group's last member |
+| **a message at the end** | an announcement card (`features.md` §3), `/ANS` low, that answers to the number and sits after the group's last member |
 | **a bridge** | §5 |
 
 ### 2.4 Fixed order is still the feature
 
-`exch-marker.md` §3's table survives:
+`marker.md` §3's table survives:
 
 | | |
 |---|---|
@@ -185,9 +185,9 @@ word". That quarter is a number:
 
 **Time.** The hunt is the class hunt's: up to a scan for the scanner to come
 round to 00 and a scan to go round, **two scans at most**, about 17 ms as
-`verilog` runs (`exch-rtl.md` §2). A caller to a busy number hears the tone that
+`verilog` runs (`rtl.md` §2). A caller to a busy number hears the tone that
 much later. **One scanner is one hunt at a time**, and a second call waits for
-it. At `exch-marker.md` §6's 480 calls an hour, were a third of them to hunt,
+it. At `marker.md` §6's 480 calls an hour, were a third of them to hunt,
 the hunt is in use for under three seconds of the hour.
 
 ### 2.6 What a number cannot do
@@ -195,10 +195,10 @@ the hunt is in use for under three seconds of the hour.
 - **No answer.** Cover is for busy and for out. Nothing times a ringing phone,
   so a call that rings unanswered rings on.
 - **Call waiting, transfer, camp-on, pre-emption.** Each needs something in
-  charge of a call, and nothing is (`exch-marker.md` §5). No width of word buys
+  charge of a call, and nothing is (`marker.md` §5). No width of word buys
   them.
 - **Another exchange.** The number is `h s`. A number elsewhere is four digits,
-  and the network has no sender to send them (`ex-extensions.md` §3.4).
+  and the network has no sender to send them (`extensions.md` §3.4).
 
 ---
 
@@ -270,12 +270,12 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 
 | where | what |
 |---|---|
-| `ex-extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class *restricted* at 111; **a14 stays spare** |
-| `exch-marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
-| `exch-features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the strap carries; legs as ordinary lines |
-| `exch-fabric.md` §3.5 | class 111 *restricted* |
-| `exch-protocol.md` §5, `exch-network.md` §2–3 | 0 and 8 as numbers; nothing of the hunt itself |
-| `mvp-ex.md`, `exch-rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no conference class; no `PB2` |
+| `extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class *restricted* at 111; **a14 stays spare** |
+| `marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
+| `features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the strap carries; legs as ordinary lines |
+| `fabric.md` §3.5 | class 111 *restricted* |
+| `protocol.md` §5, `network.md` §2–3 | 0 and 8 as numbers; nothing of the hunt itself |
+| `mvp.md`, `rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no conference class; no `PB2` |
 
 ---
 
@@ -287,9 +287,9 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
   power-up hold-off against a byte that is now a nail or a number one time in
   two.
 - **A failed probe that hunts.** Every call to a busy number takes the one hunt.
-  §2.5's load is arithmetic on `exch-marker.md` §6's calling rate, not a run.
+  §2.5's load is arithmetic on `marker.md` §6's calling rate, not a run.
 - **Taking a port at the visit that finds it**, against a direct call to that
-  port at the same visit (`exch-rtl.md` §2), and against the serialiser: the
+  port at the same visit (`rtl.md` §2), and against the serialiser: the
   write is on the bus some words after the visit, and the port reads free until
   it lands.
 - **A meet-me bridge as *answers to*** (§5), against the `o` run already in

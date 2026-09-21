@@ -1,11 +1,11 @@
-// tb_mvp -- exchange/mvp-ex.md: the minimum that makes calls.
+// tb_mvp -- exchange/mvp.md: the minimum that makes calls.
 //
 // Block 2 alone, port circuits at 20 and 21, no tones, no ringback card, no
 // trunks, no marker.  Two things are checked:
 //
-//   mvp-ex.md 2   everything absent reads as idle -- an absent block, an empty
+//   mvp.md 2   everything absent reads as idle -- an absent block, an empty
 //                 slot and a cleared latch all give FILL and A = 0
-//   mvp-ex.md 6.3 the latches written by hand are a hotline: lift one phone and
+//   mvp.md 6.3 the latches written by hand are a hotline: lift one phone and
 //                 the other rings, answer, talk, hang up in either order, and
 //                 both latches clear themselves.  A manual board with no marker.
 //
@@ -23,7 +23,7 @@ module tb_mvp;
     wire [63:0]  c_rx, a_rx;
 
     // The operator's console, on the serial control bus: the same sixteen-bit
-    // word the marker sends (exch-mainboard.md 2.3), driven by hand.
+    // word the marker sends (mainboard.md 2.3), driven by hand.
     reg        cw_req = 0, cw_bsy = 0, cw_clm = 0;
     reg  [5:0] cw_dst = 0, cw_src = 0;
     wire       cw_busy, sdata, sclk, wr;
@@ -36,7 +36,7 @@ module tb_mvp;
     reg  [2:0]   mode = 0;
     reg          fill_d = 0;
 
-    // The MVP, exactly as mvp-ex.md 1 fits it.
+    // The MVP, exactly as mvp.md 1 fits it.
     exch_top #(.BLOCK_FITTED(8'b0000_0100),
                .PORT_FITTED(64'h0000_0000_0003_0000),
                .PORT_RINGS({64{1'b1}}),          // /ANS open: plain line cards

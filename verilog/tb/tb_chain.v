@@ -8,7 +8,7 @@
 // latches, and the exchange forgets it -- no register, no digits, nothing that
 // knows where the call is going.  C faces W and has one direction.
 //
-// This is exch-network.md 3.1's worked example, one exchange shorter:
+// This is network.md 3.1's worked example, one exchange shorter:
 //
 //   A's 20 dials 1 2 4 2 1     the key seizes toward B; B patches onward to C;
 //                              every monitor hears e then b; B's b is 3 and it
@@ -22,13 +22,13 @@
 
 module tb_chain #(
     // Milliseconds of constant one-way delay on every link -- a carrier that is
-    // not a pair (exch-network.md 1.1).  IN THIS BENCH'S TIME BASE: the dial and
+    // not a pair (network.md 1.1).  IN THIS BENCH'S TIME BASE: the dial and
     // the register's windows run eight times life here, so the guard is 16 ms and
     // not 128, and 20 ms of carrier here is 160 ms of carrier in the world.
     // `make chain-delay` runs it at 20, which puts C's monitor 40 ms out from the
     // origin's seizure against that 16 ms guard -- two and a half times over it --
     // and the call still goes through, because the seizure and the caller's pulses
-    // ride the same wire and arrive equally late (exch-monitor.md 5.1).
+    // ride the same wire and arrive equally late (monitor.md 5.1).
     parameter integer DLY = 0
 ) ();
     localparam integer HIT = 1, ID = 16, CLR = 32;

@@ -608,7 +608,7 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
                  10         10    1.33          2      52.30                  8.58         48.43         40.48
                  10         10    1.33          3      17.34                  3.79         14.29          8.99
 
-  19. The minimum exchange (mvp-ex.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.
+  19. The minimum exchange (mvp.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.
       20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;
       then 20 dials the four first keys that find nothing here -- 0 (no operator), 9 (no outside line),
       1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).
@@ -901,7 +901,7 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
   whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse
   register can read (register.md 3.2): below it two digits run together, flood or no flood.
 
-  A CARRIER THAT IS NOT A PAIR.  exch-network.md 1.1 allows a carrier "about 2 ms of A path
+  A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path
   a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a
   jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that
   eats the origin's guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, 1000 calls a row.
@@ -1188,7 +1188,7 @@ NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, t
   bursty, 30 %, 2 registers      0.14 E   0.0 %       0.07 E          0.13 E    0.09 E   0.0 %
   bursty, 30 %, 1 register       0.14 E   0.0 %       0.08 E          0.13 E    0.09 E   0.0 %
 
-  5. The 5 s rule (exch-network.md 4).  1 % of network callers dial the key and stop.
+  5. The 5 s rule (network.md 4).  1 % of network callers dial the key and stop.
                                they were  trunks held, s   without the rule
   smooth, 30 % leaving                42            5.26              10.26
   bursty, 30 % leaving                28            5.26              10.26
@@ -1196,7 +1196,7 @@ NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, t
   bursty, 30 %, 2 registers           33            5.26              10.26
   bursty, 30 %, 1 register            26            5.26              10.26
 
-  6. Against the arithmetic of exch-network.md 5, with these codes' own floods (0.19 E a link):
+  6. Against the arithmetic of network.md 5, with these codes' own floods (0.19 E a link):
      at 30 % leaving a leaf link is predicted 1.28 E and 0.17 % blocking.  **Bursts leave
      the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.
 
@@ -1204,9 +1204,9 @@ NET -- a network of eight exchanges, in milliseconds: the flood, the monitors, t
 
 TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of
   48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, 2.73 s over all 64
-  (exch-network.md 4); each shape is worked with its own codes, the backbone's from 00-17.  An exchange
+  (network.md 4); each shape is worked with its own codes, the backbone's from 00-17.  An exchange
   faces four directions at most and fits eight trunk groups at most; it keeps 48 lines with two
-  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as exch-network.md 5
+  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as network.md 5
   and `net` agree it may be; "pair" is the worst end-to-end loss between two exchanges, "lost" the mean.
 
   1. Chains, 30 % of calls leaving.  "spread" is the flood crossing the network at a slow marker,
@@ -1294,7 +1294,7 @@ TOPO -- what shapes of network the protocol carries, and how large.  A line make
   tree, 12 ch, leaves: 12              17    636  0.62E   5.56 E on 12 ch   0.70%   1.40%   1.08%  3.15    4 hp   60 ms    4    4
   three tandems, leaves: 13            21    756  0.75E   5.80 E on 12 ch   0.93%   2.10%   1.37%  3.95    6 hp   92 ms    5    5
 
-  5. Rings.  A link strapped with n carries calls between its own two ends only (exch-network.md 3.3).
+  5. Rings.  A link strapped with n carries calls between its own two ends only (network.md 3.3).
                                      exch  lines  flood               worst link    pair    lost  hops  across  spread  mon  res
   chain of 4, 6 channels                4    192  0.11E   1.64 E on  6 ch   0.53%   0.84%   0.51%  1.67    3 hp   36 ms    2    0
   ring of 4, one link strapped          4    192  0.11E   1.26 E on  6 ch   0.16%   0.18%   0.10%  1.33    2 hp   24 ms    2    0
@@ -1305,7 +1305,7 @@ TOPO -- what shapes of network the protocol carries, and how large.  A line make
   two hubs, six leaves (net)            8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.27%  2.14    3 hp   44 ms    3    3
     and a strapped leaf-to-leaf link    8    348  0.20E   1.29 E on  6 ch   0.17%   0.35%   0.22%  2.06    3 hp   44 ms    3    3
 
-  6. The same families under SS0 (ex-ss0.md), whose seizure lasts only until the claim,
+  6. The same families under SS0 (ss0.md), whose seizure lasts only until the claim,
      taken as 0.4 s against the pulse flood's 2.0-3.8 s, and which needs no monitor and no guard.
                                                       pulse flood                          SS0
                                       exch  lines   worst   across  exch  lines   worst      PDD
@@ -1416,7 +1416,7 @@ TRAFFIC -- demand that is not smooth, and the same network at peak and off peak.
   herd         off peak      10.4    2.03      0.195  41.59 %     0.49     42.7 %     11.9    10.0     594
   herd         peak          30.1    4.70      0.156  36.85 %     1.39     82.4 %     43.8   258.9    1199
      "waited" is the share of callers the scanner had to come back to, which is dial tone
-     late and not a call lost (exch-marker.md 6).  42 herds were let loose.
+     late and not a call lost (marker.md 6).  42 herds were let loose.
 
      A BURST DOES NOT OFFER THE SAME CALLS, and that is not the model being wrong.  The
      cold rate is set so the mean over the cycle is the smooth one, which is exact for
@@ -1459,7 +1459,7 @@ TRAFFIC -- demand that is not smooth, and the same network at peak and off peak.
   [traffic: 6 s]
 
 BIG -- how near sixty-four exchanges the pulse flood will go, and what shape gets there.
-  The rules are Topology.md 1: four directions an exchange, eight trunk groups, the flood
+  The rules are topology.md 1: four directions an exchange, eight trunk groups, the flood
   sees a tree, sixty-four codes, and the whole flood inside the origin's 128 ms guard at a
   slow marker (12 ms a hop and 4 more at a hub).  Erlang B on a tree throughout,
   3 calls an hour of 48 s a line, and every call that leaves floods every link for
@@ -1508,7 +1508,7 @@ BIG -- how near sixty-four exchanges the pulse flood will go, and what shape get
   4. FULLY CONNECTED tandems.  Of the k(k-1)/2 links between k tandems only the k-1 of a
      chain may carry the flood, because the flood must see a tree; every other one is
      STRAPPED, and a strapped link carries calls between its own two ends only
-     (exch-network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:
+     (network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:
      Read the pairs: each is the SAME eight trunk groups at each tandem, spent on a chain
      of wide links or on a mesh of narrow ones.
                                          exch  lines  a/ex  flood            worst link    pair  hops  spread  mon  res
@@ -1551,11 +1551,11 @@ BIG -- how near sixty-four exchanges the pulse flood will go, and what shape get
      are the shapes that fill the numbering plan rather than the ones that carry the most.
 
   7. What the GUARD'S TAP buys.  The flood has to cross the network inside the origin's
-     guard (exch-monitor.md 3, rule 2), which is one tap on a counter -- 128 ms today, and
+     guard (monitor.md 3, rule 2), which is one tap on a counter -- 128 ms today, and
      12 ms a hop at a slow marker with 4 more at a hub.  It may go as far as the caller's
      own pause less the 130 ms the digit and the seizure take: a phone to ES 201 187 gives
      720 ms (register.md 2), so 590 ms, and 512 is the last tap under it.  A carrier's own
-     delay is NOT in this budget (exch-monitor.md 5.1); wander is.
+     delay is NOT in this budget (monitor.md 5.1); wander is.
 
       tap             a chain of 12 ch |          the largest network at 30 % leaving
             hops  exchanges what stops it |  exch  lines  a/ex        worst link  hops  spread

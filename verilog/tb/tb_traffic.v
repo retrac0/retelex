@@ -8,13 +8,13 @@
 // erlangs and loss, link by link and pool by pool, in the gates.
 //
 // THE SHAPE.  A chain of NHUB hubs, each carrying SPOKE spokes, each spoke a
-// chain of SLEN exchanges: the tandem-chain backbone of Topology.md 5 with
+// chain of SLEN exchanges: the tandem-chain backbone of topology.md 5 with
 // long spokes on it.  One set of parameters covers every shape the protocol
 // allows --
 //
 //     NHUB=n SPOKE=0            a chain of n
 //     NHUB=1 SPOKE=4 SLEN=1     a star: a hub and four spokes
-//     NHUB=2 SPOKE=3 SLEN=1     the reference of exch-network.md 5.1
+//     NHUB=2 SPOKE=3 SLEN=1     the reference of network.md 5.1
 //     NHUB=3 SPOKE=2 SLEN=2     a backbone of three tandems, spokes two deep
 //
 // -- and the wiring is arithmetic, so the same testbench is 2 exchanges or 14.
@@ -27,7 +27,7 @@
 //     MODEL 1  bursty   the same mean in BURSTS.  The network alternates hot
 //                       and cold; hot it is BURST_X times the rate, and the
 //                       cold rate is set so the mean over the cycle is the
-//                       same.  An office at a shift change (exch-network.md 5.1)
+//                       same.  An office at a shift change (network.md 5.1)
 //     MODEL 2  herd     smooth, with a FLASH CROWD on top: now and then a third
 //                       of every line in the network lifts inside a few
 //                       hundred milliseconds and they all dial the SAME
@@ -89,7 +89,7 @@ module tb_traffic #(
     parameter integer HERD_PC = 33,       // % of every line in the network
     parameter integer HERD_MS = 300,      // spread over this long
     // ---- the exchange ---------------------------------------------------
-    parameter integer NREG  = 3,          // registers a pool (exch-marker.md 6)
+    parameter integer NREG  = 3,          // registers a pool (marker.md 6)
     parameter integer NMON  = 3,          // monitor cells a trunk block
     parameter integer NRES  = 3,          // resolvers a hub
     parameter integer DT_WAIT = 1200,     // how long a caller waits for dial tone
@@ -98,7 +98,7 @@ module tb_traffic #(
     // One crystal for the whole network, or one an exchange.  Staggered clocks
     // cost the simulator an evaluation point for every exchange and buy nothing
     // here: the plesiochronous case is `make trunk-ppm` and `make stress-pair`,
-    // and a shared clock is the copper tie of exch-network.md 1 in any case.
+    // and a shared clock is the copper tie of network.md 1 in any case.
     parameter integer STAGGER = 0,
     parameter         TRACE = 1'b0
 ) ();
@@ -181,7 +181,7 @@ module tb_traffic #(
 
     // A code an exchange: e from 2, b from 1.  b = 0 is ten pulses, which
     // would make one exchange's floods three times another's for no reason
-    // (exch-network.md 2, "give the codes of fewest pulses to the busiest").
+    // (network.md 2, "give the codes of fewest pulses to the busiest").
     function integer code_e(input integer i); code_e = 2 + i / 7; endfunction
     function integer code_b(input integer i); code_b = 1 + i % 7; endfunction
 
@@ -235,7 +235,7 @@ module tb_traffic #(
     wire [NREG-1:0] rg [0:15];
     wire [15:0] lkall;
     // the marker's last latch write at each exchange, so a held port can say what
-    // put it there -- an operator's lamps would show the same (exch-mainboard.md 2.3)
+    // put it there -- an operator's lamps would show the same (mainboard.md 2.3)
     wire        ws [0:15];
     wire [5:0]  wd [0:15], wr [0:15];
     wire        wb [0:15], wc [0:15];
@@ -248,7 +248,7 @@ module tb_traffic #(
         localparam integer E  = code_e(i);
         localparam integer B  = code_b(i);
         // The glare bit is set at ONE end of every link: the two ends then hunt
-        // it in opposite order (exch-network.md 1).  "The higher index sets it"
+        // it in opposite order (network.md 1).  "The higher index sets it"
         // is a rule both ends can be built to without knowing the topology.
         localparam         GG0 = (ND > 0) && (i > peer_of(i, 0));
         localparam         GG1 = (ND > 1) && (i > peer_of(i, 1));
@@ -362,7 +362,7 @@ module tb_traffic #(
     integer dt_hist [0:3][0:7];          // dial tone: <1, 2, 4, 8, 16, 32, 64, >=64 scans
 
     // per exchange and direction: channel-milliseconds, and the marker's own
-    // "every trunk this way is busy" event word (ex-counters.md 9)
+    // "every trunk this way is busy" event word (counters.md 9)
     real    ch_ms [0:3][0:15][0:3];
     integer ch_hi [0:3][0:15][0:3];
     real    res_ms [0:3][0:15];
@@ -828,7 +828,7 @@ module tb_traffic #(
                                      ($realtime - lw_t[i2][k2]) / NS,
                                      lw_src[i2][k2], lw_bsy[i2][k2], lw_clm[i2][k2]);
                 $display("          (a write whose source's A was ALREADY low leaves no edge for the");
-                $display("           port to release on -- exch-rtl.md's hazard, which `make stress`");
+                $display("           port to release on -- rtl.md's hazard, which `make stress`");
                 $display("           checks for at a line and this finds at a trunk)");
             end
         end
@@ -854,7 +854,7 @@ module tb_traffic #(
 
         // ---- 2. the links ------------------------------------------------
         $display("\n  2. Every link, a phase: erlangs on its six channels, the high-water mark,");
-        $display("     and the marker's own \"every trunk this way is busy\" event (ex-counters.md 9).");
+        $display("     and the marker's own \"every trunk this way is busy\" event (counters.md 9).");
         $display("  %-14s %-10s %7s %5s %9s %9s", "link", "phase", "erlang", "high",
                  "Erlang B", "no trunk");
         for (q3 = 0; q3 < NEX; q3 = q3 + 1)
@@ -886,8 +886,8 @@ module tb_traffic #(
                 tot_wait = tot_wait + evp[p3][q3][1];
                 if (ndir_of(q3) > 1) begin
                     // Anything that FORWARDS takes one, which is a transit as much
-                    // as a hub: exch-network.md 3.2 says a chain transit "holds
-                    // nothing" and the RTL found otherwise (exch-rtl.md).  A leaf
+                    // as a hub: network.md 3.2 says a chain transit "holds
+                    // nothing" and the RTL found otherwise (rtl.md).  A leaf
                     // has one direction and never forwards, so it never takes one.
                     worst_e = worst_e + res_ms[p3][q3] / ph_ms[p3];
                     nhub = nhub + 1;

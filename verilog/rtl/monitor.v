@@ -1,4 +1,4 @@
-// monitor -- the seeker, as a POOL.  exch-monitor.md.
+// monitor -- the seeker, as a POOL.  monitor.md.
 //
 // The only part of the network that reads a digit it was not sent, so it is the
 // part that must never be wrong.  It sits on a block that holds trunks and

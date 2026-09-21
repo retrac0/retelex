@@ -1,6 +1,6 @@
 # The exchange — subscriber terminals: six lines over an MF8 link
 
-A trunk block (`exch-network.md` §1) is an MF8 trunk card on six port circuits.
+A trunk block (`network.md` §1) is an MF8 trunk card on six port circuits.
 It does not know what is at the far end of its link. If the far end is another
 exchange's trunk block, the link is a tie trunk. If it is a stock MF8 shelf of
 channel cards, the link is **six lines of this exchange at another site**: a
@@ -29,11 +29,11 @@ card serves: CVSD phones, analog phones, a data terminal, an outside line.
 ```
 
 **The exchange's port is an MF8 slot.** Its protocol is the slot interface: `C`
-and one signalling level each way (`exch-protocol.md` §1). An MF8 station card
+and one signalling level each way (`protocol.md` §1). An MF8 station card
 (the CVSD subscriber line card, the FXS card or the data card) puts off-hook on
 `A_TX` and reads ring from `A_RX`, whatever faces it (`channel-cards.md` §1). A port
 gives it exactly that: `A_RX` is E, chopped by the ring cadence while the phone
-is on-hook (`exch-fabric.md` §3.5). A card at a terminal differs from the same
+is on-hook (`fabric.md` §3.5). A card at a terminal differs from the same
 card in a local slot by one thing only: the link, which carries `C` bit for bit
 and A through an RC.
 
@@ -56,11 +56,11 @@ fitted the same way. What differs:
 | | tie trunk | subscriber terminal |
 |---|---|---|
 | block | 0 or 1, and optionally 2 and 3 | any of 2–7, one link a block |
-| ports | slots 1–3 and 5–7, where the channels are on the wire (`exch-protocol.md` §5) | the same slots, which are lines *h*1–*h*3 and *h*5–*h*7, dialled like any other line. Slots 0 and 4 stay local: lines *h*0 and *h*4 |
-| what a channel says | trunk and its direction, one word for all six, and `/ANS` tied low (`ex-extensions.md` §2) | line: its word line tied to ground, as a plain line card's pin is, and `/ANS` open, so the port rings its phone and gives ringback. It can be set a channel at a time (§3) |
+| ports | slots 1–3 and 5–7, where the channels are on the wire (`protocol.md` §5) | the same slots, which are lines *h*1–*h*3 and *h*5–*h*7, dialled like any other line. Slots 0 and 4 stay local: lines *h*0 and *h*4 |
+| what a channel says | trunk and its direction, one word for all six, and `/ANS` tied low (`extensions.md` §2) | line: its word line tied to ground, as a plain line card's pin is, and `/ANS` open, so the port rings its phone and gives ringback. It can be set a channel at a time (§3) |
 | trunk card | transmits in the exchange's clock (a strap). Its receive side crosses into that clock by two '174s for `C` and the RC and Schmitt gate for A | the same card, the same straps |
 | monitors, network card | two monitors a block, and the network card hunts the class and patches it | **not fitted.** Class 1 is not the network card's. A monitor on the block would take a subscriber lifting the handset for a seizure and count their digits |
-| `CLAIM` gate | backward A on a claimed trunk | never written, and harmless (`exch-fabric.md` §3.1) |
+| `CLAIM` gate | backward A on a claimed trunk | never written, and harmless (`fabric.md` §3.1) |
 | link down | `MUTE` clears the A '259: every M falls and calls release. `MUTE` forces the block's `BUSY` to 1 and stops the card's words, so a dead trunk is not hunted | the same. The six lines read on-hook, calls in progress release, and a caller dialling one of them gets cannot-complete instead of ringing a phone that cannot ring |
 
 **Numbers.** A terminal's lines are lines of the exchange: `h s` from inside it,
@@ -88,22 +88,22 @@ a ring generator for the shelf's `RING` bus if any of them is an FXS card.
 ## 3. What a channel says, a channel at a time
 
 A tie trunk's six channels all send one word, trunk and its direction
-(`exch-network.md` §1). A terminal's channels need not be alike:
+(`network.md` §1). A terminal's channels need not be alike:
 
 | at the terminal | its channel says | what the port does |
 |---|---|---|
 | CVSD subscriber line card, FXS card | a plain line: word line to ground, `/ANS` open | rings in cadence, gives ringback |
 | data card | data line; `/ANS` low if `DSR` should follow `DTR` without the cadence | never connected to a voice port of this exchange |
-| FXO card, exchange build (`exch-features.md` §5) | outside line, `/ANS` low | 9 hunts it: an outside line at the terminal's site. A CO ringing in is routed as 0 |
+| FXO card, exchange build (`features.md` §5) | outside line, `/ANS` low | 9 hunts it: an outside line at the terminal's site. A CO ringing in is routed as 0 |
 | a phone on any station card | operator | a second position, hunted after 04 |
-| a loopback test line (`ex-extensions.md` §1) | line, `/ANS` low | a test of the link from any phone (§5) |
-| a hotline card that dials (`ex-extensions.md` §3.4) | a plain line | dials its number whenever its phone is lifted |
-| a phone nailed to a port at the exchange (`ex-extensions.md` §3.1) | a nail | a ringdown hotline to the exchange's site, holding nothing more than the terminal's own channel |
+| a loopback test line (`extensions.md` §1) | line, `/ANS` low | a test of the link from any phone (§5) |
+| a hotline card that dials (`extensions.md` §3.4) | a plain line | dials its number whenever its phone is lifted |
+| a phone nailed to a port at the exchange (`extensions.md` §3.1) | a nail | a ringdown hotline to the exchange's site, holding nothing more than the terminal's own channel |
 
 **The trunk card says, for each channel, what a card would say for its port**
-(`ex-extensions.md` §2.1): a word line and an `/ANS` line a channel. It is six
+(`extensions.md` §2.1): a word line and an `/ANS` line a channel. It is six
 cards' worth of ports in one. The block already commutates each port's word
-separately (`exch-fabric.md` §3.1). On the trunk card a strap a channel takes the
+separately (`fabric.md` §3.1). On the trunk card a strap a channel takes the
 word line to ground (a plain line), to the card's shared 74HC165 (one word,
 jumpered), or to a '165 of the channel's own. A second strap sets `/ANS`. A tie
 trunk straps all six to the shared word and ties every `/ANS` low. A terminal
@@ -133,7 +133,7 @@ card:
 
 **For voice this is enough.** A slip is inaudible (`mf8-backplane.md` §7). A call
 from a terminal across tie trunks adds the trunks' crossings to the terminal's,
-as `exch-network.md` §8 counts them. **For synchronous data and G.711 it is
+as `network.md` §8 counts them. **For synchronous data and G.711 it is
 not.** A slip is a lost or doubled bit, so both are ruled out across a
 free-running terminal, as they are across MF8 trunks. Async oversampled data
 passes.
@@ -158,7 +158,7 @@ synchronous data stays inside the exchange.
 
 1. **The link alone**: two trunk cards back to back, as a point-to-point MF8
    link. Lock both ends, and `MUTE` releases.
-2. **A loopback test line** (`ex-extensions.md` §1) in a terminal slot, jumpered
+2. **A loopback test line** (`extensions.md` §1) in a terminal slot, jumpered
    line at the exchange. Dial it and hear yourself. A data card counting slips
    through it reads the offset between the two crystals: the count a second,
    divided by two crossings and by 64 000.
@@ -176,7 +176,7 @@ synchronous data stays inside the exchange.
   clock and with no crossing; `channel-cards.md` §5 measured the A path; and
   `mf8-backplane.md` §7 measured one slip.
 - **The exchange's receive crossing, and the trunk card's clock strap**: as for
-  tie trunks (`exch-network.md` §10).
+  tie trunks (`network.md` §10).
 - **The per-channel word and `/ANS` straps** of §3, drawn.
 - **The loop-timed terminal**: the PLL itself. Also whether, with the terminal
   locked to the exchange, a channel's '259 write can sit on the exchange's frame

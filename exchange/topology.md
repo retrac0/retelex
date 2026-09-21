@@ -1,6 +1,6 @@
 # The exchange — topology: chains, hubs, trees and rings, and how large a network can be
 
-`exch-network.md` says how a call crosses a network under the **pulse flood**:
+`network.md` says how a call crosses a network under the **pulse flood**:
 the caller's own dial pulses go live down every trunk, every exchange hears them,
 and the one they name claims the call. This document is about the network's shape. What shapes
 the protocol allows, what each carries, where each stops, and whether a network
@@ -8,7 +8,7 @@ may have a loop in it.
 
 > **Status: analysis, with the arithmetic checked call by call.** `exch.py topo`
 > is the run (`exch.log`). Its tables are Erlang B on a tree, the arithmetic of
-> `exch-network.md` §5, which `exch.py net` confirmed to two decimal places. Its
+> `network.md` §5, which `exch.py net` confirmed to two decimal places. Its
 > last parts run the shapes call by call with `net`'s engine, which models the
 > timing, the channels and the pools, **not the gates**. Traffic is the figure
 > used throughout `exchange/`: a line makes 3 calls an hour of 48 s, 0.08 E a line,
@@ -25,12 +25,12 @@ Six things decide what can be built. None of them is a route table.
 
 | | the rule | where it comes from |
 |---|---|---|
-| **Directions** | an exchange faces **four neighbours at most**. A direction is two bits of a trunk's word, N, S, E or W | `ex-extensions.md` §2.2 |
-| **One neighbour a direction** | every trunk facing one way goes to the same exchange. The origin seizes one free trunk a direction, so a direction split between two neighbours would send each flood to one of them and not the other | `exch-network.md` §3 |
-| **Trunk groups** | **eight at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `exch-protocol.md` §5 |
-| **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `exch-network.md` §3.3 |
-| **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–17 are an exchange's trunks and services | `exch-network.md` §2 |
-| **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `exch-monitor.md` §3.5 |
+| **Directions** | an exchange faces **four neighbours at most**. A direction is two bits of a trunk's word, N, S, E or W | `extensions.md` §2.2 |
+| **One neighbour a direction** | every trunk facing one way goes to the same exchange. The origin seizes one free trunk a direction, so a direction split between two neighbours would send each flood to one of them and not the other | `network.md` §3 |
+| **Trunk groups** | **eight at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `protocol.md` §5 |
+| **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `network.md` §3.3 |
+| **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–17 are an exchange's trunks and services | `network.md` §2 |
+| **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `monitor.md` §3.5 |
 
 **Trunk groups cost lines.** The first two groups sit in blocks 0 and 1, whose
 slots are not lines anyway. Each group after that takes six line slots:
@@ -49,7 +49,7 @@ Its eight groups divide among its directions as 12 + 12 + 12 + 12, as
 ## 2. What every network pays: the flood
 
 Every call that leaves its exchange holds one channel **on every link of the
-network** from the key until `e` and `b` are dialled (`exch-network.md` §4).
+network** from the key until `e` and `b` are dialled (`network.md` §4).
 **How long depends on the code called**, because a flood lasts as long as its
 two digits take to dial: a 1 is one pulse and a 0 is ten.
 
@@ -64,7 +64,7 @@ in the network lay 0.67 E on every link; at 20 %, 0.45 E; at 50 %, 1.12 E.
 - **It is the reason to keep the backbone's codes short.** The busiest exchanges
   are called most, and each pulse of their code adds 0.1 s to every flood made to
   them. 11, 12, 13 cost 2.0–2.2 s where 70, 77, 00 cost 3.1–3.8 s. The convention
-  of `exch-network.md` §2 — 00–17 for the backbone — puts the cheap codes where
+  of `network.md` §2 — 00–17 for the backbone — puts the cheap codes where
   the traffic is, except 00 itself.
 - **A six-channel link to a 48-line leaf** carries that leaf's own 1.15 E at 30 %
   leaving. It has room for about 0.76 E of flood before it blocks 1 %: **a
@@ -72,7 +72,7 @@ in the network lay 0.67 E on every link; at 20 %, 0.45 E; at 50 %, 1.12 E.
 - **The pools grow with the flood.** Monitors on a trunk block and resolvers at a
   hub are held for the same time by every call that leaves. For 0.5 % turned
   away: three of each to about 400 lines, four to 1 700, five beyond
-  (`exch-monitor.md` §4). A monitor is ≈ 8½ packages.
+  (`monitor.md` §4). A monitor is ≈ 8½ packages.
 - **The flood does not grow with distance**, and neither does what a caller
   waits: **4.8 to 5.3 s** from lifting to ringback on a network call in every
   shape here, from five exchanges to forty-seven, because the claim is 133 ms
@@ -96,7 +96,7 @@ in the network lay 0.67 E on every link; at 20 %, 0.45 E; at 50 %, 1.12 E.
 
 Each hub faces its three leaves and the other hub: four directions, the most an
 exchange has. `exch.py net` runs it call by call, smooth and in bursts
-(`exch-network.md` §5.1):
+(`network.md` §5.1):
 
 | | predicted, 30 % leaving | measured |
 |---|---|---|
@@ -155,7 +155,7 @@ Run call by call, a chain of six on six channels loses 19 network calls in
 ## 5. Hubs
 
 An exchange that faces three or four directions is a hub. It fans each flood out
-through a resolver and keeps the branch that claims (`exch-network.md` §3.2).
+through a resolver and keeps the branch that claims (`network.md` §3.2).
 
 ```
         ○                          ○   ○   ○              a star: a hub and four spokes
@@ -251,7 +251,7 @@ and the guard (`topo` 4). What stops each is in bold:
   eight crossings of 40 ppm are 32 dB against the codec's own 25 dB
   (`mf8-backplane.md` §7); or the wait, which is 4.8–5.3 s in every shape.
 - **The hop limit is one tap on one counter, and moving it fills the plan.** The
-  128 ms is `exch-monitor.md` §3's guard, and the only thing in the protocol that
+  128 ms is `monitor.md` §3's guard, and the only thing in the protocol that
   is a function of the hop count at all. At the next tap up:
 
   | the guard's tap | a chain of 12 ch | the largest network at 30 % leaving | what stops it |
@@ -266,10 +266,10 @@ and the guard (`topo` 4). What stops each is in bold:
   (`exch.py big` 7). The tap may go to 590 ms, the caller's own 720 ms pause less
   the 130 ms the digit and the seizure take, and no further.
 - **Past these limits** the way on is SS0 (§8), or a second network reached
-  through `1 8` or `1 9` (`exch-network.md` §6).
+  through `1 8` or `1 9` (`network.md` §6).
 - **And smaller exchanges.** Both the traffic on a link and the flood on it are
   proportional to the *lines* in the network, not to the exchanges, so what fills
-  the numbering plan is exchanges that are not full: `ex-traffic.md` §8 searches
+  the numbering plan is exchanges that are not full: `traffic.md` §8 searches
   the shapes again with a line cap and reaches **63 exchanges of 12 lines**, seven
   or eight hops across and inside the guard. It also settles what a **fully
   connected core of hubs** is worth — nothing, because the flood must see a tree
@@ -305,7 +305,7 @@ call that leaves. Under ordinary traffic a ring of six with no strap loses **100
 network calls in 1 000**, and a ring of four 72 (`topo` 7).
 
 **The strap is the `n` bit of a trunk's word**, set on every channel of one link
-at both ends (`exch-network.md` §3.3). A seizure is never forwarded into a
+at both ends (`network.md` §3.3). A seizure is never forwarded into a
 strapped link, and one that arrives on it is never forwarded onward. An origin
 may still seize it and the far end may still claim, so **the strapped link
 carries the calls between its own two ends, and no others.** The links without
@@ -341,7 +341,7 @@ chain of six loses 19.
   someone moves it, and until then the network is in two parts.
 - **At the strap's two ends a call between them arrives twice**, once direct and
   once the long way. The direct copy is a hop away and claims first; the origin
-  then releases the long way (`exch-network.md` §3.3).
+  then releases the long way (`network.md` §3.3).
 
 **Loops through hubs** work the same way. A strapped link between a leaf of one
 hub and a leaf of the other in §3's network takes that pair's calls off three
@@ -356,7 +356,7 @@ different directions they are a loop of two, and need a strap like any other.
 
 ## 8. What SS0 would change
 
-`ex-ss0.md` is the alternative to pulse flood: the number crosses each link
+`ss0.md` is the alternative to pulse flood: the number crosses each link
 as one message on the spare bit of the MF8 frame's S lane, and A keeps
 everything else. Its seizures go the same way — every direction at the origin,
 every other direction at a hub — but they are held only until the claim comes
@@ -384,7 +384,7 @@ run call by call):
   of a long network answers half a second after the caller's last pulse.
 - **It would not run on the trunks that are not MF8.** A single-channel card, a
   voice-band circuit or a radio carries A, and the pulse flood needs nothing else
-  (`exch-network.md` §1.1). SS0 needs the S lane, or a pair of its own.
+  (`network.md` §1.1). SS0 needs the S lane, or a pair of its own.
 
 ---
 
@@ -400,7 +400,7 @@ run call by call):
 Give the backbone the codes 00–17 and ordinary exchanges 20–77, and inside each
 run hand out the codes of fewest pulses first: 11, 12, 13 before 17, and 21, 22
 before 77. Every pulse of an exchange's code adds 0.1 s to every flood made to it
-(`exch-network.md` §2).
+(`network.md` §2).
 
 ---
 
@@ -411,16 +411,16 @@ before 77. Every pulse of an exchange's code adds 0.1 s to every flood made to i
   is, since a flood goes everywhere whatever the call's destination.
 - **How many calls leave.** Every limit here moves with it. 20 % and 50 % bracket
   it; a network's own figure is a counter on a working exchange
-  (`ex-extensions.md` §4).
+  (`extensions.md` §4).
 - **The guard at the hop limit.** Ten hops at 12 ms rests on the slow marker of
-  `exch-monitor.md` §3, which is an estimate. A chain of eleven and a tandem with
+  `monitor.md` §3, which is an estimate. A chain of eleven and a tandem with
   chains of five sit within 8 ms of it.
 - **Bursts in the larger shapes.** `net` found that bursts fall on the registers
   in the eight-exchange network. The larger shapes were run with smooth demand.
 - **SS0 (§8) has never been run call by call.** Its 0.4 s seizure is arithmetic
-  from `ex-ss0.md`'s hop of 26 ms, and its own §10 lists what it has not settled,
+  from `ss0.md`'s hop of 26 ms, and its own §10 lists what it has not settled,
   glare among it.
 - **A strap moved while calls are up**, and a ring healing: by hand, and not
   modelled.
 - **Glare.** Two ends seizing one channel at once is not in the model; the
-  opposite-order hunt of `exch-network.md` §1 is assumed to leave it rare.
+  opposite-order hunt of `network.md` §1 is assumed to leave it rare.

@@ -6,7 +6,7 @@
 // anything is.
 //
 //   local     20 dials 2 1            -- no trunk is touched
-//   network   20 dials 1 2 3 2 1      -- exch-network.md 3's pulse flood:
+//   network   20 dials 1 2 3 2 1      -- network.md 3's pulse flood:
 //             the key seizes a trunk pointed at the caller, the caller's own
 //             pulses go down it live, B's monitor hears e then b, claims, and
 //             B's marker gives a register the trunk -- which is a line there now

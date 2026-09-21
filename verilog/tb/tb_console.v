@@ -1,9 +1,9 @@
 // tb_console -- two masters on cable B: the marker and the operator's console.
-// ex-console.md.
+// console.md.
 //
-// exch-mainboard.md 2.3 calls the control bus multi-master and gives the
+// mainboard.md 2.3 calls the control bus multi-master and gives the
 // console one line, /CON -- "the marker's drivers go high-impedance.  One '244
-// enable".  exch-marker.md 8 lists a second master as not modelled.  This is
+// enable".  marker.md 8 lists a second master as not modelled.  This is
 // the model, and the things the console is FOR:
 //
 //   1  ARBITRATION UNDER TRAFFIC.  Sixteen lines calling each other at random

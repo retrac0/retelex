@@ -1,7 +1,7 @@
 """
 Call-progress tones as a looped CVSD bit stream, and what generates them.
 
-A tone in this exchange is a C bit stream like any other (exch-features.md 2),
+A tone in this exchange is a C bit stream like any other (features.md 2),
 so it can come from an analog oscillator through a CVSD encoder, or from a ROM
 played on repeat.  This script measures the ROM route and sizes it, compares the
 tone plans it could carry, and checks the two things that decide the analog
@@ -16,7 +16,7 @@ Five measurements, all against mf8-spec.md 12.1's law at 64 kbps:
                 CVSD quality, ROM planes, and analog oscillator count
     warble      the Australian three-line warble, five ways of making it.
                 The result that matters is negative: gating the encoder's
-                input with a square, which is how exch-features.md 2 makes a
+                input with a square, which is how features.md 2 makes a
                 CADENCE, splatters when run at a WARBLE rate
     cadence     the cadence tick as a binary divide off TX_CLK, and the
                 tone-to-FILL seam
@@ -277,7 +277,7 @@ def sec_warble(log):
         nl, ll = in_band_lines(cvsd.decode(np.tile(bits[base:base + N8K], 10), P))
         log(f'  {name:24s} {crest:6.1f}dB {max(ss):6.1f} /{min(ss):5.1f} {nl:6d}  '
             + ' '.join(f'{f:.0f}' for f in ll[:7]))
-    log('\n  The negative result is the one that matters.  exch-features.md 2 makes a CADENCE by')
+    log('\n  The negative result is the one that matters.  features.md 2 makes a CADENCE by')
     log('  muting the encoder\'s input, which is right at 2 Hz.  At a WARBLE rate the same square')
     log('  splatters: 50-odd lines and 23 dB lost.  An analog card needs a true four-quadrant')
     log('  multiplier -- the LM13700 of mf8-spec.md 12.1 -- and may not use a switch.\n')

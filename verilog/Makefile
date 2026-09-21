@@ -159,7 +159,7 @@ ring-open: $(BUILD)
 	    > $(BUILD)/vl-ringopen.log 2>&1 || (cat $(BUILD)/vl-ringopen.log; false)
 	@$(BUILD)/vl/ringopen/tb_ringopen 2>&1 | grep -v '^- '
 
-# The console's CONTROL: /CON as exch-mainboard.md 2.3 first had it -- one '244
+# The console's CONTROL: /CON as mainboard.md 2.3 first had it -- one '244
 # enable, the marker cut off mid-word and not told.  Part 1 only; nothing is
 # asserted.  It is there to be read beside `make console`.
 console-naive: $(BUILD)

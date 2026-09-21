@@ -4,7 +4,7 @@
 // two registers to work at A, queues two hunts for the one scanner, lands two
 // seizures on one block at B, makes both cells of B's monitor pool decide on
 // the same 1 kHz tick, and has two of B's registers reading h s side by side.
-// It is the end-to-end test exch-monitor.md 4's sizing argument never had.
+// It is the end-to-end test monitor.md 4's sizing argument never had.
 //
 //   1  20 dials 1 2 3 2 0 while 21 dials 1 2 3 2 1   -> two calls, two channels
 //   2  20 AND 21 both dial 1 2 3 2 1                 -> one number, one winner:

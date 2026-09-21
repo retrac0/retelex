@@ -92,7 +92,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 
 | | |
 |---|---|
-| [exchange/](exchange/README.md) | **the exchange**: 64 line expandable exchange using the pulse flood protocol. Twenty-two documents in [exchange/](exchange/) |
+| [exchange/](exchange/README.md) | **the exchange**: 64 line expandable exchange using the pulse flood protocol. Documents in [exchange/](exchange/) |
 | [exchange/register.md](exchange/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
 | [verilog/](verilog/README.md) | the exchange as a register-transfer model: `rtl/`, `tb/` and the benches the Makefile runs |
 | [falstad/](falstad/README.md) | the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model |

@@ -7,7 +7,7 @@ else that looks like a clock is one of those nine under another name.
 
 This document lists them, says which pin each reaches a card on, and sets the
 rule that follows from the list: **no channel card makes a clock.** It also
-closes `exch-basebandcard.md` §2.3's first open item — where a CVSD subscriber
+closes `baseband.md` §2.3's first open item — where a CVSD subscriber
 line card in an exchange gets its 128 kHz — which is the question that made the
 list worth writing.
 
@@ -43,18 +43,18 @@ They are the same chain:
 one frame; MF8 puts eight bits into one frame; both do it at 512 kHz. That is
 not a coincidence to be admired — it is why the two shelves' dividers are the
 same divider, why a card sees the same taps in both, and why `SLOT[2:0]` is
-described in `exch-mainboard.md` §2.1 as "an MF8 trunk card's frame bit count"
+described in `mainboard.md` §2.1 as "an MF8 trunk card's frame bit count"
 without further comment.
 
 Two rates on the list are not on the socket and not on any card:
 
 | | | |
 |---|---|---|
-| `SCLK` | 64 kHz – 512 kHz | the control bus's shift clock, free-running `TX_CLK` on a strap (`exch-mainboard.md` §2.3.2). It is the one clock in the exchange whose rate is a choice |
+| `SCLK` | 64 kHz – 512 kHz | the control bus's shift clock, free-running `TX_CLK` on a strap (`mainboard.md` §2.3.2). It is the one clock in the exchange whose rate is a choice |
 | `/RING_CAD` | 2 s / 4 s | the ring cadence, low true. A counter off the frame, not a tap |
 
 `RBT` is 64 kb/s of bits, not a clock: the ringback tone as a CVSD stream
-(`exch-mainboard.md` §2.1).
+(`mainboard.md` §2.1).
 
 ---
 
@@ -66,7 +66,7 @@ exchange folded in.
 | domain | where its rate comes from | what lives in it | in the exchange |
 |---|---|---|---|
 | **T** — transmit | §1's chain, the local crystal | everything a card sends: `C_TX`, `A_TX`, the word, the downstream to a phone | **the only domain below a trunk card** |
-| **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `TX_OCT` one frame late (`exch-fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
+| **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `TX_OCT` one frame late (`fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
 | **S** — the subscriber's own | the phone's clock, loop-timed or free-running (`subscriber-line.md` §7) | the 128 kBaud upstream pair | the same. It never reaches a backplane: the line card's receiver recovers it and re-times into T with two '74 stages (`channel-cards.md` §2.3) |
 
 So a channel card may see three rates and generates none of them. **In an
@@ -98,7 +98,7 @@ Two things on a card are timing but not clocks, and are allowed:
   §9.4, on the rate plug: 11.7 µs classifier, 3.1 µs dead time, 31.3 µs carrier
   timeout. They measure the *subscriber's* clock, which is domain S and not ours
   to generate.
-- **a tone card's audio oscillator** (`exch-features.md` §2), which is a tone and
+- **a tone card's audio oscillator** (`features.md` §2), which is a tone and
   not a clock.
 
 ---
@@ -107,7 +107,7 @@ Two things on a card are timing but not clocks, and are allowed:
 
 **Resolved: `/SLOT[1]`, one inverter a block, nothing added to cable A.**
 
-`exch-basebandcard.md` §2.3 raised this once and left it: "`TX_HB`, 128 kHz, is
+`baseband.md` §2.3 raised this once and left it: "`TX_HB`, 128 kHz, is
 not on cable A and the CVSD subscriber line card cannot encode without it." It is
 the only place in the exchange documents where a CVSD subscriber line card in an
 exchange block is considered at all.
@@ -145,7 +145,7 @@ made it**, which is the whole point.
 | skew | one gate. In the exchange the inverter is at the block, 25 cm from the socket (`mf8-backplane.md` §8) |
 
 The one thing not settled is the polarity and the fine phase against a real
-encoder: `exch-basebandcard.md` §2.3 calls for a scope at bring-up and this does
+encoder: `baseband.md` §2.3 calls for a scope at bring-up and this does
 not change that.
 
 ---
@@ -169,7 +169,7 @@ of the common cards cares**, because each already crosses R to T with its own
 flip-flops whatever the two rates are. A data card presents `TXC` and `RXC` to its
 DTE as two clocks (`channel-cards.md` §4.2); in an exchange they are one clock, which
 is not a degradation but the synchronous case, and is why bit-exact 64 kb/s data
-passes inside an exchange and over copper ties (`exch-network.md` §8).
+passes inside an exchange and over copper ties (`network.md` §8).
 
 ---
 
@@ -187,7 +187,7 @@ rate:
 `TX_HB`'s name says the domain, which is not the distinction — **both are T** —
 and `HB`'s says nothing at all. `LINE_HB` and `LOOP_HB` would say it. This is a
 rename across `mf8-spec.md`, `mf8-backplane.md`, `channel-cards.md`,
-`exch-mainboard.md` and `exch-basebandcard.md` and is **not applied**; the names
+`mainboard.md` and `baseband.md` and is **not applied**; the names
 above stay normative until someone decides the edit is worth it.
 
 ---
@@ -195,8 +195,8 @@ above stay normative until someone decides the edit is worth it.
 ## 7. Not measured, and what to scope
 
 - **`/SLOT[1]` against a real encoder** (§4): the derivation is arithmetic off
-  the cell count. `exch-basebandcard.md` §2.3 asked for a scope and still does.
-- **`TX_HB`'s skew across a block's card side.** `exch-mainboard.md` §5.2 gives
+  the cell count. `baseband.md` §2.3 asked for a scope and still does.
+- **`TX_HB`'s skew across a block's card side.** `mainboard.md` §5.2 gives
   under 0.1 ns/m conductor to conductor within one ribbon, and the backplane is
   25 cm; nothing has been measured at a socket.
 - **The metastability window** where a card's T and an MF8 R edge coincide.

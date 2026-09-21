@@ -2,25 +2,25 @@
 
 Today the network speaks the **pulse flood**: the caller's own dial pulses. They go live down a flood
 of seized trunks, and a monitor at every exchange reads the one digit it needs
-(`exch-network.md` §3–4). **SS0 is the alternative.** The number crosses each
+(`network.md` §3–4). **SS0 is the alternative.** The number crosses each
 link as one message, on a channel of its own: the spare bit of the MF8 frame's S
 lane. **Only the number moves.** Seizure, claim, ringback, busy and release stay
 on the A lead, in band, exactly as they are.
 
-This is the "second signalling system" that `exch-network.md` §9 set aside. It is
+This is the "second signalling system" that `network.md` §9 set aside. It is
 written up here so that the choice between the two can be made on numbers. The
 name puts it below CCITT No. 6 and No. 7. It is not called CCS, because in
-traffic engineering CCS means hundred call-seconds (`ex-extensions.md` §4).
+traffic engineering CCS means hundred call-seconds (`extensions.md` §4).
 
 > **Status: proposed, not adopted.** The numbers are `exch.py ss0`. They are
 > arithmetic on the constants `flood` uses, plus binomial arithmetic for line
 > errors. They are not a simulation of the gates or of a network (`net` does not
 > exist). No circuit has been drawn, and nothing has been on a bench. SS0 would
-> replace `exch-network.md` §3's pulses and `exch-monitor.md`, and it would leave
+> replace `network.md` §3's pulses and `monitor.md`, and it would leave
 > the fabric, the marker's rules and the release rule as they are.
 >
 > **The numbering has since changed** to `h s` locally and `1 e b h s` across the
-> network, with sixty-four exchange codes (`exch-network.md` §2). This document's
+> network, with sixty-four exchange codes (`network.md` §2). This document's
 > message, its worked call and `exch.py ss0` are of the earlier numbering, in
 > which every exchange shared `e`. §4 says what the message gains, and §1 and §7
 > compare SS0 with the live flood as it now is.
@@ -59,11 +59,11 @@ frees **x, one bit a superframe: 8 kbps a link, and no voice channel spent.**
 | | |
 |---|---|
 | **Idle is x = 0** | that is today's fixed guard: S is 0 at state 0 and 1 at state 4 (`mf8-spec.md` §2). A quiet SS0 sends exactly today's frame, and a converted trunk card facing an unconverted one reads an idle channel. Only messages themselves (x = 1) fail an old receiver's guard, so both ends of a link are converted before either sends |
-| **Transmit** | x comes from a flip-flop loaded at the superframe edge, so state 0 and state 4 of one superframe always carry a matching pair. /x is one inverter. The trunk card already transmits in the exchange's clock (`exch-network.md` §1) |
+| **Transmit** | x comes from a flip-flop loaded at the superframe edge, so state 0 and state 4 of one superframe always carry a matching pair. /x is one inverter. The trunk card already transmits in the exchange's clock (`network.md` §1) |
 | **Receive** | the A '259's Q0 holds x from state 0, and one XOR checks state 4 against it (`mf8-spec.md` §3.5). `MUTE` clears the '259, so a dead link reads x = 0, idle |
 | **What it costs the frame** | a chance false acquisition in 1 of 28 attempts, where the fixed guard gives 1 in about 500 (`mf8-spec.md` §3.5) |
-| **The pin** | x belongs to the trunk slot; its pin on the trunk card's connector is to be assigned. On a channel slot the `RAI` pin was reserved for this bit on the MF8 shelf; the exchange leaves it spare (`ex-extensions.md` §2.1), and a channel card never sees the S lane |
-| **Remote alarm** | **Decided: x is the remote alarm on every MF8 link, and between exchanges it carries SS0 as well.** One rule serves both. An end holds x at 1 while its own receiver is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. A message never holds x at 1 for more than 17 ms (the start bit and 16 data bits; the stop bit is 0), so a message never reads as the alarm. An SS0 receiver reads the alarm as a start bit with a bad stop bit, and discards it. A subscriber terminal (`exch-terminal.md`) or a plain MF8 link uses x for the alarm alone. The trunk card needs no strap: it sends `MUTE` OR its SS0 transmitter, and no message ever goes to a terminal, because the marker sends `SEIZE` only on a trunk. What the alarm does at the far end is not modelled |
+| **The pin** | x belongs to the trunk slot; its pin on the trunk card's connector is to be assigned. On a channel slot the `RAI` pin was reserved for this bit on the MF8 shelf; the exchange leaves it spare (`extensions.md` §2.1), and a channel card never sees the S lane |
+| **Remote alarm** | **Decided: x is the remote alarm on every MF8 link, and between exchanges it carries SS0 as well.** One rule serves both. An end holds x at 1 while its own receiver is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. A message never holds x at 1 for more than 17 ms (the start bit and 16 data bits; the stop bit is 0), so a message never reads as the alarm. An SS0 receiver reads the alarm as a start bit with a bad stop bit, and discards it. A subscriber terminal (`terminal.md`) or a plain MF8 link uses x for the alarm alone. The trunk card needs no strap: it sends `MUTE` OR its SS0 transmitter, and no message ever goes to a terminal, because the marker sends `SEIZE` only on a trunk. What the alarm does at the far end is not modelled |
 
 The alternatives:
 - **Give up channel 6** for 64 kbps. A link is then five voice channels, 1.36 E
@@ -103,12 +103,12 @@ The alternatives:
 
 **`chan`** is the channel of this link, given as its slot: 1–3 or 5–7, the
 same three bits as its position in the MF8 frame and its trunk port's slot
-(`exch-protocol.md` §5). 0 and 4, F and S on the wire, are invalid. **`b h s`** is
+(`protocol.md` §5). 0 and 4, F and S on the wire, are invalid. **`b h s`** is
 the number after `e`, which every exchange of one network shared when this was
 drawn. **With sixty-four codes the message carries `e` as well**, three bits as
 `b` is, since both are octal: 19 data bits,
 21 ms a message, and a third shift register in each receiver and transmitter
-(`exch-network.md` §2). The last two fields carry either kind of number with no
+(`network.md` §2). The last two fields carry either kind of number with no
 translation at either end:
 
 - **A line**: `h` is 2–7 and `s` is 0–7, as dialled.
@@ -134,8 +134,8 @@ takes 18 ms, so a genuine message always finds M up.
 | at | does |
 |---|---|
 | **the origin** | the register already keeps all four digits (its '670 holds four). 128 ms after the last pulse: if `b` is ours, it is a local call and **no trunk is touched**. Otherwise, seize a free trunk in each direction there is, all listening to the caller so that forward A is the caller's hook, as now. Send `SEIZE` on each. Keep the one whose claim rises and release the others. No claim 2 s after the `SEIZE` → cannot-complete |
-| **a transit** (`b` not ours) | hunt a free trunk in the other direction, write the two latches of the patch, and load that link's transmitter with its channel and the same `b h s`. A hub does this in each other direction and resolves the claim as the flood's hub does (`exch-network.md` §3.2). If there is no free trunk, no other direction, or the exchange is strapped NO-FORWARD, it does nothing: the incoming trunk stays seized until the origin lets it go |
-| **the owner** (`b` ours) | parse the key or the line as a local call from the trunk (`exch-marker.md` §2). Free: two writes, `CLAIM` set, backward A = 1, the line rings. Busy or empty: trunk to cannot-complete, `CLAIM` set, as today (`exch-network.md` §3) |
+| **a transit** (`b` not ours) | hunt a free trunk in the other direction, write the two latches of the patch, and load that link's transmitter with its channel and the same `b h s`. A hub does this in each other direction and resolves the claim as the flood's hub does (`network.md` §3.2). If there is no free trunk, no other direction, or the exchange is strapped NO-FORWARD, it does nothing: the incoming trunk stays seized until the origin lets it go |
+| **the owner** (`b` ours) | parse the key or the line as a local call from the trunk (`marker.md` §2). Free: two writes, `CLAIM` set, backward A = 1, the line rings. Busy or empty: trunk to cannot-complete, `CLAIM` set, as today (`network.md` §3) |
 | **a busy transmitter** | the marker waits for it: 18 ms at most |
 
 **What goes:**
@@ -152,14 +152,14 @@ takes 18 ms, so a genuine message always finds M up.
 | transmitter, a link | 2 × 74HC165 loaded in parallel; a bit counter; parity | 4 |
 | shared | the own-code compare (three XORs against the jumpers); type and validity decode; the transmitter's source mux (the register's store or a receiver, and the channel the hunt found) | 5 |
 | trunk card | the x flip-flop, an inverter, an XOR | — |
-| **an exchange with two trunk groups** | | **≈ 25**, against **≈ 38** for the monitors of two trunk blocks (`exch-monitor.md`) |
+| **an exchange with two trunk groups** | | **≈ 25**, against **≈ 38** for the monitors of two trunk blocks (`monitor.md`) |
 
 ---
 
 ## 6. A call: 2144 dials 2355 on 21 ═ 22 ═ 23 ═ 24
 
 Milliseconds from 44's last pulse (`exch.py ss0` 1). The origin is labelled 21 as
-the model runs it. Under `exch-network.md` §2 no `b` can be 1, but nothing here
+the model runs it. Under `network.md` §2 no `b` can be 1, but nothing here
 depends on the origin's own code:
 
 ```
@@ -177,7 +177,7 @@ depends on the origin's own code:
 
 Link 23–24 is never seized, and 24 hears nothing. Under the live flood the same
 call held a trunk on 23–24 for about a second and a monitor at 22, 23 and 24
-(`exch-network.md` §3.1).
+(`network.md` §3.1).
 
 **From the middle**, 2244 dials 2455. 22 seizes toward 21 and toward 23. 21 is
 the end of the chain: `b` = 4 is not its own and it has nowhere to forward, so it
@@ -193,22 +193,22 @@ That wrong-way seizure is the only trunk SS0 ever holds for nothing.
 |---|---|---|
 | signalling paths | **one**: A | **two**: A for supervision, the S lane's x for the number |
 | change to MF8 | none | the complement-pair guard; both ends of a link converted |
-| parts, two trunk groups | monitors, ≈ 48: two blocks of two, reading two digits (`exch-monitor.md` §6); ≈ 64 with three a block, which a network past about 400 lines wants | ≈ 25 (estimate), plus a flip-flop, an inverter and an XOR a trunk card |
-| trunks held for nothing, a chain of four, 20 % of calls leaving | **≈ 0.08 E on every link**: every call that leaves floods 2.0–3.8 s by the code it calls, until `e` and `b` are in; a local call floods nothing (`exch-network.md` §4) | **≈ 0.002 E**; 0.006 at 50 % leaving (`ss0` 2) |
-| how that grows | the flood's share rises with every exchange added: 0.65 E a link at twenty full exchanges, 1.2 E at thirty-six, which is what limits the network (`exch-network.md` §5, `Topology.md` §2) | only middle origins seize a wrong way, and only for tens of ms |
+| parts, two trunk groups | monitors, ≈ 48: two blocks of two, reading two digits (`monitor.md` §6); ≈ 64 with three a block, which a network past about 400 lines wants | ≈ 25 (estimate), plus a flip-flop, an inverter and an XOR a trunk card |
+| trunks held for nothing, a chain of four, 20 % of calls leaving | **≈ 0.08 E on every link**: every call that leaves floods 2.0–3.8 s by the code it calls, until `e` and `b` are in; a local call floods nothing (`network.md` §4) | **≈ 0.002 E**; 0.006 at 50 % leaving (`ss0` 2) |
+| how that grows | the flood's share rises with every exchange added: 0.65 E a link at twenty full exchanges, 1.2 E at thirty-six, which is what limits the network (`network.md` §5, `topology.md` §2) | only middle origins seize a wrong way, and only for tens of ms |
 | post-dial delay, 1 to 7 hops | **132–140 ms**, and 133 ms at any distance | **160–324 ms**: 28 ms a hop (`ss0` 1) |
 | when the number moves | digit by digit, while the caller dials | all at once, after the last digit |
 | dialling pace | the flood must be up before the next digit: 242 ms of margin at 0.5 s between digits, and a faster caller fails | any pace the register reads |
 | keypad phones across the network | no: the network hears only A | yes, with a DTMF register (`register.md` §7), which listens to the caller's `C` and so takes a port |
 | a data terminal dialling | pulses `DTR` | the same |
-| protection against a wrong number | the monitor's two rules: 0 false claims in 1 500 calls (`exch-monitor.md` §5) | parity, a 5-sample majority, invalid codes, and confirmation by A. At line error 1e−2, at most 0.012 wrong per million messages (`ss0` 3) |
-| line errors | A is filtered on every card. Characters at 16 ms a bit crossed seven hops at 1e−2 with no errors (`exch-network.md` §9) | at 1e−2, 167 messages lost per million; each is a failed call, cannot-complete |
+| protection against a wrong number | the monitor's two rules: 0 false claims in 1 500 calls (`monitor.md` §5) | parity, a 5-sample majority, invalid codes, and confirmation by A. At line error 1e−2, at most 0.012 wrong per million messages (`ss0` 3) |
+| line errors | A is filtered on every card. Characters at 16 ms a bit crossed seven hops at 1e−2 with no errors (`network.md` §9) | at 1e−2, 167 messages lost per million; each is a failed call, cannot-complete |
 | link capacity, a direction at 1 % blocking | 1.91 E | 1.91 E on the S bit; 1.36 E if channel 6 is given over |
 | out of the network | `1 8` and `1 9` are reserved; each level would claim one digit live | a reserved type or a longer message; area codes free |
 | glare | residual glare joins two callers to each other | detectable: a `SEIZE` arrives for a channel just seized. The rule for it is not worked out (§10) |
 | answer across the network | at claim | at claim (§9) |
-| the largest network, 30 % leaving | 35 exchanges and 1 260 lines; 21 where the guard binds a tandem's chains | 39 and 1 404; 33 where the guard did (`Topology.md` §8) |
-| trunks that are not MF8 | **any carrier that carries A**: a single-channel card, a copper tie, a voice-band circuit, a radio (`exch-network.md` §1.1) | the S lane, or a pair of its own |
+| the largest network, 30 % leaving | 35 exchanges and 1 260 lines; 21 where the guard binds a tandem's chains | 39 and 1 404; 33 where the guard did (`topology.md` §8) |
+| trunks that are not MF8 | **any carrier that carries A**: a single-channel card, a copper tie, a voice-band circuit, a radio (`network.md` §1.1) | the S lane, or a pair of its own |
 | what is measured | the monitor's two rules, 0 false claims in 1 500 calls; the network call by call, `exch.py net` and `topo` | arithmetic only: `exch.py ss0`. No gate, no run |
 | **a standalone exchange** | **nothing fitted** | **nothing fitted** |
 
@@ -218,7 +218,7 @@ under either. What SS0 buys is a flood of a third of a second where the live one
 lasts 2.7 s, so that adding exchanges adds almost no flood: it is the way past a
 score of full exchanges. The number can also come from a keypad. It needs MF8
 under it, where the live flood runs on any trunk that carries A
-(`exch-network.md` §1.1).
+(`network.md` §1.1).
 
 ---
 
@@ -226,13 +226,13 @@ under it, where the live flood runs on any trunk that carries A
 
 **Neither is fitted.** A standalone exchange has no trunk blocks, no network card,
 no monitors and no SS0 card. Its numbering jumper is at two digits, and nothing
-in the fabric or the marker waits for any of them (`exch-network.md` §3, "Not
-fitted"; `mvp-ex.md` §1).
+in the fabric or the marker waits for any of them (`network.md` §3, "Not
+fitted"; `mvp.md` §1).
 
 What cannot be left out is **A inside the exchange**. A is not a network protocol
 riding on the calls; it is the calls' supervision. Off-hook, ringing, ringback,
 answer and release all reach the port's own supervision gate as M and E, and the
-register reads dialling from M (`mvp-ex.md` §3). An outside line signals to its
+register reads dialling from M (`mvp.md` §3). An outside line signals to its
 central office on the FXO card, like a phone on its line card.
 
 ---

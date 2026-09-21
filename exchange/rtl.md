@@ -16,7 +16,7 @@ written without disturbing them.
 > **Status: measured in simulation.** Every finding below made a testbench fail
 > and then pass; none is an argument. What is measured is behaviour in RTL, not
 > timing in a real part: `verilog` has no gate delays, so it cannot see the hazard
-> of `exch-fabric.md` §3.2 and cannot confirm §4's nanoseconds. Nothing has been
+> of `fabric.md` §3.2 and cannot confirm §4's nanoseconds. Nothing has been
 > on a bench. Package counts are untouched by all of this except where said.
 
 ---
@@ -40,7 +40,7 @@ them.
 
 ## 2. Findings, by the document they belong to
 
-### `exch-fabric.md` §3.1 — `A out = E + CLAIM` is the port's `A_RX`
+### `fabric.md` §3.1 — `A out = E + CLAIM` is the port's `A_RX`
 
 The line reads "Backward A on a claimed trunk: `A` out = E + `CLAIM`, 2 × 74HC32,
 used on trunk blocks", and it is ambiguous between the A the port puts on the
@@ -59,16 +59,16 @@ So the supervision of §3.5 becomes, for a trunk block:
  A_RX = ( E + CLAIM ) · /( ON · /RING_CAD )
 ```
 
-### `exch-fabric.md` §3.5 — a claimed trunk keeps `CLAIM` until release
+### `fabric.md` §3.5 — a claimed trunk keeps `CLAIM` until release
 
-`exch-network.md` §3 says "a trunk port with `CLAIM` set sends backward A = 1,
+`network.md` §3 says "a trunk port with `CLAIM` set sends backward A = 1,
 steadily, until release". That is a constraint on the **marker**, and it is easy
 to miss: every later write to that port — dial tone off, the connect — must
 carry `CLAIM` too. Written without it, backward A drops for one write, and every
 patch behind it clears itself 256 ms later. The call reaches the far exchange,
 rings nothing, and the origin's trunk lets go.
 
-### `exch-marker.md` §3 — two calls may reach one line in one scan
+### `marker.md` §3 — two calls may reach one line in one scan
 
 **Not in any document, and it cannot happen with one register.** Two registers
 can finish dialling the *same* number inside one 8 ms scan. Both probe the
@@ -82,7 +82,7 @@ marker that serves more than one call at a time needs it, in 74HC as much as in
 RTL. In `verilog` it is one flag, set when a connect is issued and tested by every
 other call in the same cycle.
 
-### `exch-marker.md` §4, §6 — what a pool of registers actually requires
+### `marker.md` §4, §6 — what a pool of registers actually requires
 
 §6 offers "one to three of them" and §4 says the scanner is their finder, but
 the marker as drawn holds a call's digit-position state, and with the state in
@@ -97,7 +97,7 @@ live in the **register** — and once the digits are there the rest follows:
   after a restart are indistinguishable from a local number. An own-code call,
   an incoming claimed call and a plain local call become one path;
 - a call's remaining state — its caller, the trunks it seized, whether one has
-  claimed — goes with its register, which is where `exch-network.md` §3.2
+  claimed — goes with its register, which is where `network.md` §3.2
   already puts the trunks ("a '574 a direction in a bank a register").
 
 **There is one scanner, so there is one hunt.** With several calls, the hunt
@@ -108,7 +108,7 @@ caller who hangs up mid-hunt must release it or the scanner is locked for good.
 or a fast `e` arrives while the old store still holds the key and is wiped by the
 restart when it finally comes.
 
-### `exch-marker.md` §4 — a register's store must be empty when idle
+### `marker.md` §4 — a register's store must be empty when idle
 
 A digit handed over as a strobe is an event; a store read as a level is not. But
 a store is only safe if it is **empty whenever the register is idle**, and if the
@@ -119,13 +119,13 @@ parsed a network call as a local one built from one caller's leftovers and
 another's dialling. The store is now cleared on release, on CLR and on the
 no-digit timeout.
 
-### `exch-monitor.md` §3 — the seizure rule has a third term
+### `monitor.md` §3 — the seizure rule has a third term
 
 Written up in that document as §3.3 and §3.4: a claim coming back is not a
 seizure, and a claim is a request rather than a pulse. Both are invisible at the
 end of a chain and show on every call at a transit.
 
-### `exch-mainboard.md` §2.3.2 — steering the probe costs a visit
+### `mainboard.md` §2.3.2 — steering the probe costs a visit
 
 With the control bus serial, `/BLK` is each block's own '138 on `DST[5:3]`, so
 **the block that drives `PB` is the block the shift register names**. The marker
@@ -148,7 +148,7 @@ and the marker shifts such a word with `WR` suppressed — but it is not free:
   ever — and a hunt sweep that terminates on port 63, which a repeated visit of
   port 63 ends the instant it starts.
 
-### `exch-network.md` §3.1 — a hop is two scans, not 7 ms
+### `network.md` §3.1 — a hop is two scans, not 7 ms
 
 §3.1's worked example budgets 7 ms for a seizure to cross an exchange. A scanned
 marker cannot: it needs one scan to *see* the seizure at its visit, and the
@@ -161,7 +161,7 @@ Nothing breaks — the origin's guard is 128 ms and the flood lasts seconds — 
 §3.1's arithmetic should carry the larger figure, and a ten-hop network should
 be costed at about 170 ms of seizure propagation rather than 70.
 
-### `exch-network.md` §3 — the forwarder must not wait for the marker
+### `network.md` §3 — the forwarder must not wait for the marker
 
 "A transit needs no matrix and no route table" and patches "two latches, and
 forget". It must also **not wait on a register**: if forwarding shares the
@@ -170,7 +170,7 @@ setting up a local call is dropped, and the flood silently fails to reach part
 of the network. In `verilog` the forwarder is its own small machine sharing the
 scanner and nothing else.
 
-### `exch-protocol.md` §5 — the digit rule, taken literally
+### `protocol.md` §5 — the digit rule, taken literally
 
 "A digit's value is the low three bits of the register's pulse count, forced to
 000 when bit 3 is set: three AND gates." Implemented as anything looser — say,
@@ -191,10 +191,10 @@ of 0. The document is right and exact; it is worth implementing exactly.
   about the fabric, but it means the tone cards are pseudo-random patterns and
   nothing here hears anything.
 - **The sizing tables are still arguments.** `NREG` and `NMON` are parameters
-  now, so `exch-monitor.md` §4's Erlang table can be *measured* against offered
+  now, so `monitor.md` §4's Erlang table can be *measured* against offered
   traffic. It has not been.
-- **Still unbuilt**: fan-out and the resolvers of `exch-network.md` §3.2, rings
+- **Still unbuilt**: fan-out and the resolvers of `network.md` §3.2, rings
   and the strap (the `n` bit is decoded and both halves of its rule are in, but
   nothing closes a loop), the conference bridge, data cards, outside lines,
-  nailed-up connections, and every option bit of `ex-extensions.md` §2.2 beyond
+  nailed-up connections, and every option bit of `extensions.md` §2.2 beyond
   a trunk's direction, glare and strap.

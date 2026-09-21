@@ -3,7 +3,7 @@
 The smallest exchange that does automatic calls: two phones dial each other with
 two digits, one rings, the other hears it ringing, they talk, and either can
 hang up first, with nobody in charge of the call. Every part of it is a part of
-the full exchange (`exch-fabric.md`, `exch-marker.md`). It grows into the
+the full exchange (`fabric.md`, `marker.md`). It grows into the
 48-line exchange and then into a network by adding cards, never by changing
 what is already fitted.
 
@@ -13,9 +13,9 @@ what is already fitted.
 > dials 0, 9, 1 and 8 — the four first keys that go nowhere on an exchange this
 > small — and then an empty number and the caller's own number. Every latch ends
 > idle; `exch.log` is the run. The package counts come from the parts lists of
-> `exch-fabric.md` §3 and §5 and `channel-cards.md`, except the marker's, which is
+> `fabric.md` §3 and §5 and `channel-cards.md`, except the marker's, which is
 > estimated by function (§2). **The model's register sits on port 03**, the
-> `calls` model's older layout (`exch-marker.md`, Status); in the design a
+> `calls` model's older layout (`marker.md`, Status); in the design a
 > register takes no port. No circuit has been drawn, and nothing has been on a
 > bench.
 
@@ -31,11 +31,11 @@ what is already fitted.
 
 | | does | ≈ packages |
 |---|---|---|
-| Clock card | `HCLK`, `SLOT`, `SLOTQ`, `TX_CLK`, `TX_OCT`, `FILL`, `RING_CAD`, the 1 kHz `TICK` (`exch-fabric.md` §2) | 10 |
-| Block 2, its shared parts | commutators, strobe and write decoders, highway drivers and receivers (`exch-fabric.md` §3.1) | 13 |
-| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`exch-fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** | 17 |
+| Clock card | `HCLK`, `SLOT`, `SLOTQ`, `TX_CLK`, `TX_OCT`, `FILL`, `RING_CAD`, the 1 kHz `TICK` (`fabric.md` §2) | 10 |
+| Block 2, its shared parts | commutators, strobe and write decoders, highway drivers and receivers (`fabric.md` §3.1) | 13 |
+| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** | 17 |
 | Marker | scanner, probe, sequencer, and a diode matrix whose only job here is to send 0, 1 and 9 to hunts that find nothing and 8 straight to cannot-complete (§2, §4) | 15–20, estimated |
-| One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`exch-marker.md` §4) | 9 |
+| One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`marker.md` §4) | 9 |
 | | **exchange logic** | **≈ 70** |
 | Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the shelf's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`channel-cards.md` §2, §3) | per card |
 | Power | 5 V for the logic; the 48 V feed | |
@@ -52,33 +52,33 @@ without each, and §5 how each is added.
 **The one block goes in position 2.** 0 and 1 mean something as a first digit —
 the operator, and the network's key — so no number beginning with either ever
 reaches a line: lines are 20–77 and block 2 is the first block with ports anyone
-can dial (`exch-protocol.md` §5). 8 and 9 are first keys as well, but there is
+can dial (`protocol.md` §5). 8 and 9 are first keys as well, but there is
 no block 8 or 9 to lose. Line cards go in any of block 2's slots, and are
 dialled `2 0` to `2 7`. A plain line card says what it is with no part and no
-jumper: its word pin tied to ground, its `/ANS` pin open (`ex-extensions.md`
+jumper: its word pin tied to ground, its `/ANS` pin open (`extensions.md`
 §2).
 
 Everything absent reads as idle, and idle is what every rule already expects:
 
 | absent | reads | why that is right |
 |---|---|---|
-| blocks 0 and 1 | `HC` = `FILL`, `HA` = 0: an absent block's wires are pulled there (`exch-protocol.md` §3; `exch.py fabric` 2) | a cleared latch listens to port 00 (`exch-fabric.md` §3.3). Port 00 is on block 0 and is never fitted anyway, so a cleared latch hears silence and A = 0 with or without block 0 |
+| blocks 0 and 1 | `HC` = `FILL`, `HA` = 0: an absent block's wires are pulled there (`protocol.md` §3; `exch.py fabric` 2) | a cleared latch listens to port 00 (`fabric.md` §3.3). Port 00 is on block 0 and is never fitted anyway, so a cleared latch hears silence and A = 0 with or without block 0 |
 | an empty slot, or a slot with no port circuit | its commutator inputs pulled to `FILL`, 0 for `A` and `BUSY`, and its word pin pulled up: no word | class 000, *unequipped*: the marker never writes its latch, and dialling it gives cannot-complete |
-| the probe bus `PB` when an absent block is selected | **a pull-down on `BUSY`'s wire and a pull-up on the word's**: not busy, and no word, which is class 000 (`ex-extensions.md` §2.2) | the scanner steps all 64 ports whatever is fitted |
+| the probe bus `PB` when an absent block is selected | **a pull-down on `BUSY`'s wire and a pull-up on the word's**: not busy, and no word, which is class 000 (`extensions.md` §2.2) | the scanner steps all 64 ports whatever is fitted |
 | the ringback card | `RBT` strapped to `FILL` | a caller hears silence while the other phone rings |
 | tone cards | the marker's hunt for dial tone and cannot-complete finds nothing, and the caller's latch is written cleared | silence where the tone would be; the call still completes (`exch.py calls` 12b, 19) |
-| the network card, and the trunk ports with it | the key `1` goes to a class-4 hunt, and there is no class-4 port to find | `1` gives cannot-complete, which is what a standalone exchange should say. Nothing is strapped to say so (`exch-network.md` §2, §3.1) |
-| `/HUNT_INH` | pulled up: *accept*, so a hunt is the plain first-free-of-a-class | the one input by which a card not yet fitted will later steer a hunt (`exch-marker.md` §4) |
+| the network card, and the trunk ports with it | the key `1` goes to a class-4 hunt, and there is no class-4 port to find | `1` gives cannot-complete, which is what a standalone exchange should say. Nothing is strapped to say so (`network.md` §2, §3.1) |
+| `/HUNT_INH` | pulled up: *accept*, so a hunt is the plain first-free-of-a-class | the one input by which a card not yet fitted will later steer a hunt (`marker.md` §4) |
 
 **The marker, estimated by function.** It is the one piece without a parts list
-in `exch-marker.md`. The count is a sketch to size the minimum, not a design:
+in `marker.md`. The count is a sketch to size the minimum, not a design:
 
 | function | parts |
 |---|---|
 | scanner: a 6-bit count, eight ports a millisecond | 74HC393 |
 | probe: M from `HA` (highway select, slot select, capture); `BUSY` and the card's word from `PB`, the word into a shift register over the visit | 2 × 74HC151, 74HC74, 74HC164, 74HC30 |
 | what goes into the control word's `DST`/`SRC`: the scanner, the register's digits, or a fixed address | 3 × 74HC157 |
-| the word out: parallel load, sixteen bits on `SDATA` (`exch-mainboard.md` §2.3) | 2 × 74HC165 |
+| the word out: parallel load, sixteen bits on `SDATA` (`mainboard.md` §2.3) | 2 × 74HC165 |
 | sequencer: state count, decode, the class tests, and `/HUNT_INH` into the hunt (pulled up, so nothing here drives it) | 74HC163, 74HC138, 2–3 gate packages |
 | control bus drivers — four lines now, the probe's M and word among them (§5) | 74HC244 |
 | prefix key → class | a few diodes |
@@ -120,7 +120,7 @@ select and capture bring the other party's M back as E, from the same latch
 that picks its voice. The port's supervision gate turns E into ringing for an
 on-hook phone and releases the port when M or E falls. The scanner and the
 register read M off `HA` through their probes. There is no other signalling
-path (`exch-fabric.md` §1.1, §3.5).
+path (`fabric.md` §1.1, §3.5).
 
 ---
 
@@ -142,11 +142,11 @@ is free. From `exch.py calls` 19:
 pulse — `1` at 25.988, its one pulse having ended at 25.860 — where a wrong
 two-digit number waits for the second. `1` is the one of them a caller will dial
 out of habit, because it is what every number on a network begins with
-(`exch-network.md` §2); it costs the exchange nothing to refuse, and one diode
+(`network.md` §2); it costs the exchange nothing to refuse, and one diode
 to send to the hunt. What would have followed the key never matters here, and
 two of the things that may follow it are not implemented anywhere: `1 8` and
 `1 9` are reserved for out of the network, and are cannot-complete on every
-exchange today (`exch-network.md` §6).
+exchange today (`network.md` §6).
 
 Every latch idle and every `BUSY` clear at the end. At no time did a port hear a
 call it was not in.
@@ -160,7 +160,7 @@ measured or specified where the last column says. **That holds for the network
 too**: everything it needs is on the network card, including the trunks an
 origin seizes — a '574 a direction in a bank a register — which is why the
 marker and the registers here are the ones a networked exchange has
-(`exch-network.md` §3.2). Two things the minimum must carry for that to be
+(`network.md` §3.2). Two things the minimum must carry for that to be
 true, and does: **the marker's probe on the control bus**, the scanned port's M
 and its word beside `PORT`, `SRC`, `BUSY` and `WR` on the '244s it already has;
 and **`/HUNT_INH`**, one pulled-up input to the hunt, which reads *accept*
@@ -168,21 +168,21 @@ until a card drives it.
 
 | to add | fit | where |
 |---|---|---|
-| lines 22–27 | a port circuit (≈ 8¼) and a line card each, in block 2 | `exch-fabric.md` §3 |
-| lines 30–77 | blocks 3–7, ≈ 80 packages each when full | `exch-fabric.md` §5 |
-| dial tone, cannot-complete, ringback | a tone card each at 10 and 14, both in block 1 (`exch-protocol.md` §5), and the ringback card. The marker as it stands hunts tones by class, and finds them there first. Under the proposed class codes it reaches them by address, and block 1 then needs only its `C` commutator and a driver: a source never listens, so it needs no port circuit | `exch-features.md` §2; `exch-fabric.md` §3.5 |
-| more registers | three at 48 lines of dial phones | `exch-marker.md` §6 |
-| an operator (0) | a phone on any line card whose word says operator (the card's '165 fitted: `ex-extensions.md` §2.2). 0 hunts that class in fixed order from 00, so 04 is its home once block 0 is fitted, and a second position or a night announcement goes further along | `exch-features.md` §4; `calls` 9 |
-| the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `exch-features.md` §4 |
-| outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `exch-features.md` §5; `calls` 10, 11 |
-| lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `exch-terminal.md` |
-| the network | a trunk block at 01–03, 05–07 (and 11–13, 15–17), the network card and two or three monitors a block, and the exchange's own code `e b` jumpered on the card. Local numbers stay `h s`, and nobody's number changes. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9`. `1`, which was cannot-complete (§4), now opens the flood | `exch-network.md`, `exch-monitor.md` |
+| lines 22–27 | a port circuit (≈ 8¼) and a line card each, in block 2 | `fabric.md` §3 |
+| lines 30–77 | blocks 3–7, ≈ 80 packages each when full | `fabric.md` §5 |
+| dial tone, cannot-complete, ringback | a tone card each at 10 and 14, both in block 1 (`protocol.md` §5), and the ringback card. The marker as it stands hunts tones by class, and finds them there first. Under the proposed class codes it reaches them by address, and block 1 then needs only its `C` commutator and a driver: a source never listens, so it needs no port circuit | `features.md` §2; `fabric.md` §3.5 |
+| more registers | three at 48 lines of dial phones | `marker.md` §6 |
+| an operator (0) | a phone on any line card whose word says operator (the card's '165 fitted: `extensions.md` §2.2). 0 hunts that class in fixed order from 00, so 04 is its home once block 0 is fitted, and a second position or a night announcement goes further along | `features.md` §4; `calls` 9 |
+| the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `features.md` §4 |
+| outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
+| lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `terminal.md` |
+| the network | a trunk block at 01–03, 05–07 (and 11–13, 15–17), the network card and two or three monitors a block, and the exchange's own code `e b` jumpered on the card. Local numbers stay `h s`, and nobody's number changes. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9`. `1`, which was cannot-complete (§4), now opens the flood | `network.md`, `monitor.md` |
 
 ---
 
 ## 6. Bringing it up
 
-`exch-fabric.md` §7, cut to the minimum:
+`fabric.md` §7, cut to the minimum:
 
 1. **The clock card alone.** `SLOTQ` a quarter of a cell behind `SLOT`; `FILL`
    is `1010`.
@@ -200,7 +200,7 @@ until a card drives it.
 ## 7. Not measured
 
 - **The circuits.** Nothing is drawn. The marker's count in §2 is an estimate by
-  function, and the block's and port's counts are `exch-fabric.md`'s parts lists
+  function, and the block's and port's counts are `fabric.md`'s parts lists
   by function.
 - **`/HUNT_INH` and the probe on the control bus** (§5). Both are proposed here
   so that the network can be added without touching a fitted marker or register,

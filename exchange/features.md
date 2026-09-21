@@ -2,7 +2,7 @@
 
 Operator, outside line, tones, recorded announcements, a radio anyone may
 listen to, a conference: each is a card in a channel slot, and the marker
-reaches it by hunting a class (`exch-marker.md` §3) or by its number. A
+reaches it by hunting a class (`marker.md` §3) or by its number. A
 conference is eight ordinary line cards and a block of their own
 (`conference.md`). This is how the Bell System built such things — as trunk
 circuits — except that what is switched here is CVSD.
@@ -11,8 +11,8 @@ circuits — except that what is switched here is CVSD.
 > port* (`exch.py calls`), the announcement's bit stream and seams
 > (`exch.py announce`), and the conference bridge's speech detector, floor and
 > switch (`exch.py confer`, `conference.md`); `exch.log` is the run. *Source*,
-> *data line* and *restricted* are proposed class codes in `exch-fabric.md`
-> §3.5, not yet in `exch-marker.md` or the `calls` model. Class *conference* is
+> *data line* and *restricted* are proposed class codes in `fabric.md`
+> §3.5, not yet in `marker.md` or the `calls` model. Class *conference* is
 > **retired**: a leg is a line (`conference.md` §6). None of the cards has a
 > circuit yet, and nothing has been on a bench.
 
@@ -23,7 +23,7 @@ circuits — except that what is switched here is CVSD.
 It was, while registers had to hear tones. **All-pulse, a register needs only the
 caller's hook**, and that is on the M highway for the reading: `register.md` §4
 as it stands, its line-select '151 replaced by the marker's kind of probe,
-≈ 10 packages, all 74HC, no port (`exch-marker.md` §4). A DTMF receiver would be a
+≈ 10 packages, all 74HC, no port (`marker.md` §4). A DTMF receiver would be a
 second writer to the same store (`register.md` §7) and would need the caller's
 `C` — a port again; it is not fitted.
 
@@ -41,16 +41,16 @@ the marker writes only the listener's latch, and any number may listen.
 and punched to the `RBT` conductor in the wiring field. `C_TX` is untouched, so
 the card keeps its own channel as well (`tone-card.md` §1, §5). `RBT` is carried
 with the clock card's shelf-wide references and is the one of them the clock card
-does not drive (`exch-mainboard.md` §2.1); with no ringback card fitted it sits
-at `FILL` and a caller hears silence while the far phone rings (`mvp-ex.md`).
+does not drive (`mainboard.md` §2.1); with no ringback card fitted it sits
+at `FILL` and a caller hears silence while the far phone rings (`mvp.md`).
 
 **Which port ringback sits at is free**, because nothing is ever switched to it:
 the tone reaches a caller through the called port's cell, not through a
-connection (`exch-marker.md` §5). A slot with no port circuit costs least
+connection (`marker.md` §5). A slot with no port circuit costs least
 (`tone-card.md` §5.1). Dial tone, busy and cannot-complete are switched: the
 marker points the caller's latch at them.
 
-**The three switched tones live at 01, 02 and 03** (`exch-protocol.md` §5) —
+**The three switched tones live at 01, 02 and 03** (`protocol.md` §5) —
 dial, busy, cannot-complete — undialable because 0 is the operator key, and
 clear of every MF8 trunk group. `tone-plan.md` settles the frequencies and
 cadences. Busy and cannot-complete differ in timbre as well as speed; each is a
@@ -105,14 +105,14 @@ memory is the syllabic filter's, not the 1 ms integrator's. Record the silence.
 ## 4. Operator (class 2) and the console
 
 **The operator is a phone at port 04**, on a line card whose word says operator
-(`ex-extensions.md` §2.2). 0 hunts class 2 in fixed order from 00, and 04 is the
+(`extensions.md` §2.2). 0 hunts class 2 in fixed order from 00, and 04 is the
 first class-2 port the hunt meets. 05 is the nominal night announcement or
 backup; 06–07 take more operators or single-channel trunks
-(`exch-protocol.md` §5). Further positions may sit in any dialable line slot
-(`exch-marker.md` §3). The operator is not at 00 because a cleared latch
+(`protocol.md` §5). Further positions may sit in any dialable line slot
+(`marker.md` §3). The operator is not at 00 because a cleared latch
 listens there.
 
-**What port 04 is, exactly, is `ex-console.md` §8**: a plain line card with a
+**What port 04 is, exactly, is `console.md` §8**: a plain line card with a
 phone on it, first of block 0's four-line bank. Nothing in the fabric or the
 marker knows the number — a hunt finds the position — so **04 is a default and
 not a requirement**.
@@ -122,7 +122,7 @@ the M and `BUSY` highways — and keys that drive the marker's control bus by
 hand. **Build it first.** Fabric plus console is a working manual board, and the
 bring-up tool for everything that comes after.
 
-`ex-console.md` is the console as a master: its keys (§1), how it takes the bus
+`console.md` is the console as a master: its keys (§1), how it takes the bus
 (§2), and the four things an operator does with it — forced release (§3),
 service observing (§5), **connecting two lines** (§6), and **calling a port and
 supervising both ends** (§7). Two of those add a card to this document's list,
@@ -165,13 +165,13 @@ a tone:
                                No free test; the source is never BUSY and its latch is never written
 ```
 
-`exch-marker.md` §2 does exactly that for classes 5 and 6, so a radio whose word
+`marker.md` §2 does exactly that for classes 5 and 6, so a radio whose word
 says class 6, at 75, is dialled as 75 today. What it lacks is a class of its own: at
 class 6 it would also be hunted as cannot-complete if the card at 03 were
 pulled. **Proposed: one class, *source*, for everything that talks and never
 listens, the two tones included.** The marker reaches dial tone and
 cannot-complete by their fixed addresses, 01 and 03, not by a hunt, so no source
-is ever hunted and the class means only "one write" (`exch-fabric.md` §3.5).
+is ever hunted and the class means only "one write" (`fabric.md` §3.5).
 
 | | |
 |---|---|
@@ -195,11 +195,11 @@ circuit, marker, and what it is not.
 ## 8. Data and foreign codecs
 
 A data card is a line. A call to it is set up like any other and the fabric
-passes its bits exactly (`exch-protocol.md` §4). In-band tones sit in the stream
+passes its bits exactly (`protocol.md` §4). In-band tones sit in the stream
 until answer; E rising — `DSR` — marks it. A terminal can dial by pulsing `DTR`
-(`exch-marker.md` §7). Under the marker as it stands a phone that dials a data
+(`marker.md` §7). Under the marker as it stands a phone that dials a data
 port hears noise, and nothing prevents it. **Proposed: a class of its own, *data
-line*** (`ex-extensions.md` §2.2, §2.4). The marker will not connect a data line
+line*** (`extensions.md` §2.2, §2.4). The marker will not connect a data line
 to a voice port, or the reverse, and gives cannot-complete. A run of data ports
 with their overflow bits set is a pool with one number. The check is made inside
 one exchange: a call from another exchange arrives on a trunk.
@@ -218,7 +218,7 @@ and a DNVT card is two codecs back to back.
 - **A ROM image's start against a free-running `FILL`** in gates; the seam table is
   the bit streams, not the counter's start logic.
 - **The two new classes in the marker.** *Source* and *data line* are proposed
-  here and in `exch-fabric.md` §3.5. Class *conference* is retired: a leg is a
+  here and in `fabric.md` §3.5. Class *conference* is retired: a leg is a
   line (`conference.md` §6). The `calls` model still has a conference leg as a
   line and tones as classes 5 and 6.
 - **A CO's ring cadence ANDed with `RING_CAD`** at the operator's phone: the phone

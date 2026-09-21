@@ -17,7 +17,7 @@ module tb_fabric;
     wire [63:0]  c_rx, a_rx;
 
     // The operator's console, on the serial control bus: the same sixteen-bit
-    // word the marker sends (exch-mainboard.md 2.3), driven by hand.
+    // word the marker sends (mainboard.md 2.3), driven by hand.
     reg        cw_req = 0, cw_bsy = 0, cw_clm = 0;
     reg  [5:0] cw_dst = 0, cw_src = 0;
     wire       cw_busy, sdata, sclk, wr;

@@ -12,7 +12,7 @@
 //   D  an inbound call claimed here        CLAIM, off, a connect PAIR
 //   E  an inbound call with no register    1 cannot-complete, CLM set
 //
-// Then ex-counters.md 9's EVENT WORD: a word with G = 0, which writes to no
+// Then counters.md 9's EVENT WORD: a word with G = 0, which writes to no
 // block at all, carrying an event code in SRC with BSY = 0 and CLM = 1.  The
 // card cannot see G -- bits 15-8 fall out of the end unread -- so it counts one
 // exactly as it counts a write, and the question this bench answers is whether
@@ -23,7 +23,7 @@
 // OUTBOUND call (marker.v 562) and the second write of an INBOUND one
 // (marker.v 555) are the same sixteen bits -- DST a line, SRC a trunk, BSY 1,
 // CLM 0.  No pattern over one word tells them apart, so the trunk strap counts
-// calls completed over a trunk in BOTH directions.  ex-counters.md 3.
+// calls completed over a trunk in BOTH directions.  counters.md 3.
 `timescale 1ns/1ps
 
 module tb_stats;
@@ -85,7 +85,7 @@ module tb_stats;
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(clr), .count(c_all), .match());
 
-    // ---- and four more, strapped for ex-counters.md 9's event words ------
+    // ---- and four more, strapped for counters.md 9's event words ------
     wire [15:0] c_ev, c_wait, c_ntrk, c_glare;
 
     // ANY event: BSY = 0 with CLM = 1, the code left don't-care
@@ -154,7 +154,7 @@ module tb_stats;
         repeat (8) @(posedge clk);
 
         $display("");
-        $display("  tb_stats -- the counter card, ex-counters.md");
+        $display("  tb_stats -- the counter card, counters.md");
         $display("");
 
         // ---- A: a local call that connects ---------------------------
@@ -196,10 +196,10 @@ module tb_stats;
         $display("     C's completion and D's are the same sixteen bits:");
         $display("       outbound  DST=o23 SRC=o51 BSY=1 CLM=0");
         $display("       inbound   DST=o24 SRC=o52 BSY=1 CLM=0");
-        $display("     -- one strap cannot separate them.  ex-counters.md 3.");
+        $display("     -- one strap cannot separate them.  counters.md 3.");
         $display("");
 
-        // ---- the event words, ex-counters.md 9 -----------------------
+        // ---- the event words, counters.md 9 -----------------------
         // What no write says, because nothing is written when it happens.
         mevent(6'o25, 6'o01);                  // 25 lifted and found no register
         mevent(6'o26, 6'o01);                  // and so did 26

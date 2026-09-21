@@ -6,8 +6,8 @@
 //             listens to, and 04 would be the operator.
 //   block 2   two line cards, ports 20 and 21.
 //
-// Everything else absent, as mvp-ex.md has it.  No marker: the console patches
-// latches by hand, which is mvp-ex.md 6.3's manual board, now with a trunk in
+// Everything else absent, as mvp.md has it.  No marker: the console patches
+// latches by hand, which is mvp.md 6.3's manual board, now with a trunk in
 // the middle of it.
 `timescale 1ns/1ps
 

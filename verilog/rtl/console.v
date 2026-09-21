@@ -1,8 +1,8 @@
 // console -- the operator's console, the second master on cable B.
-// ex-console.md; exch-mainboard.md 2.3's /CON; exch-features.md 4.
+// console.md; mainboard.md 2.3's /CON; features.md 4.
 //
 // Keys, two pairs of octal wheels and two toggles, and what they make is the
-// marker's own sixteen-bit word (exch-mainboard.md 2.3.1).  The console has
+// marker's own sixteen-bit word (mainboard.md 2.3.1).  The console has
 // no verbs of its own.  Everything it does is a latch write:
 //
 //   WRITE     the word as the wheels have it: DST listens to SRC.  Bring-up
@@ -21,11 +21,11 @@
 // not one word, and it is what a connection and a release both are:
 //
 //   WRITE + BOTH    DST <- SRC and SRC <- DST: two lines connected, the pair
-//                   that ex-extensions.md 3.1 calls "two latches pointed at
+//                   that extensions.md 3.1 calls "two latches pointed at
 //                   each other by hand".  Both words are inside ONE tenure, so
 //                   no marker word can land between them
 //   RELEASE + BOTH  both ends of a call, which is what a release IS
-//                   (ex-console.md 3.1: one end is not enough)
+//                   (console.md 3.1: one end is not enough)
 //   PROBE + BOTH    both ends read, into two sets of lamps
 //
 // TAKING THE BUS.  /CON is a REQUEST, and there is no grant.  The marker
@@ -35,7 +35,7 @@
 // with WAIT periods of its own clock in silence, its '244 still off, and WAIT
 // is longer than any word the marker can send.  So the console works the same
 // with a marker fitted, with none, and with one that is stopped -- which is
-// the order exch-fabric.md 7 brings an exchange up in.
+// the order fabric.md 7 brings an exchange up in.
 //
 //   /CON  ~~\__________________________________________________/~~~
 //   oe    ____________________/~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\____
@@ -45,7 +45,7 @@
 // of a millisecond, less than the scanner spends on one block.
 //
 // A SLOWER CLOCK THAN THE MARKER'S, on purpose.  The blocks' shift registers
-// have no phase, only content (exch-mainboard.md 2.3.2), so two masters need
+// have no phase, only content (mainboard.md 2.3.2), so two masters need
 // not agree on a rate; the marker shifts at 512 kHz and this at 64.
 //
 // HOLD keeps the bus after the word.  With a marker fitted that STOPS the
@@ -69,7 +69,7 @@
 //                            control bus at all.  Two '151 and two flip-flops
 //   BUSY and the card's word off PB0 and PB1, in the octet after a PROBE word.
 //                            The block that drives PB is the block the SHIFT
-//                            REGISTER names (exch-mainboard.md 2.3.2), so a
+//                            REGISTER names (mainboard.md 2.3.2), so a
 //                            console word steers it to the console's own port
 //   who a port listens to    only the watch, and only if it was armed first
 `timescale 1ns/1ps

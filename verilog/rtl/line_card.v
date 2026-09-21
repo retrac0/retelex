@@ -12,18 +12,18 @@
 //          (the ring cadence while the port rings, steady while the far end
 //           is off-hook -- the port's gates have already done that work)
 //
-// M and E are the names exch-fabric.md 3.5 uses throughout, and they are also
+// M and E are the names fabric.md 3.5 uses throughout, and they are also
 // the E&M leads of mf8-spec.md 12.1's card, so an E&M trunk plugs into the same
-// four wires.  The card's own two pins say what the port is (ex-extensions.md 2).
+// four wires.  The card's own two pins say what the port is (extensions.md 2).
 `timescale 1ns/1ps
 
 module line_card #(
-    // exch-protocol.md 5 has a plain line card tie its word pin to ground, "which
-    // reads all ones" -- but exch-fabric.md 3.5's table gives LINE as 001, so the
+    // protocol.md 5 has a plain line card tie its word pin to ground, "which
+    // reads all ones" -- but fabric.md 3.5's table gives LINE as 001, so the
     // two cannot both be right.  Until that is settled the card sends an explicit
     // word.  See the README.
     // (was: ties its word pin to ground, which reads all ones at
-    // the block and means "a line, no options" (exch-protocol.md 5) -- no part
+    // the block and means "a line, no options" (protocol.md 5) -- no part
     // and no jumper.  A card with options shifts a word out of a '165.
     parameter [7:0] WORD  = 8'h01,      // class 001: a line, no options
     parameter       RINGS = 1'b1      // /ANS left open: this port rings

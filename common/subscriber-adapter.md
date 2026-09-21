@@ -2,7 +2,7 @@
 
 A dial telephone is two wires and a bell. Somewhere between it and the
 exchange's port, which is 64 kbps of CVSD and one signalling bit each way
-(`exch-protocol.md` §1), something has to do the conversion: a hybrid, a codec,
+(`protocol.md` §1), something has to do the conversion: a hybrid, a codec,
 a feed, a ringer and a loop detector. **This document is about where that
 something sits**, and specifies the one placement the design does not already
 have — an adapter at the subscriber's end of the digital line of
@@ -19,14 +19,14 @@ have — an adapter at the subscriber's end of the digital line of
 ## 1. Three places for one conversion
 
 The exchange's port is an MF8 slot and never learns what is behind it. Its word
-says *plain line* and `/ANS` is open (`ex-extensions.md` §2.2) in all three
+says *plain line* and `/ANS` is open (`extensions.md` §2.2) in all three
 cases:
 
 | | conversion at | outside plant | in the exchange slot | status |
 |---|---|---|---|---|
 | **A** | the exchange | one analog pair | analog FXS card, `channel-cards.md` §3 | specified |
 | **B** | the subscriber | two digital pairs | CVSD subscriber line card, `channel-cards.md` §2 | specified; **the adapter is §2 below** |
-| **C** | a shared site | one MF8 link, then analog loops | trunk card, class *line* a channel | `exch-terminal.md` |
+| **C** | a shared site | one MF8 link, then analog loops | trunk card, class *line* a channel | `terminal.md` |
 
 **The choice is per line and reversible.** Pull the FXS card, push a CVSD line
 card, run the second pair, hang an adapter: the marker, the fabric and the
@@ -100,7 +100,7 @@ LOOP_OPEN =  loop detector, or ring trip has not yet released
 ```
 
 The cadence needs no generator: it arrives as bursts of zeros on the line,
-because the exchange chops `A_RX` with it (`exch-fabric.md` §3.5), and the relay
+because the exchange chops `A_RX` with it (`fabric.md` §3.5), and the relay
 follows what the detector reads.
 
 ---

@@ -329,7 +329,7 @@ at 200 and 20.7 at 1 000.
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
-The exchange uses two of the three reserved pins (`exchange/ex-extensions.md`
+The exchange uses two of the three reserved pins (`exchange/extensions.md`
 §2.1): a12 carries the port's word, its class and options one bit a frame, and
 a13 is `/ANS`, whether the port rings. a14 stays spare. A card only ever pulls
 the two to ground, and this shelf leaves them unconnected, so a card built for

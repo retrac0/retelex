@@ -1,15 +1,15 @@
 # The exchange — the counter card
 
-`ex-extensions.md` §4 proposes traffic counters and wires them into the marker:
+`extensions.md` §4 proposes traffic counters and wires them into the marker:
 "each is a pulse from a state the marker's sequencer already reaches", on "a
 counter card beside the marker". It does not need to be. **The control bus is a
-broadcast** (`exch-mainboard.md` §2.3) — the marker's whole output is one
+broadcast** (`mainboard.md` §2.3) — the marker's whole output is one
 sixteen-bit word shifted out on `SDATA` and strobed by `WR`, and every tap on
 the ribbon sees it. A counter can therefore be a card that *only listens*: three
 of the cable's thirty-eight signals, no `/BLK`, no shunt column, no probe, no
 clock, and no connection to the marker at all.
 
-This document is the peg-count half of `ex-extensions.md` §4, built that way.
+This document is the peg-count half of `extensions.md` §4, built that way.
 The usage half — erlangs by sampling `BUSY` on the probe — is not this card
 (§5). **§9 is what makes the other half of §4's list countable at all**: the
 marker says the things no latch write says, in a word that writes nothing.
@@ -46,7 +46,7 @@ of the second register, and exactly eight bits, which is exactly one '688. Bits
 15–8 fall out of the end unread.
 
 **Clocked by `WR`.** The '688's answer is stable through the whole pulse,
-because `exch-mainboard.md` §2.3.2's one rule already keeps `WR` clear of every
+because `mainboard.md` §2.3.2's one rule already keeps `WR` clear of every
 `SCLK` edge — the same rule that makes a block's write decoder work. So `WR` is
 the counter chain's clock and the match is its `ENP`/`ENT`. No synchroniser, and
 the card takes no clock off the cable.
@@ -75,7 +75,7 @@ a jumper says what it is.
 | strapped for | `SRC[5:0]` | `BSY` | `CLM` | what it counts |
 |---|---|---|---|---|
 | **cannot-complete given** | `001100` (`o14`) | 1 | `P` | every failure: wrong numbers, busy lines, empty slots, no free trunk, no free register |
-| **dial tone given** | `001000` (`o10`) | 1 | 0 | one a call **originating** here — the calling rate `exch-marker.md` §6 assumes |
+| **dial tone given** | `001000` (`o10`) | 1 | 0 | one a call **originating** here — the calling rate `marker.md` §6 assumes |
 | **trunks let go** | `000000` | 0 | 0 | the flood's teardown, and a hub's legs dropped when one claims |
 | **calls over a trunk** | `bbb PPP` | 1 | 0 | a port pointed at a trunk on block *bbb* — network calls completed, **either direction** (§3) |
 | claims | `000000` | 1 | 1 | **two** a call: the claim and the dial-tone-off that follows it are the identical word. Read the LEDs ignoring the bottom one |
@@ -118,7 +118,7 @@ outbound half.
 ## 4. What the bus cannot see at all
 
 **No call ever ends on the control bus.** The port clears its own latch
-(`exch-fabric.md` §3.5 — "nobody is in charge of a call"), so the marker writes
+(`fabric.md` §3.5 — "nobody is in charge of a call"), so the marker writes
 nothing at release. Every counter here is a **peg count** and none can be counted
 down; there is no "calls in progress" and no holding time. That is not a
 limitation of the card, it is the architecture, and it is why §5 exists.
@@ -132,14 +132,14 @@ counter that is tolerable; for a route it would not be.
 **`DST` is unread**, so no strap can ask *which port was written*. That wants a
 second '164 and a second '688 — a different strap field, not a different card.
 It is also why §9's event word can carry a port in `DST` for free: this card
-cannot see it, and the cards that can (`ex-observers.md` §5, §6) are looking at
+cannot see it, and the cards that can (`observers.md` §5, §6) are looking at
 the whole word anyway.
 
 ---
 
 ## 5. Not this card
 
-Erlangs. `ex-extensions.md` §4's usage sample — one enabled pass of the
+Erlangs. `extensions.md` §4's usage sample — one enabled pass of the
 scanner on each `RING_CAD` edge, counting ports of one class that read `BUSY` on
 the probe, 600 counts to the erlang-hour — needs `PB`, `RING_CAD` and a wrap
 detector, and a gate that the marker's own use of the probe does not disturb.
@@ -201,7 +201,7 @@ counts land, so the chain is wider than one '161.
   card's straps misread.
 - **A hub's tie-throughs** against the trunk strap, which §3 predicts are counted
   and a leaf's are not. Not run.
-- **The console's writes.** The bus is multi-master (`exch-mainboard.md` §2.3);
+- **The console's writes.** The bus is multi-master (`mainboard.md` §2.3);
   a word from the operator's console counts exactly as the marker's does, which
   is probably right and has not been thought through.
 - **The circuit.** A sketch from the block's front end and the monitor's
@@ -216,7 +216,7 @@ counts land, so the chain is wider than one '161.
 
 ## 9. The event word: the marker says what no write says
 
-`ex-extensions.md` §4 asks for counts this card cannot reach, and they have one
+`extensions.md` §4 asks for counts this card cannot reach, and they have one
 thing in common — **nothing is written when they happen**:
 
 | | why there is no write |
@@ -224,7 +224,7 @@ thing in common — **nothing is written when they happen**:
 | a caller waited for a register | the marker does nothing at all. The caller waits and the scanner comes round again |
 | all trunks busy, a count a direction | the hunt finds nothing. The only write is the caller's cannot-complete, and it says neither *why* nor *which way* |
 | a register gave up with no digit | the register frees itself on its own timeout (`register.md` §2) |
-| glare | the design **tolerates** it — `exch-network.md` §1, "residual glare joins two callers to each other" — so there is nothing to undo and nothing to write |
+| glare | the design **tolerates** it — `network.md` §1, "residual glare joins two callers to each other" — so there is nothing to undo and nothing to write |
 | the write queue overran | a model part (`marker.v`), and the one thing a bench most wants to know did not happen |
 
 §4 above says no call ever *ends* on the bus, and that is the architecture. This
@@ -234,7 +234,7 @@ happen** and merely had no way to mention.
 ### 9.1 One bit makes the channel
 
 Bit 15 is the guard: `G`·`WR` at every block's write decoder
-(`exch-mainboard.md` §2.3.1), so **a word that does not carry it cannot write.**
+(`mainboard.md` §2.3.1), so **a word that does not carry it cannot write.**
 That is a safety rule, and it is also a second channel on the same wire.
 
 ```
@@ -255,10 +255,10 @@ That is a safety rule, and it is also a second channel on the same wire.
   under it, in `SRC`, and a strap for one of them can never count a call. §9.4
   measures both halves of that.
 - **`DST` is free.** Nothing writes, so the field can say which port the event is
-  about. This card cannot read it (§4) and does not need to; `ex-observers.md`
+  about. This card cannot read it (§4) and does not need to; `observers.md`
   §5 and §6 can, so the same word is a count here and a diagnosis there.
 - **A console cannot send one.** Its word comes off two '165 with `G` wired high
-  (`ex-console.md` §1). The converse of "a console cannot send a word the marker
+  (`console.md` §1). The converse of "a console cannot send a word the marker
   could not have sent" is now true as well, and it means **an operator cannot
   fabricate a count**.
 
@@ -280,7 +280,7 @@ That is a safety rule, and it is also a second channel on the same wire.
 | | |
 |---|---|
 | the bus | 31 µs at 512 kHz, the same as any word, on an occasion that happens a handful of times an hour |
-| the probe | **an event steers `/BLK` exactly as a write does**, so it dirties the probe and costs the same repeated visit (`exch-rtl.md`, "steering the probe costs a visit"). Setting `DST` to the block the scanner is already on would make it free; carrying the port is worth more than one visit in a 9 ms scan |
+| the probe | **an event steers `/BLK` exactly as a write does**, so it dirties the probe and costs the same repeated visit (`rtl.md`, "steering the probe costs a visit"). Setting `DST` to the block the scanner is already on would make it free; carrying the port is worth more than one visit in a 9 ms scan |
 | a call | **nothing.** An event is pushed only when the sequencer has room to spare and is simply dropped when it has not, so no caller ever waits behind a diagnostic. The counts are therefore **lower bounds**, and the occasion they would drop is the busiest one — which is what `o03` is for |
 | the marker | the guard becomes a bit of the sequencer's word instead of a tie to Vcc; four flip-flops for "a trunk faces this way at all", one for the register spell, one for the overrun |
 | a register | one conductor for `o02` |
@@ -312,7 +312,7 @@ cards counted. What they counted is the point:
 
 **Seven occasions on which the pool filled and not one caller noticed**, on a
 run where every other instrument in the exchange says nothing happened: that is
-the count `ex-extensions.md` §4 asked for and the one no listener could get. And
+the count `extensions.md` §4 asked for and the one no listener could get. And
 21 against 94 is the definition working as §9.2 states it — a spell is one
 count, however many callers queue behind it.
 
@@ -325,7 +325,7 @@ overran. **Those four are unexercised**, and §9.5 says so.
 - **The circuit.** Nothing is drawn. In 74HC the change is where `G` comes from
   and a handful of flip-flops; none of it has been laid out with the sequencer's
   own states.
-- **Bit 14.** `exch-mainboard.md` §7 leaves parity over bits 13–0 open. An event
+- **Bit 14.** `mainboard.md` §7 leaves parity over bits 13–0 open. An event
   word would carry it like any other and nothing here changes — but the two have
   never been thought about together, and bit 14 is the only place a *third*
   kind of word could ever come from.

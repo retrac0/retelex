@@ -1,5 +1,5 @@
 // con_site -- a standalone exchange with TWO masters on cable B: the marker and
-// the operator's console.  ex-console.md.
+// the operator's console.  console.md.
 //
 //   block 0   the OPERATOR'S PHONE at 04, on a plain line card: a line in every
 //             respect, and the only port of block 0 that is fitted (00 is never
@@ -19,9 +19,9 @@
 //   common    one marker (no network card), a pool of registers, the console
 //
 // Cable B is tri-state in 74HC and pulled low at every block
-// (exch-mainboard.md 6); here it is an AND-OR of whoever's '244 is on.
+// (mainboard.md 6); here it is an AND-OR of whoever's '244 is on.
 //
-// NAIVE = 1 is exch-mainboard.md 2.3's /CON as first written -- "the marker's
+// NAIVE = 1 is mainboard.md 2.3's /CON as first written -- "the marker's
 // drivers go high-impedance.  One '244 enable" -- and nothing more: the marker
 // is cut off the instant /CON falls, does not know it, and the console does
 // not wait.  It is here to be measured against.
@@ -141,7 +141,7 @@ module con_site #(
     // ---- the ring source: three ties -------------------------------------
     // A_TX high, /ANS low (PORT_RINGS clears it), and no word.  The card's own
     // C_TX is FILL in an exchange -- silence, or a looping "please hold"
-    // (exch-features.md 3); here the testbench drives it with a pattern, so
+    // (features.md 3); here the testbench drives it with a pattern, so
     // that a party parked on it can be told apart from a party hearing nothing.
     assign c_tx[PRS] = tx[PRS];  assign a_tx[PRS] = 1'b1;  assign word[PRS] = 1'b0;
 

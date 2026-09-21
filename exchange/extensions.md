@@ -2,7 +2,7 @@
 
 Additions to the exchange. Each is a card, or a few jumpers on one. None
 changes the fabric, and none needs a memory part. Test lines are features that
-are lines, in the manner of `exch-features.md`. **Whatever sits behind a port
+are lines, in the manner of `features.md`. **Whatever sits behind a port
 says everything about it** (§2): one pin says whether it rings, and one serial
 word says its class, its options, a trunk's direction and what it is nailed to.
 A hotline to another exchange is a card that dials. The traffic counters count
@@ -12,8 +12,8 @@ what the marker already does.
 > drawn, and nothing has been on a bench. Every figure here comes from another
 > document's run, as cited. The word and the hotline card's dialler are
 > sketched by function. The sources below use the *source* class that
-> `exch-fabric.md` §3.5 proposes. Under the marker as it stands, class 5 or 6
-> does the same (`exch-features.md` §6).
+> `fabric.md` §3.5 proposes. Under the marker as it stands, class 5 or 6
+> does the same (`features.md` §6).
 
 ---
 
@@ -27,8 +27,8 @@ not a rule.
 
 | | the card | class | what it tests |
 |---|---|---|---|
-| **Milliwatt** | 1004 Hz at the codec's 0 dBm0 reference, into one encoder half, as a tone card (`exch-features.md` §2). `A_TX` tied low | source | the listener's decoder, and its analog path, for level |
-| **Quiet termination** | a card carrying only its word (§2.2). Its `C_TX` is pulled to `FILL` as an empty slot's is, and its `A_TX` to 0 | source | the listener's idle noise: `FILL` decodes at −48.3 dB re nominal speech (`exch-protocol.md` §4) |
+| **Milliwatt** | 1004 Hz at the codec's 0 dBm0 reference, into one encoder half, as a tone card (`features.md` §2). `A_TX` tied low | source | the listener's decoder, and its analog path, for level |
+| **Quiet termination** | a card carrying only its word (§2.2). Its `C_TX` is pulled to `FILL` as an empty slot's is, and its `A_TX` to 0 | source | the listener's idle noise: `FILL` decodes at −48.3 dB re nominal speech (`protocol.md` §4) |
 | **Loopback** | one 74HC74 clocked on `TX_CLK`: `C_TX` ← `C_RX`, `A_TX` ← `A_RX` | line | a caller hears their own voice; a data card gets its own bits back |
 
 **Why a milliwatt means more here than in a voice-band exchange.** Bits are
@@ -39,11 +39,11 @@ MF8 a slip is a −29 dB tick lasting about a millisecond (`mf8-backplane.md` §
 It is not a level error.
 The tone is 1004 Hz, as in PCM practice, so that it is not a submultiple of the
 bit rate. It can also be a looping ROM image, as the announcement card plays
-one (`exch-features.md` §3): 251 cycles of 1004 Hz are exactly 16 000 bits,
+one (`features.md` §3): 251 cycles of 1004 Hz are exactly 16 000 bits,
 0.25 s, 2 000 bytes. That image's seam has not been measured.
 
 **The loopback re-times, as every card does.** A card holds `C_TX` for the whole
-frame and samples `C_RX` at the frame edge (`exch-fabric.md` §3.4). A bare wire
+frame and samples `C_RX` at the frame edge (`fabric.md` §3.4). A bare wire
 from `C_RX` to `C_TX` would change mid-frame and give a delay that depends on the
 slot order. The flip-flop gives two frames, 31.25 µs, whatever the slots: one
 frame there and one frame back.
@@ -75,7 +75,7 @@ and only the marker reads it: what the port is, its options, which way it goes
 if it is a trunk, and what it is nailed to if it is nailed. The block keeps no
 per-port settings, so **move a card and all of it moves with the card.**
 
-> **Proposed, not applied here** (`ex-groups.md`): the word's unused quarter,
+> **Proposed, not applied here** (`groups.md`): the word's unused quarter,
 > bit 0 and bit 7 both set, becomes *a plain line that answers to `h s`*, and a
 > call that cannot be completed at the number dialled hunts for a port that
 > answers to it. That replaces §2.4's run of adjacent `o` ports and class
@@ -98,18 +98,18 @@ Row *c* keeps all seven of its grounds.
 
 - **A card** says it for its one port.
 - **A trunk card** says it for each of its six channels: a word line and an
-  `/ANS` line a channel (`exch-network.md` §1, `exch-terminal.md` §3). An MF8
+  `/ANS` line a channel (`network.md` §1, `terminal.md` §3). An MF8
   trunk card on a tie trunk sends one word to all six from one 74HC165, since its
   link goes one way, and ties all six `/ANS` lines low. A trunk card is six
   cards' worth of ports in one. **A single-channel trunk card is one port's
-  worth**, and sits in any slot (`exch-network.md` §1.1).
+  worth**, and sits in any slot (`network.md` §1.1).
 - **An empty slot** says nothing: unequipped, and nothing points at it.
 
 ### 2.2 The word
 
 One 8-bit word a port, one bit a frame, every octet. The scanner rests on each
 port for one octet, 125 µs, so the marker has the whole word at the end of every
-visit (`exch-marker.md` §4). The pin is low for a 1.
+visit (`marker.md` §4). The pin is low for a 1.
 
 ```
  frame of the octet    0    1  2  3    4  5  6  7
@@ -124,9 +124,9 @@ visit (`exch-marker.md` §4). The pin is low for a 1.
 | 000 | unequipped | |
 | 001 | line | `o w b ·` — overflow, warm, busy-out, spare (§2.4) |
 | 010 | operator | `o · · ·` — overflow in the same bit as a line |
-| 011 | source: a radio, a clock, a test tone (`exch-features.md` §6) | |
+| 011 | source: a radio, a clock, a test tone (`features.md` §6) | |
 | 100 | outside line | |
-| 101 | tie trunk | `d d g n`: its direction, N 00, E 01, S 10, W 11; the glare bit; and `n`, which keeps a flood from being forwarded into this link or out of it, so that a ring does not circle (`exch-network.md` §1, §3.3) |
+| 101 | tie trunk | `d d g n`: its direction, N 00, E 01, S 10, W 11; the glare bit; and `n`, which keeps a flood from being forwarded into this link or out of it, so that a ring does not circle (`network.md` §1, §3.3) |
 | 110 | data line | `o · · ·` — overflow in the same bit as a line |
 | 111 | restricted | `z w b L` — 0-only, reserved (warm), busy-inbound, local-only (§2.4). Was *conference leg* |
 
@@ -156,9 +156,9 @@ A trunk's `d d g n` does not share meaning with these and keeps its own map.
   gets cannot-complete and its lifting is ignored. On a trunk card, a switch a
   channel takes one channel out of the hunt.
 - **The tone cards at 01–03 need no word.** The marker reaches them by
-  address and never reads their class (`exch-fabric.md` §3.5).
+  address and never reads their class (`fabric.md` §3.5).
 - **The block**: a fourth '151 commutates the eight word pins onto the probe bus
-  beside `BUSY` (`exch-fabric.md` §2, §3.1). **The marker**: a 74HC164 takes the
+  beside `BUSY` (`fabric.md` §2, §3.1). **The marker**: a 74HC164 takes the
   word in, a 74HC30 finds all ones, and a few gates sort the rest: bit 0 = 0 is
   a class and its options; bit 0 = 1 with bit 7 = 0 is a nail; all ones is a
   plain line; anything else is no word.
@@ -170,7 +170,7 @@ A trunk's `d d g n` does not share meaning with these and keeps its own map.
 ### 2.3 Ringing, and lines that answer at once
 
 A port that rings gives its card E only in the ring cadence, and sends the
-caller ringback meanwhile (`exch-fabric.md` §3.5):
+caller ringback meanwhile (`fabric.md` §3.5):
 
 ```
  ON   = /ANS is open  ·  /M  ·  /fM       an on-hook port that rings, and did not hang up a moment ago
@@ -196,7 +196,7 @@ and the caller hears the card, or silence until it answers.
 continuously, not in cadence, and its caller hears no ringback. **The class and
 the pin must agree** on a card that is not a line. A purpose-built card has both
 on the board. Only a subscriber terminal's channels set them by jumper
-(`exch-terminal.md` §3).
+(`terminal.md` §3).
 
 ### 2.4 Options of a line, and class *restricted*
 
@@ -209,8 +209,8 @@ same frame on every class that uses them (§2.2).
 | frame | bit | | the marker |
 |---|---|---|---|
 | 4 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`conference.md` §6). Slot order is priority, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow. Same bit on class *operator* and *data line* |
-| 5 | `w` | **warm line**: a courtesy phone, a lift's phone, a help point | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`exch-marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
-| 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`ex-console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
+| 5 | `w` | **warm line**: a courtesy phone, a lift's phone, a help point | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
+| 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
 | 7 | `·` | **spare** | one bit free on class line |
 
 **Why busy, not cannot-complete.** Cannot-complete (fast busy / reorder) means the
@@ -253,7 +253,7 @@ phones, a private wire, a permanent data circuit. Two ports facing each other
 are already a hotline (`channel-cards.md` §1), where either lifting rings the other
 and both lifted is a call. What the exchange lacks is a way to keep the pair
 after release, because the release clears both latches. A nailed-up
-connection is `mvp-ex.md` §6's bring-up step 3 made permanent, and brought up
+connection is `mvp.md` §6's bring-up step 3 made permanent, and brought up
 by the scanner from jumpers on the two cards.
 
 ### 3.1 The nail word
@@ -271,10 +271,10 @@ sends it as its word (§2.2) in place of its class:
 | **The card** | the word's parts (§2.2), with the partner's port in the jumpers. A plain line card to be nailed has them fitted, and its ground link opened |
 | **The marker** | **a nail** is bit 0 = 1 and bit 7 = 0. An empty slot reads all zeros and a plain line all ones, and neither is a nail |
 | **The rule** | checked at each port before any other: **a nail and `BUSY` clear → write this port's latch to the nail's port, with `BUSY` set.** A port with a nail is never free. It is never hunted, never connected by a dialled number, and its lifting is never a call request or a seizure |
-| **Release** | nothing stops it. When a nailed pair's call ends, the release detectors clear both latches as on any call (`exch-marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The port circuit is unchanged |
+| **Release** | nothing stops it. When a nailed pair's call ends, the release detectors clear both latches as on any call (`marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The port circuit is unchanged |
 | **After `/RESET`, or a card plugged in** | the first scan writes every nail, within 8 ms. The cards are the only record of the nails, and nothing else is needed |
-| **Both ends** | each card names the other, and each port is written from its own card. A card naming a port whose card does not name it back is a one-way nail. That is right for a listener on a source, a speaker on a radio say (`exch-features.md` §6). For a phone it is dead: it lifts and nothing rings |
-| **The console** | can still point two latches at each other by hand, as bring-up step 3 does — one key, two crossed words in one tenure (`ex-console.md` §1, §6). **It rings nothing**: with both phones on hook the pair is held by nothing, so an operator rings each end from a source first and pairs them once both have answered. It is a call, and it clears when it is released; nothing remembers it, which is the whole difference from a nail |
+| **Both ends** | each card names the other, and each port is written from its own card. A card naming a port whose card does not name it back is a one-way nail. That is right for a listener on a source, a speaker on a radio say (`features.md` §6). For a phone it is dead: it lifts and nothing rings |
+| **The console** | can still point two latches at each other by hand, as bring-up step 3 does — one key, two crossed words in one tenure (`console.md` §1, §6). **It rings nothing**: with both phones on hook the pair is held by nothing, so an operator rings each end from a source first and pairs them once both have answered. It is a call, and it clears when it is released; nothing remembers it, which is the whole difference from a nail |
 | **Counters** | a nail's writes are not calls (§4) |
 
 The nail word replaces a nail card that wrote nails from a diode matrix: a '161,
@@ -285,7 +285,7 @@ the number of nails, and changing one is two cards' jumpers.
 
 A nailed pair of phones is a ringdown hotline. Nothing in it is new: it is the
 hotline rule of `channel-cards.md` §1 under the exchange's supervision
-(`exch-fabric.md` §3.5):
+(`fabric.md` §3.5):
 
 ```
  A lifts          A's M reaches B's port as E.  B is on-hook, so B's port rings it in the cadence and sends RBT
@@ -301,13 +301,13 @@ hotline rule of `channel-cards.md` §1 under the exchange's supervision
 **A data circuit** is two data cards nailed together, with `/ANS` on both so
 that `DSR` follows `DTR` without the cadence. It is bit-exact inside one
 exchange and over copper ties. Across MF8 it is async oversampled data only
-(`exch-network.md` §8), except to a loop-timed subscriber terminal
-(`exch-terminal.md` §4).
+(`network.md` §8), except to a loop-timed subscriber terminal
+(`terminal.md` §4).
 
 ### 3.3 Across the network: nailed hop by hop
 
 A nail word names a port of its own exchange, because a latch can name nothing
-else (`exch-protocol.md` §3). A channel held end to end across exchanges is
+else (`protocol.md` §3). A channel held end to end across exchanges is
 nailed at every exchange on the way, each exchange nailing its own pair:
 
 ```
@@ -322,20 +322,20 @@ nailed at every exchange on the way, each exchange nailing its own pair:
   comes in band from B's port.
 - **The flood never touches a nailed channel.** It sends a nail and not a class,
   so it is never hunted, its M rising is never a seizure, and no monitor attends
-  it (`exch-monitor.md` §4).
+  it (`monitor.md` §4).
 - **The cost is a channel on every link crossed, for good.** A direction's six
   channels become five, and its capacity at 1 % blocking falls from 1.91 E to
   1.36 E (`exch.py ss0` 4). And the path is in jumpers at every exchange: a
   fixed route, which the network otherwise never has. Use it where a channel
   must be held end to end, such as a permanent data circuit.
 - **Through a subscriber terminal it costs nothing extra.** Each terminal line
-  has its own channel (`exch-terminal.md` §2).
+  has its own channel (`terminal.md` §2).
 
 ### 3.4 Ringdown to another exchange: a card that dials
 
 A nail cannot be named by an exchange's code and a line. A path the flood sets up lives
 only while forward A is high, and every patch clears itself on the fall
-(`exch-network.md` §3). No transit keeps anything that would tell it a patch was
+(`network.md` §3). No transit keeps anything that would tell it a patch was
 meant to stay. And backward A across the network is the claim, not the far
 phone's hook, so the far phone could not ring the near one over such a path.
 
@@ -347,9 +347,9 @@ whose pulses the flood carries live: no change to the exchange, and no sender.
 | | |
 |---|---|
 | **The number** | `1 e b h s`, or `h s` for a line of the card's own exchange. Four jumpers a digit hold its pulse count, ten for 0 |
-| **Waiting for the register** | the card must not dial before a register is attached, or the register counts from the middle. The marker points a caller at dial tone when it hands it a register (`exch-marker.md` §3), so the card waits for `C_RX` to leave the idle pattern: `C_RX` against `FILL`, one XOR and a counter. With no dial-tone card fitted, a hotline cannot dial |
-| **Dialling** | breaks on its own `A_TX` while the phone stays off-hook: 10 pps, 60/40, 0.7 s between digits, all from `TX_OCT`. These are the windows the register, the flood and the monitors were measured at: the flood is ready 258 ms after the first digit, and the monitors' rules held at 10 pps ± 10 % (`exch-network.md` §4, `exch-monitor.md` §5). The phone hanging up stops it |
-| **Then** | an ordinary call. The flood opens on `1`, the owner claims on `e b`, the far phone rings, and ringback comes in band. Answer across the network is seen at claim (`exch-network.md` §3) |
+| **Waiting for the register** | the card must not dial before a register is attached, or the register counts from the middle. The marker points a caller at dial tone when it hands it a register (`marker.md` §3), so the card waits for `C_RX` to leave the idle pattern: `C_RX` against `FILL`, one XOR and a counter. With no dial-tone card fitted, a hotline cannot dial |
+| **Dialling** | breaks on its own `A_TX` while the phone stays off-hook: 10 pps, 60/40, 0.7 s between digits, all from `TX_OCT`. These are the windows the register, the flood and the monitors were measured at: the flood is ready 258 ms after the first digit, and the monitors' rules held at 10 pps ± 10 % (`network.md` §4, `monitor.md` §5). The phone hanging up stops it |
+| **Then** | an ordinary call. The flood opens on `1`, the owner claims on `e b`, the far phone rings, and ringback comes in band. Answer across the network is seen at claim (`network.md` §3) |
 | **Time** | 0.8–3.2 s of pulses and 2.8 s of pauses for five digits: **about 4–6 s from dial tone to the far port being rung**, then the cadence's own 0–4 s to the first ring |
 | **Both ways** | a dialling card at each end, each naming the other. Both lifting at once find each other busy and get cannot-complete |
 | **Held while idle** | nothing: no channel, no latch, no register |
@@ -378,8 +378,8 @@ more.
 
 ## 4. Traffic counters
 
-The register table of `exch-marker.md` §6 and the link loads of
-`exch-network.md` §5 assume a calling rate. Counters check those tables on a
+The register table of `marker.md` §6 and the link loads of
+`network.md` §5 assume a calling rate. Counters check those tables on a
 working exchange, and say when to add a register or double a direction.
 Exchanges have always kept two kinds.
 
@@ -391,7 +391,7 @@ already reaches:
 | calls connected | the second latch write of a call. A nail's writes are not counted | the calling rate |
 | cannot-complete given | a caller's latch is written to cannot-complete | wrong numbers, busy lines, empty slots |
 | waited for a register | a call request found no register free | whether §6's register count holds |
-| all trunks busy, one a direction | a hunt for a free trunk facing that way found none | a link's blocking, against `exch-network.md` §5 |
+| all trunks busy, one a direction | a hunt for a free trunk facing that way found none | a link's blocking, against `network.md` §5 |
 
 **Usage: how much, in erlangs, by switch count.** On each rising edge of
 `RING_CAD`, once every 6 s and at no extra cost, one full pass of the scanner is

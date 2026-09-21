@@ -26,21 +26,21 @@ the release detectors would run: ports, latches, BUSY, class marks, cards that
 behave (phones, tones, registers, announcements, conference legs, a CO line).
 
 Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the run)
-        python3 sim/exch.py tandem     exch-protocol.md  §2
-        python3 sim/exch.py fabric     exch-protocol.md  §4
-        python3 sim/exch.py calls      exch-marker.md    §§3-6, exch-features.md, mvp-ex.md
-        python3 sim/exch.py announce   exch-features.md  §3
-        python3 sim/exch.py aline      exch-network.md   §8
-        python3 sim/exch.py flood      exch-network.md   §4
-        python3 sim/exch.py net        exch-network.md   §5.1
-        python3 sim/exch.py topo       Topology.md
-        python3 sim/exch.py monitor    exch-monitor.md   §5
-        python3 sim/exch.py timing     exch-fabric.md    §4
-        python3 sim/exch.py mainboard  exch-mainboard.md §5
+        python3 sim/exch.py tandem     protocol.md  §2
+        python3 sim/exch.py fabric     protocol.md  §4
+        python3 sim/exch.py calls      marker.md    §§3-6, features.md, mvp.md
+        python3 sim/exch.py announce   features.md  §3
+        python3 sim/exch.py aline      network.md   §8
+        python3 sim/exch.py flood      network.md   §4
+        python3 sim/exch.py net        network.md   §5.1
+        python3 sim/exch.py topo       topology.md
+        python3 sim/exch.py monitor    monitor.md   §5
+        python3 sim/exch.py timing     fabric.md    §4
+        python3 sim/exch.py mainboard  mainboard.md §5
         python3 sim/exch.py confer     conference.md
-        python3 sim/exch.py ss0        ex-ss0.md
+        python3 sim/exch.py ss0        ss0.md
 
-The network of exch-network.md (`net`) is the second pass and is not here.
+The network of network.md (`net`) is the second pass and is not here.
 """
 import heapq, itertools, os, sys, time, zlib
 import numpy as np
@@ -761,14 +761,14 @@ def calls():
                       f'{(w[d].mean() if d.any() else 0):21.2f} {100 * (w > 1).mean():13.2f} {100 * (w > 3).mean():13.2f}')
     print()
 
-    # ---- the minimum exchange of mvp-ex.md, as a whole
+    # ---- the minimum exchange of mvp.md, as a whole
     ev1, _ = pulses(900, '21')
     ev2, _ = pulses(8800, '20')
     tries = []
     for t0, number in ((18000, '0'), (21500, '9'), (25000, '1'), (28000, '8'), (31500, '25'), (36000, '20')):
         ev, end = pulses(t0 + 800, number)
         tries += [(t0, 'off')] + ev + [(end + 600, 'on')]
-    scene('19. The minimum exchange (mvp-ex.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
+    scene('19. The minimum exchange (mvp.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
           '      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;\n'
           '      then 20 dials the four first keys that find nothing here -- 0 (no operator), 9 (no outside line),\n'
           '      1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).',
@@ -1050,7 +1050,7 @@ def monitor():
     print('  register can read (register.md 3.2): below it two digits run together, flood or no flood.')
 
     # ---- a carrier that is not a pair -----------------------------------
-    print(f'\n  A CARRIER THAT IS NOT A PAIR.  exch-network.md 1.1 allows a carrier "about 2 ms of A path')
+    print(f'\n  A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path')
     print('  a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a')
     print('  jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that')
     print(f'  eats the origin\'s guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.')
@@ -1417,7 +1417,7 @@ def mainboard():
         print(f'       clock card {label:16s} worst loss {loss:5.1f} ns   (block {a} driving, block {b} listening)')
     print('     Hold is never worse than with no cable at all: the same term that shortens set-up lengthens hold.')
 
-    # the worst placement, folded into exch-fabric.md 4's own margins
+    # the worst placement, folded into fabric.md 4's own margins
     loss, _, _ = skew(-RIB_X)
     clkX, clkY = d('244'), d('244')
     via_card = clkX + d('card clk-C_TX') + d('157 I-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
@@ -1453,7 +1453,7 @@ def mainboard():
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
 A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: channel-cards.md 5, and `aline` 1
-A_PATH = 2.0              # what exch-network.md 1.1 allows a CARRIER a hop, one way, and what
+A_PATH = 2.0              # what network.md 1.1 allows a CARRIER a hop, one way, and what
                           # HOP's 7 ms has in it.  A copper pair or an MF8 link is under it; a
                           # leased circuit, a radio or anything with a buffer is not
 T_MARK = 2.0              # a marker action
@@ -1769,12 +1769,12 @@ def ss0():
 # ------------------------------------------------------------------ net
 
 NET_SCAN = 8.0            # the marker's scanner comes round to a port this often, ms
-NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (exch-network.md 3.2)
+NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (network.md 3.2)
 NET_REPOINT = NET_SCAN / 2 + T_MARK     # a hub re-points its incoming trunk when the claim comes back
-FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (exch-network.md 4)
+FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (network.md 4)
 NO_CLAIM = 2000.0         # no claim this long after the last digit -> cannot-complete
 HOLD_MEAN = 48000.0       # 0.08 E a line at 3 calls an hour, a line being one of two in each call
-STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of exch-network.md 4
+STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of network.md 4
 
 
 def pulses_of(d):
@@ -1805,11 +1805,11 @@ class Tempo:
         self.name, self.pulse, self.brk, self.idw = name, pulse, brk, idw
         self.gap, self.dt_pause, self.answer, self.busy = gap, dt_pause, answer, busy
         self.no_claim, self.timeout, self.fall, self.hold = no_claim, timeout, fall, hold
-        self.guard = guard                 # the origin's guard (exch-monitor.md 3, rule 2)
+        self.guard = guard                 # the origin's guard (monitor.md 3, rule 2)
 
 
 # The exchange as built: 10 pps 60/40, register.md 2's 8/128/256 ms windows, 0.5-0.9 s between
-# digits, exch-network.md 4's 5 s rule, a 256 ms release detector, a 48 s call.
+# digits, network.md 4's 5 s rule, a 256 ms release detector, a 48 s call.
 LIFE = Tempo('life', pulse=100.0, brk=60.0, idw=T_ID, gap=(500.0, 900.0),
              dt_pause=(300.0, 1000.0), answer=(0.0, 0.0), busy=3000.0,
              no_claim=NO_CLAIM, timeout=FLOOD_TIMEOUT, fall=T_FALL, hold=HOLD_MEAN,
@@ -1860,7 +1860,7 @@ class Net:
     Every exchange has registers, a trunk block a direction with monitors on it, and, where it
     faces more than two directions, fan-out resolvers.  Every link has channels.  A call is
     dialled digit by digit at 10 pps; the key opens the flood, e and b go down it live, and the
-    exchange whose code they are claims (exch-network.md 3)."""
+    exchange whose code they are claims (network.md 3)."""
 
     def __init__(self, links, lines, regs=3, mons=3, resolvers=3, leave=0.3, seed=1, strapped=(),
                  tempo=None, idle=None, holds='exp', dt_wait=None, burst=None, ports=None,
@@ -1869,7 +1869,7 @@ class Net:
         self.t, self.q, self.seq, self.t0 = 0.0, [], 0, 0.0
         self.lines, self.leave = lines, leave
         # The clock the dial is on, and whether a caller is a LINE or a Poisson stream.
-        # idle = None is the arrival process of exch-network.md 5.1: calls come from nowhere at
+        # idle = None is the arrival process of network.md 5.1: calls come from nowhere at
         # a fixed rate whatever the exchange is doing.  idle = a number makes every line a
         # source, which is what the RTL bench has -- a line is a state machine there and there
         # is no other kind of caller -- so the offered load falls as the exchange fills.
@@ -1878,16 +1878,16 @@ class Net:
         self.holds, self.dt_wait, self.burst = holds, dt_wait, burst
         self.ports = ports                     # the (h, s) a line may be, or None for any
         # What the CARRIER costs a hop, one way, and the origin's guard against it.
-        # exch-network.md 1.1 allows a carrier about 2 ms of A path a hop, which is what
+        # network.md 1.1 allows a carrier about 2 ms of A path a hop, which is what
         # NET_HOP's 7 ms has in it; a leased circuit, a radio or anything with a buffer
-        # has tens.  `guard` is exch-monitor.md 3's rule 2, which is what that budget is
+        # has tens.  `guard` is monitor.md 3's rule 2, which is what that budget is
         # for: a break inside it and the origin abandons rather than risk a wrong number.
         self.link_ms = link_ms
         self.guard = self.tp.guard if guard is None else guard
         self.is_hot = False
         self.onhook = dict(lines)
         self.cancel = {x: 0 for x in lines}
-        self.strapped = {frozenset(l) for l in strapped}          # links whose words carry n (exch-network.md 3.3)
+        self.strapped = {frozenset(l) for l in strapped}          # links whose words carry n (network.md 3.3)
         self.codes = list(lines)
         self.dirs = {x: [] for x in lines}                       # exchange -> the exchanges it faces
         self.chan = {}
@@ -2079,7 +2079,7 @@ class Net:
         call = dict(origin=x, dst=dst, lifted=lifted, t_e=t_e, t_b=t_b, t_last=t_last,
                     held=seized, seized_at=self.t, claimed=False, stopped=stopped,
                     t_break=t_break if t_break is not None else self.t + 1e9)
-        # exch-monitor.md 3, rule 2: the origin sees both its own seizure and the caller's
+        # monitor.md 3, rule 2: the origin sees both its own seizure and the caller's
         # next break, and abandons if the break is inside the guard -- because it cannot
         # know how far the flood has got, and a monitor patched in mid-digit counts short.
         if call['t_break'] < self.t + self.guard:
@@ -2222,11 +2222,11 @@ class Net:
             self.at(self.t + self.tp.fall, self.free, self.chan[l])
 
 
-NET_HOP = 7.0             # a seizure crossing one exchange (exch-network.md 4)
+NET_HOP = 7.0             # a seizure crossing one exchange (network.md 4)
 
 
 def net_topology():
-    """two hubs of four directions, three leaves each (exch-network.md 5).  Codes share e by side."""
+    """two hubs of four directions, three leaves each (network.md 5).  Codes share e by side."""
     hubs = ('11', '12')                      # backbone codes, by convention
     leaves = {'21': '11', '22': '11', '23': '11', '31': '12', '32': '12', '33': '12'}
     links = {(v, h): 6 for v, h in leaves.items()}
@@ -2325,7 +2325,7 @@ def net():
         print(f'  {label:27s} {f(sim.res["11"]):>17s} {sim.reg["11"].erlang(t):10.2f} E'
               f' {sim.reg["21"].erlang(t):13.2f} E {f(sim.mon[("21", "11")]):>17s}')
 
-    print(f'\n  5. The 5 s rule (exch-network.md 4).  {100 * STOPS:.0f} % of network callers dial the key and stop.')
+    print(f'\n  5. The 5 s rule (network.md 4).  {100 * STOPS:.0f} % of network callers dial the key and stop.')
     print(f'  {"":27s} {"they were":>10s} {"trunks held, s":>15s} {"without the rule":>18s}')
     for label, sim in rows:
         if sim.stopped_held:
@@ -2333,7 +2333,7 @@ def net():
             print(f'  {label:27s} {sim.stat["timed_out"]:10d} {sh.mean():15.2f} {10 + T_FALL / 1000:18.2f}')
 
     p = predict(links, lines, (), 0.3)
-    print(f'\n  6. Against the arithmetic of exch-network.md 5, with these codes\' own floods ({p["flood"]:.2f} E a link):')
+    print(f'\n  6. Against the arithmetic of network.md 5, with these codes\' own floods ({p["flood"]:.2f} E a link):')
     print(f'     at 30 % leaving a leaf link is predicted {p["worst_e"]:.2f} E and {100 * p["worst_b"]:.2f} % blocking.  **Bursts leave')
     print('     the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.')
 
@@ -2342,13 +2342,13 @@ def net():
 
 FLOOD_S = sum(code_hold(f'{e}{b}') for e in range(8) for b in range(8)) / 64     # over all 64 codes
 ORIG_E = 3 * HOLD_MEAN / 3600e3           # erlangs a line originates: 3 calls an hour of 48 s
-SLOW_HOP, SLOW_HUB = 12.0, 4.0            # a slow marker's hop, and a hub's extra (exch-monitor.md 3)
+SLOW_HOP, SLOW_HUB = 12.0, 4.0            # a slow marker's hop, and a hub's extra (monitor.md 3)
 SS0_HOLD = 0.4                            # SS0: a seizure held till the claim, a few hops out and back, and released
 
 
 def lines_for(groups):
     """lines left at an exchange with this many trunk groups: the first two sit in blocks 0 and 1,
-    which hold no lines anyway; each one more takes six line slots (exch-protocol.md 5)"""
+    which hold no lines anyway; each one more takes six line slots (protocol.md 5)"""
     return 48 - 6 * max(0, groups - 2)
 
 
@@ -2358,7 +2358,7 @@ ORDINARY = [f'{e}{b}' for e in (2, 3, 4, 5, 6, 7) for b in (1, 2, 3, 4, 5, 6, 7,
 
 def shape(links, straps=()):
     """a network from its links {(u, v): channels}: lines by the groups each exchange fits, and codes by
-    the convention of exch-network.md 2 -- an exchange of three or four directions takes a backbone
+    the convention of network.md 2 -- an exchange of three or four directions takes a backbone
     code, 00-17, the rest 20-77, and either kind spills into the other's when its own run out"""
     names = sorted({x for l in links for x in l}, key=lambda n: (len(n), n))
     assert len(names) <= 64, 'more than 64 exchanges'
@@ -2378,7 +2378,7 @@ def shape(links, straps=()):
 
 
 def predict(links, lines, straps=(), leave=0.3, hold=None):
-    """Erlang arithmetic for a tree, or a tree with strapped links across it (exch-network.md 3.3, 5).
+    """Erlang arithmetic for a tree, or a tree with strapped links across it (network.md 3.3, 5).
     hold: seconds a call that leaves holds a channel on every link it is offered to.  None is the
     pulse flood, each code its own; a number is SS0, where the seizure lasts only till the claim"""
     strapped = {frozenset(l) for l in straps}
@@ -2503,9 +2503,9 @@ def ring_links(n, ch):
 def topo():
     print('TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of')
     print(f'  48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, {FLOOD_S:.2f} s over all 64')
-    print('  (exch-network.md 4); each shape is worked with its own codes, the backbone\'s from 00-17.  An exchange')
+    print('  (network.md 4); each shape is worked with its own codes, the backbone\'s from 00-17.  An exchange')
     print('  faces four directions at most and fits eight trunk groups at most; it keeps 48 lines with two')
-    print('  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as exch-network.md 5')
+    print('  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as network.md 5')
     print('  and `net` agree it may be; "pair" is the worst end-to-end loss between two exchanges, "lost" the mean.')
 
     head = (f'  {"":34s} {"exch":>4s} {"lines":>6s} {"flood":>6s} {"worst link":>24s} {"pair":>7s} {"lost":>7s} '
@@ -2577,7 +2577,7 @@ def topo():
             else:
                 print(f'  {label}: none')
 
-    print('\n  5. Rings.  A link strapped with n carries calls between its own two ends only (exch-network.md 3.3).')
+    print('\n  5. Rings.  A link strapped with n carries calls between its own two ends only (network.md 3.3).')
     print(head)
     for n in (4, 6, 8):
         row(f'chain of {n}, 6 channels', chain_links(n, 6))
@@ -2585,7 +2585,7 @@ def topo():
     row('two hubs, six leaves (net)', two_hubs())
     row('  and a strapped leaf-to-leaf link', two_hubs(True), [('l00', 'l10')])
 
-    print(f'\n  6. The same families under SS0 (ex-ss0.md), whose seizure lasts only until the claim,')
+    print(f'\n  6. The same families under SS0 (ss0.md), whose seizure lasts only until the claim,')
     print(f'     taken as {SS0_HOLD:.1f} s against the pulse flood\'s 2.0-3.8 s, and which needs no monitor and no guard.')
     print(f'  {"":34s} {"pulse flood":>28s} {"SS0":>28s}')
     print(f'  {"":34s} {"exch":>5s} {"lines":>6s} {"worst":>7s} {"across":>8s} {"exch":>5s} {"lines":>6s} {"worst":>7s} {"PDD":>8s}')
@@ -2867,7 +2867,7 @@ def traffic():
                   f'{100 * w.refused / max(w.taken + w.refused, 1):6.2f} % {re_:8.2f} {rw:8.1f} % '
                   f'{dt.mean():8.1f} {np.percentile(dt, 95):7.1f} {dt.max():7.0f}')
     print('     "waited" is the share of callers the scanner had to come back to, which is dial tone')
-    print(f'     late and not a call lost (exch-marker.md 6).  {mrows[2][1].stat["herds"]} herds were let loose.')
+    print(f'     late and not a call lost (marker.md 6).  {mrows[2][1].stat["herds"]} herds were let loose.')
     print('')
     print('     A BURST DOES NOT OFFER THE SAME CALLS, and that is not the model being wrong.  The')
     print('     cold rate is set so the mean over the cycle is the smooth one, which is exact for')
@@ -2953,7 +2953,7 @@ def backbone(core_k, core_ch, levels, mid=None):
 def mesh_core(k, core_ch, levels, mid=None):
     """The same, with the k tandems FULLY CONNECTED instead of chained.  The flood must see a
     tree, so only the k-1 links of the chain may carry it and every other core link is strapped
-    (exch-network.md 3.3).  Returns the links and the straps."""
+    (network.md 3.3).  Returns the links and the straps."""
     out = backbone(k, core_ch, levels, mid)
     straps = []
     for a in range(k):
@@ -3004,7 +3004,7 @@ def big_family():
 
 def big():
     print('BIG -- how near sixty-four exchanges the pulse flood will go, and what shape gets there.')
-    print('  The rules are Topology.md 1: four directions an exchange, eight trunk groups, the flood')
+    print('  The rules are topology.md 1: four directions an exchange, eight trunk groups, the flood')
     print('  sees a tree, sixty-four codes, and the whole flood inside the origin\'s 128 ms guard at a')
     print(f'  slow marker ({SLOW_HOP:.0f} ms a hop and {SLOW_HUB:.0f} more at a hub).  Erlang B on a tree throughout,')
     print(f'  3 calls an hour of {HOLD_MEAN / 1000:.0f} s a line, and every call that leaves floods every link for')
@@ -3066,7 +3066,7 @@ def big():
     print('\n  4. FULLY CONNECTED tandems.  Of the k(k-1)/2 links between k tandems only the k-1 of a')
     print('     chain may carry the flood, because the flood must see a tree; every other one is')
     print('     STRAPPED, and a strapped link carries calls between its own two ends only')
-    print('     (exch-network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:')
+    print('     (network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:')
     print('     Read the pairs: each is the SAME eight trunk groups at each tandem, spent on a chain')
     print('     of wide links or on a mesh of narrow ones.')
     print(head)
@@ -3149,11 +3149,11 @@ def big():
 
     # ---- 7. the guard's tap ----------------------------------------------
     print(f"\n  7. What the GUARD'S TAP buys.  The flood has to cross the network inside the origin's")
-    print(f"     guard (exch-monitor.md 3, rule 2), which is one tap on a counter -- {G_ORIGIN:.0f} ms today, and")
+    print(f"     guard (monitor.md 3, rule 2), which is one tap on a counter -- {G_ORIGIN:.0f} ms today, and")
     print(f"     {SLOW_HOP:.0f} ms a hop at a slow marker with {SLOW_HUB:.0f} more at a hub.  It may go as far as the caller's")
     print(f"     own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take: a phone to ES 201 187 gives")
     print(f"     720 ms (register.md 2), so {720 - T_ID - T_MARK:.0f} ms, and 512 is the last tap under it.  A carrier's own")
-    print("     delay is NOT in this budget (exch-monitor.md 5.1); wander is.")
+    print("     delay is NOT in this budget (monitor.md 5.1); wander is.")
     print(f'\n  {"tap":>7s} {"a chain of 12 ch":>28s} | {"the largest network at 30 % leaving":>44s}')
     print(f'  {"":>7s} {"hops":>6s} {"exchanges":>10s} {"what stops it":>11s} | {"exch":>5s} {"lines":>6s} '
           f'{"a/ex":>5s} {"worst link":>17s} {"hops":>5s} {"spread":>7s}')

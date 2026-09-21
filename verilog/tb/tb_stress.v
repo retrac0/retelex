@@ -10,7 +10,7 @@
 //   listening to.  Then, continuously:
 //     symmetry    i hears j  =>  j hears i.  A one-way patch is a glitch
 //     exclusive   i hears j and k hears j, i != k, is TWO CALLERS ON ONE LINE:
-//                 the glare of exch-marker.md 3, and the thing a pool of
+//                 the glare of marker.md 3, and the thing a pool of
 //                 registers made possible
 //     not itself  a port patched to itself is a glitch
 //
@@ -198,7 +198,7 @@ module tb_stress #(
     integer n_sym = 0, n_glare = 0, n_self = 0, n_stuck = 0;
     integer errs = 0, chk = 0;
 
-    // ex-counters.md 9 rests on one invariant: a claim is always written BUSY,
+    // counters.md 9 rests on one invariant: a claim is always written BUSY,
     // so BSY = 0 with CLM = 1 is a pattern NO latch write ever carries and an
     // event strap can never count a call.  wr_stb is a real write and nothing
     // else -- an event word does not raise it -- so this counts violations.
@@ -267,7 +267,7 @@ module tb_stress #(
 
     // Hanging up.  ONE IN TEN does not stay on hook long enough for its own
     // port to release: 256 ms of M low is what the detector wants, and a
-    // shorter break is a flash, not a release (exch-marker.md 7).  The caller
+    // shorter break is a flash, not a release (marker.md 7).  The caller
     // then finds their own port still busy and gets no dial tone at all.
     task hang_up(input integer n);
         begin
@@ -316,7 +316,7 @@ module tb_stress #(
             S_LIFT: begin
                 // wait for dial tone, as a caller does: registers are a pool
                 // and a caller who finds none free is not refused, dial tone
-                // is late (exch-marker.md 6)
+                // is late (marker.md 6)
                 if (dt_of(i)) begin
                     if (kind[i] < 5) begin                // lifts and never dials
                         st[i] = S_WAIT; tmr[i] = 300 + urnd(700);
@@ -357,7 +357,7 @@ module tb_stress #(
             end
             S_TALK: begin
                 // A hook FLASH in the middle of a call: a break shorter than a
-                // release must not take the call down (exch-marker.md 7 --
+                // release must not take the call down (marker.md 7 --
                 // "breaks <= 103 ms against a release >= 204 ms").
                 if (flash[i] > 0) begin
                     flash[i] = flash[i] - 1;
@@ -419,7 +419,7 @@ module tb_stress #(
     // is on hook, whose E has been low far longer than any ring cadence, and
     // which is still BUSY, is holding something nobody asked for.
     // A WRITE THAT CANNOT BE UNDONE.  A port releases on the FALL of one of its
-    // two detectors (exch-fabric.md 3.5).  Write one BUSY while both are
+    // two detectors (fabric.md 3.5).  Write one BUSY while both are
     // already low -- its line long on hook, and a source that will never raise
     // its E -- and there is no edge left to come: the port is out of service
     // until something writes it again.  This catches the write itself rather
@@ -594,14 +594,14 @@ module tb_stress #(
                  df_a + df_b);
         $display("      -- each one a wrong number, before the marker took to deferring)");
 
-        // ---- ex-counters.md 9: what the event words counted --------------
+        // ---- counters.md 9: what the event words counted --------------
         // Five counter cards on each exchange's ribbon, strapped for a word
         // with G = 0 -- one that writes to no block.  Nothing here is checked
         // against an expected number: the traffic is random.  What IS checked
         // is that no such word ever reached a strap meant for a call, which is
         // the invariant below.
         $display("");
-        $display("  event words on the ribbon (ex-counters.md 9)%s:",
+        $display("  event words on the ribbon (counters.md 9)%s:",
                  PAIR ? ", A + B" : "");
         $display("     a caller waited for a register          %0d",
                  ev_a[31:16] + ev_b[31:16]);

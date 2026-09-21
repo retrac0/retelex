@@ -1,4 +1,4 @@
-// exch_defs.vh -- the exchange's fixed geometry.  exchange/exch-protocol.md 5.
+// exch_defs.vh -- the exchange's fixed geometry.  exchange/protocol.md 5.
 `ifndef EXCH_DEFS_VH
 `define EXCH_DEFS_VH
 
@@ -16,7 +16,7 @@
 `define CELLS_PER_FRAME 8
 `define FRAMES_PER_OCT  8
 
-// Where in a cell things happen (exch-fabric.md 3.2).  HCLK is high for the
+// Where in a cell things happen (fabric.md 3.2).  HCLK is high for the
 // first half of a cell, so the strobe decoder is enabled from tick 4, and its
 // falling edge -- the port's capture clock W -- is the middle of the cell.
 `define TICK_SLOTQ 3'd2   // SLOTQ is SLOT a quarter of a cell late

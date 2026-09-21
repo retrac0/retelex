@@ -1,4 +1,4 @@
-// mainboard -- the passive board at each tap of the ribbon.  exch-mainboard.md.
+// mainboard -- the passive board at each tap of the ribbon.  mainboard.md.
 //
 // The cable is common: every tap sees the same conductors.  Three signals a
 // block are not -- block h drives HC[h] and HA[h] and answers to /BLK -- and
@@ -56,12 +56,12 @@ module mainboard #(
             end else if (n_drivers(c) == 0) begin : undriven
                 // No block, or its shunts left out: pulled to FILL and to
                 // ground, so the column reads as CVSD silence and on-hook
-                // rather than floating (exch-mainboard.md 2.2, 6).
+                // rather than floating (mainboard.md 2.2, 6).
                 assign hc[c] = fill_pull[c];
                 assign ha[c] = 1'b0;
             end else begin : contention
                 // Two blocks shunted onto one column: two '244s on one
-                // conductor.  exch-mainboard.md 6 says this is caught at
+                // conductor.  mainboard.md 6 says this is caught at
                 // bring-up; here it reads as what it is.
                 assign hc[c] = 1'bx;
                 assign ha[c] = 1'bx;

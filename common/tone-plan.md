@@ -1,7 +1,7 @@
 # The tone plan — four tones from one ROM and one counter
 
 A call-progress tone in this design is a `C` bit stream like any other
-(`exch-features.md` §2), so it can come from an analog oscillator through a CVSD
+(`features.md` §2), so it can come from an analog oscillator through a CVSD
 encoder or from a ROM played on repeat. This document settles **which tones**,
 and specifies both cards.
 
@@ -45,11 +45,11 @@ tell apart, and in a one-frequency plan they differ only in speed. Here they
 differ in speed *and* pitch, and neither can be mistaken for the low warble that
 means the call is progressing.
 
-**Why a fourth tone.** `exch-marker.md` §3's class 6 is "cannot-complete: busy /
+**Why a fourth tone.** `marker.md` §3's class 6 is "cannot-complete: busy /
 error tone" — one destination for both. Splitting them needs a second source
 port, and the marker already computes the free test that would steer it. Under
 the proposed class codes both tone ports are class *source* **reached by
-address** (`ex-extensions.md` §2.2), so a third is another address constant, not
+address** (`extensions.md` §2.2), so a third is another address constant, not
 another class. **Port 11** is free wherever block 1 is not a trunk group, and is
 never dialable because 1 is a first key. Where block 1 *is* a trunk group, drop
 to three tones and let busy share port 14 as it does today.
@@ -135,7 +135,7 @@ sidebands fall where they fall. Rounding each sideband on its own gives
 | '244 | six buffered outputs, 33 Ω |
 | | **7 packages, +5 V only, no trims** |
 
-No word shifter: tone cards reached by address need none (`ex-extensions.md`
+No word shifter: tone cards reached by address need none (`extensions.md`
 §2.2). `/ANS` is tied low, and `A_TX` low — a source never answers and is never
 rung.
 
@@ -172,7 +172,7 @@ Australia's 2:1 would cost more gates, and against 0.4/0.2/0.4/2.0 this reads as
 two distinct rings rather than a tight burr. That is the price of one gate, and
 it is the design's only deliberate departure from the plan it is modelled on.
 
-**`/RING_CAD` is the same gate, complemented.** It is low-true — `exch-fabric.md`
+**`/RING_CAD` is the same gate, complemented.** It is low-true — `fabric.md`
 §3.5's `A_RX = E · /(ON · /RING_CAD)` rings the phone while it is low — so:
 
 ```
@@ -183,13 +183,13 @@ it is the design's only deliberate departure from the plan it is modelled on.
 Two of the '02's four sections, no extra package. **The caller's ring and the
 called phone's ring are then locked by construction, not by luck** — which is
 what `tone-card.md` §5 wanted and could not otherwise guarantee, and it is the
-reason this card and not the clock card owns the signal (`exch-mainboard.md`
+reason this card and not the clock card owns the signal (`mainboard.md`
 §2.1 for the same argument about `RBT`).
 
 The clock card keeps a **pull-down** on it. The two bus lines fail differently:
 undriven `RBT` pulled to `FILL` is silence, but undriven `/RING_CAD` pulled
 *high* would mean **no phone ever rings**. Pulled low it rings continuously and
-calls still complete, which is the degradation `mvp-ex.md` already documents for
+calls still complete, which is the degradation `mvp.md` already documents for
 a shelf with no tone card fitted.
 
 ### 4.4 One card, four ports
@@ -215,7 +215,7 @@ suits a standalone exchange or one using only trunk group 0.
 
 ## 5. The analog card
 
-`exch-features.md` §2's card plus a modulator. **The measurement that shapes it
+`features.md` §2's card plus a modulator. **The measurement that shapes it
 is negative:**
 
 | making the warble | SNR | in-band lines |

@@ -1,4 +1,4 @@
-// ctl_write -- the serialiser for cable B.  exch-mainboard.md 2.3.
+// ctl_write -- the serialiser for cable B.  mainboard.md 2.3.
 //
 // The marker's whole output is one sixteen-bit word, broadcast to every block
 // at once, MSB first:
@@ -15,7 +15,7 @@
 // word with g = 0 writes to NO block -- the guard is ANDed into WR at every one
 // of them -- but it still shifts through every '164 and it still pulses WR, so
 // a card that only LISTENS sees it exactly as it sees a real write.  That is
-// the EVENT WORD of ex-counters.md 9: the marker reporting something that no
+// the EVENT WORD of counters.md 9: the marker reporting something that no
 // latch write would have carried.
 //
 // `strobe` low shifts the word and does NOT pulse WR.  That is how the marker

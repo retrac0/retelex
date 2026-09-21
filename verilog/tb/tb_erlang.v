@@ -1,4 +1,4 @@
-// tb_erlang -- the monitor pool against exch-monitor.md 4's sizing table.
+// tb_erlang -- the monitor pool against monitor.md 4's sizing table.
 //
 // 4 sizes the pool by Erlang B on an offered load, and the load is argued from
 // three numbers: every call dialled with `1` anywhere in the network wants a
@@ -93,7 +93,7 @@ module tb_erlang #(
         end
     endfunction
 
-    // 0-7, and a dialled 0 is ten pulses (exch-protocol.md 5)
+    // 0-7, and a dialled 0 is ten pulses (protocol.md 5)
     function integer pulses(input integer d); pulses = (d == 0) ? 10 : d; endfunction
 
     // ---- the traffic generator -------------------------------------------
@@ -297,7 +297,7 @@ module tb_erlang #(
         for (j = 0; j < 4; j = j + 1) begin blocked[j] = 0; occ[j] = 0.0; end
         p_e = 1.0; lam = 0.0001; nxt = 0; offered = 0; nofree = 0;
 
-        $display("ERLANG (RTL) -- the monitor pool against exch-monitor.md 4.\n");
+        $display("ERLANG (RTL) -- the monitor pool against monitor.md 4.\n");
         $display("  The windows are the real ones (8, 128, 256 ms) and the dial is 10 pps,");
         $display("  60/40, with 500-1100 ms between digits.\n");
         #4000 rst_n = 1;

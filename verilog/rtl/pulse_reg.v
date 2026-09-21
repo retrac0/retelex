@@ -1,7 +1,7 @@
 // pulse_reg -- the register of register.md 4.  It takes no port and has no
 // class: the marker's scanner is its finder, and it reads its caller's hook off
 // the M highway through its own probe -- two '151s and a flip-flop, the same
-// structure a port uses to listen (exch-marker.md 4).
+// structure a port uses to listen (marker.md 4).
 //
 // It never sends anything.  The design has no sender: on a network call the
 // caller's own pulses go down the flood live, and this register only LISTENS,
@@ -14,7 +14,7 @@
 // reads in its own time is not.  `restart` begins the store again, and it is
 // how the two special prefixes cost nothing:
 //
-//   the key 1      "the digit the flood consumes" (exch-network.md 2).  The
+//   the key 1      "the digit the flood consumes" (network.md 2).  The
 //                  marker acts on it and restarts, so e b h s land in slots
 //                  0-3 -- exactly four, which is why the store is four deep
 //   our own e b    restart again, and h s land in slots 0-1: from there the
@@ -43,11 +43,11 @@ module pulse_reg #(
     output reg [15:0] digits,        // the store: slot 0 in [3:0], as pulse counts
     output reg        gone,          // CLR, or no digit at all
     // WHICH of the two.  The marker treats them alike -- the register is free
-    // and the call is over either way -- and only ex-counters.md 9's event word
+    // and the call is over either way -- and only counters.md 9's event word
     // wants to tell them apart, so this is one conductor on the ribbon that
     // already carries the digits.
     output reg        nodig,
-    output            brk            // a break just counted (exch-network.md 3's guard)
+    output            brk            // a break just counted (network.md 3's guard)
 );
     // the probe: a listener's two selects and a flip-flop, at mid-cell
     reg  m_cap;

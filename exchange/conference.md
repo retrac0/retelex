@@ -7,7 +7,7 @@ party bus inside.
 > **Status: proposed.** Speech detector, floor and switch measured in
 > simulation (`exch.py confer`; `exch.log` is the run). No circuit on a bench.
 > Class *conference* is **retired**: a leg is an ordinary line (§6). Marker
-> hunting of legs is proposed with `ex-groups.md`; the `calls` model still has
+> hunting of legs is proposed with `groups.md`; the `calls` model still has
 > a conference leg as a line.
 
 ---
@@ -35,13 +35,13 @@ strap (or by fitting two 4-leg modules vs one 8-leg module).
 
 | | |
 |---|---|
-| **Outer face** | `HC_OUT`, `HA_OUT`, `/BLK`: three pins and three shunt columns, its number set like any block's (`exch-mainboard.md` §1). The common cable: clocks, `FILL`, `TICK`, the serial control word. Eight ports, dialled `h 0` to `h 7` |
+| **Outer face** | `HC_OUT`, `HA_OUT`, `/BLK`: three pins and three shunt columns, its number set like any block's (`mainboard.md` §1). The common cable: clocks, `FILL`, `TICK`, the serial control word. Eight ports, dialled `h 0` to `h 7` |
 | **Inside** | `DATA`, `HELD`, `KEEP`, `ASK`, `PRI` on the block's own ribbon. Which leg holds the floor, and when it passes. The legs' words and `/ANS`, fixed, no jumper |
 | **On the party bus** | **leg modules** — detector, floor, `DATA` drive — not mini exchange blocks. The exchange sees **one** block number and eight ports, not nested `/BLK` identity |
 
 **Why the party bus never leaves the block.** The channel slot has one pin spare
-(`a14`, `ex-extensions.md` §2.1), and the mainboard cable is thirty-eight
-signals identical at every tap (`exch-mainboard.md` §1). Five more bussed
+(`a14`, `extensions.md` §2.1), and the mainboard cable is thirty-eight
+signals identical at every tap (`mainboard.md` §1). Five more bussed
 signals would have to borrow line-feed and ringing pins — ninety volts of
 ringing beside a 74HC input — or grow the cable. Neither is worth paying for
 something only eight ports will ever use. The primary bus stays exactly what it
@@ -49,7 +49,7 @@ is.
 
 **Nothing external.** No subscriber line, so no −48 V, no ringing, no PTC, no
 analog rails and no hybrid: 74HC at 5 V throughout.
-`exch-mainboard.md` §2.4's rule that −48 V and `RING` never leave a subrack does
+`mainboard.md` §2.4's rule that −48 V and `RING` never leave a subrack does
 not reach it.
 
 **A bridge is not legs scattered through the line slots.** Callers dial into
@@ -62,7 +62,7 @@ not mux every line in the exchange onto a conference selector.
 
 **CVSD bits cannot be added.** Summing needs every party decoded, summed and
 encoded again. That is a codec pair on every leg, a codec tandem for every party
-(−4.8 dB, `exch-protocol.md` §2), and every open microphone's noise in the sum.
+(−4.8 dB, `protocol.md` §2), and every open microphone's noise in the sum.
 The meet-me bridge first written here was that. **Bits can be switched.** One
 party talks at a time. The bridge chooses who, and every other party receives
 that party's bits exactly as sent: no codec, no tandem, and no added noise
@@ -199,7 +199,7 @@ bus signals between legs 3 and 4, and carries the two overflow bits with them:
 **One strap, not two things that must agree.** The segmentation of the bus, the
 priority chain and the overflow bits the marker hunts on are all inside the
 block, so all three move together and cannot be set inconsistently. Everywhere
-else a hunt group is jumpers on each card (`ex-extensions.md` §2.4), where
+else a hunt group is jumpers on each card (`extensions.md` §2.4), where
 getting one wrong is possible; here it is not.
 
 **Two of four is the default, and the strap is the exception.** §7's worst
@@ -212,12 +212,12 @@ And §4 measured three parties, and pairs in double talk: four is a short step
 from what was measured, eight is not.
 
 **Cost.** ≈ 9 packages a leg, above, and ≈ 82 for the block's own fabric and
-supervision (`exch-fabric.md` §5): **≈ 154 packages for eight legs, two bridges
+supervision (`fabric.md` §5): **≈ 154 packages for eight legs, two bridges
 and the ribbon.** The only part of it that is not an ordinary block is the
 ribbon and its strap.
 
 **Where it sits in the numbering.** Blocks 0 and 1 are never dialled — 0 is the
-operator and 1 the network's key, so `h` is 2–7 (`exch-marker.md` §2). A
+operator and 1 the network's key, so `h` is 2–7 (`marker.md` §2). A
 conference block takes one of those six: at 7 the bridges are 70 and 74, and the
 exchange keeps 40 of its 48 dialable ports as lines. A second conference block is
 another dialable block spent, and four bridges.
@@ -229,7 +229,7 @@ another dialable block spent, and four bridges.
 > **Class *conference* is retired** (its former code `111` is now *restricted*).
 > A leg is an ordinary line: `/ANS` low, `A_TX` = `A_RX`, no special class in the
 > word. The marker reaches a bridge by number like any hunt group — by the `o`
-> run below, or by *answers to* (`ex-groups.md` §5) with no secondary word and
+> run below, or by *answers to* (`groups.md` §5) with no secondary word and
 > no fifth `'151` — both retired with class *conference*.
 
 - **`/ANS` tied low** on the leg, so that it does not ring: E reaches the leg
@@ -238,13 +238,13 @@ another dialable block spent, and four bridges.
   caller's ear the whole time.
 - **A bridge is a hunt group: a run of adjacent legs on one segment of the party
   bus, and its number is its first leg's.** It is the hunt group of
-  `ex-extensions.md` §2.4: every leg but the last sets the overflow bit of its
+  `extensions.md` §2.4: every leg but the last sets the overflow bit of its
   word. Dialling any leg takes the first free leg from that one onward, in slot
   order, until a leg that is not free has the bit clear. No free leg →
   cannot-complete. **A conference block is two bridges of four or one of eight,
   by its strap** (§5), and an exchange may have more than one such block. **A
   run never crosses a block boundary**, because the party bus never leaves the
-  block. Under `ex-groups.md` §5 the same bridge is legs that *answer to* its
+  block. Under `groups.md` §5 the same bridge is legs that *answer to* its
   number, and the run leaves the marker.
 - **A bridge is reached only by its number.** No key is special to it: 8 stays a
   spare first key, and gives cannot-complete.
@@ -267,7 +267,7 @@ another dialable block spent, and four bridges.
 - **Nothing hunts onward unless its card says so.** Dialling a busy phone must
   not ring its neighbour, so a port overflows only if its word's overflow bit is
   set. A sales desk or a pool of data ports is a group in the same way
-  (`ex-extensions.md` §2.4).
+  (`extensions.md` §2.4).
 
 ---
 

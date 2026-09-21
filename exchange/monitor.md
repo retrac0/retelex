@@ -1,7 +1,7 @@
 # The exchange — the trunk monitor
 
 A flood has no route: a call is offered to every exchange it can reach, and the
-one that owns it takes it (`exch-network.md` §3). The **monitor** is the thing at
+one that owns it takes it (`network.md` §3). The **monitor** is the thing at
 each exchange that listens to the offer and decides. It is the only part of the
 network that reads a digit it was not sent, so it is the part that must never be
 wrong.
@@ -22,8 +22,8 @@ wrong.
 ## 1. What it is for
 
 A line on another exchange is dialled `1 e b h s`: the network's key, the
-exchange's two-digit code, then the line (`exch-network.md` §2). The key opens the
-flood (`exch-network.md` §3): the origin seizes a trunk in each of its directions,
+exchange's two-digit code, then the line (`network.md` §2). The key opens the
+flood (`network.md` §3): the origin seizes a trunk in each of its directions,
 every exchange the seizure reaches patches it onward, and the caller's own next
 two digits — **`e` and `b`** — go down all of it at once as dial pulses on A.
 Each exchange must now answer one question: *is that my code?*
@@ -48,7 +48,7 @@ its trunk ports' M lines directly — it never touches the fabric.
  counting  a break of 8 ms or more is a pulse; 128 ms of make ends the digit   — register.md §2's windows
  decide    the first digit is this exchange's e       → read one digit more
            the second is this exchange's b            → CLAIM: ask the marker
-           either is 8 or 9                           → reserved (exch-network.md §2: e and b are 0–7,
+           either is 8 or 9                           → reserved (network.md §2: e and b are 0–7,
                                                         and a 0 is ten pulses): let go
            either is anything else                    → let go, at once
  done      nothing more is read until the trunk releases (M low for 256 ms)
@@ -86,7 +86,7 @@ the only proof that nothing has gone by. A pooled monitor is therefore given a
 seizure within one scan of its rise — 1 ms, in which no pulse can fit — or not at
 all. (`exch.py monitor` allowed 6 ms, the scan of six channels on the 1 kHz tick.
 The scanner now steps all eight slots, because a trunk's channels sit where they
-are on the wire (`exch-protocol.md` §5), and on the tick that would take 8 ms,
+are on the wire (`protocol.md` §5), and on the tick that would take 8 ms,
 which is as long as the shortest break that counts. So it steps on the 8 kHz
 octet mark, as the marker's scanner does. The measured rows do not depend on the
 figure: a monitor given the seizure counts from the rise.)
@@ -115,7 +115,7 @@ the carrier *loses* between the seizure and the next digit — a buffer draining
 link re-timing — because that moves the pulses forward against a rise that has
 already gone by, and it costs a millisecond of guard for a millisecond of wander.
 
-Together they make the budget `exch-network.md` §4 uses: the digit recognised
+Together they make the budget `network.md` §4 uses: the digit recognised
 (128 ms), the seizure (2), and the guard — **the flood is ready 130 ms plus the
 tap after the caller's last pulse, whatever the hop count.** That is 258 ms at
 128, 386 at 256 and 642 at 512, against the 720 ms a telephone to ES 201 187
@@ -155,7 +155,7 @@ sits busy pointed at idle, and the caller times out to cannot-complete. That is
 a call this exchange owned and never took, which is the loss §4 exists to bound.
 
 A claim must therefore be **held until the marker acknowledges it**, and the
-marker must take one at a time. It is also what §3.3 of `exch-network.md`
+marker must take one at a time. It is also what §3.3 of `network.md`
 already assumes: a ring delivers a call to its owner twice, and relies on the
 second claim being processed and finding the line busy.
 
@@ -192,7 +192,7 @@ millisecond. **Not** a carrier's own transmission delay, which cancels (§5.1).
 |---|---|
 | above | the caller's own pause less the 130 ms the digit and the seizure take. A telephone to ES 201 187 gives at least 720 ms, so **590 ms**, and 512 is the last tap under it |
 | below | nothing. 128 ms is right for a network of pairs and a short chain, and there is no reason to go under it |
-| and *not* | the earliest a claim can come back. The marker reads M rising on a trunk it seized inside the guard as glare and not as a claim (`ex-counters.md` §9), so the guard must stay clear of a real one — and it does at every tap, because a caller the guard has not already abandoned has a pause of at least the tap plus 130 ms and must dial two digits before anyone can claim: **twice the tap and 378 ms more** |
+| and *not* | the earliest a claim can come back. The marker reads M rising on a trunk it seized inside the guard as glare and not as a claim (`counters.md` §9), so the guard must stay clear of a real one — and it does at every tap, because a caller the guard has not already abandoned has a pause of at least the tap plus 130 ms and must dial two digits before anyone can claim: **twice the tap and 378 ms more** |
 
 **What a longer tap costs is the fast caller.** 128 ms gives cannot-complete to
 anyone dialling with under 258 ms between digits, 256 ms to anyone under 386, and
@@ -209,7 +209,7 @@ protocol that is a function of the hop count:
 |---|---|
 | `HIT` 8 ms, `ID` 128 ms, `CLR` 256 ms | a register's and a monitor's own windows, local to one exchange, set by the dial's envelope (`register.md` §2) |
 | the origin's 2 s wait for a claim | the claim crosses forward and back at about 1.5 ms a hop: **600 hops** of room on a pair, 22 behind a 40 ms carrier |
-| the 5 s rule (`exch-network.md` §4) | sized on a slow dial reaching the code `77` in 3.8 s; distance is not in it |
+| the 5 s rule (`network.md` §4) | sized on a slow dial reaching the code `77` in 3.8 s; distance is not in it |
 | the release detectors, the trunk's 0.6 s settle, the register's 10 s | all local to one exchange |
 | the A path | shortens a break 0.5 ms a hop against a 45 ms margin: **91 hops** |
 
@@ -227,13 +227,13 @@ one a channel:
 ```
  scanner   a 3-bit counter on the 8 kHz octet mark steps the block's eight slots, one a visit,
            reads the slot's word over the visit, and attends only a slot whose word says trunk.  A block may hold an MF8 card beside idle,
-           the operator or the tones, or a single-channel trunk among lines (exch-network.md §1.1),
+           the operator or the tones, or a single-channel trunk among lines (network.md §1.1),
            and a subscriber lifting is never read as a seizure.  For channel k:
            M[k] high, and low at the last visit  → a fresh seizure, at most 1 ms old
              a monitor is free → it latches k and starts counting
              none is free      → the seizure goes unwatched here, for good
            (the last-visit bit is what makes rule 1 true by construction)
-           A nailed channel (ex-extensions.md §3.3) sends a nail and not a class, so it is never
+           A nailed channel (extensions.md §3.3) sends a nail and not a class, so it is never
            attended, and never read as dialling
 ```
 
@@ -244,7 +244,7 @@ cannot be the one that owns it.**
 Every call dialled with `1`, anywhere in the network, wants a monitor on each
 block its flood reaches. A monitor whose `e` is the one dialled holds until `b` is
 in: 2.7 s on average from the seizure. One whose `e` is not lets go after the
-first digit: 1.5 s (`exch-network.md` §4). A local call wants none. Erlang B for
+first digit: 1.5 s (`network.md` §4). A local call wants none. Erlang B for
 the worst-placed block, one at the end of a chain, which every flood reaches; 48
 lines an exchange, 3 calls a line an hour, 30 % of them leaving:
 
@@ -257,7 +257,7 @@ lines an exchange, 3 calls a line an hour, 30 % of them leaving:
 | 36 | | | | | 0.71 | 13 % | 3.0 % | **0.5 %** | 0.1 % |
 | 47 | | | | | 0.93 | 18 % | 5.3 % | 1.2 % | **0.2 %** |
 
-**Measured against a network, `exch.py net`** (`exch-network.md` §5.1): eight
+**Measured against a network, `exch.py net`** (`network.md` §5.1): eight
 exchanges, 348 lines, 30 % of calls leaving, smooth and in bursts. A leaf's trunk
 block holds its monitors 0.09 E and turns away 0.0 % of the calls that want one
 with three fitted; at 50 % leaving, 0.14 E and 0.0 %. Bursts do not move it: a
@@ -315,7 +315,7 @@ call.**
 
 ### 5.1 A carrier that is not a pair
 
-`exch-network.md` §1.1 allows a carrier "about 2 ms of A path a hop", which a
+`network.md` §1.1 allows a carrier "about 2 ms of A path a hop", which a
 copper pair and an MF8 link are inside and a leased circuit, a radio, a mux or a
 jitter buffer are not. The same model with a **constant one-way delay** added to
 every hop, both rules on, a pause of 140–900 ms and the 128 ms guard throughout;

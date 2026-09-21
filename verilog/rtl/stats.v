@@ -1,6 +1,6 @@
-// stats -- the counter card.  ex-counters.md.
+// stats -- the counter card.  counters.md.
 //
-// A card that only listens.  The control bus is a BROADCAST (exch-mainboard.md
+// A card that only listens.  The control bus is a BROADCAST (mainboard.md
 // 2.3): the marker's whole output is one sixteen-bit word shifted out on SDATA
 // and strobed by WR, and every tap on the ribbon sees it.  So a counter needs
 // no connection to the marker, no shunt column, no /BLK, no probe and no clock
@@ -24,7 +24,7 @@
 // the strap left on Pi.
 //
 // CLOCKED BY WR.  The '688's answer is stable through the whole pulse, because
-// exch-mainboard.md 2.3.2's one rule already keeps WR clear of every SCLK edge
+// mainboard.md 2.3.2's one rule already keeps WR clear of every SCLK edge
 // -- the same rule that makes a block's write decoder work.  So WR is the
 // counter chain's clock and the match is its ENP/ENT, and the card needs no
 // synchroniser and no clock off the cable.

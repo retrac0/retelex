@@ -16,7 +16,7 @@ not know it is happening, which is the point: it is one card, one slot, either
 shelf.
 
 > **Status: proposed. Nothing here is measured.** The generator is
-> `exch-features.md` §2's, already described there. §4's strap field is new and
+> `features.md` §2's, already described there. §4's strap field is new and
 > is **not in `mf8-backplane.md`** — no board, no bench, and nothing has been
 > listened to.
 
@@ -27,14 +27,14 @@ shelf.
 A channel card like any other. It drives `C_TX[n]` with the tone and holds
 `A_TX[n]` low; it takes `TX_CLK` and nothing faster.
 
-- **In an exchange block** it is exactly `exch-features.md` §2's tone card: class
+- **In an exchange block** it is exactly `features.md` §2's tone card: class
   *source*, never busy, any number of listeners, reached through the fabric. The
   block needs no modification, because a commutator already lets the marker
   switch every port that wants it onto one card.
 - **In an MF8 shelf** it feeds its own channel as it stands, and §4's strap field
   lets it feed any subset of the other five, or all of them.
 
-`A_TX` low is what every source does (`exch-features.md` §6): nothing rings,
+`A_TX` low is what every source does (`features.md` §6): nothing rings,
 nothing is ever answered, and no call is held up. A listener leaves by going
 on-hook.
 
@@ -69,7 +69,7 @@ table: **six of the fourteen signal pins.**
 | a11 | `MUTE` | — | there is no decoder to mute. §4 is where `MUTE` matters, and it matters at the backplane, not here |
 | a12 | the word | ● / — | §5 |
 | a13 | `/ANS` | **out** | tied low: it answers at once, and must never give its listener ringback |
-| a14 | secondary word | ○ | open, unless it answers to a number as well (`ex-groups.md` §3.3) |
+| a14 | secondary word | ○ | open, unless it answers to a number as well (`groups.md` §3.3) |
 | c1, c3 | `+5 V` | in | the logic and the encoder's digital half |
 | c5, c7 | `±12 V` | in | the tuned oscillator pair and the engine of `mf8-spec.md` §12.1. **The ROM-player version needs neither rail**, because it needs no codec |
 | c9–c13 | `−48 V`, `RING` | — | nothing on this card goes near the line |
@@ -82,12 +82,12 @@ four tones in two timbres, specifies them as tolerances an analog card and a ROM
 card both meet, and measures the one thing that constrains the analog build: a
 warble may not be made with a switch. What follows is the generator in outline.
 
-`exch-features.md` §2's: a tuned oscillator pair into one encoder half of
+`features.md` §2's: a tuned oscillator pair into one encoder half of
 `mf8-spec.md` §12.1, with the cadence muting the encoder's **input**, not its
 output, so the off periods are the codec's own `1010` and nothing clicks. Fast
 busy is the cannot-complete tone at its own cadence.
 
-Or `exch-features.md` §3's ROM player instead, and the shelf speaks a sentence:
+Or `features.md` §3's ROM player instead, and the shelf speaks a sentence:
 8 s of CVSD fills a 64 kB part, and **no codec is needed at all** — which also
 takes the `±12 V` off the card and leaves it pure 74HC.
 
@@ -186,11 +186,11 @@ So the two straps go together: a shelf barred with the tone bus is a shelf whose
 **`RBT` is the exchange's tone bus, and it already exists.** The ringback bit
 stream rides one mainboard conductor, is pulled to `FILL` through 4.7 kΩ at the
 clock card when nothing drives it, and is substituted into a ringing port's
-highway cell by 2 × 74HC157 a block (`exch-fabric.md` §3.1, §3.5). That is §4's
+highway cell by 2 × 74HC157 a block (`fabric.md` §3.1, §3.5). That is §4's
 arrangement with the backplane half already built.
 
 So **the ringback card is a tone card with the bus-driver population fitted**,
-its rear pin punched to `RBT` (`exch-features.md` §2: "the same kind of card,
+its rear pin punched to `RBT` (`features.md` §2: "the same kind of card,
 which drives a backplane line as well as its port"). No shunt, no new conductor,
 no strap field. The clock card simply does not populate that one '244 gate and
 keeps the 4.7 kΩ.
@@ -198,22 +198,22 @@ keeps the 4.7 kΩ.
 **Ringback is the one tone that is not switched to the caller.** Dial tone is a
 port — the marker points the caller's latch at it. Ringback cannot be, because
 the caller's latch is already pointing at the *called* port; the tone has to
-arrive in that port's cell, at every block at once (`exch-marker.md` §5:
+arrive in that port's cell, at every block at once (`marker.md` §5:
 "ringback is the one tone that is not a line, because it is made where the call
 state is"). Hence the bus.
 
 ### 5.1 Which port it sits at, and whether it is dialable
 
 **There is no reserved port for it.** Blocks 0 and 1 have exactly four
-non-channel slots and all four are spoken for (`exch-protocol.md` §5): 00 idle
+non-channel slots and all four are spoken for (`protocol.md` §5): 00 idle
 and never fitted, 04 the operator, 10 dial tone, 14 cannot-complete. Slots 1–3
 and 5–7 of those blocks are the trunk channels. So the card takes a port
 somewhere else, or no port at all:
 
 | | where | dialable? | cost |
 |---|---|---|---|
-| **no port** | any slot, with only its commutator input and no port circuit — "a source never listens, so it needs no port circuit" (`mvp-ex.md`) | no | **≈ 5 packages saved.** The bus does not care, and neither does the caller |
-| **a trunk block's spare slot** | ports 20, 24, 30 or 34 — slot 0 or 4 of a block fitted as trunk group 2 or 3, which `exch-protocol.md` §5 calls "two more lines" | **yes**, and 2 and 3 are valid first keys | nothing. Those two ports exist whether or not anything is in them |
+| **no port** | any slot, with only its commutator input and no port circuit — "a source never listens, so it needs no port circuit" (`mvp.md`) | no | **≈ 5 packages saved.** The bus does not care, and neither does the caller |
+| **a trunk block's spare slot** | ports 20, 24, 30 or 34 — slot 0 or 4 of a block fitted as trunk group 2 or 3, which `protocol.md` §5 calls "two more lines" | **yes**, and 2 and 3 are valid first keys | nothing. Those two ports exist whether or not anything is in them |
 | **a line slot** | anywhere in 20–77 | yes | one subscriber number |
 
 **The middle row is the natural home** on any exchange with a network, and it is
@@ -228,7 +228,7 @@ same stream the '157s put in a ringing port's cell.
 
 **Not in any document, and offered as an option**: `mf8-spec.md` §12.1's card
 carries two engines off one LM13700, and a tone card populates one of them as an
-encoder and leaves the decoder half unfitted (`exch-features.md` §2, "one encoder
+encoder and leaves the decoder half unfitted (`features.md` §2, "one encoder
 half"). Populate that half as a **second encoder** and one card at port 10 makes
 both tones — dial tone continuous on `C_TX`, ringback cadenced through the bus
 driver onto `RBT`.
@@ -247,12 +247,12 @@ of fast busy needs no one's permission.
 **In an exchange**, it depends where it sits:
 
 - **At ports 10 and 14** the marker reaches the tone cards by address and never
-  reads their class (`ex-extensions.md` §2.2), so the word needs no part at all.
-- **Anywhere else**, a '165 with class 011 *source* (`exch-fabric.md` §3.5), so
+  reads their class (`extensions.md` §2.2), so the word needs no part at all.
+- **Anywhere else**, a '165 with class 011 *source* (`fabric.md` §3.5), so
   that the card is never busy and any number of listeners can be switched to it.
 
 Either way a13 is tied low, for the reason every card that must not be rung in
-cadence ties it low (`ex-extensions.md` §2.3): a tone card that rang would give
+cadence ties it low (`extensions.md` §2.3): a tone card that rang would give
 its listener ringback for 0–4 s before saying anything.
 
 ## 7. Uses
@@ -262,7 +262,7 @@ commissioned; a shelf deliberately barred outside hours.
 
 And, once the bus exists, it is not only a tone bus: **any card can feed any
 subset of the others.** A milliwatt at the codec's 0 dBm0 reference for level
-checks (`ex-extensions.md` §2), an announcement ROM, or one card's transmit heard
+checks (`extensions.md` §2), an announcement ROM, or one card's transmit heard
 at another slot for a bench test. None of it needs a different card or a
 different strap.
 
@@ -280,15 +280,15 @@ different strap.
   make power-up benign; it is not load-bearing while there is one driver, and it
   is not drawn.
 - **Who drives `RBT` was contradicted across three documents, and is now
-  settled — applied, not owed.** `exch-mainboard.md` §2.1 had it among the
-  fifteen signals *from the clock card*; `exch-marker.md` §5 said flatly it was
-  not the clock card's; `exch-fabric.md` §4 hedged with "clock card, ringback
+  settled — applied, not owed.** `mainboard.md` §2.1 had it among the
+  fifteen signals *from the clock card*; `marker.md` §5 said flatly it was
+  not the clock card's; `fabric.md` §4 hedged with "clock card, ringback
   card". **It is the clock unit's conceptually and the tone card's
   electrically**: carried with the shelf-wide references, because that is what it
   is, and generated by this card, because a tuned oscillator pair through a CVSD
   encoder has no business on a board that is otherwise a crystal and a divider
-  chain. `exch-mainboard.md` §2.1 now says so and counts fourteen driven lines,
-  `exch-fabric.md` §4 gives `RBT` its own row, and `exch-features.md` §2 names
+  chain. `mainboard.md` §2.1 now says so and counts fourteen driven lines,
+  `fabric.md` §4 gives `RBT` its own row, and `features.md` §2 names
   the part. What is **not** measured is the obvious consequence: `RBT` is now one
   driver and about ten receivers on two metres of ribbon, driven from a card's
   rear connector rather than from the clock card's own '244, and that path has
@@ -299,9 +299,9 @@ different strap.
   `channel-cards.md` §2.3's rule, at the instant of lifting, has not been
   rendered.
 - **Which port the ringback card sits at** (§5.1) is unassigned in every
-  exchange document, including `mvp-ex.md`'s fit-out list, which names the card
+  exchange document, including `mvp.md`'s fit-out list, which names the card
   and gives it no slot. The three options there are worked from
-  `exch-protocol.md` §5's map, not quoted from it.
+  `protocol.md` §5's map, not quoted from it.
 - **The `MUTE` strap's blast radius** (§4.2). Tying `MUTE` to "locked" shelf-wide
   suppresses the squelch for *every* card in the shelf, not just the ones
   listening to the bus. On a barred shelf there is nothing else to hear, so it

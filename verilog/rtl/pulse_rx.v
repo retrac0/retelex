@@ -8,7 +8,7 @@
 // count is a '163 enabled by "a break has just ended, and was a pulse".  The
 // count comes out raw: ten pulses is a dialled 0, and 8 and 9 are service
 // digits the marker catches before they are ever an address
-// (exch-protocol.md 5).
+// (protocol.md 5).
 //
 // Both the register and the trunk monitor count with this, which is the point:
 // a monitor reads a digit it was not sent, with the register's own windows.

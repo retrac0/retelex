@@ -1,7 +1,7 @@
 # The exchange — tie trunks and the network
 
 An exchange is one 8 × 8 fabric of 64 ports: 48 lines, an operator, and **two groups of six
-tie trunks** — four groups at the busy centre of a network (`exch-protocol.md`
+tie trunks** — four groups at the busy centre of a network (`protocol.md`
 §5). A network is such exchanges joined by those trunks — a handful on a chain,
 a score around a hub, sixty-four codes in all — in which a line on another
 exchange is dialled directly with `1` and its four-digit number. This document is how: nobody routes, nobody sends; the call is
@@ -10,7 +10,7 @@ none of it.
 
 > **Status: analysis.** Decided: **all pulse; the flood carries the caller's own dial
 > pulses, live; no sender.** The monitor's two rules are measured
-> (`exch-monitor.md`). The timing in §3.1 and §4 is `exch.py flood` — arithmetic
+> (`monitor.md`). The timing in §3.1 and §4 is `exch.py flood` — arithmetic
 > from measured constants, **not a simulation of the gates** — and §5's link
 > loads are Erlang arithmetic. **`exch.py net` runs a network of eight exchanges
 > call by call** in milliseconds — the flood, the monitors, the claim, the
@@ -43,14 +43,14 @@ nothing.
 
 | | |
 |---|---|
-| Ports | **01–03, 05–07 and 11–13, 15–17**: two groups of six, one MF8 link each. A channel's slot is its bit position on the wire, C1–C3 at 1–3 and C4–C6 at 5–7, so one 3-bit number is its C bit, its A bit's superframe state and its port (`exch-protocol.md` §5). Slots 0 and 4, F and S on the wire, are ports of their own: idle and the operator in block 0, the two tones in block 1. **21–23, 25–27 and 31–33, 35–37 may be two groups more**, at the cost of twelve lines |
-| Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`ex-extensions.md` §2.2). An MF8 trunk card on a tie trunk sends one word to its six channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `exch-terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
-| The link | an MF8 pair each way — or, between exchanges in one rack, copper: a tie card at each end crosses the ports over and gives them their class and words; same clock, bit-exact, one frame more delay (`exch-protocol.md` §4). Or any other carrier that does what §1.1 asks |
-| The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`exch-terminal.md`) |
+| Ports | **01–03, 05–07 and 11–13, 15–17**: two groups of six, one MF8 link each. A channel's slot is its bit position on the wire, C1–C3 at 1–3 and C4–C6 at 5–7, so one 3-bit number is its C bit, its A bit's superframe state and its port (`protocol.md` §5). Slots 0 and 4, F and S on the wire, are ports of their own: idle and the operator in block 0, the two tones in block 1. **21–23, 25–27 and 31–33, 35–37 may be two groups more**, at the cost of twelve lines |
+| Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`extensions.md` §2.2). An MF8 trunk card on a tie trunk sends one word to its six channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
+| The link | an MF8 pair each way — or, between exchanges in one rack, copper: a tie card at each end crosses the ports over and gives them their class and words; same clock, bit-exact, one frame more delay (`protocol.md` §4). Or any other carrier that does what §1.1 asks |
+| The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`terminal.md`) |
 | Transmit | in the exchange's clock. The trunk card takes 4.096 MHz and frame sync from the clock card instead of owning the crystal (a strap) |
 | Receive | each link is its own clock domain. The crossing of `mf8-backplane.md` §2 moves here: two '174s for the six `C`, the §14 RC and Schmitt gate for `A` |
-| Trunk down | `MUTE` clears the A '259, every M falls, calls release themselves. **`MUTE` must also force the block's `BUSY` highway to 1**, or a dead trunk hunts as free. The trunk card also stops sending its words, which keeps a dead trunk from being hunted on any carrier (§1.1); `BUSY` is what keeps callers off a subscriber terminal's dead lines (`exch-terminal.md` §2) |
-| Guard | `exch-marker.md` §5.2's settle term already holds a released trunk busy for ~0.6 s |
+| Trunk down | `MUTE` clears the A '259, every M falls, calls release themselves. **`MUTE` must also force the block's `BUSY` highway to 1**, or a dead trunk hunts as free. The trunk card also stops sending its words, which keeps a dead trunk from being hunted on any carrier (§1.1); `BUSY` is what keeps callers off a subscriber terminal's dead lines (`terminal.md` §2) |
+| Guard | `marker.md` §5.2's settle term already holds a released trunk busy for ~0.6 s |
 | Glare | the two ends of a link hunt it in opposite order: the word's `g` bit, set at one end, has the marker take the last free trunk facing that way and not the first. Residual glare joins two callers to each other |
 
 Two directions make an exchange a node in **a chain or a ring**; a pair of
@@ -64,20 +64,20 @@ directions make an exchange a hub**: a star, or a tree of chains and stars
 A trunk is any port of class trunk that sends a direction word. The exchange
 cares about what is behind it in a handful of ways only — and **not about how long
 it is**, which is the one most carriers fail on and this one does not (§5.1 of
-`exch-monitor.md`):
+`monitor.md`):
 
 | | what the carrier must do |
 |---|---|
 | **A** | carry a level each way, and dial pulses with it: a monitor or a register must still see every break of 8 ms or more (`register.md` §2). The A path may **shorten** a break — MF8's own costs 0.5 ms a hop, and the line card's hook detector 6.1 ms once, so a 60 ms break is 50 ms after seven hops (§4) — and must not lengthen a make past the 128 ms that ends a digit, or a break past the 256 ms that is a hang-up |
-| **A's delay** | **anything.** A constant one-way delay costs the flood's guard *nothing*, because the seizure and the caller's pulses are the same wire and arrive equally late: measured to 160 ms a hop and 1.17 s across seven, 0 false claims (`exch-monitor.md` §5.1). What the guard counts is the marker's own 3–10 ms a hop, and **delay the carrier loses between the seizure and the next digit**, which costs a millisecond of guard for a millisecond of wander |
-| **A's wander** | **under 12 ms a hop** on the guard's 128 ms tap, or strap the next one: 256 ms buys 30 ms a hop and 512 ms buys 67, and 512 is the last tap a telephone to ES 201 187 will never be abandoned by (`exch-monitor.md` §3.5, measured §5.1) |
-| **C** | carry 64 kbps each way bit for bit, crossed into the exchange's clock on the card as MF8's trunk card does. Or carry voice band, with a codec pair on the card: a tandem of about 2 dB, and no data (`exch-protocol.md` §2) |
+| **A's delay** | **anything.** A constant one-way delay costs the flood's guard *nothing*, because the seizure and the caller's pulses are the same wire and arrive equally late: measured to 160 ms a hop and 1.17 s across seven, 0 false claims (`monitor.md` §5.1). What the guard counts is the marker's own 3–10 ms a hop, and **delay the carrier loses between the seizure and the next digit**, which costs a millisecond of guard for a millisecond of wander |
+| **A's wander** | **under 12 ms a hop** on the guard's 128 ms tap, or strap the next one: 256 ms buys 30 ms a hop and 512 ms buys 67, and 512 is the last tap a telephone to ES 201 187 will never be abandoned by (`monitor.md` §3.5, measured §5.1) |
+| **C** | carry 64 kbps each way bit for bit, crossed into the exchange's clock on the card as MF8's trunk card does. Or carry voice band, with a codec pair on the card: a tandem of about 2 dB, and no data (`protocol.md` §2) |
 | **Round trip, signalling** | **under 0.9 s** over the whole path, whatever the hop count: the origin gives up 2 s after `b` and the claim has to cross the network and come back inside that (§4). Nothing a terrestrial carrier does comes near it |
 | **Round trip, ECHO** | **20–30 ms, and this is the one that binds.** `channel-cards.md` §3.3 says echo needs no treatment because the round trip is "under 0.1 ms plus 5 µs per km", and there is **no canceller and no suppressor** anywhere in the design. That holds for a CVSD subscriber at both ends, which is four-wire and has no hybrid to echo off (`subscriber-line.md`); it does **not** hold the moment either end is an **analog FXS or FXO card**, whose 600 Ω hybrid returns 10–15 dB. **One 15 ms hop is already 30 ms of round trip.** A carrier of tens of milliseconds is for a network of CVSD sets, or it needs a canceller the design does not have |
 | **One way, conversation** | with no hybrid at either end the limit is G.114's, **150 ms one way** for transparency and 400 ms to be usable at all. Three 40 ms hops are transparent; ten are not |
 | **Glare** | the window in which both ends may seize one channel unseen is the carrier's delay plus the marker's own, so a 40 ms carrier makes glare about six times as likely as a pair does. The word's `g` bit still needs five of six channels busy before it can happen at all (§1) |
 | **Link down** | stop sending its word, so that its port reads unequipped and is never hunted, and let A fall, so that a call in progress releases |
-| **The word** | class trunk, its direction and its glare bit (`ex-extensions.md` §2.2), and `/ANS` tied low |
+| **The word** | class trunk, its direction and its glare bit (`extensions.md` §2.2), and `/ANS` tied low |
 
 So a direction may be carried by an MF8 card's six channels, the usual case; by
 a copper tie card between exchanges in one room; by a single-channel card, one
@@ -117,7 +117,7 @@ cannot-complete for `1`, and otherwise parses the same digits.
 - **By convention 00–17 are the backbone's**: tandems and hubs, the exchanges that
   are mostly trunks. Ordinary exchanges take 20–77. A network's codes then read
   as an exchange's ports do, where 00–17 are trunks and services and 20–77 are
-  lines (`exch-protocol.md` §5), and a planner sees which codes are which. Nothing
+  lines (`protocol.md` §5), and a planner sees which codes are which. Nothing
   enforces it: all sixty-four are assignable.
 - **8 and 9 stay special in both places of the code.** `1` followed by either, or
   `1 e` followed by either, is reserved, and cannot-complete today. After the key
@@ -171,10 +171,10 @@ in order to pass it on.
            and read on — h s, or 0, or 9: the trunk is now simply a line HERE.
            b not ours → the monitor lets go.
            A monitor counts only a seizure whose rise it saw, and the origin abandons a call
-           whose next break comes within 128 ms of its seizure  (exch-monitor.md §3)
+           whose next break comes within 128 ms of its seizure  (monitor.md §3)
  claim     a trunk port with CLAIM set sends backward A = 1, steadily, until release.  An origin
            or a hub that seized several keeps the one whose M rises and releases the others
- release   A falls through every patch at once; each port clears itself (exch-marker.md §5)
+ release   A falls through every patch at once; each port clears itself (marker.md §5)
 ```
 
 **The claim is a level, not a wink.** Release is on a *fall* of M or E. A wink is
@@ -247,8 +247,8 @@ on the trunk toward 24; the origin keeps it and releases the other.
 
 | the network card | |
 |---|---|
-| Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its guard, with the **three-way strap that sets the guard's tap** (`exch-monitor.md` §3.5) beside the code jumpers; **the trunks an origin seized**, a '574 a direction in a bank a register; the direction states and the claim comparator; at a hub, **the fan-out resolvers** (§3.2) |
-| Where the rest of it is | nowhere. **Everything the network needs is on this card.** The fabric, the ports, the registers, the marker and the release rule are the standalone exchange's, unchanged, so an exchange joins a network by plugging cards in (§3.2, `mvp-ex.md` §5) |
+| Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its guard, with the **three-way strap that sets the guard's tap** (`monitor.md` §3.5) beside the code jumpers; **the trunks an origin seized**, a '574 a direction in a bank a register; the direction states and the claim comparator; at a hub, **the fan-out resolvers** (§3.2) |
+| Where the rest of it is | nowhere. **Everything the network needs is on this card.** The fabric, the ports, the registers, the marker and the release rule are the standalone exchange's, unchanged, so an exchange joins a network by plugging cards in (§3.2, `mvp.md` §5) |
 | Not fitted | `1` gives cannot-complete, and the trunk ports are empty: the standalone exchange |
 
 ### 3.2 Hubs: three or four directions
@@ -282,8 +282,8 @@ call until then, in a **resolver**:
 | **Seeing the claim** | the scanner visits every port every 8 ms. At each visit a counter runs the stored leg addresses, the resolvers' and the seizure banks', past one shared 74HC688 while the probe reads M off the control bus, well inside the 125 µs visit: **≈ 3 packages**, shared, on the card |
 | **The origin** | the trunks it seized are held on the network card, one 74HC574 a direction the exchange has, in a bank a register: two '574 a bank at an exchange on a chain. The register counts the digits and says when to let go; the card holds the addresses and writes the latches. This replaces the card's two '174, which held only one pending network call at a time. **The bank is on the card and not in the register**, so joining a network does not reach into a register already fitted |
 | **How many** | every call dialled with `1` anywhere in the network passes the hub, for 2.2–3.2 s, the time `e` and `b` take. With 30 % of calls leaving, eight exchanges of 48 lines put 0.26 E on the hub's resolvers: two are all busy 2.6 % of the time, three 0.2 %. Twenty put 0.64 E: three 2.3 %, four 0.4 %. **Three at a hub, four at the centre of a score of exchanges** |
-| **The marker** | **nothing.** It hunts a class as it always did and knows nothing of directions: the card watches the same probe and pulls `/HUNT_INH` at a port whose word faces the wrong way, so the hunt walks on (`exch-marker.md` §4). The direction states — the origin's scan, a transit latching the incoming trunk's direction and hunting the others, the resolver's states — are **≈ 4 packages**, on the card |
-| **Timing** | a hub adds up to three writes to the flood's hop, about 4 ms, and up to one scan and a write to the claim's way back, 10 ms. The origin's guard covers ten hops at a slow marker's 12 ms on its 128 ms tap, twenty-one on its 256 ms one, and a hub counts as a hop and a third (`exch-monitor.md` §3.5). **On the 128 ms tap no exchange should be more than about eight hops from another**: a hub with four chains of four is eight across |
+| **The marker** | **nothing.** It hunts a class as it always did and knows nothing of directions: the card watches the same probe and pulls `/HUNT_INH` at a port whose word faces the wrong way, so the hunt walks on (`marker.md` §4). The direction states — the origin's scan, a transit latching the incoming trunk's direction and hunting the others, the resolver's states — are **≈ 4 packages**, on the card |
+| **Timing** | a hub adds up to three writes to the flood's hop, about 4 ms, and up to one scan and a write to the claim's way back, 10 ms. The origin's guard covers ten hops at a slow marker's 12 ms on its 128 ms tap, twenty-one on its 256 ms one, and a hub counts as a hop and a third (`monitor.md` §3.5). **On the 128 ms tap no exchange should be more than about eight hops from another**: a hub with four chains of four is eight across |
 | **Loops** | a tree of chains and stars needs no strap. A ring anywhere, through a hub or not, is broken by strapping one of its links (§3.3) |
 | **Monitors** | two a trunk block, as everywhere: a flood reaches a hub on one block |
 
@@ -295,7 +295,7 @@ registers, the marker or the release rule, and after the claim a call through a
 hub is two latches like any other.
 
 **What the standalone exchange must carry for that to be true**, and carries
-anyway (`mvp-ex.md` §5):
+anyway (`mvp.md` §5):
 
 - **the probe on the control bus.** The scanned port's M and its word go out
   beside `PORT`, `SRC`, `BUSY` and `WR`, on the '244s the marker already has. A
@@ -306,7 +306,7 @@ anyway (`mvp-ex.md` §5):
   hunt, and it keeps the marker from ever learning what a direction is.
 - **the diode for key `1`**, which sends it to a class-4 hunt. With no trunk
   port fitted that hunt finds nothing and the caller gets cannot-complete
-  (§2, `mvp-ex.md` §4).
+  (§2, `mvp.md` §4).
 
 **How big the card is.** The jumpers and the two sequences, ≈ 4 for the
 direction states, ≈ 3 for the comparator, and a '574 a direction in each
@@ -323,7 +323,7 @@ A flood must not go round in circles. Left alone, a seizure sent round a ring
 comes back to the exchange that made it, which forwards it again, and the call
 eats a channel of every link at each turn until the links are full.
 
-**The strap is the `n` bit of a trunk port's word** (`ex-extensions.md` §2.2),
+**The strap is the `n` bit of a trunk port's word** (`extensions.md` §2.2),
 set on every channel of one link, at both ends. It says:
 
 ```
@@ -372,12 +372,12 @@ twice.
 | | |
 |---|---|
 | What is consumed | the first digit only, and it is the trigger: `1`, which says only that the call leaves, so no monitor needs it |
-| A monitor | its own small circuit on the trunk block, **not a register from the pool**: `exch-monitor.md`. It reads `e` and `b`, claims or lets go, and on a claim the marker fetches a register for `h s` |
-| What keeps it from ever claiming a wrong number | **a monitor counts only a seizure whose rise it saw; the origin abandons a call whose next break comes within 128 ms of its seizure.** Measured for the first digit a monitor hears: 0 false claims in 1 500 calls with both, 4 to 97 without (`exch-monitor.md` §5). Both hazards act on the first digit heard; the second is not yet in the model |
+| A monitor | its own small circuit on the trunk block, **not a register from the pool**: `monitor.md`. It reads `e` and `b`, claims or lets go, and on a claim the marker fetches a register for `h s` |
+| What keeps it from ever claiming a wrong number | **a monitor counts only a seizure whose rise it saw; the origin abandons a call whose next break comes within 128 ms of its seizure.** Measured for the first digit a monitor hears: 0 false claims in 1 500 calls with both, 4 to 97 without (`monitor.md` §5). Both hazards act on the first digit heard; the second is not yet in the model |
 | Pulses as they arrive | a CVSD line card's hook detector shortens a break by 6.1 ms (`register.md` §1); the trunk's A path by 0.5 ms a hop (`channel-cards.md` §5); a copper tie not at all. A 60 ms break is 50 ms after seven hops, against an 8 ms window |
 | Against the release rule | the longest dial break, 103 ms, against the shortest release, 204 ms: `exch.py calls` 15b |
 | Post-dial delay | **133 ms after the last pulse**, whatever the hop count |
-| A key and nothing after it | **the origin releases its trunks 5 s after the key** if `b` has not arrived. The register keeps its own 10 s for the caller (`exch-marker.md` §6). Without the rule an accidental key, or a caller who stops to think, would hold a channel on every link for the register's whole 10 s. A slow dial reaching the code 77 needs 3.8 s, so 5 s leaves margin |
+| A key and nothing after it | **the origin releases its trunks 5 s after the key** if `b` has not arrived. The register keeps its own 10 s for the caller (`marker.md` §6). Without the rule an accidental key, or a caller who stops to think, would hold a channel on every link for the register's whole 10 s. A slow dial reaching the code 77 needs 3.8 s, so 5 s leaves margin |
 | An accidental key | one break of 8 ms or more, then 128 ms of unbroken make, on a line with a register attached. Nothing digital makes one: a CVSD line's hook detector gave **0 false events** against noise to sd 0.8 and impulses to 1000/s (`subscriber-line.md` §5), and A across MF8 gave **0 spurious transitions in 60 s to a line error rate of 1e−1** (`channel-cards.md` §5). What is left is the subscriber's own instrument — a hook flash, a worn dial contact — as in any exchange. Contact bounce is caught by the origin's guard, which abandons on a break within 128 ms of the seizure. **It would take about 13 an hour across the network to add 0.01 E to a link** |
 | Also | a data card places a network call by pulsing `DTR` |
 
@@ -388,14 +388,14 @@ flood` 5) — 258 ms on the 128 ms tap and 386 on the 256 ms one, against the 72
 a telephone to ES 201 187 gives at its fastest (`register.md` §2). The flood
 itself takes 7 ms a hop — 49 ms across seven, 84 at a slow marker — well inside
 the guard, and **which tap to strap is what decides how many hops there may be**
-(`exch-monitor.md` §3.5).
+(`monitor.md` §3.5).
 
 **And whatever the carrier.** Of that 7 ms a hop, only the marker's own 3–10 ms is
 in the guard's budget: a link's *transmission* delay is not, because the seizure
 and the caller's pulses travel it together and arrive together. A trunk on a
 leased circuit or a radio 80 ms long puts the flood up 600 ms after the seizure in
 absolute time and changes nothing, measured to 0 false claims in 1 000 calls
-(`exch-monitor.md` §5.1). What the guard does have to cover, besides the marker,
+(`monitor.md` §5.1). What the guard does have to cover, besides the marker,
 is delay the carrier **loses** between the seizure and the next digit, and the
 guard is one tap on a counter with four taps of room above it. A dial leaves 242 ms of margin at 0.5 s between digits and 542 at
 0.8 s. A caller who beats it is abandoned to cannot-complete: a failed call,
@@ -505,7 +505,7 @@ cheap.
 
 **A hub with four directions of twelve channels is a tandem switch.** It gives
 every block to a trunk group: eight groups, two facing each way, and twelve lines
-left at slots 0 and 4 of blocks 2–7 (`exch-protocol.md` §5). Each direction is a
+left at slots 0 and 4 of blocks 2–7 (`protocol.md` §5). Each direction is a
 chain of *k* exchanges of 48 lines. With 30 % of calls leaving, erlangs on each
 link of a branch from the hub outward, and calls blocked there on six channels
 and on twelve:
@@ -520,9 +520,9 @@ and on twelve:
 
 **Twenty full exchanges work around one hub** with twelve channels on every link
 but the outermost, where six will do. The hub wants four resolvers (§3.2) and
-each exchange's trunk blocks three monitors (`exch-monitor.md` §4).
+each exchange's trunk blocks three monitors (`monitor.md` §4).
 
-**`ex-traffic.md` takes the demand further** — bursts, a flash crowd, peak against
+**`traffic.md` takes the demand further** — bursts, a flash crowd, peak against
 off peak, and the whole of this section's network run a second time **in the gates**
 (`verilog`'s `make traffic-net`, eight whole exchanges in RTL) and read against the
 model here. Two things it changes: **Erlang B holds to about 1 % on a link and
@@ -530,15 +530,15 @@ understates past it**, because a flood puts a seizure on every link of the netwo
 at the same instant; and **a caller is a line**, which cannot lift while it is off
 hook, so a burst does not offer the calls the arithmetic says it does.
 
-**`Topology.md` takes this further**: chains, stars, trees and a split centre,
+**`topology.md` takes this further**: chains, stars, trees and a split centre,
 the largest of each, and rings. **What sets the limit is the flood, not the
 numbering.** The flood's share — the
 second figure above — is every call that leaves, anywhere, held on every link for
 2.7 s. Thirty-six full exchanges would put 1.2 E of it on every link: more than
 half of what six channels carry, and a fifth of twelve. **The sixty-four codes are
-more than full exchanges can use**: the largest network `Topology.md` finds is 47
+more than full exchanges can use**: the largest network `topology.md` finds is 47
 exchanges and 1 700 lines, with a fifth of calls leaving. Past that the way on
-is SS0 (`ex-ss0.md`), whose message floods for a third of a second, or a second
+is SS0 (`ss0.md`), whose message floods for a third of a second, or a second
 network reached through `1 8` or `1 9` (§6). A pair can put both groups between
 them (twelve channels, no blocking to speak of). **Closing a chain into a ring**
 puts a link between its two ends and takes their traffic off every link between
@@ -618,7 +618,7 @@ clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
   allowed six exchanges, and every call flooded, local ones too: 0.35 E a link at
   six exchanges, against 0.19 E now. Replaced by the key `1`, local numbers of two
   digits and a monitor that reads two digits.
-- **Making one exchange bigger than 64 ports** — `exch-protocol.md` §3.1.
+- **Making one exchange bigger than 64 ports** — `protocol.md` §3.1.
 
 ---
 
@@ -651,6 +651,6 @@ clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
 - **The hub** (§3.2): the resolver, the shared comparator's run through the
   stored legs, a claim that races a release, and a star's timing, all as gates.
   `net` models a two-hub tree (§5.1), and `topo` a chain, a star, two trees and
-  rings with and without a strap (`Topology.md`).
+  rings with and without a strap (`topology.md`).
 - **Trunks that are not MF8** (§1.1): no single-channel or voice-band trunk card
   has been sketched.

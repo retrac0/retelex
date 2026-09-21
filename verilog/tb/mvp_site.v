@@ -1,4 +1,4 @@
-// mvp_site -- one whole exchange as mvp-ex.md 1 fits it: the exchange logic,
+// mvp_site -- one whole exchange as mvp.md 1 fits it: the exchange logic,
 // two line cards and two subscribers on the simplified interface.  It carries
 // its own checker because it has its own crystal, and two sites do not share a
 // frame edge.

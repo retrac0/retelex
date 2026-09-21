@@ -1,10 +1,10 @@
 # The exchange — the console: a second master on cable B
 
-`exch-features.md` §4 has the console as "a busy-lamp field … and keys that drive
-the marker's control bus by hand", and says to build it first. `exch-mainboard.md`
+`features.md` §4 has the console as "a busy-lamp field … and keys that drive
+the marker's control bus by hand", and says to build it first. `mainboard.md`
 §2.3 calls that bus multi-master and gives the console one conductor, `/CON`:
 "the console has the bus; the marker's drivers go high-impedance. One '244
-enable." `exch-marker.md` §8 lists a second master as not modelled.
+enable." `marker.md` §8 lists a second master as not modelled.
 
 This document is the console as a master: how it takes the bus from a marker
 that is using it, and the things an operator does with it that a marker never
@@ -33,16 +33,16 @@ here, except where the console's own supervision overlaps it (§7.3).
 
 Two pairs of octal wheels, two toggles for the word's own flags, three keys and
 two toggles more — HOLD and BOTH — and what they make is the marker's own
-sixteen-bit word (`exch-mainboard.md` §2.3.1) — `G`, the spare,
+sixteen-bit word (`mainboard.md` §2.3.1) — `G`, the spare,
 `DST`, `SRC`, `BSY`, `CLM` — out of two 74HC165. **Everything the console does
 is one word on those same three wires.** Two keys end the word with `WR`, which
 is a latch write. The third does not, and a word with no `WR` writes nothing at
 all: it steers the probe, which is exactly how the marker reads a port
-(`exch-marker.md` §4, `marker.v`).
+(`marker.md` §4, `marker.v`).
 
 | key | the word | what it is for |
 |---|---|---|
-| **WRITE** | as the wheels and toggles have it: *`DST` listens to `SRC`* | bring-up step 3 (`exch-fabric.md` §7); a patch by hand; **service observing** (§5), which is this key with a sink's port on the `DST` wheels; **one leg of a connection** (§6) |
+| **WRITE** | as the wheels and toggles have it: *`DST` listens to `SRC`* | bring-up step 3 (`fabric.md` §7); a patch by hand; **service observing** (§5), which is this key with a sink's port on the `DST` wheels; **one leg of a connection** (§6) |
 | **RELEASE** | the same `DST`, and **`SDATA` held low for the second byte**: `SRC` 00, `BSY` 0, `CLM` 0 | **forced release** (§3). The word a call's own end would have written, had anyone written it. **One gate on the serial stream**, enabled by the bit counter's top bit |
 | **PROBE** | the same word, **and no `WR` at all** | **supervision** (§7.2). The block the word names drives the probe bus, and the console reads `BUSY` and the card's word out of the octet that follows. Nothing is written, because `WR` is what writes |
 | **BOTH** | a toggle: the key runs **twice in one tenure**, the second word with the two port fields crossed | **a connection** — WRITE + BOTH is `DST ← SRC` and `SRC ← DST` (§6). **A release of both ends** — RELEASE + BOTH is §3.1's two words. **Both ends read** — PROBE + BOTH |
@@ -69,7 +69,7 @@ flip-flop that says *second*.
 | `PB0`, `PB1` | B | a listener, in the octet after a PROBE word | `BUSY` and the card's word, §7.2 |
 | `HA[0..7]` | A | a listener, every frame, for ever | the hook of either end, §7.2 |
 | `SLOTQ[2:0]`, `HCLK`, `TX_OCT` | A | a listener | which cell and which octet, for the two rows above |
-| `/RESET` | B | a driver **if** the console carries the key bring-up step 4 asks for (`exch-fabric.md` §7) — open-drain, because the marker and the power-on circuit drive it too | clearing every latch at once. **Not measured**, and the one console control that is not one port's business |
+| `/RESET` | B | a driver **if** the console carries the key bring-up step 4 asks for (`fabric.md` §7) — open-drain, because the marker and the power-on circuit drive it too | clearing every latch at once. **Not measured**, and the one console control that is not one port's business |
 | `HC[0..7]`, `FILL`, `RBT`, `TICK`, the clocks | — | **not connected** | the console has no port, no latch, no number and no bit stream |
 
 **It drives nothing on cable A**, and nothing on cable B outside a tenure. Its
@@ -103,7 +103,7 @@ Three things go wrong, and only the first is obvious:
 - **A `WR` cut short is a runt clock into a '273.** What a latch does with half
   a clock pulse is not in the data sheet.
 - **The marker goes on scanning, and reads the wrong block.** The block that
-  drives `PB` is the block the shift register names (`exch-rtl.md`,
+  drives `PB` is the block the shift register names (`rtl.md`,
   "steering the probe costs a visit") — and the shift register now holds the
   *console's* word. Every visit until the marker next steers the probe pairs
   the right port's hook, off `HA`, with some other port's `BUSY` and class.
@@ -117,7 +117,7 @@ Three things go wrong, and only the first is obvious:
 2. **Holds while it is off.** The write sequencer starts nothing; every visit
    from `/CON` falling is distrusted, so the scanner repeats it instead of
    stepping. This is the hold the serial bus already made the scanner have
-   (`exch-rtl.md`): `/CON` is one more term in it.
+   (`rtl.md`): `/CON` is one more term in it.
 3. **Steers the probe again when `/CON` rises**, before any visit counts. It is
    the "probe dirty" request a block turn-over already raises.
 
@@ -142,29 +142,29 @@ A grant line would let the console start the moment the marker let go. It is
 not worth its conductor:
 
 - **The console must work with no marker at all.** It is the bring-up tool, and
-  `exch-fabric.md` §7 brings it up two steps before the marker. A console that
+  `fabric.md` §7 brings it up two steps before the marker. A console that
   waits for a grant needs a pull that reads "granted" when nobody is there to
   grant, and then a marker that is fitted but dead grants too. **A console that
   waits out a silence behaves identically with a marker, without one, and with
   one that has stopped.**
 - **Cable B has one spare conductor** and two claims on it already — `/HUNT_INH`
-  (`exch-basebandcard.md`) and the scanned port's `M` (`exch-mainboard.md` §9).
+  (`baseband.md`) and the scanned port's `M` (`mainboard.md` §9).
 - **What the silence costs is half a millisecond**, on an event that happens
   when a person presses a key.
 
 **The one constraint: the silence outlasts the marker's longest word.** That is
-16½ `SCLK` periods at the marker's rate. `exch-mainboard.md` §2.3 lets the marker
+16½ `SCLK` periods at the marker's rate. `mainboard.md` §2.3 lets the marker
 run `SCLK` anywhere from 512 kHz down to 64 kHz — 32 µs to 258 µs — and the
 console's silence is 32 periods of `TX_CLK`, **500 µs: twice the slowest**.
 
 **Why finish the word, and not cut it and send it again.** A write is idempotent
-(`exch-mainboard.md` §7: a second `WR` "writes the latch a second time, with the
+(`mainboard.md` §7: a second `WR` "writes the latch a second time, with the
 same data"), so the marker could be cut off at once and repeat the word when it
 gets the bus back. The lost write would be cured. The runt `WR` would not.
 
 **Two rates on one bus, on purpose.** The marker shifts at 512 kHz and the
 console at 64, off `TX_CLK`. The blocks' shift registers "have no phase, only
-content" (`exch-mainboard.md` §2.3.2), so nothing has to agree.
+content" (`mainboard.md` §2.3.2), so nothing has to agree.
 
 ### 2.4 HOLD
 
@@ -172,7 +172,7 @@ The toggle keeps the tenure open after the word, or opens one with no word.
 **With a marker fitted, that stops the marker** — and nothing else. Calls in
 progress carry on, bit for bit (§10), because nobody is in charge of a call.
 Nothing new is set up: no dial tone, no register, no nail re-made after a
-release (`ex-extensions.md` §3.1). Words keyed during a hold go out with no
+release (`extensions.md` §3.1). Words keyed during a hold go out with no
 silence; the bus is already the console's. Dropping the toggle, the marker
 steers its probe and carries on from the port it stopped at.
 
@@ -192,7 +192,7 @@ no dial tone and says nothing about why.
 A scan of 64 ports is 9.02 ms with the console quiet; with a console word every
 16 ms on average — a rate no operator reaches — 9.19 ms mean, 10.75 ms worst.
 Against that, the origin's guard is 128 ms and a flood lasts seconds
-(`exch-network.md` §3).
+(`network.md` §3).
 
 ---
 
@@ -204,13 +204,13 @@ one.
 ```
  RELEASE 20       20's latch: listening to 00, BUSY clear.  20 hears idle
    + one release time      20's E detector, which was high, times out; until then 20 still reads busy
-                            (exch-marker.md 5.2) and nothing may seize it
+                            (marker.md 5.2) and nothing may seize it
    + one scan     20 is off hook with an idle latch: a CALL REQUEST.  A register, and dial tone
 ```
 
 Measured: dial tone 35 ms after the key, where the bench's release time is 32 ms
 — in the exchange, 256 ms and a scan. It is exactly what the party left off-hook
-at the end of any call gets (`exch-marker.md` §5.1), by the same path. **The
+at the end of any call gets (`marker.md` §5.1), by the same path. **The
 console writes one word and the port's own supervision does the rest**; nothing
 in the marker knows a release was forced.
 
@@ -248,7 +248,7 @@ on the same three wires — two '164, a '688 on `DST` against the `DST` wheels a
 
 The case a maintenance key is really for. A latch written `BUSY` by hand with
 both phones on hook — a slip at the console, or a marker fault — is held for
-ever: release is on a *fall* (`exch-marker.md` §5), and nothing here ever rose.
+ever: release is on a *fall* (`marker.md` §5), and nothing here ever rose.
 Measured: still held after 150 ms; one RELEASE, free; the line then lifts and
 gets dial tone.
 
@@ -268,10 +268,10 @@ Writing a line `00` with `BUSY` set looks like a busy-out key, and while it last
 it is one: a caller to it gets cannot-complete, and the mark outlasts that call.
 **But the first time the line's own phone is lifted and replaced, the port
 releases itself** — its `M` rose and fell, which is a release — and the mark is
-gone. The same is true of `ex-ss0.md`'s `BLOCK`, which marks a trunk the same way
+gone. The same is true of `ss0.md`'s `BLOCK`, which marks a trunk the same way
 and is cleared by the far end's next seizure and release.
 
-**Out of service is the switch on the card's word** (`ex-extensions.md` §2.2):
+**Out of service is the switch on the card's word** (`extensions.md` §2.2):
 no word, so the port reads unequipped, and nothing at the port can undo it.
 The console is not the tool.
 
@@ -293,12 +293,12 @@ amplifier and a jack — and three ties.
 | pin | tied | so |
 |---|---|---|
 | `A_TX` (`M`) | low | never off hook: never a call request, never a seizure, and its own `M` can never release it |
-| `/ANS` | low | never rung, never sends ringback (`ex-extensions.md` §2.3) |
+| `/ANS` | low | never rung, never sends ringback (`extensions.md` §2.3) |
 | the word | none | **to the marker it is an empty slot**: never hunted, and cannot-complete if dialled |
 
 To the fabric it is a port with a latch like any other, and **only the console
-ever writes it**. It is the converse of `exch-features.md` §6's source, and it is
-also `ex-extensions.md` §3.1's "speaker on a radio" with the nail taken off.
+ever writes it**. It is the converse of `features.md` §6's source, and it is
+also `extensions.md` §3.1's "speaker on a radio" with the nail taken off.
 **Its own converse is the ring source of §6.3**: the same three ties with `A_TX`
 the other way up, and no decoder behind them.
 
@@ -306,7 +306,7 @@ the other way up, and no decoder behind them.
 
 **WRITE, with the sink on the `DST` wheels, the observed port on the `SRC` wheels
 and `BSY` up.** The fabric already lets any number of latches point at one slot
-(`exch-features.md` §6: 63 listeners on one source), and the observed port's own
+(`features.md` §6: 63 listeners on one source), and the observed port's own
 latch is not touched. Measured, on a call between 20 and 21 with a sink pointed
 at each:
 
@@ -329,7 +329,7 @@ at each:
 - **A call over a trunk** is observed at the trunk port, which sends what the
   far party says.
 - **Two adjacent slots by convention** — 76 and 77 in the bench, beside the test
-  lines `ex-extensions.md` §1 suggests at 75–77. A suggestion, not a rule.
+  lines `extensions.md` §1 suggests at 75–77. A suggestion, not a rule.
 
 ### 5.3 It cannot be detected
 
@@ -342,7 +342,7 @@ the same lock as `/RESET`.
 
 ## 6. Connecting two lines
 
-`ex-extensions.md` §3.1 says the console "can still point two latches at each
+`extensions.md` §3.1 says the console "can still point two latches at each
 other by hand, as bring-up step 3 does. That is a call, and it clears when it is
 released." That is true of the latches and **not true of the call**, because
 nothing in it rings. This section is the whole of it: the word pair, what it
@@ -351,8 +351,8 @@ does at each combination of hooks, and the card that makes two idle phones ring.
 ### 6.1 A connection is two latches, so it is two words
 
 A port's '273 holds **who it listens to** and nothing else
-(`exch-protocol.md` §3). Hearing is one-way, so a conversation is two latches,
-and the marker itself sets one up with two writes (`exch-marker.md` §4). The
+(`protocol.md` §3). Hearing is one-way, so a conversation is two latches,
+and the marker itself sets one up with two writes (`marker.md` §4). The
 console's **WRITE + BOTH** is those two writes:
 
 ```
@@ -371,7 +371,7 @@ seventeen bits, and neither party is off hook yet in the sequence below.
 
 | both phones … | what happens |
 |---|---|
-| **on hook** | **neither rings, and both are busy for ever.** `E` at each end is the *other end's hook*, and neither has one up, so the ring condition (`exch-marker.md` §5) is never met — and no detector ever armed, so nothing will ever fall to release them. It is §3.3's port held by nothing, twice. Measured: still held at 150 ms; RELEASE + BOTH frees both |
+| **on hook** | **neither rings, and both are busy for ever.** `E` at each end is the *other end's hook*, and neither has one up, so the ring condition (`marker.md` §5) is never met — and no detector ever armed, so nothing will ever fall to release them. It is §3.3's port held by nothing, twice. Measured: still held at 150 ms; RELEASE + BOTH frees both |
 | **one off hook** | the off-hook end rings the other, in cadence, and hears ringback from it: `channel-cards.md` §1's hotline, made by hand. The other answering is a call |
 | **both off hook** | they are talking, from the frame after the second word. This is the useful one, and §6.4 is how both come to be off hook |
 
@@ -386,9 +386,9 @@ way to ring a port: point it at something whose `M` is up.
 | `A_TX` (`M`) | **high** | a port pointed at it is being called: on-hook, it **rings**; off-hook, its `E` never falls, so it is **held** |
 | `/ANS` | low | it is never rung itself |
 | the word | none — **the pin left open** | unequipped: never hunted, never dialled, and **its `M` is not a call request** |
-| `C_TX` | `FILL`, or a looping "please hold" (`exch-features.md` §3) | what a party parked on it hears |
+| `C_TX` | `FILL`, or a looping "please hold" (`features.md` §3) | what a party parked on it hears |
 
-**It is `exch-features.md` §6's source with `A_TX` the other way up**, and that
+**It is `features.md` §6's source with `A_TX` the other way up**, and that
 document's reason for tying `A_TX` low is exactly what makes this card need
 care: "a source cannot hold `M` high to say it is alive, because `M` high on an
 idle port is a seizure to the scanner". A seizure is `M` high on a **free port
@@ -400,7 +400,7 @@ is not *hunted* for the same reason the sink is not, a hunt comparing a class it
 does not have; no hunt is dialled in this bench.
 
 > **The word pin must be left open, not grounded.** A plain line card grounds it,
-> which reads all ones and means *a line with no options* (`ex-extensions.md`
+> which reads all ones and means *a line with no options* (`extensions.md`
 > §2.2) — and a permanently off-hook line is a call request at every scan, which
 > would hold a register for ever. It is a blank card, not a line card.
 
@@ -409,7 +409,7 @@ does not have; no hunt is dialled in this bench.
 | a phone on hook | **rings**, in cadence, and hears the source |
 | it answers | ringing stops; it is **parked**: busy, held, hearing the source. Still held at 150 ms, because nothing can fall |
 | it hangs up | its own `M` falls: the port releases itself by the ordinary rule, and the park is over |
-| any number of ports at once | free: the fabric fans out (`exch-features.md` §6) |
+| any number of ports at once | free: the fabric fans out (`features.md` §6) |
 | dialled by a subscriber | cannot-complete |
 
 **Parts: none.** A blank card, three ties, and whatever makes the sound if it is
@@ -437,10 +437,10 @@ release time later and got dial tone, and nothing was left held.
 - **Nobody is in charge afterwards.** The pair is an ordinary call from the
   instant it is made: either party hanging up releases both, and the console has
   nothing left to do. It is not remembered anywhere. A connection that must
-  survive a release is a **nail** (`ex-extensions.md` §3.1), which is two cards'
+  survive a release is a **nail** (`extensions.md` §3.1), which is two cards'
   jumpers and not a console word.
 - **A party who never answers rings for ever.** Nothing times a ringing port
-  (`ex-groups.md` §2.6). The operator releases it.
+  (`groups.md` §2.6). The operator releases it.
 - **Either party may be a trunk channel, a sink or anything else with a latch.**
   The word does not know what is at the far end; §7 is the same sequence with
   the operator's own phone in the place of the ring source.
@@ -455,7 +455,7 @@ and the console has no part in it.** Three things it cannot do, and each is why
 this section exists:
 
 - it cannot reach a port with no number and cannot reach one with no word.
-  00–17 are never dialled (`exch-protocol.md` §5) — a trunk channel, a tone, the
+  00–17 are never dialled (`protocol.md` §5) — a trunk channel, a tone, the
   position at 04 itself — and a sink or a ring source answers any dial with
   cannot-complete, because a card that sends no word reads unequipped;
 - it cannot hold one call and start another. Once the operator's latch is
@@ -495,8 +495,8 @@ and still busy with no console and no operator in the call; and 04, off hook
 with a cleared latch, was a call request like anyone's and got dial tone.
 
 **Ringback here is `FILL`.** The bench fits no ringback card, so what the
-operator hears while 20 rings is the silence `mvp-ex.md` describes; the `RBT`
-substitution itself is `exch-fabric.md` §3.5's and is measured elsewhere. What is
+operator hears while 20 rings is the silence `mvp.md` describes; the `RBT`
+substitution itself is `fabric.md` §3.5's and is measured elsewhere. What is
 measured here is that 20 was being rung, and by which hook.
 
 **Patch first, then lift.** The order is the whole of the interface, and the
@@ -505,10 +505,10 @@ reason is the register pool:
 | | measured |
 |---|---|
 | **patched, then lifted** | `M` rises on a port that is already busy, which is not a call request. **No register, no dial tone**, and the position is a talking port and nothing else |
-| **lifted, then patched** | the lift was a call request: dial tone, and **a register out of the pool**. The console's word patches the port anyway, and the register goes on watching that hook until its own no-digit timeout — 594 ms in the bench, **ten seconds in the exchange** (`exch-marker.md` §5.1). It then lets go with an event word, which writes nothing, so the patch survives it |
+| **lifted, then patched** | the lift was a call request: dial tone, and **a register out of the pool**. The console's word patches the port anyway, and the register goes on watching that hook until its own no-digit timeout — 594 ms in the bench, **ten seconds in the exchange** (`marker.md` §5.1). It then lets go with an event word, which writes nothing, so the patch survives it |
 
 An operator who habitually lifts first takes one register out of a pool of two
-or three for ten seconds at a time (`exch-marker.md` §6). **The cure, if the
+or three for ten seconds at a time (`marker.md` §6). **The cure, if the
 handset must be up first, is §4's make-busy on the position's own line** —
 `WRITE`, `DST` = the position, `SRC` 00, `BSY` up — measured: no register, no
 dial tone, the console rings from it as usual, and the mark goes when the
@@ -517,7 +517,7 @@ handset does.
 > `exch.py calls`, the other model, gives a caller who dials nothing
 > cannot-complete at the timeout. A marker that did that would write over the
 > console's patch — the mark above is the safe habit under either model, and the
-> difference between the two is `exch-marker.md` §8's business, not this
+> difference between the two is `marker.md` §8's business, not this
 > document's.
 
 ### 7.2 Supervising both ends: what the console can read
@@ -527,7 +527,7 @@ Three read-backs, and they are not the same kind of thing:
 | | what | where from | when | needs the marker? |
 |---|---|---|---|---|
 | **hook** | the port's `M` — off hook, and what the other end of its call sees as `E` | `HA[h]` in the port's own cell, **cable A** | **every frame, 15.6 µs**, for ever | **no** |
-| **`BUSY`, and the card's word** | busy, and what the card says it is (`ex-extensions.md` §2.2) | `PB0`, `PB1`, in the octet after a **PROBE** word | once a tenure, 951 µs | no — and it stops the marker while it reads |
+| **`BUSY`, and the card's word** | busy, and what the card says it is (`extensions.md` §2.2) | `PB0`, `PB1`, in the octet after a **PROBE** word | once a tenure, 951 µs | no — and it stops the marker while it reads |
 | **who a port listens to** | the last word written to its latch | the watch (§3.2), on cable B | only when somebody writes it | no |
 
 **The hook, of both ends, all the time.** Two '151 on `HA[0..7]` picked by the
@@ -537,7 +537,7 @@ lifting moved the lamp **13 µs later**, inside one frame, and it went on doing 
 with the marker stopped under HOLD. It is the supervision the console has at
 bring-up step 2, before there is a marker at all.
 
-**`BUSY` and the class, on demand.** `exch-mainboard.md` §2.3.2: the block that
+**`BUSY` and the class, on demand.** `mainboard.md` §2.3.2: the block that
 drives `PB` is the block the shift register names. A console word names the port
 on the `DST` wheels, so **a word with no `WR` steers the probe bus to it** and
 the console reads what the marker reads at a visit. Measured:
@@ -557,7 +557,7 @@ the exchange was written.
 turn-over, about every millisecond. A console that sent its word and then looked
 would be reading whatever block the marker had moved on to. Holding the bus for
 the octet after the word costs 125–250 µs and makes the reading unambiguous by
-construction — the same argument `hookbusy-display.md` §3 makes for its row
+construction — the same argument `hookbusy.md` §3 makes for its row
 decode.
 
 **What cannot be read at all: a latch.** There is no read-back path from a '273,
@@ -565,7 +565,7 @@ which is why §3.2's watch exists and why it has to be armed first.
 
 ### 7.3 With a lamp field beside it
 
-`hookbusy-display.md` is 64 hook lamps off cable A and eight busy lamps off
+`hookbusy.md` is 64 hook lamps off cable A and eight busy lamps off
 `PB0`, and **its busy row follows whatever word is on the bus** — including the
 console's. So a console fitted beside that panel already has both read-backs:
 press PROBE and the panel's busy column is the console's block; hold HOLD and it
@@ -582,22 +582,22 @@ supervision packages go. A console built alone needs them.
 **A plain line card with a phone on it, in slot 4 of block 0** — and nothing
 else. It has a port circuit, a latch, two release detectors and a `BUSY` bit
 like every other port; it rings, it answers, it can be observed, released and
-made busy from the console like every other port; and `exch-protocol.md` §5's
+made busy from the console like every other port; and `protocol.md` §5's
 map is the only place in the exchange the number appears.
 
 | | |
 |---|---|
 | **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's '165 unfitted, is a line with no options |
-| **its word** | *line*, today with class *operator* so that the 0 hunt finds it (`exch-marker.md` §1). Under `ex-groups.md` §2 that class goes: it is a plain line, and a second position is a card that **answers to** the pilot |
+| **its word** | *line*, today with class *operator* so that the 0 hunt finds it (`marker.md` §1). Under `groups.md` §2 that class goes: it is a plain line, and a second position is a card that **answers to** the pilot |
 | **`/ANS`** | open. It is a phone and it rings in cadence |
-| **reached by** | **key 0 only.** 0 hunts class *operator* in fixed order from 00 and 04 is the first such port (`exch-marker.md` §3) — and from another exchange by `1 e b 0`, which is the same key once the far monitor has claimed (`exch-network.md` §3) |
-| **not reached by** | its own number. Ports 00–17 are never dialled, because 0 and 1 mean something as a first digit (`exch-protocol.md` §5) |
+| **reached by** | **key 0 only.** 0 hunts class *operator* in fixed order from 00 and 04 is the first such port (`marker.md` §3) — and from another exchange by `1 e b 0`, which is the same key once the far monitor has claimed (`network.md` §3) |
+| **not reached by** | its own number. Ports 00–17 are never dialled, because 0 and 1 mean something as a first digit (`protocol.md` §5) |
 | **to the console** | a number on the `SRC` wheels, and nothing more (§7.1) |
 | **to the fabric** | nothing at all. No block, no port circuit and no highway knows which port it is |
 
 **Why slot 4, and why block 0.** A link's channels sit where they are on the
 wire: MF8 puts F at frame position 0 and S at 4, so **slots 0 and 4 of a block
-are never trunk channels** (`exch-protocol.md` §5). Block 0 is therefore a block
+are never trunk channels** (`protocol.md` §5). Block 0 is therefore a block
 with six channel slots and two ports that survive a trunk group — 00 and 04 —
 and 00 can never hold anything, because a cleared latch listens to 00: an
 operator there would ring every idle phone whenever the handset came up, and
@@ -621,9 +621,9 @@ without the other.
 
 | | |
 |---|---|
-| a second position | another class-*operator* card in any line slot. 0's fixed order from 00 reaches 04 first, then it (`exch-marker.md` §3) |
-| a night announcement | the same, last in slot order: an announcement card, `/ANS` low, that answers itself (`exch-features.md` §3) |
-| night service | the out-of-service switch on 04's word (`ex-extensions.md` §2.2). 04 reads unequipped, and 0 goes on down the hunt |
+| a second position | another class-*operator* card in any line slot. 0's fixed order from 00 reaches 04 first, then it (`marker.md` §3) |
+| a night announcement | the same, last in slot order: an announcement card, `/ANS` low, that answers itself (`features.md` §3) |
+| night service | the out-of-service switch on 04's word (`extensions.md` §2.2). 04 reads unequipped, and 0 goes on down the hunt |
 | no position fitted | 0 gives cannot-complete. Nothing else changes: a console with a ring source needs no position, and a CO line ringing in — which is routed as 0 — gets cannot-complete too, so an exchange with incoming trunks wants one |
 
 ### 8.3 Should the position have 04 at all?
@@ -646,9 +646,9 @@ So the trade is worth stating, and it comes out one way:
 **So the position keeps 04 on an attended exchange, and an unattended one should
 give it to the fourth tone**, which is the one thing with nowhere else
 guaranteed. Moving the position costs nothing in the marker: it is found by a
-hunt, and "nothing on the marker says where anything is" (`exch-marker.md` §1).
+hunt, and "nothing on the marker says where anything is" (`marker.md` §1).
 
-**One trap if a source takes 04.** Under `ex-groups.md` §2, key 0 becomes *a call
+**One trap if a source takes 04.** Under `groups.md` §2, key 0 becomes *a call
 to a pilot number*, the pilot is **probed first**, and a source found at a probe
 is connected in one write — so a tone sitting at the pilot would answer 0 with a
 tone. The pilot must then move to a port that fails the probe: 00, which is
@@ -724,22 +724,22 @@ own, at its own 4.096 MHz.
 
 ## 11. What this changes elsewhere
 
-- **`exch-mainboard.md` §2.3**, `/CON`: a request honoured between words, not an
+- **`mainboard.md` §2.3**, `/CON`: a request honoured between words, not an
   enable; and §7's glitch table gains a row — `/CON` low is a stopped marker,
   costing nothing in progress.
-- **`exch-marker.md` §8**, "a second master on the control bus is not modelled":
+- **`marker.md` §8**, "a second master on the control bus is not modelled":
   it is now.
-- **`ex-extensions.md` §3.1**, "the console can still point two latches at each
+- **`extensions.md` §3.1**, "the console can still point two latches at each
   other by hand… that is a call": it is a call only if a hook is up somewhere.
   §6 is what it takes, and §6.3 adds a card to the wiring field.
-- **`exch-features.md` §4** has the console as a lamp field and keys. The keys
+- **`features.md` §4** has the console as a lamp field and keys. The keys
   are §1, the position is §8, and "build it first" is unchanged — with a ring
   source card and two phones, fabric plus console is a working manual board
   before the marker exists.
-- **`exch-features.md` §6**, sources: `A_TX` is tied low there "because `M` high
+- **`features.md` §6**, sources: `A_TX` is tied low there "because `M` high
   on an idle port is a seizure to the scanner". §6.3 is the exception and says
   why it is one — no word, no class, no seizure.
-- **`ex-counters.md` §8**, the console's writes: a counter card counts them as
+- **`counters.md` §8**, the console's writes: a counter card counts them as
   the marker's. **A RELEASE is the *trunks let go* pattern exactly**, and an
   observe write whose `SRC` is a trunk port matches *calls over a trunk*.
   **A PROBE is counted by nothing**, because nothing is written. At an
@@ -748,7 +748,7 @@ own, at its own 4.096 MHz.
 - **`tone-card.md` §5.1** counts the four undialable ports and finds all four
   spoken for. §8.3 is the trade that frees one of them, and which exchange should
   take it.
-- **`hookbusy-display.md`**: its busy row already follows the console's words,
+- **`hookbusy.md`**: its busy row already follows the console's words,
   which §7.3 makes a function rather than a coincidence.
 
 ---
@@ -776,7 +776,7 @@ own, at its own 4.096 MHz.
 - **An operator's habits.** Patch-then-lift is a rule a person has to keep, and
   nothing on the panel enforces it or shows that it was broken. Whether it
   survives a busy hour is not something a bench can say.
-- **The free-running `SCLK` strap** of `exch-mainboard.md` §2.3.2 with two
+- **The free-running `SCLK` strap** of `mainboard.md` §2.3.2 with two
   masters on the bus.
 - **Two consoles.** `/CON` would want to be open-drain and the silence is not an
   arbiter between them.

@@ -37,24 +37,28 @@ line. 8 and 9 stay special in the code.
 
 | | |
 |---|---|
-| [docs/mvp-ex.md](mvp-ex.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
-| [docs/exch-protocol.md](exch-protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
-| [docs/exch-fabric.md](exch-fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
-| [docs/exch-mainboard.md](exch-mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
-| [docs/exch-marker.md](exch-marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
-| [docs/exch-features.md](exch-features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), data |
-| [docs/conference.md](conference.md) | **proposed, switch measured**: meet-me conference block — attaches to the mainboard buses, private party bus, two×4 or one×8 bit-switched bridges, no codec |
-| [docs/exch-network.md](exch-network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
-| [docs/Topology.md](Topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link strapped and fail without |
-| [docs/exch-terminal.md](exch-terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
-| [docs/exch-rtl.md](exch-rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
-| [docs/exch-basebandcard.md](exch-basebandcard.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
-| [docs/exch-monitor.md](exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
-| [docs/ex-extensions.md](ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted*), its options (hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
-| [docs/ex-groups.md](ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, a bank of call-in lines and a meet-me **conference bridge** are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and extensions-on-a-bridge are **retired** |
-| [docs/ex-observers.md](ex-observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
-| [docs/ex-traffic.md](ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
-| [docs/ex-ss0.md](ex-ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
+| [mvp.md](mvp.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
+| [protocol.md](protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
+| [fabric.md](fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
+| [mainboard.md](mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
+| [marker.md](marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
+| [features.md](features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), data |
+| [conference.md](conference.md) | **proposed, switch measured**: meet-me conference block — attaches to the mainboard buses, private party bus, two×4 or one×8 bit-switched bridges, no codec |
+| [register.md](register.md) | the register: dial pulses into a digit store in 74HC, pulse correction, measured end to end |
+| [console.md](console.md) | **proposed**: the operator's console — forced release, service observing, connecting two lines, dialling a port and supervising both ends |
+| [network.md](network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges a six-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
+| [topology.md](topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link strapped and fail without |
+| [terminal.md](terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
+| [rtl.md](rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
+| [baseband.md](baseband.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
+| [monitor.md](monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
+| [extensions.md](extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted*), its options (hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
+| [groups.md](groups.md) | **proposed**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, a bank of call-in lines and a meet-me **conference bridge** are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and extensions-on-a-bridge are **retired** |
+| [observers.md](observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
+| [hookbusy.md](hookbusy.md) | the hook/busy display panel — 128 lamps on a card stack, merging the two observer fields |
+| [counters.md](counters.md) | the traffic counter card on the control bus |
+| [traffic.md](traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
+| [ss0.md](ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
 
 ## Tool
 
@@ -94,10 +98,10 @@ out of the model, not out of the design.
 **Decided: the exchange stays 8 × 8 — 64 ports — and more lines are more
 exchanges.** Four
 ways of making one fabric bigger were worked through and set aside as too
-complex for what they bought (`exch-protocol.md` §3.1). A chain of four or five
+complex for what they bought (`protocol.md` §3.1). A chain of four or five
 48-line exchanges is comfortable on six-channel links while most calls stay
 home, and twenty work around a tandem hub of four twelve-channel directions
-(`exch-network.md` §5). What limits a network is its flood, which every call that
+(`network.md` §5). What limits a network is its flood, which every call that
 leaves lays on every link for 2.7 s.
 
 Decided and not yet modelled as a whole: **the network, the *pulse flood*.** All pulse, no DTMF: a
@@ -109,15 +113,15 @@ sender, no matrix, no route table. The monitor's two rules are measured — no
 wrong number in 1 500 calls at any pause a register can read — and the rest is
 timed by arithmetic on measured constants. **`net` is the second pass, and it
 runs**: eight exchanges call by call, two hubs of four directions with three
-leaves each, against smooth and bursty demand (`exch-network.md` §5.1). It
+leaves each, against smooth and bursty demand (`network.md` §5.1). It
 confirms §5's arithmetic to two decimal places, and finds that bursts leave the
 links alone and fall on the registers. **`topo` runs the other shapes**
-(`Topology.md`): the protocol holds 36 exchanges and about 1 300 lines, and a ring
+(`topology.md`): the protocol holds 36 exchanges and about 1 300 lines, and a ring
 works only with one of its links strapped. The `monitor` and `flood` models still run
 the earlier numbering, in which the first digit of every number was the key and a
 monitor compared one digit; the two-digit monitor is to be run. `1 8` and `1 9`, out of the network, are reserved.
 
-**Checked against the gates, and three things it changed** (`ex-traffic.md`).
+**Checked against the gates, and three things it changed** (`traffic.md`).
 `verilog`'s `make traffic-net` runs the same eight exchanges in RTL under the same
 demand on the same clock, and `traffic` runs it here; where they agree, `big`
 carries the shapes out to the sixty-four codes. What came of it: **Erlang B is
@@ -131,7 +135,7 @@ by call. The flood's own failure mode is `no claim` and not `no trunk`: a call
 blocked on any link between the caller and the owner is dialled in full and then
 times out, so **twice the busy hour costs seventeen times the calls**.
 
-**How large, with the line count free** (`ex-traffic.md` §8). Both the traffic on
+**How large, with the line count free** (`traffic.md` §8). Both the traffic on
 a link and the flood on it go with the *lines* in the network and not the
 exchanges, so the way to fill the numbering plan is exchanges that are not full:
 **63 of the 64 codes**, on three tandems in a chain with a tree under each, eight
@@ -139,11 +143,11 @@ hops and 124 ms of the origin's 128 ms guard — and what stops it is the guard,
 not the codes. **The guard is one tap on a counter**, and the next one up (256 ms)
 fills all sixty-four codes with 1 428 lines; past that what stops the search is
 the traffic on the centre and the four directions an exchange has, neither of
-which is a timer (`exch-monitor.md` §3.5). A **fully connected core of hubs buys nothing**: the flood must
+which is a timer (`monitor.md` §3.5). A **fully connected core of hubs buys nothing**: the flood must
 see a tree, so every link off it is a strap, and a strap carries its own two ends
 only.
 
-Decided: **the port map** (`exch-protocol.md` §5). 00 is idle, and a cleared
+Decided: **the port map** (`protocol.md` §5). 00 is idle, and a cleared
 latch listens to it. 01–03 are dial, busy and cannot-complete. 04–07 are a
 four-line bank (operator, night/backup, then more positions or single-channel
 trunks). MF8 trunk groups start at block 1 when networked; standalone frees
@@ -151,7 +155,7 @@ digit 1 so 10–77 are fifty-six lines. The `calls` model still puts tones and
 registers on the older map — nothing it measures depends on those addresses.
 
 Decided, and written up as a proposal: **MF8 serves subscriber terminals as well
-as trunks**, depending on need (`exch-terminal.md`). A trunk block with its class
+as trunks**, depending on need (`terminal.md`). A trunk block with its class
 set to line, and a stock MF8 shelf at the far end, give six lines at another
 site. Voice needs nothing new. Synchronous data needs a loop-timed terminal,
 whose PLL is not designed.
@@ -160,11 +164,11 @@ Proposed, with the switch and its detector measured: **sources**, which anyone
 may dial and any number may hear, and a **conference bridge with no codec**
 (`conference.md`), which passes one talker's bits to everyone else and chooses
 the talker by counting runs of three in each caller's bits. Sources are a new
-class (`exch-fabric.md` §3.5); conference legs are ordinary lines. Neither is in
+class (`fabric.md` §3.5); conference legs are ordinary lines. Neither is in
 the marker or the `calls` model yet as classes.
 
 Proposed: **the mainboard is a ribbon for what every block shares and a
-board for the three signals that are not shared** (`exch-mainboard.md`). Block *h* drives
+board for the three signals that are not shared** (`mainboard.md`). Block *h* drives
 highway *h* and answers to `BLK[h]`, which is the whole of a block's identity and
 the one thing an identical tap on a common ribbon cannot give it; three shunts in
 one labelled column give it back for no parts, where working it out in logic
@@ -176,7 +180,7 @@ slip already does to every line in the system every 156 ms. `/RESET` is the exce
 is filtered at every block.
 
 Proposed: **whatever sits behind a port says everything about it**
-(`ex-extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
+(`extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
 rings. One serial word, which the marker's scanner reads at every visit, carries
 the class and its options: a trunk's direction, a hunt group, a warm line, or
 the port it is nailed to; class *restricted* is its own code (`z w b L`: 0-only,
@@ -185,7 +189,7 @@ says all of it with no part, its word pin tied to ground. The earlier class on
 three pins is gone, and with it three commutators a block. Every circuit is
 still to draw. Nothing has been on a bench.
 
-Proposed: **a port answers to a number** (`ex-groups.md`). A call that cannot be
+Proposed: **a port answers to a number** (`groups.md`). A call that cannot be
 completed at the number dialled is offered to the first free port that says it
 answers to that number, which makes a hunt group, a second operator's position,
 cover and a bank of call-in lines out of jumpers on the members' cards, in any

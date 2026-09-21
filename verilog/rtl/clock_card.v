@@ -1,5 +1,5 @@
-// clock_card -- the exchange's one clock source.  exch-fabric.md 2, and the
-// signal list of exch-mainboard.md 2.1.  In 74HC this is a 4.096 MHz crystal,
+// clock_card -- the exchange's one clock source.  fabric.md 2, and the
+// signal list of mainboard.md 2.1.  In 74HC this is a 4.096 MHz crystal,
 // a '4040, a '163 for SLOT and a '175 on the 1.024 MHz tap for SLOTQ.
 //
 // Everything here is generated from one master clock.  Where the hardware has a
@@ -29,7 +29,7 @@ module clock_card #(
     output                   tx_clk,     // 64 kHz frame clock
     output                   frame_stb,  // one tick at the frame edge, where every card samples
     output                   tx_oct,     // 8 kHz octet mark
-    output                   rx_oct,     // TX_OCT one frame late (exch-fabric.md 3.4)
+    output                   rx_oct,     // TX_OCT one frame late (fabric.md 3.4)
     output reg               fill,       // 1010 at 32 kHz: CVSD silence
     output reg               ring_cad_n, // 2 s / 4 s, LOW while ringing
     output                   tick_1k     // the marker's and the registers' time base

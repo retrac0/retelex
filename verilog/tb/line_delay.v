@@ -2,12 +2,12 @@
 //
 // `MS` milliseconds of constant one-way delay on the line, which is what
 // distance, a mux, a vocoder or a jitter buffer put between the two ends of a
-// trunk (`exch-network.md` §1.1). It is a testbench part and nothing in the
+// trunk (`network.md` §1.1). It is a testbench part and nothing in the
 // exchange knows it is there: a trunk card sends its differential Manchester
 // into it and the far card's classifier takes it out, later.
 //
 // It is here to settle one question. The origin's 128 ms guard
-// (`exch-monitor.md` §3, rule 2) is sized on how long the flood takes to
+// (`monitor.md` §3, rule 2) is sized on how long the flood takes to
 // spread, and a link tens of milliseconds long makes the flood take tens of
 // milliseconds longer a hop. **It costs the guard nothing**, because the
 // seizure that opens the flood and the caller's pulses that follow it are the

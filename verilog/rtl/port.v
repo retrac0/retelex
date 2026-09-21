@@ -1,4 +1,4 @@
-// port -- one of the 64 ports: the crosspoint (exch-fabric.md 3.2) and the
+// port -- one of the 64 ports: the crosspoint (fabric.md 3.2) and the
 // supervision (3.5).  Five packages and three and a quarter in 74HC.
 //
 // The crosspoint is a '273 holding [ highway | slot ], two '151s to pick a
@@ -30,7 +30,7 @@ module port #(
     input      [7:0]  ha,
 
     // the card behind this port.  C_TX does not come in here: the ringback
-    // substitution ahead of the commutator is the block's '157 (exch-fabric.md
+    // substitution ahead of the commutator is the block's '157 (fabric.md
     // 3.1), so a port's only card input is M.
     input             a_tx,          // M: the card's hook
     output            c_rx,
@@ -72,7 +72,7 @@ module port #(
     assign busy_hw = busy || fe || (fm && !m);            // busy while either is still timing out
     assign a_hw    = a_tx;                                // the card's M, onto the A highway
 
-    // exch-fabric.md 3.1: "Backward A on a claimed trunk: A out = E + CLAIM,
+    // fabric.md 3.1: "Backward A on a claimed trunk: A out = E + CLAIM,
     // 2 x 74HC32, used on trunk blocks" -- eight OR gates for eight ports.  It
     // is the A the port hands its CARD, not what it puts on the highway: a
     // claimed trunk must send backward A = 1 up the link while its highway goes

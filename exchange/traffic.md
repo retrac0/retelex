@@ -1,6 +1,6 @@
 # The exchange — traffic: bursts, herds, peak against off peak, and how near sixty-four
 
-`exch-network.md` §5 works out what a link carries with Erlang B, and `Topology.md`
+`network.md` §5 works out what a link carries with Erlang B, and `topology.md`
 takes that over the shapes a network may have. Both assume **smooth demand**: calls
 that arrive from nowhere at a fixed rate, spread evenly over the other exchanges.
 Real demand is neither. This document is what happens when it is not — and it is
@@ -43,10 +43,10 @@ eight times slower here than in the real exchange.** Dial tone, the hunt and the
 hop all cost eight times as much of a call as they will. Everything in this document
 is therefore *hard* on the common control and *fair* on the links, which carry what
 they carry whatever the clock. `exch.py`'s `Tempo` holds the two tables — `LIFE` and
-`FAST` — and `net` and `topo` still run `LIFE`, so nothing in `exch-network.md` §5.1
-or `Topology.md` has moved.
+`FAST` — and `net` and `topo` still run `LIFE`, so nothing in `network.md` §5.1
+or `topology.md` has moved.
 
-**The network is the reference shape of `exch-network.md` §5.1**, scaled to what
+**The network is the reference shape of `network.md` §5.1**, scaled to what
 eight exchanges of RTL can be: two hubs on one link, three leaves on each, **six
 channels on every link**, twelve lines an exchange, ninety-six lines in all. Codes
 are `21` and `22` for the hubs and `23`–`27`, `31` for the leaves — `e` from 2 and
@@ -79,7 +79,7 @@ from is the whole of the traffic model.
 | | |
 |---|---|
 | **smooth** | exponential about the mean. Poisson arrivals, the textbook case and the one Erlang B assumes |
-| **bursty** | the same mean in **bursts**. The network goes hot and cold together — 1 s hot in every 6, and hot the rate is eight times what it is cold. The office at a shift change of `exch-network.md` §5.1 |
+| **bursty** | the same mean in **bursts**. The network goes hot and cold together — 1 s hot in every 6, and hot the rate is eight times what it is cold. The office at a shift change of `network.md` §5.1 |
 | **herd** | smooth, with a **flash crowd** on top: now and then a third of every line in the network lifts inside 300 ms, and **they all dial the same exchange**. A number read out on the radio. This is the one that is not only *when* the calls come but *where they go* |
 
 and the conversation is exponential, constant, or a two-class mix of nine short
@@ -135,7 +135,7 @@ that is not being claimed. What is claimed is that each attempt lays the same
 channel-seconds on the trunks, which is the table above.
 
 **The registers disagree by a factor of two, and the model is the one that is
-wrong.** `exch-monitor.md` §2 gives a register to a **claim** as well as to a caller
+wrong.** `monitor.md` §2 gives a register to a **claim** as well as to a caller
 — *this call is ours: give it a register and the trunk's port* — so in the gates the
 *terminating* exchange holds one for every network call, and `exch.py net` has never
 modelled that. It is the largest single gap this comparison found in the model, and
@@ -169,13 +169,13 @@ exchanges and at ten, and the bench names them and the last latch write each one
 ```
 
 Ports 12, 32 and 42 are blocks 1, 3 and 4; port 03 is block 0. **That is a hub's
-fan-out** (`exch-network.md` §3.2) — a seizure came in on one direction and was
+fan-out** (`network.md` §3.2) — a seizure came in on one direction and was
 patched out into the other three — and when the call died without a claim, the
 incoming trunk released and the three legs did not. A port releases on the **fall**
 of one of its two detectors, and all three were written after the source's A had
 already gone, so there is no edge left for either detector to fall on.
 
-**It is `exch-rtl.md`'s hazard at a trunk instead of at a line**, and the
+**It is `rtl.md`'s hazard at a trunk instead of at a line**, and the
 ten-exchange run finds it at chain transits too, one channel at each of three
 exchanges. `make stress` checks for the same shape directly and reports it at HEAD
 on a line written to dial tone. **Nothing in a millisecond model can find this**: it
@@ -245,8 +245,8 @@ hole.**
 **One column is not a comparison.** The resolvers are counted over every exchange
 that can forward in the gates — six of them here, the two hubs and the four transits
 — and over the two hubs alone in the model, because `exch.py net` still follows
-`exch-network.md` §3.2's *a chain transit holds nothing* and `verilog` found that it
-does not (`exch-rtl.md`). The two numbers are near each other by arithmetic accident.
+`network.md` §3.2's *a chain transit holds nothing* and `verilog` found that it
+does not (`rtl.md`). The two numbers are near each other by arithmetic accident.
 
 ---
 
@@ -284,7 +284,7 @@ reasons that are both the pulse flood's:
   scanner — so the calls that do get away leave the exchange bunched on the scan
   rather than spread over the second.
 
-**The knee is at about 3 E on six channels**, which is where `exch-network.md` §5's
+**The knee is at about 3 E on six channels**, which is where `network.md` §5's
 sizing already puts it: below it every link is quiet and the arithmetic is sound for
 choosing trunks; above it the loss doubles for every step and the arithmetic
 understates by more at every step. **Halving the idle between a line's calls from
@@ -295,7 +295,7 @@ for 1.8 times the calls.
 the register pool is worse off than the trunks: at 6 000 ms one caller in seven is
 already waiting a scan for dial tone while the busiest link refuses 2 % of seizures,
 and at 3 000 more than half of them are. Three registers to twelve lines is
-`exch-marker.md` §6's pool offered thirty times what §6 sizes it for, so that is
+`marker.md` §6's pool offered thirty times what §6 sizes it for, so that is
 arithmetic working, not a surprise — but it is the order in which a network gives
 way: **dial tone first, trunks second.**
 
@@ -331,7 +331,7 @@ The same herd at peak is 36.9 % against smooth's 26.4 % — 40 % worse, not sixt
 times. **Off peak is where a herd shows**, because at peak the link is congested
 already and a flash crowd has nothing left to take.
 
-**Bursts fall on the registers and not on the links**, which is `exch-network.md`
+**Bursts fall on the registers and not on the links**, which is `network.md`
 §5.1's finding, reached by a different road. Here the bursty runs carry *less* —
 the lines cannot deliver an eight-fold rate (§2) — and at equal traffic per call
 (the "E a call/s" column: 0.236 against 0.236 off peak) the link sees exactly the
@@ -358,7 +358,7 @@ same hour.
 **The pools built for the flood are never the constraint.** Over these runs a hub's
 resolvers reach 1.0–1.5 E of three and turn away 8–18 % of the fan-outs that want
 one; a block's monitors reach 0.5–0.7 E and turn away 2.6–4.2 %. Both are at
-roughly **thirty times** the design's offered load (`exch-network.md` §5.1's line
+roughly **thirty times** the design's offered load (`network.md` §5.1's line
 makes 3 calls an hour; here it makes one every second and a half of a clock that is
 itself eight times fast), and three of each still hold.
 
@@ -395,8 +395,8 @@ correctly, and the design need not know what a call's length distribution is.
 
 ## 8. How near sixty-four exchanges
 
-`exch-network.md` §5's arithmetic, run over shapes instead of over one shape:
-`exch.py big`. The rules are `Topology.md` §1 — four directions an exchange, eight
+`network.md` §5's arithmetic, run over shapes instead of over one shape:
+`exch.py big`. The rules are `topology.md` §1 — four directions an exchange, eight
 trunk groups, the flood sees a tree, sixty-four codes, and the whole flood inside
 the origin's guard at its smallest tap, 128 ms, at a slow marker (12 ms a hop and
 4 more at a hub; §8.5 runs the other taps). A
@@ -448,7 +448,7 @@ network carries the same thing and the shape stops mattering.
 
 **The flood must see a tree.** Of the *k*(*k*−1)/2 links between *k* fully connected
 tandems, only the *k*−1 of a spanning chain may carry it; every other one is
-**strapped**, and `exch-network.md` §3.3's strapped link carries calls between its
+**strapped**, and `network.md` §3.3's strapped link carries calls between its
 own two ends only. Read in pairs — the same eight trunk groups at each tandem, spent
 on a chain of wide links or on a mesh of narrow ones:
 
@@ -521,7 +521,7 @@ the origin's 128 ms guard — *four milliseconds of margin*, which is what actua
 stops it. **The guard is a strap and the next tap up ends that**: at 256 ms the
 same search finds all 64 codes and 1 428 lines, and what stops it then is the
 traffic on the centre and the four directions an exchange has, neither of which is
-a timer (`exch-monitor.md` §3.5, `exch.py big` §7). At 128 ms the traffic is
+a timer (`monitor.md` §3.5, `exch.py big` §7). At 128 ms the traffic is
 handled by giving up lines: 24 an exchange where a fifth
 of calls leave, 12 where a third do, 8 where half do.
 
@@ -536,9 +536,9 @@ of calls leave, 12 where a third do, 8 where half do.
 **So the answer to "how near sixty-four" is: one short of it on the guard's
 smallest tap, and all of it on the next one.** What runs out at 63 is the 128 ms
 guard — and behind that,
-`exch-monitor.md` §3's 12 ms hop at a slow marker, which is the one constant in this
+`monitor.md` §3's 12 ms hop at a slow marker, which is the one constant in this
 whole document that is an *assumption about parts* rather than a measurement.
-The guard is a three-way strap (`exch-monitor.md` §3.5), and at its 256 ms tap the
+The guard is a three-way strap (`monitor.md` §3.5), and at its 256 ms tap the
 same search finds **all 64 codes and 1 428 lines**; what stops it there is the
 traffic on the centre and the four directions an exchange has, and neither of
 those is a timer.
@@ -598,8 +598,8 @@ margin, because the second hour is not twice as bad.**
 - **`exch.py big` is arithmetic**, Erlang B on a tree, except for §8's last table.
   §5 says what that arithmetic is worth: good to about 1 % and optimistic past it.
 - **The model still does not give a register to a claim** (§3.1), which the gates do
-  and `exch-monitor.md` §2 requires. Every register figure in `exch.py` — here, in
-  `net`, in `topo`, and therefore in `exch-network.md` §5.1's table — is **low at a
+  and `monitor.md` §2 requires. Every register figure in `exch.py` — here, in
+  `net`, in `topo`, and therefore in `network.md` §5.1's table — is **low at a
   terminating exchange** by about the share of its calls that arrive over a trunk.
   Nothing else in those documents moves; the links and the pools built for the flood
   do not see it.

@@ -1,5 +1,5 @@
 // tb_ring -- four exchanges in a RING, and the strap that keeps a flood from
-// going round in circles.  exch-network.md 3.3.
+// going round in circles.  network.md 3.3.
 //
 //        22  A ══ E/W ══ B  23
 //            ║             ║
@@ -7,7 +7,7 @@
 //            ║             ║
 //        25  D ══ W/E ══ C  24
 //
-// The strap is the `n` bit of a trunk port's word (ex-extensions.md 2.2), set
+// The strap is the `n` bit of a trunk port's word (extensions.md 2.2), set
 // on every channel of one link, at both ends:
 //
 //   a seizure is never forwarded INTO a strapped link, and a seizure that

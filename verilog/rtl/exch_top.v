@@ -1,7 +1,7 @@
 // exch_top -- ONE exchange: the clock card, the mainboard and eight blocks.
-// exchange/exch-protocol.md 3, exch-fabric.md, exch-mainboard.md.
+// exchange/protocol.md 3, fabric.md, mainboard.md.
 //
-// This is the exchange logic and nothing else -- mvp-ex.md 1's "= 70 packages".
+// This is the exchange logic and nothing else -- mvp.md 1's "= 70 packages".
 // Cards are not in here: the module's edge is the channel-slot pins of
 // mf8-backplane.md 8, so whatever plugs into a port plugs in from outside, and
 // a port has no idea what it is.  The highway conductors and the cell clocks
@@ -20,7 +20,7 @@ module exch_top #(
     parameter [7:0]   SHUNT_FITTED = BLOCK_FITTED,
     parameter         RBT_IS_FILL  = 1'b1,                          // no ringback card
     // A tone card drives RBT and /RING_CAD off its rear connector
-    // (common/tone-plan.md 4.3-4.4, exchange/exch-mainboard.md 2.1).  With these
+    // (common/tone-plan.md 4.3-4.4, exchange/mainboard.md 2.1).  With these
     // clear the clock card keeps both, which is the exchange as it was.
     parameter         TONE_CARD    = 1'b0,
     parameter integer T_RISE       = 1024,                          // 16 ms in frames
@@ -42,7 +42,7 @@ module exch_top #(
     output     [63:0]    c_rx,
     output     [63:0]    a_rx,           // E, in the ring cadence while the port rings
 
-    // ---- cable B: the control bus, serial (exch-mainboard.md 2.3) --------
+    // ---- cable B: the control bus, serial (mainboard.md 2.3) --------
     input                sdata,
     input                sclk,
     input                wr,
@@ -114,7 +114,7 @@ module exch_top #(
         end else begin : absent
             // No block in this position: it drives nothing, and the mainboard
             // pulls its column to FILL.  A cleared latch listens to port 00,
-            // which is on block 0 and is never fitted anyway (mvp-ex.md 2).
+            // which is on block 0 and is never fitted anyway (mvp.md 2).
             assign hc_from_block[h] = 1'b0;
             assign ha_from_block[h] = 1'b0;
             assign c_rx[h*8 +: 8]   = 8'h00;

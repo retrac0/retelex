@@ -1,6 +1,6 @@
 # The exchange — the hook/busy display
 
-`ex-observers.md` §2 and §3 are two lamp fields and §7 recommends merging them
+`observers.md` §2 and §3 are two lamp fields and §7 recommends merging them
 into one grid of bicolour LEDs. **This is that panel, built the other way**: not
 64 two-colour lamps but 128 single-colour ones, on a stack of seventeen cards
 that is one PCB design in sixteen copies. The colour stops being the carrier and
@@ -19,7 +19,7 @@ hue judgement costs.
 
 ## 1. Two fields, and they are not the same kind of thing
 
-`ex-observers.md` §1 is the whole argument and it is worth restating, because
+`observers.md` §1 is the whole argument and it is worth restating, because
 every awkwardness below descends from it:
 
 | | hook | busy |
@@ -32,7 +32,7 @@ every awkwardness below descends from it:
 
 `HC` and `HA` are sixteen conductors on cable A because the ports need them to
 hear each other. `BUSY` got two, shared by eight blocks, because
-`exch-mainboard.md` §2.2 could say *"only the marker reads them"* — which was
+`mainboard.md` §2.2 could say *"only the marker reads them"* — which was
 true when it was written, and stopped being true when a lamp field wanted to
 read all 64 at once. **The cable was sized before this panel existed**, and §9
 says what to do about it.
@@ -47,7 +47,7 @@ differently, and that is honest rather than untidy.
 
 | | parts |
 |---|---|
-| the latch | 1 × 74HC259 — the inverse of a '151 commutator (`ex-observers.md` §1) |
+| the latch | 1 × 74HC259 — the inverse of a '151 commutator (`observers.md` §1) |
 | the lamps | 8 × 5 mm LED, one column at the front edge, **green or orange by stuffing** |
 | | 8 resistors |
 | **BLK** | a 2×8 shunt column, silkscreen 0–7, **two shunts in one position** |
@@ -64,18 +64,18 @@ position, so the block number is set once and `MODE` picks which of the two the
 | **HOOK** | `HA[h]` | `HCLK` | Vcc |
 | **BUSY** | `PB0` | `LEB[h]` | `/RESET` |
 
-**The card knows nothing.** That is `exch-mainboard.md` §2.1's bargain one level
+**The card knows nothing.** That is `mainboard.md` §2.1's bargain one level
 down — *"the cable is common, the board is position-wired, and the card knows
 nothing"* — and it is why any card works in any position, why the stack order
 cannot be got subtly wrong, and why **one spare covers eight**.
 
 **No card carries a gate.** The busy `/LE` arrives already gated because the
-common card's '138 does it with its own enables (§3). `ex-observers.md` §3 spent
+common card's '138 does it with its own enables (§3). `observers.md` §3 spent
 a '138 and half a '123 on one field of eight rows; here the same parts serve
 sixteen cards.
 
 **`/LE` = `HCLK` needs no edge placed.** `HCLK` is high for the first half of a
-cell and `SLOTQ` changes a quarter of a cell in (`exch-mainboard.md` §2.1), so
+cell and `SLOTQ` changes a quarter of a cell in (`mainboard.md` §2.1), so
 the address moves while the latch is closed and the addressed output follows its
 port's bit through the second half — the same window every port in the exchange
 captures in. There is no glitch window and nothing to trim.
@@ -86,7 +86,7 @@ Green cards are hook rows, orange cards are busy rows, and **that is the only
 difference in the bill of materials**. So a card in the wrong position is
 visible before it is powered on.
 
-It also settles the objection to `ex-observers.md` §7's bicolour grid. There,
+It also settles the objection to `observers.md` §7's bicolour grid. There,
 amber-versus-red was a *hue* discrimination with no other cue: it needed
 three-lead common-cathode parts, two resistors trimmed per lamp to get a real
 amber, and it failed outright for about one man in twelve. Here **position
@@ -109,7 +109,7 @@ orange reads the panel perfectly from the column alternation.
 the gating, which is why no lamp card has a gate on it.
 
 **Both '164 are needed although only three bits are read.** `DST[5:3]` is bits
-13–11 of the word (`exch-mainboard.md` §2.3.1), so the second register exists to
+13–11 of the word (`mainboard.md` §2.3.1), so the second register exists to
 push them to the end.
 
 **The shift register has no phase, only content.** Its sixteen bits are right
@@ -118,10 +118,10 @@ nothing and needs no frame reference. And because the block that drives `PB0` is
 the block `DST[5:3]` names, and this decodes the same three bits out of the same
 broadcast, **whatever is on `PB0` in cell *s* belongs to port (`DST[5:3]`, *s*)
 by construction.** The field cannot be wrong about whose bit it has. It is
-`ex-counters.md` §1's argument used for the row instead of the pattern.
+`counters.md` §1's argument used for the row instead of the pattern.
 
 **`G` is not read**, because nothing here writes a latch and there is no guard to
-honour. So an event word (`ex-counters.md` §9, `G` = 0) steers this field's row
+honour. So an event word (`counters.md` §9, `G` = 0) steers this field's row
 exactly as it steers `/BLK` at every block. The row moves to the port the event
 is about and the data stays honest, because the block driving `PB0` moved with
 it.
@@ -132,7 +132,7 @@ Mid-word the '164 holds rippling garbage and the row it names walks about. The
 **data** stays honest — the block's own `/BLK` decoder is rippling in lockstep,
 so the block driving `PB` is always the one being written to. What is not honest
 is the **hand-over**: one block's '244 turning off, the next turning on, and `PB`
-briefly undriven. `PB` is pulled LOW at the marker (`exch-mainboard.md` §6), so
+briefly undriven. `PB` is pulled LOW at the marker (`mainboard.md` §6), so
 an undriven instant reads *not busy* — and a '259 is transparent while addressed,
 so a lamp is wrongly **cleared** and holds that until its block's next visit, up
 to a scan later.
@@ -228,7 +228,7 @@ right went dark*, which is about as self-diagnosing as a fault gets.
 
 ### 5.1 Four states, one of them a call
 
-`ex-observers.md` §4.1, as a horizontal pair 8 mm apart:
+`observers.md` §4.1, as a horizontal pair 8 mm apart:
 
 | | | |
 |---|---|---|
@@ -238,14 +238,14 @@ right went dark*, which is about as self-diagnosing as a fault gets.
 | **green** | **orange** | **a call** |
 
 Nothing else in the exchange knows any of this. *"Nobody is in charge of a
-call"* (`exch-fabric.md` §3.5) means the state of the machine exists only as 64
+call"* (`fabric.md` §3.5) means the state of the machine exists only as 64
 latches and 64 hook wires; no call ever ends on the control bus
-(`ex-counters.md` §4), so no listener can reconstruct it from the words. **It has
+(`counters.md` §4), so no listener can reconstruct it from the words. **It has
 to be read where it lives**, and this is the only place it is gathered up.
 
 ### 5.2 A flood, on the vertical axis
 
-`ex-observers.md` §4.4 reads better rotated:
+`observers.md` §4.4 reads better rotated:
 
 ```
   the caller dials 1      every free trunk in every direction is seized,
@@ -261,12 +261,12 @@ to be read where it lives**, and this is the only place it is gathered up.
 
 A vertical bar is a shape the eye tracks well, and **nothing else makes a flood
 visible.** The cost of the pulse flood is a column of lamps for two and a bit
-seconds on every call that leaves, which is what `exch-network.md` §5 measures
-and `Topology.md` §4 limits the network by.
+seconds on every call that leaves, which is what `network.md` §5 measures
+and `topology.md` §4 limits the network by.
 
 ### 5.3 The shunt column, by colour
 
-`ex-observers.md` §4.2, now touching:
+`observers.md` §4.2, now touching:
 
 | green column | orange column | |
 |---|---|---|
@@ -281,7 +281,7 @@ visits changes when the exchange changes, and a frozen one does not.
 ### 5.4 Two lags, and only one of them is the panel's
 
 A busy lamp is up to **9 ms** behind because the row waits for the scanner. It is
-then up to **0.6 s** behind again because `exch-marker.md` §5.2 put the release
+then up to **0.6 s** behind again because `marker.md` §5.2 put the release
 guard on the same wire — what a lamp shows is `busy || fe || (fm && !m)`, *not
 free* rather than `BUSY`, which is what the marker tests and what an operator
 wants. The second lag is the design's, not the field's.
@@ -299,7 +299,7 @@ wants. The second lag is the design's, not the field's.
 | PCB designs | **two** — the card in 16 copies, the common card in 1 |
 | cables | twelve signals off A, four off B: one tap on the harness |
 
-Two packages more than `ex-observers.md` §7's bicolour grid, for one board
+Two packages more than `observers.md` §7's bicolour grid, for one board
 design in sixteen copies, a dead lamp that is a pull-and-replace, and no hue
 anywhere in the reading of it.
 
@@ -366,9 +366,9 @@ wants, and it is a jumper, not a different card.
 - **LED current and readability.** 2 mA a lamp is arithmetic. Whether 5 mm
   lamps at 0.4 inch read at arm's length in a rack, and whether green and orange
   separate under whatever light is in the room, wants eyes and not a calculation.
-- **The port map is a new drawing.** `ex-observers.md` §1's claim that *"the port
+- **The port map is a new drawing.** `observers.md` §1's claim that *"the port
   map is the panel's silkscreen, already laid out"* does not survive the
-  rotation: `exch-protocol.md` §5's map is *h*-rows × *s*-columns and this is its
+  rotation: `protocol.md` §5's map is *h*-rows × *s*-columns and this is its
   transpose.
 - **Against a running exchange.** The bench replays words into the stack; it does
   not sit inside `tb_net` or `tb_stress` and check the lamps against 48 callers.
@@ -381,19 +381,19 @@ wants, and it is a jumper, not a different card.
   wheels rather than the scanner, so the panel dwells on whatever block they are
   looking at. Reasonable, and not thought through.
 - **Two consoles, two masters, and a stopped marker** — the states
-  `ex-console.md` §2 puts the bus in, none of them exercised here.
+  `console.md` §2 puts the bus in, none of them exercised here.
 
 ---
 
 ## 9. What this changes elsewhere
 
-- **`ex-observers.md` §7**, the bicolour recommendation. This supersedes it, and
+- **`observers.md` §7**, the bicolour recommendation. This supersedes it, and
   the reason is §2.1: position can carry hook-versus-busy, so colour does not
   have to, and every problem with amber goes away with it.
-- **`ex-observers.md` §3** keeps its parts list but loses its '138 and its
+- **`observers.md` §3** keeps its parts list but loses its '138 and its
   one-shot to the common card, where sixteen cards share them instead of eight
   rows.
-- **`exch-mainboard.md` §2.2's justification** — *"only the marker reads them, so
+- **`mainboard.md` §2.2's justification** — *"only the marker reads them, so
   eight blocks share two wires"* — now has a counter-example. Everything awkward
   about the busy half descends from it: the '138, the `INH`, the 9 ms window and
   the freeze. **Eight conductors would delete all four**, making the busy field
@@ -402,7 +402,7 @@ wants, and it is a jumper, not a different card.
   one spare pin, so this is not a change to make today — but `HB[0..7]` belongs
   on §8's list of what a future cable should carry, beside `HB`, `RX_OCT` and
   `/CON`, which are the precedent for cable A growing at all.
-- **`exch-mainboard.md` §9** still has `M` unlisted as a conductor. If cable A is
+- **`mainboard.md` §9** still has `M` unlisted as a conductor. If cable A is
   ever respun, that and a `BUSY` highway are the two open items, and pin 1 is
   the spare.
 

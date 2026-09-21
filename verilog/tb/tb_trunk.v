@@ -3,15 +3,15 @@
 // Each exchange has a trunk block (block 0: six channels at 01-03, 05-07) and a
 // block of lines (block 2: ports 20 and 21).  One MF8 pair each way carries the
 // six channels.  There is no marker, so the console patches the latches by hand
-// at both ends -- which is mvp-ex.md 6.3's manual board with a trunk in the
-// middle of it, and exch-network.md 1's tie trunk exactly: a pair of ports,
+// at both ends -- which is mvp.md 6.3's manual board with a trunk in the
+// middle of it, and network.md 1's tie trunk exactly: a pair of ports,
 // back to back, holding no digits and deciding nothing.
 //
 // What this exercises: the 8 x 8 fabric at both ends, a trunk block with its
 // channels on the slots they occupy on the wire, the MF8 frame and its header,
 // differential Manchester in and out, the framer acquiring and tracking, the
 // crossing between two exchanges' clocks, and the hotline and release rules of
-// exch-fabric.md 3.5 running through the trunk pair untouched.
+// fabric.md 3.5 running through the trunk pair untouched.
 `timescale 1ns/1ps
 
 module tb_trunk;

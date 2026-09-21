@@ -1,4 +1,4 @@
-// marker -- the common control.  exch-marker.md 2-4, exch-network.md 3.
+// marker -- the common control.  marker.md 2-4, network.md 3.
 //
 // A scanner, a probe, a sequencer and a diode matrix.  It holds nothing about
 // the exchange: no route table, no translation, no record of where anything is.
@@ -10,13 +10,13 @@
 //               0     hunt the operator          9  hunt an outside line
 //               1     the network: 1 e b h s     8  cannot-complete
 //
-// The network part is exch-network.md 3's pulse flood, at the origin:
+// The network part is network.md 3's pulse flood, at the origin:
 //
 //   the first digit is in, and it is 1  -> seize a free trunk, pointed AT THE
 //       CALLER, so their remaining digits go down it live as dial pulses.
 //   our own e b      -> release the trunk and carry on locally
 //   an e or b of 8/9 -> reserved: release, cannot-complete
-//   a break within 128 ms of the seizure -> abandon (exch-monitor.md 3, rule 2)
+//   a break within 128 ms of the seizure -> abandon (monitor.md 3, rule 2)
 //   the trunk's M rises -> it claimed; when the last digit is in, point the
 //       caller at it and free the register
 //   no claim 2 s after the last digit -> cannot-complete
@@ -37,20 +37,20 @@
 `timescale 1ns/1ps
 
 module marker #(
-    parameter integer NREG      = 2,        // registers in the pool (exch-marker.md 6)
-    parameter integer NRES      = 1,        // resolvers, at a hub (exch-network.md 3.2)
+    parameter integer NREG      = 2,        // registers in the pool (marker.md 6)
+    parameter integer NRES      = 1,        // resolvers, at a hub (network.md 3.2)
     parameter [2:0]   OWN_E     = 3'd2,
     parameter [2:0]   OWN_B     = 3'd2,
     parameter [5:0]   DIALTONE  = 6'o10,
     parameter [5:0]   NOGO      = 6'o14,
     parameter         HAS_NET   = 1'b1,
-    // ms: the origin's guard (exch-monitor.md 3, rule 2).  It is a STRAP in the
+    // ms: the origin's guard (monitor.md 3, rule 2).  It is a STRAP in the
     // 74HC design -- three stages of the counter the sequence already runs on --
     // and the one number that says how big the network is: 128 ms covers ten hops
-    // at a slow marker, 256 twenty-one, 512 forty-two (exch-monitor.md 3.5).
+    // at a slow marker, 256 twenty-one, 512 forty-two (monitor.md 3.5).
     parameter integer T_GUARD   = 128,
     parameter integer T_CLAIM   = 2000,     // ms: give up waiting for a claim
-    // A console is fitted on cable B (ex-console.md 2).  With none, /CON is
+    // A console is fitted on cable B (console.md 2).  With none, /CON is
     // ignored and may be left unconnected.
     parameter         HAS_CON   = 1'b0
 )(
@@ -69,7 +69,7 @@ module marker #(
     input            pb_busy,
     input            pb_word,
 
-    // cable B, serial (exch-mainboard.md 2.3)
+    // cable B, serial (mainboard.md 2.3)
     output           sdata,
     output           sclk,
     output           wr,
@@ -119,23 +119,23 @@ module marker #(
     // /CON, the console's REQUEST for cable B, and the marker's own '244
     // enable.  A request and not a switch: it is honoured BETWEEN words and
     // never inside one, so a word in flight when it falls still finishes, WR
-    // and all (ex-console.md 2).  There is no grant; the console waits instead.
+    // and all (console.md 2).  There is no grant; the console waits instead.
     input             con_n,
     output            bus_oe
 );
     localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
                C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_CONF = 3'd7;
 
-    // ---------------- the event word (ex-counters.md 9) ------------------
+    // ---------------- the event word (counters.md 9) ------------------
     // What a pure listener cannot see, because nothing is WRITTEN when it
     // happens: a caller who found no register, a direction with no free trunk,
-    // a register that timed out, glare.  ex-extensions.md 4 wanted these counted
+    // a register that timed out, glare.  extensions.md 4 wanted these counted
     // and wired them into the marker; they do not have to be.
     //
     // A word with G = 0 writes to no block -- the guard is ANDed into WR at
     // every one of them -- but it still shifts through every '164 and still
     // pulses WR.  So the marker can REPORT on the bus, and the one-'164 counter
-    // card of ex-counters.md 1, which discards bits 15-8 and cannot see G,
+    // card of counters.md 1, which discards bits 15-8 and cannot see G,
     // counts an event with a plain strap.
     //
     // BSY = 0 with CLM = 1 is the whole of the trick.  A claim is always
@@ -168,8 +168,8 @@ module marker #(
 
     wire [7:0] wsr_next = {pb_word, wsr[7:1]};
     wire [2:0] p_cls    = p_word[2:0];
-    // A trunk's option bits (ex-extensions.md 2.2): which way its link goes,
-    // its glare bit, and whether the link is strapped (exch-network.md 3.3).
+    // A trunk's option bits (extensions.md 2.2): which way its link goes,
+    // its glare bit, and whether the link is strapped (network.md 3.3).
     wire [1:0] p_dir    = p_word[4:3];
     wire       p_g      = p_word[5];
     wire       p_n      = p_word[6];
@@ -239,7 +239,7 @@ module marker #(
     reg       hb;                      // the hunt was taken THIS cycle (blocking)
 
     // ---------------- a call: one of these a register --------------------
-    // exch-marker.md 4 and exch-network.md 3.2 put a call's state with its
+    // marker.md 4 and network.md 3.2 put a call's state with its
     // REGISTER -- "a '574 a direction in a bank a register" -- and the marker
     // is what acts on it.  Each register has a stage, its caller, the trunks
     // it seized and whether one claimed.
@@ -262,7 +262,7 @@ module marker #(
 
     // A digit's VALUE is the low three bits, forced to 000 when bit 3 is set --
     // three AND gates, so that a dialled 0, ten pulses, 1010, is octal 0
-    // (exch-protocol.md 5).  8 and 9 are service digits.
+    // (protocol.md 5).  8 and 9 are service digits.
     function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
     function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
 
@@ -310,7 +310,7 @@ module marker #(
     endtask
 
     // ---------------- the forwarder --------------------------------------
-    // exch-network.md 3: a seizure arriving on a trunk is patched onward into
+    // network.md 3: a seizure arriving on a trunk is patched onward into
     // every OTHER direction, and the exchange forgets everything but the
     // addresses, which go in a resolver.  It runs on its own so that a transit
     // is never held up by a call the marker is setting up.
@@ -321,7 +321,7 @@ module marker #(
     reg [5:0] f_cand [0:3];            // a free trunk in each OTHER direction
     reg [3:0] f_cok;
 
-    // ---------------- the resolvers (exch-network.md 3.2) ----------------
+    // ---------------- the resolvers (network.md 3.2) ----------------
     // A hub forwards into two or three directions.  Any number of trunks may
     // listen to the incoming one, so the caller's pulses go down every leg at
     // once -- but the incoming trunk can listen to only ONE port, and which
@@ -464,7 +464,7 @@ module marker #(
             // Let go BETWEEN words only.  A word cut short is a lost write, and
             // a WR cut short is a runt clock into a '273; a word that finishes
             // is neither, and the console's silence is longer than any word
-            // (ex-console.md 2).  When the console lets go, the blocks hold ITS
+            // (console.md 2).  When the console lets go, the blocks hold ITS
             // last word, so the probe is steered again before a visit counts.
             // After the case above, so that this `probe_dirty` is the last word.
             if (!yield) begin
@@ -473,7 +473,7 @@ module marker #(
                 yield <= 1'b0; probe_dirty <= 1'b1;
             end
 
-            // ---- the queue overran (a model part, ex-counters.md 9) -----
+            // ---- the queue overran (a model part, counters.md 9) -----
             // Sticky, and owed until there is room for it: the one event that
             // cannot be pushed when it happens, because what happened is that
             // there was no room.
@@ -604,13 +604,13 @@ module marker #(
                             // first, which is seconds.  M up on a trunk we
                             // seized 128 ms ago is the OTHER end seizing the
                             // same channel, and the two callers get each other
-                            // (exch-network.md 1: "residual glare").  The word's
+                            // (network.md 1: "residual glare").  The word's
                             // g bit is what makes it rare; this counts what is
                             // left, and changes nothing about what happens.
                             if (guarding[r]) push_ev(p_port, EV_GLARE);
                         end
 
-                // the origin's 128 ms guard (exch-monitor.md 3, rule 2)
+                // the origin's 128 ms guard (monitor.md 3, rule 2)
                 if (guarding[r] && tick_1k) begin
                     if (tmr[r] == T_GUARD[15:0]) guarding[r] <= 1'b0;
                     else tmr[r] <= tmr[r] + 1'b1;
@@ -763,7 +763,7 @@ module marker #(
                     pk[pick] = 1'b1; att = 1'b1;
                 end else begin
                     // no register free: claimed, cannot complete -- the caller
-                    // hears it at once (exch-monitor.md 2)
+                    // hears it at once (monitor.md 2)
                     push(mon_port, NOGO, 1'b1, 1'b1);
                 end
             end
@@ -798,14 +798,14 @@ module marker #(
                     // LINE's port: the claimed trunk's register would read the
                     // line's dialling and connect the far caller to whatever
                     // that line asked for -- a wrong number across the network,
-                    // out of the one thing exch-monitor.md 3 exists to stop.
+                    // out of the one thing monitor.md 3 exists to stop.
                     // The caller waits a scan instead; they are waiting for
                     // dial tone anyway.
                     // ALL REGISTERS BUSY.  The caller waits a scan and asks
                     // again, so the refusal repeats; the flip-flop makes it one
                     // count an OCCASION -- from the pool filling to the next
                     // register handed out -- which is the peg count
-                    // ex-extensions.md 4 asked for and not a rate.
+                    // extensions.md 4 asked for and not a rate.
                     if (!already && pick < 0 && !arb) begin
                         arb <= 1'b1; push_ev(p_port, EV_WAITREG);
                     end

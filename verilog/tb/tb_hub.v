@@ -1,4 +1,4 @@
-// tb_hub -- a HUB with four directions, and the resolvers of exch-network.md 3.2.
+// tb_hub -- a HUB with four directions, and the resolvers of network.md 3.2.
 //
 //                      C  24
 //                      |  N

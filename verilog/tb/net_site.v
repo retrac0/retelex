@@ -3,7 +3,7 @@
 //   block 0   an MF8 trunk group, six channels at 01-03, 05-07, facing DIR0
 //   block 1   dial tone at 10 and cannot-complete at 14, and -- from NDIR = 2 --
 //             a SECOND trunk group at 11-13, 15-17 facing DIR1.  That is
-//             exactly how exch-protocol.md 5 lays block 1 out: the two tones sit
+//             exactly how protocol.md 5 lays block 1 out: the two tones sit
 //             at slots 0 and 4, which are F and S on the wire, and the six
 //             channels sit where they are on the wire either side of them
 //   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
@@ -16,7 +16,7 @@
 // An exchange with one direction is an end of a chain; with two it is a transit,
 // and its marker forwards a seizure from one into the other; with three or four
 // it is a HUB, and a seizure is fanned out into every other direction at once
-// and held in a resolver until one of them claims (exch-network.md 3.2).
+// and held in a resolver until one of them claims (network.md 3.2).
 `timescale 1ns/1ps
 
 module net_site #(
@@ -24,7 +24,7 @@ module net_site #(
     parameter [2:0]   OWN_B = 3'd2,
     // How many directions this exchange has, and for each its direction, its
     // glare bit and its strap, as the card's word carries them
-    // (ex-extensions.md 2.2).  N=0 S=1 E=2 W=3.
+    // (extensions.md 2.2).  N=0 S=1 E=2 W=3.
     parameter integer NDIR = 1,
     parameter [1:0]   DIR0 = 2'd2,
     parameter         G0 = 1'b0,
@@ -43,7 +43,7 @@ module net_site #(
     parameter integer T_A = 4,
     parameter integer HIT = 1, ID = 16, CLR = 32,
     parameter integer T_GUARD = 16, T_CLAIM = 250,
-    // Which ports hold line cards.  The default is the two of mvp-ex.md 1;
+    // Which ports hold line cards.  The default is the two of mvp.md 1;
     // a stress run fills whole blocks with them.
     parameter [63:0]  LINE_PORTS = 64'h0000_0000_0003_0000,
     parameter integer NMON = 2,                  // cells in each block's pool (4)
@@ -78,7 +78,7 @@ module net_site #(
     output        wr_stb,        // the last latch write the marker sent
     output [5:0]  wr_dst, wr_src,
     output        wr_bsy, wr_clm,
-    // ex-counters.md 9: five counter cards on the ribbon, strapped for the
+    // counters.md 9: five counter cards on the ribbon, strapped for the
     // marker's event words.  { glare, nodig, notrunk, waitreg, any }
     output [79:0] ev_cnt
 );
@@ -94,7 +94,7 @@ module net_site #(
     // The channel slots a trunk card drives: 1-3 and 5-7, where they are on the
     // wire.  Slots 0 and 4 are F and S and are NOT ports -- on block 1 they are
     // the two tone cards, and on a trunk block nothing at all, which is what
-    // keeps port 00 unfitted for "a cleared latch listens to 00" (mvp-ex.md 2).
+    // keeps port 00 unfitted for "a cleared latch listens to 00" (mvp.md 2).
     localparam [63:0] TRUNKS = 64'h0000_0000_0000_00EE
                              | ((NDIR >= 2) ? 64'h0000_0000_0000_EE00 : 64'd0)
                              | ((NDIR >= 3) ? 64'h0000_0000_EE00_0000 : 64'd0)
@@ -120,7 +120,7 @@ module net_site #(
     exch_top #(.BLOCK_FITTED(BF),
                .PORT_FITTED (PF),
                // ONLY the lines ring.  A trunk port that rings chops its own
-               // forward A into the ring cadence (exch-fabric.md 3.5's A_RX
+               // forward A into the ring cadence (fabric.md 3.5's A_RX
                // gate), so it would flood the cadence down the link instead of
                // the caller's dial pulses and nothing beyond could read a digit.
                .PORT_RINGS  (LINE_PORTS),
@@ -189,7 +189,7 @@ module net_site #(
                 assign word[B*8+k] = t_word[g*8+k];
             end
 
-            // A monitor pool on each block that holds trunks (exch-monitor.md 4).
+            // A monitor pool on each block that holds trunks (monitor.md 4).
             monitor #(.NMON(NMON), .OWN_E(OWN_E), .OWN_B(OWN_B), .BLOCK(B[2:0]),
                       .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon (
                 .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
@@ -217,7 +217,7 @@ module net_site #(
     endgenerate
 
     // ---- common control --------------------------------------------------
-    // The registers: a pool, found by the marker's scanner (exch-marker.md 4, 6).
+    // The registers: a pool, found by the marker's scanner (marker.md 4, 6).
     wire [NREG-1:0]    r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
     wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
@@ -240,7 +240,7 @@ module net_site #(
     // until the pool it names drops its request, because the marker reads
     // mon_port one cycle before it answers: a selection that moved in between
     // would acknowledge the wrong pool, and a claim is a call this exchange
-    // owned (exch-monitor.md 3.4).
+    // owned (monitor.md 3.4).
     wire       mack;
     reg  [3:0] sel, ask;
     integer    z;
@@ -264,7 +264,7 @@ module net_site #(
     assign mon_busy = mh_v;
     assign mon_full = mf_v;
 
-    // ---- counter cards, ex-counters.md 1 and 9 --------------------------
+    // ---- counter cards, counters.md 1 and 9 --------------------------
     // Cards that only listen: sdata, sclk, wr and nothing else.  The event
     // strap is BSY = 0 with CLM = 1, which no latch write ever carries, and the
     // code is in SRC.  The card cannot see G and does not need to.

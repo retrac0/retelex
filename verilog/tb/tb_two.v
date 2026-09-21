@@ -3,7 +3,7 @@
 // Nothing in the RTL is global, so an exchange is a thing you instantiate.  The
 // two crystals here are 100 ppm apart, which is what mf8-backplane.md 2 assumes
 // of any two ends of a link: each exchange keeps its own T domain, and a link
-// between them would be plesiochronous.  Both sites run mvp-ex.md 6.3's manual
+// between them would be plesiochronous.  Both sites run mvp.md 6.3's manual
 // board at once and neither disturbs the other.
 `timescale 1ns/1ps
 

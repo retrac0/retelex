@@ -265,7 +265,7 @@ BER, so it is not recorded further.)
 **Decided: x is the remote alarm.** An end holds x at 1 while its own receiver
 is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. Idle
 is x = 0, which is today's fixed guard. Between exchanges the same bit also
-carries SS0's messages (`exchange/ex-ss0.md`). A message holds x at 1 for 17 ms
+carries SS0's messages (`exchange/ss0.md`). A message holds x at 1 for 17 ms
 at most, so the one 32 ms rule serves both kinds of link. The pair itself is not
 yet written into §2–§4 or §11.
 

@@ -10,47 +10,47 @@ comparator — so that the RTL and the documents can be read against each other.
 > control bus, the supervision, an MF8 trunk, and the common control — marker,
 > registers, seekers and resolvers — run and are checked. The testbenches build
 > networks out of whole exchanges: two on a link, three in a chain, **five round
-> a hub**, **four in a ring**. Every shape `exch-network.md` §3 describes now
+> a hub**, **four in a ring**. Every shape `network.md` §3 describes now
 > runs — the flood, the transit, the fan-out of §3.2, the strap of §3.3 — and
-> the monitor pool has been put against `exch-monitor.md` §4's sizing table with
+> the monitor pool has been put against `monitor.md` §4's sizing table with
 > traffic rather than argument. **`make traffic` builds a network of up to ten
 > whole exchanges out of three shape numbers and offers it demand that is not
 > smooth** — bursts, a flash crowd, peak against off peak — and `exch.py traffic`
 > runs the same network on the same clock, so the two are read against each other
-> (`ex-traffic.md`). Nothing has been on an FPGA.
+> (`traffic.md`). Nothing has been on an FPGA.
 
 **The hierarchy is the layout.** Each module is a thing you could point at in a
 rack, and the module boundaries are the connectors.
 
 ```
- exch_top          ONE exchange -- the logic of mvp-ex.md 1, and nothing that plugs in
+ exch_top          ONE exchange -- the logic of mvp.md 1, and nothing that plugs in
    clock_card      HCLK, SLOT, SLOTQ a quarter cell later, TX_CLK, TX_OCT, RX_OCT,
-                   HB, FILL, the ring cadence, TICK          (exch-mainboard.md 2.1)
+                   HB, FILL, the ring cadence, TICK          (mainboard.md 2.1)
    mainboard       the ribbon's sixteen highway conductors, the eight BLK conductors,
                    and the SHUNT field that gives each block position its number
-                                                             (exch-mainboard.md 1, 6)
+                                                             (mainboard.md 1, 6)
    block  x8       four commutators, the write and strobe decoders, the ringback
-                   '157s, and eight ports                    (exch-fabric.md 3.1)
-     port x8       the crosspoint: '273, three '151s, a '74 pair   (exch-fabric.md 3.2)
-                   the supervision: two detectors and the gates    (exch-fabric.md 3.5)
+                   '157s, and eight ports                    (fabric.md 3.1)
+     port x8       the crosspoint: '273, three '151s, a '74 pair   (fabric.md 3.2)
+                   the supervision: two detectors and the gates    (fabric.md 3.5)
    mux8            a 74HC151.  The whole fabric is this part used three ways
    ctl_write       the serialiser for cable B: one 16-bit word on one wire
-                                                             (exch-mainboard.md 2.3)
+                                                             (mainboard.md 2.3)
 
  marker            scanner, probe, hunt in fixed order from 00, the number
                    parsing of 2, the flood at both ends, and the fan-out and
-                   RESOLVERS of a hub                         (exch-marker.md,
-                                                              exch-network.md 3)
+                   RESOLVERS of a hub                         (marker.md,
+                                                              network.md 3)
  pulse_reg         a register, one of a POOL: no port, no class, reads its
                    caller's hook off the M highway through its own probe, and
                    holds its own four-digit store              (register.md 4)
  monitor           the seeker, a POOL on each trunk block: the only part of the
-                   network that reads a digit it was not sent (exch-monitor.md)
+                   network that reads a digit it was not sent (monitor.md)
    pulse_rx        register.md 2's three windows off one timer, shared by both
 
  line_card         a card that plugs into a channel slot -- OUTSIDE exch_top, because
                    that is where it is                       (mf8-backplane.md 8)
- mf8_trunk_card    six channels of a block made into a tie trunk (exch-network.md 1)
+ mf8_trunk_card    six channels of a block made into a tie trunk (network.md 1)
    mf8_encoder     differential Manchester: a transition a cell, two for a 0
                                                              (mf8-spec.md 9.2)
    mf8_decoder     the classifier: times gaps, no PLL, nothing to lose
@@ -72,7 +72,7 @@ Verilator. Anything that passes under one must pass under the other.
 
 ```
 make fabric   every source to every listener, bit-exact, one frame
-make mvp      mvp-ex.md: absent parts read as idle, and the hotline
+make mvp      mvp.md: absent parts read as idle, and the hotline
 make two      two exchanges, own crystals 100 ppm apart, both making calls
 make trunk    two exchanges tied by one MF8 link, calls patched across it
 make net      the same two exchanges, calls DIALLED: local, and the pulse flood
@@ -81,7 +81,7 @@ make monitor  the seeker's pool and the three terms of its seizure rule
 make pool     two callers at once: two registers, two cells, one scanner
 make hub      five exchanges: four directions, a fan-out, and the resolvers
 make ring     four exchanges in a ring, and the strap that breaks it
-make erlang   the monitor pool against exch-monitor.md 4's sizing table
+make erlang   the monitor pool against monitor.md 4's sizing table
 make stress   a FULL exchange -- 48 lines -- under random traffic
 make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
 make iv       the whole suite again under Icarus, as the reference
@@ -128,7 +128,7 @@ of the calls: there it checks that the two simulators agree, not the figures.
 Eight master ticks to a 512 kHz cell, eight cells to a frame, eight frames to an
 octet. Everything the 74HC design does with separate clock wires comes out here
 as strobes on that one domain, so the model is synchronous throughout and
-`SLOTQ` still sits a quarter of a cell behind `SLOT`, where `exch-fabric.md`
+`SLOTQ` still sits a quarter of a cell behind `SLOT`, where `fabric.md`
 §3.2 puts it. **This does not reproduce the §3.2 hazard** — a race between a
 '138's address and its enable has no meaning in RTL, where nothing glitches by
 construction. `SLOTQ` is here because the hardware has it, not because the model
@@ -138,22 +138,22 @@ needs it.
 tick 4 of the selected cell, and a card reads `C_RX` at the frame edge and
 nowhere else. That gives the one frame of delay for every pair of ports that
 `exch.py fabric` measured, whatever the two slots — which is what keeps octets
-aligned (`exch-fabric.md` §3.4).
+aligned (`fabric.md` §3.4).
 
 **No tri-state.** The highways have one driver a wire, so they are plain signals.
 The probe bus `PB` *is* tri-state in 74HC, and here it is a mux with the same
 observable behaviour: pulled low when no block is selected, so an absent block
-reads as eight unequipped slots (`exch-mainboard.md` §6).
+reads as eight unequipped slots (`mainboard.md` §6).
 
 **Growing the exchange is changing a parameter.** `BLOCK_FITTED` and
-`PORT_FITTED` default to the MVP of `mvp-ex.md` §1 — block 2 alone, port
+`PORT_FITTED` default to the MVP of `mvp.md` §1 — block 2 alone, port
 circuits at 20 and 21, `RBT` strapped to `FILL`. An unfitted block's highway is
 pulled to `FILL` and its `A` to ground; an unpopulated slot the same. Nothing
 that is fitted changes when more is.
 
 **The subscriber interface is four wires.** A card's subscriber side is `tx`
 and `rx` (CVSD each way) and `m` and `e` (the hook out, supervision back) --
-the names `exch-fabric.md` §3.5 uses throughout, and the same four leads as
+the names `fabric.md` §3.5 uses throughout, and the same four leads as
 `mf8-spec.md` §12.1's E&M card. The transformers, the 48 V phantom and the
 128 kBaud line code of `subscriber-line.md` change no bit that reaches the
 exchange, so they are left out. `e` already carries the ring cadence: the
@@ -164,7 +164,7 @@ its clock as a port, so an exchange is a thing you instantiate. `make two` runs
 a pair on crystals 100 ppm apart -- the plesiochronous case `mf8-backplane.md`
 §2 assumes of any two ends of a link.
 
-**The control bus is one word on one wire.** `exch-mainboard.md` §2.3: the
+**The control bus is one word on one wire.** `mainboard.md` §2.3: the
 marker's whole output is sixteen bits — a guard, `DST`, and the port's '273
 verbatim — broadcast to every block, and the block that answers `WR` is the one
 its shunt column names. One consequence the RTL made plain: **`/BLK` steers the
@@ -193,7 +193,7 @@ own: **an event on a wire is a race; a level that is valid when read is not.**
 dialling the *same* number inside one 8 ms scan. They probe the called port at
 the same visit, both see `BUSY` clear, and **both write its latch** -- one
 caller silently patched to a line that is ringing for someone else. It cannot
-happen with a single register, which is why `exch-marker.md` §3 does not mention
+happen with a single register, which is why `marker.md` §3 does not mention
 it; any marker serving more than one call at a time needs the arbitration, in
 74HC as much as here. It is ordinary glare and takes the ordinary answer: the
 first takes the line, the second gets busy.
@@ -207,7 +207,7 @@ trunk.
 ### What a transit demands of a monitor
 
 Three findings from building the chain, all in the same place, and together they
-say that **`exch-monitor.md` §4's seizure rule is not sufficient once an exchange
+say that **`monitor.md` §4's seizure rule is not sufficient once an exchange
 has outgoing trunks of its own**. An end of a chain never shows any of it; a
 transit shows it on every call.
 
@@ -232,7 +232,7 @@ does. Immune to the scan race rather than subject to it.
 And one of timing: **a hop cost about three scans** until the forwarder was made
 to sweep from where the seizure was seen rather than from port 63. Two now, of
 which one is the marker's own detection latency — inherent to a scanned marker,
-and worth holding against `exch-network.md` §3.1's 7 ms hop.
+and worth holding against `network.md` §3.1's 7 ms hop.
 
 **The pool is the thing §4 is really about.** Its sizing table -- two a block to
 four exchanges, three to twenty, four to thirty-six -- is the loss to callers
@@ -247,7 +247,7 @@ interesting cases cannot be reached from a system test: two seizures on one
 block would need two callers dialling at once, and one register serves one
 caller. §4's Erlang argument is measured the same way and for the same reason:
 `make erlang` offers a block's eight lines the traffic of a whole network, and
-*The pool against `exch-monitor.md` §4* below is what came back.
+*The pool against `monitor.md` §4* below is what came back.
 
 ### What a hub demands of a marker
 
@@ -285,8 +285,8 @@ packages a resolver, and §3.2's own erlang figures say two or three of them.
 
 ### What a carrier's delay demands of the guard: nothing
 
-`exch-network.md` §1.1 allows a trunk's carrier "about 2 ms of A path a hop", and
-the origin's 128 ms guard (`exch-monitor.md` §3, rule 2) is sized on the flood
+`network.md` §1.1 allows a trunk's carrier "about 2 ms of A path a hop", and
+the origin's 128 ms guard (`monitor.md` §3, rule 2) is sized on the flood
 crossing the network inside it. A leased circuit, a radio, a mux or a jitter
 buffer is tens of milliseconds a hop, which looks like it must eat that guard.
 
@@ -303,7 +303,7 @@ high and the dial pulses are breaks in it. Delay the wire and both move together
 so a monitor 40 ms out in absolute time still sees the rise before the first break
 reaches it. What the guard is counting is only the part of a hop where the signal
 **restarts** — the marker reading M and writing the onward latch — which is what
-the flood's 7 ms a hop is mostly made of. `exch-monitor.md` §5.1 has it measured
+the flood's 7 ms a hop is mostly made of. `monitor.md` §5.1 has it measured
 to 160 ms a hop and 1.17 s across seven, at 0 false claims in 1 000 calls, and has
 the thing that *does* cost the guard: delay the carrier **loses** between the
 seizure and the next digit.
@@ -313,7 +313,7 @@ bit-path comparison is skipped when there is a carrier, because it aligns over a
 few frames and a carrier is thousands of them.
 
 **The guard is a parameter here and a strap there.** `marker`'s `T_GUARD` is
-128 ms, which `exch-monitor.md` §3.5 now makes one setting of three — 128, 256 and
+128 ms, which `monitor.md` §3.5 now makes one setting of three — 128, 256 and
 512 ms, three adjacent stages of the counter the sequence already runs on — and
 the one number in the protocol that says how big the network is. The system
 testbenches pass 16, which is that 128 at their eight-times-life scaling.
@@ -344,7 +344,7 @@ caller hears anything wrong — it costs channels, and a scanned marker cannot d
 better without a latch a trunk.
 
 **A trunk card must tie its `/ANS`.** A port whose card leaves `/ANS` open
-rings, and `exch-fabric.md` §3.5's `A_RX` gate then chops that port's own
+rings, and `fabric.md` §3.5's `A_RX` gate then chops that port's own
 forward A into the ring cadence. A trunk port that does it sends the cadence
 down the link instead of the caller's dial pulses — breaks that are not breaks
 at this model's scaled cadence, and a hang-up every few seconds at the real one.
@@ -354,7 +354,7 @@ and nothing beyond the hub could read a digit.
 
 ### What the serial bus demands of a marker
 
-Three things the RTL found in making `exch-mainboard.md` §2.3 work, none of
+Three things the RTL found in making `mainboard.md` §2.3 work, none of
 them in the document yet. They are the marker's, not this model's: a 74HC
 marker on this bus needs all three.
 
@@ -384,8 +384,8 @@ that half self-heals within a millisecond.
 
 **A trunk is a pair of ports back to back, and nothing else.** What a trunk
 port hears from its own fabric goes out on the line; what comes in off the line
-is what that port's card says (`exch-network.md` §1). The card decides nothing
-and holds no digits. A call across it is the hotline rule of `exch-fabric.md`
+is what that port's card says (`network.md` §1). The card decides nothing
+and holds no digits. A call across it is the hotline rule of `fabric.md`
 §3.5 running through the pair untouched: the far line rings because its port
 sees E, and the caller hears ringback because the far port substitutes `RBT`
 into its own highway cell — both of which `make trunk` watches happen across
@@ -394,7 +394,7 @@ two exchanges.
 **A block does not know its own number.** `block`'s `H` parameter is carried so
 an instance names itself in a waveform and is read by nothing. Which highway a
 block drives is the `mainboard`'s `SHUNT` parameter -- three bits a position,
-the three shunts in one silkscreened column of `exch-mainboard.md` §1. A
+the three shunts in one silkscreened column of `mainboard.md` §1. A
 position whose shunts are left out drives nothing and its column is pulled to
 `FILL`; two positions shunted onto one column read as `x`, which is what two
 '244s on one conductor are. Layout, not logic.
@@ -471,7 +471,7 @@ already stopped them being handed the *same* register. But both wrote
 `reg_port`, and the second writer won, so **both registers latched the line's
 port number**. The claimed trunk's register would then count the line's dialling
 and the marker would connect the far caller to whatever that line asked for — a
-wrong number across the network, which is the one thing `exch-monitor.md` §3
+wrong number across the network, which is the one thing `monitor.md` §3
 exists to stop.
 
 The rule is **one attach a cycle**: a caller who lifts in the same cycle as a
@@ -487,7 +487,7 @@ visit with a line waiting for dial tone.
 
 **And a clean result: overload does not jam it.** `make stress-overload` gives
 the same forty-eight callers a **two**-register exchange — the pool
-`exch-marker.md` §6 sizes for 0.16 E, offered something nearer ten. In two
+`marker.md` §6 sizes for 0.16 E, offered something nearer ten. In two
 rounds, 199 callers lifted, **141 of them waited out dial tone and gave up**,
 and four calls got through. Nothing was left held, no line was heard by two
 callers, no port was stuck, and the write queue never overran. The exchange
@@ -504,7 +504,7 @@ by link and pool by pool, in the gates.
 
 **The topology is arithmetic**, so the same testbench is three exchanges or ten: a
 chain of `NHUB` hubs, `SPOKE` spokes on each, each spoke a chain of `SLEN`. `NHUB=1
-SPOKE=4` is a star; `NHUB=2 SPOKE=3` is `exch-network.md` §5.1's reference shape;
+SPOKE=4` is a star; `NHUB=2 SPOKE=3` is `network.md` §5.1's reference shape;
 `NHUB=2 SPOKE=2 SLEN=2` is a backbone with spokes two deep and a transit on every
 one of them. A `net_site` is instantiated for each, its direction slots packed from
 0, and the link between any two is `assign lin[i] = lout[peer]` — no wires by hand.
@@ -608,7 +608,7 @@ at peak.
 
 **The ten-exchange network is full**: every one of its nine links is between 3.4 and
 4.4 E of six and every one reached six, and **at peak it carries less than off
-peak** — 34.59 E against 35.59 — with half again the calls offered. `ex-traffic.md`
+peak** — 34.59 E against 35.59 — with half again the calls offered. `traffic.md`
 §4 reads it beside the model, where the two agree on erlangs for each call a second
 offered to **eight tenths of a per cent** at eight exchanges and five per cent at
 ten.
@@ -643,14 +643,14 @@ latch write the marker sent it:
 ```
 
 Ports 11 and 31 are blocks 1 and 3; port 42 is block 4. **That is a hub's fan-out**
-(`exch-network.md` §3.2): a seizure arrived on the fourth direction and was patched
+(`network.md` §3.2): a seizure arrived on the fourth direction and was patched
 out into two others, and when the call died without a claim the incoming trunk
 released and *the legs did not*. A port releases on the **fall** of one of its two
 detectors, and both of these were written after the source's A had already gone —
 so neither detector has an edge left to fall on, and the port is held until
 something writes it again.
 
-**It is the hazard `exch-rtl.md` already has, at a trunk instead of at a line.**
+**It is the hazard `rtl.md` already has, at a trunk instead of at a line.**
 `make stress` checks for it directly (`no port was written BUSY with no edge left
 to release it`) and reports it at HEAD on a line written to dial tone; this finds
 the same shape on a hub's fan-out legs and on a chain transit's patch. `make
@@ -671,7 +671,7 @@ network calls, and seventy samples of an exponential holding time do not have a
 stable mean; the 3.29 against 4.49 above is that and not physics. **The RTL is
 where the mechanism is checked and the model is where the statistics are.**
 
-## The pool against `exch-monitor.md` §4, measured
+## The pool against `monitor.md` §4, measured
 
 §4 sizes the monitor pool with Erlang B on a load it argues from three numbers:
 every call dialled with `1` anywhere in the network wants a monitor on each
@@ -761,7 +761,7 @@ flip-flops. Anyone putting this on an FPGA pays that; anyone building it in
 
 ## Two things the RTL settled
 
-**`A out = E + CLAIM`** (`exch-fabric.md` §3.1) is the A the port hands its
+**`A out = E + CLAIM`** (`fabric.md` §3.1) is the A the port hands its
 **card**, not its highway contribution. Three things agree: "2 × 74HC32" is
 eight OR gates for eight ports; backward A goes up the link, which is fed from
 `A_RX`; and the highway must go on carrying the far caller's dial pulses so that
@@ -776,18 +776,18 @@ trunk let go.
 
 ## Open, and deliberately not guessed
 
-- **The word's encoding.** `exch-protocol.md` §5 says a plain line card ties its
+- **The word's encoding.** `protocol.md` §5 says a plain line card ties its
   word pin to ground and "reads all ones and means a line with no options",
-  while `exch-fabric.md` §3.5's table gives *line* as class 001. Both cannot be
+  while `fabric.md` §3.5's table gives *line* as class 001. Both cannot be
   right. The fabric uses the word for nothing, so the commutator is wired and
   the encoding left alone until the marker is built.
 - **Detector tolerance.** `exch.py calls` draws each port's detectors ±20 % about
-  256 ms, which is why `mvp-ex.md` §3 has 21 release at 6.266 s and 20 at 6.284.
+  256 ms, which is why `mvp.md` §3 has 21 release at 6.266 s and 20 at 6.284.
   Here they are exact, so both ports release in the same frame.
 
 ## Next
 
-1. **A testbench for the `SCLK` hazard** (`exch-mainboard.md` §7): a spurious
+1. **A testbench for the `SCLK` hazard** (`mainboard.md` §7): a spurious
    shift puts the next write in the wrong port with the wrong source. It costs
    one call and does not persist, and it is worth watching it not persist.
 2. **Two seizures inside one sweep.** An exchange has one forwarder and a
@@ -796,7 +796,7 @@ trunk let go.
    cannot-complete. At the 0.26 E of §4 that is about one flood in a thousand —
    but that is arithmetic on the model, not a measurement, and no document
    mentions the case. `tb_hub` staggers its two floods to keep clear of it.
-3. **`exch-marker.md` §6's register table itself.** `make traffic` now measures
+3. **`marker.md` §6's register table itself.** `make traffic` now measures
    the *delay* — the mean, the 95th and the worst wait for dial tone, and the
    whole distribution by how many 8 ms scans a caller waited — which is the
    quantity §6 is really about, and it does it under network traffic rather than
@@ -804,14 +804,14 @@ trunk let go.
    `NREG` at a fixed load, to put a number a pool against a wait.
 4. **The fan-out leak above.** A hub's legs, and a chain transit's patch, can be
    written after the call they were for has gone, and then have no edge left to
-   release on. It is `exch-rtl.md`'s hazard and the answer is the same one: either
+   release on. It is `rtl.md`'s hazard and the answer is the same one: either
    the marker must not write a port whose source is already down, or a port must
    release on a level and not only on an edge. `make traffic` reports it.
-5. **SS0** (`ex-ss0.md`) against the flood, on these same networks.
+5. **SS0** (`ss0.md`) against the flood, on these same networks.
 6. **Sixteen exchanges or more**, which `tb_traffic` will build from its three
    shape parameters and Verilator will not compile in a working day. What the
    suite has instead is `exch.py traffic`, which is the same network and the same
    demand in milliseconds and agrees with the gates at eight and at ten
-   (`ex-traffic.md` §§3–4), and `exch.py big`, which carries that out to the
+   (`traffic.md` §§3–4), and `exch.py big`, which carries that out to the
    sixty-four codes.
 7. Nothing has been on an FPGA.

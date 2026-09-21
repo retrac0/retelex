@@ -1,11 +1,11 @@
-// block -- eight ports and what they share.  exch-fabric.md 3.1.
+// block -- eight ports and what they share.  fabric.md 3.1.
 //
 // A block owns one highway pair.  Its commutator is a '151 with the eight
 // ports' C_TX on its inputs and SLOT on its selects: a rotary switch turning at
 // 64 kHz, which is, part for part, an MF8 trunk transmitter's frame mux.  The
 // block knows nothing else -- no address, no comparator, no class.  Which
 // highway it drives and which BLK select is its own come from the mainboard's
-// shunt field (exch-mainboard.md 1), here the H parameter.
+// shunt field (mainboard.md 1), here the H parameter.
 `timescale 1ns/1ps
 `include "exch_defs.vh"
 
@@ -13,7 +13,7 @@ module block #(
     /* verilator lint_off UNUSEDPARAM */
     // This block's number.  Nothing in here reads it -- which is the point:
     // a block has no address and no comparator, and which highway it drives
-    // comes from the mainboard's shunt field (exch-mainboard.md 1).  It is
+    // comes from the mainboard's shunt field (mainboard.md 1).  It is
     // carried only so the instance names itself in a waveform.
     parameter [2:0]  H            = 3'd0,
     /* verilator lint_on UNUSEDPARAM */
@@ -45,7 +45,7 @@ module block #(
     output     [7:0]  c_rx,
     output     [7:0]  a_rx,
 
-    // the control bus, serial (exch-mainboard.md 2.3)
+    // the control bus, serial (mainboard.md 2.3)
     input             blk,           // /BLK, back from this position's shunt column
     input             sdata,
     input             sclk,
@@ -81,7 +81,7 @@ module block #(
         assign wr_dec[k] = blk && wr && cw[15] && (cw[10:8] == k[2:0]);
 
         // an unpopulated slot: C pulled to FILL, A and BUSY to 0, no word.
-        // exch-fabric.md 1.1 -- exactly as an empty MF8 slot is pulled.
+        // fabric.md 1.1 -- exactly as an empty MF8 slot is pulled.
         assign c_mux[k]    = PORT_FITTED[k] ? (rb[k] ? rbt : c_tx[k]) : fill;   // the '157
         assign a_com[k]    = PORT_FITTED[k] ? a_hw[k]    : 1'b0;
         assign busy_com[k] = PORT_FITTED[k] ? busy_hw[k] : 1'b0;
@@ -106,7 +106,7 @@ module block #(
 
     // In 74HC the probe bus is tri-state, one block enabled by BLK[H], pulled
     // LOW at the marker so an absent block reads as eight unequipped slots
-    // (exch-mainboard.md 6).  A mux at the top does the same job here.
+    // (mainboard.md 6).  A mux at the top does the same job here.
     assign port_busy = busy_com;
 
     assign pb_busy = blk ? pb_busy_i : 1'b0;

@@ -2,15 +2,15 @@
 
 The common control of one exchange: how a port says what it is, how a number is
 read, how the marker finds what was asked for, and how a call ends with nobody
-in charge of it. The fabric the marker writes to is `exch-protocol.md`; the
-cards it hunts for are `exch-features.md`.
+in charge of it. The fabric the marker writes to is `protocol.md`; the
+cards it hunts for are `features.md`.
 
 > **Status: proposed, measured in simulation.** `exch.py calls` runs one exchange
 > a millisecond at a time — ports, latches, `BUSY`, class marks, release
 > detectors with their tolerances, and cards that behave — and `exch.log` is the
 > run. The first run of that model found two faults in the rule as first written;
 > §5 has both, with the before and after. **The model predates the port map of
-> `exch-protocol.md` §5**. It agrees on idle at 00. It still puts tones and
+> `protocol.md` §5**. It agrees on idle at 00. It still puts tones and
 > registers on an older layout (tones not at 01–03, trunks mixed into block 0),
 > where the map now has dial/busy/cannot-complete at 01–03, the operator bank at
 > 04–07, and MF8 trunks from block 1. Its scenarios also put
@@ -23,17 +23,17 @@ cards it hunts for are `exch-features.md`.
 ## 1. Class marks
 
 Every port says what it is in a **word**: eight bits that whatever sits behind
-it sends, one a frame, on one pin (`ex-extensions.md` §2.2). A card sends it for
-its one port, and a trunk card for each of its six channels (`exch-network.md`
+it sends, one a frame, on one pin (`extensions.md` §2.2). A card sends it for
+its one port, and a trunk card for each of its six channels (`network.md`
 §1). The word carries a 3-bit class and four options that depend on the class: a
 trunk's direction, a hunt group, a warm line. Or it names the port this one
-is nailed to. **Class *restricted*** is its own code (`exch-fabric.md` §3.5), not
+is nailed to. **Class *restricted*** is its own code (`fabric.md` §3.5), not
 an option. **A plain line card ties the pin to ground**, which reads all ones
 and means a line with no options. The marker's probe reads the word at every
 visit, beside the port's M and its `BUSY` (§4). **Nothing on the marker says
 where anything is**: move a card and its role moves with it. Whether a port rings
 is not the marker's business: the card says it to the port's own gates on a pin,
-`/ANS` (`ex-extensions.md` §2.3).
+`/ANS` (`extensions.md` §2.3).
 
 | class | is | reached by | free when |
 |---|---|---|---|
@@ -41,24 +41,24 @@ is not the marker's business: the card says it to the port's own gates on a pin,
 | 1 | line: a phone, a data card, a conference bridge leg | its number | `BUSY` = 0, M = 0, settled (§5) |
 | 2 | operator | **0** | same |
 | 3 | external trunk: an FXO to a CO, a foreign PBX | **9** | same |
-| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`ex-extensions.md` §2.2), and an MF8 trunk card sends one word to all six channels | the network card (`exch-network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
+| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`extensions.md` §2.2), and an MF8 trunk card sends one word to all six channels | the network card (`network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
 | 5 | dial tone | the marker, on seizure | always: a source, one latch write |
 | 6 | cannot-complete: busy / error tone, or a looping announcement | the marker, whenever it cannot complete | always |
-| 7 | spare in this older map. Under `exch-fabric.md` §3.5, code **111** is *restricted* | — | — |
+| 7 | spare in this older map. Under `fabric.md` §3.5, code **111** is *restricted* | — | — |
 
 **Proposed, not applied here or in the model:** the codes renumbered
-(`exch-fabric.md` §3.5), with *source*, *data line* and *restricted*. *Source* is
+(`fabric.md` §3.5), with *source*, *data line* and *restricted*. *Source* is
 anything that talks and never listens: the two tones, reached by address rather
-than hunted, and a radio or a clock that anyone may dial (`exch-features.md`
+than hunted, and a radio or a clock that anyone may dial (`features.md`
 §6). *Data line* is a line the marker will not connect to a voice port. A
 conference bridge leg is an ordinary line (`conference.md` §6); class
 *conference* is retired. *Restricted* (`111`) options are `z w b L`
-(`ex-extensions.md` §2.4): **0-only**, reserved (warm), **busy-inbound**,
+(`extensions.md` §2.4): **0-only**, reserved (warm), **busy-inbound**,
 **local-only**; bare restricted still floors as local-only. A line's options are
 `o w b ·` — overflow, warm, busy-out, spare — with `o`/`w`/`b` in the same
 frames as restricted and as overflow on operator and data.
 
-**Proposed further** (`ex-groups.md`): a port may *answer to a number*. A
+**Proposed further** (`groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
 the ports that answer to it, 0 becomes a call to 04, and class *operator* and
 §2's overflow step go.
@@ -77,16 +77,16 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
              itself → class 6               not free (BUSY or busy `b`), overflow set → try next
              not free → class 6 (busy tone) else → connect
- caller      class restricted: `z` → only 0; else `L` or floor → no 9 / no flood   (ex-extensions.md §2.4)
+ caller      class restricted: `z` → only 0; else `L` or floor → no 9 / no flood   (extensions.md §2.4)
              busy `b` does not block a call request
 ```
 
 Whether `1` is the flood or highway 1 is the network strap: network card fitted,
-or the jumper that says the same with none (`exch-protocol.md` §5). A number on
+or the jumper that says the same with none (`protocol.md` §5). A number on
 another exchange is `1 e b h s`: the key, the exchange's code, then the line.
 The key opens the flood. If the `e b` that follows is this exchange's own, the
 trunks are released and what follows is parsed exactly as above
-(`exch-network.md` §3). `e` and `b` are 0–7. Either being 8 or 9 is reserved:
+(`network.md` §3). `e` and `b` are 0–7. Either being 8 or 9 is reserved:
 the trunks are released and the caller gets class 6. A local number in 20–77 is
 the same two digits alone or networked; **`h s` after `1 e b` means the same
 port**. Ports 00–07 are never dialled (0 is the operator key). Ports 10–17 are
@@ -111,13 +111,13 @@ the wanted class that is free. **Fixed order is the feature**:
 
 **A nail comes first.** A card's word is either its class or a nail. A nail with
 `BUSY` clear is written before anything else is considered, and a port that sends
-a nail is never free and never a call request (`ex-extensions.md` §3.1).
+a nail is never free and never a call request (`extensions.md` §3.1).
 
 **Seizure is handled by class too.** M rising on a free, idle port is a call
 request. Class 1 or 2: give a free register the caller's number; point the
 caller at dial tone. Class 3 — a CO line ringing in, from a caller who cannot
 dial — **is routed as if it had dialled 0**, and so is a line whose word says
-warm line (`ex-extensions.md` §2.4). Class 4 is the network card's, and a hunt
+warm line (`extensions.md` §2.4). Class 4 is the network card's, and a hunt
 for one is steered by that card on `/HUNT_INH` (§4): the marker hunts the class
 and never knows which way a trunk faces.
 
@@ -127,12 +127,12 @@ and never knows which way a trunk faces.
 
 | | |
 |---|---|
-| Clock card | 4.096 MHz → '4040 → 512 k, 64 k, 8 k, the 1 kHz tick, `FILL`, `RING_CAD` (2 s / 4 s). **`RBT` is not its**: it is carried with these and generated by the ringback tone card, which drives the conductor through a buffer on the card. The clock card terminates it to `FILL` and nothing else (§5, `exch-features.md` §2, `exch-mainboard.md` §2.1, `tone-card.md` §5) |
+| Clock card | 4.096 MHz → '4040 → 512 k, 64 k, 8 k, the 1 kHz tick, `FILL`, `RING_CAD` (2 s / 4 s). **`RBT` is not its**: it is carried with these and generated by the ringback tone card, which drives the conductor through a buffer on the card. The clock card terminates it to `FILL` and nothing else (§5, `features.md` §2, `mainboard.md` §2.1, `tone-card.md` §5) |
 | Scanner | a 6-bit counter on the 8 kHz mark. It moved here from `register.md` §5, where it was part of the register: a hunt must not wait for a register |
-| Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's word, which a 74HC164 takes in over the visit), addressed by the scanner or by the digit store. A port probed out of the scanner's turn is read for one whole octet, up to 250 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`exch-network.md` §3.2) |
-| Sequencer | a state counter and decode. Its whole output is latch writes on the control bus — one sixteen-bit word shifted out on `SDATA`, then `WR` (`exch-mainboard.md` §2.3) — which is multi-master: the operator's console drives it by hand. Its hunt takes one input, `/HUNT_INH`, pulled up on the backplane: a card may reject the port the probe is on and the hunt walks on. Nothing else may steer a hunt, and with no card fitted the line reads *accept* |
+| Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's word, which a 74HC164 takes in over the visit), addressed by the scanner or by the digit store. A port probed out of the scanner's turn is read for one whole octet, up to 250 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`network.md` §3.2) |
+| Sequencer | a state counter and decode. Its whole output is latch writes on the control bus — one sixteen-bit word shifted out on `SDATA`, then `WR` (`mainboard.md` §2.3) — which is multi-master: the operator's console drives it by hand. Its hunt takes one input, `/HUNT_INH`, pulled up on the backplane: a card may reject the port the probe is on and the hunt walks on. Nothing else may steer a hunt, and with no card fitted the line reads *accept* |
 | Diode matrix | prefix key → class. Nothing else: no addresses, no translation |
-| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero is an operator transfer consult (`register.md` §6.1): the register is kept after the second leg connects, and CLR pairs held ↔ called. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network card**, so a register is the same ~12 packages whether the exchange stands alone or not (`exch-network.md` §3.2) |
+| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero is an operator transfer consult (`register.md` §6.1): the register is kept after the second leg connects, and CLR pairs held ↔ called. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network card**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2) |
 
 A connection is two writes — caller listens to called, called listens to caller
 — and the marker is finished with the call.
@@ -176,7 +176,7 @@ Every one of these ends with every latch idle and every `BUSY` clear
 | an empty slot; 1; 8; 2 then 9 | class 6 |
 | abandoned while ringing | the called phone stops ringing at once (E fell) and is free 300 ms later |
 | abandoned while dialling | **the register lets go by itself**: the hook it is watching stays down 256 ms |
-| off-hook, nothing dialled | class 6 after 10 s, register freed; the port stays busy until the phone is hung up. On a network call the origin releases its trunks first, 5 s after the key (`exch-network.md` §3–4) |
+| off-hook, nothing dialled | class 6 after 10 s, register freed; the port stays busy until the phone is hung up. On a network call the origin releases its trunks first, 5 s after the key (`network.md` §3–4) |
 | two callers dialling each other | both get class 6 |
 | a called phone lifting 3 ms before the test | reads busy: M is part of the free test |
 | one register, two callers | the second gets dial tone 1.9 s late: when the first has dialled, and the freed register has settled (§5.2) |
@@ -256,7 +256,7 @@ for an exchange of keypad phones, three for dials or for a busy one.** `register
 caller's hook. The store and its code would take an MT8870 as a second writer
 (`register.md` §7), and the scenarios of §5.1 were run with a keypad as well as
 a dial, but a keypad's digits are in band and **the network hears only the A
-line** (`exch-network.md` §4): a keypad phone could place local calls and no
+line** (`network.md` §4): a keypad phone could place local calls and no
 others. The comparison that settled it:
 
 | | DTMF | pulses on A |
@@ -269,7 +269,7 @@ others. The comparison that settled it:
 
 **The network speaks the second, live**: a caller's own pulses go down the flood,
 and each exchange's monitor — a cut-down pulse register on the trunk block,
-`exch-monitor.md` — reads the one digit it needs. Nothing is sent twice.
+`monitor.md` — reads the one digit it needs. Nothing is sent twice.
 
 ---
 
@@ -285,7 +285,7 @@ and each exchange's monitor — a cut-down pulse register on the trunk block,
   is met. In hardware it is a frame or two; it is where the "1 ms" in §5.3's
   bottom row comes from.
 - **A CO's ring cadence against `RING_CAD`** at the operator's phone: the two are
-  ANDed (`exch-features.md` §5).
+  ANDed (`features.md` §5).
 - **Marker contention**: two requests in one tick are served in scan order in the
   model; a second master on the control bus is not modelled.
 - **Partial dialling**: the 10 s timeout runs from the last digit as well as from

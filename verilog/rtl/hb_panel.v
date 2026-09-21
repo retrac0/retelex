@@ -1,5 +1,5 @@
 // hb_panel -- the whole display: seventeen cards on one pin-header stack.
-// hookbusy-display.md.
+// hookbusy.md.
 //
 // Sixteen lamp cards at 0.4 inch, plus the common card at the left end, and a
 // 26-way that passes straight through all of them.  In the normal
@@ -14,15 +14,15 @@
 //
 // A port is a horizontal pair 8 mm apart: BOTH lit is a call, green alone is
 // off hook and unserved, orange alone is ringing or a port held by nothing,
-// dark is idle.  ex-observers.md 4.1's four states, read without a hue
+// dark is idle.  observers.md 4.1's four states, read without a hue
 // judgement -- POSITION carries hook-versus-busy and the colour only confirms
-// it, which is what the bicolour grid of ex-observers.md 7 could not do.
+// it, which is what the bicolour grid of observers.md 7 could not do.
 //
 // THE JUMPERS ARE PARAMETERS because a jumper is set once, with the subrack,
 // and never again.  BLK[c] is card c's shunt column and HOOK[c] its mode
 // block; the defaults are the normal configuration and nothing else in the
 // design depends on them.  Sixteen hook cards is a legal setting and it is
-// what a fabric-only bring-up wants (exch-fabric.md 7 step 2), because not one
+// what a fabric-only bring-up wants (fabric.md 7 step 2), because not one
 // lamp card needs the marker to exist.
 `timescale 1ns/1ps
 

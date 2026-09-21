@@ -1,8 +1,8 @@
 // hc259 -- a 74HC259 addressable latch: the inverse of mux8's '151, and the
-// whole of a lamp field.  ex-observers.md 1, "a lamp field is a demultiplexer
+// whole of a lamp field.  observers.md 1, "a lamp field is a demultiplexer
 // with LEDs on it".
 //
-// The fabric has already done the hard half.  exch-fabric.md 1.1 puts all 64
+// The fabric has already done the hard half.  fabric.md 1.1 puts all 64
 // ports on eight wires, each port once a frame, and A PORT'S ADDRESS IS WHERE
 // IT APPEARS -- which wire, and when.  Address this part with the same count
 // the commutator used and hand it the wire, and its eight outputs are the
@@ -13,7 +13,7 @@
 // THE PART IS LEVEL SENSITIVE, not edged.  /LE low and the ADDRESSED output
 // follows D; the other seven hold.  /LE high and all eight hold.  /CLR is
 // asynchronous.  That transparency is not a detail to be tidied away in the
-// model -- it is exactly why the busy field needs an INH (ex-observers.md 3),
+// model -- it is exactly why the busy field needs an INH (observers.md 3),
 // and a model that latched on an edge would hide the fault the inhibit exists
 // to prevent.
 `timescale 1ns/1ps

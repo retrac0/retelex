@@ -1,16 +1,16 @@
 // mf8_trunk_card -- an MF8 trunk card in a block of an exchange.
-// exch-network.md 1, mf8-spec.md 9-11, exch-fabric.md 1.1.
+// network.md 1, mf8-spec.md 9-11, fabric.md 1.1.
 //
 // It makes six ports of its block into a tie trunk: a pair of ports, one in
 // each exchange, back to back.  What a trunk port hears from its own fabric
 // goes out on the line; what comes in off the line is what that port's "card"
-// says.  exch-network.md 1:
+// says.  network.md 1:
 //
 //     T's C_RX, A_RX  ------------------->  T's C_TX, A_TX   (the far end's)
 //     T's C_TX, A_TX  <-------------------  T's C_RX, A_RX
 //
 // To the fabric it is a card like any other, and it decides nothing.  A call
-// across it is the hotline rule of exch-fabric.md 3.5 running through the pair
+// across it is the hotline rule of fabric.md 3.5 running through the pair
 // untouched: the far line rings because its port sees E, and the caller hears
 // ringback because the far port substitutes RBT into its own highway cell.
 //
@@ -134,7 +134,7 @@ module mf8_trunk_card #(
             assign port_a_tx[g]  = mute ? 1'b0 : a_filt[g];
             // One '165 sends one word to all six channels, and sends none while
             // the link is down -- so a dead trunk reads unequipped and is never
-            // hunted (exch-network.md 1).
+            // hunted (network.md 1).
             assign port_word[g]  = mute ? 1'b0 : wsr[0];
         end
     end endgenerate
