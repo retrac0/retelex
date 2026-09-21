@@ -242,9 +242,9 @@ plain line.
 | E&M, facing a station | **grounded**, or a '165 if it answers to a number | **open** | E rings it |
 | E&M, facing a PBX | **'165**, class 100 | **tied low** | a tie to a foreign switch is an outside line, not a network trunk: it carries no direction word and takes no part in the flood |
 
-A card that needs both a class and an *answers to* number cannot say both in
-one word; that combination is not offered (`ex-groups.md`: secondary word
-retired). Use a plain cover member, or the `o` run.
+A card that needs both a class (e.g. *restricted*) and an *answers to* number
+cannot say both in one word; that combination is not offered (`ex-groups.md`:
+secondary word retired). Use a plain cover member, or the `o` run.
 
 **Cost of the decision.** The data card goes from 4 packages to 5¼ and is no
 longer the cheapest card in the shelf (`channel-cards.md` §4.4); the FXO population

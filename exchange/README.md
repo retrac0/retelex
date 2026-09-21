@@ -49,7 +49,7 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-rtl.md](exch-rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
 | [docs/exch-basebandcard.md](exch-basebandcard.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
 | [docs/exch-monitor.md](exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
-| [docs/ex-extensions.md](ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class, its options (restricted lines, hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
+| [docs/ex-extensions.md](ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted*), its options (hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
 | [docs/ex-groups.md](ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, a bank of call-in lines and a meet-me **conference bridge** are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and extensions-on-a-bridge are **retired** |
 | [docs/ex-observers.md](ex-observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
 | [docs/ex-traffic.md](ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
@@ -176,10 +176,11 @@ is filtered at every block.
 Proposed: **whatever sits behind a port says everything about it**
 (`ex-extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
 rings. One serial word, which the marker's scanner reads at every visit, carries
-the class and its options: a trunk's direction, a restricted line, a hunt group,
-a warm line, or the port it is nailed to. A plain line card says all of it with
-no part, its word pin tied to ground. The earlier class on three pins is gone,
-and with it three commutators a block. Every circuit is still to draw. Nothing has been on a bench.
+the class and its options: a trunk's direction, a hunt group, a warm line, or
+the port it is nailed to; class *restricted* is its own code. A plain line card
+says all of it with no part, its word pin tied to ground. The earlier class on
+three pins is gone, and with it three commutators a block. Every circuit is
+still to draw. Nothing has been on a bench.
 
 Proposed: **a port answers to a number** (`ex-groups.md`). A call that cannot be
 completed at the number dialled is offered to the first free port that says it

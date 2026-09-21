@@ -26,8 +26,9 @@ Every port says what it is in a **word**: eight bits that whatever sits behind
 it sends, one a frame, on one pin (`ex-extensions.md` §2.2). A card sends it for
 its one port, and a trunk card for each of its six channels (`exch-network.md`
 §1). The word carries a 3-bit class and four options that depend on the class: a
-trunk's direction, a restricted line, a hunt group. Or it names the port this one
-is nailed to. **A plain line card ties the pin to ground**, which reads all ones
+trunk's direction, a hunt group, a warm line. Or it names the port this one
+is nailed to. **Class *restricted*** is its own code (`exch-fabric.md` §3.5), not
+an option. **A plain line card ties the pin to ground**, which reads all ones
 and means a line with no options. The marker's probe reads the word at every
 visit, beside the port's M and its `BUSY` (§4). **Nothing on the marker says
 where anything is**: move a card and its role moves with it. Whether a port rings
@@ -43,16 +44,18 @@ is not the marker's business: the card says it to the port's own gates on a pin,
 | 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`ex-extensions.md` §2.2), and an MF8 trunk card sends one word to all six channels | the network card (`exch-network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
 | 5 | dial tone | the marker, on seizure | always: a source, one latch write |
 | 6 | cannot-complete: busy / error tone, or a looping announcement | the marker, whenever it cannot complete | always |
-| 7 | spare. (Trunk direction B held it until the direction moved onto the trunk card; registers held it while they were lines. All-pulse registers read the M highway through a probe and take no port — §4) | — | — |
+| 7 | spare in this older map. Under `exch-fabric.md` §3.5, code **111** is *restricted* | — | — |
 
 **Proposed, not applied here or in the model:** the codes renumbered
-(`exch-fabric.md` §3.5), with *source* and *data line*. *Source* is anything
-that talks and never listens: the two tones, reached by address rather than
-hunted, and a radio or a clock that anyone may dial (`exch-features.md` §6).
-*Data line* is a line the marker will not connect to a voice port. A conference
-bridge leg is an ordinary line (`exch-features.md` §7.4); class *conference* is
-retired. A line's options are restricted, overflow (a hunt group) and warm line
-(`ex-extensions.md` §2.4).
+(`exch-fabric.md` §3.5), with *source*, *data line* and *restricted*. *Source* is
+anything that talks and never listens: the two tones, reached by address rather
+than hunted, and a radio or a clock that anyone may dial (`exch-features.md`
+§6). *Data line* is a line the marker will not connect to a voice port. A
+conference bridge leg is an ordinary line (`exch-features.md` §7.4); class
+*conference* is retired. *Restricted* (`111`) is a lobby or public phone: 9 and
+(networked) 1 give cannot-complete (`ex-extensions.md` §2.4). A line's options
+are overflow (a hunt group), warm line, and **busy-out** (`b`: terminating
+calls see not-free / busy tone; outbound unchanged); one bit is spare.
 
 **Proposed further** (`ex-groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
@@ -71,9 +74,10 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
                    standalone: highway 1; wait for s — 10–17 are ordinary lines
              8 * # class 6
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
-             itself → class 6               not free, its overflow bit set → try the next port
-             not free → class 6             else → connect
- caller      restricted: 9 and (networked) 1 → class 6                        (ex-extensions.md §2.4)
+             itself → class 6               not free (BUSY or busy-out `b`), overflow set → try next
+             not free → class 6 (busy tone) else → connect
+ caller      class restricted: 9 and (networked) 1 → class 6                 (ex-extensions.md §2.4)
+             busy-out `b` does not block a call request
 ```
 
 Whether `1` is the flood or highway 1 is the network strap: network card fitted,

@@ -122,13 +122,13 @@ visit (`exch-marker.md` §4). The pin is low for a 1.
 | class `c c c` | | options `p p p p` |
 |---|---|---|
 | 000 | unequipped | |
-| 001 | line | `r o w ·`: restricted, overflow, warm line (§2.4) |
+| 001 | line | `o w b ·`: overflow, warm line, busy-out (§2.4) |
 | 010 | operator | `· o · ·` |
 | 011 | source: a radio, a clock, a test tone (`exch-features.md` §6) | |
 | 100 | outside line | |
 | 101 | tie trunk | `d d g n`: its direction, N 00, E 01, S 10, W 11; the glare bit; and `n`, which keeps a flood from being forwarded into this link or out of it, so that a ring does not circle (`exch-network.md` §1, §3.3) |
-| 110 | data line | `r o · ·` |
-| 111 | spare | **retired:** was *conference leg*; a bridge leg is class line with `/ANS` low (`exch-features.md` §7.4) |
+| 110 | data line | `o · · ·` |
+| 111 | restricted | a lobby or public phone (§2.4). Options as a line: `o w b ·`. Was *conference leg* |
 
 - **A plain line card carries no part and no jumper for this.** Its word pin is
   tied to ground, which reads all ones, and that means a line with no options.
@@ -136,8 +136,8 @@ visit (`exch-marker.md` §4). The pin is low for a 1.
   carries the word's parts.
 - **The word's parts**: a 74HC165 loaded from jumpers on `TX_OCT` and shifted on
   `TX_CLK`, into ¼ 74HC03: **≈ 1¼ packages**. A line card has the footprint, and
-  it is fitted when the card is to be an operator's position, restricted, in a
-  hunt group, a warm line or nailed.
+  it is fitted when the card is to be an operator's position, restricted (class
+  111), in a hunt group, a warm line, busy-out, or nailed.
 - **Held off at power-up.** The '03's second input is an RC of about 100 ms. A
   card just plugged in sends nothing until its '165 is loading properly. Without
   this a random byte reads as a nail one time in four. A trunk card also gates
@@ -191,16 +191,33 @@ the pin must agree** on a card that is not a line. A purpose-built card has both
 on the board. Only a subscriber terminal's channels set them by jumper
 (`exch-terminal.md` §3).
 
-### 2.4 Options of a line
+### 2.4 Options of a line, and class *restricted*
 
-Three of the option bits of a line's word, read only by the marker. None needs a part anywhere
-but the card's word and a term in a test the marker already makes.
+Three of the option bits of a **line**'s word (`001`), and of a **restricted**
+port (`111`), are read only by the marker. None needs a part anywhere but the
+card's word and a term in a test the marker already makes.
 
 | bit | | the marker |
 |---|---|---|
-| `r` | **restricted**: a lobby phone, a public phone | the bit goes into the register with the caller's port number. 9 and 1 give cannot-complete, so it reaches its own exchange's lines and operator and nothing else. No flood is opened |
 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`exch-features.md` §7.4). Slot order is priority, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow |
 | `w` | **warm line**: a courtesy phone, a lift's phone, a help point | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`exch-marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
+| `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`ex-console.md` §4): this mark is in the word and survives hang-up |
+| `·` | **spare** | one bit free on class line and on class restricted |
+
+**Why busy, not cannot-complete.** Cannot-complete (fast busy / reorder) means the
+number cannot be completed — empty slot, wrong digit, restricted dialling.
+Busy-out means “this phone is not taking calls,” which is what a busy line
+already says, and it is what a hunt group needs so a member can leave the group
+without ending the run. Distinctive DND tone would be a second source and a
+second marker steer; not worth it.
+
+**Class *restricted* (`111`)** is a lobby phone or a public phone: the same free
+test and ringing as a line, but the marker tests the **caller's class** when the
+digits are in. **9** and (networked) **1** give cannot-complete, so it reaches
+its own exchange's lines and operator and nothing else. No flood is opened. The
+restriction is unsafe to miss, so it is a class and not an option — a jumper the
+user cannot clear. Conference bridge legs remain class *line* with `/ANS` low
+(`exch-features.md` §7.4).
 
 A data line (class 110) is a line the marker will not connect to a voice port,
 and the reverse: the mismatch `channel-cards.md` §1 warns is "loud, locked, not
@@ -381,7 +398,7 @@ hundred call-seconds, comes from.
 | test lines | a tone card; a card with only its word; a 74HC74 | line slots |
 | the word and `/ANS` | nothing on a plain line card; ≈ 1¼ on any other; two pull-ups a port; ≈ 3 at the marker | the cards, the block, the marker |
 | lines that answer at once | `/ANS` tied low on the card | the card |
-| restricted lines, hunt groups, warm lines | the card's word; a bit in each register; terms in the marker's tests | the cards, the marker |
+| restricted lines, hunt groups, warm lines, busy-out | class *restricted*, or the line options; terms in the marker's tests | the cards, the marker |
 | nailed-up connections | the card's word | the cards |
 | nailed hop by hop | a word of its own on each trunk card channel that may be nailed | trunk cards |
 | hotlines to another exchange | ≈ 8 on each hotline card | the card |
@@ -404,8 +421,10 @@ network.
   in the scanned port's cell, the all-ones detector, the power-up hold-off, and
   a plain card's ground link against a fault that reads the same.
 - **`/ANS` alone forming `ON`**, drawn.
-- **The line options in the marker**: the restricted bit through the register,
-  the overflow hunt, and a warm line's lift against the call-request rule.
+- **The line options in the marker**: class *restricted* on the caller (9 and
+  networked 1 → cannot-complete), the overflow hunt, a warm line's lift against
+  the call-request rule, and busy-out `b` (terminating not-free / busy; outbound
+  still a call request).
 - **The nail rule**: its place ahead of the call-request rule, and the 8 ms after
   a release in which a nailed port is idle.
 - **A nail now needs the scanner after every release.** With the marker stopped,

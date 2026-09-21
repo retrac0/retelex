@@ -11,8 +11,9 @@ the trunk hunt is really a different one.
 
 This document proposes one rule for everything but the trunks: **a port may say
 that it answers to a number** — in the **one** word on `a12`. A conference
-bridge is then a group of ordinary lines. Class *conference* (111), the
-secondary word on `a14`, and the fifth `'151` / `PB2` path are **retired**.
+bridge is then a group of ordinary lines. Class *conference* is **retired**
+(code `111` is now *restricted*); the secondary word on `a14` and the fifth
+`'151` / `PB2` path are **retired** as well.
 
 The short answers, before the detail:
 
@@ -73,7 +74,7 @@ the run should become a comparison, and the question is what to compare.
 
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
-in the word. A line's options have one bit spare (`ex-extensions.md` §2.2).
+in the word. A line's options have one bit spare (`ex-extensions.md` §2.4).
 Spending all four of a class's option bits gives sixteen groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one
 people dial. That is the tight encoding. §2 is the loose one, and it needs no
@@ -202,13 +203,14 @@ the hunt is in use for under three seconds of the hour.
 
 ## 3–4. Set aside: the secondary word
 
-> **Retired with class 111.** A second `'165` on `a14`, a fifth `'151` onto
-> `PB2`, and the trade of what goes in which byte, lived here so a port could
-> carry class/options *and* an *answers to* / *lifts to* number. Conference legs
-> were the main customer; they no longer need it. Without that path: restricted
-> or data members of a group stay on the `o` run or use a plain cover phone;
-> *lifts to* any number other than 04 is not offered (`w` remains lifts-to-04);
-> one phone covers one number, not two. Pin `a14` is spare again.
+> **Retired with the conference / secondary-word path.** A second `'165` on
+> `a14`, a fifth `'151` onto `PB2`, and the trade of what goes in which byte,
+> lived here so a port could carry class/options *and* an *answers to* /
+> *lifts to* number. Conference legs were the main customer; they no longer
+> need it. Without that path: a restricted phone (class `111`) cannot also
+> *answer to* a number in the same word — use a plain cover member or the `o`
+> run; *lifts to* any number other than 04 is not offered (`w` remains
+> lifts-to-04); one phone covers one number, not two. Pin `a14` is spare again.
 
 ---
 
@@ -242,12 +244,13 @@ last, its number its first leg's. **Its legs answer to its number instead.**
 
 ## 6. Set aside: a group with a bridge in it
 
-> **Retired with class 111.** Extension phones that all ring through a bridge,
-> ring-out, `DATA2`, and a marker pass that distinguished *leg* from *phone* by
-> class, lived here. Without a conference class the marker cannot tell a leg
-> from a cover phone that answers to the same number. Meet-me (§5) and ordinary
-> hunt groups (§2) remain. Re-open only with a way to mark a leg that is not
-> class 111 — layout, a pin, or another word form.
+> **Retired with the conference-leg class.** Extension phones that all ring
+> through a bridge, ring-out, `DATA2`, and a marker pass that distinguished
+> *leg* from *phone* by class, lived here. Without a conference class the
+> marker cannot tell a leg from a cover phone that answers to the same number.
+> Meet-me (§5) and ordinary hunt groups (§2) remain. Re-open only with a way to
+> mark a leg that is not a class — layout, a pin, or another word form.
+> (Code `111` is now *restricted*, not spare.)
 
 ---
 
@@ -266,12 +269,12 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 
 | where | what |
 |---|---|
-| `ex-extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class 111 spare; **a14 stays spare** |
-| `exch-marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class |
+| `ex-extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class *restricted* at 111; **a14 stays spare** |
+| `exch-marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
 | `exch-features.md` §4, §7.1, §7.3–§7.4 | the operator; the party bus; what the strap carries; legs as ordinary lines |
-| `exch-fabric.md` §3.5 | class 111 spare |
+| `exch-fabric.md` §3.5 | class 111 *restricted* |
 | `exch-protocol.md` §5, `exch-network.md` §2–3 | 0 and 8 as numbers; nothing of the hunt itself |
-| `mvp-ex.md`, `exch-rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no class 111; no `PB2` |
+| `mvp-ex.md`, `exch-rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no conference class; no `PB2` |
 
 ---
 

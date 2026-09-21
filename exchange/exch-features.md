@@ -10,8 +10,8 @@ switched here is CVSD.
 > **Status: proposed.** Measured in simulation: every card's *behaviour as a
 > port* (`exch.py calls`), the announcement's bit stream and seams
 > (`exch.py announce`), and the conference bridge's speech detector, floor and
-> switch (`exch.py confer`); `exch.log` is the run. *Source* and *data line*
-> (§6, §8) are proposed class codes in `exch-fabric.md` §3.5, not yet in
+> switch (`exch.py confer`); `exch.log` is the run. *Source*, *data line* and
+> *restricted* are proposed class codes in `exch-fabric.md` §3.5, not yet in
 > `exch-marker.md` or the `calls` model. Class *conference* is **retired**: a
 > leg is a line (§7.4). None of the cards has a circuit yet, and nothing has
 > been on a bench.
@@ -366,11 +366,11 @@ another dialable block spent, and four bridges.
 
 ### 7.4 The marker's part
 
-> **Class *conference* (111) is retired.** A leg is an ordinary line: `/ANS`
-> low, `A_TX` = `A_RX`, no special class in the word. The marker reaches a
-> bridge by number like any hunt group — by the `o` run below, or by *answers
-> to* (`ex-groups.md` §5) with no secondary word and no fifth `'151` — both
-> retired with class *conference*.
+> **Class *conference* is retired** (its former code `111` is now *restricted*).
+> A leg is an ordinary line: `/ANS` low, `A_TX` = `A_RX`, no special class in the
+> word. The marker reaches a bridge by number like any hunt group — by the `o`
+> run below, or by *answers to* (`ex-groups.md` §5) with no secondary word and
+> no fifth `'151` — both retired with class *conference*.
 
 - **`/ANS` tied low** on the leg, so that it does not ring: E reaches the leg
   steadily, not in the ring cadence, and the caller hears no ringback. A leg
