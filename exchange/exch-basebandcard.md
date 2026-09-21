@@ -69,7 +69,7 @@ socket.
 
 | | signals | how many |
 |---|---|---|
-| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the word, `/ANS`, and the secondary word (`ex-groups.md` §3.3, added since) | **7 a slot, 56 a block** |
+| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the word, `/ANS` (`a14` spare) | **6 a slot, 48 a block** |
 | **common to all eight** | `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` | 7 |
 | **rails** | `+5 V`, `GND`, `±12 V`, `−48 V` and its return, `RING` and its return | |
 
@@ -101,8 +101,8 @@ carries:
 - a7 `RX_CLK` **is** `TX_CLK` in an exchange (`exch-fabric.md` §3.4)
 - a11 `MUTE` is **tied to "locked"** at every socket, because a block has no link
 
-One change since: a14, which §2.3 below still treats as the one spare, carries
-the secondary word of `ex-groups.md` §3.3. This card leaves it open.
+Pin `a14` is spare. A secondary word on it (`ex-groups.md`) is retired; this
+card leaves it open.
 
 The pull-ups on a12, a13 and a14 are at the port, not on the card
 (`exch-fabric.md` §3.5). **What this card does with each pin is §3.5.**
@@ -130,9 +130,9 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
   seven control signals and not in any pin list. A card that drives it needs a
   pin **and** a path back to the marker, which is a third
   `PB` line — the probe bus carries `BUSY` and the word and nothing else today.
-  Nothing in `verilog` drives it. **a14 was the one spare and is now the secondary
-  word** (`common-cards.md` §1), so it has no pin left either. It is a loose end
-  this document can only name, and it has got shorter of room since.
+  Nothing in `verilog` drives it. **a14 is spare** (the secondary word is
+  retired), so `/HUNT_INH` could use it if built from a channel slot
+  (`common-cards.md` §1). It is a loose end this document can only name.
 - **The trunk socket is a different socket.** An MF8 trunk card is six ports in
   one (`ex-extensions.md` §2.1) and needs 6 × `C_RX`, 6 × `A_RX` in and
   6 × `C_TX`, 6 × `A_TX`, 6 words, 6 `/ANS` out, plus `HCLK`, `HB` and
@@ -233,7 +233,7 @@ rail**, which is the lightest load on the socket of anything in the set.
 | a11 | `MUTE` | — | tied to "locked" at every socket in a block, and real only in an MF8 shelf. This card's link-down detector is its own, on a12 |
 | a12 | the word | **out**, o.d. | `0 101 d d g n` from the '165 on four jumpers: class trunk, its direction, its glare bit, its NO-FORWARD bit. Held off at power-up by the RC of `ex-extensions.md` §2.2, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
 | a13 | `/ANS` | **out** | tied low on the board. No part |
-| a14 | secondary word | — | open. A trunk answers to a direction and not to a number |
+| a14 | spare | — | open |
 | a16, c2, c4, c6, c8, c11, c14, c16 | `GND` | in | |
 | c1, c3 | `+5 V` | in | **the only rail.** No `±12 V`, no `−48 V`, no `RING`, nothing above 5 V anywhere on the card |
 
@@ -307,12 +307,13 @@ so **moving the card moves all of it**:
   no monitor can never *own* a call arriving on that trunk. It still passes the
   flood on; it just cannot be the exchange the call is for. **Fitting this card
   in a block of lines silently changes what that block needs.**
-- **A dialable number.** Trunk groups live at 01–03, 05–07, 11–13, 15–17, which
-  are never dialled because 0 and 1 are first keys (`exch-protocol.md` §5). A
-  single-channel card in a line slot has a number a subscriber can dial. What the
-  marker does when a dialled port's class is trunk is not written down in
-  `exch-marker.md` and is not in the `calls` model. It should be cannot-complete.
-  **Unsettled, and a reason to prefer a low slot where one is free.**
+- **A dialable number.** MF8 trunk groups live at 11–13, 15–17 and further in
+  blocks 2+, never dialled on a networked exchange because 1 is the flood key
+  (`exch-protocol.md` §5). A single-channel card in a line slot has a number a
+  subscriber can dial. What the marker does when a dialled port's class is trunk
+  is not written down in `exch-marker.md` and is not in the `calls` model. It
+  should be cannot-complete. **Unsettled, and a reason to prefer an undialable
+  seat — 06–07 in the operator bank are free of that.**
 - **The `n` bit is per link, and this card is exactly one link** — so the
   NO-FORWARD strap of `exch-network.md` §3.3, which must be set at both ends of
   one link, is one jumper on one card here, where on an MF8 card it is six

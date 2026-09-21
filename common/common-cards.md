@@ -56,7 +56,7 @@ Row *a* signals, row *c* power and returns. **The direction is the card's view**
 | 11 | `MUTE` | in | asserted when not locked | **tied to "locked"**: a block has no link | `GND` |
 | 12 | `TYPE0` — **the word** (§2) | **out**, o.d. | not connected | read by the marker's scanner | `RING` (FXS slots only, strapped) |
 | 13 | `TYPE1` — **`/ANS`** (§2) | **out**, o.d. | not connected | read by the port's own gates | `RING RET` |
-| 14 | `RAI` — the secondary word (`ex-groups.md` §3.3) | **out**, o.d. | not connected | a pull-up at the port; optional | `GND` |
+| 14 | `RAI` — spare | **out**, o.d. | not connected | a pull-up at the port; unused | `GND` |
 | 15 | key | | | | key |
 | 16 | `GND` | | | | `GND` |
 
@@ -77,9 +77,9 @@ mid-insertion, or held off by its power-up RC (§2) — which an output that dri
 high cannot do. It is also what lets the same pin be a tied-to-ground constant
 on a plain line card and a shifted byte on the card beside it.
 
-**The per-slot count is seven, not six.** `exch-basebandcard.md` §2.1 counted six
-a slot and 48 a block, which was right before a14 carried the secondary word:
-**7 a slot, 56 a block.** The clocks and the rails are still the only common
+**The per-slot count is six.** `C_TX`, `A_TX`, `C_RX`, `A_RX`, the word, `/ANS`
+— **6 a slot, 48 a block.** Pin `a14` is spare (a secondary word on it is
+retired with `ex-groups.md`). The clocks and the rails are the only common
 lines, and the property that matters is unchanged.
 
 ### 1.3 What each card does with each pin
@@ -102,9 +102,9 @@ is fitted; — = no connection on the card.
 | a9 | `C_RX[n]` | ● | ● | ● | ● | ● | **—** | ● |
 | a10 | `A_RX[n]` | ● | ● | ● | ● | ● | — | ● |
 | a11 | `MUTE` | ● | — | — | ● | — | — | — |
-| a12 | the word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 10 and 14 | '165 |
+| a12 | the word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 01–03 | '165 |
 | a13 | `/ANS` | open | open | low | low | open or low | low | low |
-| a14 | secondary word | ○ | ○ | ○ | ○ | ○ | ○ | — |
+| a14 | spare | ○ | ○ | ○ | ○ | ○ | ○ | — |
 | c5, c7 | `±12 V` | — | ● | ● | — | ● | ● | — |
 | c9, c10 | `−48 V` | ● | ● | — | — | — | — | — |
 | c12 | `RING` | — | ● | — | — | — | — | — |
@@ -140,7 +140,7 @@ Five things the matrix shows that no card's own document can:
   all have to hear something. It also explains a10 and a11 in that column —
   nothing rings it, nothing answers it, and an outage it cannot hear is an
   outage it need not handle. In a channel slot it is one port of class
-  *source*; at ports 10 and 14 the marker reaches it by address and it needs
+  *source*; at ports 01–03 the marker reaches it by address and it needs
   no word at all (`ex-extensions.md` §2.2).
 - **a12 and a13 are where portability was broken** and §2 is the repair; the
   matrix is that section's answer in one column each.
@@ -156,8 +156,9 @@ Five things the matrix shows that no card's own document can:
   to the clock card that is not on this connector, or the bit-exact synchronous
   case is not available from a channel slot. **Open.**
 - **`/HUNT_INH`.** Specified in `exch-marker.md` §4 and `exch-network.md` §3.2,
-  in no signal list, driven by nothing in `verilog`. a14 was the one spare and is
-  now the secondary word, so it has no pin at all (§9).
+  in no signal list, driven by nothing in `verilog`. a14 is spare again (the
+  secondary word is retired), so it could take this pin if `/HUNT_INH` is ever
+  built from a channel slot (§9).
 - **The line.** Rows *a* and *c* are fully committed; the subscriber pair, the
   E&M leads and the baseband card's four conductors leave by §7.3's rear
   connector.
@@ -241,9 +242,9 @@ plain line.
 | E&M, facing a station | **grounded**, or a '165 if it answers to a number | **open** | E rings it |
 | E&M, facing a PBX | **'165**, class 100 | **tied low** | a tie to a foreign switch is an outside line, not a network trunk: it carries no direction word and takes no part in the flood |
 
-A card that wants a number as well as a class says it on a14, the secondary word
-(`ex-groups.md` §3.3) — a second '165 into a second gate of the same '03. a14 is
-unconnected in an MF8 shelf too, so that is portable by the same argument.
+A card that needs both a class and an *answers to* number cannot say both in
+one word; that combination is not offered (`ex-groups.md`: secondary word
+retired). Use a plain cover member, or the `o` run.
 
 **Cost of the decision.** The data card goes from 4 packages to 5¼ and is no
 longer the cheapest card in the shelf (`channel-cards.md` §4.4); the FXO population
@@ -492,7 +493,8 @@ conductors at all and the wiring field can be re-punched without touching it.
   and what the other three's decoders do through an outage has not been
   listened to.
 - **`/HUNT_INH`**, still specified in three documents, present in no signal list
-  and driven by nothing (`exch-basebandcard.md` §2.3). a14 is now the secondary
-  word, so if `/HUNT_INH` is ever built it needs a different pin.
+  and driven by nothing (`exch-basebandcard.md` §2.3). a14 is spare again (the
+  secondary word retired), so it is available if `/HUNT_INH` is ever built from
+  a channel slot.
 - **A dialled port whose class is trunk or outside line**, which
   `exch-marker.md` does not cover and the `calls` model does not have.

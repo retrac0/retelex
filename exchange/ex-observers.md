@@ -51,9 +51,9 @@ the panel's silkscreen, already laid out:
 
 ```
         s=0    1      2      3      4      5      6      7
-  h=0   idle  trunk  trunk  trunk  OPER   trunk  trunk  trunk     block 0: a tie trunk group, 01-03 05-07
-    1   DT    trunk  trunk  trunk  NOGO   trunk  trunk  trunk     block 1: the two tones, a second group
-    2   20     21     22     23     24     25     26     27       blocks 2-7: 48 lines
+  h=0   idle  DT     busy   NOGO   OPER   night  (line) (line)   block 0: tones 01-03, bank 04-07
+    1   .     trunk  trunk  trunk  .      trunk  trunk  trunk     block 1: first MF8 group when networked
+    2   20     21     22     23     24     25     26     27       blocks 2-7: lines (or more trunks)
    ...
     7   70     71     72     73     74     75     76     77
 ```
@@ -108,7 +108,7 @@ is saying about itself, 64 000 times a second:
 | an FXO card, the exchange build (`exch-features.md` §5) | ringing present, held 5 s across the cadence gap, OR the loop closed: an incoming CO call lights it *steadily* |
 | a tie trunk channel | **what the far end is sending on A** — not a hook here at all. §4 |
 | a tone, a radio, an announcement before it answers, a sink card | `A_TX` tied low: **dark for ever, and working perfectly** |
-| a conference leg | `A_TX` = `A_RX`: the leg mirrors its own caller |
+| a conference bridge leg | `A_TX` = `A_RX`: the leg mirrors its own caller |
 | an empty slot, an unfitted block | pulled to ground: dark |
 
 **`/CLR` is tied high and not to `/RESET`.** A reset clears every latch in the
@@ -207,8 +207,8 @@ on the panel per port would want eight '164, one a column, and 192 more lamps,
 to display something that changes only when somebody changes a card.
 
 So: **the class is the silkscreen and the watch.** The port map is printed round
-the grid (§1), which labels every fixed address — 00 idle, 04 the operator, 10
-dial tone, 14 cannot-complete, the two trunk groups — and §5's card reads the
+the grid (§1), which labels every fixed address — 00 idle, 01–03 the tones, 04
+the operator bank, the first trunk group on block 1 when networked — and §5's card reads the
 live class of any one port on demand. What the field gives instead is each
 class's **signature**, which is more useful than its name:
 
@@ -220,7 +220,7 @@ class's **signature**, which is more useful than its name:
 | **tie trunk** (4) | busy alone for the length of a flood, then hook if it claimed. §4.4 |
 | **tone, source** (5, 6) | **both dark always.** Working and idle look identical, and a pulled tone card looks the same again (`exch-marker.md` §3: the next class-5 port serves, and with none the call still completes in silence) |
 | **announcement** | dark, then hook 300 ms after it is rung, then dark |
-| **conference leg** | the leg's hook is its caller's hook, one lamp a leg |
+| **conference bridge leg** | the leg's hook is its caller's hook, one lamp a leg |
 | **unequipped** (0) | both dark |
 
 ### 4.4 A flood is visible, and nothing else makes it visible

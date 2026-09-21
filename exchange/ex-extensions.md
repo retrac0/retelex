@@ -58,7 +58,7 @@ frame there and one frame back.
   offset: the count a second, divided by two crossings and by 64 000, is the
   offset between the two crystals.
 
-The loopback copies `A_RX` to `A_TX`, as a conference leg does, so it answers
+The loopback copies `A_RX` to `A_TX`, as a conference bridge leg does, so it answers
 when rung and releases when its caller does. As a line, it waits for the first
 burst of the ring cadence, up to 4 s. §2.3 removes the wait. The two sources are
 never rung and never answer: a caller hears them at once, any number may listen,
@@ -79,8 +79,7 @@ per-port settings, so **move a card and all of it moves with the card.**
 > bit 0 and bit 7 both set, becomes *a plain line that answers to `h s`*, and a
 > call that cannot be completed at the number dialled hunts for a port that
 > answers to it. That replaces §2.4's run of adjacent `o` ports and class
-> *operator*. Pin a14 carries an optional secondary word, a number on a port
-> that already has a class, and `w` becomes the primary's case of *lifts to*.
+> *operator*. Pin `a14` stays spare; a secondary word is retired.
 
 ### 2.1 The pins
 
@@ -129,7 +128,7 @@ visit (`exch-marker.md` §4). The pin is low for a 1.
 | 100 | outside line | |
 | 101 | tie trunk | `d d g n`: its direction, N 00, E 01, S 10, W 11; the glare bit; and `n`, which keeps a flood from being forwarded into this link or out of it, so that a ring does not circle (`exch-network.md` §1, §3.3) |
 | 110 | data line | `r o · ·` |
-| 111 | conference leg | `· o · ·` |
+| 111 | spare | **retired:** was *conference leg*; a bridge leg is class line with `/ANS` low (`exch-features.md` §7.4) |
 
 - **A plain line card carries no part and no jumper for this.** Its word pin is
   tied to ground, which reads all ones, and that means a line with no options.
@@ -149,7 +148,7 @@ visit (`exch-marker.md` §4). The pin is low for a 1.
   ground link opened on a plain card. The port reads unequipped. A call to it
   gets cannot-complete and its lifting is ignored. On a trunk card, a switch a
   channel takes one channel out of the hunt.
-- **The tone cards at 10 and 14 need no word.** The marker reaches them by
+- **The tone cards at 01–03 need no word.** The marker reaches them by
   address and never reads their class (`exch-fabric.md` §3.5).
 - **The block**: a fourth '151 commutates the eight word pins onto the probe bus
   beside `BUSY` (`exch-fabric.md` §2, §3.1). **The marker**: a 74HC164 takes the
@@ -178,7 +177,7 @@ open. Every card that must not be rung in cadence ties it low:
 
 | card | why |
 |---|---|
-| tie trunk, outside line, conference leg | a trunk that rang would give its caller ringback the instant it was seized, and chop forward A in the cadence. These cards tie it low on the board |
+| tie trunk, outside line, conference bridge leg | a trunk that rang would give its caller ringback the instant it was seized, and chop forward A in the cadence. These cards tie it low on the board |
 | the loopback test line (§1), a paging amplifier, a relay port | to answer, or act, at once and not 0–4 s later at the first ring burst |
 | the announcement at the end of the operator hunt | class operator, so that 0 finds it, and still it must answer at once |
 | a data card, if its `DSR` should follow `DTR` without the cadence | `DSR` at once |
@@ -396,9 +395,10 @@ network.
 ## 6. Not measured
 
 - **All of it in the `calls` model.** The loopback and the answer-at-once port
-  behave like the conference leg the model already has (`A_TX` = `A_RX`, a class
-  that does not ring). A nailed pair is bring-up step 3, which the model does
-  not run as a scenario, and the scanner's nail rule is not in it.
+  behave like the conference bridge leg the model already has (`A_TX` = `A_RX`,
+  no special class, and `/ANS` low so that it does not ring). A nailed pair is
+  bring-up step 3, which the model does not run as a scenario, and the scanner's
+  nail rule is not in it.
 - **The milliwatt's level** through the encoder half, and its ROM image's seam.
 - **The word as gates**: the '165's load against `TX_OCT`, the probe's capture
   in the scanned port's cell, the all-ones detector, the power-up hold-off, and

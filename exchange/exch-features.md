@@ -1,19 +1,20 @@
 # The exchange — features are lines
 
 Operator, outside line, tones, recorded announcements, a radio anyone may
-listen to, a conference: each is a card in a channel slot with a class mark,
-and the marker reaches it by hunting the class (`exch-marker.md` §3) or by its
-number. A conference is eight such cards and a block of their own (§7.3). This is
+listen to, a conference: each is a card in a channel slot, and the marker
+reaches it by hunting a class (`exch-marker.md` §3) or by its number. A
+conference is eight ordinary line cards and a block of their own (§7.3). This is
 how the Bell System built such things — as trunk circuits — except that what is
 switched here is CVSD.
 
 > **Status: proposed.** Measured in simulation: every card's *behaviour as a
 > port* (`exch.py calls`), the announcement's bit stream and seams
 > (`exch.py announce`), and the conference bridge's speech detector, floor and
-> switch (`exch.py confer`); `exch.log` is the run. Sources (§6) and the
-> conference bridge (§7) add two classes, which are **proposed with the class
-> codes of `exch-fabric.md` §3.5 and not yet in `exch-marker.md` or the `calls`
-> model**. None of the cards has a circuit yet, and nothing has been on a bench.
+> switch (`exch.py confer`); `exch.log` is the run. *Source* and *data line*
+> (§6, §8) are proposed class codes in `exch-fabric.md` §3.5, not yet in
+> `exch-marker.md` or the `calls` model. Class *conference* is **retired**: a
+> leg is a line (§7.4). None of the cards has a circuit yet, and nothing has
+> been on a bench.
 
 ---
 
@@ -43,24 +44,21 @@ with the clock card's shelf-wide references and is the one of them the clock car
 does not drive (`exch-mainboard.md` §2.1); with no ringback card fitted it sits
 at `FILL` and a caller hears silence while the far phone rings (`mvp-ex.md`).
 
-**Which port it sits at is free**, because nothing is ever switched to it: the
-tone reaches a caller through the called port's cell, not through a connection
-(`exch-marker.md` §5). A slot with no port circuit costs least; slot 0 or 4 of a
-block fitted as trunk group 2 or 3 — ports 20, 24, 30, 34 — costs nothing and is
-dialable as a test line (`tone-card.md` §5.1).
+**Which port ringback sits at is free**, because nothing is ever switched to it:
+the tone reaches a caller through the called port's cell, not through a
+connection (`exch-marker.md` §5). A slot with no port circuit costs least
+(`tone-card.md` §5.1). Dial tone, busy and cannot-complete are switched: the
+marker points the caller's latch at them.
 
-Dial tone is at port 10 and cannot-complete at 14 (`exch-protocol.md` §5). Both
-are in block 1.
-
-**Which tones, and a fourth.** `tone-plan.md` settles the frequencies and
-cadences, and proposes **busy at port 11** — free wherever block 1 is not a trunk
-group, never dialable because 1 is a first key — so that busy and
-cannot-complete differ in timbre as well as speed instead of sharing one tone.
-It is another *source* reached by address, not another class, and the marker
-already computes the free test that steers it. It also specifies the generator
-as a tolerance both an oscillator card and a ROM card meet, and measures why the
-cadence trick above **must not** be used at a warble rate: a square there costs
-23 dB and fifty spurious lines (`sim/tones.py warble`).
+**The three switched tones live at 01, 02 and 03** (`exch-protocol.md` §5) —
+dial, busy, cannot-complete — undialable because 0 is the operator key, and
+clear of every MF8 trunk group. `tone-plan.md` settles the frequencies and
+cadences. Busy and cannot-complete differ in timbre as well as speed; each is a
+*source* reached by address, not another class, and the marker already computes
+the free test that steers busy vs cannot-complete. The generator is a tolerance
+both an oscillator card and a ROM card meet; the cadence trick above **must not**
+be used at a warble rate: a square there costs 23 dB and fifty spurious lines
+(`sim/tones.py warble`).
 
 ---
 
@@ -107,17 +105,17 @@ not the 1 ms integrator's. Record the silence.
 ## 4. Operator (class 2) and the console
 
 **The operator is a phone at port 04**, on a line card whose word says operator
-(`ex-extensions.md` §2.2). 0 hunts class 2 in fixed order
-from 00, and 04 is the first class-2 port the hunt meets. So a second position
-and a night announcement are just more class-2 cards further along, in any of
-the line slots (`exch-marker.md` §3). The operator is not at 00 because a
-cleared latch listens there (`exch-protocol.md` §5).
+(`ex-extensions.md` §2.2). 0 hunts class 2 in fixed order from 00, and 04 is the
+first class-2 port the hunt meets. 05 is the nominal night announcement or
+backup; 06–07 take more operators or single-channel trunks
+(`exch-protocol.md` §5). Further positions may sit in any dialable line slot
+(`exch-marker.md` §3). The operator is not at 00 because a cleared latch
+listens there.
 
 **What port 04 is, exactly, is `ex-console.md` §8**: a plain line card with a
-phone on it, in the one slot of block 0 that a trunk group cannot take and a
-dial cannot reach. Nothing in the fabric or the marker knows the number — a hunt
-finds the position — so **04 is a default and not a requirement**, and §8.3 is
-the trade against giving that slot to `tone-plan.md`'s fourth tone instead.
+phone on it, first of block 0's four-line bank. Nothing in the fabric or the
+marker knows the number — a hunt finds the position — so **04 is a default and
+not a requirement**.
 
 **The console is separate, and optional**: a busy-lamp field — '259s and LEDs off
 the M and `BUSY` highways — and keys that drive the marker's control bus by
@@ -169,10 +167,10 @@ a tone:
 
 `exch-marker.md` §2 does exactly that for classes 5 and 6, so a radio whose word
 says class 6, at 75, is dialled as 75 today. What it lacks is a class of its own: at
-class 6 it would also be hunted as cannot-complete if the card at 14 were
+class 6 it would also be hunted as cannot-complete if the card at 03 were
 pulled. **Proposed: one class, *source*, for everything that talks and never
 listens, the two tones included.** The marker reaches dial tone and
-cannot-complete by their fixed addresses, 10 and 14, not by a hunt, so no source
+cannot-complete by their fixed addresses, 01 and 03, not by a hunt, so no source
 is ever hunted and the class means only "one write" (`exch-fabric.md` §3.5).
 
 | | |
@@ -200,8 +198,9 @@ bit streams.
 ### 7.1 How it works
 
 ```
- legs      eight cards in a conference block (§7.3), class conference, joined by the block's own ribbon:
-           the party bus.  Each is an ordinary port.  Its caller listens to it and it listens to its
+ legs      eight cards in a conference block (§7.3), ordinary lines with `/ANS`
+           low, joined by the block's own ribbon: the party bus.  Each is an
+           ordinary port.  Its caller listens to it and it listens to its
            caller: a two-way connection
  detector  on the caller's bits: runs of three equal bits, counted over a 16 ms window (TICK / 16).
            8 or more in a window = the caller SPOKE
@@ -367,16 +366,16 @@ another dialable block spent, and four bridges.
 
 ### 7.4 The marker's part
 
-> **Proposed, not applied here** (`ex-groups.md` §5–§6): a bridge's legs
-> *answer to* its number, so the run, its `o` bits and the marker's ≈ 2 packages
-> go. Phones that answer to a bridge's number become its extensions, which needs
-> the bridge to ring out and the second `DATA` line that §7.5 declined.
+> **Class *conference* (111) is retired.** A leg is an ordinary line: `/ANS`
+> low, `A_TX` = `A_RX`, no special class in the word. The marker reaches a
+> bridge by number like any hunt group — by the `o` run below, or by *answers
+> to* (`ex-groups.md` §5) with no secondary word and no fifth `'151` — both
+> retired with class *conference*.
 
-- **Class *conference*** (`exch-fabric.md` §3.5), in the leg's word, and **`/ANS`
-  tied low** on the leg, so that it does not ring: E reaches the leg steadily,
-  not in the ring cadence, and the caller hears no ringback. A leg that rang in
-  cadence would take up to 4 s to answer, with ringback in the caller's ear the
-  whole time.
+- **`/ANS` tied low** on the leg, so that it does not ring: E reaches the leg
+  steadily, not in the ring cadence, and the caller hears no ringback. A leg
+  that rang in cadence would take up to 4 s to answer, with ringback in the
+  caller's ear the whole time.
 - **A bridge is a hunt group: a run of adjacent legs on one segment of the party
   bus, and its number is its first leg's.** It is the hunt group of
   `ex-extensions.md` §2.4: every leg but the last sets the overflow bit of its
@@ -385,7 +384,8 @@ another dialable block spent, and four bridges.
   cannot-complete. **A conference block is two bridges of four or one of eight,
   by its strap** (§7.3), and an exchange may have more than one such block. **A
   run never crosses a block boundary**, because the party bus never leaves the
-  block.
+  block. Under `ex-groups.md` §5 the same bridge is legs that *answer to* its
+  number, and the run leaves the marker.
 - **A bridge is reached only by its number.** No key is special to it: 8 stays a
   spare first key, and gives cannot-complete.
 - **Across the network a bridge is dialled like any line**, `1 e b h s` from
@@ -454,9 +454,10 @@ and a DNVT card is two codecs back to back.
 - **The conference with real phones**: handset levels, room noise and echo from
   real hybrids, rather than the test set's talkers with added noise; and how
   people take to a half-duplex meeting.
-- **The two new classes in the marker.** Sources and conference legs are
-  proposed here and in `exch-fabric.md` §3.5. The `calls` model still has a
-  conference leg as a line and tones as classes 5 and 6.
+- **The two new classes in the marker.** *Source* and *data line* are proposed
+  here and in `exch-fabric.md` §3.5. Class *conference* is retired: a leg is a
+  line. The `calls` model still has a conference leg as a line and tones as
+  classes 5 and 6.
 - **A CO's ring cadence ANDed with `RING_CAD`** at the operator's phone: the phone
   rings only when both are on. Feed the operator's ring from E alone when the
   caller is class 3, or accept it.

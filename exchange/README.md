@@ -4,12 +4,15 @@ A telephone exchange in 74HC and a few tuned analog circuits, that grows eight
 ports at a time, takes every MF8 channel card unchanged, and is tied by MF8 both
 to other exchanges and to subscriber terminals. No processor, no memory part in
 the exchange logic. **An exchange is one 8 × 8 fabric — eight highways by eight
-slots, 64 ports**: 48 lines (20–77),
-an operator (04) and two groups of six tie trunks (01–03 and 05–07, 11–13 and
-15–17: each channel on the slot that is its bit position on the wire). A network
+slots, 64 ports**: standalone, fifty-six dialable lines (10–77) with block 0
+holding tones at 01–03 and a four-line bank at 04–07 (operator and kin);
+networked, forty-eight lines (20–77) and the first MF8 trunk group on block 1
+(11–13, 15–17), with further groups in blocks 2+ at the cost of those lines.
+A network
 is such exchanges in a chain, a ring, a star or a tree (an exchange faces up to
 four directions): a handful on a chain, a score around a tandem hub. A line is dialled `h s` from its own
-exchange and `1 e b h s` from anywhere: the key, the exchange's code (00–77,
+exchange and `1 e b h s` from anywhere when networked (standalone, 1 is a
+highway digit): the key, the exchange's code (00–77,
 sixty-four of them, with 00–17 kept for the backbone by convention) and the
 line. 8 and 9 stay special in the code.
 
@@ -47,7 +50,7 @@ line. 8 and 9 stay special in the code.
 | [docs/exch-basebandcard.md](exch-basebandcard.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, which is a star and not a bus: the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
 | [docs/exch-monitor.md](exch-monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
 | [docs/ex-extensions.md](ex-extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class, its options (restricted lines, hunt groups, warm lines, a trunk's direction) or the port it is nailed to; nailed-up connections brought up by the scanner, ringdown, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
-| [docs/ex-groups.md](ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number**, so a hunt group, a second operator's position, cover and a bank of call-in lines are jumpers on the members' cards, in any slots; a **secondary word** on the slot's last spare pin for the port that needs a class *and* a number, and the trade of what goes in which word; the conference bridge as a group, and **a group with a bridge in it**: extensions that ring together, where whoever answers is in and a phone lifted later joins, with nothing remembering the call |
+| [docs/ex-groups.md](ex-groups.md) | **proposed**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, a bank of call-in lines and a meet-me **conference bridge** are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and extensions-on-a-bridge are **retired** |
 | [docs/ex-observers.md](ex-observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a strapped match |
 | [docs/ex-traffic.md](ex-traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
 | [docs/ex-ss0.md](ex-ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
@@ -139,10 +142,12 @@ which is a timer (`exch-monitor.md` §3.5). A **fully connected core of hubs buy
 see a tree, so every link off it is a strap, and a strap carries its own two ends
 only.
 
-Decided: **the port map** (`exch-protocol.md` §5). A trunk's channels sit on
-slots 1–3 and 5–7, where they are on the wire. 00 is idle, and a cleared latch
-listens to it. 04 is the operator, 10 dial tone and 14 cannot-complete. The
-`calls` model agrees on idle at 00 and still puts tones and registers at 01–05.
+Decided: **the port map** (`exch-protocol.md` §5). 00 is idle, and a cleared
+latch listens to it. 01–03 are dial, busy and cannot-complete. 04–07 are a
+four-line bank (operator, night/backup, then more positions or single-channel
+trunks). MF8 trunk groups start at block 1 when networked; standalone frees
+digit 1 so 10–77 are fifty-six lines. The `calls` model still puts tones and
+registers on the older map — nothing it measures depends on those addresses.
 
 Decided, and written up as a proposal: **MF8 serves subscriber terminals as well
 as trunks**, depending on need (`exch-terminal.md`). A trunk block with its class
@@ -181,8 +186,6 @@ completed at the number dialled is offered to the first free port that says it
 answers to that number, which makes a hunt group, a second operator's position,
 cover and a bank of call-in lines out of jumpers on the members' cards, in any
 slots, and replaces both the run of adjacent `o` ports and class *operator*. The
-word's last unused form says it on a plain phone's card; a secondary word on the
-slot's last spare pin, a14, says it on a port that already has a class. A
-conference bridge becomes a group at no cost, and a group may hold a bridge:
-extensions that ring together and join, with nothing remembering the call.
-Nothing is measured.
+word's last unused form says it on a plain phone's card — one `'165`, no second
+byte. A conference bridge becomes a group the same way (class *conference* and
+the secondary word / fifth `'151` retired). Nothing is measured.

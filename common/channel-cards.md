@@ -157,7 +157,7 @@ in the set — and it is the only one that needs a2 and a4.**
 | a11 | `MUTE` | in | ORed into the `ON_HOOK` select, so an off-hook phone hears `1010` through an outage rather than the receiver's last latched bits (§2.3). **Two cards in the set read this pin and this is one** |
 | a12 | the word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The '165 footprint is on the board and unpopulated |
 | a13 | `/ANS` | — | **open.** The port rings in cadence and gives the caller ringback, which is what a telephone wants |
-| a14 | secondary word | ○ | open, unless the line answers to a number as well (`ex-groups.md` §3.3) |
+| a14 | spare | ○ | open |
 | c1, c3 | `+5 V` | in | all the logic |
 | c9, c10 | `−48 V`, `−48 RET` | in | **the phantom.** 48 V into the downstream centre tap through the card's own 100 mA PTC in series with the slot fuse, returned through the upstream centre tap; ≤ 40 mA to the phone (§2.1) |
 | c5, c7 | `±12 V` | — | there is no analog signal path on this card. The phone holds the codec |
@@ -328,7 +328,7 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 | a11 | `MUTE` | — | — | **not read, and arguably should be.** See below |
 | a12 | the word | GND | '165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 100, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
 | a13 | `/ANS` | open | low | **FXS:** open, and the phone rings in cadence. **FXO:** tied low — an outside line must never be rung, and must not give its caller ringback |
-| a14 | secondary word | ○ | ○ | open, unless the port answers to a number as well (`ex-groups.md` §3.3) |
+| a14 | spare | ○ | ○ | open |
 | c1, c3 | `+5 V` | ● | ● | the logic and the engine's digital half |
 | c5, c7 | `±12 V` | ● | ● | **the analog card's rails**: LM13700, TL074, TL072, LM311, the filters and the trims (§3.2, §3.3, §3.8) |
 | c9, c10 | `−48 V`, `−48 RET` | ● | — | the battery feed through the slot's 100 mA PTC, current-limited to 25–45 mA (§3.4). The FXO takes its battery from the CO |
