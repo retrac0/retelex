@@ -77,21 +77,22 @@ FABRIC -- the highway cell by cell: 8 slots x 64 kHz = 512 kbps a block, up to 8
   [fabric: 41 s]
 
 CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.
-  00 idle (never fitted), 01 dial tone, 02 cannot-complete tone, 03-05 registers; subscribers 20-77.
+  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04-07 operator bank;
+  registers are a pool (no ports); subscribers 20-77 (standalone may use 10-17).
   Release: M or E low for 256 ms (each port's two detectors +-20%), after 16 ms high.  Scanner: 8 ports a tick.
 
   1. A local call; the caller hangs up first, the called party stays off-hook and gets dial tone.
          0.000  20 hears silence, free
          0.000  21 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  20 hears silence
-         1.190  marker: 20 <-> 21
-         1.190  21 hears voice 20
-         1.191  20 hears ringback
-         1.191  21 hears voice 20, is being rung
-         4.190  20 hears voice 21
-         4.190  21 hears voice 20
+         0.939  20 hears silence
+         1.189  marker: 20 <-> 21
+         1.189  21 hears voice 20
+         1.190  20 hears ringback
+         1.190  21 hears voice 20, is being rung
+         4.189  20 hears voice 21
+         4.189  21 hears voice 20
          9.000  21 hears silence
          9.267  port 20 releases itself (M fell)
          9.267  20 hears silence, is being rung, free
@@ -99,9 +100,8 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          9.268  20 hears silence, free
          9.268  21 hears silence
          9.298  port 21 releases itself (E fell)
-         9.298  marker: register 03 -> 21, dial tone from 01
+         9.298  marker: register 0 -> 21, dial tone from 01
          9.298  21 hears dial tone
-        12.246  port 03 releases itself (E fell)
         12.266  port 21 releases itself (M fell)
         12.266  21 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 31 ms;  overheard another call 0 ms
@@ -109,15 +109,15 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   2. The called party hangs up first.
          0.000  20 hears silence, free
          0.000  21 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  20 hears silence
-         1.190  marker: 20 <-> 21
-         1.190  21 hears voice 20
-         1.191  20 hears ringback
-         1.191  21 hears voice 20, is being rung
-         3.690  20 hears voice 21
-         3.690  21 hears voice 20
+         0.939  20 hears silence
+         1.189  marker: 20 <-> 21
+         1.189  21 hears voice 20
+         1.190  20 hears ringback
+         1.190  21 hears voice 20, is being rung
+         3.689  20 hears voice 21
+         3.689  21 hears voice 20
          8.000  20 hears silence
          8.266  port 21 releases itself (M fell)
          8.266  20 hears ringback
@@ -126,29 +126,28 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          8.267  21 hears silence, free
          8.284  port 20 releases itself (E fell)
          8.284  20 hears silence, free
-         8.290  marker: register 03 -> 20, dial tone from 01
+         8.290  marker: register 0 -> 20, dial tone from 01
          8.290  20 hears dial tone
-        11.246  port 03 releases itself (E fell)
         11.267  port 20 releases itself (M fell)
         11.267  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 18 ms;  overheard another call 0 ms
 
   3. Busy: 22 calls 21 while 20 and 21 are talking.  Then 22 dials itself.
          0.000  22 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
-         1.190  marker: 20 <-> 21
-         4.002  marker: register 03 -> 22, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
+         1.189  marker: 20 <-> 21
+         4.002  marker: register 0 -> 22, dial tone from 01
          4.002  22 hears dial tone
-         4.840  22 hears silence
-         5.090  marker: 22 -> cannot-complete (21 busy)
-         5.090  22 hears cannot-complete tone
+         4.839  22 hears silence
+         5.089  marker: 22 -> busy (21 busy)
+         5.089  22 hears busy tone
          6.707  port 22 releases itself (M fell)
          6.707  22 hears silence, free
-         7.002  marker: register 03 -> 22, dial tone from 01
+         7.002  marker: register 0 -> 22, dial tone from 01
          7.002  22 hears dial tone
-         7.840  22 hears silence
-         8.090  marker: 22 -> cannot-complete (22 busy)
-         8.090  22 hears cannot-complete tone
+         7.839  22 hears silence
+         8.089  marker: 22 -> busy (22 busy)
+         8.089  22 hears busy tone
          9.207  port 22 releases itself (M fell)
          9.207  22 hears silence, free
          9.267  port 20 releases itself (M fell)
@@ -158,30 +157,30 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   4. Numbers that are not there: 26 (empty slot), 1 (the network, with no network card), 8 (spare),
      2 then 9, and 03, which cannot be dialled at all.
          0.000  20 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  20 hears silence
-         1.190  marker: 20 -> cannot-complete (26 is unequipped)
-         1.190  20 hears cannot-complete tone
+         0.939  20 hears silence
+         1.189  marker: 20 -> cannot-complete (26 is unequipped)
+         1.189  20 hears cannot-complete tone
          2.767  port 20 releases itself (M fell)
          2.767  20 hears silence, free
-         3.002  marker: register 03 -> 20, dial tone from 01
+         3.002  marker: register 0 -> 20, dial tone from 01
          3.002  20 hears dial tone
-         3.840  marker: 20 -> cannot-complete (no free class 4)
-         3.840  20 hears cannot-complete tone
+         3.839  marker: 20 -> cannot-complete (no free class 4)
+         3.839  20 hears cannot-complete tone
          5.267  port 20 releases itself (M fell)
          5.267  20 hears silence, free
-         5.506  marker: register 03 -> 20, dial tone from 01
+         5.506  marker: register 0 -> 20, dial tone from 01
          5.506  20 hears dial tone
-         6.340  marker: 20 -> cannot-complete (first key 8)
-         6.340  20 hears cannot-complete tone
+         6.339  marker: 20 -> cannot-complete (first key 8)
+         6.339  20 hears cannot-complete tone
          7.767  port 20 releases itself (M fell)
          7.767  20 hears silence, free
-         8.002  marker: register 03 -> 20, dial tone from 01
+         8.002  marker: register 0 -> 20, dial tone from 01
          8.002  20 hears dial tone
-         8.840  20 hears silence
-         9.090  marker: 20 -> cannot-complete (second key 9)
-         9.090  20 hears cannot-complete tone
+         8.839  20 hears silence
+         9.089  marker: 20 -> cannot-complete (second key 9)
+         9.089  20 hears cannot-complete tone
         10.767  port 20 releases itself (M fell)
         10.767  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
@@ -189,13 +188,13 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   5. Abandoned while ringing: the called phone must stop ringing and be free.
          0.000  20 hears silence, free
          0.000  21 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  20 hears silence
-         1.190  marker: 20 <-> 21
-         1.190  21 hears voice 20
-         1.191  20 hears ringback
-         1.191  21 hears voice 20, is being rung
+         0.939  20 hears silence
+         1.189  marker: 20 <-> 21
+         1.189  21 hears voice 20
+         1.190  20 hears ringback
+         1.190  21 hears voice 20, is being rung
          4.000  21 hears silence, is being rung
          4.001  20 hears silence
          4.001  21 hears silence
@@ -207,27 +206,19 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
 
   6. Abandoned while dialling: the register must let go by itself.
          0.000  20 hears silence, free
-         0.000  03 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.106  03 hears voice 20
-         0.940  20 hears silence
-         1.500  03 hears silence
-         1.746  port 03 releases itself (E fell)
-         1.746  03 hears silence, free
+         0.939  20 hears silence
          1.767  port 20 releases itself (M fell)
          1.767  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
 
   7. Permanent signal: off-hook and nothing dialled.
          0.000  20 hears silence, free
-         0.000  03 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.106  03 hears voice 20
         10.107  marker: 20 -> cannot-complete (nothing dialled)
         10.107  20 hears cannot-complete tone
-        10.107  03 hears silence, free
         13.267  port 20 releases itself (M fell)
         13.267  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
@@ -236,28 +227,27 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          0.000  20 hears silence, free
          0.000  21 hears silence, free
          0.000  23 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
-         0.106  marker: register 04 -> 21, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
+         0.106  marker: register 1 -> 21, dial tone from 01
          0.106  20 hears dial tone
          0.106  21 hears dial tone
-         0.940  20 hears silence
-         0.940  21 hears silence
-         1.190  marker: 20 -> cannot-complete (21 busy)
-         1.190  marker: 21 -> cannot-complete (20 busy)
-         1.190  20 hears cannot-complete tone
-         1.190  21 hears cannot-complete tone
+         0.939  20 hears silence
+         0.939  21 hears silence
+         1.189  marker: 20 -> busy (21 busy)
+         1.189  marker: 21 -> busy (20 busy)
+         1.189  20 hears busy tone
+         1.189  21 hears busy tone
          3.266  port 21 releases itself (M fell)
          3.266  21 hears silence, free
          3.267  port 20 releases itself (M fell)
          3.267  20 hears silence, free
-         4.002  marker: register 03 -> 20, dial tone from 01
+         4.002  marker: register 0 -> 20, dial tone from 01
          4.002  20 hears dial tone
-         4.840  20 hears silence
-         5.090  marker: 20 -> cannot-complete (23 busy)
-         5.090  marker: register 03 -> 23, dial tone from 01
-         5.090  20 hears cannot-complete tone
+         4.839  20 hears silence
+         5.089  marker: 20 -> busy (23 busy)
+         5.089  20 hears busy tone
+         5.090  marker: register 0 -> 23, dial tone from 01
          5.090  23 hears dial tone
-         7.246  port 03 releases itself (E fell)
          7.250  port 23 releases itself (M fell)
          7.250  23 hears silence, free
          7.267  port 20 releases itself (M fell)
@@ -268,15 +258,15 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          0.000  20 hears silence, free
          0.000  30 hears silence, free
          0.000  31 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  marker: 20 <-> 30
-         0.940  20 hears silence
-         0.940  30 hears voice 20
-         0.941  20 hears ringback
-         0.941  30 hears voice 20, is being rung
-         2.440  20 hears voice 30
-         2.440  30 hears voice 20
+         0.939  marker: 20 <-> 30
+         0.939  20 hears silence
+         0.939  30 hears voice 20
+         0.940  20 hears ringback
+         0.940  30 hears voice 20, is being rung
+         2.439  20 hears voice 30
+         2.439  30 hears voice 20
          6.000  30 hears silence
          6.200  20 hears silence
          6.267  port 20 releases itself (M fell)
@@ -289,20 +279,20 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          0.000  20 hears silence, free
          0.000  30 hears silence, free
          0.000  31 hears silence, free
-         0.106  marker: register 03 -> 23, dial tone from 01
-         1.190  marker: 23 <-> 30
-         1.190  30 hears voice 23
-         1.191  30 hears voice 23, is being rung
-         2.690  30 hears voice 23
-         3.002  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 23, dial tone from 01
+         1.189  marker: 23 <-> 30
+         1.189  30 hears voice 23
+         1.190  30 hears voice 23, is being rung
+         2.689  30 hears voice 23
+         3.002  marker: register 0 -> 20, dial tone from 01
          3.002  20 hears dial tone
-         3.840  marker: 20 <-> 31
-         3.840  20 hears silence
-         3.840  31 hears voice 20
-         3.841  20 hears ringback
-         3.841  31 hears voice 20, is being rung
-         5.340  20 hears voice 31
-         5.340  31 hears voice 20
+         3.839  marker: 20 <-> 31
+         3.839  20 hears silence
+         3.839  31 hears voice 20
+         3.840  20 hears ringback
+         3.840  31 hears voice 20, is being rung
+         5.339  20 hears voice 31
+         5.339  31 hears voice 20
          8.000  31 hears silence
          8.267  port 20 releases itself (M fell)
          8.267  20 hears silence, is being rung, free
@@ -311,10 +301,9 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          8.268  31 hears silence
          8.285  port 31 releases itself (E fell)
          8.285  31 hears silence, free
-         8.291  marker: register 03 -> 31, dial tone from 01
+         8.291  marker: register 0 -> 31, dial tone from 01
          8.291  31 hears dial tone
          9.000  30 hears silence
-         9.246  port 03 releases itself (E fell)
          9.250  port 23 releases itself (M fell)
          9.273  port 31 releases itself (M fell)
          9.273  31 hears silence, free
@@ -325,42 +314,39 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   9c. 0: both positions off-hook, so the announcement card answers, plays and drops; the caller is back at dial tone.
          0.000  20 hears silence, free
          0.000  32 hears silence, free
-         0.107  marker: register 03 -> 30, dial tone from 01
-         0.107  marker: register 04 -> 31, dial tone from 01
-         1.002  marker: register 05 -> 20, dial tone from 01
+         0.107  marker: register 0 -> 30, dial tone from 01
+         0.107  marker: register 1 -> 31, dial tone from 01
+         1.002  marker: register 2 -> 20, dial tone from 01
          1.002  20 hears dial tone
-         1.840  marker: 20 <-> 32
-         1.840  20 hears silence
-         1.840  32 hears voice 20
-         1.841  20 hears ringback
-         1.841  32 hears voice 20, is being rung
-         2.140  20 hears night announcement 32
-         2.140  32 hears voice 20
-         4.640  20 hears silence
-         4.863  port 32 releases itself (M fell)
-         4.863  20 hears ringback
-         4.863  32 hears silence, is being rung, free
-         4.864  20 hears silence
-         4.864  32 hears silence, free
-         4.924  port 20 releases itself (E fell)
-         4.924  20 hears silence, free
-         4.930  marker: register 05 -> 20, dial tone from 01
+         1.839  marker: 20 <-> 32
+         1.839  20 hears silence
+         1.839  32 hears voice 20
+         1.840  20 hears ringback
+         1.840  32 hears voice 20, is being rung
+         2.139  20 hears night announcement 32
+         2.139  32 hears voice 20
+         4.639  20 hears silence
+         4.862  port 32 releases itself (M fell)
+         4.862  20 hears ringback
+         4.862  32 hears silence, is being rung, free
+         4.863  20 hears silence
+         4.863  32 hears silence, free
+         4.923  port 20 releases itself (E fell)
+         4.923  20 hears silence, free
+         4.930  marker: register 2 -> 20, dial tone from 01
          4.930  20 hears dial tone
-         8.259  port 05 releases itself (E fell)
          8.267  port 20 releases itself (M fell)
          8.267  20 hears silence, free
-         8.707  port 04 releases itself (E fell)
          8.718  port 30 releases itself (M fell)
-         8.746  port 03 releases itself (E fell)
          8.773  port 31 releases itself (M fell)
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 61 ms;  overheard another call 0 ms
 
   9d. 0 with no operator class fitted.
          0.000  20 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  marker: 20 -> cannot-complete (no free class 2)
-         0.940  20 hears cannot-complete tone
+         0.939  marker: 20 -> cannot-complete (no free class 2)
+         0.939  20 hears cannot-complete tone
          3.267  port 20 releases itself (M fell)
          3.267  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
@@ -369,18 +355,18 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          0.000  20 hears silence, free
          0.000  22 hears silence, free
          0.000  23 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.940  marker: 20 <-> 10
-         0.940  20 hears CO line 10
-         1.002  marker: register 04 -> 22, dial tone from 01
+         0.939  marker: 20 <-> 10
+         0.939  20 hears CO line 10
+         1.002  marker: register 0 -> 22, dial tone from 01
          1.002  22 hears dial tone
-         1.840  marker: 22 <-> 11
-         1.840  22 hears CO line 11
-         2.002  marker: register 03 -> 23, dial tone from 01
+         1.839  marker: 22 <-> 11
+         1.839  22 hears CO line 11
+         2.002  marker: register 0 -> 23, dial tone from 01
          2.002  23 hears dial tone
-         2.840  marker: 23 -> cannot-complete (no free class 3)
-         2.840  23 hears cannot-complete tone
+         2.839  marker: 23 -> cannot-complete (no free class 3)
+         2.839  23 hears cannot-complete tone
          7.207  port 22 releases itself (M fell)
          7.207  22 hears silence, free
          7.218  port 10 releases itself (M fell)
@@ -408,7 +394,7 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
         14.218  30 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 0 ms;  overheard another call 0 ms
 
-  11b. The same with mf8-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.
+  11b. The same with channel-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.
          0.000  10 hears silence, free
          0.000  30 hears silence, free
          0.505  marker: 10 <-> 30
@@ -448,12 +434,12 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
 
   12a. The dial-tone card is pulled; a second class-5 card at 06 serves.
          0.000  20 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 06
+         0.106  marker: register 0 -> 20, dial tone from 06
          0.106  20 hears dial tone (spare)
-         0.940  20 hears silence
-         1.190  marker: 20 <-> 21
-         1.191  20 hears ringback
-         2.190  20 hears voice 21
+         0.939  20 hears silence
+         1.189  marker: 20 <-> 21
+         1.190  20 hears ringback
+         2.189  20 hears voice 21
          5.200  20 hears silence
          5.267  port 20 releases itself (M fell)
          5.267  20 hears silence, free
@@ -462,11 +448,11 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
 
   12b. No tone cards at all: silence where the tones would be, and the call still completes.
          0.000  20 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from nowhere
+         0.106  marker: register 0 -> 20, dial tone from nowhere
          0.106  20 hears silence
-         1.190  marker: 20 <-> 21
-         1.191  20 hears ringback
-         2.190  20 hears voice 21
+         1.189  marker: 20 <-> 21
+         1.190  20 hears ringback
+         2.189  20 hears voice 21
          5.200  20 hears silence
          5.267  port 20 releases itself (M fell)
          5.267  20 hears silence, free
@@ -476,18 +462,18 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   13. One register, two callers lifting together: the second waits for dial tone.
          0.000  20 hears silence, free
          0.000  22 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         1.540  20 hears silence
-         1.790  marker: 20 <-> 24
-         1.791  20 hears ringback
-         2.042  marker: register 03 -> 22, dial tone from 01
-         2.042  22 hears dial tone
-         2.790  20 hears voice 24
-         3.540  22 hears silence
-         3.790  marker: 22 <-> 25
-         3.791  22 hears ringback
-         4.790  22 hears voice 25
+         1.539  20 hears silence
+         1.789  marker: 20 <-> 24
+         1.790  20 hears ringback
+         1.794  marker: register 0 -> 22, dial tone from 01
+         1.794  22 hears dial tone
+         2.789  20 hears voice 24
+         3.539  22 hears silence
+         3.789  marker: 22 <-> 25
+         3.790  22 hears ringback
+         4.789  22 hears voice 25
          6.200  20 hears silence
          6.200  22 hears silence
          6.207  port 22 releases itself (M fell)
@@ -502,24 +488,24 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          0.000  20 hears silence, free
          0.000  22 hears silence, free
          0.000  23 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from 01
+         0.106  marker: register 0 -> 20, dial tone from 01
          0.106  20 hears dial tone
-         0.602  marker: register 04 -> 22, dial tone from 01
+         0.602  marker: register 1 -> 22, dial tone from 01
          0.602  22 hears dial tone
-         0.940  20 hears silence
-         1.106  marker: register 05 -> 23, dial tone from 01
+         0.939  20 hears silence
+         1.106  marker: register 2 -> 23, dial tone from 01
          1.106  23 hears dial tone
-         1.190  marker: 20 <-> 70
-         1.191  20 hears ringback
-         1.390  20 hears conference 70
-         1.440  22 hears silence
-         1.690  marker: 22 <-> 71
-         1.691  22 hears ringback
-         1.890  22 hears conference 71
-         1.940  23 hears silence
-         2.190  marker: 23 <-> 72
-         2.191  23 hears ringback
-         2.390  23 hears conference 72
+         1.189  marker: 20 <-> 70
+         1.190  20 hears ringback
+         1.389  20 hears conference 70
+         1.439  22 hears silence
+         1.689  marker: 22 <-> 71
+         1.690  22 hears ringback
+         1.889  22 hears conference 71
+         1.939  23 hears silence
+         2.189  marker: 23 <-> 72
+         2.190  23 hears ringback
+         2.389  23 hears conference 72
          6.001  20 hears silence
          6.231  port 70 releases itself (M fell)
          6.267  port 20 releases itself (M fell)
@@ -537,15 +523,15 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   15a. A rotary phone dials 20 on the A line: 10 pps, 60 % break.  The register counts its own A_RX; 0 is ten pulses.
          0.000  24 hears silence, free
          0.000  20 hears silence, free
-         0.106  marker: register 03 -> 24, dial tone from 01
+         0.106  marker: register 0 -> 24, dial tone from 01
          0.106  24 hears dial tone
-         1.188  24 hears silence
-         2.888  marker: 24 <-> 20
-         2.888  20 hears voice 24
-         2.889  24 hears ringback
-         2.889  20 hears voice 24, is being rung
-         4.388  24 hears voice 20
-         4.388  20 hears voice 24
+         1.187  24 hears silence
+         2.887  marker: 24 <-> 20
+         2.887  20 hears voice 24
+         2.888  24 hears ringback
+         2.888  20 hears voice 24, is being rung
+         4.387  24 hears voice 20
+         4.387  20 hears voice 24
          7.500  20 hears silence
          7.700  24 hears silence
          7.769  port 24 releases itself (M fell)
@@ -557,15 +543,15 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
   15b. The slowest dial register.md allows, 7 pps at 72 % (103 ms breaks), with every release detector at its shortest, 204 ms.
          0.000  24 hears silence, free
          0.000  27 hears silence, free
-         0.106  marker: register 03 -> 24, dial tone from 01
+         0.106  marker: register 0 -> 24, dial tone from 01
          0.106  24 hears dial tone
-         1.273  24 hears silence
-         2.973  marker: 24 <-> 27
-         2.973  27 hears voice 24
-         2.974  24 hears ringback
-         2.974  27 hears voice 24, is being rung
-         3.973  24 hears voice 27
-         3.973  27 hears voice 24
+         1.272  24 hears silence
+         2.972  marker: 24 <-> 27
+         2.972  27 hears voice 24
+         2.973  24 hears ringback
+         2.973  27 hears voice 24, is being rung
+         3.972  24 hears voice 27
+         3.972  27 hears voice 24
          6.585  27 hears silence
          6.785  24 hears silence
          6.788  port 24 releases itself (M fell)
@@ -581,8 +567,8 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
       Each port's two release detectors are drawn +-20% about 256 ms, so one can still be timing
       out when the other has already freed the port.
       a port reads busy while a detector times out    new calls killed by a stale release  longest dangling listen ms  third party: connected / busy  not idle at 9 s  ... not a register
-      no                                                                                6                        2439                      191 / 109                5                   0
-      yes                                                                               0                          94                       11 / 289                7                   0
+      no                                                                                5                        2439                      186 / 114                0                   0
+      yes                                                                               0                          94                       10 / 290                0                   0
       Not idle at 9 s is always the same thing: the party left off-hook was given a register and hung up inside
       the detector's 16 ms arming time, so the register never saw E rise; the 10 s no-digit timeout frees it.
 
@@ -614,14 +600,14 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
       1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).
          0.000  20 hears silence, free
          0.000  21 hears silence, free
-         0.106  marker: register 03 -> 20, dial tone from nowhere
+         0.106  marker: register 0 -> 20, dial tone from nowhere
          0.106  20 hears silence
-         1.988  marker: 20 <-> 21
-         1.988  21 hears voice 20
-         1.989  20 hears ringback
-         1.989  21 hears voice 20, is being rung
-         3.488  20 hears voice 21
-         3.488  21 hears voice 20
+         1.987  marker: 20 <-> 21
+         1.987  21 hears voice 20
+         1.988  20 hears ringback
+         1.988  21 hears voice 20, is being rung
+         3.487  20 hears voice 21
+         3.487  21 hears voice 20
          6.000  20 hears silence
          6.266  port 21 releases itself (M fell)
          6.266  20 hears ringback
@@ -630,19 +616,18 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
          6.267  21 hears silence, free
          6.284  port 20 releases itself (E fell)
          6.284  20 hears silence, free
-         6.290  marker: register 03 -> 20, dial tone from nowhere
+         6.290  marker: register 0 -> 20, dial tone from nowhere
          6.290  20 hears silence
-         7.246  port 03 releases itself (E fell)
          7.267  port 20 releases itself (M fell)
          7.267  20 hears silence, free
-         8.002  marker: register 03 -> 21, dial tone from nowhere
+         8.002  marker: register 0 -> 21, dial tone from nowhere
          8.002  21 hears silence
-        10.788  marker: 21 <-> 20
-        10.788  20 hears voice 21
-        10.789  20 hears voice 21, is being rung
-        10.789  21 hears ringback
-        12.288  20 hears voice 21
-        12.288  21 hears voice 20
+        10.787  marker: 21 <-> 20
+        10.787  20 hears voice 21
+        10.788  20 hears voice 21, is being rung
+        10.788  21 hears ringback
+        12.287  20 hears voice 21
+        12.287  21 hears voice 20
         15.000  20 hears silence
         15.266  port 21 releases itself (M fell)
         15.266  20 hears ringback
@@ -651,45 +636,44 @@ CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00
         15.267  21 hears silence, free
         15.284  port 20 releases itself (E fell)
         15.284  20 hears silence, free
-        15.290  marker: register 03 -> 20, dial tone from nowhere
+        15.290  marker: register 0 -> 20, dial tone from nowhere
         15.290  20 hears silence
-        16.746  port 03 releases itself (E fell)
         16.767  port 20 releases itself (M fell)
         16.767  20 hears silence, free
-        18.002  marker: register 03 -> 20, dial tone from nowhere
+        18.002  marker: register 0 -> 20, dial tone from nowhere
         18.002  20 hears silence
-        19.888  marker: 20 -> cannot-complete (no free class 2)
+        19.887  marker: 20 -> cannot-complete (no free class 2)
         21.367  port 20 releases itself (M fell)
         21.367  20 hears silence, free
-        21.506  marker: register 03 -> 20, dial tone from nowhere
+        21.506  marker: register 0 -> 20, dial tone from nowhere
         21.506  20 hears silence
-        23.288  marker: 20 -> cannot-complete (no free class 3)
+        23.287  marker: 20 -> cannot-complete (no free class 3)
         24.767  port 20 releases itself (M fell)
         24.767  20 hears silence, free
-        25.002  marker: register 03 -> 20, dial tone from nowhere
+        25.002  marker: register 0 -> 20, dial tone from nowhere
         25.002  20 hears silence
-        25.988  marker: 20 -> cannot-complete (no free class 4)
+        25.987  marker: 20 -> cannot-complete (no free class 4)
         27.467  port 20 releases itself (M fell)
         27.467  20 hears silence, free
-        28.002  marker: register 03 -> 20, dial tone from nowhere
+        28.002  marker: register 0 -> 20, dial tone from nowhere
         28.002  20 hears silence
-        29.688  marker: 20 -> cannot-complete (first key 8)
+        29.687  marker: 20 -> cannot-complete (first key 8)
         31.167  port 20 releases itself (M fell)
         31.167  20 hears silence, free
-        31.506  marker: register 03 -> 20, dial tone from nowhere
+        31.506  marker: register 0 -> 20, dial tone from nowhere
         31.506  20 hears silence
-        33.788  marker: 20 -> cannot-complete (25 is unequipped)
+        33.787  marker: 20 -> cannot-complete (25 is unequipped)
         35.267  port 20 releases itself (M fell)
         35.267  20 hears silence, free
-        36.002  marker: register 03 -> 20, dial tone from nowhere
+        36.002  marker: register 0 -> 20, dial tone from nowhere
         36.002  20 hears silence
-        38.788  marker: 20 -> cannot-complete (20 busy)
+        38.787  marker: 20 -> busy (20 busy)
         40.267  port 20 releases itself (M fell)
         40.267  20 hears silence, free
      end: every latch idle, every BUSY clear;  longest a port listened to a party no longer listening back 18 ms;  overheard another call 0 ms
 
 
-  [calls: 54 s]
+  [calls: 161 s]
 
 ANNOUNCE -- a recorded message as a ROM of CVSD bits: no codec on the card.
   message 4.0 s + 0.25 s of silence each end = 288000 bits = 36000 bytes (crc32 020b1b95); 8 kB a second, so 8 s fills a 64 kB part.
@@ -984,7 +968,7 @@ MONITOR -- which rules keep a live flood from ever claiming a wrong number.
                                 1500          1.125 |     52.94     22.95      7.92      2.18
                                 3000          2.250 |     69.23     43.78     24.72     12.21
 
-  [monitor: 620 s]
+  [monitor: 740 s]
 
 TIMING -- the fabric in nanoseconds.  512 kbps: a cell is 1953 ns, HCLK high for its first half.
   Every delay in every trial drawn on its own between 0.35 x typical and the data-sheet maximum

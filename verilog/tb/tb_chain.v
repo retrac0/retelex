@@ -73,7 +73,7 @@ module tb_chain #(
        .fan_legs(), .res_used(), .port_busy(), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // B: code 23, a transit.  W toward A on block 0, E toward C on block 1.
+    // B: code 23, a transit.  W toward A on block 1, E toward C on block 3.
     // The glare bit is set at one end of each link, here B's W side and C's.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .NDIR(2), .DIR0(W), .G0(1'b1),
                .DIR1(E),
@@ -224,6 +224,7 @@ module tb_chain #(
         hk_c[6'o21] = 0; hk_b[6'o20] = 0; #(120_000_000 + 2 * SLK);
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

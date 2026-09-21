@@ -14,10 +14,9 @@ what is already fitted.
 > small — and then an empty number and the caller's own number. Every latch ends
 > idle; `exch.log` is the run. The package counts come from the parts lists of
 > `fabric.md` §3 and §5 and `channel-cards.md`, except the marker's, which is
-> estimated by function (§2). **The model's register sits on port 03**, the
-> `calls` model's older layout (`marker.md`, Status); in the design a
-> register takes no port. No circuit has been drawn, and nothing has been on a
-> bench.
+> estimated by function (§2). **The register is a pool member and takes no
+> port**, matching the design (`marker.md` §4). No circuit has been drawn, and
+> nothing has been on a bench.
 
 ---
 

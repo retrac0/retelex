@@ -72,10 +72,10 @@ are lines *h*5–*h*7. Label the terminal's slots with their line numbers.
 for good, so nothing is hunted across the link and nothing blocks. Blocks 2–7
 give up to six terminals and 36 lines, and the twelve slots at *h*0 and *h*4 stay
 local. A busy exchange at the centre of a network with trunk groups in
-blocks 2 and 3 has four blocks left for terminals. On a standalone exchange,
-block 0 or 1 can also take a terminal, but only for channels that nobody dials:
-outside lines or operator positions, which 9 and 0 hunt. 0 and 1 are never the
-first digit of a line.
+blocks 2 and 3 has four blocks left for terminals. **Not block 0**: its channel
+slots are tones and the 04–07 bank. On a standalone exchange, block 1 can also
+take a terminal (1 is a highway digit then); on a networked one, block 1 is the
+first trunk group.
 
 **Cost at the exchange.** The six port circuits are the ones six local cards
 would need, and so are the block's shared parts. Added: the trunk card, whose
@@ -162,7 +162,7 @@ synchronous data stays inside the exchange.
    line at the exchange. Dial it and hear yourself. A data card counting slips
    through it reads the offset between the two crystals: the count a second,
    divided by two crossings and by 64 000.
-3. **One phone.** Lift it and get dial tone from 10. Dial a local line, ring,
+3. **One phone.** Lift it and get dial tone from 01. Dial a local line, ring,
    answer, and release in both orders. Then break the link during a call: both
    ports release, and a call to the terminal's lines gets cannot-complete until
    the link locks again.

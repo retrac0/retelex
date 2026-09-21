@@ -87,6 +87,7 @@ module tb_two;
         $display("\n     A: %0d checks, %0d errors     B: %0d checks, %0d errors",
                  chk_a, errs_a, chk_b, errs_b);
         $display("\n  %s", (errs_a == 0 && errs_b == 0) ? "PASS" : "FAIL");
+        if (errs_a || errs_b) $fatal(1);
         $finish;
     end
 endmodule

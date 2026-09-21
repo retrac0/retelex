@@ -159,6 +159,7 @@ module tb_mvp;
         stage(100, 4, "caller hangs up first: both latches idle");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 endmodule

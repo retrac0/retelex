@@ -224,6 +224,7 @@ module tb_net;
         want(!ln_a[6'o20], "and the port released itself");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

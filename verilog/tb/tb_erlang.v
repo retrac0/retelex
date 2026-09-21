@@ -320,6 +320,7 @@ module tb_erlang #(
         run_load(0.93, 0.125, 1650.0, "4. Forty-seven exchanges -- 0.93 E, the last row.");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

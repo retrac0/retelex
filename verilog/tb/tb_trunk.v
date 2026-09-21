@@ -234,6 +234,7 @@ module tb_trunk;
                  ($time - t0) / FR);
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

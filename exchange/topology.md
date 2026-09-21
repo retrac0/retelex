@@ -29,17 +29,18 @@ Six things decide what can be built. None of them is a route table.
 | **One neighbour a direction** | every trunk facing one way goes to the same exchange. The origin seizes one free trunk a direction, so a direction split between two neighbours would send each flood to one of them and not the other | `network.md` §3 |
 | **Trunk groups** | **eight at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `protocol.md` §5 |
 | **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `network.md` §3.3 |
-| **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–17 are an exchange's trunks and services | `network.md` §2 |
+| **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–07 are an exchange's services and 10–17 its first trunk group when networked | `network.md` §2 |
 | **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `monitor.md` §3.5 |
 
-**Trunk groups cost lines.** The first two groups sit in blocks 0 and 1, whose
-slots are not lines anyway. Each group after that takes six line slots:
+**Trunk groups cost lines.** The first trunk group sits in block 1, whose
+slots are not lines (block 0 holds tones and the operator bank). Each group
+after that takes six line slots:
 
-| trunk groups | 1–2 | 3 | 4 | 5 | 6 | 7 | 8 |
-|---|---|---|---|---|---|---|---|
-| lines left | 48 | 42 | 36 | 30 | 24 | 18 | 12 |
+| trunk groups | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| lines left | 48 | 42 | 36 | 30 | 24 | 18 | 12 | 6 |
 
-An exchange with all eight is a **tandem**: 48 channels of trunk and twelve lines.
+An exchange with all eight is a **tandem**: 48 channels of trunk and six lines.
 Its eight groups divide among its directions as 12 + 12 + 12 + 12, as
 24 + 12 + 12, as 18 + 18 + 12 or as 24 + 24. At 1 % blocking six channels carry
 1.91 E, twelve 5.88 E, eighteen 10.44 E and twenty-four 15.30 E.
@@ -90,7 +91,7 @@ in the network lay 0.67 E on every link; at 20 %, 0.45 E; at 50 %, 1.12 E.
    leaf ─┤ 6 ch   ┌──────┐            ┌──────┐   6 ch ┤
          └────────┤  11  │════════════│  12  ├────────┘─ leaf
                   └──────┘            └──────┘
-       48 lines a leaf          five groups and 30 lines a hub; 348 lines
+       48 lines a leaf          five groups and 24 lines a hub; 336 lines
         codes 21-23, 31-33           codes 11 and 12: the backbone's
 ```
 
@@ -171,7 +172,7 @@ through a resolver and keeps the branch that claims (`network.md` §3.2).
            \│/       \│/
             ●═══ ■ ═══●                                    a tree: a tandem, four sub-hubs,
            /  ═══╩═══  \                                   three leaves, or chains, on each
-          ●             ●       ■ tandem: 4 × 12 ch, 12 lines
+          ●             ●       ■ tandem: 4 × 12 ch, 6 lines
          /│\           /│\      ● sub-hub: 12 ch up, 6 or 12 ch down
         ○ ○ ○         ○ ○ ○
 ```
@@ -182,7 +183,7 @@ through a resolver and keeps the branch that claims (`network.md` §3.2).
 |---|---|---|---|---|---|---|---|---|---|
 | star: a hub and four spokes, 6 ch | 5 | 228 | 0.12 E | 1.24 E on 6, 0.15 % | 0.29 % | 0.24 % | 1.6 | 28 ms | 2, 2 |
 | star: a tandem and four spokes, 12 ch | 5 | 204 | 0.11 E | 1.15 E on 12, 0.00 % | 0.00 % | 0.00 % | 1.7 | 28 ms | 2, 2 |
-| two hubs, six leaves | 8 | 348 | 0.20 E | 1.29 E on 6, 0.17 % | 0.35 % | 0.27 % | 2.1 | 44 ms | 3, 3 |
+| two hubs, six leaves | 8 | 336 | 0.20 E | 1.29 E on 6, 0.17 % | 0.35 % | 0.27 % | 2.1 | 44 ms | 3, 3 |
 | tandem, four chains of 3; 12 ch, 6 to the last | 13 | 516 | 0.31 E | 1.35 E on 6, 0.22 % | 0.44 % | 0.15 % | 3.4 | 76 ms | 3, 3 |
 | tandem, four chains of 5, the same | 21 | 804 | 0.49 E | 1.52 E on 6, 0.38 % | 1.03 % | 0.36 % | 5.1 | 124 ms | 4, 4 |
 | tandem, four chains of 5, 12 ch throughout | 21 | 780 | 0.48 E | 4.09 E on 12, 0.08 % | 0.21 % | 0.16 % | 5.1 | 124 ms | 4, 4 |

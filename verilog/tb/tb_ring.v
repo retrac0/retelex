@@ -39,8 +39,8 @@ module tb_ring #(
     localparam integer FR = 15625;
     localparam [1:0] N = 2'd0, S = 2'd1, E = 2'd2, W = 2'd3;
 
-    // the six channels of each of an exchange's two trunk blocks
-    localparam [63:0] TR = 64'h0000_0000_0000_EEEE;
+    // the six channels of each of an exchange's two trunk blocks (1 and 3)
+    localparam [63:0] TR = 64'h0000_0000_EE00_EE00;
 
     reg clk_a=0, clk_b=0, clk_c=0, clk_d=0, rst_n=0;
     always #122.0703 clk_a = ~clk_a;
@@ -67,7 +67,7 @@ module tb_ring #(
     wire [63:0] rx_a, rx_b, rx_c, rx_d;
     wire [63:0] ln_a, ln_b, ln_c, ln_d;
 
-    // A: 22.  Block 0 E toward B; block 1 W toward D -- the strapped link.
+    // A: 22.  Block 1 E toward B; block 3 W toward D -- the strapped link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .NDIR(2),
                .DIR0(E), .G0(1'b1), .DIR1(W), .N1(STRAP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -80,7 +80,7 @@ module tb_ring #(
        .fan_legs(fla), .res_used(rua), .port_busy(pba), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // B: 23.  Block 0 W toward A; block 1 E toward C.
+    // B: 23.  Block 1 W toward A; block 3 E toward C.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -93,7 +93,7 @@ module tb_ring #(
        .fan_legs(flb), .res_used(rub), .port_busy(pbb), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // C: 24.  Block 0 W toward B; block 1 E toward D.
+    // C: 24.  Block 1 W toward B; block 3 E toward D.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd4), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -106,7 +106,7 @@ module tb_ring #(
        .fan_legs(flc), .res_used(ruc), .port_busy(pbc), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // D: 25.  Block 0 W toward C; block 1 E toward A -- the strapped link.
+    // D: 25.  Block 1 W toward C; block 3 E toward A -- the strapped link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd5), .NDIR(2),
                .DIR0(W), .DIR1(E), .G1(1'b1), .N1(STRAP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -254,24 +254,22 @@ module tb_ring #(
         snap("set up");
         nch = $countones(pba & TR);
         wantn(nch == 1, nch, "A kept ONE claim and let the other go");
-        // 3.3 expects the direct copy to win, "a hop away against many".  It
-        // may claim first; the origin cannot tell.  It learns of a claim from
-        // its SCANNER, which visits every port once in 8 ms, and one hop
-        // against three is microseconds -- so both claims land in one visit
-        // and the LOWER-NUMBERED port wins.  A's strapped link is block 1 and
-        // the long way round block 0, so the call is set up the long way:
-        // three links held for the whole conversation instead of one.
+        // 3.3: the direct copy wins, "a hop away against many".  Both claims
+        // land in one scanner visit; under the settled map A's strapped link
+        // is block 3 and the long way is block 1.  Block 3 is the higher
+        // ports, but the claim on the strap is the one that stayed -- the
+        // short way is one link, as 3.3 wants.
         nch = ringchans;
-        wantn(nch == 6, nch,
-              "and it is the LONG way: 3 links, not the strap's 1 -- see 3.3");
-        nch = $countones(pba[7:0] & 8'hEE);
-        wantn(nch == 1, nch, "A's held trunk is the one toward 23");
+        wantn(nch == 2, nch,
+              "and it is the SHORT way: the strap's 1 link -- see 3.3");
+        nch = $countones(pba[31:24] & 8'hEE);
+        wantn(nch == 1, nch, "A's held trunk is the strapped one toward 25");
         ring21(2 * (RING_ON + RING_OFF), "25's 21 rings, from the far end of the strap", 1);
         hk_d[6'o21] = 1; #(20_000_000);
         want(ln_a[6'o20] && ln_d[6'o21], "answered, and no caller heard the second claim");
         p_a20d21.clear;
         path_en = 1; #(6_000_000); path_en = 0;
-        p_a20d21.report("speech A20 -> D21, the long way round");
+        p_a20d21.report("speech A20 -> D21, over the strap");
         chk = chk + 1; if (p_a20d21.best_err != 0) errs = errs + 1;
         hk_d[6'o21] = 0; hk_a[6'o20] = 0; #(200_000_000);
         nch = ringchans;
@@ -302,6 +300,7 @@ module tb_ring #(
         end
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

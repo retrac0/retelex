@@ -124,6 +124,7 @@ module tb_fabric;
         $display("     %0d errors in %0d bits.", errs, bits);
 
         $display("\n  %s", (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 endmodule

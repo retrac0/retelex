@@ -74,8 +74,9 @@ a jumper says what it is.
 
 | strapped for | `SRC[5:0]` | `BSY` | `CLM` | what it counts |
 |---|---|---|---|---|
-| **cannot-complete given** | `001100` (`o14`) | 1 | `P` | every failure: wrong numbers, busy lines, empty slots, no free trunk, no free register |
-| **dial tone given** | `001000` (`o10`) | 1 | 0 | one a call **originating** here — the calling rate `marker.md` §6 assumes |
+| **cannot-complete given** | `000011` (`o03`) | 1 | `P` | every failure: wrong numbers, empty slots, no free trunk, no free register |
+| **dial tone given** | `000001` (`o01`) | 1 | 0 | one a call **originating** here — the calling rate `marker.md` §6 assumes |
+| **busy tone given** | `000010` (`o02`) | 1 | `P` | called party busy (when the marker points at 02; today RTL still uses `o03` for both) |
 | **trunks let go** | `000000` | 0 | 0 | the flood's teardown, and a hub's legs dropped when one claims |
 | **calls over a trunk** | `bbb PPP` | 1 | 0 | a port pointed at a trunk on block *bbb* — network calls completed, **either direction** (§3) |
 | claims | `000000` | 1 | 1 | **two** a call: the claim and the dial-tone-off that follows it are the identical word. Read the LEDs ignoring the bottom one |

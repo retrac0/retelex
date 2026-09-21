@@ -4,8 +4,8 @@ by class in fixed order, and features that are lines.
 
     tandem    why the fabric switches bits and not voice band: N codecs in tandem
     fabric    the highway, cell by cell: commutate, select, capture, re-time
-    calls     one exchange, tick by tick: the hotline rule, the release rule, the
-              hunts for 0 and 9, registers as a pool, and what each party hears
+    calls     one exchange, tick by tick: the hotline rule, the release rule,
+              answers-to hunt (0 → 04), class hunt for 9, registers as a pool, and what each party hears
     announce  a recorded message as a ROM image of CVSD bits, and its two seams
     aline     digits as serial characters on the A bit, through one to seven trunk hops
     flood     the timing of a network call: the key 1, live pulses, e and b, the claim
@@ -317,6 +317,19 @@ RING_ON, RING_OFF = 2000, 4000
 class Card:
     cls = UNEQ
     name = ''
+    # Card-identity options (extensions.md §2.4).  Restricted is a flag here: the
+    # calls model keeps the older class numbers (no fabric.md renumber), so dialling
+    # limits live on the card rather than as class 111.
+    priority = False
+    overflow = False          # ignored: groups.md §2 replaced the o-run
+    busy_out = False
+    rings = True
+    restricted = False
+    z_only = False
+    warm = False
+    local_only = False
+    nail = None
+    answers_to = None         # port number this plain line covers (groups.md §2)
     def __init__(self): self.M = 0; self.key = None
     def step(self, ex, p, t): pass
     def sound(self): return 'silence'
@@ -327,12 +340,39 @@ class Tone(Card):
     def sound(self): return self.name
 
 
+def _card_opts(card, priority=False, overflow=False, busy_out=False, rings=True,
+               restricted=False, z_only=False, warm=False, local_only=False, nail=None,
+               answers_to=None):
+    """Apply extensions.md §2.4 options plus groups.md §2 answers_to.  Bare
+    restricted floors to local-only when z and L are clear and warm is clear.
+    overflow is accepted but ignored (the o-run is retired)."""
+    card.priority = priority
+    card.overflow = overflow
+    card.busy_out = busy_out
+    card.rings = rings
+    card.restricted = restricted
+    card.z_only = z_only
+    card.warm = warm
+    card.local_only = local_only
+    card.nail = nail
+    card.answers_to = answers_to
+    if restricted and not z_only and not local_only and not warm:
+        card.local_only = True
+    return card
+
+
 class Phone(Card):
     """A subscriber.  script: [(ms, 'off' | 'on' | 'key', digit)].  answer: ms of
-    being rung before the hook lifts (None: never answers)."""
-    def __init__(self, script=(), answer=None, cls=LINE, keylen=80):
+    being rung before the hook lifts (None: never answers).  rings=False is /ANS
+    low: E is steady and the phone answers without cadence/ringback."""
+    def __init__(self, script=(), answer=None, cls=LINE, keylen=80,
+                 priority=False, overflow=False, busy_out=False, rings=True,
+                 restricted=False, z_only=False, warm=False, local_only=False, nail=None,
+                 answers_to=None):
         super().__init__(); self.cls = cls; self.script = sorted(script, key=lambda e: e[0])
         self.answer = answer; self.keylen = keylen; self.rung = 0; self.key_end = -1
+        _card_opts(self, priority, overflow, busy_out, rings,
+                   restricted, z_only, warm, local_only, nail, answers_to)
     def step(self, ex, p, t):
         if self.key is not None and t >= self.key_end:
             self.key = None
@@ -343,32 +383,46 @@ class Phone(Card):
             elif what == 'on': self.M = 0; self.rung = 0
             elif what == 'key': self.key = arg[0]; self.key_end = t + self.keylen
         if self.answer is not None and not self.M:
-            self.rung = self.rung + 1 if ex.rung(p) else 0
-            if self.rung >= self.answer:
-                self.M = 1; self.answer = None
+            signaled = bool(ex.E[p]) if not self.rings else ex.rung(p)
+            if signaled:
+                self.rung += 1
+                if self.rung >= self.answer:
+                    self.M = 1; self.answer = None
+            else:
+                self.rung = 0
     def sound(self): return 'voice'
 
 
 class Announce(Card):
     """A ROM message as a line: answers when rung, plays, drops M."""
-    def __init__(self, cls=OPER, answer=300, play=3000, name='announcement'):
+    def __init__(self, cls=LINE, answer=300, play=3000, name='announcement',
+                 priority=False, overflow=False, busy_out=False, rings=True,
+                 restricted=False, z_only=False, warm=False, local_only=False, nail=None,
+                 answers_to=None):
         super().__init__(); self.cls = cls; self.answer = answer; self.play = play
         self.name = name; self.rung = 0; self.left = 0
+        _card_opts(self, priority, overflow, busy_out, rings,
+                   restricted, z_only, warm, local_only, nail, answers_to)
     def step(self, ex, p, t):
         if self.M:
             self.left -= 1
             if self.left <= 0 or not ex.E[p]:
                 self.M = 0; self.rung = 0
         else:
-            self.rung = self.rung + 1 if ex.rung(p) else 0
-            if self.rung >= self.answer:
-                self.M = 1; self.left = self.play
+            signaled = bool(ex.E[p]) if not self.rings else ex.rung(p)
+            if signaled:
+                self.rung += 1
+                if self.rung >= self.answer:
+                    self.M = 1; self.left = self.play
+            else:
+                self.rung = 0
     def sound(self): return self.name
 
 
 class Leg(Announce):
-    """A meet-me conference leg: answers when rung and stays while the caller does."""
-    def __init__(self): super().__init__(cls=LINE, answer=200, play=10 ** 9, name='conference')
+    """A meet-me conference leg: /ANS low, answers at once and stays while the caller does."""
+    def __init__(self):
+        super().__init__(cls=LINE, answer=0, play=10 ** 9, name='conference', rings=False)
 
 
 class COLine(Card):
@@ -448,10 +502,19 @@ class Exchange:
     def inflight(self, p):
         """A release detector still timing out: its filter high, its input already low."""
         return self.settle and ((self.filt[p][0] and not self.card[p].M) or (self.filt[p][1] and not self.E[p]))
-    def free(self, p): return not self.busy[p] and not self.card[p].M and not self.inflight(p)
+    def free(self, p):
+        """Free for terminating / hunt: not busy, on-hook, not settling; busy-out and
+        a nail both count as not free (extensions.md §2.4, §3.1)."""
+        c = self.card[p]
+        if c.nail is not None or c.busy_out:
+            return False
+        return not self.busy[p] and not c.M and not self.inflight(p)
     def rung(self, p):
         """On-hook with E high: the hotline rule's ring condition, before the cadence.
-        ringgate: on-hook means the FILTERED hook too, so a phone just hung up is not rung."""
+        ringgate: on-hook means the FILTERED hook too, so a phone just hung up is not rung.
+        rings=False (/ANS low): never the ring condition — no cadence, no ringback."""
+        if not self.card[p].rings:
+            return False
         return bool(self.E[p] and not self.card[p].M and not (self.ringgate and self.filt[p][0])
                     and self.cls(p) in (LINE, OPER))
     def ringing(self, p): return self.rung(p) and self.t % (RING_ON + RING_OFF) < RING_ON
@@ -485,9 +548,10 @@ class Exchange:
     def release_reg(self, r):
         self.regs[r].clear(); self.calls.pop(r, None)
     def request(self, p):
-        if self.cls(p) == EXT:                        # a CO line ringing in: as if it had dialled 0
-            o = self.hunt(OPER)
-            if o is not None: self.connect(p, o)
+        c = self.card[p]
+        # CO line ringing in, or warm restricted: as if dialled 0 (probe 04), no register
+        if self.cls(p) == EXT or (c.restricted and c.warm):
+            self._probe_or_answers(p, 0o04)
             return
         r = next((i for i, reg in enumerate(self.regs) if reg.caller is None), None)
         if r is None:
@@ -497,15 +561,44 @@ class Exchange:
         self.write(p, d or 0, 1)
         self.calls[r] = [p, [], self.t]
         self.note(f'marker: register {r} -> {oc(p)}, dial tone from {oc(d) if d else "nowhere"}')
+    def _try_terminate(self, a, q):
+        """Probe one port: free LINE/OPER/EXT → connect; tone → give it; else fail (False)."""
+        c = self.cls(q)
+        if c == UNEQ:
+            return False
+        if c in (DIAL, BUSY, NOGO):
+            self.write(a, q, 1); return True
+        if c not in (LINE, OPER, EXT):
+            return False
+        if q == a or not self.free(q):
+            return False
+        self.connect(a, q); return True
+    def _probe_or_answers(self, a, q0):
+        """groups.md §2.2: probe dialled q0; else first free port with answers_to == q0."""
+        if self._try_terminate(a, q0):
+            return
+        for p in range(NP):
+            if self.card[p].answers_to == q0 and self._try_terminate(a, p):
+                return
+        self.nogo(a, f'no answer to {oc(q0)}')
     def marker_digit(self, r, k, t):
         if r not in self.calls: return
         a, digits, _ = self.calls[r]
         digits.append(k); self.calls[r][2] = t
+        caller = self.card[a]
         if len(digits) == 1:
             self.write(a, 0, 1)                       # dial tone off at the first digit
-            if k == '0' or k == '9':
-                q = self.hunt(OPER if k == '0' else EXT)
-                self.connect(a, q) if q is not None else self.nogo(a, f'no free class {2 if k == "0" else 3}')
+            # Restricted dialling limits (extensions.md §2.4): z wins; else L or floor.
+            if caller.restricted:
+                if caller.z_only and k != '0':
+                    self.nogo(a, 'restricted 0-only'); self.release_reg(r); return
+                if caller.local_only and k in '19':
+                    self.nogo(a, 'restricted local-only'); self.release_reg(r); return
+            if k == '0':                              # groups.md §2.2: called = 04, then answers-to
+                self._probe_or_answers(a, 0o04)
+            elif k == '9':
+                q = self.hunt(EXT)
+                self.connect(a, q) if q is not None else self.nogo(a, 'no free class 3')
             elif k == '1':                            # the network's key: seize a trunk.  The flood itself is
                 q = self.hunt(TRUNK)                  # exch.py net; no scenario here fits a trunk card, so the
                 self.nogo(a, 'no free class 4' if q is None else 'the flood is not modelled here')
@@ -517,12 +610,7 @@ class Exchange:
             if k not in '01234567':
                 self.nogo(a, f'second key {k}')
             else:
-                q = int(digits[0]) * 8 + int(k)
-                c = self.cls(q)
-                if c == UNEQ: self.nogo(a, f'{oc(q)} is {CLASS[c]}')
-                elif c in (DIAL, BUSY, NOGO): self.write(a, q, 1)
-                elif q == a or not self.free(q): self.busy_tone(a, f'{oc(q)} busy')
-                else: self.connect(a, q)
+                self._probe_or_answers(a, int(digits[0]) * 8 + int(k))
         self.release_reg(r)
 
     # -- one tick
@@ -558,6 +646,11 @@ class Exchange:
                 self.nogo(a, 'nothing dialled'); self.release_reg(r)
         for _ in range(8):                            # the scanner: 8 ports a tick, 64 in 8 ms
             p = self.scan; self.scan = (self.scan + 1) % NP
+            nail = self.card[p].nail
+            if nail is not None and not self.busy[p]:
+                # Nail before call-request (extensions.md §3.1): write latch to partner.
+                self.write(p, nail, 1)
+                continue
             if (self.card[p].M and not self.busy[p] and not self.latch[p] and not self.inflight(p)
                     and self.cls(p) in (LINE, OPER, EXT)):
                 self.request(p)
@@ -622,7 +715,7 @@ def pulses(t, digits, pps=10.0, brk=0.60, pause=700):
 
 def calls():
     print('CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.')
-    print('  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04-07 operator bank;')
+    print('  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04 operator pilot (groups.md §2);')
     print('  registers are a pool (no ports); subscribers 20-77 (standalone may use 10-17).')
     print(f'  Release: M or E low for {T_FALL} ms (each port\'s two detectors +-{TOL:.0%}), after {T_RISE} ms high.  '
           f'Scanner: 8 ports a tick.\n')
@@ -663,20 +756,23 @@ def calls():
                   0o21: P_([(100, 'off')] + keys(900, '20') + [(3000, 'on')]),
                   0o23: P_([(5087, 'off'), (7000, 'on')])}), 8500, [0o20, 0o21, 0o23])
 
-    ops = lambda first: {0o30: P_(first, answer=1500, cls=OPER), 0o31: P_([(9000, 'on')], answer=1500, cls=OPER),
-                         0o32: Announce(OPER, play=2500, name='night announcement')}
-    scene('9a. 0: the first operator is free.',
+    # 0 → pilot 04; further positions answer_to 04 (groups.md §2)
+    ops = lambda first: {0o04: P_(first, answer=1500),
+                         0o31: P_([(9000, 'on')], answer=1500, answers_to=0o04),
+                         0o32: Announce(play=2500, name='night announcement', answers_to=0o04)}
+    scene('9a. 0: the operator at 04 is free.',
           layout({0o20: P_([(100, 'off')] + keys(900, '0') + [(6000, 'on')]), **ops([(6200, 'on')])}),
-          7500, [0o20, 0o30, 0o31])
-    scene('9b. 0: the first operator is in a call, so the hunt falls to the second position.',
+          7500, [0o20, 0o04, 0o31])
+    scene('9b. 0: 04 is in a call (23 dialled 0 first), so the hunt falls to the second position (answers to 04).',
           layout({0o20: P_([(3000, 'off')] + keys(3800, '0') + [(8000, 'on')]),
-                  0o23: P_([(100, 'off')] + keys(900, '30') + [(9000, 'on')]), **ops([(9200, 'on')])}),
-          10500, [0o20, 0o30, 0o31])
-    scene('9c. 0: both positions off-hook, so the announcement card answers, plays and drops; the caller is back at dial tone.',
+                  0o23: P_([(100, 'off')] + keys(900, '0') + [(9000, 'on')]), **ops([(9200, 'on')])}),
+          10500, [0o20, 0o04, 0o31])
+    scene('9c. 0: 04 and the second position off-hook, so the announcement (answers to 04) plays and drops.',
           layout({0o20: P_([(1000, 'off')] + keys(1800, '0') + [(8000, 'on')]),
-                  0o30: P_([(100, 'off'), (8500, 'on')], cls=OPER), 0o31: P_([(100, 'off'), (8500, 'on')], cls=OPER),
-                  0o32: Announce(OPER, play=2500, name='night announcement')}), 9500, [0o20, 0o32])
-    scene('9d. 0 with no operator class fitted.',
+                  0o04: P_([(100, 'off'), (8500, 'on')]),
+                  0o31: P_([(100, 'off'), (8500, 'on')], answers_to=0o04),
+                  0o32: Announce(play=2500, name='night announcement', answers_to=0o04)}), 9500, [0o20, 0o32])
+    scene('9d. 0 with nothing at 04 and no answers-to member.',
           layout({0o20: P_([(100, 'off')] + keys(900, '0') + [(3000, 'on')])}), 4000, [0o20])
 
     scene('10. 9: two CO lines at 10 and 11, three callers.',
@@ -685,12 +781,12 @@ def calls():
                   0o23: P_([(2000, 'off')] + keys(2800, '9') + [(7000, 'on')]),
                   0o10: COLine(), 0o11: COLine()}), 8500, [0o20, 0o22, 0o23])
     ring = [(500 + k * 6000, 2500 + k * 6000) for k in range(4)]
-    scene('11a. A CO line rings in: routed as 0.  The exchange FXO build holds A_TX across the cadence gap and while the loop is closed.',
-          layout({0o10: COLine(ring, hold=True), 0o30: P_([(14000, 'on')], answer=8000, cls=OPER)}),
-          16000, [0o10, 0o30])
+    scene('11a. A CO line rings in: routed as 0 (probe 04).  The exchange FXO build holds A_TX across the cadence gap and while the loop is closed.',
+          layout({0o10: COLine(ring, hold=True), 0o04: P_([(14000, 'on')], answer=8000)}),
+          16000, [0o10, 0o04])
     scene('11b. The same with channel-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.',
-          layout({0o10: COLine(ring, hold=False), 0o30: P_([(14000, 'on')], answer=8000, cls=OPER)}),
-          16000, [0o10, 0o30])
+          layout({0o10: COLine(ring, hold=False), 0o04: P_([(14000, 'on')], answer=8000)}),
+          16000, [0o10, 0o04])
 
     scene('12a. The dial-tone card is pulled; a second class-5 card at 06 serves.',
           layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(5000, 'on')]), 0o21: P_([(5200, 'on')], answer=1000),
@@ -795,6 +891,44 @@ def calls():
           layout({0o20: P_([(100, 'off')] + ev1 + [(7000, 'on'), (16500, 'on')] + tries, answer=1500),
                   0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, tones=False),
           40500, [0o20, 0o21], regs=1)
+
+    # ---- card-identity options (extensions.md §2.4) and answers-to (groups.md §2)
+    scene('20. Answers-to hunt group: 21 and 22 answer to 20.\n'
+          '      23 dials 20 while 20 and 21 are busy → connects to 22.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '24') + [(12000, 'on')]),
+                  0o21: P_([(200, 'off')] + keys(1000, '25') + [(12000, 'on')], answers_to=0o20),
+                  0o22: P_([(13000, 'on')], answer=1500, answers_to=0o20),
+                  0o23: P_([(4000, 'off')] + keys(4800, '20') + [(11000, 'on')]),
+                  0o24: P_([(12200, 'on')], answer=800),
+                  0o25: P_([(12200, 'on')], answer=800)}), 14500, [0o23, 0o20, 0o21, 0o22])
+    scene('21. Busy-out: 21 has b set.  20 dials 21 → cannot-complete (not free, no cover); then 21 lifts and dials 20 → connects.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(3500, 'on'), (8000, 'on')], answer=1500),
+                  0o21: P_([(4000, 'off')] + keys(4800, '20') + [(10000, 'on')], busy_out=True)}),
+          11500, [0o20, 0o21])
+    scene('22. Restricted 0-only: 20 may only dial 0.  21 → cannot-complete; 0 → operator at 04.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(2500, 'on'), (3000, 'off')] + keys(3800, '0')
+                           + [(7000, 'on')], restricted=True, z_only=True),
+                  0o21: P_(),
+                  0o04: P_([(7200, 'on')], answer=1500)}), 8500, [0o20, 0o04])
+    scene('23. Restricted local-only: 20 cannot dial 9 or 1; a local call to 21 completes.\n'
+          '      Bare restricted (no z, no L) floors to local-only the same way.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '9') + [(2500, 'on'), (3000, 'off')] + keys(3800, '21')
+                           + [(8000, 'on')], restricted=True, local_only=True),
+                  0o21: P_([(8200, 'on')], answer=1500),
+                  0o10: COLine(),
+                  0o22: P_([(100, 'off')] + keys(900, '9') + [(2500, 'on')], restricted=True)}),
+          9500, [0o20, 0o21, 0o22])
+    scene('24. Restricted warm: 20 lifts and is routed as 0 (probe 04) with no register (like a CO line ringing in).',
+          layout({0o20: P_([(100, 'off'), (6000, 'on')], restricted=True, warm=True, z_only=True),
+                  0o04: P_([(6200, 'on')], answer=1500)}), 7500, [0o20, 0o04])
+    scene('25. Rings=False (/ANS low): 21 answers at once; caller hears silence, not ringback, until answer.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '21') + [(5000, 'on')]),
+                  0o21: P_([(5200, 'on')], answer=0, rings=False)}), 6500, [0o20, 0o21])
+    scene('26. Cover: 21 answers to 20.  22 dials 20 while 20 is busy → 21 rings.',
+          layout({0o20: P_([(100, 'off')] + keys(900, '23') + [(10000, 'on')]),
+                  0o21: P_([(11000, 'on')], answer=1500, answers_to=0o20),
+                  0o22: P_([(4000, 'off')] + keys(4800, '20') + [(9000, 'on')]),
+                  0o23: P_([(10200, 'on')], answer=800)}), 12500, [0o22, 0o20, 0o21])
 
 
 # ------------------------------------------------------------------ announce
@@ -3274,7 +3408,10 @@ def big():
 
 
 
-TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline, 'flood': flood, 'monitor': monitor, 'timing': timing, 'mainboard': mainboard, 'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo, 'traffic': traffic, 'big': big}
+TARGETS = {'tandem': tandem, 'fabric': fabric, 'calls': calls, 'announce': announce, 'aline': aline,
+           'flood': flood, 'monitor': monitor, 'timing': timing, 'mainboard': mainboard,
+           'confer': confer, 'ss0': ss0, 'net': net, 'topo': topo, 'traffic': traffic,
+           'big': big}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):

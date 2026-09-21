@@ -158,6 +158,7 @@ module tb_pool;
         want(!ln_a[6'o20] && !ln_a[6'o21] && !ln_b[6'o21], "everything released");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 

@@ -148,6 +148,7 @@ module tb_monitor;
         want(claimed_slots == 8'b0000_1010, "naming slots 01 and 03");
 
         $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
         $finish;
     end
 
