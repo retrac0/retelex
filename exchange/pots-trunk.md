@@ -11,12 +11,12 @@ population of `channel-cards.md` §3. This card rides a POTS-grade 600 Ω pair
 the way a leased voice circuit does: tip and ring, no battery feed, no ring
 generator, no loop closure toward a CO.
 
-> **Status: proposed. Nothing here is newly measured.** The codec law, hybrid
+> **Status: proposed; `sim/pots_trunk.py` measured.** The codec law, hybrid
 > loss and pulse limits are cited from where they were measured
 > (`mf8-spec.md` §12.1, `channel-cards.md` §3.3, `network.md` §1.1,
-> `monitor.md` §5.1). Frequency plan, detector timing and notch depth are
-> assignments against those limits. No circuit has been drawn and no pair has
-> been listened to.
+> `monitor.md` §5.1). Frequency plan and detector timing are assignments;
+> §9 records what the sim found against them. No circuit has been drawn and
+> no pair has been listened to.
 
 ---
 
@@ -267,18 +267,32 @@ of filtered M or E.
 
 ---
 
-## 9. Not measured, and open
+## 9. Measured (`sim/pots_trunk.py`), and open
 
-- **Talk-off.** Dual-tone AND is the argument; nobody has shouted into a notched
-  hybrid with these four frequencies and counted false idles or false seizes.
-- **Pulse integrity end to end.** §4's attack/release is an assignment against
-  `network.md` §1.1; a rotary dial through two cards and a pair wants a bench.
-- **Notch depth with a real hybrid.** 40 dB is the target so a −10 dBm0 idle
-  tone at 12 dB trans-hybrid leak still sits under the encoder's floor; the
-  compromise balance and the four notches will fight each other on the bench.
-- **Level plan.** −10 dBm0 for the idle tone against the codec's nominal speech
-  is a starting point, not a measurement.
-- **MT8870 footprint.** Optional; if built, re-check collision with in-band
-  DTMF from a phone on the speech path.
-- **Schematic and Falstad.** Not drawn.
-- **Canceller.** Out of scope; long hops stay forbidden by §3 until one exists.
+`pots_trunk.log` is the run. Model: dual-tone W/E, −12 dB hybrid leak, Q=25
+zero-phase notches, Goertzel AND + twist ≤ 6 dB, 16/8 ms Schmitt, Gaussian
+noise referred to one tone's rms.
+
+| | result |
+|---|---|
+| **Notch depth** | ≫ 40 dB at each of 2200/2400/2600/2800 (ideal IIR; print capped at 80) |
+| **Idle detect vs noise** | A stays idle to **0 dB SNR**; ~3 % false seize at −3 dB; ~30 % at −10 dB |
+| **Dial pulses** | digit 5 (60/40 ms) keeps all five breaks ≥ 50 ms through **0 dB SNR**; ~5–10 ms shortening from the detector |
+| **Link down** | cut pair → unequipped in **160 ms** (target 100–200) |
+| **Speech + notches** | idle whistle residue **−95 dB** with notches; without them segSNR collapses to ~8 dB. With notches, tandem segSNR holds the ceiling against a notched reference; channel noise then binds (17 dB at SNR 20, 10 dB at SNR 10) |
+| **Talk-off** | flat in-band synthetic speech false-idles **~11 %** of the time (worst stuck run ~50 ms). A 1 kHz tone at nominal: **0 %**. Real speech with formants is owed |
+
+**What the sim does not settle.** A Goertzel-and-Schmitt stand-in is not a twin-T
+plus LM567; causal notches on the card will disperse speech where filtfilt does
+not; talk-off wants a real talker, not band-limited noise; and nothing has been
+on a pair.
+
+Still open on the bench:
+
+- **Talk-off with real speech** into the strapped detector.
+- **Pulse integrity** through two cards and a real hybrid.
+- **Notch depth with a compromise balance** — Q and the hybrid will fight.
+- **Level plan** (−10 dB re nominal) against a working detector IC.
+- **MT8870 footprint**, if built.
+- **Schematic and Falstad.**
+- **Canceller.** Out of scope; long hops stay forbidden by §3.

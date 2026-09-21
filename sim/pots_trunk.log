@@ -1,0 +1,102 @@
+pots_trunk.py -- exchange/pots-trunk.md
+  pairs W=(2400.0, 2600.0) E=(2200.0, 2800.0); tone -10 dB re NOMINAL; hybrid −12 dB; detector 16/8 ms
+
+NOTCHES -- depth of the cascaded W+E notches at each signalling frequency
+
+    freq   alone dB through notch dB   depth dB
+    2400      -29.5           -276.2       80.0
+    2600      -29.5           -275.3       80.0
+    2200      -29.5           -277.0       80.0
+    2800      -29.5           -274.5       80.0
+
+  Q=25, target ≥ 40 dB (pots-trunk.md §3). Depth capped at 80 in the print.
+
+  [notch: 0.0 s]
+
+DETECT -- far idle pair through hybrid leak of the near send pair, vs SNR
+
+  SNR referred to one tone's rms.  Idle = both far tones above thresh;
+  thresh = clean−6 dB (≈ -28.1 dB re NOMINAL²), twist ≤ 6 dB, window 20 ms.
+
+    SNR dB  raw present %   A=0 (idle) %  false seize %
+     clean          100.0           99.0            1.0
+       +30          100.0           99.0            1.0
+       +20          100.0           99.0            1.0
+       +15          100.0           99.0            1.0
+       +10          100.0           99.0            1.0
+        +6          100.0           99.0            1.0
+        +3          100.0           99.0            1.0
+        +0           99.7           99.0            1.0
+        -3           97.9           97.1            2.9
+        -6           90.6           90.9            9.1
+       -10           74.7           70.2           29.8
+
+  Want: idle ≈ 100 % down to a few dB SNR; false seize is 100−idle.
+
+  [detect: 13.7 s]
+
+TALK-OFF -- speech alone (no far tones) into the W detector
+
+  Synthetic speech here is flat in-band, so it is a harsh talk-off
+  source (real speech has formants).  Stuck ms is the worst A=0 run.
+
+  condition                            false idle %  A stuck idle ms
+  speech alone                                11.25             54.2
+  speech + near E leak                        11.12             53.3
+  speech + E leak + SNR 20                    10.96             48.3
+  1 kHz tone at nominal                        0.00              0.0
+
+
+  [talkoff: 5.2 s]
+
+PULSES -- dial breaks as tone restore, through noise
+
+  Digit 5: five 60 ms breaks / 40 ms makes after a 200 ms seize.
+  A break ≥ 8 ms must survive (network.md §1.1).
+
+    SNR dB  breaks seen  min break ms  mean break ms   OK
+     clean          5.0          55.0           55.0  yes
+       +20          5.0          55.0           55.0  yes
+       +15          5.0          55.0           55.0  yes
+       +10          5.0          53.0           54.4  yes
+        +6          5.0          51.0           53.8  yes
+        +3          5.0          50.0           53.4  yes
+        +0          5.0          50.0           53.0  yes
+
+
+  [pulses: 1.5 s]
+
+SPEECH -- CVSD tandem on the 8 kHz line, with far idle tones and notches
+
+  Path: encode → decode (near) → [8 kHz] → tones? → notches? → bandlimit
+  → encode → decode (far).
+  segSNR against a *notched* clean path so the score is the whistle,
+  not the spectral holes the notches cut in the reference.
+
+  plain path vs itself:     segSNR  35.0 dB
+  notched vs plain:         segSNR   9.6 dB (spectral holes — not a fault)
+  notched vs notched:       segSNR  35.0 dB
+
+  condition                                 segSNR dB  W residue dB
+  tones + leak, no notches                        8.4          -0.7
+  tones + leak + notches                         35.0         -94.7
+  tones + notches + SNR 20                       17.5         -94.7
+  tones + notches + SNR 10                       10.0         -94.7
+  notches only (no tones)                        35.0         -94.7
+
+  Residue is mean W-bin level re a clean dual tone; notches should
+  drive it deep negative.  segSNR uses the notched clean path as ref
+  whenever notches are on, so a dead whistle reads near the ceiling.
+
+  [speech: 24.4 s]
+
+LINK DOWN -- cut the far tones, time to unequipped
+
+  Target 150 ms (pots-trunk.md §5).
+
+  cut at 200 ms → link-down at 360.0 ms absolute, 160.0 ms after the cut
+  noise only, SNR 0 dB → link-down at 165.0 ms
+
+
+  [linkdown: 0.0 s]
+
