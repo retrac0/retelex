@@ -192,7 +192,10 @@ until a card drives it.
    answer, talk, hang up in either order, and both latches clear themselves.
    **With the console setting up each call, this is a manual board with no
    marker at all.**
-4. **The marker and the register.** Dial.
+4. **The mini-marker** (`mini-marker.md`). One register inside, two digits,
+   no card word, no 1-prefix. Dial 20 and 21. Throw it away when the real
+   marker goes in.
+5. **The marker and the register.** Dial.
 
 ---
 

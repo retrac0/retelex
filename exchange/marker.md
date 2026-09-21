@@ -3,7 +3,9 @@
 The common control of one exchange: how a port says what it is, how a number is
 read, how the marker finds what was asked for, and how a call ends with nobody
 in charge of it. The fabric the marker writes to is `protocol.md`; the
-cards it hunts for are `features.md`.
+cards it hunts for are `features.md`. A bring-up jig with no card word and
+no 1-prefix — one register inside, two digits, then throw it away — is
+`mini-marker.md`.
 
 > **Status: proposed, measured in simulation.** `exch.py calls` runs one exchange
 > a millisecond at a time — ports, latches, `BUSY`, class marks, release

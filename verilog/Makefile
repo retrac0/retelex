@@ -7,7 +7,7 @@ SHELL := /bin/bash
 # is about two orders of magnitude faster and is what to use while working --
 # the network testbench is 3 s of model time, which is minutes under Icarus and
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
-RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v \
+RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v rtl/mini_marker.v \
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/pulse_gen.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
@@ -37,8 +37,9 @@ TB_priority := tb/net_site.v tb/tb_priority.v
 TB_word   := tb/net_site.v tb/tb_word.v
 TB_groups := tb/net_site.v tb/tb_groups.v
 TB_pulse_gen := tb/net_site.v tb/tb_pulse_gen.v
+TB_mini := tb/mini_site.v tb/tb_mini.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen mini
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -226,6 +227,8 @@ lint:
 	    rtl/mf8_trunk_card.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v
 	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module marker \
 	    rtl/marker.v
+	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module mini_marker \
+	    rtl/mini_marker.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v
 
 # The full 64-port exchange, every block fitted: cells and flip-flops.
 synth: $(BUILD)
@@ -237,6 +240,6 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean pulse-gen iv-pulse-gen
+.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean pulse-gen mini iv-pulse-gen
 pulse-gen: pulse_gen
 iv-pulse-gen: iv-pulse_gen
