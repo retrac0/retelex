@@ -1,4 +1,4 @@
-// tb_pulse_gen -- pulse-gen.md: keypad map, both timebases, and a call with no handset.
+// tb_pulse_gen -- pulse-gen.md: button map, both timebases, and a call with no handset.
 `timescale 1ns/1ps
 
 module tb_pulse_gen;
@@ -24,11 +24,7 @@ module tb_pulse_gen;
     end
 
     reg        g_hook = 0, g_xtal = 1, g_wdt = 0;
-    reg  [1:0] g_kr = 0, g_kc = 0;
-    reg        g_press = 0;
-    wire [3:0] g_row;
-    wire [3:0] g_col = (g_press && (g_row == ~(4'b0001 << g_kr))) ?
-                       ~(4'b0001 << g_kc) : 4'b1111;
+    reg [15:0] g_key = 16'hFFFF;
     wire       g_m, g_ctx, g_word, g_ans;
     wire [4:0] rx_cnt;
     wire       rx_stb, rx_clr;
@@ -36,7 +32,7 @@ module tb_pulse_gen;
     pulse_gen #(.T_OH(10), .T_ID(200), .DEBOUNCE(2), .T_DT(4)) u_g (
         .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .tx_oct(1'b0),
         .fill(1'b0), .c_rx(1'b0),
-        .hook_sw(g_hook), .row(g_row), .col(g_col),
+        .hook_sw(g_hook), .key_n(g_key),
         .use_xtal(g_xtal), .wait_dt(g_wdt),
         .dip_pps(2'd1), .dip_brk(1'b0), .dip_oh(4'd0),
         .c_tx(g_ctx), .a_tx(g_m), .word_pin(g_word), .ans_n(g_ans));
@@ -46,11 +42,7 @@ module tb_pulse_gen;
         .cnt(rx_cnt), .dig_stb(rx_stb), .clear(rx_clr), .counting(), .brk_stb());
 
     reg        a_hook = 0;
-    reg  [1:0] a_kr = 0, a_kc = 0;
-    reg        a_press = 0;
-    wire [3:0] a_row;
-    wire [3:0] a_col = (a_press && (a_row == ~(4'b0001 << a_kr))) ?
-                       ~(4'b0001 << a_kc) : 4'b1111;
+    reg [15:0] a_key = 16'hFFFF;
     wire       a_m;
     wire [4:0] ax_cnt;
     wire       ax_stb;
@@ -58,7 +50,7 @@ module tb_pulse_gen;
     pulse_gen #(.PPS(8), .BREAK_PCT(67), .T_OH(10), .T_ID(200), .DEBOUNCE(2)) u_adj (
         .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .tx_oct(1'b0),
         .fill(1'b0), .c_rx(1'b0),
-        .hook_sw(a_hook), .row(a_row), .col(a_col),
+        .hook_sw(a_hook), .key_n(a_key),
         .use_xtal(1'b0), .wait_dt(1'b0),
         .dip_pps(2'd0), .dip_brk(1'b1), .dip_oh(4'd0),
         .c_tx(), .a_tx(a_m), .word_pin(), .ans_n());
@@ -77,22 +69,22 @@ module tb_pulse_gen;
         end
     endtask
 
-    // Hold a key long enough for debounce (2 hits of that row, 4-row scan).
-    task press(input [1:0] r, input [1:0] c);
+    // Hold pin n (1..16) long enough for debounce.
+    task press(input [4:0] n);
         begin
-            g_kr = r; g_kc = c; g_press = 1;
-            utick(16);
-            g_press = 0;
+            g_key = ~(16'b1 << (n - 1));
             utick(8);
+            g_key = 16'hFFFF;
+            utick(4);
         end
     endtask
 
-    task press_adj(input [1:0] r, input [1:0] c);
+    task press_adj(input [4:0] n);
         begin
-            a_kr = r; a_kc = c; a_press = 1;
-            utick(16);
-            a_press = 0;
+            a_key = ~(16'b1 << (n - 1));
             utick(8);
+            a_key = 16'hFFFF;
+            utick(4);
         end
     endtask
 
@@ -145,11 +137,8 @@ module tb_pulse_gen;
     wire [63:0] ln_a, ln_b, rx_a, rx_b;
 
     wire       pg_m;
-    wire [3:0] n_row;
-    reg        n_hook = 0, n_press = 0;
-    reg  [1:0] n_kr = 0, n_kc = 0;
-    wire [3:0] n_col = (n_press && (n_row == ~(4'b0001 << n_kr))) ?
-                       ~(4'b0001 << n_kc) : 4'b1111;
+    reg        n_hook = 0;
+    reg [15:0] n_key = 16'hFFFF;
     reg        ans_a21 = 0, ans_b21 = 0;
     wire [63:0] hk_a = {46'd0, ans_a21, pg_m, 16'd0};
     wire [63:0] hk_b = {46'd0, ans_b21, 1'b0, 16'd0};
@@ -182,16 +171,16 @@ module tb_pulse_gen;
     pulse_gen #(.PPS(50), .BREAK_PCT(60), .T_OH(40), .T_ID(60), .DEBOUNCE(2)) u_net (
         .clk(clk_a), .rst_n(rst_net), .tick_1k(tick_a), .tx_oct(1'b0),
         .fill(1'b0), .c_rx(1'b0),
-        .hook_sw(n_hook), .row(n_row), .col(n_col),
+        .hook_sw(n_hook), .key_n(n_key),
         .use_xtal(1'b0), .wait_dt(1'b0),
         .dip_pps(2'd1), .dip_brk(1'b0), .dip_oh(4'd0),
         .c_tx(), .a_tx(pg_m), .word_pin(), .ans_n());
 
-    task npress(input [1:0] r, input [1:0] c);
+    task npress(input [4:0] n);
         begin
-            n_kr = r; n_kc = c; n_press = 1;
+            n_key = ~(16'b1 << (n - 1));
             #(30_000_000);
-            n_press = 0;
+            n_key = 16'hFFFF;
             #(20_000_000);
         end
     endtask
@@ -233,7 +222,7 @@ module tb_pulse_gen;
     endtask
 
     initial begin
-        $display("PULSE-GEN (RTL) -- pulse-gen.md, keypad and a call with no handset.\n");
+        $display("PULSE-GEN (RTL) -- pulse-gen.md, buttons and a call with no handset.\n");
         $fflush();
         #200 rst_n = 1;
         utick(5);
@@ -244,28 +233,28 @@ module tb_pulse_gen;
         // ---- 1. crystal 10 pps 60/40, digit 5 ----
         $display("  1. Crystal 10 pps 60/40, digit 5."); $fflush();
         g_hook = 1; utick(12);
-        press(2'd1, 2'd1);                    // 5
+        press(5'd5);
         expect_dig(5'd5, "register counts 5");
         want(g_brk >= 58 && g_brk <= 62, "break is 60 ticks");
         want(g_mk  >= 38 && g_mk  <= 42, "make is 40 ticks");
         g_hook = 0; utick(30);
 
         // ---- 2. hex map, including D = 16 ----
-        $display("  2. Keypad map: 0 * # A B C D."); $fflush();
+        $display("  2. Hex map: 0 * # A B C D."); $fflush();
         g_hook = 1; utick(12);
-        press(2'd3, 2'd1); expect_dig(5'd10, "0 is 10 pulses");
-        press(2'd3, 2'd0); expect_dig(5'd11, "* is 11 pulses");
-        press(2'd3, 2'd2); expect_dig(5'd12, "# is 12 pulses");
-        press(2'd0, 2'd3); expect_dig(5'd13, "A is 13 pulses");
-        press(2'd1, 2'd3); expect_dig(5'd14, "B is 14 pulses");
-        press(2'd2, 2'd3); expect_dig(5'd15, "C is 15 pulses");
-        press(2'd3, 2'd3); expect_dig(5'd16, "D is 16 pulses, not a wrap");
+        press(5'd10); expect_dig(5'd10, "0 is 10 pulses");
+        press(5'd11); expect_dig(5'd11, "* is 11 pulses");
+        press(5'd12); expect_dig(5'd12, "# is 12 pulses");
+        press(5'd13); expect_dig(5'd13, "A is 13 pulses");
+        press(5'd14); expect_dig(5'd14, "B is 14 pulses");
+        press(5'd15); expect_dig(5'd15, "C is 15 pulses");
+        press(5'd16); expect_dig(5'd16, "D is 16 pulses, not a wrap");
         g_hook = 0; utick(30);
 
         // ---- 3. adjustable 8 pps 67 % ----
         $display("  3. Adjustable source, 8 pps 67 %%."); $fflush();
         a_hook = 1; utick(12);
-        press_adj(2'd0, 2'd0);                // 1
+        press_adj(5'd1);
         begin : adjd
             integer guard;
             guard = 0;
@@ -284,12 +273,12 @@ module tb_pulse_gen;
         g_hook = 1;
         utick(12);
         want(g_m, "off-hook, no breaks during the seize delay");
-        press(2'd0, 2'd0);                    // 1
+        press(5'd1);
         expect_dig(5'd1, "digit after the seize delay");
         g_hook = 0; utick(20);
 
         g_hook = 1; utick(12);
-        press(2'd3, 2'd1);                    // 0 = 10 pulses
+        press(5'd10);                         // 0 = 10 pulses
         nfall = 0;
         guardt = 0;
         while (nfall < 3 && guardt < 800) begin
@@ -313,9 +302,9 @@ module tb_pulse_gen;
         end
 
         g_hook = 1; utick(12);
-        press(2'd0, 2'd1);                    // 2
+        press(5'd2);
         utick(30);                            // into the train
-        press(2'd0, 2'd0);                    // 1 queued
+        press(5'd1);                          // queued
         expect_dig(5'd2, "first queued digit is 2");
         expect_dig(5'd1, "then the queued 1");
         g_hook = 0; utick(30);
@@ -328,9 +317,9 @@ module tb_pulse_gen;
         want(lock_a && lock_b, "link up");
         n_hook = 1;
         #(80_000_000);
-        npress(2'd0, 2'd1);                   // 2
+        npress(5'd2);
         #(150_000_000);
-        npress(2'd0, 2'd0);                   // 1
+        npress(5'd1);
         #(80_000_000);
         ring_a21(2 * (RING_ON + RING_OFF),
                   "A's 21 rings, originated from the generator");
@@ -343,17 +332,17 @@ module tb_pulse_gen;
 
         n_hook = 1;
         #(80_000_000);
-        npress(2'd0, 2'd0);                   // 1  network key
+        npress(5'd1);                          // 1  network key
         #(80_000_000);
         want(mh_b, "B's monitor caught the seizure");
-        npress(2'd0, 2'd1);                   // 2  e
+        npress(5'd2);                          // 2  e
         #(150_000_000);
-        npress(2'd0, 2'd2);                   // 3  b
+        npress(5'd3);                          // 3  b
         #(80_000_000);
         want(gc_a, "the claim came back");
-        npress(2'd0, 2'd1);                   // 2  h
+        npress(5'd2);                          // 2  h
         #(150_000_000);
-        npress(2'd0, 2'd0);                   // 1  s
+        npress(5'd1);                          // 1  s
         #(80_000_000);
         ring_b21(2 * (RING_ON + RING_OFF),
                   "B's 21 rings: the flood carried the generator's pulses");

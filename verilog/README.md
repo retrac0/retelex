@@ -56,7 +56,7 @@ rack, and the module boundaries are the connectors.
 
  line_card         a card that plugs into a channel slot -- OUTSIDE exch_top, because
                    that is where it is                       (mf8-backplane.md 8)
- pulse_gen         keypad hook/pulse card: 10 pps on A_TX, no handset
+ pulse_gen         hex buttons as pins: 10 pps on A_TX, no handset
                                                              (pulse-gen.md)
  mf8_trunk_card    six channels of a block made into a tie trunk (network.md 1)
    mf8_encoder     differential Manchester: a transition a cell, two for a 0
@@ -98,7 +98,7 @@ make sclk     mainboard.md 7: a spurious SCLK edge mid-shift, and that it heals
 make priority  extensions.md 2.4.1: a priority lift waits out non-priority under overload
 make word     the card word: class, nail, answers-to, plain FF, zero
 make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
-make pulse_gen pulse-gen.md: keypad, 10 pps, a call with no handset
+make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
 make mini     mini-marker.md: two lines, one register, no card word, no 1-prefix
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link

@@ -1,16 +1,17 @@
 # The exchange — a hook/pulse generator, no handset
 
-A channel card that **seizes and dials**. A hook switch and a 4 × 4 keypad on
-the front, 10 pps breaks on `A_TX`, nothing in the ear. Registers and the pulse
-flood read only A, so they see an ordinary caller (`network.md` §3, `register.md`
-§1). It is the interactive cousin of the stored-number hotline of
-`extensions.md` §3.4: that card dials one jumpered number when its phone is
-lifted; this one is a tester, and the number is whatever is keyed.
+A channel card that **seizes and dials**. A hook switch and sixteen SMD
+buttons on the front — each button is also a pin — 10 pps breaks on `A_TX`,
+nothing in the ear. Registers and the pulse flood read only A, so they see an
+ordinary caller (`network.md` §3, `register.md` §1). It is the interactive
+cousin of the stored-number hotline of `extensions.md` §3.4: that card dials
+one jumpered number when its phone is lifted; this one is a tester, and the
+number is whatever is keyed.
 
 > **Status: proposed, measured in simulation.** `make pulse_gen` runs the
-> timebases, the keypad map including D = 16, and a `net_site` call originated
-> from this card — local, and the flood. The circuit is a proposal from
-> data-sheet behaviour. Nothing has been on a bench.
+> timebases, the hex map including D = 16, and a `net_site`
+> call originated from this card — local, and the flood. The circuit is a
+> proposal from data-sheet behaviour. Nothing has been on a bench.
 
 ---
 
@@ -23,7 +24,7 @@ because they *are* forward A.
 
 | | |
 |---|---|
-| **Face** | channel slot of `common-cards.md` §1, plus a 4 × 4 keypad, a hook switch, and the `SRC` / wait / DIP straps on the front |
+| **Face** | channel slot of `common-cards.md` §1, plus sixteen SMD buttons (each a pin), a hook switch, and the `SRC` / wait / DIP straps on the front |
 | **`A_TX`** | off-hook with 10 pps breaks. High is a make |
 | **`C_TX`** | `FILL`. There is no microphone |
 | **`/ANS`** | tied low. The port never rings. A tester who dials it hears silence |
@@ -32,7 +33,7 @@ because they *are* forward A.
 
 A phone on a line card does the same with its hook. Fitting this card in the
 slot *is* that hook: `A_TX` is M, and a register attached to the port counts
-what the keypad sends.
+what the buttons send.
 
 ---
 
@@ -100,18 +101,19 @@ key. `A_TX = SEIZE · /BREAK`.
 
 ---
 
-## 4. The keypad
+## 4. The buttons
 
-DTMF layout, sixteen keys, rows driven, columns pulled up. Scan on `TICK`,
-about 20 ms debounce, one-key lockout while a train is out, **one-deep queue**
-so `1 e b h s` can be typed without waiting each train.
+Sixteen SMD push-buttons in the hex layout, **each its own pin**, pulled up,
+to ground when pressed. No matrix, no scan. Debounce on `TICK`, about 20 ms,
+one-key lockout while a train is out, **one-deep queue** so `1 e b h s` can be
+typed without waiting each train. The same sixteen nets come off a header, so
+a bench can drive them with no buttons fitted.
 
 ```
-        C0  C1  C2  C3
-   R0    1   2   3   A          pulses  1  2  3 13
-   R1    4   5   6   B                  4  5  6 14
-   R2    7   8   9   C                  7  8  9 15
-   R3    *   0   #   D                 11 10 12 16
+        KEY1  KEY2  KEY3  KEYA          pulses  1  2  3 13
+        KEY4  KEY5  KEY6  KEYB                  4  5  6 14
+        KEY7  KEY8  KEY9  KEYC                  7  8  9 15
+        KEY*  KEY0  KEY#  KEYD                 11 10 12 16
 ```
 
 1–9 are 1–9 pulses; 0 is ten, as a rotary dial. \* is 11, # is 12, A–D are
@@ -135,7 +137,7 @@ five bits and the store's extra bits are a nibble of a second '670
  HOOK ──[ ½ '123, or DIP-loaded '163 on TICK ]── SEIZE
         strap: wait that, or C_RX XOR FILL ('86 and a '74)
 
- keys ──[ '145 rows, ¼ '14 cols, encode ]── load 5-bit count (½ '193 + FF)
+ KEY 1–9 0 * # A–D ── pull-up ──[ 2 × '148 ]── load 5-bit count (½ '193 + FF)
  count ── BREAK edges, down; zero ──[ '393 pause ]── next key
  A_TX = SEIZE · /BREAK
  C_TX = FILL          /ANS = 0          word pin = GND
@@ -147,17 +149,16 @@ five bits and the store's extra bits are a nibble of a second '670
 | 100 ms and 60 % break | 74HC4017, ¼ 74HC4002 |
 | `SRC` mux, DT XOR | ¼ 74HC157, ¼ 74HC86, ½ 74HC74 |
 | seize delay | ½ 74HC123, or a '163 and the DIP |
-| row drive, columns, debounce | 74HC145, ¼ 74HC14, ½ 74HC74 |
-| encode to 1..16 | gates, or a 16×5 ROM; ¾ 74HC153 and a '04 will do |
+| buttons, debounce | 16 SMD, resistor network, ½ 74HC74 |
+| encode 16 pins to 1..16 | 2 × 74HC148 |
 | pulse count | ½ 74HC193 and one FF (five bits, so D loads 16) |
 | RC astable (if fitted) | ¼ 74HC14, pot, C; ½ 74HC123 |
 
-**≈ 12–13 packages.** The hotline's eight, plus scan and encode. Fitted only on
-this card.
+**≈ 11 packages.** The hotline's eight, plus encode. Fitted only on this card.
 
 ```
-  keypad ── scan ── map ── sequencer ── A_TX
-  hook  ── seize delay ──┘         ┌── C_TX = FILL
+  KEY 1–9 0 * # A–D ── encode ── sequencer ── A_TX
+  hook       ── seize delay ──┘    ┌── C_TX = FILL
   TX_OCT ── ÷ ── TICK ── SRC mux ──┘
   RC / DIP ─────────────┘
 ```
@@ -178,7 +179,7 @@ does both, with this card originating and no handset on the port.
 ## 7. Not measured
 
 - **The circuit.** A proposal from data-sheet behaviour, including the '4017's
-  60 % NOR and the keypad scan against bounce.
+  60 % NOR and the buttons against bounce.
 - **A real RC astable** against the register's 7–12 pps window, and a pot at
   the end of its travel.
 - **Dial-tone detect** against a real tone card, as `extensions.md` §3.4 left

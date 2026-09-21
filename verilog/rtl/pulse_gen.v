@@ -1,9 +1,9 @@
 // pulse_gen -- hook/pulse generator card, pulse-gen.md.
 //
-// A line that lifts, with a keypad and no handset.  A_TX is off-hook with
-// 10 pps breaks; C_TX is FILL; /ANS is low; the word pin is grounded.  Two
-// timebases: the socket's crystal divided to 10 pps 60/40, or an adjustable
-// RC/DIP source (PPS / BREAK_PCT / T_OH, or the DIP straps).
+// A line that lifts, with sixteen buttons and no handset.  A_TX is off-hook
+// with 10 pps breaks; C_TX is FILL; /ANS is low; the word pin is grounded.
+// Two timebases: the socket's crystal divided to 10 pps 60/40, or an
+// adjustable RC/DIP source (PPS / BREAK_PCT / T_OH, or the DIP straps).
 `timescale 1ns/1ps
 
 module pulse_gen #(
@@ -23,8 +23,7 @@ module pulse_gen #(
     input            c_rx,
 
     input            hook_sw,
-    output reg [3:0] row,             // one-hot, active low
-    input      [3:0] col,             // active low
+    input     [15:0] key_n,           // one pin a button, active low
 
     input            use_xtal,        // 1: 10 pps 60/40 from TICK
     input            wait_dt,         // 1: wait for dial tone, else T_OH / DIP
@@ -59,37 +58,35 @@ module pulse_gen #(
     wire [9:0] oh_ms   = USE_DIP ? ({6'd0, dip_oh} + 10'd1) * 10'd100
                                  : T_OH[9:0];
 
+    // Hex: pin n (0..15) is n+1 pulses (0 is pin 10, * 11, # 12, A–D 13–16).
+    // Lowest pressed pin wins — 2 × '148.
     function [4:0] keymap;
-        input [1:0] r, c;
+        input [15:0] k;
         begin
-            case ({r, c})
-                4'b00_00: keymap = 5'd1;
-                4'b00_01: keymap = 5'd2;
-                4'b00_10: keymap = 5'd3;
-                4'b00_11: keymap = 5'd13;     // A
-                4'b01_00: keymap = 5'd4;
-                4'b01_01: keymap = 5'd5;
-                4'b01_10: keymap = 5'd6;
-                4'b01_11: keymap = 5'd14;     // B
-                4'b10_00: keymap = 5'd7;
-                4'b10_01: keymap = 5'd8;
-                4'b10_10: keymap = 5'd9;
-                4'b10_11: keymap = 5'd15;     // C
-                4'b11_00: keymap = 5'd11;     // *
-                4'b11_01: keymap = 5'd10;     // 0
-                4'b11_10: keymap = 5'd12;     // #
-                default:  keymap = 5'd16;     // D
-            endcase
+            if      (!k[ 0]) keymap = 5'd1;
+            else if (!k[ 1]) keymap = 5'd2;
+            else if (!k[ 2]) keymap = 5'd3;
+            else if (!k[ 3]) keymap = 5'd4;
+            else if (!k[ 4]) keymap = 5'd5;
+            else if (!k[ 5]) keymap = 5'd6;
+            else if (!k[ 6]) keymap = 5'd7;
+            else if (!k[ 7]) keymap = 5'd8;
+            else if (!k[ 8]) keymap = 5'd9;
+            else if (!k[ 9]) keymap = 5'd10;
+            else if (!k[10]) keymap = 5'd11;
+            else if (!k[11]) keymap = 5'd12;
+            else if (!k[12]) keymap = 5'd13;
+            else if (!k[13]) keymap = 5'd14;
+            else if (!k[14]) keymap = 5'd15;
+            else if (!k[15]) keymap = 5'd16;
+            else             keymap = 5'd0;
         end
     endfunction
 
     reg [2:0]  st;
-    reg [1:0]  scan_r;
     reg [5:0]  db;
     reg        armed, key_stb;
-    reg [4:0]  key_n;
-    reg        raw_v;
-    reg [4:0]  raw_n;
+    reg [4:0]  key_n_lat, raw_n;
     reg        q_valid;
     reg [4:0]  q_n;
     reg [4:0]  left;
@@ -100,15 +97,12 @@ module pulse_gen #(
     wire       breaking = (st == BRK);
     assign     a_tx     = seized && !breaking;
 
-    wire       hit   = ~(&col);
-    wire [1:0] hit_c = !col[0] ? 2'd0 : !col[1] ? 2'd1 :
-                       !col[2] ? 2'd2 : 2'd3;
+    wire [4:0] raw = keymap(key_n);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            st <= IDLE; scan_r <= 0; row <= 4'b1110;
-            db <= 0; armed <= 0; key_stb <= 0; key_n <= 0;
-            raw_v <= 0; raw_n <= 0;
+            st <= IDLE;
+            db <= 0; armed <= 0; key_stb <= 0; key_n_lat <= 0; raw_n <= 0;
             q_valid <= 0; q_n <= 0; left <= 0; tmr <= 0;
             dt_n <= 0; dt_ok <= 0;
         end else begin
@@ -117,8 +111,7 @@ module pulse_gen #(
             if (!hook_sw) begin
                 st <= IDLE; tmr <= 0; left <= 0;
                 q_valid <= 0; dt_n <= 0; dt_ok <= 0;
-                db <= 0; armed <= 0; raw_v <= 0;
-                row <= 4'b1110; scan_r <= 0;
+                db <= 0; armed <= 0; raw_n <= 0;
             end else begin
                 if (tick_1k) begin
                     if (c_rx != fill) begin
@@ -126,41 +119,28 @@ module pulse_gen #(
                         if (dt_n >= T_DT[4:0] - 1) dt_ok <= 1'b1;
                     end
 
-                    // A key is visible one row in four.  Latch it for the
-                    // scan, and debounce on the scan wrap, not on the miss
-                    // ticks in between.
-                    if (hit) begin
-                        raw_v <= 1'b1;
-                        raw_n <= keymap(scan_r, hit_c);
+                    if (raw == 5'd0) begin
+                        db <= 0; armed <= 1'b0; raw_n <= 0;
+                    end else if (raw != raw_n) begin
+                        raw_n <= raw; db <= 0;
+                    end else if (!armed) begin
+                        if (db == DEBOUNCE[5:0] - 1) begin
+                            key_stb   <= 1'b1;
+                            key_n_lat <= raw;
+                            armed     <= 1'b1;
+                            db        <= 0;
+                        end else db <= db + 1'b1;
                     end
-                    if (scan_r == 2'd3) begin
-                        if (raw_v || hit) begin
-                            if (!armed) begin
-                                if (db == DEBOUNCE[5:0] - 1) begin
-                                    key_stb <= 1'b1;
-                                    key_n   <= hit ? keymap(scan_r, hit_c) : raw_n;
-                                    armed   <= 1'b1;
-                                    db      <= 0;
-                                end else db <= db + 1'b1;
-                            end
-                        end else begin
-                            db <= 0; armed <= 1'b0;
-                        end
-                        raw_v <= 1'b0;
-                    end
-
-                    scan_r <= scan_r + 1'b1;
-                    row    <= ~(4'b0001 << (scan_r + 1'b1));
                 end
 
                 // Consume a queued digit, then accept a new key into the
-                // one-deep queue so a press during READY is not lost.
+                // one-deep queue so a press during a train is not lost.
                 if (st == READY && q_valid) begin
                     left <= q_n; tmr <= 0; st <= BRK;
-                    if (key_stb && key_n != 5'd0) q_n <= key_n;
+                    if (key_stb && key_n_lat != 5'd0) q_n <= key_n_lat;
                     else q_valid <= 1'b0;
-                end else if (key_stb && !q_valid && key_n != 5'd0) begin
-                    q_valid <= 1'b1; q_n <= key_n;
+                end else if (key_stb && !q_valid && key_n_lat != 5'd0) begin
+                    q_valid <= 1'b1; q_n <= key_n_lat;
                 end
 
                 case (st)
