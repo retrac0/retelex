@@ -366,6 +366,9 @@ A phone that dials a stored number when it is lifted does the same with no card
 at all. The number may also be `h s` of the card's own exchange: a hotline that
 holds nothing while idle, where a nail rings faster and holds two latches.
 
+A tester who wants to **drive a register and the flood without a handset** is
+the same live A with the number keyed rather than jumpered: `pulse-gen.md`.
+
 ### 3.5 Which to use
 
 | | nail (§3.1) | nailed hop by hop (§3.3) | a card that dials (§3.4) |

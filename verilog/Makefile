@@ -9,7 +9,7 @@ SHELL := /bin/bash
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
 RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v \
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
-         rtl/line_card.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
+         rtl/line_card.v rtl/pulse_gen.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
          rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v
 BUILD := build
@@ -36,8 +36,9 @@ TB_sclk   := tb/tb_sclk.v
 TB_priority := tb/net_site.v tb/tb_priority.v
 TB_word   := tb/net_site.v tb/tb_word.v
 TB_groups := tb/net_site.v tb/tb_groups.v
+TB_pulse_gen := tb/net_site.v tb/tb_pulse_gen.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -236,4 +237,6 @@ synth: $(BUILD)
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean
+.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean pulse-gen iv-pulse-gen
+pulse-gen: pulse_gen
+iv-pulse-gen: iv-pulse_gen

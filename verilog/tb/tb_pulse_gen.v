@@ -1,0 +1,370 @@
+// tb_pulse_gen -- pulse-gen.md: keypad map, both timebases, and a call with no handset.
+`timescale 1ns/1ps
+
+module tb_pulse_gen;
+    integer errs = 0, chk = 0;
+
+    task want(input v, input string what);
+        begin
+            chk = chk + 1;
+            if (!v) begin errs = errs + 1; $display("     %-52s FAIL", what); end
+            else $display("     %-52s ok", what);
+            $fflush();
+        end
+    endtask
+
+    // ---- unit: synthetic 1 kHz tick, real 8/128/256 windows in ticks ----
+    reg clk = 0, rst_n = 0, u_tick = 0;
+    always #5 clk = ~clk;
+    reg [6:0] tdiv = 0;
+    always @(posedge clk) begin
+        u_tick <= 1'b0;
+        if (tdiv == 7'd99) begin tdiv <= 0; u_tick <= 1'b1; end
+        else tdiv <= tdiv + 1'b1;
+    end
+
+    reg        g_hook = 0, g_xtal = 1, g_wdt = 0;
+    reg  [1:0] g_kr = 0, g_kc = 0;
+    reg        g_press = 0;
+    wire [3:0] g_row;
+    wire [3:0] g_col = (g_press && (g_row == ~(4'b0001 << g_kr))) ?
+                       ~(4'b0001 << g_kc) : 4'b1111;
+    wire       g_m, g_ctx, g_word, g_ans;
+    wire [4:0] rx_cnt;
+    wire       rx_stb, rx_clr;
+
+    pulse_gen #(.T_OH(10), .T_ID(200), .DEBOUNCE(2), .T_DT(4)) u_g (
+        .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .tx_oct(1'b0),
+        .fill(1'b0), .c_rx(1'b0),
+        .hook_sw(g_hook), .row(g_row), .col(g_col),
+        .use_xtal(g_xtal), .wait_dt(g_wdt),
+        .dip_pps(2'd1), .dip_brk(1'b0), .dip_oh(4'd0),
+        .c_tx(g_ctx), .a_tx(g_m), .word_pin(g_word), .ans_n(g_ans));
+
+    pulse_rx #(.HIT(8), .ID(128), .CLR(256)) u_rx (
+        .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .arm(g_hook), .m(g_m),
+        .cnt(rx_cnt), .dig_stb(rx_stb), .clear(rx_clr), .counting(), .brk_stb());
+
+    reg        a_hook = 0;
+    reg  [1:0] a_kr = 0, a_kc = 0;
+    reg        a_press = 0;
+    wire [3:0] a_row;
+    wire [3:0] a_col = (a_press && (a_row == ~(4'b0001 << a_kr))) ?
+                       ~(4'b0001 << a_kc) : 4'b1111;
+    wire       a_m;
+    wire [4:0] ax_cnt;
+    wire       ax_stb;
+
+    pulse_gen #(.PPS(8), .BREAK_PCT(67), .T_OH(10), .T_ID(200), .DEBOUNCE(2)) u_adj (
+        .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .tx_oct(1'b0),
+        .fill(1'b0), .c_rx(1'b0),
+        .hook_sw(a_hook), .row(a_row), .col(a_col),
+        .use_xtal(1'b0), .wait_dt(1'b0),
+        .dip_pps(2'd0), .dip_brk(1'b1), .dip_oh(4'd0),
+        .c_tx(), .a_tx(a_m), .word_pin(), .ans_n());
+
+    pulse_rx #(.HIT(8), .ID(128), .CLR(256)) u_arx (
+        .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .arm(a_hook), .m(a_m),
+        .cnt(ax_cnt), .dig_stb(ax_stb), .clear(), .counting(), .brk_stb());
+
+    task utick(input integer n);
+        integer i;
+        begin
+            for (i = 0; i < n; i = i + 1) begin
+                @(posedge clk);
+                while (!u_tick) @(posedge clk);
+            end
+        end
+    endtask
+
+    // Hold a key long enough for debounce (2 hits of that row, 4-row scan).
+    task press(input [1:0] r, input [1:0] c);
+        begin
+            g_kr = r; g_kc = c; g_press = 1;
+            utick(16);
+            g_press = 0;
+            utick(8);
+        end
+    endtask
+
+    task press_adj(input [1:0] r, input [1:0] c);
+        begin
+            a_kr = r; a_kc = c; a_press = 1;
+            utick(16);
+            a_press = 0;
+            utick(8);
+        end
+    endtask
+
+    task expect_dig(input [4:0] n, input string what);
+        integer guard;
+        begin
+            guard = 0;
+            while (!rx_stb && guard < 4000) begin
+                @(posedge clk);
+                if (u_tick) guard = guard + 1;
+            end
+            want(rx_stb && rx_cnt == n, what);
+            @(posedge clk);
+        end
+    endtask
+
+    // Width of the last completed break and make, in TICKS.
+    reg        g_lastm = 1'b0, a_lastm = 1'b0;
+    reg [9:0]  g_wcnt = 0, a_wcnt = 0;
+    reg [9:0]  g_brk = 0, g_mk = 0, a_brk = 0, a_mk = 0;
+    always @(posedge clk) if (u_tick) begin
+        if (g_lastm != g_m) begin
+            if (!g_lastm && g_m) g_brk <= g_wcnt;
+            if ( g_lastm && !g_m) g_mk  <= g_wcnt;
+            g_wcnt <= 0;
+        end else if (g_wcnt != 10'h3FF) g_wcnt <= g_wcnt + 1'b1;
+        g_lastm <= g_m;
+        if (a_lastm != a_m) begin
+            if (!a_lastm && a_m) a_brk <= a_wcnt;
+            if ( a_lastm && !a_m) a_mk  <= a_wcnt;
+            a_wcnt <= 0;
+        end else if (a_wcnt != 10'h3FF) a_wcnt <= a_wcnt + 1'b1;
+        a_lastm <= a_m;
+    end
+
+    integer nfall, guardt;
+
+    // ---- originate: net_site, scaled windows, this card is the caller ----
+    localparam integer HIT = 1, ID = 16, CLR = 32;
+    localparam integer T_RISE = 64, T_FALL = 2048;
+    localparam integer RING_ON = 200, RING_OFF = 400;
+    localparam integer FR = 15625;
+
+    reg clk_a = 0, clk_b = 0, rst_net = 0;
+    always #122.0703 clk_a = ~clk_a;
+    initial begin #40; forever #122.0703 clk_b = ~clk_b; end
+
+    wire la_out, lb_out, lock_a, lock_b, fs_a, fs_b, rc_a, rc_b;
+    wire dt_a, ng_a, mh_b, gc_a;
+    wire [63:0] ln_a, ln_b, rx_a, rx_b;
+
+    wire       pg_m;
+    wire [3:0] n_row;
+    reg        n_hook = 0, n_press = 0;
+    reg  [1:0] n_kr = 0, n_kc = 0;
+    wire [3:0] n_col = (n_press && (n_row == ~(4'b0001 << n_kr))) ?
+                       ~(4'b0001 << n_kc) : 4'b1111;
+    reg        ans_a21 = 0, ans_b21 = 0;
+    wire [63:0] hk_a = {46'd0, ans_a21, pg_m, 16'd0};
+    wire [63:0] hk_b = {46'd0, ans_b21, 1'b0, 16'd0};
+
+    wire       tick_a;
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .T_RISE(T_RISE), .T_FALL(T_FALL),
+               .RING_ON(RING_ON), .RING_OFF(RING_OFF),
+               .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
+    A (.clk(clk_a), .rst_n(rst_net),
+       .hook(hk_a), .tx(64'd0), .rx(rx_a), .e(ln_a),
+       .line_in(lb_out), .line_out(la_out), .locked(lock_a),
+       .frame_stb(fs_a), .tick_1k(tick_a), .ring_cad_n(rc_a), .dt_bit(dt_a), .ng_bit(ng_a),
+       .mon_held(), .got_claim(gc_a), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy(), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
+
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd3), .DIR0(2'd3), .G0(1'b1),
+               .T_RISE(T_RISE), .T_FALL(T_FALL),
+               .RING_ON(RING_ON), .RING_OFF(RING_OFF),
+               .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
+    B (.clk(clk_b), .rst_n(rst_net),
+       .hook(hk_b), .tx(64'd0), .rx(rx_b), .e(ln_b),
+       .line_in(la_out), .line_out(lb_out), .locked(lock_b),
+       .frame_stb(fs_b), .ring_cad_n(rc_b), .dt_bit(), .ng_bit(),
+       .mon_held(mh_b), .got_claim(), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy(), .regs_busy(), .wq_ovf(), .n_defer(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
+
+    // 50 pps 60/40, 40 ms seize, 60 ms pause: scaled like tb_net.
+    pulse_gen #(.PPS(50), .BREAK_PCT(60), .T_OH(40), .T_ID(60), .DEBOUNCE(2)) u_net (
+        .clk(clk_a), .rst_n(rst_net), .tick_1k(tick_a), .tx_oct(1'b0),
+        .fill(1'b0), .c_rx(1'b0),
+        .hook_sw(n_hook), .row(n_row), .col(n_col),
+        .use_xtal(1'b0), .wait_dt(1'b0),
+        .dip_pps(2'd1), .dip_brk(1'b0), .dip_oh(4'd0),
+        .c_tx(), .a_tx(pg_m), .word_pin(), .ans_n());
+
+    task npress(input [1:0] r, input [1:0] c);
+        begin
+            n_kr = r; n_kc = c; n_press = 1;
+            #(30_000_000);
+            n_press = 0;
+            #(20_000_000);
+        end
+    endtask
+
+    task ring_a21(input integer n, input string what);
+        integer i, hi, lo;
+        begin
+            hi = 0; lo = 0;
+            for (i = 0; i < n; i = i + 1) begin
+                #(FR);
+                if (ln_a[6'o21] && !rc_a) hi = hi + 1;
+                if (!ln_a[6'o21]) lo = lo + 1;
+            end
+            chk = chk + 1;
+            if (hi > 0 && lo > 0)
+                $display("     %-52s ok", what);
+            else begin errs = errs + 1;
+                $display("     %-52s FAIL (%0d/%0d)", what, hi, lo); end
+            $fflush();
+        end
+    endtask
+
+    task ring_b21(input integer n, input string what);
+        integer i, hi, lo;
+        begin
+            hi = 0; lo = 0;
+            for (i = 0; i < n; i = i + 1) begin
+                #(FR);
+                if (ln_b[6'o21] && !rc_b) hi = hi + 1;
+                if (!ln_b[6'o21]) lo = lo + 1;
+            end
+            chk = chk + 1;
+            if (hi > 0 && lo > 0)
+                $display("     %-52s ok", what);
+            else begin errs = errs + 1;
+                $display("     %-52s FAIL (%0d/%0d)", what, hi, lo); end
+            $fflush();
+        end
+    endtask
+
+    initial begin
+        $display("PULSE-GEN (RTL) -- pulse-gen.md, keypad and a call with no handset.\n");
+        $fflush();
+        #200 rst_n = 1;
+        utick(5);
+
+        want(g_word == 1'b0 && g_ans == 1'b0, "word pin grounded, /ANS low");
+        want(g_ctx == 1'b0, "C_TX follows FILL");
+
+        // ---- 1. crystal 10 pps 60/40, digit 5 ----
+        $display("  1. Crystal 10 pps 60/40, digit 5."); $fflush();
+        g_hook = 1; utick(12);
+        press(2'd1, 2'd1);                    // 5
+        expect_dig(5'd5, "register counts 5");
+        want(g_brk >= 58 && g_brk <= 62, "break is 60 ticks");
+        want(g_mk  >= 38 && g_mk  <= 42, "make is 40 ticks");
+        g_hook = 0; utick(30);
+
+        // ---- 2. hex map, including D = 16 ----
+        $display("  2. Keypad map: 0 * # A B C D."); $fflush();
+        g_hook = 1; utick(12);
+        press(2'd3, 2'd1); expect_dig(5'd10, "0 is 10 pulses");
+        press(2'd3, 2'd0); expect_dig(5'd11, "* is 11 pulses");
+        press(2'd3, 2'd2); expect_dig(5'd12, "# is 12 pulses");
+        press(2'd0, 2'd3); expect_dig(5'd13, "A is 13 pulses");
+        press(2'd1, 2'd3); expect_dig(5'd14, "B is 14 pulses");
+        press(2'd2, 2'd3); expect_dig(5'd15, "C is 15 pulses");
+        press(2'd3, 2'd3); expect_dig(5'd16, "D is 16 pulses, not a wrap");
+        g_hook = 0; utick(30);
+
+        // ---- 3. adjustable 8 pps 67 % ----
+        $display("  3. Adjustable source, 8 pps 67 %%."); $fflush();
+        a_hook = 1; utick(12);
+        press_adj(2'd0, 2'd0);                // 1
+        begin : adjd
+            integer guard;
+            guard = 0;
+            while (!ax_stb && guard < 4000) begin
+                @(posedge clk);
+                if (u_tick) guard = guard + 1;
+            end
+            want(ax_stb && ax_cnt == 5'd1, "adjustable path counts 1");
+            @(posedge clk);
+        end
+        want(a_brk >= 80 && a_brk <= 88, "8 pps 67 %: break ~83 ticks");
+        a_hook = 0; utick(20);
+
+        // ---- 4. seize delay, hang-up aborts, one-deep queue ----
+        $display("  4. Seize delay, hang-up, queue."); $fflush();
+        g_hook = 1;
+        utick(12);
+        want(g_m, "off-hook, no breaks during the seize delay");
+        press(2'd0, 2'd0);                    // 1
+        expect_dig(5'd1, "digit after the seize delay");
+        g_hook = 0; utick(20);
+
+        g_hook = 1; utick(12);
+        press(2'd3, 2'd1);                    // 0 = 10 pulses
+        nfall = 0;
+        guardt = 0;
+        while (nfall < 3 && guardt < 800) begin
+            if (g_m) begin utick(1); guardt = guardt + 1; end
+            else begin
+                nfall = nfall + 1;
+                while (!g_m && guardt < 800) begin utick(1); guardt = guardt + 1; end
+            end
+        end
+        want(nfall >= 3, "saw three breaks of a 0 before hang-up");
+        begin : abort
+            integer i, saw;
+            saw = 0;
+            g_hook = 0;
+            for (i = 0; i < 250; i = i + 1) begin
+                utick(1);
+                if (rx_stb) saw = 1;
+            end
+            want(!g_m, "hang-up drops A_TX at once");
+            want(!saw, "aborted 0 is not strobed as a digit");
+        end
+
+        g_hook = 1; utick(12);
+        press(2'd0, 2'd1);                    // 2
+        utick(30);                            // into the train
+        press(2'd0, 2'd0);                    // 1 queued
+        expect_dig(5'd2, "first queued digit is 2");
+        expect_dig(5'd1, "then the queued 1");
+        g_hook = 0; utick(30);
+
+        // ---- 5. originate: local, then the flood ----
+        $display("  5. No handset: 20 dials 2 1, then 1 2 3 2 1.");
+        $fflush();
+        rst_net = 1;
+        #(20_000_000);
+        want(lock_a && lock_b, "link up");
+        n_hook = 1;
+        #(80_000_000);
+        npress(2'd0, 2'd1);                   // 2
+        #(150_000_000);
+        npress(2'd0, 2'd0);                   // 1
+        #(80_000_000);
+        ring_a21(2 * (RING_ON + RING_OFF),
+                  "A's 21 rings, originated from the generator");
+        ans_a21 = 1;
+        #(20_000_000);
+        want(ln_a[6'o20] && ln_a[6'o21], "answered: E steady at both");
+        ans_a21 = 0; n_hook = 0;
+        #(80_000_000);
+        want(!ln_a[6'o20] && !ln_a[6'o21], "both released");
+
+        n_hook = 1;
+        #(80_000_000);
+        npress(2'd0, 2'd0);                   // 1  network key
+        #(80_000_000);
+        want(mh_b, "B's monitor caught the seizure");
+        npress(2'd0, 2'd1);                   // 2  e
+        #(150_000_000);
+        npress(2'd0, 2'd2);                   // 3  b
+        #(80_000_000);
+        want(gc_a, "the claim came back");
+        npress(2'd0, 2'd1);                   // 2  h
+        #(150_000_000);
+        npress(2'd0, 2'd0);                   // 1  s
+        #(80_000_000);
+        ring_b21(2 * (RING_ON + RING_OFF),
+                  "B's 21 rings: the flood carried the generator's pulses");
+        ans_b21 = 1;
+        #(20_000_000);
+        want(ln_b[6'o21], "answered at B");
+        ans_b21 = 0; n_hook = 0;
+        #(80_000_000);
+
+        $display("\n  %0d checks, %0d errors.  %s", chk, errs, (errs == 0) ? "PASS" : "FAIL");
+        if (errs) $fatal(1);
+        $finish;
+    end
+endmodule

@@ -82,7 +82,7 @@ module marker #(
     output reg [5:0]         reg_src,        // held party loaded at attach; 00 = none
     input      [NREG-1:0]    reg_busy,
     input      [3*NREG-1:0]  reg_ndig,
-    input      [16*NREG-1:0] reg_digits,
+    input      [20*NREG-1:0] reg_digits,
     input      [6*NREG-1:0]  reg_held,       // each register's src, levels
     output reg [NREG-1:0]    reg_restart,
     input      [NREG-1:0]    reg_gone,
@@ -309,8 +309,8 @@ module marker #(
     // A digit's VALUE is the low three bits, forced to 000 when bit 3 is set --
     // three AND gates, so that a dialled 0, ten pulses, 1010, is octal 0
     // (protocol.md 5).  8 and 9 are service digits.
-    function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
-    function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
+    function [2:0] oct(input [4:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
+    function       isvc(input [4:0] c); isvc = (c == 5'd8) || (c == 5'd9) || (c > 5'd10); endfunction
 
     task nogo(input integer q);                // cannot-complete, and let go
         begin
@@ -419,7 +419,7 @@ module marker #(
     reg        got_reg;                // this visit's call request got a register
     reg        pri_wait_v;             // priority still wanting this visit
     reg [2:0]  nd;
-    reg [3:0]  dg0, dg1;
+    reg [4:0]  dg0, dg1;
     reg [5:0]  held;                   // reg_held[r] this cycle
     reg [2:0]  lim;                    // clim[r] this cycle
 
@@ -686,8 +686,8 @@ module marker #(
             // =========== every call in the pool, each cycle ===============
             for (r = 0; r < NREG; r = r + 1) begin
                 nd  = reg_ndig  [r*3  +: 3];
-                dg0 = reg_digits[r*16 +: 4];
-                dg1 = reg_digits[r*16 + 4 +: 4];
+                dg0 = reg_digits[r*20 +: 5];
+                dg1 = reg_digits[r*20 + 5 +: 5];
                 held = reg_held[r*6 +: 6];
 
                 if (hold[r] != 2'd0) hold[r] <= hold[r] - 1'b1;

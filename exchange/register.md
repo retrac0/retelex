@@ -201,10 +201,12 @@ is never counted.
  74HC4040   on TICK, reset by RST         Q4 ─▶ HIT ┐
                                           Q8 ─▶ ID  ├─ D flip-flops, D = 1, clocked by the tap, cleared by RST
                                           Q9 ─▶ CLR ┘
- 74HC163    pulse count, on TICK      enable  EDGE · /BRK · HIT · /CLR          a break has just ended, and was a pulse
-                                      clear   STB, synchronous
+ 74HC163 + FF   pulse count, on TICK  enable  EDGE · /BRK · HIT · /CLR          a break has just ended, and was a pulse
+                                      clear   STB, synchronous                  five bits, so 16 pulses is 16, not a wrap
  STB      = ID · /ID' · /BRK · (count ≠ 0)                                       ID' is ID a tick later
- 74HC670    the store, four digits    write   the count at N, while STB, in the tick's second half
+ 74HC670 + nibble  the store, four digits   write the count at N, while STB, in the tick's second half
+                                      four bits of each digit in the '670; the four MSBs in one nibble of a second '670
+                                      (pulse-gen.md 4: D is 16 pulses)
  N          digit index               ½ 74HC393, advanced by STB's end
  RELEASE  = CLR · BRK                 the caller hung up, or the pair is cut
 ```
@@ -223,7 +225,9 @@ so the write completes before the edge that clears the '163.
 pulse, and `1010` is what an MT8870-class DTMF receiver presents for 0. Digits
 1–9 are `0001`–`1001` on both. Pulse and tone digits therefore share one store
 with no translation (§7). A decade '160 would read 0 as `0000`, which is the
-MT8870's D.
+MT8870's D. Sixteen pulses — keypad D of `pulse-gen.md` — need the fifth bit:
+the store holds `10000`, which no MT8870 produces, and the marker's `isvc`
+treats it as service, as it does 11–15.
 
 | block | parts |
 |---|---|
@@ -232,8 +236,8 @@ MT8870's D.
 | synchronizer, edge, `RST` | 74HC175, ¼ 74HC86 |
 | timer | 74HC4040 |
 | HIT, ID, CLR, ID' | 2 × 74HC74 |
-| pulse count | 74HC163 |
-| store | 74HC670 |
+| pulse count | 74HC163 + 1 FF (five bits: 1–16) |
+| store | 74HC670 + one nibble of a second '670 |
 | held party `SRC` (§6.1) | ½ 74HC174 (six bits), or spare in a second '670 |
 | count ≠ 0, strobe and enable gating | 74HC4002, 74HC08 |
 
