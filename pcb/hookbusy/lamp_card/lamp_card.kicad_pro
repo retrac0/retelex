@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "filename": "lamp_card.kicad_pro",
+    "version": 3
+  },
+  "board": {
+    "design_settings": {}
+  },
+  "sheets": [
+    [
+      "lamp_card",
+      "lamp_card.kicad_sch"
+    ]
+  ],
+  "text_variables": {}
+}

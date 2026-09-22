@@ -7,14 +7,14 @@ that is one PCB design in sixteen copies. The colour stops being the carrier and
 becomes the confirmation, which costs two packages and buys back everything a
 hue judgement costs.
 
-> **Status: proposed; the decoding measured in RTL.** `verilog/rtl/hc259.v`,
-> `lamp_card.v`, `common_card.v` (the interface card) and `hb_panel.v` are the
-> parts and the stack, and `verilog/tb/tb_panel.v` drives them from the real
-> clock card and from `ctl_write` — 57 checks, passing under both Icarus and
-> Verilator. §3 defines the interface card; §7 is what the bench measures, and
-> §7.2 is the one that needed measuring: the inhibit, against a control stack
-> built without it. **The mechanics and the panel are a sketch.** Nothing has
-> been drawn, nothing has been on a bench, and §8 is longer than §7.
+> **Status: proposed; the decoding measured in RTL; PCB placement started.**
+> `verilog/rtl/hc259.v`, `lamp_card.v`, `common_card.v` (the interface card) and
+> `hb_panel.v` are the parts and the stack, and `verilog/tb/tb_panel.v` drives
+> them from the real clock card and from `ctl_write` — 57 checks, passing under
+> both Icarus and Verilator. §3 defines the interface card; §7 is what the bench
+> measures. **KiCad boards** (outline + footprints + pad nets, not routed) live
+> in [`pcb/hookbusy/`](../pcb/hookbusy/). Schematics there are stubs. Nothing has
+> been on a bench, and §8 is still longer than §7.
 
 ---
 
@@ -287,7 +287,7 @@ the left, slots 0–7 top to bottom.
 |---|---|
 | 17 cards × 0.4" | 172.72 mm = **exactly 34HP** |
 | 8 rows at 0.4" | 71.12 mm centre to centre, ≈ 76 mm with the bodies — in §7's 90 mm |
-| card | ≈ 80 mm tall × 60 mm deep |
+| card | **50 mm deep × 100 mm tall** (`pcb/hookbusy/`) |
 | clearance | 10.16 − 1.6 board − 4 mm DIP = **4.5 mm**; a 5 mm LED leaves 5.16 mm |
 | panel | **3U × 34HP** |
 
@@ -299,19 +299,12 @@ a 2.54 mm pin strip has several millimetres of usable engagement and does not
 need to define the spacing, only to conduct. Nobody should go hunting for a
 10.16 mm stackthrough part.
 
-### 4.1 The gap between the pairs
+### 4.1 One LED column
 
-A block's two columns want to read as one thing. The card carries **two LED
-footprint columns 2 mm apart and one is stuffed**: green cards use the right,
-orange the left. Same PCB, and the pairs close up:
-
-| | |
-|---|---|
-| within a pair | 8.16 mm |
-| between pairs | 12.16 mm |
-| grid, first to last centre | 150.4 mm |
-
-Cells stop being square, which is the point — the pair is the unit.
+Each lamp card has **one** front-edge hole set — eight 5 mm LEDs at 0.4″,
+centred on the 100 mm edge. Same PCB for HOOK and BUSY; stuffing is green or
+orange and MODE selects which latch inputs are live. Adjacent cards in the
+stack still read as a pair at 0.4″ centres.
 
 ### 4.2 Four buses through the stack
 
@@ -477,17 +470,17 @@ wants, and it is a jumper, not a different card.
 
 ## 8. Not measured
 
-- **All of the mechanics.** Nothing is drawn. The card outline, the spacer
-  length, the four stacking headers' engagement, the bezel and the two LED
-  footprint columns of §4.1 are arithmetic and a sketch.
+- **Routing and fab.** `pcb/hookbusy/` has both boards placed with nets on pads;
+  copper is not routed, DRC not run, no Gerbers.
+- **Schematics.** The KiCad sheets are stubs; the board refs are the authority
+  until the sheets catch up.
 - **The stacking part.** §4 says the spacers are the datum and the headers
   float, which needs four headers whose engagement range actually covers
-  10.16 mm ± the stack-up. Not chosen, not checked. §3.3 assigns the pin
-  maps; the parts are not.
+  10.16 mm ± the stack-up. §3.3 assigns the pin maps; the parts are not.
 - **The bezel.** One window with a diffuser and the grid and port map
   silkscreened on it, referenced off the panel rather than off the stack, so
   that 128 lamps stay off the tolerance budget. Drawn nowhere.
-- **LED current and readability.** 2 mA a lamp is arithmetic. Whether 5 mm
+- **LED current and readability.** 1k5 / 2 mA is arithmetic. Whether 5 mm
   lamps at 0.4 inch read at arm's length in a rack, and whether green and orange
   separate under whatever light is in the room, wants eyes and not a calculation.
 - **The port map is a new drawing.** `observers.md` §1's claim that *"the port

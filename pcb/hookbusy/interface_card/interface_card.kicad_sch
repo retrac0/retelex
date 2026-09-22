@@ -1,0 +1,19 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "9cf654fe-49fe-491c-89b5-2d8512470b82")
+	(paper "A3")
+	(title_block
+		(title "Hook/busy interface card")
+		(comment 1 "hookbusy.md — nets live on the PCB for this pass")
+		(comment 2 "Open the .kicad_pcb; draw the schematic next to match refs")
+	)
+	(lib_symbols)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

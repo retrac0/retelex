@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "filename": "interface_card.kicad_pro",
+    "version": 3
+  },
+  "board": {
+    "design_settings": {}
+  },
+  "sheets": [
+    [
+      "interface_card",
+      "interface_card.kicad_sch"
+    ]
+  ],
+  "text_variables": {}
+}
