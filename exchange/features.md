@@ -31,10 +31,13 @@ second writer to the same store (`register.md` §7) and would need the caller's
 
 ## 2. Tones (class 5, class 6) — analog
 
-A tuned oscillator pair into one encoder half of `mf8-spec.md` §12.1. Cadence
-mutes the encoder's **input**, not its output, so the off periods are the codec's
-own `1010` and nothing clicks. `A_TX` is tied low. A tone card is never busy:
-the marker writes only the listener's latch, and any number may listen.
+One slot, one tone: a 555-style or discrete carrier into one encoder half of
+`mf8-spec.md` §12.1, with pots for the carrier frequency and the warble rate, a
+jumper for pure tone vs soft-modulated warble, and a 16-bit cadence mask from
+jumpers stepped at 256 ms off `TX_CLK` (`tone-plan.md` §5). Cadence mutes the
+encoder's **input**, not its output, so the off periods are the codec's own
+`1010` and nothing clicks. `A_TX` is tied low. A tone card is never busy: the
+marker writes only the listener's latch, and any number may listen.
 
 `RBT`, the ringback bit stream, comes from **the same card with one part added**:
 ⅛ of a 74HC244 and 33 Ω from the encoder's own node, out of the rear connector
@@ -55,10 +58,10 @@ dial, busy, cannot-complete — undialable because 0 is the operator key, and
 clear of every MF8 trunk group. `tone-plan.md` settles the frequencies and
 cadences. Busy and cannot-complete differ in timbre as well as speed; each is a
 *source* reached by address, not another class, and the marker already computes
-the free test that steers busy vs cannot-complete. The generator is a tolerance
-both an oscillator card and a ROM card meet; the cadence trick above **must not**
-be used at a warble rate: a square there costs 23 dB and fifty spurious lines
-(`sim/tones.py warble`).
+the free test that steers busy vs cannot-complete. The ROM card meets the plan
+exactly; the analog card approximates it with pots and jumpers. A hard square at
+the warble rate is an informed parts trade (−23 dB, 52 lines —
+`sim/tones.py warble`), not the preferred modulated path.
 
 ---
 

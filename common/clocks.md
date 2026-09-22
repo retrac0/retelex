@@ -105,6 +105,11 @@ Two things on a card are timing but not clocks, and are allowed:
 - **a tone card's audio oscillator** (`features.md` §2), which is a tone and
   not a clock.
 
+A third is a divider, not a generator: the **analog tone card's cadence counter**
+(`tone-plan.md` §5.2) is a `'4040` off socket `TX_CLK` (a1). Q13 is 256 ms; a
+nibble and sixteen jumpers make the 4.096 s on/off mask. That is a tap of the
+shelf chain, not a crystal or free-running oscillator on the card.
+
 ---
 
 ## 4. Where 128 kHz comes from in an exchange
