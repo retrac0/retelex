@@ -36,14 +36,14 @@ They are the same chain:
 | 32 | **128 kHz** | **`TX_HB`** — the next '4040 tap | **`/SLOT[1]`** — §4 | **a2** | the CVSD subscriber line card's downstream encoder |
 | 64 | 64 kHz | **`TX_CLK`** | **`TX_CLK`** = `/SLOT[2]` | **a1**, and **a7** as `RX_CLK` | every card, every port, everything |
 | 128 | 32 kHz | **`FILL`** | **`FILL`** | **a4** | every unfitted `C_TX`; any card that must send silence |
-| 512 | 8 kHz | **`TX_OCT`** | **`TX_OCT`** | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's '165; the exchange's scanner and monitors |
+| 512 | 8 kHz | **`TX_OCT`** | **`CLK_8K`** (= `TX_OCT` on a3) | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's '165; the exchange's scanner and monitors |
 | 4096 | 1 kHz | — | **`TICK`** | — | the marker and the registers |
 
 **The exchange's cell is not MF8's line bit.** A block commutates eight ports
 into one frame at 512 kHz. The MF8 unit converts that highway to a 16-bit
 line at 1024 kbps (`mf8-unit.md` §5.2½). `SLOT[2:0]` addresses the commutator
 only. A card still sees the same payload taps in both shelves (`TX_CLK`,
-`TX_OCT`, `FILL`); the line's `HB` 2.048 MHz stays on the unit.
+`TX_OCT` / `CLK_8K`, `FILL`); the line's `HB` 2.048 MHz stays on the unit.
 
 Two rates on the list are not on the socket and not on any card:
 
@@ -65,7 +65,7 @@ exchange folded in.
 | domain | where its rate comes from | what lives in it | in the exchange |
 |---|---|---|---|
 | **T** — transmit | §1's chain, the local crystal | everything a card sends: `C_TX`, `A_TX`, the word, the downstream to a phone | **the only domain below a trunk card** |
-| **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `TX_OCT` one frame late (`fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
+| **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `CLK_8K` (`TX_OCT`) one frame late (`fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
 | **S** — the subscriber's own | the phone's clock, loop-timed or free-running (`subscriber-line.md` §7) | the 128 kBaud upstream pair | the same. It never reaches a backplane: the line card's receiver recovers it and re-times into T with two '74 stages (`channel-cards.md` §2.3) |
 
 So a channel card may see three rates and generates none of them. **In an
@@ -163,10 +163,10 @@ The six clock pins of the channel socket, and what is guaranteed about each in
 |---|---|---|---|---|
 | a1 | `TX_CLK` | 64 kHz | rising edge = the start of bit 0; every T-domain output on every card changes on it and only on it | no |
 | a2 | `TX_HB` | 128 kHz | §4's contract | source only; same waveform |
-| a3 | `TX_OCT` | 8 kHz | one frame wide, at superframe state 7 | no |
+| a3 | `TX_OCT` / `CLK_8K` | 8 kHz | one frame wide, at superframe state 7. Exchange name **`CLK_8K`**: the scanner/visit mark, not an 8-bit word width | no |
 | a4 | `FILL` | 32 kHz | `TX_CLK` ÷ 2, free-running, **common to the whole shelf** — an unfitted slot and a card must idle on the same phase | no |
 | a7 | `RX_CLK` | 64 kHz | the frame reference for everything the card is given | **yes**: recovered in MF8, **is `TX_CLK`** in an exchange |
-| a8 | `RX_OCT` | 8 kHz | recovered state 7 | **yes**: `TX_OCT` one frame late in an exchange |
+| a8 | `RX_OCT` | 8 kHz | recovered state 7 | **yes**: `CLK_8K` one frame late in an exchange |
 
 **The last two rows are the only clock difference between the shelves, and none
 of the common cards cares**, because each already crosses R to T with its own

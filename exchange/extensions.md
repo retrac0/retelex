@@ -107,9 +107,10 @@ Row *c* keeps all seven of its grounds.
 
 ### 2.2 The word
 
-One 8-bit word a port, one bit a frame, every octet. The scanner rests on each
-port for one octet, 125 µs, so the marker has the whole word at the end of every
-visit (`marker.md` §4). The pin is low for a 1.
+One 8-bit word a port, one bit a frame, every `CLK_8K` period. The scanner rests
+on each port for one **`CLK_8K`** period (125 µs; socket `TX_OCT` / a3), so the
+marker has the whole word at the end of every visit (`marker.md` §4, `clocks.md`
+§1). The pin is low for a 1.
 
 ```
  frame of the octet    0    1  2  3    4  5  6  7
@@ -141,7 +142,7 @@ meaning with these and keeps its own map.
   tied to ground, which reads all ones, and that means a line with no options.
   Plain lines are most of an exchange. Only a card with something more to say
   carries the word's parts.
-- **The word's parts**: a 74HC165 loaded from jumpers on `TX_OCT` and shifted on
+- **The word's parts**: a 74HC165 loaded from jumpers on `CLK_8K` (`TX_OCT`) and shifted on
   `TX_CLK`, into ¼ 74HC03: **≈ 1¼ packages**. A line card has the footprint, and
   it is fitted when the card is to be an operator's position, restricted (class
   111, including warm), in a hunt group, busy-out / busy-inbound, or
@@ -355,12 +356,12 @@ whose pulses the flood carries live: no change to the exchange, and no sender.
 |---|---|
 | **The number** | `1 e b h s`, or `h s` for a line of the card's own exchange. Four jumpers a digit hold its pulse count, ten for 0 |
 | **Waiting for the register** | the card must not dial before a register is attached, or the register counts from the middle. The marker points a caller at dial tone when it hands it a register (`marker.md` §3), so the card waits for `C_RX` to leave the idle pattern: `C_RX` against `FILL`, one XOR and a counter. With no dial-tone card fitted, a hotline cannot dial |
-| **Dialling** | breaks on its own `A_TX` while the phone stays off-hook: 10 pps, 60/40, 0.7 s between digits, all from `TX_OCT`. These are the windows the register, the flood and the monitors were measured at: the flood is ready 258 ms after the first digit, and the monitors' rules held at 10 pps ± 10 % (`network.md` §4, `monitor.md` §5). The phone hanging up stops it |
+| **Dialling** | breaks on its own `A_TX` while the phone stays off-hook: 10 pps, 60/40, 0.7 s between digits, all from `CLK_8K`. These are the windows the register, the flood and the monitors were measured at: the flood is ready 258 ms after the first digit, and the monitors' rules held at 10 pps ± 10 % (`network.md` §4, `monitor.md` §5). The phone hanging up stops it |
 | **Then** | an ordinary call. The flood opens on `1`, the owner claims on `e b`, the far phone rings, and ringback comes in band. Answer across the network is seen at claim (`network.md` §3) |
 | **Time** | 0.8–3.2 s of pulses and 2.8 s of pauses for five digits: **about 4–6 s from dial tone to the far port being rung**, then the cadence's own 0–4 s to the first ring |
 | **Both ways** | a dialling card at each end, each naming the other. Both lifting at once find each other busy and get cannot-complete |
 | **Held while idle** | nothing: no channel, no latch, no register |
-| **Parts** | the 10 ms step from `TX_OCT` ('4040 and a gate); the 100 ms pulse and its 60 % break ('4017 and a NOR); the pulse count ('193, loaded through 2 × '153 from the jumpers of `e b h s`; the key `1` is wired, as the count the digit pointer's first state loads, and a jumper skips it for a local number); the digit pointer and the pause ('393); the idle-pattern detector and control ('86, '74): **≈ 8 packages**, fitted only on a hotline card |
+| **Parts** | the 10 ms step from `CLK_8K` ('4040 and a gate); the 100 ms pulse and its 60 % break ('4017 and a NOR); the pulse count ('193, loaded through 2 × '153 from the jumpers of `e b h s`; the key `1` is wired, as the count the digit pointer's first state loads, and a jumper skips it for a local number); the digit pointer and the pause ('393); the idle-pattern detector and control ('86, '74): **≈ 8 packages**, fitted only on a hotline card |
 
 A phone that dials a stored number when it is lifted does the same with no card
 at all. The number may also be `h s` of the card's own exchange: a hotline that
@@ -447,7 +448,7 @@ network.
   bring-up step 3, which the model does not run as a scenario, and the scanner's
   nail rule is not in it.
 - **The milliwatt's level** through the encoder half, and its ROM image's seam.
-- **The word as gates**: the '165's load against `TX_OCT`, the probe's capture
+- **The word as gates**: the '165's load against `CLK_8K`, the probe's capture
   in the scanned port's cell, the all-ones detector, the power-up hold-off, and
   a plain card's ground link against a fault that reads the same.
 - **`/ANS` alone forming `ON`**, drawn.

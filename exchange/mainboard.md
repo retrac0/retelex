@@ -90,8 +90,8 @@ new here and §8 says why.
 | `SLOTQ[2:0]` | 512 kHz | the same count a quarter cell late, from the '175 on the 1.024 MHz tap. Addresses every strobe decoder and nothing else (`fabric.md` §3.2) |
 | `HB` | 1.024 MHz | the tap the '175 clocks `SLOTQ` from. **The fastest thing on the bus.** Also the trunk encoder's half-bit clock on a fused MF8 link (`mf8-spec.md` §9.1) |
 | `TX_CLK` | 64 kHz | the frame clock. Every card's `RX_CLK` pin is this signal |
-| `TX_OCT` | 8 kHz | the octet mark. Also the scanner's and the monitors' step |
-| `RX_OCT` | 8 kHz | `TX_OCT` one frame late, from one flip-flop on the clock card (`fabric.md` §3.4). A card's `RX_OCT` pin |
+| `CLK_8K` | 8 kHz | the exchange name for socket `TX_OCT` / a3. Scanner and monitors step on it; a port visit is one period (125 µs) |
+| `RX_OCT` | 8 kHz | `CLK_8K` one frame late, from one flip-flop on the clock card (`fabric.md` §3.4). A card's `RX_OCT` pin |
 | `FILL` | 32 kHz | the `1010` idle pattern: what an unfitted port, an unfitted block and a cleared latch all hear |
 | `RBT` | 64 kb/s | the ringback tone as bits, substituted ahead of a ringing port's commutator input. **The one line in this group the clock card does not drive** — see below |
 | `/RING_CAD` | 2 s / 4 s | the ring cadence, low true |
@@ -215,7 +215,7 @@ and the mainboard carries `+5 V` and ground only.
 taps `HC[h]` / `HA[h]` (`mainboard.md` §2.4, `mf8-unit.md` §1): those are
 the commutation of this block's `C_TX` / `A_TX`, which is what goes on the
 line after F and S are inserted. It takes `HCLK`, `HB`, `SLOT` and
-`TX_OCT` from the clock card through the block. Fabric `HB` is also the
+`CLK_8K` (`TX_OCT`) from the clock card through the block. Fabric `HB` is also the
 line half-bit clock at 1.024 MHz. So the cable has ten taps — eight
 blocks, the clock card and common control — however many trunks are
 fitted.
@@ -256,7 +256,7 @@ not.
 |---|---|---|---|---|---|---|---|
 | 1 | spare | 17 | `SLOTQ2` | 33 | `HC0` | 49 | `HA0` |
 | 3 | **`HCLK`** | 19 | **`TX_CLK`** | 35 | `HC1` | 51 | `HA1` |
-| 5 | `TICK` | 21 | `TX_OCT` | 37 | `HC2` | 53 | `HA2` |
+| 5 | `TICK` | 21 | `CLK_8K` | 37 | `HC2` | 53 | `HA2` |
 | 7 | `SLOT0` | 23 | `RX_OCT` | 39 | `HC3` | 55 | `HA3` |
 | 9 | `SLOT1` | 25 | `FILL` | 41 | `HC4` | 57 | `HA4` |
 | 11 | `SLOT2` | 27 | `RBT` | 43 | `HC5` | 59 | `HA5` |
@@ -485,7 +485,7 @@ whose worst case is worse than one CVSD bit.
   never has to leave the clock card**, and the fastest edge on the
   mainboard is 1.024 MHz rather than four. Worth having: it is the one
   signal that would have wanted care.
-- **`RX_OCT`.** `fabric.md` §3.4 says a card's `RX_OCT` is `TX_OCT` one
+- **`RX_OCT`.** `fabric.md` §3.4 says a card's `RX_OCT` is `CLK_8K` one
   frame late, from one flip-flop on the clock card — so it is a signal, and §2's
   table did not list it.
 - **`/CON`.** §3.1 calls the control bus multi-master and leaves how the console

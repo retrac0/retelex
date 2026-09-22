@@ -3,9 +3,9 @@
 // a '4040, a '163 for SLOT and a '175 on the 1.024 MHz tap for SLOTQ.
 //
 // Everything here is generated from one master clock.  Where the hardware has a
-// real clock wire -- TX_CLK, TX_OCT -- this gives both the waveform (for
-// inspection and for a card that wants an edge) and a one-tick strobe, which is
-// what the synchronous RTL actually uses.
+// real clock wire -- TX_CLK, CLK_8K (socket TX_OCT) -- this gives both the
+// waveform (for inspection and for a card that wants an edge) and a one-tick
+// strobe, which is what the synchronous RTL actually uses.
 `timescale 1ns/1ps
 `include "exch_defs.vh"
 
@@ -28,8 +28,8 @@ module clock_card #(
 
     output                   tx_clk,     // 64 kHz frame clock
     output                   frame_stb,  // one tick at the frame edge, where every card samples
-    output                   tx_oct,     // 8 kHz octet mark
-    output                   rx_oct,     // TX_OCT one frame late (fabric.md 3.4)
+    output                   tx_oct,     // CLK_8K: 8 kHz (socket TX_OCT / a3)
+    output                   rx_oct,     // CLK_8K one frame late (fabric.md 3.4)
     output reg               fill,       // 1010 at 32 kHz: CVSD silence
     output reg               ring_cad_n, // 2 s / 4 s, LOW while ringing
     output                   tick_1k     // the marker's and the registers' time base
