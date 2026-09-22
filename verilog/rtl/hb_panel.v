@@ -1,10 +1,11 @@
 // hb_panel -- the whole display: seventeen cards on one pin-header stack.
 // hookbusy.md.
 //
-// Sixteen lamp cards at 0.4 inch, plus the common card at the left end, and a
-// 26-way that passes straight through all of them.  In the normal
-// configuration the columns alternate hook and busy -- green, orange, green,
-// orange -- and a block is an adjacent colour PAIR:
+// Sixteen lamp cards at 0.4 inch, plus the interface card (common_card) at the
+// left end, on four stacking headers that pass straight through -- HA, LEB,
+// PWR, and control (hookbusy.md 3, 4.2).  In the normal configuration the
+// columns alternate hook and busy -- green, orange, green, orange -- and a
+// block is an adjacent colour PAIR:
 //
 //    common   1   2   3   4   5   6          15  16
 //    legend  0H  0B  1H  1B  2H  2B   ...    7H  7B
@@ -51,15 +52,23 @@ module hb_panel #(
     output     [2:0]   dst_blk        // what the stack's own '164 currently names
 );
     wire [7:0] leb_n;
+    wire [2:0] slotq_s;
+    wire       hclk_s, pb0_s, reset_n_s;
 
     common_card #(.INH_TICKS(INH_TICKS), .INH_EN(INH_EN)) u_common (
-        .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .hclk(hclk),
-        .leb_n(leb_n), .dst_blk(dst_blk));
+        .clk(clk), .rst_n(rst_n),
+        .sdata(sdata), .sclk(sclk),
+        .slotq(slotq), .hclk(hclk), .pb0(pb0), .reset_n(reset_n),
+        .leb_n(leb_n),
+        .slotq_s(slotq_s), .hclk_s(hclk_s), .pb0_s(pb0_s), .reset_n_s(reset_n_s),
+        .dst_blk(dst_blk));
 
     genvar c;
     generate for (c = 0; c < 16; c = c + 1) begin : card
         lamp_card #(.BLK(BLK[c*3 +: 3]), .HOOK(HOOK[c])) u_card (
-            .clk(clk), .slotq(slotq), .hclk(hclk), .ha(ha), .pb0(pb0),
-            .leb_n(leb_n), .reset_n(reset_n), .lamp(lamp[c*8 +: 8]));
+            .clk(clk),
+            .slotq(slotq_s), .hclk(hclk_s), .pb0(pb0_s), .reset_n(reset_n_s),
+            .ha(ha), .leb_n(leb_n),
+            .lamp(lamp[c*8 +: 8]));
     end endgenerate
 endmodule

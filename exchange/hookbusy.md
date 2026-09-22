@@ -8,12 +8,13 @@ becomes the confirmation, which costs two packages and buys back everything a
 hue judgement costs.
 
 > **Status: proposed; the decoding measured in RTL.** `verilog/rtl/hc259.v`,
-> `lamp_card.v`, `common_card.v` and `hb_panel.v` are the parts and the stack,
-> and `verilog/tb/tb_panel.v` drives them from the real clock card and from
-> `ctl_write` — 57 checks, passing under both Icarus and Verilator. §7 is what
-> it measures, and §7.2 is the one that needed measuring: the inhibit, against a
-> control stack built without it. **The mechanics and the panel are a sketch.**
-> Nothing has been drawn, nothing has been on a bench, and §8 is longer than §7.
+> `lamp_card.v`, `common_card.v` (the interface card) and `hb_panel.v` are the
+> parts and the stack, and `verilog/tb/tb_panel.v` drives them from the real
+> clock card and from `ctl_write` — 57 checks, passing under both Icarus and
+> Verilator. §3 defines the interface card; §7 is what the bench measures, and
+> §7.2 is the one that needed measuring: the inhibit, against a control stack
+> built without it. **The mechanics and the panel are a sketch.** Nothing has
+> been drawn, nothing has been on a bench, and §8 is longer than §7.
 
 ---
 
@@ -52,7 +53,7 @@ differently, and that is honest rather than untidy.
 | | 8 resistors |
 | **BLK** | a 2×8 shunt column, silkscreen 0–7, **two shunts in one position** |
 | **MODE** | a 2×3 block: hook or busy, three poles |
-| | 26-way stacking header, through |
+| | four stacking headers, through — **HA**, **LEB**, **PWR**, **control** (§4.2) |
 | | **≈ 1 package a card, 16 cards** |
 
 `BLK` routes `HA[h]` to the hook `D` and `LEB[h]` to the busy `/LE` off the same
@@ -70,7 +71,7 @@ nothing"* — and it is why any card works in any position, why the stack order
 cannot be got subtly wrong, and why **one spare covers eight**.
 
 **No card carries a gate.** The busy `/LE` arrives already gated because the
-common card's '138 does it with its own enables (§3). `observers.md` §3 spent
+interface card's '138 does it with its own enables (§3). `observers.md` §3 spent
 a '138 and half a '123 on one field of eight rows; here the same parts serve
 sixteen cards.
 
@@ -96,37 +97,123 @@ orange reads the panel perfectly from the column alternation.
 
 ---
 
-## 3. The common card: the seventeenth
+## 3. The interface card
 
-| | parts |
+The seventeenth card is the stack's **interface card** — the only tap on the
+two exchange cables, the only driver onto **control** and **LEB**, and the
+left-hand end of all four through-headers. (RTL still calls the module
+`common_card`; the board is this.) Its front edge is bare 2HP and is the
+panel's **slot legend**. It carries no lamps.
+
+> **Measured in RTL:** the word decode, the inhibit, the `LEB` enables and the
+> cable→control split (`common_card.v`, `tb_panel.v`). The '244 is a port split
+> in the model — transparent assigns — so the bench does not prove drive
+> current; it proves that lamp cards see only the buffered nets. Mechanics,
+> the IDC taps and the '123's RC are not drawn.
+
+### 3.1 Parts
+
+| | |
 |---|---|
 | the word | 2 × 74HC164 — sixteen bits off cable B, exactly as at a block |
-| the row | 1 × 74HC138 on `DST[5:3]`, **`/E1` = `HCLK`, `/E2` = `INH`** |
-| the inhibit | ½ 74HC123, retriggerable, about a cell |
-| | **≈ 3½ packages**, and the tap on both cables |
+| the row | 1 × 74HC138 on `DST[5:3]`, **`/E1` = `HCLK`**, **`/E2` = `INH`** |
+| the inhibit | ½ 74HC123, retriggerable, about a cell and a half |
+| the control buffer | 1 × 74HC244 — six of eight bits onto the control bus |
+| decoupling | 100 nF a package, at the '244 and the '138 |
+| connectors | cable A tap, cable B tap; four stack headers (through toward the lamps) |
+| | **≈ 4½ packages** |
 
-**The '138's eight active-low outputs *are* the `LEB` lines.** Its own enables do
-the gating, which is why no lamp card has a gate on it.
+**No shunt column and no MODE.** This card is one position and one job.
+
+### 3.2 Cable-side tap
+
+Twelve signals off cable A, four off cable B — one load on each ribbon
+conductor it uses. Pin numbers are `mainboard.md` §3's IDC positions:
+
+| cable A | pin | into |
+|---|---|---|
+| `HCLK` | 3 | '244 and '138 `/E1` |
+| `SLOTQ0` | 13 | '244 |
+| `SLOTQ1` | 15 | '244 |
+| `SLOTQ2` | 17 | '244 |
+| `HA0`…`HA7` | 49…63 odd | **HA** header, straight through |
+
+| cable B | pin | into |
+|---|---|---|
+| `SDATA` | 3 | first '164 `DS` |
+| `SCLK` | 5 | both '164 `CP`; '123 retrigger |
+| `/RESET` | 7 | '244 |
+| `PB0` | 11 | '244 |
+
+`SDATA` and `SCLK` **stop here**. They are not on any stack bus. `WR` is not
+taken: nothing on this card writes a latch.
+
+### 3.3 Stack-side headers
+
+Four through-headers, pin 1 at the front (lamp) edge. The interface card is
+the left end: its receptacles face the first lamp card; the cable taps and the
+legend face out.
+
+| bus | pins | nets | driven by |
+|---|---|---|---|
+| **HA** | 1–8 | `HA0` … `HA7` | cable A, unbuffered |
+| **LEB** | 1–8 | `LEB0` … `LEB7` | '138 `Y0`…`Y7`, active low |
+| **PWR** | 1–4 | `+5V`, `GND`, `+5V`, `GND` | local supply into the stack |
+| **control** | 1–6 | `SLOTQ0`, `SLOTQ1`, `SLOTQ2`, `HCLK`, `PB0`, `/RESET` | '244 outputs |
+
+**PWR** is injected on this card — the exchange ribbons do not carry the
+panel's 256 mA. Dual `+5V`/`GND` pairs share the return.
+
+### 3.4 The '244 — control leaves the cable here
+
+| '244 | cable in | control out |
+|---|---|---|
+| 1A1 / 1Y1 | `SLOTQ0` | control pin 1 |
+| 1A2 / 1Y2 | `SLOTQ1` | pin 2 |
+| 1A3 / 1Y3 | `SLOTQ2` | pin 3 |
+| 1A4 / 1Y4 | `HCLK` | pin 4 |
+| 2A1 / 2Y1 | `PB0` | pin 5 |
+| 2A2 / 2Y2 | `/RESET` | pin 6 |
+| 2A3, 2A4 | tie to GND | unused |
+| `/1G`, `/2G` | GND | always enabled |
+
+Sixteen '259 address and enable pins must not hang on the ribbons. The '164s
+and the '138 keep the **cable-side** `HCLK` and `SCLK` — one ribbon load — and
+the '244 is a separate drive into the stack. Lamp cards see only the control
+header.
+
+`HA` needs no buffer here: each highway already has a '244 on the fabric
+(`fabric.md` §3.1). `LEB` is born on this card as the '138's outputs.
+
+### 3.5 The word and the row
 
 **Both '164 are needed although only three bits are read.** `DST[5:3]` is bits
 13–11 of the word (`mainboard.md` §2.3.1), so the second register exists to
-push them to the end.
+push them to the end. Bit 15 (`G`) is not read: nothing here writes a latch, so
+an event word (`counters.md` §9, `G` = 0) steers the row exactly as it steers
+`/BLK` at every block.
 
 **The shift register has no phase, only content.** Its sixteen bits are right
-whenever the marker has driven sixteen good bits in a row, so this card counts
-nothing and needs no frame reference. And because the block that drives `PB0` is
-the block `DST[5:3]` names, and this decodes the same three bits out of the same
-broadcast, **whatever is on `PB0` in cell *s* belongs to port (`DST[5:3]`, *s*)
-by construction.** The field cannot be wrong about whose bit it has. It is
-`counters.md` §1's argument used for the row instead of the pattern.
+whenever the marker has driven sixteen good bits in a row — no bit counter, no
+frame reference, gated or free-running `SCLK`.
 
-**`G` is not read**, because nothing here writes a latch and there is no guard to
-honour. So an event word (`counters.md` §9, `G` = 0) steers this field's row
-exactly as it steers `/BLK` at every block. The row moves to the port the event
-is about and the data stays honest, because the block driving `PB0` moved with
-it.
+**The '138's eight active-low outputs *are* the `LEB` lines.**
 
-### 3.1 Why the inhibit
+| | |
+|---|---|
+| `A2..A0` | `DST[5:3]` from the '164s |
+| `/E1` | cable `HCLK` — enabled in the **second** half of the cell |
+| `/E2` | `INH` — high while `SCLK` is moving and for ~1½ cells after |
+| `E3` | Vcc |
+| `Y0..Y7` | `LEB[0..7]` |
+
+So `LEB[h]` is low only when the word names block *h*, the word is still, and
+it is the open half of the cell. Whatever is on `PB0` in cell *s* then belongs
+to port (`DST[5:3]`, *s*) **by construction** — the same three bits steer the
+block that drives `PB0`. The field cannot be wrong about whose bit it has
+(`counters.md` §1's argument, used for the row).
+
+### 3.6 The inhibit
 
 Mid-word the '164 holds rippling garbage and the row it names walks about. The
 **data** stays honest — the block's own `/BLK` decoder is rippling in lockstep,
@@ -141,16 +228,44 @@ Half a package removes the question. A word is 31 µs at 512 kHz and the field i
 blind for it; the lamp it would have written is written on the next frame, 15.6
 µs later. §7.2 measures both halves of that.
 
+**`INH` timing.** Any edge on cable `SCLK` retriggers the '123. The output pulse
+is about **1½ cells** (RTL `INH_TICKS = 12` at 4.096 MHz ≈ 2.93 µs against a
+1.95 µs cell). The RC (or the second half of the '123 strapped as a fixed
+width) is set on the bench; the number is arithmetic until then.
+
+### 3.7 Signal flow
+
+```
+ cable A ── HCLK, SLOTQ ─────────────► '244 ──► control bus ──► lamp cards
+        └─ HCLK ────────────────────► '138 /E1
+        └─ HA[0..7] ─────────────────────────► HA bus ──────► lamp cards
+
+ cable B ── SDATA, SCLK ──► '164 ×2 ── DST[5:3] ──► '138 A
+        └─ SCLK ──────────► '123 ──── INH ──────► '138 /E2
+        └─ PB0, /RESET ──────────────► '244 ──► control bus
+                                              '138 Y ──► LEB bus ──► lamp cards
+
+ local +5V/GND ──────────────────────────────────► PWR bus ──► lamp cards
+```
+
+### 3.8 What this card is not
+
+- **Not a lamp card.** No '259, no LEDs, no BLK/MODE.
+- **Not a second master.** It never drives `SDATA` / `SCLK` / `WR`.
+- **Not a probe.** It does not read `PB1` or a port's word — only `PB0` for the
+  busy lamps, through the buffer.
+- **Not optional for a busy field.** Hook-only bring-up can omit it and jumper
+  every lamp card to HOOK with `HA` and control sourced some other way; a mixed
+  or busy field needs this card for `LEB` and the buffered control.
+
 ---
 
 ## 4. The stack, and where it goes
 
-Seventeen cards standing at **0.4 inch**, plugged into one another on a 26-way
-that passes straight through. The common card is at the left end, where three
-things fall out at once: its front edge is a bare 2HP strip and becomes **the
-slot legend**; its cable connectors are unconstrained because it has no
-neighbour on one side; and the bus enters the stack at one end rather than the
-middle.
+Seventeen cards standing at **0.4 inch**, plugged into one another on **four
+internal buses** that pass straight through — `HA`, `LEB`, `PWR`, and
+**control**. The **interface card** (§3) is at the left end: legend, cable taps,
+and the driven ends of control and `LEB`.
 
 ```
    common   1   2   3   4   5   6              15  16
@@ -178,11 +293,11 @@ the left, slots 0–7 top to bottom.
 
 **0.4 inch is exactly 2HP**, which is why it is worth holding: seventeen cards
 come out as a whole number of horizontal units with nothing to fudge. It is
-*not* set by the connector. The pitch comes from the LED grid and the header has
-to live with it, so **the spacers are the datum and the header floats** — a
-2.54 mm pin strip has several millimetres of usable engagement and does not need
-to define the spacing, only to conduct. Nobody should go hunting for a 10.16 mm
-stackthrough part.
+*not* set by the connectors. The pitch comes from the LED grid and the headers
+have to live with it, so **the spacers are the datum and the headers float** —
+a 2.54 mm pin strip has several millimetres of usable engagement and does not
+need to define the spacing, only to conduct. Nobody should go hunting for a
+10.16 mm stackthrough part.
 
 ### 4.1 The gap between the pairs
 
@@ -198,29 +313,34 @@ orange the left. Same PCB, and the pairs close up:
 
 Cells stop being square, which is the point — the pair is the unit.
 
-### 4.2 The 26-way
+### 4.2 Four buses through the stack
 
-| | |
-|---|---|
-| `SLOTQ[2:0]` | 3 |
-| `HCLK` | 1, **ground either side** — it is every hook card's `/LE` and its edges are load-bearing |
-| `HA[0..7]` | 8 |
-| `PB0` | 1 |
-| `LEB[0..7]` | 8 |
-| `/RESET` | 1 |
-| +5V, GND | 2 |
-| | **24 signals, 26 pins** |
+One mixed header is the wrong cut. The stack carries four different kinds of
+thing, so it gets **four stacking headers**, each through every lamp card and
+rooted on the interface card (§3.3 for the pin maps):
 
-`SDATA` and `SCLK` are not on it: they stop at the common card. Its own taps are
-twelve signals off cable A (`HCLK`, `SLOTQ[2:0]`, `HA[0..7]`) and four off cable
-B (`SDATA`, `SCLK`, `/RESET`, `PB0`).
+| bus | pins | |
+|---|---|---|
+| **HA** | 8 | `HA[0..7]` — cable A's highways, every frame |
+| **LEB** | 8 | `LEB[0..7]` — the interface card's already-gated busy `/LE` |
+| **PWR** | 4 | `+5V`, `GND`, `+5V`, `GND` — dual returns for 256 mA lit |
+| **control** | 6 | `SLOTQ[2:0]`, `HCLK`, `PB0`, `/RESET` — buffered on the interface card |
+| | **26** | |
+
+**Why four.** `HA` is the fabric sample and a hook card needs nothing else from
+the stack to light. `LEB` is the busy half's only private bus. `PWR` is current,
+not signal. **Control** is clock- and word-shaped and must not load the ribbons
+— see §3.4.
+
+`SDATA` and `SCLK` are on none of them: they stop at the interface card.
 
 **A through-stack, not a backplane.** Both are two PCB designs, so that is not
-the difference. The difference is that a bad contact anywhere takes out
-everything downstream, and that pulling a middle card means disassembling from
-one end. Against that: one bolt-through, one outline, one spacer length, no
-bracket — and a failure in the stack announces itself as *everything to the
-right went dark*, which is about as self-diagnosing as a fault gets.
+the difference. The difference is that a bad contact on one bus takes out that
+bus downstream — an open on `HA` darkens every hook column to the right; an
+open on `LEB` freezes every busy column to the right and leaves the greens
+alive — and that pulling a middle card means disassembling from one end.
+Against that: one bolt-through, one outline, one spacer length, four floating
+headers, no bracket — and a fault that names which bus went open.
 
 ---
 
@@ -292,16 +412,18 @@ wants. The second lag is the design's, not the field's.
 
 | | |
 |---|---|
-| silicon | 16 × '259 + 3½ = **19½ packages** |
+| silicon | 16 × '259 + 4½ = **20½ packages** |
 | lamps | 128 LEDs, 128 resistors |
 | current | 2 mA a lamp: 16 mA out of a '259, a third of the package limit; **256 mA** for the full panel |
 | panel | 3U × 34HP |
-| PCB designs | **two** — the card in 16 copies, the common card in 1 |
+| PCB designs | **two** — the lamp card in 16 copies, the interface card in 1 |
+| stack buses | four headers: `HA`, `LEB`, `PWR`, control — **26 pins** |
 | cables | twelve signals off A, four off B: one tap on the harness |
 
-Two packages more than `observers.md` §7's bicolour grid, for one board
-design in sixteen copies, a dead lamp that is a pull-and-replace, and no hue
-anywhere in the reading of it.
+Two packages more than `observers.md` §7's bicolour grid was, before the
+control buffer; with the '244 it is three more — for one board design in
+sixteen copies, a dead lamp that is a pull-and-replace, and no hue anywhere
+in the reading of it.
 
 ---
 
@@ -340,9 +462,10 @@ is real and is not small.
 
 `/RESET` clears all 64 busy lamps in the same instant and does not put anyone's
 phone down — the hook field's `/CLR` is tied high and every green column is
-still lit. Then **the one block the stack's own '164 still names is read again
-within a frame**, because nothing cleared the word; the other seven wait for the
-scanner. That is correct and it was not obvious until the bench showed it.
+still lit. Then **the one block the interface card's own '164 still names is
+read again within a frame**, because nothing cleared the word; the other seven
+wait for the scanner. That is correct and it was not obvious until the bench
+showed it.
 
 ### 7.4 One PCB, jumpered the other way
 
@@ -355,11 +478,12 @@ wants, and it is a jumper, not a different card.
 ## 8. Not measured
 
 - **All of the mechanics.** Nothing is drawn. The card outline, the spacer
-  length, the stacking header's engagement, the bezel and the two LED footprint
-  columns of §4.1 are arithmetic and a sketch.
-- **The stacking part.** §4 says the spacers are the datum and the header
-  floats, which needs a header whose engagement range actually covers 10.16 mm
-  ± the stack-up. Not chosen, not checked.
+  length, the four stacking headers' engagement, the bezel and the two LED
+  footprint columns of §4.1 are arithmetic and a sketch.
+- **The stacking part.** §4 says the spacers are the datum and the headers
+  float, which needs four headers whose engagement range actually covers
+  10.16 mm ± the stack-up. Not chosen, not checked. §3.3 assigns the pin
+  maps; the parts are not.
 - **The bezel.** One window with a diffuser and the grid and port map
   silkscreened on it, referenced off the panel rather than off the stack, so
   that 128 lamps stay off the tolerance budget. Drawn nowhere.
@@ -391,7 +515,7 @@ wants, and it is a jumper, not a different card.
   the reason is §2.1: position can carry hook-versus-busy, so colour does not
   have to, and every problem with amber goes away with it.
 - **`observers.md` §3** keeps its parts list but loses its '138 and its
-  one-shot to the common card, where sixteen cards share them instead of eight
+  one-shot to the interface card, where sixteen cards share them instead of eight
   rows.
 - **`mainboard.md` §2.2's justification** — *"only the marker reads them, so
   eight blocks share two wires"* — now has a counter-example. Everything awkward

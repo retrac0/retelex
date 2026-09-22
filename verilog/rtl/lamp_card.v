@@ -1,13 +1,14 @@
 // lamp_card -- ONE CARD of the hook/busy display.  hookbusy.md 2.
 //
 // One 74HC259, eight LEDs, eight resistors, two shunt columns and a mode
-// block.  Sixteen of these stand at 0.4 inch on a pin-header stack and a
-// seventeenth -- common_card -- carries the word decode and the tap on the two
-// cables.  ONE PCB IN SIXTEEN COPIES: the card knows nothing, and two shunts
-// and a jumper say what it is.  That is mainboard.md 2.1's bargain one
-// level down -- "the cable is common, the board is position-wired, and the card
-// knows nothing" -- and it is why any card works in any position and one spare
-// covers eight.
+// block.  Sixteen of these stand at 0.4 inch on four stacking headers --
+// HA, LEB, PWR, and control -- and a seventeenth -- the interface card
+// (common_card) -- carries the word decode, the LEB decode, the control
+// buffer and the tap on the two cables.  ONE PCB IN SIXTEEN COPIES:
+// the card knows nothing, and two shunts and a jumper say what it is.  That
+// is mainboard.md 2.1's bargain one level down -- "the cable is common, the
+// board is position-wired, and the card knows nothing" -- and it is why any
+// card works in any position and one spare covers eight.
 //
 //   BLK   a 2x8 shunt column, silkscreen 0-7, TWO shunts in one position:
 //         HA[h] -> the hook D, and LEB[h] -> the busy /LE
@@ -36,14 +37,18 @@ module lamp_card #(
     parameter       HOOK = 1'b1       // the mode block: 1 = hook, 0 = busy
 )(
     input             clk,
-    // ---- the 26-way, straight through the stack ------------------------
-    input      [2:0]  slotq,          // the '259 address, both modes
-    input             hclk,           // the hook /LE
-    input      [7:0]  ha,             // cable A: all eight highways
-    input             pb0,            // cable B: the selected block's BUSY
-    input      [7:0]  leb_n,          // the common card's '138 outputs
-    input             reset_n,        // /RESET, cable B: the busy /CLR.  NOT a
-                                      // power-on reset -- a '164 has no clear at all
+    // ---- four buses through the stack (hookbusy.md 4.2) ----------------
+    // HA       ha[7:0]
+    // LEB      leb_n[7:0]
+    // PWR      (implied)
+    // control  slotq, hclk, pb0, reset_n
+    input      [2:0]  slotq,          // control: the '259 address, both modes
+    input             hclk,           // control: the hook /LE
+    input      [7:0]  ha,             // HA bus: all eight highways
+    input             pb0,            // control: the selected block's BUSY
+    input      [7:0]  leb_n,          // LEB bus: the interface card's '138 outputs
+    input             reset_n,        // control: busy /CLR.  NOT a power-on
+                                      // reset -- a '164 has no clear at all
 
     output     [7:0]  lamp            // eight LEDs, green or orange by stuffing
 );

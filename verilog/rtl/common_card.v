@@ -1,13 +1,20 @@
-// common_card -- the seventeenth card: the only one in the stack that is not a
-// lamp card.  hookbusy.md 3.
+// common_card -- the interface card (seventeenth in the stack).  hookbusy.md 3.
 //
-// It is observers.md 3's shared parts, moved one board back and used sixteen
-// ways instead of eight times over:
+// The only tap on the two exchange cables, and the only driver onto control
+// and LEB (HA is fanned through unbuffered; PWR is injected here):
 //
 //   2 x 74HC164    the sixteen-bit word off cable B, exactly as at a block
 //   1 x 74HC138    DST[5:3], /E1 = HCLK, /E2 = INH.  Its eight active-low
 //                  outputs ARE the LEB lines, so no lamp card carries a gate
 //   1/2 x 74HC123  INH: high while SCLK is moving and for a cell after it
+//   1 x 74HC244    six of eight bits buffer SLOTQ[2:0], HCLK, PB0, /RESET
+//                  from the cable tap onto the CONTROL bus through the stack
+//
+// CONTROL IS BUFFERED.  Sixteen '259 address and enable pins must not hang on
+// the exchange ribbons.  The '164s and the '138 keep the cable-side HCLK /
+// SCLK -- one load on the ribbon -- and the '244 is a separate drive into the
+// stack.  HA needs no buffer here: each highway already has a '244 on the
+// fabric (fabric.md 3.1).
 //
 // BOTH '164 ARE NEEDED although only three bits are read.  DST[5:3] is bits
 // 13-11 of the word (mainboard.md 2.3.1), so the second register exists
@@ -45,15 +52,30 @@ module common_card #(
     input             clk,
     input             rst_n,
 
-    // the tap on cable B
+    // ---- cable-side tap -----------------------------------------------
     input             sdata,
     input             sclk,
-    // and on cable A
+    input      [2:0]  slotq,
     input             hclk,
+    input             pb0,
+    input             reset_n,
 
-    output     [7:0]  leb_n,            // up the 26-way to every busy card
+    // ---- into the stack -----------------------------------------------
+    output     [7:0]  leb_n,            // LEB bus
+    output     [2:0]  slotq_s,          // control bus, buffered
+    output            hclk_s,
+    output            pb0_s,
+    output            reset_n_s,
     output     [2:0]  dst_blk           // the word's DST[5:3], as a block's shunt sees it
 );
+    // ---- '244: cable -> control bus -----------------------------------
+    // Six of eight bits.  Transparent in the model; the point is the port
+    // split -- lamp cards see only *_s.
+    assign slotq_s   = slotq;
+    assign hclk_s    = hclk;
+    assign pb0_s     = pb0;
+    assign reset_n_s = reset_n;
+
     // ---- the two '164 -------------------------------------------------
     // G, bit 15, IS NOT READ -- there is no guard gate here because nothing
     // here writes a latch.  So an EVENT word (counters.md 9, G = 0) steers
@@ -85,6 +107,7 @@ module common_card #(
     wire inh = INH_EN && (osh != 8'd0);
 
     // ---- the '138: /E1 = HCLK, /E2 = INH -------------------------------
+    // Cable-side HCLK -- one ribbon load shared with the '244 input.
     // Enabled only in the second half of a cell, and only when the word is
     // still.  Its eight outputs are the busy cards' /LE, already gated.
     genvar h;
