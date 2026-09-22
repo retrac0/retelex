@@ -15,10 +15,14 @@ The short answers, before the detail:
 
 - **The card is interchangeable with a subscriber line card at the socket.** Same
   pins, one port, any slot. It uses no −48 V, no `RING` and no ±12 V.
-- **The block's card side is not a bus.** It is a star: per-slot lines
-  point to point, and only the clocks and the rails are common. It is the MF8
-  channel slot of `mf8-backplane.md` §8, with the block standing where the MF8
-  trunk card stands.
+- **The block's card side is not a bus.** Electrically it is a star: per-slot
+  lines point to point, and only the clocks and the rails are common. Physically
+  that star rides an **internal 2 × 16 ribbon**; the IDC taps along it are the
+  sockets (`fabric.md` §5.1). It is the MF8 channel slot of `mf8-backplane.md`
+  §8, with the block standing where the MF8 trunk card stands.
+- **A port circuit is fitted only with its card.** Shared block logic
+  (commutators, highway drivers) is on the board at the ribbon's root; the
+  crosspoint and supervision come with the card at the tap.
 - **What does not swap is the monitor.** A trunk on a block needs a monitor pool
   on that block, and a monitor is not a card.
 
@@ -58,14 +62,11 @@ eye.**
 
 ## 2. The block's card side — "the block header"
 
-A block's eight card sockets are the least-specified part of the design.
 `protocol.md` §1 says "a port is what an MF8 channel slot already is";
-`fabric.md` §5 says "eight card sockets standing on it"; no document says
-which pin is which. It matters here because the question this card raises is
-whether it can sit where a line card sits, and that is a question about the
-socket.
+`fabric.md` §5.1 is the packaging. This section is the electrical star and the
+socket pinout — whether a baseband trunk can sit where a line card sits.
 
-### 2.1 It is a star, not a bus
+### 2.1 It is a star on a ribbon, not a bus
 
 | | signals | how many |
 |---|---|---|
@@ -80,14 +81,25 @@ is common, the board is position-wired, and the card knows nothing", carried dow
 one more level — and it is the third time the same bargain is struck in this
 design.
 
+**Physically the star is an internal 2 × 16 ribbon** off the block's shared
+board (`fabric.md` §5.1). The same connector family as §2.2's channel socket;
+IDC taps along the ribbon are the sockets. Commons are continuous; each tap
+takes that slot's six private lines. It is not a multi-drop bus for the
+per-slot signals, and it is not eight sockets standing on a flat mainboard of
+eighty packages.
+
 The fastest thing on it is `TX_HB` at 128 kHz, against 1.024 MHz on the
-mainboard. Electrically it is nothing: 25 cm of backplane, `mf8-backplane.md` §8,
-no termination.
+mainboard. Electrically it is nothing: a short ribbon, `mf8-backplane.md` §8's
+rates, no termination.
 
 So: **not a secondary bus.** The block's card side is the MF8 channel slot with
 the block standing in the MF8 trunk card's seat. A block *is* an MF8 shelf
 without a line — which is the reason `terminal.md` works at all, and the
-reason a card built for one works unchanged in the other.
+reason a card built for one works unchanged in the other. An MF8 *trunk*
+group taps the highway ribbon (`mf8-unit.md` §1); it does not collect the
+star on T. The **local eight-channel highway trunk** does use T + C
+(`local-trunk.md`, `fabric.md` §5.2): eight seats of copper in highway shape,
+where this card is one seat on a ribbon tap.
 
 ### 2.2 The channel socket
 
@@ -231,7 +243,7 @@ rail**, which is the lightest load on the socket of anything in the set.
 | a9 | `C_RX[n]` | in | straight out on the line, 64 kb/s NRZ, changing at the local frame edge |
 | a10 | `A_RX[n]` | in | straight out on the line. E as it stands, since `/ANS` is low and a trunk never rings (§4) |
 | a11 | `MUTE` | — | tied to "locked" at every socket in a block, and real only in an MF8 shelf. This card's link-down detector is its own, on a12 |
-| a12 | the word | **out**, o.d. | `0 101 d d g n` from the '165 on four jumpers: class trunk, its direction, its glare bit, its NO-FORWARD bit. Held off at power-up by the RC of `extensions.md` §2.2, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
+| a12 | the word | **out**, o.d. | `11 101 d d g` from the '165 on three jumpers: class trunk, its direction, its glare bit. Held off at power-up by the RC of `extensions.md` §2.2, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
 | a13 | `/ANS` | **out** | tied low on the board. No part |
 | a14 | spare | — | open |
 | a16, c2, c4, c6, c8, c11, c14, c16 | `GND` | in | |
@@ -273,7 +285,7 @@ trunk-card capability and this card carries voice and async only.
 | incoming `C`, re-timed | ½ 74HC74 |
 | incoming A: RC, diode, Schmitt | ¼ 74HC14 |
 | link-down detector (§3.3) | ½ 74HC123 |
-| the word: '165 from `d d g n` jumpers, into ¼ '03, held off at power-up by an RC (`extensions.md` §2.2) | 1¼ |
+| the word: '165 from `d d g` jumpers, into ¼ '03, held off at power-up by an RC (`extensions.md` §2.2) | 1¼ |
 | `/ANS` | tied low on the board: no part |
 | | **≈ 4½** — 74HC population, **≈ 3** |
 
@@ -293,7 +305,7 @@ so **moving the card moves all of it**:
 
 | | a plain line card | the baseband trunk card |
 |---|---|---|
-| the word (a12) | pin tied to ground: all ones, class line, no options | `0 101 d d g n` from a '165: class trunk, its direction, its glare bit, its NO-FORWARD bit |
+| the word (a12) | pin tied to ground: all ones, class line, no options | `11 101 d d g` from a '165: class trunk, its direction, its glare bit |
 | `/ANS` (a13) | open: the port rings in cadence and gives ringback | tied low: a trunk that rang would give its caller ringback the instant it was seized, and chop forward A in the cadence (`extensions.md` §2.3) |
 | the port circuit | unchanged | unchanged — the same 5 packages of crosspoint and 3¼ of supervision |
 | the block | unchanged | unchanged |
@@ -314,10 +326,10 @@ so **moving the card moves all of it**:
   is not written down in `marker.md` and is not in the `calls` model. It
   should be cannot-complete. **Unsettled, and a reason to prefer an undialable
   seat — 06–07 in the operator bank are free of that.**
-- **The `n` bit is per link, and this card is exactly one link** — so the
-  NO-FORWARD strap of `network.md` §3.3, which must be set at both ends of
-  one link, is one jumper on one card here, where on an MF8 card it is six
-  channels' worth of one word. A bypass link across a ring is the natural use of
+- **The NO-FORWARD strap is per link, and this card is exactly one link** — so
+  the strap of `network.md` §3.3, which must be set at both ends of
+  one link, is one jumper on one card here, where on an MF8 card it is one
+  jumper a direction on the network card and does not sit in the shared word. A bypass link across a ring is the natural use of
   a single-channel trunk, and it is also where the strap belongs.
 
 ---
@@ -325,12 +337,13 @@ so **moving the card moves all of it**:
 ## 5. What one channel is worth
 
 `network.md` §1.1: one channel carries **0.01 E at 1 % blocking**, against
-0.15 for two and 1.91 for six, and every network call floods every link for
-1.2–1.7 s. So:
+0.15 for two, 1.91 for six (MF8), and **3.13 for eight** on a local highway
+trunk (`local-trunk.md`). Every network call floods every link for 1.2–1.7 s.
+So:
 
 - **It is not a route for an exchange's traffic.** It suits a few lines at the far
   end of a network, a bypass across a ring, or topping a six-channel direction up
-  to seven.
+  to seven — or, for a full short-range group, use `local-trunk.md` instead.
 - **Glare is not a problem, for the reason that makes it useless for traffic.**
   The `g` bit tells one end to hunt the *last* free trunk facing a way
   (`network.md` §1); with one channel there is no last, so on a group of one

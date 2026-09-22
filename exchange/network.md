@@ -1,7 +1,7 @@
 # The exchange — tie trunks and the network
 
-An exchange is one 8 × 8 fabric of 64 ports: 48 lines, an operator, and **an MF8 group of eight
-tie trunks on block 1** — further groups at the busy centre of a network (`protocol.md`
+An exchange is one 8 × 8 fabric of 64 ports: 48 lines, an operator, and **an MF8 group of six
+channels on block 1** — further groups at the busy centre of a network (`protocol.md`
 §5). A network is such exchanges joined by those trunks — a handful on a chain,
 a score around a hub, sixty-four codes in all — in which a line on another
 exchange is dialled directly with `1` and its four-digit number. This document is how: nobody routes, nobody sends; the call is
@@ -43,13 +43,13 @@ nothing.
 
 | | |
 |---|---|
-| Ports | **10–17** first: one MF8 link on block 1, eight channels. The exchange unit occupies the block and takes its highway (`mf8-unit.md` §5). Slot *n* is channel C*n* of the line after conversion, not a bit position on the wire (`protocol.md` §5). **Further groups in blocks 2+** (20–27, …) at the cost of those lines. **Block 0 is never an MF8 trunk group** — 01–03 are tones, 04–07 the operator bank; 06–07 may take single-channel trunks (`network.md` §1.1). On a standalone exchange, 1 is a highway digit and there is no trunk block |
-| Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`extensions.md` §2.2). An MF8 unit on a tie trunk sends one word to its eight channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — eight channels, or sixteen, or nine with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
-| The link | an MF8 pair each way — or, between exchanges in one rack, copper: a tie card at each end crosses the ports over and gives them their class and words; same clock, bit-exact, one frame more delay (`protocol.md` §4). Or any other carrier that does what §1.1 asks |
-| The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same unit, eight lines of this exchange (`terminal.md`) |
-| Transmit | payload in the exchange's clock (`TX_CLK` / `TX_OCT` on C). The line mux is the unit's own 4.096 MHz, tap Q1, `HB` 2.048 MHz — not `SLOT`, not fabric `HB` (`mf8-unit.md` §5.5) |
-| Receive | each link is its own clock domain. The crossing of `mf8-backplane.md` §2 moves here: two '174s for the eight `C`, the §14 RC and Schmitt gate for `A` |
-| Trunk down | `MUTE` clears the A hold, every M falls, calls release themselves. **`MUTE_BLK` forces the block's `BUSY` highway to 1**, or a dead trunk hunts as free. The unit also stops sending its words, which keeps a dead trunk from being hunted on any carrier (§1.1); `BUSY` is what keeps callers off a subscriber terminal's dead lines (`terminal.md` §2) |
+| Ports | **11–13, 15–17** first: one MF8 link on block 1, six channels on the wire seats; slots 10 and 14 free (`protocol.md` §5). The trunk card taps `HC[h]`/`HA[h]` and inserts F and S (`mf8-unit.md` §1, `mainboard.md` §2.4). **Further groups in blocks 2+** at the cost of those lines. **Block 0 is never an MF8 trunk group** — 01–03 are tones, 04–07 the operator bank; 06–07 may take single-channel trunks (`network.md` §1.1). On a standalone exchange, 1 is a highway digit and there is no trunk block |
+| Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so, and which way its link goes, in its word** (`extensions.md` §2.2). An MF8 trunk card sends one word to its six channels, from one 74HC165, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
+| The link | an MF8 pair each way — or, between exchanges in one rack or room, copper: a **local highway trunk** of eight channels (`local-trunk.md`), or a single-channel baseband card (`baseband.md`); or any other carrier that does what §1.1 asks |
+| The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`terminal.md`) |
+| Transmit | in this exchange's clock — `HCLK`, fabric `HB` 1.024 MHz, `SLOT` and `TX_OCT` from the clock card; the trunk card does not own a crystal (`mf8-spec.md` §9, `mainboard.md` §8) |
+| Receive | each link is its own clock domain. The crossing of `mf8-backplane.md` §2 moves here: two '174s for the six `C`, the §14 RC and Schmitt gate for `A` |
+| Trunk down | `MUTE` clears the A hold, every M falls, calls release themselves. The card also stops sending its words, which keeps a dead trunk from being hunted on any carrier (§1.1); on a terminal, force `BUSY` so callers do not ring a phone that cannot ring (`terminal.md` §2) |
 | Guard | `marker.md` §5.2's settle term already holds a released trunk busy for ~0.6 s |
 | Glare | the two ends of a link hunt it in opposite order: the word's `g` bit, set at one end, has the marker take the last free trunk facing that way and not the first. Residual glare joins two callers to each other |
 
@@ -75,12 +75,15 @@ it is**, which is the one most carriers fail on and this one does not (§5.1 of
 | **Round trip, signalling** | **under 0.9 s** over the whole path, whatever the hop count: the origin gives up 2 s after `b` and the claim has to cross the network and come back inside that (§4). Nothing a terrestrial carrier does comes near it |
 | **Round trip, ECHO** | **20–30 ms, and this is the one that binds.** `channel-cards.md` §3.3 says echo needs no treatment because the round trip is "under 0.1 ms plus 5 µs per km", and there is **no canceller and no suppressor** anywhere in the design. That holds for a CVSD subscriber at both ends, which is four-wire and has no hybrid to echo off (`subscriber-line.md`); it does **not** hold the moment either end is an **analog FXS or FXO card**, whose 600 Ω hybrid returns 10–15 dB. **One 15 ms hop is already 30 ms of round trip.** A carrier of tens of milliseconds is for a network of CVSD sets, or it needs a canceller the design does not have |
 | **One way, conversation** | with no hybrid at either end the limit is G.114's, **150 ms one way** for transparency and 400 ms to be usable at all. Three 40 ms hops are transparent; ten are not |
-| **Glare** | the window in which both ends may seize one channel unseen is the carrier's delay plus the marker's own, so a 40 ms carrier makes glare about six times as likely as a pair does. The word's `g` bit still needs seven of eight channels busy before it can happen at all (§1) |
+| **Glare** | the window in which both ends may seize one channel unseen is the carrier's delay plus the marker's own, so a 40 ms carrier makes glare about six times as likely as a pair does. The word's `g` bit still needs five of six channels busy before it can happen at all (§1) |
 | **Link down** | stop sending its word, so that its port reads unequipped and is never hunted, and let A fall, so that a call in progress releases |
 | **The word** | class trunk, its direction and its glare bit (`extensions.md` §2.2), and `/ANS` tied low |
 
-So a direction may be carried by an MF8 unit's eight channels, the usual case; by
-a copper tie card between exchanges in one room (`baseband.md`); by a
+So a direction may be carried by an MF8 trunk's six channels, the usual case; by
+a **local eight-channel highway trunk** between exchanges in one room or
+adjacent racks (`local-trunk.md`) — whole block, T + C, copper `C`/`A`
+highways with `HCLK` carried so each receive path is master-timed by the far
+end; by a single-channel copper card on a ribbon tap (`baseband.md`); by a
 single-channel card, one trunk over a pair or two, for example two CVSD line
 interfaces back to back (`subscriber-line.md`), not designed; or by a
 voice-band card on a leased circuit or a radio — the E&M card of
@@ -88,9 +91,11 @@ voice-band card on a leased circuit or a radio — the E&M card of
 with A as a dual tone each way**. Any mix of them may face one way.
 
 **One channel carries little.** At 1 % blocking one channel carries 0.01 E, two
-carry 0.15 E and eight 3.13 E, and every call in the network floods every link for
-1.2–1.7 s (§4). A direction of one channel suits a few lines at the far end of a
-network, or tops up a direction. It is not a route for an exchange's traffic.
+carry 0.15 E, six 1.91 E and eight 3.13 E, and every call in the network floods
+every link for 1.2–1.7 s (§4). A direction of one channel suits a few lines at
+the far end of a network, or tops up a direction. It is not a route for an
+exchange's traffic. Eight copper channels (`local-trunk.md`) are a short-range
+alternative to one MF8 group.
 
 ---
 
@@ -326,8 +331,10 @@ A flood must not go round in circles. Left alone, a seizure sent round a ring
 comes back to the exchange that made it, which forwards it again, and the call
 eats a channel of every link at each turn until the links are full.
 
-**The strap is the `n` bit of a trunk port's word** (`extensions.md` §2.2),
-set on every channel of one link, at both ends. It says:
+**The strap is a jumper a compass direction on the network card**, not a bit of
+a trunk port's word (`extensions.md` §2.2). The six channels of an MF8 trunk
+already share one word (direction and glare); the strap is per *link*, so one
+jumper covers them. It says:
 
 ```
  a strapped link   a seizure is never forwarded INTO it, and a seizure that arrives ON it is never
@@ -417,7 +424,7 @@ too.
 
 ## 5. How many exchanges a link will carry
 
-A direction of eight channels carries 3.13 erlang at 1 % blocking; **of sixteen, 8.88 —
+A direction of six channels carries 1.91 erlang at 1 % blocking; **of twelve, 5.88 —
 more than twice the calls for twice the trunks.** The tables below were run on
 six-channel groups (1.91 E / 5.88 E at twelve) and are the shape, not the new
 capacity. In a chain the middle link carries
@@ -507,12 +514,12 @@ cheap.
 
 ---
 
-**A hub with four directions of sixteen channels is a tandem switch.** It gives
+**A hub with four directions of twelve channels is a tandem switch.** It gives
 blocks 1–7 to trunk groups: seven groups, and the 04–07 bank (`protocol.md` §5,
-`mf8-unit.md` §7). Each direction is a
+`mf8-unit.md` §1). Each direction is a
 chain of *k* exchanges of 48 lines. With 30 % of calls leaving, erlangs on each
-link of a branch from the hub outward, and calls blocked there on eight channels
-and on sixteen:
+link of a branch from the hub outward, and calls blocked there on six channels
+and on twelve:
 
 | *k* | exchanges | flood a link | hub to 1st | 1st to 2nd | 2nd to 3rd | 3rd to 4th | 4th to 5th |
 |---|---|---|---|---|---|---|---|
@@ -656,5 +663,6 @@ clock card keeps a strap and a footprint to slave to a trunk's `RX_CLK` later.
   `net` models a two-hub tree (§5.1), and `topo` a chain, a star, two trees and
   rings with and without a strap (`topology.md`).
 - **Trunks that are not MF8** (§1.1): the baseband copper card is `baseband.md`;
-  the two-wire voice-band card with in-band dual-tone A is `pots-trunk.md`.
-  Neither has been on a bench; `pots-trunk.md` §9 lists what it still owes.
+  the local eight-channel highway trunk is `local-trunk.md`; the two-wire
+  voice-band card with in-band dual-tone A is `pots-trunk.md`. None has been on
+  a bench; `pots-trunk.md` §9 lists what it still owes.
