@@ -178,6 +178,8 @@ either.
 ## 4. Logic at each end
 
 **Phone.** Hook switch and dial contact in series, as on an analog loop.
+The packaged mk1 set is `su-1.md` (Autovon pad → pulses, 4P4C handset,
+codec in the phone).
 
 ```
 TX   = ON-HOOK or dial break  ?  1100 (bit clock ÷ 4)  :  CVSD encoder

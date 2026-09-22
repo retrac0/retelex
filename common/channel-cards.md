@@ -57,7 +57,8 @@ read ring from A.
 
 Two pairs to one phone. The phone holds the codec; this card holds the line
 interfaces, the hook detector and the slot logic. Everything about the line
-itself is `subscriber-line.md`; what follows is the card.
+itself is `subscriber-line.md`; the mk1 packaged phone is `su-1.md`. What
+follows is the card.
 
 ```
   phone ═══ upstream pair ═══▶ [ 128 kBaud receiver, §9.4 ] ─Q, strobe──▶ [ sync ] ──▶ C_TX[n]

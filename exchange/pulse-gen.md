@@ -6,7 +6,8 @@ nothing in the ear. Registers and the pulse flood read only A, so they see an
 ordinary caller (`network.md` §3, `register.md` §1). It is the interactive
 cousin of the stored-number hotline of `extensions.md` §3.4: that card dials
 one jumpered number when its phone is lifted; this one is a tester, and the
-number is whatever is keyed.
+number is whatever is keyed. The handset cousin with the same 1–16 pulse map
+(Autovon labels) and a codec is `su-1.md`.
 
 > **Status: proposed, measured in simulation.** `make pulse_gen` runs the
 > timebases, the hex map including D = 16, and a `net_site`

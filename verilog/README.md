@@ -61,6 +61,8 @@ rack, and the module boundaries are the connectors.
                    that is where it is                       (mf8-backplane.md 8)
  pulse_gen         hex buttons as pins: 10 pps on A_TX, no handset
                                                              (pulse-gen.md)
+ su1               Autovon pad → pulses, mute, ring; handset cousin of pulse_gen
+                                                             (su-1.md)
  mf8_trunk_card    eight channels of a block made into a tie trunk (mf8-unit.md 5)
    mf8_encoder     differential Manchester: a transition a line bit, two for a 0
                                                              (mf8-spec.md 9.2)
@@ -102,6 +104,7 @@ make priority  extensions.md 2.4.1: a priority lift waits out non-priority under
 make word     the card word: class, nail, answers-to, plain FF, zero
 make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
+make su1      su-1.md: Autovon pad, mute, ring trip, a local call
 make mini     mini-marker.md: two lines, one register, no card word; 1 is a highway
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
