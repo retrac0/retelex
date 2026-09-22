@@ -21,7 +21,7 @@ module clock_card #(
 
     output reg [2:0]         tick,       // where we are in the cell
     output                   hclk,       // 512 kHz, high for the first half of a cell
-    output                   hb,         // 1.024 MHz, mf8-spec.md 9.1's half-bit clock
+    output                   line_hb,    // 1.024 MHz LINE_HB (mf8-spec.md §9.1)
     output reg [2:0]         slot,       // the cell number: addresses every commutator
     output reg [2:0]         slotq,      // the same count a quarter cell late: strobes only
     output                   cap_stb,    // mid-cell: every port's capture clock W
@@ -42,7 +42,7 @@ module clock_card #(
     localparam [18:0] CAD_ON   = 19'(RING_ON);
 
     assign hclk      = ~tick[2];                       // ticks 0-3 high, 4-7 low
-    assign hb        = tick[1];                        // 4.096 / 4 = 1.024 MHz: mf8-spec.md 9.1's HB
+    assign line_hb   = tick[1];                        // 4.096 / 4 = 1.024 MHz LINE_HB
     assign cap_stb   = (tick == `TICK_MID);
     assign frame_stb = (tick == 3'd0) && (slot == 3'd0);
     assign tx_clk    = ~slot[2];                       // high for the first half of the frame

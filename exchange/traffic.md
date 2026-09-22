@@ -448,7 +448,7 @@ network carries the same thing and the shape stops mattering.
 
 **The flood must see a tree.** Of the *k*(*k*−1)/2 links between *k* fully connected
 tandems, only the *k*−1 of a spanning chain may carry it; every other one is
-**strapped**, and `network.md` §3.3's strapped link carries calls between its
+**jumpered**, and `network.md` §3.3's jumpered link carries calls between its
 own two ends only. Read in pairs — the same eight trunk groups at each tandem, spent
 on a chain of wide links or on a mesh of narrow ones:
 
@@ -460,7 +460,7 @@ on a chain of wide links or on a mesh of narrow ones:
 | the same, fully connected, 6 ch | 8 | 312 | 2.00 E on **6** | **1.21 %** | 2.06 % |
 
 **The mesh carries exactly the same traffic on half the channels.** Its extra links
-are straps, and the only calls a strapped tandem-to-tandem link can take are the
+are jumpers, and the only calls a jumpered tandem-to-tandem link can take are the
 twelve lines at one end calling the twelve at the other — which at a tandem is
 almost nothing. **Capacity between hubs is bought in channels on the tree, not in
 links off it.** A mesh of five needs four directions and has none left for a spoke;
@@ -478,7 +478,7 @@ no call is ever forwarded:
 A five-exchange mesh is a fifth of the load of the chain and one hop across, and the
 flood never leaves the link it was born on. **Five is where it stops**: a sixth
 exchange wants a fifth direction, and hanging anything off one of the five turns
-every mesh link back into a strap that nothing behind it may cross.
+every mesh link back into a jumper that nothing behind it may cross.
 
 ### 8.4 What reaches sixty-four codes is smaller exchanges
 
@@ -518,7 +518,7 @@ largest of them, by exchanges:
 three under every sub-hub and two leaves under every one of those.** Sixty-three
 exchanges of the sixty-four codes, eight hops across and 124 ms of flood against
 the origin's 128 ms guard — *four milliseconds of margin*, which is what actually
-stops it. **The guard is a strap and the next tap up ends that**: at 256 ms the
+stops it. **The guard is a jumper and the next tap up ends that**: at 256 ms the
 same search finds all 64 codes and 1 428 lines, and what stops it then is the
 traffic on the centre and the four directions an exchange has, neither of which is
 a timer (`monitor.md` §3.5, `exch.py big` §7). At 128 ms the traffic is
@@ -529,7 +529,7 @@ of calls leave, 12 where a third do, 8 where half do.
 |---|---|
 | a tandem chain with spokes | **directions**: a middle tandem has two left and two trunk groups (§8.1) |
 | long spokes | **the link next the tandem at four deep, and the guard at five** (§8.2) |
-| a fully connected core | **nothing to carry**: every link off the tree is a strap (§8.3) |
+| a fully connected core | **nothing to carry**: every link off the tree is a jumper (§8.3) |
 | a branching tree of full exchanges | **traffic**: about a thousand lines on a twelve-channel centre (§8.4) |
 | the best of them | **the guard, at 124 ms of 128** |
 
@@ -538,7 +538,7 @@ smallest tap, and all of it on the next one.** What runs out at 63 is the 128 ms
 guard — and behind that,
 `monitor.md` §3's 12 ms hop at a slow marker, which is the one constant in this
 whole document that is an *assumption about parts* rather than a measurement.
-The guard is a three-way strap (`monitor.md` §3.5), and at its 256 ms tap the
+The guard is a three-way jumper (`monitor.md` §3.5), and at its 256 ms tap the
 same search finds **all 64 codes and 1 428 lines**; what stops it there is the
 traffic on the centre and the four directions an exchange has, and neither of
 those is a timer.

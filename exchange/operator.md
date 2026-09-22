@@ -44,7 +44,7 @@ exchange the number appears.
 
 | | |
 |---|---|
-| **the card** | any station card: FXS or CVSD line (`channel-cards.md`). The word's `'165` fitted for class *operator* |
+| **the card** | any station card: FXS or CVSD line (`channel-cards.md`). The word's **2×`'165`** fitted for class *operator* |
 | **`/ANS`** | open — it rings in cadence |
 | **reached by** | **key 0 only** as a subscriber. 0 hunts class *operator* in fixed order from 00 (`marker.md` §3). From another exchange: `1 e b 0`, the same key once the far monitor has claimed (`network.md` §3) |
 | **not reached by** | its own number when it sits at 00–07 — those ports are never dialled, because 0 is the operator key (`protocol.md` §5) |

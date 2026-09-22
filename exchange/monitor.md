@@ -91,14 +91,14 @@ octet mark, as the marker's scanner does. The measured rows do not depend on the
 figure: a monitor given the seizure counts from the rise.)
 
 **2. The origin abandons a call whose next break comes within *the guard* of its
-seizure. The guard is a strap, and 128 ms is one setting of it (§3.5).** The flood takes time to spread: 7 ms a hop, 12 at a slow marker. A
+seizure. The guard is a jumper, and 128 ms is one setting of it (§3.5).** The flood takes time to spread: 7 ms a hop, 12 at a slow marker. A
 caller whose next digit begins before the last exchange is patched in has their
 first pulse or two swallowed at the far end, where the monitor — which *did* see
 its rise — counts a digit short. Only the origin can know: it sees both its own
 seizure and the caller's next break. One tap on a counter: if the break comes
 inside the guard, release the trunks and give cannot-complete. 128 ms covers ten
 hops at the slow figure, 256 ms twenty-one and 512 ms forty-two, and which tap an
-exchange is strapped for is the one number in the protocol that says how big the
+exchange is jumpered for is the one number in the protocol that says how big the
 network is (§3.5).
 
 **What the guard is counting is the marker, not the carrier.** A trunk on a
@@ -161,7 +161,7 @@ second claim being processed and finding the line busy.
 
 ### 3.5 Setting the guard
 
-**The guard is a strap, and it is the only number in the protocol that says how
+**The guard is a jumper, and it is the only number in the protocol that says how
 big the network is.** An exchange's other jumpers say *who it is* — `e` and `b`,
 its own code, and nothing anywhere says where anything is. This one says how far
 the flood has to travel, it is the same value at every exchange in one network,
@@ -369,7 +369,7 @@ per km" and echo is objectionable above 20–30 ms. That is still true for a CVS
 subscriber at each end, which is four-wire; it stops being true the moment either
 end is an analog FXS or FXO card, and **one 15 ms hop is 30 ms of round trip.**
 
-**Which tap to strap, what it buys and what it costs, is §3.5.** The guard is the
+**Which tap to jumper, what it buys and what it costs, is §3.5.** The guard is the
 only timer in the protocol that is a function of the hop count, and a carrier's
 length is not in it; its wander is.
 
@@ -394,7 +394,7 @@ select taken away, and a compare added.
 |---|---|
 | scanner | ½ 74HC393 |
 | M at the scanner's channel; M at its last visit | 74HC151; 74HC259 and a 74HC151 |
-| the scanned slot's word, trunk or not: the block's word commutator sampled in that slot's cell, one bit a frame | 74HC164 and a gate, ≈ 1½ |
+| the scanned slot's word, trunk or not: the block's word commutator held on `DST[2:0]`, sixteen bits at 128 kHz | 2 × 74HC164 and a gate, ≈ 2½ |
 | free-monitor pick, gating | 74HC00, 74HC08 |
 
 **≈ 8½ packages a monitor, ≈ 6½ shared: ≈ 24 for a block with two, ≈ 32 with three.** The same

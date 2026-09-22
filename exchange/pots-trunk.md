@@ -29,7 +29,7 @@ generator, no loop closure toward a CO.
    port's C_TX ◀── encode ◀── notches ◀───┤              │
    port's A_TX ◀── dual-tone detector ◀───┘              │
                                                          ▼
-                                              far card, straps swapped
+                                              far card, jumpers swapped
 ```
 
 What the near port hears from its fabric is decoded to analog, mixed with the
@@ -45,7 +45,7 @@ nothing — same bargain as `network.md` §1 and `baseband.md` §1.
 | conductors | a pair each way | four (or six with clock) | **two** |
 | `C` | 64 kb/s on the frame | 64 kb/s NRZ on a wire | **voice band**, codec on the card |
 | A | S bit | a wire | **in-band dual tone** |
-| data | yes | yes, with the one-clock strap | **no** — a tandem of about 2 dB (`network.md` §1.1) |
+| data | yes | yes, with the one-clock jumper | **no** — a tandem of about 2 dB (`network.md` §1.1) |
 | link-alive | framer / carrier detect | clock conductor or edges | **idle tones present** |
 
 One channel still carries little (`network.md` §1.1): a few lines at the far
@@ -58,9 +58,9 @@ exchange's traffic.
 
 Both ends must send A. The pair carries **two dual-tone pairs**, W and E, and
 each card is jumpered to send one and receive the other. Same PCB both ends;
-only the straps differ.
+only the jumpers differ.
 
-| strap | send (oscillators) | receive (detector) | typical end |
+| jumper | send (oscillators) | receive (detector) | typical end |
 |---|---|---|---|
 | **WEST** | pair **W** | pair **E** | one end of the hop |
 | **EAST** | pair **E** | pair **W** | the other |
@@ -79,13 +79,13 @@ only the straps differ.
 | **W** | **2400 Hz** | **2600 Hz** | dual-tone AND detection; clear of `tone-plan.md`'s 425∿25 and 600∿120; clear of the DTMF grid so a keypad on the speech path cannot false-claim |
 | **E** | **2200 Hz** | **2800 Hz** | same; far enough from W that a twin-T or ceramic notch set can split them |
 
-Four frequencies total. The send gate puts **both** of the strapped send pair
+Four frequencies total. The send gate puts **both** of the jumpered send pair
 on the line together, equal amplitude, at a level about **−10 dBm0** relative
 to the codec's nominal speech — loud enough for the far detector after hybrid
 and line loss, quiet enough that a failed notch is a whistle and not a howl.
 
 **Optional second footprint.** An MT8870 (or kin) and two standard DTMF digit
-pairs, strap-selected, instead of discrete oscillators and AND gates. Same
+pairs, jumper-selected, instead of discrete oscillators and AND gates. Same
 WEST/EAST jumpers; different frequencies. The default above stays the one that
 cannot be talked onto by a telephone keypad.
 
@@ -161,10 +161,10 @@ on the guard's 128 ms tap.
 | Tone present → A low (idle assert) | **≤ 16 ms** | matches the fabric's supervision up-path order (`fabric.md` §3.5); a pulse break must reappear as A low before the digit ends |
 | Tone absent → A high (seize assert) | **≤ 8 ms** | seize and claim should not lag the baseband case by much; the flood's own hop time dominates |
 | Break shortening | **≤ 2 ms** a hop from the detector alone | budget beside MF8's 0.5 ms; seven hops still leave a 60 ms break as ≥ 40 ms |
-| Valid receive pair | both tones of the strapped recv pair above threshold for the idle-assert time | AND, not OR |
+| Valid receive pair | both tones of the jumpered recv pair above threshold for the idle-assert time | AND, not OR |
 | Link down (§5) | no valid receive pair for **100–200 ms** | clear of a long dial-pulse break (≤ ~100 ms make/break machine) and inside the origin's patience |
 
-The detectors are two narrow filters (or one DTMF receiver strapped to the
+The detectors are two narrow filters (or one DTMF receiver jumpered to the
 recv digit) into an AND, then an RC and ¼ 74HC14 into `A_TX` — same Schmitt
 habit as `mf8-spec.md` §14, with the time constants taken from the table
 above rather than from §14's 2 ms bit-error filter. **Assignment, not
@@ -180,7 +180,7 @@ so a call in progress releases.
 
 **No valid receive pair for 100–200 ms** is link down:
 
-- gate the word '165 off (open-drain held off) — unequipped, leaves the hunt
+- gate the word's 2×'165 off (open-drain held off) — unequipped, leaves the hunt
 - force `A_TX` low — M falls, the port's release rule runs
 
 Idle tones make this free: a live idle hop always presents the far send pair;
@@ -205,9 +205,9 @@ or the baseband trunk; any slot that may hold a single-channel trunk
 
 | pin | | | what this card does with it |
 |---|---|---|---|
-| a1 | `TX_CLK` | in | the encoder's clock; shifts the word '165 |
-| a2 | `TX_HB` | — | nothing encodes a digital line |
-| a3 | `TX_OCT` | in | loads the word '165 |
+| a1 | `TX_CLK` | in | the encoder's clock; shifts the word's 2×'165 |
+| a2 | `LOOP_HB` | — | nothing encodes a digital line |
+| a3 | `TX_OCT` | in | loads the word's 2×'165 |
 | a4 | `FILL` | — | codec idle is its own `1010` |
 | a5 | `C_TX[n]` | **out** | encoder out, in T |
 | a6 | `A_TX[n]` | **out** | dual-tone detector (§4), gated low on link-down. M at the port |
@@ -216,7 +216,7 @@ or the baseband trunk; any slot that may hold a single-channel trunk
 | a9 | `C_RX[n]` | in | into the decoder |
 | a10 | `A_RX[n]` | in | through a short RC and Schmitt to the tone gate: high silences the send pair. E as it stands — `/ANS` is low, a trunk never rings |
 | a11 | `MUTE` | — | unused; link-down is §5 on a12 |
-| a12 | the word | **out**, o.d. | `0 101 d d g n` from the '165 on four jumpers: class trunk, direction, glare, NO-FORWARD. Held off at power-up by the RC of `extensions.md` §2.2, **and gated by §5's link-down detector** |
+| a12 | card word | **out**, o.d. | class trunk `11 101 000` + secondary tag `10` payload `d d g 000` (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §5's link-down detector** |
 | a13 | `/ANS` | **out** | tied low on the board |
 | a14 | spare | — | open |
 | c5, c7 | `±12 V` | in | codec, oscillators, detectors, hybrid amps |
@@ -226,8 +226,8 @@ or the baseband trunk; any slot that may hold a single-channel trunk
 **Rear connector: two pins**, tip and ring. Same physical leave as the FXS/FXO
 converter; different circuit behind them (dry, no feed).
 
-**WEST/EAST and the tone-pair frequencies are board straps**, not socket pins.
-Wrong straps (both WEST) read as link down at both ends and take the trunk out
+**WEST/EAST and the tone-pair frequencies are board jumpers**, not socket pins.
+Wrong jumpers (both WEST) read as link down at both ends and take the trunk out
 of the hunt — fail-safe, if surprising at bring-up.
 
 ---
@@ -238,12 +238,12 @@ of the hunt — fail-safe, if surprising at bring-up.
 |---|---|
 | codec engine | `mf8-spec.md` §12.1 / FXS half — one LM13700, integrator and syllabic parts |
 | hybrid, trims, speech filters | as `channel-cards.md` §3.3 — TL07x, 600 Ω transformer |
-| send-pair oscillators | two Wien or twin-T oscillators, gated; or one DTMF generator strapped |
+| send-pair oscillators | two Wien or twin-T oscillators, gated; or one DTMF generator jumpered |
 | RX notches | four twin-T or two dual notches (W and E) |
 | recv detectors + AND | two filters and a gate, or one MT8870 footprint |
 | A path RC + Schmitt | ¼ 74HC14 |
 | link-down | ½ 74HC123 |
-| the word | 1¼ — '165 and ¼ '03, as baseband |
+| the word | ≈ 2 + FET — 2×'165 and 2N7002, as baseband |
 | `/ANS` | tied low: no part |
 
 No package total is claimed until a schematic exists. It is clearly more than
@@ -289,7 +289,7 @@ on a pair.
 
 Still open on the bench:
 
-- **Talk-off with real speech** into the strapped detector.
+- **Talk-off with real speech** into the jumpered detector.
 - **Pulse integrity** through two cards and a real hybrid.
 - **Notch depth with a compromise balance** — Q and the hybrid will fight.
 - **Level plan** (−10 dB re nominal) against a working detector IC.

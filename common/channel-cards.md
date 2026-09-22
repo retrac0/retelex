@@ -1,6 +1,6 @@
 # MF8 channel cards — specification
 
-Three cards for the eight channel slots of `mf8-backplane.md`:
+Three cards for the six channel slots of `mf8-backplane.md`:
 
 | card | faces | the codec is | signalling |
 |---|---|---|---|
@@ -66,7 +66,7 @@ follows is the card.
                                        └─▶ [ hook detector ] ── ON_HOOK ──┬─▶ /A_TX[n]
                                                                           │
   phone ◀══ downstream pair ◀══ [ encoder, §9.2 ] ◀── DN_D ◀── [ rule ] ◀─┤◀── C_RX[n] ─▶ [ sync ]
-              48 V phantom          TX_CLK, TX_HB                          │◀── A_RX[n] ─▶ [ RC, '14 ]
+              48 V phantom          TX_CLK, LOOP_HB                          │◀── A_RX[n] ─▶ [ RC, '14 ]
                                                                           └◀── FILL, MUTE
 ```
 
@@ -75,7 +75,7 @@ follows is the card.
 | item | specification | from |
 |---|---|---|
 | Downstream driver | 75176 driver half, series matching, 150 ns slew limit, 1:1 transformer ≥ 33 mH **with the line-side centre tap brought out** | `mf8-spec.md` §9.3 |
-| Downstream encoder | ½ 74HC74 + ¼ 74HC00, `H` = `TX_CLK`, clocked by `TX_HB` | §9.2 |
+| Downstream encoder | ½ 74HC74 + ¼ 74HC00, `H` = `TX_CLK`, clocked by `LOOP_HB` | §9.2 |
 | Upstream receiver | the §9.4 interval classifier — '86, '221, '123, '74 — at the **64 kbps plug**: filter corner 128 kHz, classifier 11.7 µs, dead time 3.1 µs, carrier timeout 31.3 µs | §9.4, §9.7 |
 | Upstream transformer | 1:1, ≥ 33 mH, centre tap brought out; 100–135 Ω termination on the line side of the comparator | §9.3 |
 | Protection, both pairs | gas tube to ground on both conductors, series PTC, TVS clamping above the 48 V feed | §9.3 |
@@ -146,8 +146,8 @@ in the set — and it is the only one that needs a2 and a4.**
 | pin | | | what this card does with it |
 |---|---|---|---|
 | a1 | `TX_CLK` | in | `H` into the downstream encoder (§2.1), and the clock of both synchronizer stages of §2.3 — the one 74HC175 that crosses `C_RX[n]` and the receiver's latch into T |
-| a2 | `TX_HB` | in | **the downstream encoder's clock.** 128 kHz, and this card is its only customer in either shelf. Without it the card cannot be fitted at all: `clocks.md` §4 exists for this pin and this card |
-| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word '165 where that footprint is populated — an operator's position, a restricted phone (class 111, including warm), a hunt group, a nail (`extensions.md` §2.2) |
+| a2 | `LOOP_HB` | in | **128 kHz.** Downstream encoder clock, and the option-word **2×`'165`** shift when that footprint is populated (`extensions.md` §2.2). Without it the card cannot be fitted: `clocks.md` §4 |
+| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word's 2×'165 where that footprint is populated — an operator's position, a restricted phone (class 111), a hunt group, a call nail, a tied nail (`extensions.md` §2.2) |
 | a4 | `FILL` | in | the bus's `1010`, sent **downstream to the phone** while it is on-hook and not being rung. a data input of §2.3's ¾ 74HC157, and the reason the card carries no oscillator and no idle-pattern generator |
 | a5 | `C_TX[n]` | **out** | `Q_s`: the upstream receiver's data latch, resynchronized to `TX_CLK` |
 | a6 | `A_TX[n]` | **out** | `NOT ON_HOOK`, off §2.2's LM339 through ¼ 74HC04. Off-hook, held through dial pulses by the 4 ms RC and the violation term |
@@ -156,7 +156,7 @@ in the set — and it is the only one that needs a2 and a4.**
 | a9 | `C_RX[n]` | in | through two 74HC74 stages on `TX_CLK` to `C_RX_s`, then downstream to the phone while it is off-hook |
 | a10 | `A_RX[n]` | in | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`: **ring the phone.** With it asserted and the phone on-hook the card sends all-zeros downstream, which is the ringer's own detector at the far end (`subscriber-line.md` §4) |
 | a11 | `MUTE` | in | ORed into the `ON_HOOK` select, so an off-hook phone hears `1010` through an outage rather than the receiver's last latched bits (§2.3). **Two cards in the set read this pin and this is one** |
-| a12 | the word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The '165 footprint is on the board and unpopulated |
+| a12 | card word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The 2×'165 footprint is on the board and unpopulated |
 | a13 | `/ANS` | — | **open.** The port rings in cadence and gives the caller ringback, which is what a telephone wants |
 | a14 | spare | ○ | open |
 | c1, c3 | `+5 V` | in | all the logic |
@@ -166,10 +166,10 @@ in the set — and it is the only one that needs a2 and a4.**
 | | rear, 4 pins | | downstream pair, upstream pair, both carrying the phantom |
 
 **a2 and a4 are on the channel socket because of this card.** No other card in
-either shelf reads either: nothing else encodes a line, and every other card's
-idle is its own codec's `1010`. `clocks.md` §4 calls that "one bullet away from
-being noticed", and the matrix of `common-cards.md` §1.3 is where it stops being
-possible to miss.
+an MF8 shelf or an exchange block reads either: nothing else encodes a line, and
+every other card's idle is its own codec's `1010`. `clocks.md` §4 calls that
+"one bullet away from being noticed", and the matrix of `common-cards.md` §1.3
+is where it stops being possible to miss.
 
 **a7 and a11 are the two pins that say what kind of card this is.** It ignores
 `RX_CLK` because its receive timing comes off the subscriber loop and not off the
@@ -258,6 +258,13 @@ engines; `Iabc max` is the one trimmer, set by measuring `C_int`, not by ear.
 The encoder is in the T domain on `TX_CLK`, the decoder in R on `RX_CLK`, and
 the two never meet (`mf8-backplane.md` §2).
 
+**Preferred packaging:** both engines live on the common **CVSD codec riser**
+(`cvsd-codec.md`) — a second 100 × 100 mm layer stacked on this base through
+mezzanine header **R**. The base keeps the hybrid, trims, line circuit and
+socket; the riser is shared with E&M and the subscriber-adapter carrier. A
+one-board stuffing option (engine on the base, R unpopulated) remains valid
+until the riser is the default.
+
 ### 3.3 Audio path and hybrid
 
 | item | specification |
@@ -305,7 +312,7 @@ This card is where high voltage first appears in the shelf: −48 V battery,
 side and the logic side; the optos are the safety barrier and are specified for
 isolation rating, not just CTR; protection ahead of everything; and the `RING`
 bus gets the same treatment wherever it runs (`mf8-backplane.md` §8 puts it
-between ground pins, on the power row, and straps it only to FXS layers).
+between ground pins, on the power row, and jumpers it only to FXS layers).
 
 ### 3.7 The card's pins
 
@@ -317,23 +324,23 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 | pin | | FXS | FXO | what the card does with it |
 |---|---|---|---|---|
 | a1 | `TX_CLK` | ● | ● | the encoder's clock. The engine's T half runs on it and only on it (§3.2) |
-| a2 | `TX_HB` | — | — | nothing on this card encodes a line. Its line is analog and the only modulation on the board is the codec |
-| a3 | `TX_OCT` | ○ | ● | loads the word '165, which the FXO always carries (class 100, *outside line*) and the FXS carries only where the line is more than a plain line |
+| a2 | `LOOP_HB` | — | — | nothing on this card encodes a line. Its line is analog and the only modulation on the board is the codec |
+| a3 | `TX_OCT` | ○ | ● | loads the word's 2×'165, which the FXO always carries (class 100, *outside line*) and the FXS carries only where the line is more than a plain line |
 | a4 | `FILL` | — | — | **the engine's own `1010` at silence is the idle**, so the card needs no fill pattern. That is the same property the tone card leans on (`tone-card.md` §3) |
 | a5 | `C_TX[n]` | ● | ● | the encoder out, in T |
-| a6 | `A_TX[n]` | ● | ● | **FXS:** loop current flowing — the 10–15 mA opto of §3.4, the phone is off-hook. **FXO:** ringing present, and *which* ringing is §5 of `common-cards.md`'s OFFICE / SEIZE strap: raw in the CO's cadence, or held 5 s and ORed with the loop closed. The strap is on this pin's meaning, not on a pin of its own |
+| a6 | `A_TX[n]` | ● | ● | **FXS:** loop current flowing — the 10–15 mA opto of §3.4, the phone is off-hook. **FXO:** ringing present, and *which* ringing is §5 of `common-cards.md`'s OFFICE / SEIZE jumper: raw in the CO's cadence, or held 5 s and ORed with the loop closed. The jumper is on this pin's meaning, not on a pin of its own |
 | a7 | `RX_CLK` | ● | ● | **the decoder's clock.** The decoder is in R and the encoder in T, and the two never meet (§3.2) — which is why this card reads a7 where the CVSD line card does not (§2.4) |
 | a8 | `RX_OCT` | — | — | |
 | a9 | `C_RX[n]` | ● | ● | into the decoder, in R |
 | a10 | `A_RX[n]` | ● | ● | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`. **FXS:** drive the ring relay, which connects the `RING` bus and disconnects the feed while it is connected; ring trip drops it within 200 ms whatever this pin says (§3.4). **FXO:** close the loop; low opens it, and that is how dial pulses leave (§3.5) |
 | a11 | `MUTE` | — | — | **not read, and arguably should be.** See below |
-| a12 | the word | GND | '165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 100, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
+| a12 | card word | GND | 2×'165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 100, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
 | a13 | `/ANS` | open | low | **FXS:** open, and the phone rings in cadence. **FXO:** tied low — an outside line must never be rung, and must not give its caller ringback |
 | a14 | spare | ○ | ○ | open |
 | c1, c3 | `+5 V` | ● | ● | the logic and the engine's digital half |
 | c5, c7 | `±12 V` | ● | ● | **the analog card's rails**: LM13700, TL074, TL072, LM311, the filters and the trims (§3.2, §3.3, §3.8) |
 | c9, c10 | `−48 V`, `−48 RET` | ● | — | the battery feed through the slot's 100 mA PTC, current-limited to 25–45 mA (§3.4). The FXO takes its battery from the CO |
-| c12, c13 | `RING`, `RING RET` | ● | — | 20 Hz, ~80 Vrms, from the Noisy PSU, through the ring relay. Cadence = `A_RX`. **The strap at c12 is fitted only for an FXS layer** (`mf8-backplane.md` §8) |
+| c12, c13 | `RING`, `RING RET` | ● | — | 20 Hz, ~80 Vrms, from the Noisy PSU, through the ring relay. Cadence = `A_RX`. **The jumper at c12 is fitted only for an FXS layer** (`mf8-backplane.md` §8) |
 | | rear, 2 pins | | | tip and ring |
 
 **The FXS population is the only card in the set that uses every rail the socket
@@ -357,8 +364,8 @@ gate** (`common-cards.md` §9).
 
 | block | population | parts |
 |---|---|---|
-| Engine, both halves | both | 3 × 74HC74, 74HC86, 74HC08, LM13700, TL072, LM311 — `mf8-spec.md` §12.1 |
-| Audio filters and trims | both | TL074, TL072 |
+| Engine, both halves | both | on the **codec riser** (`cvsd-codec.md`): 3 × 74HC74, 74HC86, 74HC32, LM13700, 2× TL072, LM311, TL072 recon — or the same parts stuffed on-base if R is left open |
+| Audio filters and trims | both | TL074 / TL072 on the **base** (300–3400 Hz into the riser); reconstruction is on the riser |
 | A filter | both | ¼ 74HC14 |
 | Hybrid and balance | both | 600 Ω transformer, compromise network |
 | Protection | both | gas tube, PTC, TVS |
@@ -410,7 +417,7 @@ carried, and no scrambler is fitted or needed.
 | Signalling | `DTR` in on `A_TX[n]`, `DSR` out from `A_RX[n]` through the §14 filter; one bit each way at 8 kHz | the A bit is otherwise unused, and a far end that is not ready is worth knowing |
 | On `MUTE` | `RXD` forced to 1 — mark idle to a synchronous DTE, idle to an async one; `DSR` drops with the '259 clear | `mf8-spec.md` §13 |
 
-`A_TX` need not be strapped. Under this frame the signalling lane takes no part
+`A_TX` need not be tied. Under this frame the signalling lane takes no part
 in whether a data lane can hold a wrong alignment — `mf8-spec.md` §5 was
 measured over every byte in every seat under every hook state — so the bit is
 free to carry `DTR`, and does.
@@ -440,7 +447,7 @@ trunk's, so there is no slip in the carrier's sense; the far DTE receives the
 waveform re-timed to `RX_CLK`.
 
 **Bonding.** Two cards in adjacent slots — adjacent is safe under this frame's
-slot rule — with a strap "even" on one and "odd" on the other and a short link
+slot rule — with a jumper "even" on one and "odd" on the other and a short link
 between them carry one 128 kbps stream, even bits on the lower slot; three in
 slots 1, 2, 3 carry 192 kbps. Slot identity is fixed by the framer, so the
 order is fixed forever and there is no alignment state. The carrier does not
@@ -448,14 +455,14 @@ know it is happening.
 
 ### 4.3 The slot rule
 
-Two data cards may not sit in C0 and C7 together (`mf8-spec.md` §5,
-`mf8-unit.md` §4.2). **Key the data card's connector so those two end
-slots cannot both take one**, or key to C0–C6, or to C1–C7: seven data
-cards, not the pair eight apart on the wire. PCM octets are safe in
-every seat and every pair. With a data card carrying the F word in C0
-and voice in C7, the residual is §5's: acquired by chance about once in
-300 attempts at one skew and released by the guard counter in a few
-milliseconds. It is the price of eight C plus F and S opposite.
+Two data cards may not sit three slots apart: not 1 and 4, not 2 and 5,
+not 3 and 6 (`mf8-spec.md` §5). **Key the data card's connector so those
+pairs cannot both take one**, or key to seats 1–3 only (three data cards
+on one shelf). PCM octets are safe in every seat and every pair. With a
+data card carrying the F word three seats from a voice card, the residual
+is §5's: acquired by chance about once in 300 attempts at one skew and
+released by the guard counter in a few milliseconds. It is the price of
+six C plus F and S opposite.
 
 ### 4.4 Parts
 
@@ -465,10 +472,12 @@ milliseconds. It is the price of eight C plus F and S opposite.
 | Retiming | ½ 74HC74 per direction |
 | `RXD` idle on `MUTE` | ¼ 74HC32 |
 | A filter | ¼ 74HC14 |
-| Bond strap and link | a 3-position strap, one header |
+| Bond jumper and link | a 3-position jumper, one header |
 | Async population | MAX232 in place of the RS-422 parts |
+| Option word (when fitted) | 2 × 74HC165, 2N7002, RC hold-off (`extensions.md` §2.2) |
 
-**4 packages.** The cheapest card in the shelf.
+**≈ 4 packages** without the word; **≈ 6 + FET** with it. No longer the cheapest
+card in the shelf once the word is populated (`common-cards.md` §2).
 
 ### 4.5 Bring-up
 

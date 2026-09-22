@@ -32,7 +32,7 @@ module tb_panel;
     wire [2:0] tick, slot, slotq;
     wire       hclk, frame_stb;
     clock_card u_clk (
-        .clk(clk), .rst_n(rst_n), .tick(tick), .hclk(hclk), .hb(),
+        .clk(clk), .rst_n(rst_n), .tick(tick), .hclk(hclk), .line_hb(),
         .slot(slot), .slotq(slotq), .cap_stb(), .tx_clk(), .frame_stb(frame_stb),
         .tx_oct(), .rx_oct(), .fill(), .ring_cad_n(), .tick_1k());
 

@@ -16,8 +16,8 @@ module tb_priority;
     localparam integer T_RISE = 16, T_FALL = 64;   // fast release for the bench
     localparam integer RING_ON = 200, RING_OFF = 400;
     localparam integer NS = 1_000_000;
-    // class 001, o=0, P=1, b=0, spare=0  -- extensions.md / marker.v bit map
-    localparam [7:0] WORD_PRI = 8'b0010_0010;
+    // class 001, P=1, b=0, spare=0  -- extensions.md 2.2 / 2.4.1
+    localparam [15:0] WORD_PRI = {8'hFF, 8'b0010_0111};
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -32,7 +32,7 @@ module tb_priority;
     // ports 20, 21, 22 fitted; 22 carries the priority word
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_0007_0000),
-               .LINE_WORD_20(8'hFF), .LINE_WORD_21(8'hFF),
+               .LINE_WORD_20(16'hFFFF), .LINE_WORD_21(16'hFFFF),
                .LINE_WORD_22(WORD_PRI),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),

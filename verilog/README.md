@@ -11,7 +11,7 @@ comparator — so that the RTL and the documents can be read against each other.
 > registers, seekers and resolvers — run and are checked. The testbenches build
 > networks out of whole exchanges: two on a link, three in a chain, **five round
 > a hub**, **four in a ring**. Every shape `network.md` §3 describes now
-> runs — the flood, the transit, the fan-out of §3.2, the strap of §3.3 — and
+> runs — the flood, the transit, the fan-out of §3.2, the jumper of §3.3 — and
 > the monitor pool has been put against `monitor.md` §4's sizing table with
 > traffic rather than argument. **`make traffic` builds a network of up to ten
 > whole exchanges out of three shape numbers and offers it demand that is not
@@ -25,7 +25,7 @@ rack, and the module boundaries are the connectors.
 ```
  exch_top          ONE exchange -- the logic of mvp.md 1, and nothing that plugs in
    clock_card      HCLK, SLOT, SLOTQ a quarter cell later, TX_CLK, TX_OCT, RX_OCT,
-                   HB, FILL, the ring cadence, TICK          (mainboard.md 2.1)
+                   LINE_HB, FILL, the ring cadence, TICK          (mainboard.md 2.1)
    mainboard       the ribbon's sixteen highway conductors, the eight BLK conductors,
                    and the SHUNT field that gives each block position its number
                                                              (mainboard.md 1, 6)
@@ -63,7 +63,7 @@ rack, and the module boundaries are the connectors.
                                                              (pulse-gen.md)
  su1               Autovon pad → pulses, mute, ring; handset cousin of pulse_gen
                                                              (su-1.md)
- mf8_trunk_card    eight channels of a block made into a tie trunk (mf8-unit.md 5)
+ mf8_trunk_card    six channels of a block made into a tie trunk (mf8-unit.md 1)
    mf8_encoder     differential Manchester: a transition a line bit, two for a 0
                                                              (mf8-spec.md 9.2)
    mf8_decoder     the classifier: times gaps, no PLL, nothing to lose
@@ -94,21 +94,21 @@ make monitor  the seeker's pool and the three terms of its seizure rule
 make pool     two callers at once: two registers, two cells, one scanner
 make hub      five exchanges: four directions, a fan-out, and the resolvers
 make hub-fwd  hub scenario 4 alone: two seizures inside one forwarder sweep
-make ring     four exchanges in a ring, and the strap that breaks it
+make ring     four exchanges in a ring, and the jumper that breaks it
 make erlang   the monitor pool against monitor.md 4's sizing table
 make stress   a FULL exchange -- 48 lines -- under random traffic
 make regs     marker.md 6's axis: NREG = 1, 2, 3 at a fixed 48-line load
 make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
 make sclk     mainboard.md 7: a spurious SCLK edge mid-shift, and that it heals
 make priority  extensions.md 2.4.1: a priority lift waits out non-priority under overload
-make word     the card word: class, nail, answers-to, plain FF, zero
+make word     the card word: class, answers-to, call nail, tied nail, plain FF, zero
 make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
 make su1      su-1.md: Autovon pad, mute, ring trip, a local call
 make mini     mini-marker.md: two lines, one register, no card word; 1 is a highway
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
-make ring-open    the same ring with the strap OUT: the flood circles
+make ring-open    the same ring with the jumper OUT: the flood circles
 make erlang-long  the traffic run with enough calls to measure, not just check
 make stress-pair      the stress run over two exchanges, 100 ppm apart
 make stress-overload  48 callers thrashing a TWO-register exchange
@@ -169,7 +169,7 @@ reads as eight unequipped slots (`mainboard.md` §6).
 
 **Growing the exchange is changing a parameter.** `BLOCK_FITTED` and
 `PORT_FITTED` default to the MVP of `mvp.md` §1 — block 2 alone, port
-circuits at 20 and 21, `RBT` strapped to `FILL`. An unfitted block's highway is
+circuits at 20 and 21, `RBT` tied to `FILL`. An unfitted block's highway is
 pulled to `FILL` and its `A` to ground; an unpopulated slot the same. Nothing
 that is fitted changes when more is.
 
@@ -334,32 +334,33 @@ seizure and the next digit.
 bit-path comparison is skipped when there is a carrier, because it aligns over a
 few frames and a carrier is thousands of them.
 
-**The guard is a parameter here and a strap there.** `marker`'s `T_GUARD` is
+**The guard is a parameter here and a jumper there.** `marker`'s `T_GUARD` is
 128 ms, which `monitor.md` §3.5 now makes one setting of three — 128, 256 and
 512 ms, three adjacent stages of the counter the sequence already runs on — and
 the one number in the protocol that says how big the network is. The system
 testbenches pass 16, which is that 128 at their eight-times-life scaling.
 
-### What a ring demands of the strap
+### What a ring demands of the jumper
 
-`make ring` is 22 ═ 23 ═ 24 ═ 25 ═ 22 with the 25 ═ 22 link strapped at both
-ends. The strap is the `n` bit of the trunk port's word, and both halves of its
+`make ring` is 22 ═ 23 ═ 24 ═ 25 ═ 22 with the 25 ═ 22 link jumpered at both
+ends. The no-forward jumper is one plug a compass direction on the network unit, not a bit
+of the trunk port's word, and both halves of its
 rule were already in the RTL with nothing to close a loop on.
 
 | measured | |
 |---|---|
-| a call two hops either way | every exchange sees it **once**: 8 channels, one on each of four links, and one turn only. 4 once the call is up |
-| an origin on a strapped link | may still seize it, and the far end may still claim — the flood simply is not forwarded off it |
-| a call to the far end of the strap | arrives **twice**, and both copies claim, as §3.3 says. No caller hears the second |
-| the strap out, `make ring-open` | ONE call, **high-water 40 of the ring's 48 trunk channels**, and 8 still held once it is up against the strapped ring's 4. All of it releases when the caller hangs up |
+| a call two hops either way | every exchange sees it **once**: 6 channels, one on each of four links, and one turn only. 4 once the call is up |
+| an origin on a jumpered link | may still seize it, and the far end may still claim — the flood simply is not forwarded off it |
+| a call to the far end of the jumper | arrives **twice**, and both copies claim, as §3.3 says. No caller hears the second |
+| the jumper out, `make ring-open` | ONE call, **high-water 40 of the ring's 48 trunk channels**, and 8 still held once it is up against the jumpered ring's 4. All of it releases when the caller hangs up |
 
 **Which copy of a doubled call the origin keeps is decided by its scanner, not
 by which claimed first.** §3.3 reasons that "the direct copy is a hop away and
 the long one many, so the direct copy always claims first". It may well; **the
 origin cannot tell**. It learns of a claim from its own scanner, which reaches a
 given port once in 8 ms, and one hop against three is microseconds, so both fall
-inside one visit. Under the settled map the strapped link is block 3 and the
-long way is block 1; `make ring` keeps the strap (two ports on one link), which
+inside one visit. Under the settled map the jumpered link is block 3 and the
+long way is block 1; `make ring` keeps the jumper (two ports on one link), which
 is what §3.3 wants. Nothing is misrouted and no caller hears anything wrong —
 a scanned marker cannot do better without a latch a trunk.
 
@@ -379,7 +380,7 @@ them in the document yet. They are the marker's, not this model's: a 74HC
 marker on this bus needs all three.
 
 **Steering the probe costs a visit, and the cost lands on slot 0.** The word
-takes 31 µs at 512 kHz; the visit it governs takes its first `PB` sample about
+takes 125 µs at 128 kHz; the visit it governs takes its first `PB` sample about
 1 µs in, so **a re-point can never complete before the visit it is for**. The
 first visit of every block therefore reads the *previous* block's `BUSY` and
 word — and in the port map that is `00`, `10`, and the first line of every

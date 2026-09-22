@@ -13,10 +13,9 @@ and specifies both cards.
 - **ROM cadences are taps off the address counter.** No table, no decode, no
   comparator. The double ring is one NOR gate. The analog card uses a 16-bit
   jumper mask off `TX_CLK` instead (§5.2).
-- **Warble quality is optional on the analog card.** A hard square gate at the
-  warble rate costs 52 spurious lines and 23 dB (`sim/tones.py warble`); the
-  card prefers a soft path, and a jumper chooses pure tone vs that modulated
-  path — not a hard requirement to meet the ROM's SNR.
+- **The analog card may not make the warble with a switch.** Measured: 52
+  spurious lines and 23 dB lost. It needs a true four-quadrant multiplier; a
+  jumper only chooses pure tone vs that AM.
 
 > **Status: proposed.** `sim/tones.py` is the run and `sim/tones.log` the record.
 > Nothing here is perceptual — nobody has listened to `sim/out/tone_*.wav`. No
@@ -87,24 +86,24 @@ carrier for the stop tones.
 
 ## 3. What any implementation must hold
 
-Targets for the tones. The **ROM card meets them exactly.** The analog card
-approximates by pot and jumper; warble quality is optional (§5).
+Tolerances, so the ROM card and the analog card are interchangeable when the
+analog pots are set:
 
 | | | ROM gives | analog gives |
 |---|---|---|---|
-| plane A carrier | **425 Hz ± 1.5 %** | 421.875 (−0.74 %) | **f0 pot** |
-| plane A modulation | **25 Hz ± 10 %** | 23.4375 (−6.25 %) | **f_w pot**, when warble jumper fitted |
-| plane B carrier | **600 Hz ± 1.5 %** | 601.5625 (+0.26 %) | **f0 pot** |
-| plane B modulation | **120 Hz ± 10 %** | 117.1875 (−2.34 %) | **f_w pot**, when warble jumper fitted |
-| modulation shape | **sinusoidal** | exact | soft path preferred; square gate allowed as a parts trade (§5) |
+| plane A carrier | **425 Hz ± 1.5 %** | 421.875 (−0.74 %) | **f0 pot**, ± 1–2 % |
+| plane A modulation | **25 Hz ± 10 %** | 23.4375 (−6.25 %) | **f_w pot**, ± 5 % |
+| plane B carrier | **600 Hz ± 1.5 %** | 601.5625 (+0.26 %) | **f0 pot**, ± 1–2 % |
+| plane B modulation | **120 Hz ± 10 %** | 117.1875 (−2.34 %) | **f_w pot**, ± 5 % |
+| modulation shape | **sinusoidal. A switch is prohibited — §5** | exact | OTA multiplier when warble jumper fitted |
 | line spacing | **equal, to 1 %** | exact by construction | as pots drift |
 | level | `NOMINAL_RMS` | exact | one trim |
-| cadence | **± 10 %**, and the ratios of §4.2 / §5.2 | exact taps | 16-step jumper mask, §5.2 |
+| cadence | **± 10 %**, and the ratios of §4.2 / §5.2 | exact taps | 16-step jumper mask (± one step), §5.2 |
 
-**Equal spacing is the binding one on the ROM.** 25 Hz is not a multiple of the
-8 kB part's 7.8125 Hz grid, so the **carrier and the modulation** snap to the
-grid and the sidebands fall where they fall. Rounding each sideband on its own
-gives 398 + 422 + **453** — unequal, and no longer one tone.
+**Equal spacing is the binding one.** 25 Hz is not a multiple of the 8 kB part's
+7.8125 Hz grid, so the **carrier and the modulation** snap to the grid and the
+sidebands fall where they fall. Rounding each sideband on its own gives
+398 + 422 + **453** — unequal, and no longer one tone.
 
 ---
 
@@ -221,10 +220,10 @@ and punch the rest. Block 0 is never an MF8 trunk group (`protocol.md` §5).
 
 Where the ROM card burns four tones into one part, the analog card is the cheap
 opposite: **one oscillator into one encoder half, one tone out of one slot.**
-Frequency and warble rate are pots; pure vs modulated and the cadence pattern
-are jumpers. It is the card you set on the bench and leave alone.
+Frequency and warble rate are pots; pure vs Aussie-style AM and the cadence
+pattern are jumpers. It is the card you set on the bench and leave alone.
 
-**The measurement that shapes the warble jumper is negative:**
+**The measurement that shapes the warble path is negative:**
 
 | making the warble | SNR | in-band lines |
 |---|---|---|
@@ -235,37 +234,37 @@ are jumpers. It is the card you set on the bench and leave alone.
 | square gate, RC-rounded 4 ms | 18.2 / 17.9 | 9 |
 
 Cadence muting the encoder's **input** is right at ~2 Hz and **splatters at
-25 Hz**. So the modulated jumper position prefers a soft path — RC-rounded gate
-or a simple envelope — over a hard square at the LFO rate. A hard switch is
-still allowed as a parts trade; the table above is why it is informed. The pure
-position bypasses the modulator and feeds the carrier straight in. Wien bridges
-and a four-quadrant OTA are **not** required on this card.
+25 Hz**. Cadence mute is not warble: the warble jumper engages a true
+four-quadrant multiplier (½ LM13700 already on the §12.1 encoder half), never a
+switch at the LFO rate. The pure-tone jumper bypasses that multiplier and feeds
+the carrier straight in.
 
 ### 5.1 The whole of it
 
 ```
-  [carrier osc]──▶ pot: f0 ──┬── pure ─────────────────────────┐
-                             │                                 ▼
-                             └── mod ──▶ [soft warble path] ─▶ [encoder input]
-                                              ▲                     │
-  [LFO osc]──────▶ pot: f_w ──────────────────┘                     │ muted when
-                                                                    │ cadence bit = 0
+  [carrier osc]──▶ pot: f0 ──┬── pure ────────────────────────┐
+                             │                                ▼
+                             └── warble ──▶ [½ LM13700 AM] ─▶ [encoder input]
+                                              ▲                    │
+  [LFO osc]──────▶ pot: f_w ──────────────────┘                    │ muted when
+                                                                   │ cadence bit = 0
   TX_CLK ──▶ ['4040] ── Q13 = 256 ms ──▶ nibble ──▶ ['150] ◀── 16 jumpers
-                                              │                     ▼
-                                         cadence bit           §12.1 encoder ──▶ C_TX
-                                                                    │
-                                                               ['244] rear → RBT / /RING_CAD
+                                              │                    ▼
+                                         cadence bit          §12.1 encoder ──▶ C_TX
+                                                                   │
+                                                              ['244] rear → RBT / /RING_CAD
 ```
 
 | | |
 |---|---|
 | Carrier | NE555 astable or a one-/two-transistor RC osc. **Pot sets the main frequency** (plane A ~425 Hz, plane B ~600 Hz) |
-| Warbler | Second RC osc. **Pot sets the warble rate** (~25 Hz or ~120 Hz). Used only when the mod jumper is fitted |
-| Pure / mod | 3-pin header: carrier → encoder, or soft-modulated carrier → encoder |
-| Cadence | `'4040` off socket **`TX_CLK` (a1)**; **Q13 = 256 ms** clocks a 4-bit step into a 16:1 mux whose inputs are sixteen jumpers (or a DIP). Bit = 1 opens the encoder **input**; bit = 0 leaves the codec on its own `1010` |
-| §12.1 encoder half | ≈ 4 packages incl. comparator (and LM13700 only if that half already carries one for the engine) |
+| Warbler | Second RC osc. **Pot sets the warble rate** (~25 Hz or ~120 Hz for plane B). Used only when the warble jumper is fitted |
+| AM | ½ LM13700 four-quadrant; depth fixed for equal sidebands when the pots are on the plan |
+| Pure / warble | 3-pin header: carrier → encoder, or OTA out → encoder |
+| Cadence | `'4040` off socket **`TX_CLK` (a1)**; **Q13 = 256 ms** clocks a 4-bit step into a 16:1 mux (`'150` / dual `'151`) whose inputs are sixteen jumpers (or a DIP). Bit = 1 opens the encoder **input**; bit = 0 leaves the codec on its own `1010` |
+| §12.1 encoder half | ≈ 4 packages incl. LM13700, comparator |
 | Level trim | one pot into the encoder, as every analog source |
-| | **≈ 8–10 packages, ±12 V + +5, three pots, one jumper field** |
+| | **≈ 10 packages, ±12 V + +5, three pots, one jumper field** |
 
 No `TICK`, no rear punch for clocks: the cadence divider is a tap of the socket
 clock, not a crystal on the card (`clocks.md` §3).
@@ -279,14 +278,16 @@ mask, not a decode:
 | tone | mask (16 bits, MSB = first step) | on / off shape |
 |---|---|---|
 | dial | `1111 1111 1111 1111` | continuous |
-| busy | `1111 1111 0000 0000` | 2.048 / 2.048 s (8 on / 8 off) |
-| cannot-complete | `1111 0000 1111 0000` | 1.024 / 1.024 s (4 / 4 / 4 / 4) |
-| ringback | `1100 1100 0000 0000` | 0.512 / 0.512 / 0.512 / 2.560 s (2 on, 2 off, 2 on, 10 off) |
+| busy | `1111 0000 1111 0000` | 1.024 / 1.024 s (~0.5 / 0.5 at this step) |
+| cannot-complete | `1100 1100 1100 1100` | 0.512 / 0.512 s (~0.25 / 0.25 at this step) |
+| ringback | `1101 1000 0000 0000` | **0.512 / 0.256 / 0.512 / 2.816 s** — UK/AU 0.4/0.2/0.4/2.0 on this grid (2:1 burst:gap) |
 
-Busy is cannot-complete one stage slower, as in §4.2. Ringback matches §4.3's
-double pulse. A ringback population also takes the cadence bit's complement out
-the rear connector as `/RING_CAD`, same ownership rule as the ROM card (§4.3,
-`tone-card.md` §5).
+Busy is cannot-complete one stage slower, as in §4.2. Ratios land within one
+step of the ROM taps where they share the same shape; ringback here prefers the
+UK-style **2:1** double pulse over §4.3's equal-burst NOR (which would be
+`1100 1100 0000 0000`). A ringback population also takes the cadence bit's
+complement out the rear connector as `/RING_CAD`, same ownership rule as the
+ROM card (§4.3, `tone-card.md` §5).
 
 ### 5.3 Against the ROM card
 
@@ -296,17 +297,16 @@ analog cards where the ROM is one.
 | | ROM | analog |
 |---|---|---|
 | cards for four tones | **1** | 3–4 |
-| packages | **7** | ≈ 8–10 each |
+| packages | **7** | ≈ 10 each |
 | rails | **+5 V only** | ±12 V and +5 |
 | trims | **none** | **f0, f_w, level** |
 | cadence | counter taps | 16 jumpers |
-| frequency stability | **exact, forever** | RC drift; pots approximate §3 |
-| warble SNR | exact sinusoidal | soft path preferred; square allowed |
+| frequency stability | **exact, forever** | RC drift; pots set §3 |
+| warble | exact sinusoidal | OTA AM (switch prohibited) |
 | integration level | **the EPROM is LSI** | SSI/MSI and linear |
 
-Both plug into the same socket. The ROM is the zero-trim multi-tone build; the
-analog card is the one that needs no memory part and is set with pots and
-jumpers.
+Either card meets §3 when the analog pots are set, and both plug into the same
+socket. The analog card is the one that needs no memory part.
 
 ---
 
@@ -323,12 +323,14 @@ jumpers.
   Bell values and whether they were AM or additive are least sure, and **plane B
   is built on them**.
 - **No circuit, either card.** Oscillator start-up against a tone that must be
-  present the instant a caller lifts is not worked, nor how clean a 555 carrier
-  is after the encoder's band-limit, nor which soft warble path (§5) a board
-  actually ships.
+  present the instant a caller lifts is not worked on a board, nor the OTA's
+  feedthrough. **`spice/tone-analog/`** explores the front-end (including a soft
+  and hard gate for the warble *measurement*); the card itself still requires
+  the LM13700 path of §5.
 - **Analog cadence masks** (§5.2) are an assignment of the jumper field; nothing
-  has been strapped or listened to. A different step rate is free if a later
-  bench prefers it.
+  has been jumpered or listened to. A different step rate is free if a later
+  bench prefers it. The spice deck drives `CAD` from a pulse, not the 16-jumper
+  mux.
 - **The overmodulated envelope** of a depth-1.0 warble reverses phase twice a
   cycle; what the syllabic filter makes of that at a cadence seam is not worked.
   The seam itself measures −44.7 dB worst over 32 cut points.

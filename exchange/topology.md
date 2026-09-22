@@ -27,10 +27,10 @@ Six things decide what can be built. None of them is a route table.
 |---|---|---|
 | **Directions** | an exchange faces **four neighbours at most**. A direction is two bits of a trunk's word, N, S, E or W | `extensions.md` §2.2 |
 | **One neighbour a direction** | every trunk facing one way goes to the same exchange. The origin seizes one free trunk a direction, so a direction split between two neighbours would send each flood to one of them and not the other | `network.md` §3 |
-| **Trunk groups** | **seven at most**, one MF8 link of eight channels each, one a block. Two groups facing the same way are one direction of sixteen channels; three, twenty-four; four, thirty-two | `protocol.md` §5 |
-| **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A link strapped with `n` is outside the tree (§7) | `network.md` §3.3 |
+| **Trunk groups** | **seven at most**, one MF8 link of six channels each, one a block. Two groups facing the same way are one direction of twelve channels; three, eighteen; four, twenty-four | `protocol.md` §5 |
+| **The flood sees a tree** | the links a flood may be forwarded along must have no cycle in them. A no-forward jumpered link is outside the tree (§7) | `network.md` §3.3 |
 | **Sixty-four codes** | `e b`, both digits 0–7, octal as a line's number is. 00–17 are the backbone's by convention: the tandems and hubs, as ports 00–07 are an exchange's services and 10–17 its first trunk group when networked | `network.md` §2 |
-| **The guard** | the flood must cross the whole network inside the origin's guard, which is **a strap**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `monitor.md` §3.5 |
+| **The guard** | the flood must cross the whole network inside the origin's guard, which is **a jumper**: 128 ms is ten hops at a slow marker's 12 ms, 256 ms twenty-one and 512 ms forty-two, less a third of a hop for each hub on the way. It is the same tap at every exchange in one network and it is the only number in the protocol that says how big the network is | `monitor.md` §3.5 |
 
 **Trunk groups cost lines.** The first trunk group sits in block 1, whose
 slots are not lines (block 0 holds tones and the operator bank). Each group
@@ -40,10 +40,10 @@ after that takes eight line slots:
 |---|---|---|---|---|---|---|---|
 | lines left | 48 | 40 | 32 | 24 | 16 | 8 | 0 |
 
-An exchange with all seven is a **tandem**: 56 channels of trunk and the 04–07
-bank. Its seven groups divide among its directions as 16 + 16 + 16 + 8, as
-24 + 16 + 16, as 24 + 24 + 8. At 1 % blocking eight channels carry
-3.13 E, sixteen 8.88 E, twenty-four 15.30 E and thirty-two 22.05 E.
+An exchange with all seven is a **tandem**: 42 channels of trunk and the 04–07
+bank. Its seven groups divide among its directions as 12 + 12 + 12 + 6, as
+18 + 12 + 12, as 18 + 18 + 6. At 1 % blocking six channels carry
+1.91 E, twelve 5.88 E, eighteen 10.44 E and twenty-four 15.30 E.
 
 ---
 
@@ -274,7 +274,7 @@ and the guard (`topo` 4). What stops each is in bold:
   the shapes again with a line cap and reaches **63 exchanges of 12 lines**, seven
   or eight hops across and inside the guard. It also settles what a **fully
   connected core of hubs** is worth — nothing, because the flood must see a tree
-  and every link off it is a strap that carries its own two ends only (§7).
+  and every link off it is a jumper that carries its own two ends only (§7).
 
 Run call by call at 30 % leaving with five monitors and resolvers (`topo` 7): the
 tree of twenty-nine refuses 0.55 % on its busiest link where 0.71 % was
@@ -289,7 +289,7 @@ in 1 000 to them, and with four, 0.3.
 
 ## 7. Rings and loops
 
-**A loop is possible, if one link of it is strapped. A loop with no strap is not.**
+**A loop is possible, if one link of it is jumpered. A loop with no jumper is not.**
 
 A flood has no memory of where it has been. Sent round a ring, it comes back to
 the exchange that made it, which forwards it again as any seizure, on another
@@ -298,22 +298,22 @@ channels and counts the channels seized a second and a half later:
 
 | | channels seized by one call |
 |---|---|
-| one link strapped | 6 of 36 |
-| no strap | **36 of 36** |
+| one link jumpered | 6 of 36 |
+| no jumper | **36 of 36** |
 
 The whole ring is held until the code is dialled, two seconds or more, for every
-call that leaves. Under ordinary traffic a ring of six with no strap loses **100
+call that leaves. Under ordinary traffic a ring of six with no jumper loses **100
 network calls in 1 000**, and a ring of four 72 (`topo` 7).
 
-**The strap is the `n` bit of a trunk's word**, set on every channel of one link
-at both ends (`network.md` §3.3). A seizure is never forwarded into a
-strapped link, and one that arrives on it is never forwarded onward. An origin
-may still seize it and the far end may still claim, so **the strapped link
+**A no-forward jumper — one plug a compass direction on the network unit**, set for every
+channel of one link at both ends (`network.md` §3.3). A seizure is never forwarded into a
+jumpered link, and one that arrives on it is never forwarded onward. An origin
+may still seize it and the far end may still claim, so **the jumpered link
 carries the calls between its own two ends, and no others.** The links without
 the bit must form a tree:
 
 ```
- straps needed  =  links  −  exchanges  +  1          a ring: one.  A tree: none
+ jumpers needed  =  links  −  exchanges  +  1          a ring: one.  A tree: none
 ```
 
 **What a ring buys** (`topo` 5, 30 % leaving, six channels):
@@ -321,7 +321,7 @@ the bit must form a tree:
 | | busiest link | pair | lost | channels a call |
 |---|---|---|---|---|
 | chain of 4 | 1.64 E, 0.53 % | 0.84 % | 0.51 % | 1.67 |
-| ring of 4, one link strapped | 1.26 E, 0.16 % | 0.18 % | 0.10 % | 1.33 |
+| ring of 4, one link jumpered | 1.26 E, 0.16 % | 0.18 % | 0.10 % | 1.33 |
 | chain of 6 | 2.24 E, 1.89 % | 4.67 % | 2.55 % | 2.33 |
 | ring of 6 | 2.01 E, 1.23 % | 2.78 % | 1.39 % | 2.07 |
 | chain of 8 | 2.87 E, 4.52 % | 15.0 % | 7.90 % | 3.00 |
@@ -335,23 +335,23 @@ chain of six loses 19.
   one.
 - **It does not share load both ways round.** The flood goes one way, so the call
   does. Every other pair is served exactly as on the chain.
-- **It is a spare.** If a link fails, move the strap to it and the ring is a
+- **It is a spare.** If a link fails, move the jumper to it and the ring is a
   chain again with every exchange reachable. That is a jumper, or a switch on the
   trunk card, at both ends of two links. Nothing moves it by itself: a trunk card
-  takes its dead link out of the hunt, but the strap elsewhere stays until
+  takes its dead link out of the hunt, but the jumper elsewhere stays until
   someone moves it, and until then the network is in two parts.
-- **At the strap's two ends a call between them arrives twice**, once direct and
+- **At the jumper's two ends a call between them arrives twice**, once direct and
   once the long way. The direct copy is a hop away and claims first; the origin
   then releases the long way (`network.md` §3.3).
 
-**Loops through hubs** work the same way. A strapped link between a leaf of one
+**Loops through hubs** work the same way. A jumpered link between a leaf of one
 hub and a leaf of the other in §3's network takes that pair's calls off three
 links: the mean loss falls from 0.31 % to 0.25 %, and nothing else changes. A
 leaf has two directions then, and still 48 lines.
 
 **Two links between the same two exchanges are not a loop if they face the same
 way.** They are one direction of twelve channels and one hunt. Jumpered as two
-different directions they are a loop of two, and need a strap like any other.
+different directions they are a loop of two, and need a jumper like any other.
 
 ---
 
@@ -421,7 +421,7 @@ before 77. Every pulse of an exchange's code adds 0.1 s to every flood made to i
 - **SS0 (§8) has never been run call by call.** Its 0.4 s seizure is arithmetic
   from `ss0.md`'s hop of 26 ms, and its own §10 lists what it has not settled,
   glare among it.
-- **A strap moved while calls are up**, and a ring healing: by hand, and not
+- **A jumper moved while calls are up**, and a ring healing: by hand, and not
   modelled.
 - **Glare.** Two ends seizing one channel at once is not in the model; the
   opposite-order hunt of `network.md` §1 is assumed to leave it rare.

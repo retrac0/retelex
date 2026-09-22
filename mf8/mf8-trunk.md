@@ -9,7 +9,7 @@ keyed **pass header**. Channel cards and the PSU sit on the spacer-stack of
 > **Status: proposed.** Package counts are from `mf8-spec.md` §10–11 and
 > `mf8-backplane.md` §8; the pass pinout is an assignment. Nothing laid out.
 > **Gateway / Pico slot: deferred** — not placed in the stack yet.
-> **Channel through-header C wiring: deferred** — pin *roles* remain
+> **Channel stack header C wiring: deferred** — pin *roles* remain
 > `common-cards.md` §1; layer geometry is not written here.
 
 ---
@@ -23,7 +23,7 @@ stack driver on D.
 
 | Board | Owns | ≈ packages |
 |---|---|---|
-| **Trunk-D** | Crystal / `4040` / `393`, frame and signalling muxes, F gen, framer **without** the classifier, C and A holds, `MUTE` / `LOCK` / `CD`, eight C/A pairs; on an exchange, collect T + commons C | **≈ 16–20** |
+| **Trunk-D** | Crystal / `4040` / `393`, frame and signalling muxes, F gen, framer **without** the classifier, C and A holds, `MUTE` / `LOCK` / `CD`, six C/A pairs; on an exchange, a highway tap (`mf8-unit.md` §1) | **≈ 16–20** |
 | **Trunk-A** | TX encoder + `75176` + transformer + protection; RX transformer, filter, comparator, **§9.4 classifier**, carrier detect | **≈ 6–8** + **2** transformers |
 
 Rear plant (trunk pair) leaves **Trunk-A** only (`common-cards.md` §7.3). Optional
@@ -42,12 +42,12 @@ PSU pass. Directions below are **signal flow**.
 | signal | rate | what |
 |---|---|---|
 | `TX_BIT` | 512 kb/s | frame-mux serial bit, before the biphase encoder — F, S, and the six C bits in turn (`mf8-spec.md` §10) |
-| `HB` | 1.024 MHz | half-bit clock; clocks the encoder on A (`mf8-spec.md` §9.1–9.2) |
+| `LINE_HB` | 1.024 MHz | half-bit clock; clocks the encoder on A (`mf8-spec.md` §9.1–9.2) |
 | `+5 V` | | logic for A |
 | `GND` | | |
 
 `TX_BIT` changes on the bit boundary in T; the encoder on A decides mid-cell on
-`HB`. No need to pass `TX_CLK` if `HB` and `TX_BIT` are enough for §9.2.
+`LINE_HB`. No need to pass `TX_CLK` if `LINE_HB` and `TX_BIT` are enough for §9.2.
 
 ### 2.2 A → D (receive path into the framer)
 
@@ -69,7 +69,7 @@ Odd pins signal, even ground — same idiom as the exchange ribbons:
 | pin | | pin | |
 |---|---|---|---|
 | 1 | `TX_BIT` | 2 | `GND` |
-| 3 | `HB` | 4 | `GND` |
+| 3 | `LINE_HB` | 4 | `GND` |
 | 5 | `RX_BIT` | 6 | `GND` |
 | 7 | `RX_STB` | 8 | `GND` |
 | 9 | `/CD` | 10 | `GND` |
@@ -94,7 +94,7 @@ adjacent in the stack (`mf8-psu.md` §5).
 ## 4. Decisions locked here
 
 - **Classifier on Trunk-A** — clean digital `RX_BIT` / `RX_STB` / `/CD` toward D.  
-- **Encoder and `75176` on Trunk-A** — `TX_BIT` + `HB` toward A.  
+- **Encoder and `75176` on Trunk-A** — `TX_BIT` + `LINE_HB` toward A.  
 - **100 × 100** outline, same family as channel and PSU cards.  
 - **Gateway slot: deferred** — Pico / mirrored 2 × 32 not placed in this stack yet.
 
@@ -104,7 +104,7 @@ adjacent in the stack (`mf8-psu.md` §5).
 
 - Exact stack order of D vs A relative to the six FXS layers (ASCII in
   `mf8-psu.md` §5 puts D then A; either order works if C lands only on D).  
-- Whether `H` (line bit clock) is derived on A from `HB` or also passed.  
+- Whether `H` (line bit clock) is derived on A from `LINE_HB` or also passed.  
 - Rate-plug parts for the classifier — on A with the timers.  
 - Bench: scope `TX_BIT`→line and `RX_STB`→`259` write against `mf8-spec.md` §5
   margins with the pass in between.

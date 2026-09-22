@@ -24,16 +24,17 @@ they speak the same ribbons, and a network unit plugs into either
 
 Every port says what it is in a **word**: eight bits that whatever sits behind
 it sends, one a frame, on one pin (`extensions.md` §2.2). A card sends it for
-its one port, and a trunk card for each of its eight channels (`network.md`
-§1). The word carries a 3-bit class and four options that depend on the class: a
-trunk's direction, a hunt group, a warm restricted line. Or it names the port this one
-is nailed to. **Class *restricted*** is its own code (`fabric.md` §3.5), not
-an option. **A plain line card ties the pin to ground**, which reads all ones
-and means a line with no options. The marker's probe reads the word at every
-visit, beside the port's M and its `BUSY` (§4). **Nothing on the marker says
-where anything is**: move a card and its role moves with it. Whether a port rings
-is not the marker's business: the card says it to the port's own gates on a pin,
-`/ANS` (`extensions.md` §2.3).
+its one port, and a trunk card for each of its six channels (`network.md`
+§1). Two type bits, then either a 3-bit class and three options, or a 6-bit
+port: answers-to, a call nail, or a tied nail (`extensions.md` §2.2). A trunk's
+direction and glare sit in the three options; the no-forward jumper is one plug
+a compass direction on the network unit, not in the word. **Class *restricted***
+is its own code (`fabric.md` §3.5), not an option. **A plain line card ties
+the pin to ground**, which reads all ones and means a line with no options. The
+marker's probe reads the word at every visit, beside the port's M and its
+`BUSY` (§4). **Nothing on the marker says where anything is**: move a card and
+its role moves with it. Whether a port rings is not the marker's business: the
+card says it to the port's own gates on a pin, `/ANS` (`extensions.md` §2.3).
 
 | class | is | reached by | free when |
 |---|---|---|---|
@@ -41,7 +42,7 @@ is not the marker's business: the card says it to the port's own gates on a pin,
 | 1 | line: a phone, a data card, a conference bridge leg | its number | `BUSY` = 0, M = 0, settled (§5) |
 | 2 | operator | **0** | same |
 | 3 | external trunk: an FXO to a CO, a foreign PBX | **9** | same |
-| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`extensions.md` §2.2), and an MF8 unit sends one word to all eight channels | the network card (`network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
+| 4 | tie trunk. **Its direction is not the class**: the port's word says N, S, E or W (`extensions.md` §2.2), and an MF8 trunk sends one word to all six channels | the network unit (`network.md`), a free trunk facing the way it wants | same, and a valid direction word: a trunk card sends none while its link is down |
 | 5 | dial tone | the marker, on seizure | always: a source, one latch write |
 | 6 | cannot-complete: busy / error tone, or a looping announcement | the marker, whenever it cannot complete | always |
 | 7 | spare in this older map. Under `fabric.md` §3.5, code **111** is *restricted* | — | — |
@@ -52,12 +53,11 @@ anything that talks and never listens: the two tones, reached by address rather
 than hunted, and a radio or a clock that anyone may dial (`features.md`
 §6). *Data line* is a line the marker will not connect to a voice port. A
 conference bridge leg is an ordinary line (`conference.md` §6); class
-*conference* is retired. *Restricted* (`111`) options are `z w b L`
-(`extensions.md` §2.4): **0-only**, **warm**, **busy-inbound**,
-**local-only**; bare restricted still floors as local-only. A line's options are
-`o · b ·` — overflow, spare, busy-out, spare — with `o`/`b` in the same
-frames as restricted and as overflow on operator and data. Frame 5 is warm
-on restricted and spare on a line.
+*conference* is retired. *Restricted* (`111`) options are `z b 0`
+(`extensions.md` §2.4): **0-only**, **busy-inbound**; bit 7 MBZ. Bare
+restricted still floors as local-only. A line's options are `P b 0` —
+priority, busy-out, MBZ — with `b` in the same frame as restricted. Warm is
+the **call-nail** form (type `10`), not an option: call nail to 04 is the operator.
 
 **Proposed further** (`groups.md`): a port may *answer to a number*. A
 dialled number that cannot be completed where it was dialled is hunted for among
@@ -79,7 +79,8 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
              itself → class 6               not free (BUSY or busy `b`), overflow set → try next
              not free → class 6 (busy tone) else → connect
- caller      class restricted: `w` → lift as 0; `z` → only 0; else `L` or floor → no 9 / no flood
+ caller      class restricted: `z` → only 0; else `L` or floor → no 9 / no flood
+             call nail: connect as if dialled `h s`, no register
              busy `b` does not block a call request
 ```
 
@@ -89,10 +90,10 @@ is `1 e b h s`: the key, the exchange's code, then the line. The **unit**
 opens the flood. If the `e b` that follows is this exchange's own, the unit
 releases the trunks and restarts; what follows is parsed exactly as above
 (`network.md` §3). `e` and `b` are 0–7. Either being 8 or 9 is reserved:
-the unit releases the trunks and the caller gets class 6. A local number in 20–77 is
-the same two digits alone or networked; **`h s` after `1 e b` means the same
-port**. Ports 00–07 are never dialled (0 is the operator key). Ports 10–17 are
-lines when standalone and undialable when networked.
+the unit releases the trunks and the caller gets class 6. A local number in
+20–77 is the same two digits alone or networked; **`h s` after `1 e b` means
+the same port**. Ports 00–07 are never dialled (0 is the operator key). Ports
+10–17 are lines when standalone and undialable when networked.
 
 Dial tone goes off at the first digit: one write, the caller listens to port 00.
 
@@ -111,15 +112,15 @@ the wanted class that is free. **Fixed order is the feature**:
 | tones | pull the dial-tone card and the next class-5 port serves. With no tone card at all a caller hears silence where the tones would be, and the call still completes |
 | no class 2 fitted | 0 → class 6 |
 
-**A nail comes first.** A card's word is either its class or a nail. A nail with
-`BUSY` clear is written before anything else is considered, and a port that sends
-a nail is never free and never a call request (`extensions.md` §3.1).
+**A tied nail comes first.** Type `00` is a tied nail (not all zeros). A tied nail with `BUSY` clear is two
+writes — this port and the dest — before anything else is considered. A port
+that sends a tied nail is never free and never a call request (`extensions.md` §3.1).
 
 **Seizure is handled by class too.** M rising on a free, idle port is a call
 request. Class 1 or 2: give a free register the caller's number; point the
 caller at dial tone. Class 3 — a CO line ringing in, from a caller who cannot
-dial — **is routed as if it had dialled 0**, and so is a **restricted** line
-whose word says warm (`extensions.md` §2.4). Class 4 is the **network unit's**, never a
+dial — **is routed as if it had dialled 0**, and so is a **call nail to 04**
+(`extensions.md` §2.2, §2.4). Class 4 is the **network unit's**, never a
 caller: the marker does not attach a register to a trunk. A hunt for a trunk
 is steered by that unit on `/HUNT_INH` (§4), or the unit watches the scan
 itself (`common-control.md` §2.2): the marker hunts the class and never
@@ -134,7 +135,7 @@ register on that port, `CLAIM` already written.
 |---|---|
 | Clock card | 4.096 MHz → '4040 → 512 k, 64 k, 8 k, the 1 kHz tick, `FILL`, `RING_CAD` (2 s / 4 s). **`RBT` is not its**: it is carried with these and generated by the ringback tone card, which drives the conductor through a buffer on the card. The clock card terminates it to `FILL` and nothing else (§5, `features.md` §2, `mainboard.md` §2.1, `tone-card.md` §5) |
 | Scanner | a 6-bit counter on **`CLK_8K`** (8 kHz; socket `TX_OCT`). It moved here from `register.md` §5, where it was part of the register: a hunt must not wait for a register |
-| Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's word, which a 74HC164 takes in over the visit), addressed by the scanner or by the digit store. A port probed out of the scanner's turn is read for one whole `CLK_8K` period, 125 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`network.md` §3.2) |
+| Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's **16-bit** word, which two 74HC164 take in at 128 kHz over the visit), addressed by the scanner (`DST[2:0]`) or by the digit store. A port probed out of the scanner's turn is read for one whole `CLK_8K` period, 125 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`network.md` §3.2) |
 | Sequencer | a state counter and decode. Its whole output is latch writes on the control bus — one sixteen-bit word shifted out on `SDATA`, then `WR` (`mainboard.md` §2.3) — which is multi-master: the operator's console drives it by hand. Its hunt takes one input, `/HUNT_INH`, pulled up on the backplane: a card may reject the port the probe is on and the hunt walks on. Nothing else may steer a hunt, and with no card fitted the line reads *accept* |
 | Diode matrix | prefix key → class. Nothing else: no addresses, no translation |
 | Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero would be an operator flash-transfer consult (`register.md` §6.1): deferred — transfer is console-only for now (`operator.md` §3); attaches today load `SRC` = 00. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network unit**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2, `common-control.md` §2.1) |

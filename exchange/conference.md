@@ -17,7 +17,7 @@ party bus inside.
 The conference **unit** is one ordinary exchange block. It attaches to the
 mainboard buses like any other block. Inside it keeps a private **party bus**.
 Onto that bus sit the bridge modules: **two of four legs, or one of eight**, by
-strap (or by fitting two 4-leg modules vs one 8-leg module).
+jumper (or by fitting two 4-leg modules vs one 8-leg module).
 
 ```
  main exchange buses (highways, clocks, FILL, SDATA/SCLK, …)
@@ -27,10 +27,10 @@ strap (or by fitting two 4-leg modules vs one 8-leg module).
     internal party bus (DATA, HELD, KEEP, ASK, PRI + overflow)
          │
     ┌────┴────┐
-   4-leg     4-leg     strap open  → two conferences
+   4-leg     4-leg     jumper open  → two conferences
    bridge    bridge
          or
-      one 8-leg bridge  strap closed → one conference
+      one 8-leg bridge  jumper closed → one conference
 ```
 
 | | |
@@ -91,7 +91,7 @@ digital party bus unless true multi-talker full-duplex is required.
  bus       DATA  the holder's C_RX, driven by the holder alone      HELD  a leg holds the floor
            KEEP  the holder is not silent                            ASK   a leg other than the holder spoke
            PRI   a daisy chain in slot order
- strap     cuts all five between legs 3 and 4: one bridge of eight, or two of four (§5)
+ jumper     cuts all five between legs 3 and 4: one bridge of eight, or two of four (§5)
  C_TX      HELD and not mine → DATA;  otherwise FILL.  The holder's own caller hears silence
  A_TX      = A_RX: a leg answers the moment it is called and drops when its caller does
 ```
@@ -165,7 +165,7 @@ more below it.
 
 ---
 
-## 5. The circuit, strap and cost
+## 5. The circuit, jumper and cost
 
 | per leg | parts |
 |---|---|
@@ -181,28 +181,28 @@ divides the same bussed `TICK` from `RESET`, so all windows end together, and
 take and let-go are decided on the same edge from the same bus state. A leg
 whose caller hangs up drops the floor with its `A_RX`.
 
-**The strap: one bridge of eight, or two of four.** One strap block cuts all five
+**The jumper: one bridge of eight, or two of four.** One jumper block cuts all five
 bus signals between legs 3 and 4, and carries the two overflow bits with them:
 
 ```
-                70   71   72   73   │ strap │   74   75   76   77
+                70   71   72   73   │ jumper │   74   75   76   77
 
   DATA  HELD   ──●────●────●────●───┤   ○   ├───●────●────●────●──
   KEEP  ASK                         │       │
   PRI          ──►────►────►────►───┤   ○   ├───►────►────►────►
   o bit          o    o    o    ·   │   ○   │   o    o    o    ·
 
-  strap out, as drawn   two bridges of four, at 70 and at 74
-  strap in              one bridge of eight, at 70: the cut closes, PRI runs through, 73's o is set
+  jumper out, as drawn   two bridges of four, at 70 and at 74
+  jumper in              one bridge of eight, at 70: the cut closes, PRI runs through, 73's o is set
 ```
 
-**One strap, not two things that must agree.** The segmentation of the bus, the
+**One jumper, not two things that must agree.** The segmentation of the bus, the
 priority chain and the overflow bits the marker hunts on are all inside the
 block, so all three move together and cannot be set inconsistently. Everywhere
 else a hunt group is jumpers on each card (`extensions.md` §2.4), where
 getting one wrong is possible; here it is not.
 
-**Two of four is the default, and the strap is the exception.** §7's worst
+**Two of four is the default, and the jumper is the exception.** §7's worst
 failure is one leg wedging a whole bridge: a caller in noise 20 dB below speech
 never falls silent, so that leg holds the floor until it hangs up. Eight legs
 give eight chances of it per conference and lose the whole bridge; four give four
@@ -214,7 +214,7 @@ from what was measured, eight is not.
 **Cost.** ≈ 9 packages a leg, above, and ≈ 82 for the block's own fabric and
 supervision (`fabric.md` §5): **≈ 154 packages for eight legs, two bridges
 and the ribbon.** The only part of it that is not an ordinary block is the
-ribbon and its strap.
+ribbon and its jumper.
 
 **Where it sits in the numbering.** Blocks 0 and 1 are never dialled — 0 is the
 operator and 1 the network's key, so `h` is 2–7 (`marker.md` §2). A
@@ -242,7 +242,7 @@ another dialable block spent, and four bridges.
   word. Dialling any leg takes the first free leg from that one onward, in slot
   order, until a leg that is not free has the bit clear. No free leg →
   cannot-complete. **A conference block is two bridges of four or one of eight,
-  by its strap** (§5), and an exchange may have more than one such block. **A
+  by its jumper** (§5), and an exchange may have more than one such block. **A
   run never crosses a block boundary**, because the party bus never leaves the
   block. Under `groups.md` §5 the same bridge is legs that *answer to* its
   number, and the run leaves the marker.
@@ -260,7 +260,7 @@ another dialable block spent, and four bridges.
   taken: **≈ 2 packages**, and at most two scans, 16 ms. It is the same hunt for
   every kind of group.
 - **A bigger bridge is more legs on one segment.** There is no sum to clip and no
-  noise to add, so the limit is the block and its strap, not the audio: eight is
+  noise to add, so the limit is the block and its jumper, not the audio: eight is
   the most one bridge can be, because eight is a block. The cost of a bridge is
   counted in dialable block numbers (§5), not in line slots, and what argues
   against spending more of them is §7, not the bit stream.
@@ -291,7 +291,7 @@ another dialable block spent, and four bridges.
 ## 8. Not measured
 
 - **Every circuit here.** The conference leg, its party bus and the block's
-  strap.
+  jumper.
 - **The conference with real phones**: handset levels, room noise and echo from
   real hybrids, rather than the test set's talkers with added noise; and how
   people take to a half-duplex meeting.

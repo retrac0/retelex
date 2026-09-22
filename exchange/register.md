@@ -1,6 +1,6 @@
 # The register — reading the dial into a simple exchange
 
-The shelf of `mf8-backplane.md` extends lines. It does not switch them. An
+The MF8 shelf of `mf8-backplane.md` extends lines. It does not switch them. An
 exchange needs three more things: a **register** that reads the number a caller
 dials, a **switch** that decides who hears whom, and a **marker** that sets the
 switch from the register. This document covers the register: how the dial
@@ -272,7 +272,7 @@ A register works for a few seconds per call and is idle the rest of the time.
 the busiest hour and the register holds each for 10 s: dial tone, four digits,
 pauses. That is 0.067 erlang. With **one register**, a caller finds it busy
 1 time in 15 and waits about 11 s for dial tone. With **two**, it is 1 time in
-465. One is enough for a shelf, and two is the choice if waiting for dial tone
+465. One is enough for eight lines, and two is the choice if waiting for dial tone
 is not acceptable. This is arithmetic on assumed calling rates, not a measurement.
 
 ---

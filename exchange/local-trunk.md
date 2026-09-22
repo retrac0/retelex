@@ -23,7 +23,7 @@ payload seats where fused MF8 gives six.
 ```
 
 Each end occupies a whole block **1–7**, stuffed as an **adapter** (`fabric.md`
-§5.2): T + C face the unit; the ribbon taps are not populated; eight port
+§5.2): T + C face the unit; the block-ribbon IDC taps are not populated; eight port
 circuits sit behind T. Every port is class trunk, one shared direction word,
 `/ANS` tied low. The marker, the flood and the monitors treat the group as they
 treat any other trunk block.
@@ -75,7 +75,7 @@ contract.
 | **C** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out** |
 | **rear** | the highway-shaped link (§5), not on T, not on H |
 
-**Word.** One 74HC165 to all eight: class trunk, direction N/E/S/W, glare `g`
+**Word.** Two 74HC165 daisy-chained to all eight: class trunk, direction N/E/S/W, glare `g`
 (`extensions.md` §2.2). Gated by link-up (§6). Power-up RC as usual.
 
 **`/ANS`.** Tied low on the board. Trunks do not ring.
@@ -192,7 +192,7 @@ Not drawn.
 | RX demux holds | 2 × '174 (C); A levels or a second '174 | 2–3 |
 | Local crossing | 2 × '174 on local `TX_CLK` | 2 |
 | A path | RC + Schmitt, eight ways (or shared after demux) | ≈ 1–2 |
-| Word, `/ANS`, `MUTE_BLK`, link-down | ≈ 3¼ + ½ | ≈ 4 |
+| Card word, `/ANS`, `MUTE_BLK`, link-down | ≈ 3¼ + ½ | ≈ 4 |
 | | **≈ 14–18** | beside the eight port circuits the block already has |
 
 No 4.096 MHz, no classifier, no magnetics in the baseline.

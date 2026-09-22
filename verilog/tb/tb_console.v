@@ -55,7 +55,7 @@ module tb_console #(
     wire        con_busy, con_done, w_bsy, w_clm, w_seen;
     wire [5:0]  w_src;
     wire        hook_dst, hook_src, sup_busy_dst, sup_busy_src, sup_seen;
-    wire [7:0]  sup_word_dst, sup_word_src;
+    wire [15:0] sup_word_dst, sup_word_src;
     wire        b_sdata, b_sclk, b_wr, con_n, con_oe, mk_drv, fs, tick_1k, dt_bit, ng_bit;
     localparam integer NREG = 6;                         // enough that dial tone is never waiting for a register
     wire [NREG-1:0] regs;
@@ -787,22 +787,22 @@ module tb_console #(
         k = n_probe_wrote;
         con_key(K_PROBE, 1'b0, 6'o20, 6'o21, 1'b0);
         $display("     a probe of one port took %0.0f us", t_ten / 1000.0);
-        want(sup_seen && !sup_busy_dst && sup_word_dst == 8'hFF,
+        want(sup_seen && !sup_busy_dst && sup_word_dst == 16'hFFFF,
              "20 free: BUSY clear, and the card's word is a plain line (all ones)");
         con_key(K_PROBE, 1'b0, 6'o70, 6'o21, 1'b0);
-        want(sup_word_dst == 8'h00, "70, an empty slot in a fitted block: no word at all");
+        want(sup_word_dst == 16'h0000, "70, an empty slot in a fitted block: no word at all");
         con_key(K_PROBE, 1'b0, SK0, 6'o21, 1'b0);
-        want(sup_word_dst == 8'h00 && !sup_busy_dst, "76, a sink: no word either -- an empty slot to the marker");
+        want(sup_word_dst == 16'h0000 && !sup_busy_dst, "76, a sink: no word either -- an empty slot to the marker");
         @(negedge clk); sw_dst = PRS;
         #(2 * NS);
         con_key(K_PROBE, 1'b0, PRS, 6'o21, 1'b0);
-        want(sup_word_dst == 8'h00 && !sup_busy_dst && hook_dst,
+        want(sup_word_dst == 16'h0000 && !sup_busy_dst && hook_dst,
              "75, the ring source: no word, not busy -- and its M is HIGH, which is why it is safe");
         call(6'o20, 6'o21);
         con_key(K_PROBE, 1'b1, 6'o20, 6'o21, 1'b0);
         $display("     a probe of both ends took %0.0f us", t_ten / 1000.0);
         want(sup_busy_dst && sup_busy_src &&
-             sup_word_dst == 8'hFF && sup_word_src == 8'hFF,
+             sup_word_dst == 16'hFFFF && sup_word_src == 16'hFFFF,
              "PROBE + BOTH, on a call: both ends busy, both plain lines, one tenure");
         want(hook_dst && hook_src, "and both off hook, off cable A at the same time");
         want(n_probe_wrote == k, "and not one WR pulsed: a probe writes nothing");

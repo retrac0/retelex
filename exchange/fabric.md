@@ -101,8 +101,14 @@ What follows from the shape:
   hears CVSD silence.
 - **The marker reads ports the same way.** `BUSY` and each card's word are commutated
   by two more '151s onto wires only the marker sees, and its probe is a
-  listener's two selects and a flip-flop, addressed by its scanner instead of by
-  a latch.
+  listener's two selects and a flip-flop, **addressed by the port in the serial
+  control word (`DST[2:0]`) — the scanner — not by `SLOT`**. So for a whole visit
+  `PB` holds that card's pin steady, and a **16-bit** word at 128 kHz fits one
+  octet (`extensions.md` §2.2). Highway commutators stay on `SLOT`. The probe
+  select is the scanner's low three bits — the same field as `DST[2:0]` — taken
+  from the scanner while the marker owns the bus, so a visit does not need a
+  fresh serial word a port; `/BLK` still comes from the once-a-block steer. A
+  console `PROBE` uses the serial word's `DST[2:0]` instead.
 - **A trunk block's highway is an MF8 frame with F and S given back**: the six
   payload channels sit at slots 1–3 and 5–7; slots 0 and 4 are ordinary ports
   on that block (`protocol.md` §5). The commutator *is* the trunk transmitter's
@@ -131,11 +137,11 @@ of the twenty conductors this table used to list.
 | `SLOT[2:0]` | clock card, a 74HC163 | the cell number; changes at the start of the cell. Addresses every commutator |
 | `SLOTQ[2:0]` | clock card, a 74HC175 on the 1.024 MHz tap | **the same count a quarter of a cell late.** Addresses every strobe decoder, and nothing else (§3.2) |
 | `TX_CLK`, `TX_OCT`, `RX_OCT` | clock card | 64 kHz frame, 8 kHz octet, as `mf8-backplane.md` §3. **A card's `RX_CLK` pin is `TX_CLK`, and its `RX_OCT` is `TX_OCT` one frame late** (§3.4), from one flip-flop here |
-| `HB` | clock card | 1.024 MHz, the half-bit clock of `mf8-spec.md` §9.1. Only a trunk card wants it, and it is the fastest thing on the bus: **4.096 MHz never leaves the clock card** (`mainboard.md` §8) |
+| `LINE_HB` | clock card | 1.024 MHz, the half-bit clock of `mf8-spec.md` §9.1. Only a trunk card wants it, and it is the fastest thing on the bus: **4.096 MHz never leaves the clock card** (`mainboard.md` §8) |
 | `FILL`, `/RING_CAD`, `TICK` | clock card | 32 kHz idle pattern; 2 s / 4 s, low true; 1 kHz |
-| `RBT` | **the ringback tone card**, through a buffer on the card | the ringback bit stream. One of the shelf-wide references and carried with them, but a tuned oscillator through a CVSD encoder does not belong on the clock card, so this one conductor is driven from a tone card's rear connector and **pulled to `FILL` at the clock card when none is fitted** (`mainboard.md` §2.1, `tone-card.md` §5) |
+| `RBT` | **the ringback tone card**, through a buffer on the card | the ringback bit stream. One of the fabric-wide references and carried with them, but an analog tone oscillator through a CVSD encoder does not belong on the clock card, so this one conductor is driven from a tone card's rear connector and **pulled to `FILL` at the clock card when none is fitted** (`mainboard.md` §2.1, `tone-card.md` §5) |
 | `HC[0..7]`, `HA[0..7]` | block *h* drives wire *h* | the highways. **One driver a wire**; every block listens to all sixteen through its own receivers. `HA` is also the marker's M highway |
-| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a dest form (`extensions.md` §2.2), one bit a frame. Commutated like the highways; only the marker reads them, so eight blocks share two wires |
+| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a dest form (`extensions.md` §2.2), **sixteen bits at 128 kHz** over the visit. Commutated by `DST[2:0]` of the control word (the scanner's port); only the marker reads them, so eight blocks share two wires |
 | `SDATA`, `SCLK` | marker, or the console | the latch write as one sixteen-bit word — `DST[5:0]`, `SRC[5:0]`, `BSY`, `CLM`, a guard bit — shifted to every block at once. Two '164 take it in and a '138 turns `DST[5:3]` into the eight lines the shunt picks `/BLK` off, so a block still needs no address and no comparator: "layout, not logic" (`mainboard.md` §2.3) |
 | `WR`, `/RESET` | the same | the write, gated with `/BLK` and the guard bit; and the clear. **`/RESET` is the signal on the bus a glitch can hurt most**, and is filtered at every block; `SCLK` is the one it can hurt next, and costs one call (`mainboard.md` §7) |
 | `/CON` | console | the console has the bus: marker goes high-Z |
@@ -148,7 +154,8 @@ of the twenty conductors this table used to list.
 
 | function | part | notes |
 |---|---|---|
-| Commutators: `C`, `A`, `BUSY`, the word | 4 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Exactly the trunk transmitter's frame mux (`mf8-spec.md` §10) without F and S |
+| Commutators: `C`, `A` | 2 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Exactly the trunk transmitter's frame mux (`mf8-spec.md` §10) without F and S |
+| Commutators: `BUSY`, the word | 2 × 74HC151 | addressed by the **scanner's** `DST[2:0]` (live from the marker while it owns the bus; from the serial word on a console `PROBE`). Steady on `PB` for the visit |
 | Ringback substitution ahead of the `C` commutator | 2 × 74HC157 | port *k* sends `RBT` instead of its card's `C_TX` while it is being rung (§3.5) |
 | Strobe decoder | 74HC138 | addressed by `SLOTQ`; `HCLK` on an active-low enable, so line *k* is low for **the second half of cell *k*** and its falling edge is the middle of the cell |
 | Write decoder | 74HC138 | `/BLK`·`WR`·`G` enables; `DST[2:0]` picks the latch to clock |
@@ -225,7 +232,7 @@ card.
 | function | part |
 |---|---|
 | Two detectors: filter, its inverse, the edge | 74HC14, two RC, two CR, two diodes |
-| Pull-ups for the card's `/ANS` and word pins (`extensions.md` §2.1) | two resistors |
+| Pull-ups for the card's `/ANS` and word pins (`extensions.md` §2.1): **~680 Ω** each | two resistors |
 | `ON`, `RB`, `A_RX`, the in-flight term, `BUSY` out, the clear | ½ 74HC02, ¾ 74HC08, ¼ 74HC00, ⅓ 74HC4075, ⅓ 74HC4073 |
 | | **≈ 3¼** |
 
@@ -244,9 +251,9 @@ marker reads:
 | class | | class | |
 |---|---|---|---|
 | 000 | unequipped | 100 | outside line |
-| 001 | line | 101 | tie trunk. Its direction, N, S, E or W, and its glare bit are among the word's option bits. The no-forward strap is a jumper a direction on the network card, not in the word (`network.md` §3.3) |
+| 001 | line | 101 | tie trunk. Its direction, N, S, E or W, and its glare bit are among the word's option bits. The no-forward jumper is one plug a direction on the network unit, not in the word (`network.md` §3.3) |
 | 010 | operator | 110 | data line |
-| 011 | source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z b L` (`extensions.md` §2.4). Warm is a call nail to 04. Conference leg as a class is retired: a bridge leg is an ordinary line |
+| 011 | source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z b 0` (`extensions.md` §2.4). Warm is a call nail to 04. Conference leg as a class is retired: a bridge leg is an ordinary line |
 
 **All ones is not class 111.** It is a separate constant: a plain line card ties
 its word pin to ground and reads `11111111`, which means *line, no options*,
@@ -292,15 +299,15 @@ Nothing in the fabric has less than three quarters of a microsecond in hand.
 
 ### 5.1 Physical form of a block
 
-Cable A and the mainboard shunt field are `mainboard.md`. What hangs off one
-tap is this:
+Fabric cable A and the mainboard **block shunt** are `mainboard.md`. What hangs
+off one tap is this:
 
 ```
-  cable A ──▶ mainboard (shunts: HC[h], HA[h], /BLK) ──▶ block shared board (§3.1)
+  fabric cable A ──▶ mainboard (block shunt: HC / HA / `/BLK`) ──▶ block shared board (§3.1)
                                                           │
-                                                          └─ internal 2 × 16 ribbon
+                                                          └─ **block ribbon** (2 × 16)
                                                                │
-                                               IDC tap 0 … IDC tap 7   ← "sockets"
+                                               IDC tap 0 … IDC tap 7   ← channel sockets
                                                                │
                                                     card + port circuit (§3.2, §3.5)
                                                     only when that slot is fitted
@@ -311,13 +318,13 @@ write decoders, highway drivers and receivers, the serial word path: ≈ 15¼
 packages of §3.1. It drives `HC[h]` / `HA[h]`, listens to every highway, and
 answers `/BLK`. It does not hold eight idle port circuits.
 
-**The card side is a star on a ribbon.** Electrically it is still §2 / `baseband.md`
-§2.1: six signals a slot point to point, clocks and rails common, no slot-ID,
-nothing contending. Physically that star is carried on an **internal 2 × 16
+**The card side is a star on a block ribbon.** Electrically it is still §2 /
+`baseband.md` §2.1: six signals a slot point to point, clocks and rails common,
+no slot-ID, nothing contending. Physically that star is carried on a **block
 ribbon** in the same connector family as the channel socket (`common-cards.md`
-§1). The IDC taps along the ribbon *are* the sockets. Commons run the length;
-per-slot lines peel to one tap. It is a loom that preserves the star, not a
-multi-drop bus for `C_TX`.
+§1). The IDC taps along the block ribbon *are* the channel sockets. Commons run
+the length; per-slot lines peel to one tap. It is a loom that preserves the
+star, not a multi-drop bus for `C_TX`.
 
 **A port circuit is populated only with its card.** The ≈ 8¼ packages of §3.2 and
 §3.5 — latch, selects, capture, supervision — sit with the card at that tap, not
@@ -326,38 +333,39 @@ pulled to `FILL`, A and `BUSY` at 0, and no word: unequipped (`mvp.md` §2). The
 MVP fits two port circuits on one block and leaves the other six out; that is the
 normal growth rule, not a special case.
 
-**What a line-card installation is.** Card + its port circuit on one ribbon tap.
-Shared logic and the highway stay on the block end of the ribbon. Two blocks of
-eight fitted ports fill an 84 HP subrack beside their cards; in SO-16 the shared
-board alone is a single Eurocard. Forty-eight lines are then about 500 packages
-of line cards, 640 of fabric and a hundred of common control.
+**What a line-card installation is.** Card + its port circuit on one block-ribbon
+tap. Shared logic and the highway stay on the block end of the block ribbon. Two
+blocks of eight fitted ports fill an 84 HP subrack beside their cards; in SO-16
+the shared board alone is a single Eurocard. Forty-eight lines are then about
+500 packages of line cards, 640 of fabric and a hundred of common control.
 
 ### 5.2 The block-adapter face — T + C
 
 A second stuffing of the same star: one board that is **eight ordinary slot
-appearances** electrically, collected at the block end of the ribbon, instead of
-eight IDC taps. That face is a fabric contract for an eight-appearance adapter.
+appearances** electrically, collected at the block end of the block ribbon,
+instead of eight IDC taps. That face is a fabric contract for an eight-appearance
+adapter.
 **MF8 trunks do not use it** — they tap the highway (`mf8-unit.md` §1).
 `mf8-unit.md` measured an eight-channel split that would have; that path is
 not taken.
 
 **Principle.** Each appearance is the same six per-slot signals a channel card
-uses on a ribbon tap (`common-cards.md` §1), same four pins a card may drive,
+uses on an IDC tap of the block ribbon (`common-cards.md` §1), same four pins a card may drive,
 same word and `/ANS`. The block's commutator, latches, captures and supervision
 are unchanged: they sit behind the collect as they sit behind a tap. The adapter
 does not tap `HC`/`HA`. What is block-scoped — one force that busies all eight
 ports together — is not smuggled onto a slot pin; it is a pin of its own.
 
 ```
-  cable A ──▶ mainboard ──▶ block shared board (§3.1)
+  fabric cable A ──▶ mainboard ──▶ block shared board (§3.1)
                                │
-                               ├─ P: internal 2 × 16 ribbon → IDC taps (line stuffing)
+                               ├─ P: **block ribbon** → IDC taps = channel sockets (line stuffing)
                                │
                                └─ T + C: collect of the star (adapter stuffing)
                                     eight port circuits still behind T
 ```
 
-**Dual footprint, one stuffing.** A block kept as lines populates the ribbon
+**Dual footprint, one stuffing.** A block kept as lines populates the block-ribbon
 taps (P). A block kept as an adapter group mates **T** and **C** and does not
 populate those taps. Mixing a line card with an adapter on the same block is
 not a configuration: there is nowhere to plug the card, and the group's
@@ -372,7 +380,7 @@ are spaced for separate cards, and a11 still would not carry a busy force.
 **`MUTE_BLK`.** Asserted by the adapter when the group must not be hunted —
 link down, unlocked, no carrier, or whatever failure domain that adapter owns.
 The block ORs it into its `BUSY` commutator (all eight inputs, or the `'151`'s
-output — one gate), strapped in when T is stuffed for an adapter. Pulled so an
+output — one gate), jumpered in when T is stuffed for an adapter. Pulled so an
 unfitted C does not busy a line stuffing. It is not a11 (common listen-only,
 tied locked in an exchange) and not a14 on slot 0 (per-slot spare that still
 wants eight taps). One dedicated pin is the path `network.md` §1 named.
@@ -385,14 +393,14 @@ or plant sits on its rear; the fabric never sees that rear.
 
 **What the block still has.** Eight port circuits behind T, the commutators
 including word and `BUSY`, a monitor pool that reads this block's M, the
-`MUTE_BLK` OR when strapped. Nothing on H for the adapter. A line stuffing
+`MUTE_BLK` OR when jumpered. Nothing on H for the adapter. A line stuffing
 leaves the OR off.
 
 **Who uses it.** The **local eight-channel highway trunk** (`local-trunk.md`)
 is the proposed user: T + C, rear a highway-shaped copper copy of eight `C`/`A`
 cells with far-mastered receive clocks. A conference block that wants the same
 collect would mate T and C with a different rear. Single-channel trunks and
-six-channel MF8 stay on the highway tap / ribbon (`network.md` §1.1,
+six-channel MF8 stay on the highway tap / block ribbon (`network.md` §1.1,
 `mf8-unit.md` §1). Scatter across arbitrary ports is out of scope for this
 face: one failure domain, one monitor, one `MUTE_BLK`.
 
@@ -430,7 +438,7 @@ could still be wrong.
 
 1. **Clock card alone**: `HCLK`, `SLOT`, `SLOTQ` a quarter cell behind it, `TX_CLK`,
    `FILL`. Scope `SLOTQ` against `HCLK`.
-2. **One block, shared board only, no ribbon taps fitted.** Every `C_TX` pulled to
+2. **One block, shared board only, no IDC taps fitted.** Every `C_TX` pulled to
    `FILL`: `HC[h]` is `1010`. Strobe line *k* low for the second half of cell *k*
    and at no other time — trigger on any edge outside it, with the block warm and
    cold (§5.1).

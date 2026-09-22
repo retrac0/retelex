@@ -36,16 +36,16 @@ cards, not a different marker.
 |---|---|---|
 | Clock card | `HCLK`, `SLOT`, `SLOTQ`, `TX_CLK`, `TX_OCT`, `FILL`, `RING_CAD`, the 1 kHz `TICK` (`fabric.md` §2) | 10 |
 | Block 2, its shared parts | commutators, strobe and write decoders, highway drivers and receivers (`fabric.md` §3.1) | 13 |
-| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** — a port circuit exists only with its card on a ribbon tap (`fabric.md` §5.1) | 17 |
+| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** — a port circuit exists only with its card on an IDC tap of the block ribbon (`fabric.md` §5.1) | 17 |
 | Marker | scanner, probe, sequencer. 0 and 9 go to hunts that find nothing; 8 to cannot-complete; **1 is a highway** (§2, §4). The mini-marker of `mini-marker.md` is this job with no word and no hunt | 15–20, estimated; the mini-marker is less |
 | One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`marker.md` §4). On the mini-marker it lives on the same card; the ribbon is the same (`common-control.md` §2.1) | 9 |
 | | **exchange logic** | **≈ 70** |
-| Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the shelf's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`channel-cards.md` §2, §3) | per card |
+| Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the block's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`channel-cards.md` §2, §3) | per card |
 | Power | 5 V for the logic; the 48 V feed | |
 
 **Not fitted, and not missed:** blocks 0, 1 and 3–7; tone cards and the
 ringback card; an operator; outside lines; a second register; trunks, the
-network card and monitors; the console. §2 and §4 say what a caller gets
+network unit and monitors; the console. §2 and §4 say what a caller gets
 without each, and §5 how each is added.
 
 ---
@@ -68,7 +68,7 @@ Everything absent reads as idle, and idle is what every rule already expects:
 | blocks 0 and 1 | `HC` = `FILL`, `HA` = 0: an absent block's wires are pulled there (`protocol.md` §3; `exch.py fabric` 2) | a cleared latch listens to port 00 (`fabric.md` §3.3). Port 00 is on block 0 and is never fitted anyway, so a cleared latch hears silence and A = 0 with or without block 0 |
 | an empty slot, or a slot with no port circuit | its commutator inputs pulled to `FILL`, 0 for `A` and `BUSY`, and its word pin pulled up: no word | class 000, *unequipped*: the marker never writes its latch, and dialling it gives cannot-complete |
 | the probe bus `PB` when an absent block is selected | **a pull-down on `BUSY`'s wire and a pull-up on the word's**: not busy, and no word, which is class 000 (`extensions.md` §2.2) | the scanner steps all 64 ports whatever is fitted |
-| the ringback card | `RBT` strapped to `FILL` | a caller hears silence while the other phone rings |
+| the ringback card | `RBT` tied to `FILL` | a caller hears silence while the other phone rings |
 | tone cards | the marker's hunt for dial tone and cannot-complete finds nothing, and the caller's latch is written cleared | silence where the tone would be; the call still completes (`exch.py calls` 12b, 19) |
 | the network unit, and the trunk ports with it | digit `1` is a highway: 10–17 are ordinary lines, none fitted here | a local `1 s` that lands on an empty slot is silence or cannot-complete the way any empty number is. The flood is the unit, which is not here (`common-control.md` §3, `protocol.md` §5) |
 | `/HUNT_INH` | pulled up: *accept*, so a hunt is the plain first-free-of-a-class | the one input by which a card not yet fitted will later steer a hunt (`marker.md` §4, `common-control.md` §2.4) |
@@ -180,7 +180,7 @@ the ribbon, which is enough for a one-direction flood (`common-control.md` §4).
 | lines 30–77 | blocks 3–7, ≈ 80 packages each when full | `fabric.md` §5 |
 | dial tone, busy, cannot-complete, ringback | tone cards at 01–03 (`protocol.md` §5), and the ringback card on the `RBT` bus. The marker reaches the switched tones by address; a source never listens, so it needs no port circuit | `features.md` §2; `fabric.md` §3.5 |
 | more registers | three at 48 lines of dial phones | `marker.md` §6 |
-| an operator (0) | a phone on any line card whose word says operator (the card's '165 fitted: `extensions.md` §2.2). 0 hunts that class in fixed order from 00, so 04 is its home once block 0 is fitted; 05–07 and dialable line slots follow | `operator.md`; `calls` 9 |
+| an operator (0) | a phone on any line card whose word says operator (the card's 2×'165 fitted: `extensions.md` §2.2). 0 hunts that class in fixed order from 00, so 04 is its home once block 0 is fitted; 05–07 and dialable line slots follow | `operator.md`; `calls` 9 |
 | the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `features.md` §4 |
 | outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
 | lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `terminal.md` |
@@ -220,7 +220,7 @@ the ribbon, which is enough for a one-direction flood (`common-control.md` §4).
   register, and neither is in the `calls` model, which has no probe bus and hunts
   by reading the class directly. Digit `1` as a highway in `calls` 19 is the
   standalone map; the flood is `exch.py net`.
-- **The pull-downs on `PB`, and `RBT` strapped to `FILL`.** The fabric model
+- **The pull-downs on `PB`, and `RBT` tied to `FILL`.** The fabric model
   measured absent blocks on the highways (`exch.py fabric` 2). The `calls` model
   has no probe bus and no `RBT` wire.
 - **The model's layout.** Its register is a port (03) and its tones would be

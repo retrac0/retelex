@@ -44,9 +44,8 @@
 // At TX_CLK's rate, 64 kHz, that is 32 + 16 + 1 periods: about three quarters
 // of a millisecond, less than the scanner spends on one block.
 //
-// A SLOWER CLOCK THAN THE MARKER'S, on purpose.  The blocks' shift registers
-// have no phase, only content (mainboard.md 2.3.2), so two masters need
-// not agree on a rate; the marker shifts at 512 kHz and this at 64.
+// Same SCLK rate as the marker: 128 kHz (mainboard.md 2.3.2).  The blocks'
+// shift registers have no phase, only content, so either master may drive.
 //
 // HOLD keeps the bus after the word.  With a marker fitted that STOPS the
 // marker: calls in progress carry on, because nobody is in charge of a call,
@@ -76,8 +75,8 @@
 `include "exch_defs.vh"
 
 module console #(
-    parameter integer DIV  = 64,      // master clocks an SCLK period: 64 kHz, TX_CLK's rate
-    parameter integer WAIT = 32       // periods of silence after /CON falls.  0 = take it at once
+    parameter integer DIV  = 32,      // master clocks an SCLK period: 128 kHz
+    parameter integer WAIT = 32       // SCLK periods of silence after /CON falls.  0 = take it at once
 )(
     input            clk,
     input            rst_n,
@@ -126,8 +125,8 @@ module console #(
     input            pb_word,
     output reg       sup_busy_dst,
     output reg       sup_busy_src,
-    output reg [7:0] sup_word_dst,
-    output reg [7:0] sup_word_src,
+    output reg [15:0] sup_word_dst,
+    output reg [15:0] sup_word_src,
     output reg       sup_seen
 );
     localparam S_IDLE = 3'd0, S_WAIT = 3'd1, S_SHIFT = 3'd2, S_STROBE = 3'd3,
@@ -141,7 +140,8 @@ module console #(
     reg [7:0]  nwait;
     reg [7:0]  d;
     reg        psync;                 // the probe's octet has begun
-    reg [7:0]  pw;                    // the card's word, one bit a frame
+    reg [15:0] pw;                    // the card's word, sixteen bits at 128 kHz
+    reg [4:0]  wdiv;
     reg        pb;
 
     localparam [7:0] DLAST = DIV[7:0] - 8'd1;
@@ -165,19 +165,21 @@ module console #(
     wire [15:0] w_first  = {1'b1, 1'b0, sw_dst, sw_src, sw_bsy, sw_clm};
     wire [15:0] w_second = {1'b1, 1'b0, sw_src, sw_dst, sw_bsy, sw_clm};
 
-    // Which port this pass is about: the one whose cell the probe reads.
-    wire [5:0] pport = second ? sw_src : sw_dst;
-    wire       pcell = (tick == `TICK_MID) && (slotq == pport[2:0]);
+    // Probe capture: PB is held on DST[2:0] for the whole visit (block.v), so
+    // sample BUSY and the card's word the same way the marker does — sixteen
+    // bits at 128 kHz over one octet (extensions.md 2.2).
     wire       oct_stb = frame_stb && tx_oct;
+    wire       w_take  = (wdiv == 5'd31);
+    wire [15:0] pw_next = {pb_word, pw[15:1]};
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             st <= S_IDLE; w <= 16'd0; rel <= 1'b0; prb <= 1'b0; pend <= 1'b0;
             nbit <= 5'd0; nwait <= 8'd0; d <= 8'd0; second <= 1'b0;
             sdata <= 1'b0; sclk <= 1'b0; wr <= 1'b0; done <= 1'b0;
-            psync <= 1'b0; pw <= 8'd0; pb <= 1'b0;
+            psync <= 1'b0; pw <= 16'd0; wdiv <= 5'd0; pb <= 1'b0;
             sup_busy_dst <= 1'b0; sup_busy_src <= 1'b0;
-            sup_word_dst <= 8'd0; sup_word_src <= 8'd0; sup_seen <= 1'b0;
+            sup_word_dst <= 16'd0; sup_word_src <= 16'd0; sup_seen <= 1'b0;
         end else begin
             done <= 1'b0;
             case (st)
@@ -213,7 +215,7 @@ module console #(
                     // a PROBE never strobes: the word steers /BLK and nothing else
                     if (nbit == 5'd1) begin
                         st <= prb ? S_PROBE : S_STROBE;
-                        psync <= 1'b0; pw <= 8'd0; pb <= 1'b0;
+                        psync <= 1'b0; pw <= 16'd0; wdiv <= 5'd0; pb <= 1'b0;
                     end
                 end
             end
@@ -234,23 +236,34 @@ module console #(
             S_PROBE: begin
                 // The bus is still the console's and WR never pulses, so nothing
                 // is written.  The block the word names is driving PB: read it
-                // for one whole octet, in the port's own cell, exactly as the
-                // marker reads a port at every visit (marker.v, the probe).
+                // for one whole octet at 128 kHz, exactly as the marker does
+                // (marker.v, the probe).
                 sclk <= 1'b0; wr <= 1'b0; sdata <= 1'b0;
                 if (!psync) begin
-                    if (oct_stb) begin psync <= 1'b1; pw <= 8'd0; end
+                    if (oct_stb) begin psync <= 1'b1; pw <= 16'd0; wdiv <= 5'd0; end
                 end else begin
-                    if (pcell) begin pb <= pb_busy; pw <= {pb_word, pw[7:1]}; end
                     if (oct_stb) begin
-                        if (second) begin sup_busy_src <= pb; sup_word_src <= pw; end
-                        else        begin sup_busy_dst <= pb; sup_word_dst <= pw; end
+                        if (second) begin
+                            sup_busy_src <= w_take ? pb_busy : pb;
+                            sup_word_src <= w_take ? pw_next : pw;
+                        end else begin
+                            sup_busy_dst <= w_take ? pb_busy : pb;
+                            sup_word_dst <= w_take ? pw_next : pw;
+                        end
+                        pw   <= 16'd0;
+                        wdiv <= 5'd0;
                         if (sw_both && !second) begin
                             w <= w_second; second <= 1'b1; nbit <= 5'd16; st <= S_SHIFT;
                         end else begin
                             done <= 1'b1; pend <= 1'b0; second <= 1'b0; sup_seen <= 1'b1;
                             st <= key_hold ? S_HELD : S_IDLE;
                         end
-                    end
+                    end else if (w_take) begin
+                        pb   <= pb_busy;
+                        pw   <= pw_next;
+                        wdiv <= 5'd0;
+                    end else
+                        wdiv <= wdiv + 1'b1;
                 end
             end
             S_HELD: begin                       // the bus is the console's, and quiet

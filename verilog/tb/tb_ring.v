@@ -1,4 +1,4 @@
-// tb_ring -- four exchanges in a RING, and the strap that keeps a flood from
+// tb_ring -- four exchanges in a RING, and the jumper that keeps a flood from
 // going round in circles.  network.md 3.3.
 //
 //        22  A ══ E/W ══ B  23
@@ -7,29 +7,29 @@
 //            ║             ║
 //        25  D ══ W/E ══ C  24
 //
-// The strap is a jumper a compass direction on the network card
+// The no-forward jumper is one plug a compass direction on the network unit
 // (extensions.md 2.2, STRAP_N), set on every channel of one link, at both ends:
 //
-//   a seizure is never forwarded INTO a strapped link, and a seizure that
+//   a seizure is never forwarded INTO a jumpered link, and a seizure that
 //   arrives ON one is never forwarded onward.  An origin may still seize it,
 //   and the far end may still claim.
 //
 //   1. A dials 1 2 4 2 1     24 is two hops either way.  The short way claims;
-//                            the long way and the strapped link are released,
+//                            the long way and the jumpered link are released,
 //                            and 24 must clear its OWN onward patch toward 25
-//   2. A dials 1 2 5 2 1     25 is the far end of the strapped link, and the
+//   2. A dials 1 2 5 2 1     25 is the far end of the jumpered link, and the
 //                            call reaches it TWICE -- once on the link, once the
 //                            long way round.  Both claim; no caller hears the
 //                            second; and which one the origin keeps is decided
 //                            by its SCANNER, not by which claimed first
-//   3. `make ring-open`      the same ring with the strap OUT: the flood comes
+//   3. `make ring-open`      the same ring with the jumper OUT: the flood comes
 //                            back to the exchange that made it, which forwards
 //                            it again, and the call eats a channel of every
 //                            link at each turn until the links are full
 `timescale 1ns/1ps
 
 module tb_ring #(
-    parameter         STRAP = 1'b1,      // 0: take the strap out and watch it circle
+    parameter         JUMPER = 1'b1,      // 0: take the jumper out and watch it circle
     parameter         TRACE = 1'b0
 ) ();
     localparam integer HIT = 1, ID = 16, CLR = 32;
@@ -39,8 +39,8 @@ module tb_ring #(
     localparam integer FR = 15625;
     localparam [1:0] N = 2'd0, S = 2'd1, E = 2'd2, W = 2'd3;
 
-    // the eight channels of each of an exchange's two trunk blocks (1 and 3)
-    localparam [63:0] TR = 64'h0000_0000_FF00_FF00;
+    // the six channels of each of an exchange's two trunk blocks (1 and 3)
+    localparam [63:0] TR = 64'h0000_0000_EE00_EE00;
 
     reg clk_a=0, clk_b=0, clk_c=0, clk_d=0, rst_n=0;
     always #122.0703 clk_a = ~clk_a;
@@ -67,9 +67,9 @@ module tb_ring #(
     wire [63:0] rx_a, rx_b, rx_c, rx_d;
     wire [63:0] ln_a, ln_b, ln_c, ln_d;
 
-    // A: 22.  Block 1 E toward B; block 3 W toward D -- the strapped link.
+    // A: 22.  Block 1 E toward B; block 3 W toward D -- the jumpered link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .NDIR(2),
-               .DIR0(E), .G0(1'b1), .DIR1(W), .N1(STRAP),
+               .DIR0(E), .G0(1'b1), .DIR1(W), .N1(JUMPER),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
     A (.clk(clk_a), .rst_n(rst_n),
@@ -106,9 +106,9 @@ module tb_ring #(
        .fan_legs(flc), .res_used(ruc), .port_busy(pbc), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // D: 25.  Block 1 W toward C; block 3 E toward A -- the strapped link.
+    // D: 25.  Block 1 W toward C; block 3 E toward A -- the jumpered link.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd5), .NDIR(2),
-               .DIR0(W), .DIR1(E), .G1(1'b1), .N1(STRAP),
+               .DIR0(W), .DIR1(E), .G1(1'b1), .N1(JUMPER),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250))
     D (.clk(clk_d), .rst_n(rst_n),
@@ -196,14 +196,14 @@ module tb_ring #(
     integer nch;
 
     initial begin
-        if (STRAP) $display("RING (RTL) -- 22 = 23 = 24 = 25 = 22, strapped on 25 = 22.\n");
-        else       $display("RING (RTL) -- the SAME ring with the strap OUT.\n");
+        if (JUMPER) $display("RING (RTL) -- 22 = 23 = 24 = 25 = 22, jumpered on 25 = 22.\n");
+        else       $display("RING (RTL) -- the SAME ring with the jumper OUT.\n");
         #4000 rst_n = 1;
         wait (&lka && &lkb && &lkc && &lkd);
         $display("  0. Four exchanges, four links, all locked.\n");
         #(20_000_000);
 
-        if (STRAP) begin
+        if (JUMPER) begin
         // ---- 1. two hops either way: the short way claims -----------------
         $display("  1. A's 20 dials 1 2 4 2 1 -- 24 is two hops either way round.");
         hk_a[6'o20] = 1; #(40_000_000);
@@ -211,10 +211,10 @@ module tb_ring #(
         #(80_000_000);
         snap("A flooded");
         wantn($countones(dha) == 2, $countones(dha),
-              "A seized both ways: an origin may seize a strapped link");
+              "A seized both ways: an origin may seize a jumpered link");
         want(mhb && mhc && mhd, "B, C and D all heard it");
         nch = ringchans;
-        wantn(nch == 8, nch, "eight channels: one a link, and ONE turn only");
+        wantn(nch == 8, nch, "eight trunk ends: one a link, and ONE turn only");
         dial_a(2);
         dial_a(4);
         #(40_000_000);
@@ -237,14 +237,14 @@ module tb_ring #(
         nch = ringchans;
         wantn(nch == 0, nch, "everything released");
 
-        // ---- 2. the far end of the strapped link, reached twice -----------
-        $display("\n  2. A's 20 dials 1 2 5 2 1 -- 25, the far end of the STRAP.");
+        // ---- 2. the far end of the jumpered link, reached twice -----------
+        $display("\n  2. A's 20 dials 1 2 5 2 1 -- 25, the far end of the JUMPER.");
         hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
         #(80_000_000);
         snap("A flooded");
         nch = $countones(pbd & TR);
-        wantn(nch == 2, nch, "25 got the call TWICE: on the strap, and the long way");
+        wantn(nch == 2, nch, "25 got the call TWICE: on the jumper, and the long way");
         dial_a(2);
         dial_a(5);
         #(40_000_000);
@@ -255,28 +255,28 @@ module tb_ring #(
         nch = $countones(pba & TR);
         wantn(nch == 1, nch, "A kept ONE claim and let the other go");
         // 3.3: the direct copy wins, "a hop away against many".  Both claims
-        // land in one scanner visit; under the settled map A's strapped link
+        // land in one scanner visit; under the settled map A's jumpered link
         // is block 3 and the long way is block 1.  Block 3 is the higher
-        // ports, but the claim on the strap is the one that stayed -- the
+        // ports, but the claim on the jumper is the one that stayed -- the
         // short way is one link, as 3.3 wants.
         nch = ringchans;
         wantn(nch == 2, nch,
-              "and it is the SHORT way: the strap's 1 link -- see 3.3");
+              "and it is the SHORT way: the jumper's 1 link -- see 3.3");
         nch = $countones(pba[31:24] & 8'hFF);
-        wantn(nch == 1, nch, "A's held trunk is the strapped one toward 25");
-        ring21(2 * (RING_ON + RING_OFF), "25's 21 rings, from the far end of the strap", 1);
+        wantn(nch == 1, nch, "A's held trunk is the jumpered one toward 25");
+        ring21(2 * (RING_ON + RING_OFF), "25's 21 rings, from the far end of the jumper", 1);
         hk_d[6'o21] = 1; #(20_000_000);
         want(ln_a[6'o20] && ln_d[6'o21], "answered, and no caller heard the second claim");
         p_a20d21.clear;
         path_en = 1; #(6_000_000); path_en = 0;
-        p_a20d21.report("speech A20 -> D21, over the strap");
+        p_a20d21.report("speech A20 -> D21, over the jumper");
         chk = chk + 1; if (p_a20d21.best_err != 0) errs = errs + 1;
         hk_d[6'o21] = 0; hk_a[6'o20] = 0; #(200_000_000);
         nch = ringchans;
         wantn(nch == 0, nch, "everything released");
 
         end else begin
-        // ---- 3. the strap out: the flood goes round and round -------------
+        // ---- 3. the jumper out: the flood goes round and round -------------
         $display("  1. A's 20 dials 1 2 4 ... with nothing to break the loop.");
         hk_a[6'o20] = 1; #(40_000_000);
         dial_a(1);
@@ -291,7 +291,7 @@ module tb_ring #(
         snap("settled");
         nch = ringchans;
         $display("     ONE call: high-water mark %0d of the ring's 48 trunk channels,", peak);
-        $display("     and %0d still held once it is up -- the strapped ring held 4.", nch);
+        $display("     and %0d still held once it is up -- the jumpered ring held 4.", nch);
         wantn(peak >= 40, peak, "the flood went round until the links were full");
         wantn(nch >= 8, nch, "and it settles at a channel on EVERY link, both ways");
         hk_a[6'o20] = 0; #(600_000_000);

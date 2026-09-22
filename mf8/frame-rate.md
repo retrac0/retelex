@@ -30,9 +30,9 @@ F + S + N channels must be a power of two, so **N = 2, 6, 14**.
 | 16 b | 14 | 32k | 512k | 1.024 M | 448k | 0.71× | 16 fr |
 | 16 b | 14 | 64k | 1024k | 2.048 M | 896k | 0.50× | 16 fr |
 
-The exchange uses that last row with **eight switched and six overhead**,
-not fourteen payload (`mf8-unit.md` §4.2, `mf8-spec.md` §2). Octet
-alignment is q[2:0] of the 16-state counter.
+The exchange uses the **8-bit / six-channel** row at 64 kbps on a 512 kbps
+line (`mf8-spec.md` §2). Eight- and ten-bit frames were measured and not
+taken (`mf8-unit.md`). Octet alignment is the 8-state superframe counter.
 
 Reach is the √f law scaled to a 256 kbps reference — the ratios
 are sound, the kilometres are not measured.
@@ -145,7 +145,7 @@ No other combination lands on 8 kHz:
 | **6** | **8 frames** | **8** | **8 kHz — one PCM sample** |
 | 14 | 16 frames | 16 | 4 kHz — two octets |
 
-**The catch is serious, and it is why the header matters.** `mfspec.md`'s
+**The catch is serious, and it is why the F word matters.** `mfspec.md`'s
 superframe phase was admitted wrong for 56 of 64 hook states, which there
 misroutes signalling. If octet alignment rides the same phase, a wrong phase
 **rotates every PCM sample** — garbage audio on a link that is otherwise
@@ -194,5 +194,5 @@ Caveats:
 - §3.1 is 0.25 s × 4 seeds at one impulse rate on one assumed span loss. The
   ordering is the finding; the magnitudes are thin.
 - The 4-bit and 16-bit frame lengths are arithmetic here. Only N = 6 has a
-  validated header (`mf8-spec.md`); the others need their own framing word and
-  guard positions, and the mis-strap case between them is unmeasured.
+  validated F word (`mf8-spec.md`); the others need their own framing word and
+  guard positions, and the mis-jumper case between them is unmeasured.

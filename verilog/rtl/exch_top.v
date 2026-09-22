@@ -46,6 +46,8 @@ module exch_top #(
     input                sdata,
     input                sclk,
     input                wr,
+    input                con_n,          // high: marker; low: console has the bus
+    input      [2:0]     scan_port,      // marker scanner[2:0] for the probe mux
     output               pb_busy,
     output               pb_word,
     output     [63:0]    port_busy,      // each block's eight BUSY lines, for its monitor
@@ -57,7 +59,7 @@ module exch_top #(
     output     [2:0]     slotq,
     output     [2:0]     tick,           // the cell's eighths: a trunk card's encoder wants them
     output               hclk,
-    output               hb,
+    output               line_hb,
     output               tx_clk,
     output               frame_stb,
     output               tx_oct,
@@ -74,7 +76,7 @@ module exch_top #(
 
     clock_card #(.RING_ON(RING_ON), .RING_OFF(RING_OFF)) u_clk (
         .clk(clk), .rst_n(rst_n),
-        .tick(tick), .hclk(hclk), .hb(hb), .slot(slot), .slotq(slotq),
+        .tick(tick), .hclk(hclk), .line_hb(line_hb), .slot(slot), .slotq(slotq),
         .cap_stb(cap_stb), .tx_clk(tx_clk), .frame_stb(frame_stb),
         .tx_oct(tx_oct), .rx_oct(rx_oct), .fill(fill),
         .ring_cad_n(ring_cad_n_clk), .tick_1k(tick_1k));
@@ -108,6 +110,7 @@ module exch_top #(
                 .c_tx(c_tx[h*8 +: 8]), .a_tx(a_tx[h*8 +: 8]), .word(word[h*8 +: 8]),
                 .c_rx(c_rx[h*8 +: 8]), .a_rx(a_rx[h*8 +: 8]),
                 .blk(blk_to_block[h]), .sdata(sdata), .sclk(sclk), .wr(wr),
+                .con_n(con_n), .scan_port(scan_port),
                 .blk_dec(blk_dec[h*8 +: 8]),
                 .pb_busy(pb_busy_b[h]), .pb_word(pb_word_b[h]),
                 .port_busy(port_busy[h*8 +: 8]));

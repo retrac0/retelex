@@ -10,6 +10,10 @@ G.711 PCM stream.
 Every number here was measured by `mf8.py` unless it is marked as analysis.
 §15 lists what has not been measured.
 
+> **This is the MF8 used on trunks.** Eight- and ten-bit frames were measured
+> (`mf8_16.py`, `mf8_10.py`, `mf8_10_16.py`, `mf8_baud.py`; `exchange/mf8-unit.md`)
+> and are **not taken**.
+
 ## 1. What changed from `mfspec.md`, and why
 
 | | `mfspec.md` | this spec |
@@ -44,8 +48,8 @@ S sits at bit 4, half a frame from F, and not beside it. That is the one
 geometric choice in the frame, and §3.4 is why: the framing check reads F and S,
 and at a wrong bit alignment those two reads land on two other lanes 4 apart.
 With S beside F, two of the seven wrong alignments read one data card and one
-header bit, and a single data card can hold either of them open. With S
-opposite F, the header can only ever land on itself.
+F-word bit, and a single data card can hold either of them open. With S
+opposite F, the F word can only ever land on itself.
 
 **Superframe — 8 frames, 125 µs, 8 kHz:**
 
@@ -68,7 +72,7 @@ and it is the octet counter (§6).
 
 ---
 
-## 3. The header
+## 3. The F word
 
 ### 3.1 F — the word `11111110`
 
@@ -180,7 +184,7 @@ those are* decides whether the wrong alignment can be held:
 | skew | read as F | read as S | |
 |---|---|---|---|
 | 1, 2, 3 | C1, C2, C3 | C4, C5, C6 | two payload lanes, three seats apart |
-| **4** | **S** | **F** (next frame) | **the header on itself** |
+| **4** | **S** | **F** (next frame) | **the F word on itself** |
 | 5, 6, 7 | C4, C5, C6 | C1, C2, C3 (next frame) | two payload lanes, three seats apart |
 
 At skew 4 the S lane passes for the word only with every channel off-hook
@@ -194,7 +198,7 @@ apart — which is §5's rule, and the whole of it.
 **With S beside F**, at bit 1 — the previous layout — the table reads
 differently. Skew 1 reads S as F and C1 as the guard; skew 7 reads C6 as F and
 the *next frame's F* as the guard. Each of those is **one data card plus the
-header**, and the header is fixed content, so a single data card holds either
+F word**, and the F word is fixed content, so a single data card holds either
 open on its own. As found, with the guard then at 3,5:
 
 - **Seat 6, byte `0x7F`.** `01111111` in C6 passes for the word, and the real F
@@ -328,7 +332,7 @@ more 74HC193, clocked by the guard enable the decode already produces (§11).
 ### 4.1 False locks — measured
 
 Every start-up skew, every payload class this project has used to break a framer,
-plus the adversarial case constructed against *this* header:
+plus the adversarial case constructed against *this* F word:
 
 | payload | locks | **false** | wrong sf phase | acquisition, frames |
 |---|---|---|---|---|
@@ -450,7 +454,7 @@ event is a mute of a few milliseconds, not a call with the wrong channels in it.
 This is the same kind of rule a 4-bit static framing word needs ("any seat, but
 never two adjacent"); here the forbidden spacing is three because S is at bit 4.
 A frame that carries a signalling bit in *every* frame can avoid needing it, by
-strapping that bit high so one half of the check is never arbitrary data — a bit
+jumpering that bit high so one half of the check is never arbitrary data — a bit
 this frame does not have, because signalling is sub-commutated into the
 superframe. **That is the price of §2's efficiency, stated plainly: three data
 cards of six, not six — 1,2,3 or 4,5,6, or any three with no two three apart.**
@@ -603,7 +607,7 @@ so 64 kbps channels are available at any reach, at two of them for 1.00× or six
 for 0.71×.
 
 Only N = 6 is specified here. The other frame lengths need their own F word and
-guard positions, and the mis-strap case between them is **not measured**.
+guard positions, and the mis-jumper case between them is **not measured**.
 
 ---
 
@@ -636,12 +640,12 @@ the 2.048 MHz half-bit clock of the fastest family rate, with the one divide a
 Pierce oscillator's duty cycle needs. Nothing on the card needs a faster clock.
 
 ```
-4.096 MHz ─→ 74HC4040 prescaler ─→ RATE jumper ─→ HB, half-bit clock
+4.096 MHz ─→ 74HC4040 prescaler ─→ RATE jumper ─→ LINE_HB, half-bit clock
                                                        │
                                                  ÷2 ─→ H, line bit clock
 ```
 
-| rate jumper | line rate | HB (half-bit) | H (line bit) |
+| rate jumper | line rate | LINE_HB (half-bit) | H (line bit) |
 |---|---|---|---|
 | Q1 | 1024 kbps | 2.048 MHz | 1.024 MHz |
 | **Q2** | **512 kbps — this spec** | **1.024 MHz** | **512 kHz** |
@@ -652,8 +656,8 @@ Pierce oscillator's duty cycle needs. Nothing on the card needs a faster clock.
 The frame counter is clocked from H rather than taken as a tap on the prescaler.
 The rate jumper moves the half-bit tap, so on one ripple chain the frame counter
 would move with it and the mux address would need a matrix of jumpers. Re-clocked
-from H, its bits sit on fixed pins at every strap. **That one 74HC393 is the whole
-price of the rate strap.**
+from H, its bits sit on fixed pins at every jumper. **That one 74HC393 is the whole
+price of the rate jumper.**
 
 **Accuracy is nearly irrelevant.** The far-end receiver tolerates ±13% of a cell
 and the oscillator contributes ~0.01%. Specify the crystal for unit-to-unit
@@ -666,14 +670,14 @@ stages of a '393 — tens of nanoseconds against a settling budget of half a cel
 ### 9.2 Encoder circuit — one gate, one flip-flop
 
 §9.2, unchanged. Let `H` be the half-cell phase (0 in the
-first half of a line cell, 1 in the second) and `HB` the half-bit clock:
+first half of a line cell, 1 in the second) and `LINE_HB` the half-bit clock:
 
 ```
         line bit ──┐
                    ├── NAND ──> EN ──┬── J ┐
         /H ────────┘                 └── K ┤ 74HC74/109  ──> line
-                                           │  clocked by HB
-        HB ────────────────────────────────┘
+                                           │  clocked by LINE_HB
+        LINE_HB ────────────────────────────────┘
 
 EN = NAND(/H, line bit) = H OR NOT(line bit)
 ```
@@ -686,7 +690,7 @@ EN = NAND(/H, line bit) = H OR NOT(line bit)
 | 0 | 1 | **0** | mid-cell — **hold**, encoding a 1 |
 
 A JK wired J = K = EN toggles when EN is high and holds when it is low, which is
-exactly the code. H and the flip-flop are both clocked from HB; the JK samples
+exactly the code. H and the flip-flop are both clocked from LINE_HB; the JK samples
 H's value from *before* the edge, so same-edge synchronous clocking is correct,
 but it depends on the divider's clock-to-Q exceeding the JK's hold time. 74HC
 satisfies that comfortably — **check it against the specific parts, because a
@@ -802,7 +806,7 @@ set per direction.
 ## 10. Transmitter
 
 ```
-4.096 MHz ─→ 74HC4040 ─→ RATE jumper ─→ half-bit clock HB ─→ biphase encoder
+4.096 MHz ─→ 74HC4040 ─→ RATE jumper ─→ half-bit clock ─→ biphase encoder
                                               │
                                         ÷2 ─→ H, line bit clock
                                               │
@@ -872,7 +876,7 @@ section is the engine they share and the rules they obey.
 
 Semi-analog CVSD, E&M four-wire. **The law is MIL-STD-188-113's — the DNVT's —
 run at 64 kbps.** The card's components set slew, not step size, so the same
-card runs at any family rate with no strap.
+card runs at any family rate with no jumper.
 
 | parameter | this card | MIL-STD-188-113, at 16 and 32 kbps |
 |---|---|---|
@@ -1099,8 +1103,8 @@ a floor computed on the same window.
 
 **Not measured at all:**
 
-- **Mis-strap between family members** (N = 2, 6, 14). A period-4 word defeats a
-  ×2 mis-strap by a divisibility argument; the equivalent argument for
+- **Mis-jumper between family members** (N = 2, 6, 14). A period-4 word defeats a
+  ×2 mis-jumper by a divisibility argument; the equivalent argument for
   `11111110` has not been made or tested.
 - **The other frame lengths.** Only N = 6 has an F word and guard positions.
 - **The residual slot-rule risk beyond pairs.** Three data cards at seats
@@ -1184,4 +1188,4 @@ Caveats that affect how the numbers should be read:
   32-frame acquisition but short for rare events.
 - Speech is one talker rolled per channel, as elsewhere in this repository.
 - this document is the review this design came out of, and records what the
-  original header did and why each change here is here.
+  original F word did and why each change here is here.

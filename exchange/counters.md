@@ -16,17 +16,17 @@ marker says the things no latch write says, in a word that writes nothing.
 
 > **Status: proposed; the counting measured in RTL.** `verilog/rtl/stats.v` is the
 > card and `verilog/tb/tb_stats.v` drives `ctl_write` with the exact sequence of
-> words `marker.v` pushes for five calls, checking what each strap field counts.
+> words `marker.v` pushes for five calls, checking what each jumper field counts.
 > It passes under both Icarus and Verilator. The parts are a sketch from the
 > monitor's and the block's; nothing has been drawn and nothing has been on a
 > bench. §3's negative result — that an outbound and an inbound completion are
-> the same sixteen bits — is measured, and it is the reason the fourth strap is
+> the same sixteen bits — is measured, and it is the reason the fourth jumper is
 > not the one first asked for.
 >
 > **§9, the event word, is built**: `marker.v` sends one for each of five
 > occasions, `ctl_write.v` carries the guard bit, and `tb_stats.v` and
-> `tb_stress.v` measure both halves of the claim — that a plain strap counts
-> them, and that not one of them reaches a strap meant for a call.
+> `tb_stress.v` measure both halves of the claim — that a plain jumper counts
+> them, and that not one of them reaches a jumper meant for a call.
 
 ---
 
@@ -35,7 +35,7 @@ marker says the things no latch write says, in a word that writes nothing.
 | | parts |
 |---|---|
 | the word | 1 × 74HC164 — `SRC[5:0]`, `BSY`, `CLM` |
-| the strap field | 1 × 74HC688, eight three-way straps |
+| the jumper field | 1 × 74HC688, eight three-way jumpers |
 | the count | 4 × 74HC161 — sixteen bits, and 16 LEDs |
 | the match | ¼ gate, inverting the '688's active-low answer into `ENP`/`ENT` |
 | | **≈ 6¼ packages**, 16 LEDs, one reset key |
@@ -62,17 +62,17 @@ it does not care whether `SCLK` is gated or free-running.
 
 ---
 
-## 2. The strap field is the '688's Q side
+## 2. The jumper field is the '688's Q side
 
 A '688 compares eight bits and has no mask input, but a don't-care costs
-nothing: **strap `Q`ᵢ to `P`ᵢ and that bit always matches.** Three ways a bit —
+nothing: **jumper `Q`ᵢ to `P`ᵢ and that bit always matches.** Three ways a bit —
 ground, Vcc, or `P`ᵢ — and one package is any pattern over `SRC`+`BSY`+`CLM`. It
 is the same bargain as the mainboard's shunt column: the card is one design and
 a jumper says what it is.
 
-`P` below means the strap is left on `P`ᵢ — don't care.
+`P` below means the jumper is left on `P`ᵢ — don't care.
 
-| strapped for | `SRC[5:0]` | `BSY` | `CLM` | what it counts |
+| jumpered for | `SRC[5:0]` | `BSY` | `CLM` | what it counts |
 |---|---|---|---|---|
 | **cannot-complete given** | `000011` (`o03`) | 1 | `P` | every failure: wrong numbers, empty slots, no free trunk, no free register |
 | **dial tone given** | `000001` (`o01`) | 1 | 0 | one a call **originating** here — the calling rate `marker.md` §6 assumes |
@@ -85,14 +85,14 @@ a jumper says what it is.
 The first four are the card's four; the last two come free from the same field.
 
 **The tone ports are jumpered here as they are at the marker.** `DIALTONE` and
-`NOGO` are port numbers, and the card's straps carry the same two numbers the
+`NOGO` are port numbers, and the card's jumpers carry the same two numbers the
 marker's own jumpers do.
 
 ---
 
 ## 3. Measured: outbound and inbound are the same word
 
-The fourth strap was first written as *outbound completed*. It cannot be.
+The fourth jumper was first written as *outbound completed*. It cannot be.
 
 | | the write | the word |
 |---|---|---|
@@ -106,7 +106,7 @@ at the caller seconds earlier when the flood was seized; an inbound one is the
 previous word — two more packages and a strobe eight `SCLK` into the next word —
 and that is not a pattern counter.
 
-So the strap counts **calls completed over a trunk, both directions**, which is
+So the jumper counts **calls completed over a trunk, both directions**, which is
 honest and still useful: against *dial tone given* it splits the exchange's
 traffic into local and network. At a **hub** it also counts every tie-through and
 resolver write, because those have a trunk as `SRC` too; at a leaf it does not.
@@ -130,8 +130,8 @@ limitation of the card, it is the architecture, and it is why §5 exists.
 counts words the blocks themselves may have rejected on a bad guard. For a
 counter that is tolerable; for a route it would not be.
 
-**`DST` is unread**, so no strap can ask *which port was written*. That wants a
-second '164 and a second '688 — a different strap field, not a different card.
+**`DST` is unread**, so no jumper can ask *which port was written*. That wants a
+second '164 and a second '688 — a different jumper field, not a different card.
 It is also why §9's event word can carry a port in `DST` for free: this card
 cannot see it, and the cards that can (`observers.md` §5, §6) are looking at
 the whole word anyway.
@@ -159,7 +159,7 @@ That is why the card carries one counter and not two: a second row would want
 
 **How long before it wraps**, at 48 lines and 3 calls a line an hour:
 
-| strapped for | a busy hour | 65 536 counts |
+| jumpered for | a busy hour | 65 536 counts |
 |---|---|---|
 | dial tone given | 144 | 19 days |
 | cannot-complete given | ≈ 22 | 124 days |
@@ -168,7 +168,7 @@ That is why the card carries one counter and not two: a second row would want
 | every write | ≈ 720 | **3.8 days** |
 
 Sixteen bits is what makes *since reboot* mean something for the four; the
-occupancy strap is the one to read weekly.
+occupancy jumper is the one to read weekly.
 
 ---
 
@@ -179,7 +179,7 @@ sequences for five calls — a local call that connects, one that does not, an
 outbound network call, an inbound call claimed here, and an inbound call with no
 register free — and reads six cards on the ribbon:
 
-| strapped for | counted | expected |
+| jumpered for | counted | expected |
 |---|---|---|
 | dial tone given | 3 | one per originating call |
 | cannot-complete given | 2 | the local failure and the claimed one |
@@ -197,16 +197,16 @@ counts land, so the chain is wider than one '161.
 
 - **Against a running network.** The bench replays the marker's words; it does
   not yet sit inside `tb_net` or `tb_hub` and check the totals those benches
-  already know. That is the run that would prove the strap patterns are complete
+  already know. That is the run that would prove the jumper patterns are complete
   as well as correct — in particular whether the marker ever writes a word this
-  card's straps misread.
-- **A hub's tie-throughs** against the trunk strap, which §3 predicts are counted
+  card's jumpers misread.
+- **A hub's tie-throughs** against the trunk jumper, which §3 predicts are counted
   and a leaf's are not. Not run.
 - **The console's writes.** The bus is multi-master (`mainboard.md` §2.3);
   a word from the operator's console counts exactly as the marker's does, which
   is probably right and has not been thought through.
 - **The circuit.** A sketch from the block's front end and the monitor's
-  counter. The '688's don't-care strap, the match into `ENP`/`ENT`, and `WR` as
+  counter. The '688's don't-care jumper, the match into `ENP`/`ENT`, and `WR` as
   the chain's clock against the '161's setup time have not been drawn.
 - **The reset key**, which in `stats.v` is synchronous to the model's one clock
   domain and in the card is the '161's asynchronous clear.
@@ -244,16 +244,16 @@ That is a safety rule, and it is also a second channel on the same wire.
  0    0     a port      a CODE       0    1     an EVENT.  No block writes anything at all
 ```
 
-- **Nothing at a block changes.** Not a gate, not a strap, not a conductor. The
+- **Nothing at a block changes.** Not a gate, not a jumper, not a conductor. The
   word shifts through the same two '164 and is refused by the same quarter
   package that already refuses a word with a bad guard.
 - **This card cannot tell the difference, and that is the point.** §1: bits 15–8
   fall out of the end unread, so a G = 0 word clocks the '688 and the '161 chain
-  exactly as a write does. **A plain strap counts an event.**
+  exactly as a write does. **A plain jumper counts an event.**
 - **`BSY` = 0 with `CLM` = 1 is what keeps the two apart.** Every write the
   marker makes that sets `CLM` also sets `BSY` — a claim is a *seized* trunk —
   so that combination is one no latch write ever carries. Sixty-four codes live
-  under it, in `SRC`, and a strap for one of them can never count a call. §9.4
+  under it, in `SRC`, and a jumper for one of them can never count a call. §9.4
   measures both halves of that.
 - **`DST` is free.** Nothing writes, so the field can say which port the event is
   about. This card cannot read it (§4) and does not need to; `observers.md`
@@ -280,7 +280,7 @@ That is a safety rule, and it is also a second channel on the same wire.
 
 | | |
 |---|---|
-| the bus | 31 µs at 512 kHz, the same as any word, on an occasion that happens a handful of times an hour |
+| the bus | 125 µs at 128 kHz, the same as any word, on an occasion that happens a handful of times an hour |
 | the probe | **an event steers `/BLK` exactly as a write does**, so it dirties the probe and costs the same repeated visit (`rtl.md`, "steering the probe costs a visit"). Setting `DST` to the block the scanner is already on would make it free; carrying the port is worth more than one visit in a 9 ms scan |
 | a call | **nothing.** An event is pushed only when the sequencer has room to spare and is simply dropped when it has not, so no caller ever waits behind a diagnostic. The counts are therefore **lower bounds**, and the occasion they would drop is the busiest one — which is what `o03` is for |
 | the marker | the guard becomes a bit of the sequencer's word instead of a tie to Vcc; four flip-flops for "a trunk faces this way at all", one for the register spell, one for the overrun |
@@ -295,10 +295,10 @@ now sends seven event words after them:
 |---|---|
 | every event (`BSY` 0, `CLM` 1, code don't-care) | 7 of 7 |
 | a caller waited for a register | 2 |
-| all trunks busy — **all four directions on one card**, the two low bits strapped to `P`ᵢ | 2 |
+| all trunks busy — **all four directions on one card**, the two low bits jumpered to `P`ᵢ | 2 |
 | glare | 1 |
-| **the five straps meant for calls** — dial tone, cannot-complete, trunks let go, calls over a trunk, claims | **unchanged, every one** |
-| the occupancy strap | 25: every word on the bus, which is what it asks for and the one strap that is not fooled because it is not trying to be |
+| **the five jumpers meant for calls** — dial tone, cannot-complete, trunks let go, calls over a trunk, claims | **unchanged, every one** |
+| the occupancy jumper | 25: every word on the bus, which is what it asks for and the one jumper that is not fooled because it is not trying to be |
 
 **`verilog/tb/tb_stress.v`**, forty-eight callers and real traffic, carries five
 such cards on each exchange's ribbon. It checks the invariant the whole scheme
@@ -339,7 +339,7 @@ overran. **Those four are unexercised**, and §9.5 says so.
   collision; the stress bench makes line glare likely and trunk glare only
   possible.
 - **Four of the five codes have never fired in a real run.** `tb_stats` sends
-  them by hand and the straps count them; nothing has yet driven `marker.v` into
+  them by hand and the jumpers count them; nothing has yet driven `marker.v` into
   sending `o02`, `o03`, `o04` or `o10`–`o13`. The trunk ones want the pair run
   with every channel seized, and `o04` wants a collision built on purpose.
 - **A hub's congestion.** `o10`–`o13` are the *origin's* hunt. The forwarder at

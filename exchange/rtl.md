@@ -134,7 +134,7 @@ therefore cannot probe a block without first shifting a word naming it. That is
 safe — §2.3.2's "nothing reads the outputs until `WR`" is what makes it safe,
 and the marker shifts such a word with `WR` suppressed — but it is not free:
 
-- the word takes 31 µs at 512 kHz and the visit it governs takes its first `PB`
+- the word takes 125 µs at 128 kHz and the visit it governs takes its first `PB`
   sample about 1 µs in, so **a re-point can never complete before the visit it
   is for**. The first visit of every block reads the previous block's `BUSY` and
   word, and in the port map that is `00`, `10` and the first line of every block
@@ -195,7 +195,7 @@ of 0. The document is right and exact; it is worth implementing exactly.
   now, so `monitor.md` §4's Erlang table can be *measured* against offered
   traffic. It has not been.
 - **Still unbuilt**: fan-out and the resolvers of `network.md` §3.2, rings
-  and the strap (the `n` bit is decoded and both halves of its rule are in, but
+  and the jumper (a jumper a direction, not an option bit; both halves of its rule are in, but
   nothing closes a loop), the conference bridge, data cards, outside lines,
   nailed-up connections, and every option bit of `extensions.md` §2.2 beyond
-  a trunk's direction, glare and strap.
+  a trunk's direction, glare and jumper.

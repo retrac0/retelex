@@ -17,11 +17,11 @@
 // blocks themselves may have rejected on a bad guard.  For a counter that is
 // tolerable.  For a route it would not be.
 //
-// THE STRAP FIELD IS THE '688's Q SIDE.  A '688 compares eight bits and has no
-// mask input, but a don't-care costs nothing: strap Qi to Pi and that bit
+// THE JUMPER FIELD IS THE '688's Q SIDE.  A '688 compares eight bits and has no
+// mask input, but a don't-care costs nothing: jumper Qi to Pi and that bit
 // always matches.  Three ways a bit -- ground, Vcc, or Pi -- and one package
 // is any pattern over SRC+BSY+CLM.  Here that is (PAT, ANY): ANY[i] set is
-// the strap left on Pi.
+// the jumper left on Pi.
 //
 // CLOCKED BY WR.  The '688's answer is stable through the whole pulse, because
 // mainboard.md 2.3.2's one rule already keeps WR clear of every SCLK edge
@@ -35,7 +35,7 @@
 `timescale 1ns/1ps
 
 module stats #(
-    // The strap field: the pattern, and which straps are left on Pi.
+    // The jumper field: the pattern, and which jumpers are left on Pi.
     parameter [5:0] SRC     = 6'o03,        // NOGO: cannot-complete given
     parameter       BSY     = 1'b1,
     parameter       CLM     = 1'b0,
@@ -64,7 +64,7 @@ module stats #(
     wire [7:0] pat = {SRC,     BSY,     CLM};
     wire [7:0] any = {SRC_ANY, BSY_ANY, CLM_ANY};
 
-    // the '688, with the don't-care straps: equal, or strapped to itself
+    // the '688, with the don't-care jumpers: equal, or jumpered to itself
     assign match = &((sr ~^ pat) | any);
     assign count = cnt;
 

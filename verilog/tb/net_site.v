@@ -23,7 +23,7 @@ module net_site #(
     parameter [2:0]   OWN_E = 3'd2,
     parameter [2:0]   OWN_B = 3'd2,
     // How many directions this exchange has, and for each its direction, its
-    // glare bit (in the card's word) and its no-forward strap (STRAP_N on the
+    // glare bit (in the card's word) and its no-forward jumper (STRAP_N on the
     // marker, not in the word).  N=0 S=1 E=2 W=3.
     parameter integer NDIR = 1,
     parameter [1:0]   DIR0 = 2'd2,
@@ -49,11 +49,11 @@ module net_site #(
     // Per-port line words (extensions.md 2.2).
     // Default all-ones = grounded plain line.
     // Class: {ppp, ccc, 2'b11}; answers {hs, 2'b01}; call nail {hs, 2'b10}; tied nail {hs, 2'b00}.
-    parameter [7:0]   LINE_WORD_04 = 8'hFF,
-    parameter [7:0]   LINE_WORD_20 = 8'hFF,
-    parameter [7:0]   LINE_WORD_21 = 8'hFF,
-    parameter [7:0]   LINE_WORD_22 = 8'hFF,
-    parameter [7:0]   LINE_WORD_23 = 8'hFF,
+    parameter [15:0]  LINE_WORD_04 = 16'hFFFF,
+    parameter [15:0]  LINE_WORD_20 = 16'hFFFF,
+    parameter [15:0]  LINE_WORD_21 = 16'hFFFF,
+    parameter [15:0]  LINE_WORD_22 = 16'hFFFF,
+    parameter [15:0]  LINE_WORD_23 = 16'hFFFF,
     parameter integer NMON = 2,                  // cells in each block's pool (4)
     parameter integer NREG = 2,                  // registers in the pool
     parameter integer NRES = 2                   // resolvers: a forward is held until it resolves (3.2)
@@ -87,7 +87,7 @@ module net_site #(
     output        wr_stb,        // the last latch write the marker sent
     output [5:0]  wr_dst, wr_src,
     output        wr_bsy, wr_clm,
-    // counters.md 9: five counter cards on the ribbon, strapped for the
+    // counters.md 9: five counter cards on the ribbon, jumpered for the
     // marker's event words.  { glare, nodig, notrunk, waitreg, any }
     output [79:0] ev_cnt
 );
@@ -95,11 +95,13 @@ module net_site #(
 
     // Which block each direction's trunk group sits on: 1, then 3, 4 and 5 —
     // block 0 is tones + the operator bank; block 2 is the lines.
-    // Class form: 11 ccc ppp.  Trunk options d d g in frames 5–7; n is STRAP_N.
-    localparam [7:0] WORD0 = {G0, DIR0, 3'b101, 2'b11};
-    localparam [7:0] WORD1 = {G1, DIR1, 3'b101, 2'b11};
-    localparam [7:0] WORD2 = {G2, DIR2, 3'b101, 2'b11};
-    localparam [7:0] WORD3 = {G3, DIR3, 3'b101, 2'b11};
+    // Class form + tagged secondary (extensions.md 2.2):
+    // primary 11 101 000; tag 10; payload {DIR, G, 000}.
+    // WORD = {DIR, G, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11}
+    localparam [15:0] WORD0 = {DIR0, G0, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
+    localparam [15:0] WORD1 = {DIR1, G1, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
+    localparam [15:0] WORD2 = {DIR2, G2, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
+    localparam [15:0] WORD3 = {DIR3, G3, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
     localparam [3:0] STRAP_N = ({3'b000, N0} << DIR0) | ({3'b000, N1} << DIR1)
                              | ({3'b000, N2} << DIR2) | ({3'b000, N3} << DIR3);
 
@@ -125,6 +127,7 @@ module net_site #(
     wire        sdata, sclk, wr;
     wire [31:0] t_c_tx, t_a_tx, t_word;          // eight slots a direction
     wire        oct_stb = frame_stb & tx_oct;
+    wire [2:0]  scan_port;
 
     assign port_busy = pbusy;
 
@@ -141,9 +144,10 @@ module net_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(sdata), .sclk(sclk), .wr(wr),
+            .con_n(1'b1), .scan_port(scan_port),
             .pb_busy(pb_busy), .pb_word(pb_word), .port_busy(pbusy),
             .hc(), .ha(ha),
-            .slot(slot), .slotq(slotq), .tick(tick), .hclk(), .hb(), .tx_clk(),
+            .slot(slot), .slotq(slotq), .tick(tick), .hclk(), .line_hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
 
@@ -169,7 +173,7 @@ module net_site #(
                 (p == 6'o20) ? LINE_WORD_20 :
                 (p == 6'o21) ? LINE_WORD_21 :
                 (p == 6'o22) ? LINE_WORD_22 :
-                (p == 6'o23) ? LINE_WORD_23 : 8'hFF
+                (p == 6'o23) ? LINE_WORD_23 : 16'hFFFF
             )) u_c (
                            .clk(clk), .frame_stb(frame_stb), .tx_oct(tx_oct),
                            .tx(tx[p]), .rx(rx[p]), .m(hook[p]), .e(e[p]),
@@ -191,7 +195,7 @@ module net_site #(
     generate for (g = 0; g < 4; g = g + 1) begin : dir
         if (g < NDIR) begin : fitted
             localparam integer B = (g == 0) ? 1 : (g == 1) ? 3 : (g == 2) ? 4 : 5;
-            localparam [7:0] W = (g == 0) ? WORD0 : (g == 1) ? WORD1 :
+            localparam [15:0] W = (g == 0) ? WORD0 : (g == 1) ? WORD1 :
                                  (g == 2) ? WORD2 : WORD3;
 
             mf8_trunk_card #(.T_A(T_A), .WORD(W)) u_trunk (
@@ -288,7 +292,7 @@ module net_site #(
 
     // ---- counter cards, counters.md 1 and 9 --------------------------
     // Cards that only listen: sdata, sclk, wr and nothing else.  The event
-    // strap is BSY = 0 with CLM = 1, which no latch write ever carries, and the
+    // jumper is BSY = 0 with CLM = 1, which no latch write ever carries, and the
     // code is in SRC.  The card cannot see G and does not need to.
     wire [15:0] ev_any_c, ev_wait_c, ev_ntrk_c, ev_ndig_c, ev_glare_c;
     assign ev_cnt = {ev_glare_c, ev_ndig_c, ev_ntrk_c, ev_wait_c, ev_any_c};
@@ -309,7 +313,7 @@ module net_site #(
             .SRC_ANY(6'o00), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_glare (
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(1'b0), .count(ev_glare_c), .match());
-    // all four directions at once: the two low bits strapped to Pi
+    // all four directions at once: the two low bits jumpered to Pi
     stats #(.SRC(6'o10), .BSY(1'b0), .CLM(1'b1),
             .SRC_ANY(6'o03), .BSY_ANY(1'b0), .CLM_ANY(1'b0)) u_ev_ntrk (
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
@@ -317,7 +321,7 @@ module net_site #(
 
     wire [5:0]  pr_port;
     wire        pr_visit, pr_valid, pr_m, pr_busy;
-    wire [7:0]  pr_word;
+    wire [15:0] pr_word;
     wire [NREG-1:0] flood_go, net_restart, net_done, net_nogo, net_local;
     wire [6*NREG-1:0] flood_caller;
     wire        net_att;
@@ -339,7 +343,8 @@ module net_site #(
         .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk),
         .reg_release(r_release),
-        .probe_port(pr_port), .probe_visit(pr_visit), .probe_valid(pr_valid),
+        .probe_port(pr_port), .scan_port(scan_port),
+        .probe_visit(pr_visit), .probe_valid(pr_valid),
         .probe_m(pr_m), .probe_busy(pr_busy), .probe_word(pr_word),
         .flood_go(flood_go), .flood_caller(flood_caller),
         .net_restart(net_restart), .net_done(net_done),

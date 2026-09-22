@@ -5,18 +5,18 @@ an MF8 shelf on a tone, so that every phone hears fast busy the moment it is
 lifted** — the difference between a dead telephone and a telephone that says no.
 
 It is not one of the four cards of `common-cards.md`, and it is worth having. It
-is the **cheapest card in either shelf**, and the only one that drives and never
-listens: `C_RX` and `A_RX` go nowhere on it, nothing rings it, nothing answers
-it, and an outage it cannot hear is an outage it need not handle
-(`common-cards.md` §1.3).
+is the **cheapest card in an MF8 shelf or an exchange block**, and the only one
+that drives and never listens: `C_RX` and `A_RX` go nowhere on it, nothing rings
+it, nothing answers it, and an outage it cannot hear is an outage it need not
+handle (`common-cards.md` §1.3).
 
 Feeding more than its own channel takes a change to the MF8 backplane, and that
 change is **a bus wire, a resistor and a field of jumpers** — §4. The card does
 not know it is happening, which is the point: it is one card, one slot, either
-shelf.
+an MF8 shelf or an exchange block.
 
 > **Status: proposed. Nothing here is measured.** The generator is
-> `features.md` §2's, already described there. §4's strap field is new and
+> `features.md` §2's, already described there. §4's jumper field is new and
 > is **not in `mf8-backplane.md`** — no board, no bench, and nothing has been
 > listened to.
 
@@ -31,7 +31,7 @@ A channel card like any other. It drives `C_TX[n]` with the tone and holds
   *source*, never busy, any number of listeners, reached through the fabric. The
   block needs no modification, because a commutator already lets the marker
   switch every port that wants it onto one card.
-- **In an MF8 shelf** it feeds its own channel as it stands, and §4's strap field
+- **In an MF8 shelf** it feeds its own channel as it stands, and §4's jumper field
   lets it feed any subset of the other five, or all of them.
 
 `A_TX` low is what every source does (`features.md` §6): nothing rings,
@@ -57,7 +57,7 @@ table: **six of the fourteen signal pins.**
 | pin | | | what this card does with it |
 |---|---|---|---|
 | a1 | `TX_CLK` | in | the encoder's clock. The generator's T half runs on it |
-| a2 | `TX_HB` | — | nothing here encodes a line |
+| a2 | `LOOP_HB` | — | nothing here encodes a line |
 | a3 | `TX_OCT` | ○ | loads the word's 2×'165 where it is fitted — §5 |
 | a4 | `FILL` | — | the encoder's own `1010` at silence is the idle, and the cadence mutes its **input** rather than its output, so there is never a pattern to substitute |
 | a5 | `C_TX[n]` | **out** | the tone, into the commutator. The bus-driver population takes a second copy off the same node, **not** off this pin — one output, one load, as every other card has |
@@ -67,7 +67,7 @@ table: **six of the fourteen signal pins.**
 | a9 | `C_RX[n]` | — | **the pin no other card can leave open.** A talking circuit, a data pipe and a trunk all have to hear something; a source does not |
 | a10 | `A_RX[n]` | — | it is never rung and never seized |
 | a11 | `MUTE` | — | there is no decoder to mute. §4 is where `MUTE` matters, and it matters at the backplane, not here |
-| a12 | the word | ● / — | §5 |
+| a12 | card word | ● / — | §5 |
 | a13 | `/ANS` | **out** | tied low: it answers at once, and must never give its listener ringback |
 | a14 | spare | ○ | open |
 | c1, c3 | `+5 V` | in | the logic and the encoder's digital half |
@@ -78,18 +78,18 @@ table: **six of the fourteen signal pins.**
 ## 3. The generator
 
 **Which tones, and both cards that make them, are `tone-plan.md`.** It settles
-four tones in two timbres, specifies the ROM card exactly, and gives the analog
-card pots and jumpers that approximate the same plan. What follows is the
-generator in outline.
+four tones in two timbres, specifies them as tolerances an analog card and a ROM
+card both meet when the analog pots are set, and measures the one thing that
+constrains the analog build: a warble may not be made with a switch. What
+follows is the generator in outline.
 
 `features.md` §2's analog card: **one slot, one tone.** A 555-style or discrete
 carrier into one encoder half of `mf8-spec.md` §12.1; a pot sets the carrier, a
-second pot the warble rate, and a jumper chooses pure tone or a soft-modulated
-warble (hard square at the LFO rate is an informed parts trade — `tone-plan.md`
-§5). Cadence is a 16-bit on/off mask read from jumpers, stepped at 256 ms off
-`TX_CLK`, muting the encoder's **input** so the off periods are the codec's own
-`1010`. Fast busy is the cannot-complete tone with its own mask —
-`tone-plan.md` §5.
+second pot the warble rate, and a jumper chooses pure tone or Aussie-style AM
+(425 ∿ 25) through ½ LM13700. Cadence is a 16-bit on/off mask read from jumpers,
+stepped at 256 ms off `TX_CLK`, muting the encoder's **input** so the off
+periods are the codec's own `1010`. Fast busy is the cannot-complete tone with
+its own mask — `tone-plan.md` §5.
 
 Or `features.md` §3's ROM player instead, and the shelf speaks a sentence:
 8 s of CVSD fills a 64 kB part, and **no codec is needed at all** — which also
@@ -136,7 +136,7 @@ paralleled — and that, plus one conductor, is the whole of the modification.
 tri-state on the backplane, no enables, no new bus signal, and nothing for the
 clock card or the trunk card to do.
 
-**A listener strapped to an unfed bus is safe by construction**: the 4.7 kΩ holds
+**A listener jumpered to an unfed bus is safe by construction**: the 4.7 kΩ holds
 it at `FILL`, which is what an empty slot already sounds like.
 
 ### 4.1 Why the driver is on the card, not the backplane
@@ -176,13 +176,13 @@ usual, or **tied to "locked"** — which is precisely what an exchange block doe
 at every socket, for the same reason, because a block has no link
 (`common-cards.md` §1).
 
-| card | `MUTE` as usual | `MUTE` strapped to "locked" |
+| card | `MUTE` as usual | `MUTE` tied to "locked" |
 |---|---|---|
 | CVSD subscriber line | hears `1010`: the tone is muted at the card | hears the tone |
 | FXS, FXO, E&M | hears the tone either way — none of them reads a11 (`common-cards.md` §1.4) | the same |
-| data | `RXD` forced to 1 | `RXD` follows the bus, which is not data. Do not strap a data slot to the bus |
+| data | `RXD` forced to 1 | `RXD` follows the bus, which is not data. Do not jumper a data slot to the bus |
 
-So the two straps go together: a shelf barred with the tone bus is a shelf whose
+So the two jumpers go together: a shelf barred with the tone bus is a shelf whose
 `MUTE` is tied to "locked", and that is one jumper, not one a slot.
 
 ## 5. In an exchange: the ringback card is this card
@@ -196,7 +196,7 @@ arrangement with the backplane half already built.
 So **the ringback card is a tone card with the bus-driver population fitted**,
 its rear pin punched to `RBT` (`features.md` §2: "the same kind of card,
 which drives a backplane line as well as its port"). No shunt, no new conductor,
-no strap field. The clock card simply does not populate that one '244 gate and
+no jumper field. The clock card simply does not populate that one '244 gate and
 keeps the 4.7 kΩ.
 
 **Ringback is the one tone that is not switched to the caller.** Dial tone is a
@@ -267,12 +267,12 @@ And, once the bus exists, it is not only a tone bus: **any card can feed any
 subset of the others.** A milliwatt at the codec's 0 dBm0 reference for level
 checks (`extensions.md` §2), an announcement ROM, or one card's transmit heard
 at another slot for a bench test. None of it needs a different card or a
-different strap.
+different jumper.
 
 ## 8. Not measured, and open
 
 - **No circuit**, in either the oscillator or the ROM-player version.
-- **§4 is not in `mf8-backplane.md`.** The strap field, the bus and its 4.7 kΩ
+- **§4 is not in `mf8-backplane.md`.** The jumper field, the bus and its 4.7 kΩ
   belong in §6 and §8 there and are not in either. Until they are, this document
   is proposing a board change that the backplane's own specification does not
   carry.
@@ -287,7 +287,7 @@ different strap.
   fifteen signals *from the clock card*; `marker.md` §5 said flatly it was
   not the clock card's; `fabric.md` §4 hedged with "clock card, ringback
   card". **It is the clock unit's conceptually and the tone card's
-  electrically**: carried with the shelf-wide references, because that is what it
+  electrically**: carried with the fabric-wide references, because that is what it
   is, and generated by this card, because an analog tone oscillator through a
   CVSD encoder has no business on a board that is otherwise a crystal and a
   divider chain. `mainboard.md` §2.1 now says so and counts fourteen driven lines,
@@ -305,9 +305,9 @@ different strap.
   exchange document, including `mvp.md`'s fit-out list, which names the card
   and gives it no slot. The three options there are worked from
   `protocol.md` §5's map, not quoted from it.
-- **The `MUTE` strap's blast radius** (§4.2). Tying `MUTE` to "locked" shelf-wide
+- **The `MUTE` jumper's blast radius** (§4.2). Tying `MUTE` to "locked" shelf-wide
   suppresses the squelch for *every* card in the shelf, not just the ones
   listening to the bus. On a barred shelf there is nothing else to hear, so it
-  costs nothing there; it is not a strap to leave fitted in service.
+  costs nothing there; it is not a jumper to leave fitted in service.
 - **The card's pin column** (§2) is an assignment read off this document, with no
   board behind it, like every other column in `common-cards.md` §1.3.

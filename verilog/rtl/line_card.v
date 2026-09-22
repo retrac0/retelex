@@ -18,12 +18,11 @@
 `timescale 1ns/1ps
 
 module line_card #(
-    // The word's encoding is settled (common-cards.md 2, extensions.md 2.2):
-    // all ones is the constant *plain line* (pin tied to ground, no part);
-    // class 001 is an explicit word for a line that has options to say.
-    // Both are lines to the marker; they are different codes.
-    parameter [7:0] WORD  = 8'hFF,      // plain line: grounded pin reads all ones
-    parameter       RINGS = 1'b1      // /ANS left open: this port rings
+    // extensions.md 2.2: 16-bit word at 128 kHz.  All ones is the constant
+    // *plain line* (pin tied to ground, no part).  Class forms put the primary
+    // in bits 7–0; bits 15–8 are FF when the secondary chip is absent.
+    parameter [15:0] WORD  = 16'hFFFF,  // plain line: grounded pin reads all ones
+    parameter        RINGS = 1'b1       // /ANS left open: this port rings
 )(
     input        clk,
     input        frame_stb,
@@ -49,9 +48,19 @@ module line_card #(
     assign e     = a_rx;
     assign ans_n = ~RINGS;            // a phone leaves it open; a trunk ties it low
 
-    // The word, one bit a frame, re-loaded every octet.
-    reg [7:0] sr = WORD;
-    always @(posedge clk) if (frame_stb)
-        sr <= tx_oct ? WORD : {1'b0, sr[7:1]};
+    // 16-bit word: parallel-load every TX_OCT, then LSB-first at 128 kHz
+    // (bit-time 0 = WORD[0] — extensions.md 2.2).  4.096 MHz / 32.
+    reg [15:0] sr = WORD;
+    reg [4:0]  div = 5'd0;
+    always @(posedge clk) begin
+        if (frame_stb && tx_oct) begin
+            sr  <= WORD;
+            div <= 5'd0;
+        end else if (div == 5'd31) begin
+            sr  <= {1'b0, sr[15:1]};
+            div <= 5'd0;
+        end else
+            div <= div + 1'b1;
+    end
     assign word_pin = sr[0];
 endmodule

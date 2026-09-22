@@ -47,7 +47,7 @@ whatever the subscriber's distance, so the engine sees its nominal 0.15 rms of
 full scale for everyone and DTMF keeps the margins of `subscriber-line.md` §5.
 Under A a distant subscriber arrives 6–8 dB low into an engine whose `Iabc` trim
 was set for a nominal loop. B also keeps ringing voltage and per-line analog out
-of the exchange shelf (`channel-cards.md` §3.6), and leaves the same two pairs and
+of the exchange block (`channel-cards.md` §3.6), and leaves the same two pairs and
 the same exchange card able to serve a native CVSD phone or a data device by
 swapping the far-end box.
 
@@ -153,7 +153,7 @@ power is. The feed disconnects for the burst, which returns ~300 mW, and a
 reservoir on the raw input carries the rest — ½C(38² − 30²) = 1 J wants 3.7 mF,
 so 4700 µF at 50 V for a 2 s burst on a 2 s / 4 s cadence.
 
-**Make the supply a strap.** Two populations:
+**Make the supply a jumper.** Two populations:
 
 | | |
 |---|---|

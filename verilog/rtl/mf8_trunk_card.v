@@ -14,15 +14,16 @@
 // untouched: the far line rings because its port sees E, and the caller hears
 // ringback because the far port substitutes RBT into its own highway cell.
 //
-// Transmit is in THIS exchange's clock -- the card takes HCLK, HB, SLOT and
-// TX_OCT from the clock card instead of owning a crystal (a strap).  Receive is
+// Transmit is in THIS exchange's clock -- the card takes HCLK, LINE_HB, SLOT and
+// TX_OCT from the clock card instead of owning a crystal (a jumper).  Receive is
 // its own clock domain: mf8-backplane.md 2's crossing moves here, and is the
 // two '174s that re-sample the six C bits on the local frame edge.  That is
 // where the plesiochronous slip happens, once per channel per 156 ms at 100 ppm.
 `timescale 1ns/1ps
 
 module mf8_trunk_card #(
-    parameter [7:0]   WORD = 8'b0000_1010,   // class trunk 101, form 0, dir N
+    parameter [15:0]  WORD = 16'b000_0_00_10_000_101_11,
+        // tag 10, payload ddg=000 (N), primary trunk 101 options 000
     parameter integer T_A  = 128             // the A lead's RC and Schmitt: 2 ms in frames
 )(
     input            clk,
@@ -115,11 +116,21 @@ module mf8_trunk_card #(
         end
     end
 
-    reg [7:0] wsr;
+    reg [15:0] wsr;
+    reg [4:0]  wdiv;
     always @(posedge clk or negedge rst_n)
-        if (!rst_n)         wsr <= WORD;
-        else if (frame_stb) wsr <= tx_oct ? WORD : {1'b0, wsr[7:1]};
-
+        if (!rst_n) begin
+            wsr <= WORD; wdiv <= 5'd0;
+        end else begin
+            if (frame_stb && tx_oct) begin
+                wsr  <= WORD;
+                wdiv <= 5'd0;
+            end else if (wdiv == 5'd31) begin
+                wsr  <= {1'b0, wsr[15:1]};
+                wdiv <= 5'd0;
+            end else
+                wdiv <= wdiv + 1'b1;
+        end
     // What the six ports' cards say.  Not locked: mute -- every channel reads
     // CVSD silence and on-hook, so calls on it release themselves and a caller
     // hears nothing (mf8-spec.md 13).  Slots 0 and 4 are not this card's.
@@ -132,7 +143,8 @@ module mf8_trunk_card #(
         end else begin : channel
             assign port_c_tx[g]  = mute ? fill : c_local[g];
             assign port_a_tx[g]  = mute ? 1'b0 : a_filt[g];
-            // One '165 sends one word to all six channels, and sends none while
+            // Two '165 daisy-chained send one 16-bit word to all six channels,
+            // and send none while
             // the link is down -- so a dead trunk reads unequipped and is never
             // hunted (network.md 1).
             assign port_word[g]  = mute ? 1'b0 : wsr[0];

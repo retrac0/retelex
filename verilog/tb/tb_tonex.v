@@ -44,7 +44,8 @@ module tb_tonex;
          .c_tx(ctx), .a_tx(atx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
          .rbt_in(t_rb), .ring_cad_n_in(t_cadn),
          .sdata(sdata), .sclk(sclk), .wr(wr),
-         .pb_busy(), .pb_word(), .port_busy(), .slot(), .slotq(), .hclk(), .hb(),
+         .con_n(1'b1), .scan_port(3'd0),
+         .pb_busy(), .pb_word(), .port_busy(), .slot(), .slotq(), .hclk(), .line_hb(),
          .tx_clk(), .frame_stb(frame_stb), .tx_oct(), .rx_oct(),
          .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k());
 

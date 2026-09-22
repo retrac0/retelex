@@ -1,16 +1,16 @@
 // tb_trunk -- two exchanges tied by one MF8 link, with calls across it.
 //
-// Each exchange has a trunk block (block 1: eight channels at 10-17, the
-// exchange unit taking that highway) and a block of lines (block 2: ports
-// 20 and 21).  One MF8 pair each way carries the eight channels.  There is
+// Each exchange has a trunk block (block 1: six channels at 11-13 / 15-17,
+// the trunk card tapping that highway) and a block of lines (block 2: ports
+// 20 and 21).  One MF8 pair each way carries the six channels.  There is
 // no marker, so the console patches the latches by hand at both ends --
 // which is mvp.md 6.3's manual board with a trunk in the middle of it, and
 // network.md 1's tie trunk exactly: a pair of ports, back to back, holding
 // no digits and deciding nothing.
 //
-// What this exercises: the 8 x 8 fabric at both ends, an MF8 unit converting
-// the 16-bit line to eight highway slots, the 16-bit frame and its header,
-// differential Manchester in and out, the framer acquiring and tracking, the
+// What this exercises: the 8 x 8 fabric at both ends, an MF8 trunk card
+// fusing the highway with the 8-bit / six-channel frame, differential
+// Manchester in and out, the framer acquiring and tracking, the
 // crossing between two exchanges' clocks, and the hotline and release rules of
 // fabric.md 3.5 running through the trunk pair untouched.
 `timescale 1ns/1ps

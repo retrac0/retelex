@@ -25,7 +25,7 @@ because they *are* forward A.
 
 | | |
 |---|---|
-| **Face** | channel slot of `common-cards.md` §1, plus sixteen SMD buttons (each a pin), a hook switch, and the `SRC` / wait / DIP straps on the front |
+| **Face** | channel slot of `common-cards.md` §1, plus sixteen SMD buttons (each a pin), a hook switch, and the `SRC` / wait / DIP jumpers on the front |
 | **`A_TX`** | off-hook with 10 pps breaks. High is a make |
 | **`C_TX`** | `FILL`. There is no microphone |
 | **`/ANS`** | tied low. The port never rings. A tester who dials it hears silence |
@@ -43,9 +43,9 @@ what the buttons send.
 The register, the flood and the monitors were measured at **10 pps, 60/40**,
 and they hold at 10 pps ± 10 % (`register.md` §2, `network.md` §4, `monitor.md`
 §5). The card can send that exactly, off the crystal, or something else, off
-straps or a pot, so a tester can walk the windows.
+jumpers or a pot, so a tester can walk the windows.
 
-Strap `SRC` picks the source. Both paths run on the same 1 kHz `TICK` when the
+Jumper `SRC` picks the source. Both paths run on the same 1 kHz `TICK` when the
 source is the crystal; the RC path is analog and is a model of that astable
 in the RTL (`PPS`, `BREAK_PCT`, `T_OH`).
 
@@ -67,7 +67,7 @@ the same tick: 500–800 ms before the first digit (ES 201 187's 500 ms floor),
 
 ### 2.2 Adjustable: DIP, or RC
 
-**DIP**, still from the crystal. Straps on the '4017 and an extra gate pick
+**DIP**, still from the crystal. Jumpers on the '4017 and an extra gate pick
 8 / 10 / 12 pps and 60 / 67 % break — the two break ratios ES 201 187 allows,
 and the three rates a GPO register was expected to take. A 4-bit DIP loads the
 seize delay, 100–1600 ms in 100 ms steps of `TICK`.
@@ -90,15 +90,15 @@ detector.
 
 The hook switch seizes. Hanging up aborts a train at once and drops `A_TX`.
 The first digit waits, because a register attached late would count from the
-middle of a break (`extensions.md` §3.4). Two ways, strapped:
+middle of a break (`extensions.md` §3.4). Two ways, jumpered:
 
-| strap | wait |
+| jumper | wait |
 |---|---|
 | **RC / DIP** | a delay after seize, default 500–800 ms. Deaf: the card does not listen. Enough, because a register is attached in one scan and dial tone is prompt |
 | **dial tone** | `C_RX` XOR `FILL`, a counter. The marker points a caller at dial tone when it hands it a register (`marker.md` §3). With no dial-tone card fitted this wait never ends |
 
 Then each key is `n` breaks at the selected rate, a 700 ms pause, and the next
-key. `A_TX = SEIZE · /BREAK`.
+key. `A_TX = seized · /BREAK`.
 
 ---
 
@@ -132,15 +132,15 @@ five bits and the store's extra bits are a nibble of a second '670
 ```
  TX_OCT ──[ ½ '393 ÷8 ]── TICK ──[ '4017 ]── 100 ms, Q0–Q5 NOR = BREAK_xtal
  RC / ¼ '14 astable ──[ ½ '123 ]── BREAK_rc
- DIP ── straps on the '4017 ── BREAK_dip
+ DIP ── jumpers on the '4017 ── BREAK_dip
  SRC ── mux ── BREAK
 
- HOOK ──[ ½ '123, or DIP-loaded '163 on TICK ]── SEIZE
-        strap: wait that, or C_RX XOR FILL ('86 and a '74)
+ HOOK ──[ ½ '123, or DIP-loaded '163 on TICK ]── seized
+        jumper: wait that, or C_RX XOR FILL ('86 and a '74)
 
  KEY 1–9 0 * # A–D ── pull-up ──[ 2 × '148 ]── load 5-bit count (½ '193 + FF)
  count ── BREAK edges, down; zero ──[ '393 pause ]── next key
- A_TX = SEIZE · /BREAK
+ A_TX = seized · /BREAK
  C_TX = FILL          /ANS = 0          word pin = GND
 ```
 

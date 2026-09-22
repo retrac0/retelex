@@ -3,7 +3,7 @@
 // A line that lifts, with sixteen buttons and no handset.  A_TX is off-hook
 // with 10 pps breaks; C_TX is FILL; /ANS is low; the word pin is grounded.
 // Two timebases: the socket's crystal divided to 10 pps 60/40, or an
-// adjustable RC/DIP source (PPS / BREAK_PCT / T_OH, or the DIP straps).
+// adjustable RC/DIP source (PPS / BREAK_PCT / T_OH, or the DIP jumpers).
 `timescale 1ns/1ps
 
 module pulse_gen #(

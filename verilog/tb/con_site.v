@@ -15,7 +15,7 @@
 //             hunted, never a call request, and cannot-complete if dialled;
 //             to the fabric it is a port with a latch, and only the console
 //             ever writes it.  What it hears is the observer's headphones
-//   common    one marker (no network card), a pool of registers, the console
+//   common    one marker (no network unit), a pool of registers, the console
 //
 // Cable B is tri-state in 74HC and pulled low at every block
 // (mainboard.md 6); here it is an AND-OR of whoever's '244 is on.
@@ -32,7 +32,7 @@ module con_site #(
     parameter integer RING_ON = 200, RING_OFF = 400,
     parameter integer HIT = 1, ID = 16, CLR = 32, NODIG = 2000,
     parameter integer NREG = 3,
-    parameter integer CON_DIV = 64,              // the console shifts at 64 kHz
+    parameter integer CON_DIV = 32,              // the console shifts at 128 kHz
     parameter integer CON_WAIT = 32
 )(
     input         clk,
@@ -55,7 +55,7 @@ module con_site #(
     output        watch_bsy, watch_clm, watch_seen,
     output        hook_dst, hook_src,
     output        sup_busy_dst, sup_busy_src,
-    output [7:0]  sup_word_dst, sup_word_src,
+    output [15:0] sup_word_dst, sup_word_src,
     output        sup_seen,
 
     // for a testbench: cable B as a listener sees it, and who is driving
@@ -84,6 +84,7 @@ module con_site #(
     wire        tx_oct, fill, pb_busy, pb_word;
     wire [7:0]  ha;
     wire        oct_stb = frame_stb & tx_oct;
+    wire [2:0]  scan_port;
 
     // ---- cable B, and its two masters ------------------------------------
     wire mk_sdata, mk_sclk, mk_wr, mk_oe;
@@ -101,9 +102,10 @@ module con_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr),
+            .con_n(con_n), .scan_port(scan_port),
             .pb_busy(pb_busy), .pb_word(pb_word), .port_busy(port_busy),
             .hc(), .ha(ha),
-            .slot(slot), .slotq(slotq), .tick(tick), .hclk(), .hb(), .tx_clk(),
+            .slot(slot), .slotq(slotq), .tick(tick), .hclk(), .line_hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(), .tick_1k(tick_1k));
 
@@ -184,7 +186,8 @@ module con_site #(
         .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_held(r_held),
         .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk), .reg_release(r_release),
-        .probe_port(), .probe_visit(), .probe_valid(),
+        .probe_port(), .scan_port(scan_port),
+        .probe_visit(), .probe_valid(),
         .probe_m(), .probe_busy(), .probe_word(),
         .flood_go(), .flood_caller(),
         .net_restart({NREG{1'b0}}), .net_done({NREG{1'b0}}),

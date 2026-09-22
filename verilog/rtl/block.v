@@ -41,7 +41,7 @@ module block #(
     // the eight cards
     input      [7:0]  c_tx,
     input      [7:0]  a_tx,
-    input      [7:0]  word,          // the card's class and options, one bit a frame
+    input      [7:0]  word,          // the card's class and options, 16 bits at 128 kHz
     output     [7:0]  c_rx,
     output     [7:0]  a_rx,
 
@@ -50,6 +50,8 @@ module block #(
     input             sdata,
     input             sclk,
     input             wr,
+    input             con_n,         // high: marker owns the bus; low: console
+    input      [2:0]  scan_port,     // marker scanner[2:0] — probe select while con_n
     output     [7:0]  blk_dec,       // this block's own '138 on DST[5:3], out to the shunt
     output            pb_busy,       // the probe bus, driven only while BLK[H]
     output            pb_word,
@@ -98,11 +100,16 @@ module block #(
             .wr(wr_dec[k]), .src(cw[7:2]), .bsy_in(cw[1]), .clm_in(cw[0]));
     end endgenerate
 
-    // the four commutators, all on SLOT: C, A, BUSY and the card's word
-    mux8 u_cc (.d(c_mux),    .s(slot), .y(hc_out));
-    mux8 u_ca (.d(a_com),    .s(slot), .y(ha_out));
-    mux8 u_cb (.d(busy_com), .s(slot), .y(pb_busy_i));
-    mux8 u_cw (.d(word_com), .s(slot), .y(pb_word_i));
+    // Highway commutators on SLOT.  Probe BUSY and word: while the marker
+    // owns the bus, the scanner's low three bits (same field as DST[2:0]) hold
+    // the port for the whole visit so a 16-bit word at 128 kHz fits one octet.
+    // The console's PROBE uses the serial word's DST[2:0] instead (fabric.md 1,
+    // extensions.md 2.2).  Write decoder still reads DST from the '164.
+    wire [2:0] pb_sel = con_n ? scan_port : cw[10:8];
+    mux8 u_cc (.d(c_mux),    .s(slot),     .y(hc_out));
+    mux8 u_ca (.d(a_com),    .s(slot),     .y(ha_out));
+    mux8 u_cb (.d(busy_com), .s(pb_sel),   .y(pb_busy_i));
+    mux8 u_cw (.d(word_com), .s(pb_sel),   .y(pb_word_i));
 
     // In 74HC the probe bus is tri-state, one block enabled by BLK[H], pulled
     // LOW at the marker so an absent block reads as eight unequipped slots

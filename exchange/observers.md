@@ -14,7 +14,7 @@ This document is four of them:
 | §2 | **the hook lamp field** | 64 lamps, one a port, off the A highways. ≈ 8 packages |
 | §3 | **the busy lamp field** | 64 lamps, one a port, off `PB` and the word. ≈ 12 |
 | §5 | **the port watch** | one port's latch, hook, `BUSY` and class, on two wheels. ≈ 10 |
-| §6 | **the last-word display** | the last word on cable B, frozen on a strapped match. ≈ 5½ |
+| §6 | **the last-word display** | the last word on cable B, frozen on a jumpered match. ≈ 5½ |
 
 `features.md` §4 has the first two in one line — "a busy-lamp field — '259s
 and LEDs off the M and `BUSY` highways" — and §1 of this document is why that
@@ -142,7 +142,7 @@ turning off and the next is turning on and `PB` is briefly undriven. `PB` is
 pulled low at the marker (`mainboard.md` §6), so an undriven instant reads
 *not busy*, and a '259 is transparent while addressed: a lamp could be wrongly
 cleared and hold that until its block's next visit, up to a scan later. `INH`
-costs a package and removes the question. **A word is 31 µs at 512 kHz and the
+costs a package and removes the question. **A word is 125 µs at 128 kHz and the
 field is blind for it**; the lamp it would have written is written on the next
 frame, 15.6 µs later.
 
@@ -202,7 +202,7 @@ visits changes when the exchange changes, and a frozen one does not.
 ### 4.3 Classes do not appear, and should not
 
 A lamp field shows **behaviour**, and a class is **identity**. The identity is on
-`PB1`, one bit a frame, eight in a visit (`extensions.md` §2.2) — to put it
+`PB1`, sixteen bits at 128 kHz over the visit (`extensions.md` §2.2) — to put it
 on the panel per port would want eight '164, one a column, and 192 more lamps,
 to display something that changes only when somebody changes a card.
 
@@ -291,7 +291,7 @@ operator:**
 **The class beside the shadow is what tells an empty slot from an idle line** —
 the one thing §4.3 says the field cannot do. Set the wheels to a dark pair of
 lamps: class 0 is an empty slot, all ones is a plain line card, class 001 is an
-explicit line word, a nail is a nail, and no word at all is a card held off at
+explicit line word, a dest form is a dest, and no word at all is a card held off at
 power-up or taken out of service (`extensions.md` §2.2, `common-cards.md` §2).
 
 ---
@@ -302,23 +302,23 @@ power-up or taken out of service (`extensions.md` §2.2, `common-cards.md` §2).
 |---|---|
 | the word | 2 × 74HC164 |
 | the display | 2 × 74HC574, 16 LEDs: `G` and the spare, `DST` as two octal groups, `SRC` as two more, `BSY` and `CLM` |
-| the trigger | 1 × 74HC688 with `counters.md` §2's three-way straps — ground, Vcc or `P`ᵢ — over any eight of the sixteen bits |
+| the trigger | 1 × 74HC688 with `counters.md` §2's three-way jumpers — ground, Vcc or `P`ᵢ — over any eight of the sixteen bits |
 | armed / frozen | ½ 74HC74, one lamp, one key, and one gate into the '574 clocks |
 | | **≈ 5½ packages.** 5 on a panel that already carries §5's '164 pair |
 
 Free-running it holds **the last word cable B carried**, which on a quiet
 exchange is the last thing that happened, and under load is a blur that tells you
-the marker is alive. Armed, it holds the *first* word matching the straps and
+the marker is alive. Armed, it holds the *first* word matching the jumpers and
 lights FROZEN. That is a one-shot logic analyser for six packages, and at
 bring-up it is what turns `fabric.md` §7 step 6 — "a second block, then the
 marker" — from inference into a reading.
 
-**Two modes, one strap:**
+**Two modes, one jumper:**
 
 | clocked by | catches | needs |
 |---|---|---|
 | `WR` | every **write**, by either master | nothing. `mainboard.md` §2.3.2's one rule already keeps `WR` clear of every `SCLK` edge, so the word is stable through the pulse |
-| **the end of an `SCLK` burst** | every word, **probe steers included** — the scanner walking the blocks, live | a retriggerable one-shot of about one `SCLK` period. Works only with `SCLK` gated per word, not on the free-running strap of §2.3.2 |
+| **the end of an `SCLK` burst** | every word, **probe steers included** — the scanner walking the blocks, live | a retriggerable one-shot of about one `SCLK` period. Works only with `SCLK` gated per word, not on the free-running jumper of §2.3.2 |
 
 The second mode is the one that shows what the marker is *doing* rather than what
 it has decided, and it is the same `SCLK`-is-moving signal the busy field needs
@@ -394,10 +394,10 @@ the cure is a ULN2803 a row and no change anywhere else.
 - **Bicolour LEDs.** Whether green, red and amber are told apart at arm's length
   in a rack, and whether amber at 2 mA a die is the same brightness as the other
   two. The fallback is two grids and 16HP.
-- **The watch's word display** assumes the card's octet is aligned to `TX_OCT`
-  (`extensions.md` §2.2's '165 loaded on `TX_OCT`), so eight frames of `PB1`
-  from an octet edge are the word. If a block's selection changes mid-octet the
-  shifted byte is garbage; the gate that suppresses that is named here and not
-  drawn.
+- **The watch's word display** assumes the card's word is aligned to `CLK_8K`
+  (`extensions.md` §2.2's 2×'165 loaded on `CLK_8K` / `TX_OCT`), so sixteen
+  bits of `PB1` from a `CLK_8K` edge are the word. If a block's selection changes
+  mid-visit the shifted word is garbage; the gate that suppresses that is named
+  here and not drawn.
 - **Two consoles, two watches, two of anything.** All four cards are listeners
   and cannot contend. The trigger output is the only pin any of them drives.

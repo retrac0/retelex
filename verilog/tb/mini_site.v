@@ -42,6 +42,7 @@ module mini_site #(
     wire        tx_oct, pb_busy, sdata, sclk, wr;
     wire [7:0]  ha;
     wire        oct_stb = frame_stb & tx_oct;
+    wire [2:0]  scan_port;
 
     exch_top #(.BLOCK_FITTED(BF), .PORT_FITTED(PF),
                .PORT_RINGS(LINE_PORTS),
@@ -51,9 +52,10 @@ module mini_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(sdata), .sclk(sclk), .wr(wr),
+            .con_n(1'b1), .scan_port(scan_port),
             .pb_busy(pb_busy), .pb_word(), .port_busy(port_busy),
             .hc(), .ha(ha),
-            .slot(), .slotq(slotq), .tick(tick), .hclk(), .hb(), .tx_clk(),
+            .slot(), .slotq(slotq), .tick(tick), .hclk(), .line_hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
 
@@ -96,5 +98,6 @@ module mini_site #(
           .sdata(sdata), .sclk(sclk), .wr(wr),
           .reg_busy(reg_busy), .wq_ovf(wq_ovf),
           .wr_stb(wr_stb), .wr_dst(wr_dst), .wr_src(wr_src),
-          .wr_bsy(wr_bsy), .wr_clm(wr_clm));
+          .wr_bsy(wr_bsy), .wr_clm(wr_clm),
+          .scan_port(scan_port));
 endmodule

@@ -2,7 +2,7 @@
 //
 // The card is a passive listener on cable B, so it can be tested the way the
 // blocks are: drive ctl_write with the exact sequence of words the marker
-// pushes for a call, and see what each strap field counts.  The sequences
+// pushes for a call, and see what each jumper field counts.  The sequences
 // below are marker.v's own push() calls, in order, for five calls:
 //
 //   A  a local call that connects          1 dial tone, 1 off, a connect PAIR
@@ -16,13 +16,13 @@
 // block at all, carrying an event code in SRC with BSY = 0 and CLM = 1.  The
 // card cannot see G -- bits 15-8 fall out of the end unread -- so it counts one
 // exactly as it counts a write, and the question this bench answers is whether
-// a strap can be sure which it counted.  It can: no latch write the marker
+// a jumper can be sure which it counted.  It can: no latch write the marker
 // makes carries CLM without BSY.
 //
 // The interesting negative result is C against D: the write that completes an
 // OUTBOUND call (marker.v 562) and the second write of an INBOUND one
 // (marker.v 555) are the same sixteen bits -- DST a line, SRC a trunk, BSY 1,
-// CLM 0.  No pattern over one word tells them apart, so the trunk strap counts
+// CLM 0.  No pattern over one word tells them apart, so the trunk jumper counts
 // calls completed over a trunk in BOTH directions.  counters.md 3.
 `timescale 1ns/1ps
 
@@ -47,7 +47,7 @@ module tb_stats;
 
     reg clr = 0;
 
-    // ---- six cards on the ribbon, one strap field each -------------------
+    // ---- six cards on the ribbon, one jumper field each -------------------
     wire [15:0] c_cc, c_dt, c_let, c_trk, c_clm, c_all;
 
     // cannot-complete given: SRC = NOGO, BSY, CLM either way
@@ -80,12 +80,12 @@ module tb_stats;
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(clr), .count(c_clm), .match());
 
-    // every write: the marker's occupancy.  All eight straps on Pi.
+    // every write: the marker's occupancy.  All eight jumpers on Pi.
     stats #(.SRC_ANY(6'o77), .BSY_ANY(1'b1), .CLM_ANY(1'b1)) u_all (
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(clr), .count(c_all), .match());
 
-    // ---- and four more, strapped for counters.md 9's event words ------
+    // ---- and four more, jumpered for counters.md 9's event words ------
     wire [15:0] c_ev, c_wait, c_ntrk, c_glare;
 
     // ANY event: BSY = 0 with CLM = 1, the code left don't-care
@@ -196,7 +196,7 @@ module tb_stats;
         $display("     C's completion and D's are the same sixteen bits:");
         $display("       outbound  DST=o23 SRC=o51 BSY=1 CLM=0");
         $display("       inbound   DST=o24 SRC=o52 BSY=1 CLM=0");
-        $display("     -- one strap cannot separate them.  counters.md 3.");
+        $display("     -- one jumper cannot separate them.  counters.md 3.");
         $display("");
 
         // ---- the event words, counters.md 9 -----------------------
@@ -217,14 +217,14 @@ module tb_stats;
         want(c_glare, 16'd1, "glare");
 
         $display("");
-        $display("     and NOT ONE of them reached a strap meant for a call:");
+        $display("     and NOT ONE of them reached a jumper meant for a call:");
         want(c_dt,  16'd3,  "dial tone given -- unchanged");
         want(c_cc,  16'd2,  "cannot-complete given -- unchanged");
         want(c_let, 16'd1,  "trunks let go -- unchanged");
         want(c_trk, 16'd2,  "calls completed over a trunk -- unchanged");
         want(c_clm, 16'd2,  "claims -- unchanged");
         $display("");
-        $display("     The occupancy strap is the one exception, and it is");
+        $display("     The occupancy jumper is the one exception, and it is");
         $display("     honest: it asks for every word and gets every word.");
         want(c_all, (nwrite + nevent), "every word on the bus");
         $display("");

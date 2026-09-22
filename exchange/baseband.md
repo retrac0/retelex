@@ -17,11 +17,11 @@ The short answers, before the detail:
   pins, one port, any slot. It uses no −48 V, no `RING` and no ±12 V.
 - **The block's card side is not a bus.** Electrically it is a star: per-slot
   lines point to point, and only the clocks and the rails are common. Physically
-  that star rides an **internal 2 × 16 ribbon**; the IDC taps along it are the
-  sockets (`fabric.md` §5.1). It is the MF8 channel slot of `mf8-backplane.md`
-  §8, with the block standing where the MF8 trunk card stands.
+  that star rides a **block ribbon**; the IDC taps along it *are* the
+  channel sockets (`fabric.md` §5.1). It is the MF8 channel slot of
+  `mf8-backplane.md` §8, with the block standing where the MF8 trunk card stands.
 - **A port circuit is fitted only with its card.** Shared block logic
-  (commutators, highway drivers) is on the board at the ribbon's root; the
+  (commutators, highway drivers) is on the board at the block ribbon's root; the
   crosspoint and supervision come with the card at the tap.
 - **What does not swap is the monitor.** A trunk on a block needs a monitor pool
   on that block, and a monitor is not a card.
@@ -60,18 +60,18 @@ eye.**
 
 ---
 
-## 2. The block's card side — "the block header"
+## 2. The block's card side
 
 `protocol.md` §1 says "a port is what an MF8 channel slot already is";
 `fabric.md` §5.1 is the packaging. This section is the electrical star and the
-socket pinout — whether a baseband trunk can sit where a line card sits.
+channel-socket pinout — whether a baseband trunk can sit where a line card sits.
 
-### 2.1 It is a star on a ribbon, not a bus
+### 2.1 It is a star on a block ribbon, not a bus
 
 | | signals | how many |
 |---|---|---|
-| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the word, `/ANS` (`a14` spare) | **6 a slot, 48 a block** |
-| **common to all eight** | `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` | 7 |
+| **point to point, slot *n* only** | `C_TX[n]`, `A_TX[n]`, `C_RX[n]`, `A_RX[n]`, the card word, `/ANS` (`a14` spare) | **6 a slot, 48 a block** |
+| **common to all eight** | `TX_CLK`, `LOOP_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `FILL`, `MUTE` | 7 |
 | **rails** | `+5 V`, `GND`, `±12 V`, `−48 V` and its return, `RING` and its return | |
 
 Nothing on a slot is shared with another slot, nothing is bidirectional, nothing
@@ -81,35 +81,37 @@ is common, the board is position-wired, and the card knows nothing", carried dow
 one more level — and it is the third time the same bargain is struck in this
 design.
 
-**Physically the star is an internal 2 × 16 ribbon** off the block's shared
-board (`fabric.md` §5.1). The same connector family as §2.2's channel socket;
-IDC taps along the ribbon are the sockets. Commons are continuous; each tap
-takes that slot's six private lines. It is not a multi-drop bus for the
+**Physically the star is a block ribbon** off the block's shared board
+(`fabric.md` §5.1). The same connector family as §2.2's channel socket; IDC
+taps along the block ribbon *are* the channel sockets. Commons are continuous;
+each tap takes that slot's six private lines. It is not a multi-drop bus for the
 per-slot signals, and it is not eight sockets standing on a flat mainboard of
 eighty packages.
 
-The fastest thing on it is `TX_HB` at 128 kHz, against 1.024 MHz on the
-mainboard. Electrically it is nothing: a short ribbon, `mf8-backplane.md` §8's
-rates, no termination.
+The fastest thing on it is `LOOP_HB` at 128 kHz, against 1.024 MHz on the
+mainboard. Electrically it is nothing: a short block ribbon, `mf8-backplane.md`
+§8's rates, no termination.
 
 So: **not a secondary bus.** The block's card side is the MF8 channel slot with
-the block standing in the MF8 trunk card's seat. A block *is* an MF8 shelf
-without a line — which is the reason `terminal.md` works at all, and the
-reason a card built for one works unchanged in the other. An MF8 *trunk*
+the block standing in the MF8 trunk card's seat. A block presents the same
+channel socket as an MF8 shelf without a line — which is the reason
+`terminal.md` works at all, and the reason a card built for one works unchanged
+in the other. An MF8 *trunk*
 group taps the highway ribbon (`mf8-unit.md` §1); it does not collect the
 star on T. The **local eight-channel highway trunk** does use T + C
 (`local-trunk.md`, `fabric.md` §5.2): eight seats of copper in highway shape,
-where this card is one seat on a ribbon tap.
+where this card is one seat on an IDC tap of the block ribbon.
 
 ### 2.2 The channel socket
 
 **The pinout has left this document.** `common-cards.md` §1 is now the single
-table for the channel socket in both shelves: what stood here, with the
-direction of every pin, the drive rule, and a column for each card in the set.
+table for the channel socket in an MF8 shelf and in an exchange block: what stood
+here, with the direction of every pin, the drive rule, and a column for each
+card in the set.
 It is not repeated. Three readings this section made first, and that table
 carries:
 
-- a2 `TX_HB` is **derived at the block** — §2.3, and now `clocks.md` §4
+- a2 `LOOP_HB` is **derived at the block** — §2.3, and now `clocks.md` §4
 - a7 `RX_CLK` **is** `TX_CLK` in an exchange (`fabric.md` §3.4)
 - a11 `MUTE` is **tied to "locked"** at every socket, because a block has no link
 
@@ -121,9 +123,9 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
 
 ### 2.3 Four things the socket needs that no document supplies
 
-- **`TX_HB`, 128 kHz, is not on cable A** — **closed, `clocks.md` §4** — and the
+- **`LOOP_HB`, 128 kHz, is not on cable A** — **closed, `clocks.md` §4** — and the
   CVSD subscriber line card cannot encode without it (`channel-cards.md` §2: differential Manchester at
-  128 kBaud, `H` = `TX_CLK`, clocked by `TX_HB`). It needs no conductor.
+  128 kBaud, `H` = `TX_CLK`, clocked by `LOOP_HB`). It needs no conductor.
   `SLOT[2:0]` counts the eight cells of a frame at 512 kHz, so **`/SLOT1` is a
   128 kHz square wave rising at the frame edge and at the half-frame, and
   `/SLOT2` is `TX_CLK`** — the half-bit clock is already on the cable, one bit
@@ -137,7 +139,7 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
   such as the data card forcing `RXD` to 1, then simply never sees it.
 - **`/HUNT_INH` is specified but lands nowhere.** `marker.md` §4 has it
   "pulled up on the backplane: a card may reject the port the probe is on and the
-  hunt walks on", and `network.md` §3.2 has the network card driving it at a
+  hunt walks on", and `network.md` §3.2 has the network unit driving it at a
   port whose word faces the wrong way. It is not in `mainboard.md` §2.3's
   seven control signals and not in any pin list. A card that drives it needs a
   pin **and** a path back to the marker, which is a third
@@ -147,7 +149,7 @@ The pull-ups on a12, a13 and a14 are at the port, not on the card
   (`common-cards.md` §1). It is a loose end this document can only name.
 - **The trunk socket is a different socket.** An MF8 trunk card is six ports in
   one (`extensions.md` §2.1) and needs 6 × `C_RX`, 6 × `A_RX` in and
-  6 × `C_TX`, 6 × `A_TX`, 6 words, 6 `/ANS` out, plus `HCLK`, `HB` and
+  6 × `C_TX`, 6 × `A_TX`, 6 words, 6 `/ANS` out, plus `HCLK`, `LINE_HB` and
   `SLOT[2:0]` for its own frame mux and line encoder — none of which a channel
   socket carries. That is `mf8-backplane.md` §8's gateway slot, a 2 × 32, used
   the other way about. **The baseband card wants none of it**: one port, one bit
@@ -180,14 +182,14 @@ undistorted, which is what `monitor.md` §7 already says of a copper tie:
 "a crossover with no A-path RC, so pulses arrive undistorted and a hop is a
 frame".
 
-### 3.2 Clocking: the strap that decides what the link will carry
+### 3.2 Clocking: the jumper that decides what the link will carry
 
-| strap | what it is | what crosses |
+| jumper | what it is | what crosses |
 |---|---|---|
-| **one clock** | both exchanges on one clock card, or the far end's `TX_CLK` on a fifth conductor with the clock card slaved to it — `network.md` §8 already keeps "a strap and a footprint to slave to a trunk's `RX_CLK` later" | **bit-exact, two frames, one per fabric, octet phase preserved.** Synchronous 64 kb/s data and G.711 pass, which is exactly what `network.md` §8 means by "inside an exchange and over copper ties, not across MF8". Measured: `exch.py fabric` 8, 0 errors |
+| **one clock** | both exchanges on one clock card, or the far end's `TX_CLK` on a fifth conductor with the clock card slaved to it — `network.md` §8 already keeps "a jumper and a footprint to slave to a trunk's `RX_CLK` later" | **bit-exact, two frames, one per fabric, octet phase preserved.** Synchronous 64 kb/s data and G.711 pass, which is exactly what `network.md` §8 means by "inside an exchange and over copper ties, not across MF8". Measured: `exch.py fabric` 8, 0 errors |
 | **two clocks** | ±20 ppm each, up to 40 between neighbours | one slip every 390 ms at 40 ppm, 780 at 20 — the same event MF8 has, and `mf8-backplane.md` §7 measured it at 34.6 dB below the clean decode against the codec's own 25.3. Voice fine. Async oversampled to 9 600 fine. **Synchronous data no**, and the octet phase is not held |
 
-The card is the same either way; the strap chooses whether the incoming flip-flop
+The card is the same either way; the jumper chooses whether the incoming flip-flop
 is clocked by the local frame edge or by the far end's.
 
 ### 3.3 Link down, which is the one thing four wires cannot do
@@ -203,8 +205,8 @@ Three ways out, and the middle one is the recommendation:
 | | what | costs | verdict |
 |---|---|---|---|
 | **edge detection on `C`** | an idle far port has a cleared latch listening to port 00 and so carries `FILL`, `1010` at 32 kHz (`fabric.md` §3.3); "no edge for *n* frames" would be link down | ½ package | **no.** It is right for an idle link and for voice, and wrong for the one case that matters: a data call. HDLC idles at all ones, and a constant pattern across a live link would read as a cut cable and drop the call |
-| **a fifth conductor each way, carrying `TX_CLK`** | a continuous 64 kHz square wave; absent for *n* frames is link down. Fail-safe: a pulled cable stops it | one conductor, one driver, one receiver, a retriggerable detector ≈ ½ package | **yes.** It is the smallest thing that is fail-safe, and it does two more jobs: it is the far end's bit clock for §3.2's incoming flip-flop, and it is the `RX_CLK` the clock card's existing strap wants, which turns the pair synchronous and buys §3.2's top row |
-| **a line code on `C`** | differential Manchester at 128 kBaud, the subscriber loop's own engine (`subscriber-line.md`) — DC-free, so the pair can be transformer-coupled, and carrier detect falls out of the decoder's violation term | ≈ 2–3 packages more, and `TX_HB` | the version for **between buildings**, where the isolation is worth more than the packages. Not the baseline |
+| **a fifth conductor each way, carrying `TX_CLK`** | a continuous 64 kHz square wave; absent for *n* frames is link down. Fail-safe: a pulled cable stops it | one conductor, one driver, one receiver, a retriggerable detector ≈ ½ package | **yes.** It is the smallest thing that is fail-safe, and it does two more jobs: it is the far end's bit clock for §3.2's incoming flip-flop, and it is the `RX_CLK` the clock card's existing jumper wants, which turns the pair synchronous and buys §3.2's top row |
+| **a line code on `C`** | differential Manchester at 128 kBaud, the subscriber loop's own engine (`subscriber-line.md`) — DC-free, so the pair can be transformer-coupled, and carrier detect falls out of the decoder's violation term | ≈ 2–3 packages more, and `LOOP_HB` | the version for **between buildings**, where the isolation is worth more than the packages. Not the baseline |
 
 **Four wires is still a usable link** where the run is short and inside one room:
 what a cut cable then costs is that the trunk stays in the hunt, a caller is
@@ -232,9 +234,9 @@ rail**, which is the lightest load on the socket of anything in the set.
 
 | pin | | | what this card does with it |
 |---|---|---|---|
-| a1 | `TX_CLK` | in | **three jobs.** It re-times incoming `C` through the ½ '74 in the local-clock strap of §3.2; it shifts the word '165; and it is the waveform driven down §3.3's clock conductor, where that conductor is fitted |
-| a2 | `TX_HB` | — | nothing on this card encodes a line |
-| a3 | `TX_OCT` | in | loads the word '165, so the byte repeats every octet |
+| a1 | `TX_CLK` | in | **three jobs.** It re-times incoming `C` through the ½ '74 in the local-clock jumper of §3.2; it shifts the word's 2×'165; and it is the waveform driven down §3.3's clock conductor, where that conductor is fitted |
+| a2 | `LOOP_HB` | — | nothing on this card encodes a line |
+| a3 | `TX_OCT` | in | loads the word's 2×'165, so the sixteen bits repeat every `CLK_8K` |
 | a4 | `FILL` | — | the port already idles to `FILL` through its own commutator input (`fabric.md` §3.3), and an idle far end sends it down the line. The card generates no idle pattern |
 | a5 | `C_TX[n]` | **out** | incoming `C` off the line, re-timed: one bit a frame into the block's `C` commutator |
 | a6 | `A_TX[n]` | **out** | incoming A off the line, through the RC and ¼ '14. This is M at the port |
@@ -243,7 +245,7 @@ rail**, which is the lightest load on the socket of anything in the set.
 | a9 | `C_RX[n]` | in | straight out on the line, 64 kb/s NRZ, changing at the local frame edge |
 | a10 | `A_RX[n]` | in | straight out on the line. E as it stands, since `/ANS` is low and a trunk never rings (§4) |
 | a11 | `MUTE` | — | tied to "locked" at every socket in a block, and real only in an MF8 shelf. This card's link-down detector is its own, on a12 |
-| a12 | the word | **out**, o.d. | `11 101 d d g` from the '165 on three jumpers: class trunk, its direction, its glare bit. Held off at power-up by the RC of `extensions.md` §2.2, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
+| a12 | card word | **out**, o.d. | class trunk `11 101 000` + secondary tag `10` payload `d d g 000` from the 2×'165 (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
 | a13 | `/ANS` | **out** | tied low on the board. No part |
 | a14 | spare | — | open |
 | a16, c2, c4, c6, c8, c11, c14, c16 | `GND` | in | |
@@ -258,7 +260,7 @@ which is a usable link inside one room and is not fail-safe.
 **a12 is where this card differs from every other card in the set.** The others
 declare something fixed — a class, or a constant from a grounded pin — and
 declare it for as long as they are seated. This one's word is conditional on a
-wire outside the shelf, and that is the whole of `extensions.md` §2.2's "a
+wire outside the card, and that is the whole of `extensions.md` §2.2's "a
 trunk card also gates that input with *link up*, so a dead link sends nothing and
 is never hunted", on one channel instead of six. **The link-down detector is not
 a feature of the line interface; it is the enable on the word.**
@@ -272,7 +274,7 @@ driven by the block from cable A. On an MF8 shelf the same job is done from
 slot 0, where the trunk card drives a7 for the whole shelf; a channel card has no
 such pin and must not drive one. So the one-clock case needs a wire from this
 card's rear connector to the clock card's slaving input
-(`network.md` §8's "a strap and a footprint"), outside this connector and
+(`network.md` §8's "a jumper and a footprint"), outside this connector and
 outside the backplane. **Open**, and it is a decision rather than a measurement:
 either that wire exists, or bit-exact data between exchanges stays an MF8
 trunk-card capability and this card carries voice and async only.
@@ -285,7 +287,7 @@ trunk-card capability and this card carries voice and async only.
 | incoming `C`, re-timed | ½ 74HC74 |
 | incoming A: RC, diode, Schmitt | ¼ 74HC14 |
 | link-down detector (§3.3) | ½ 74HC123 |
-| the word: '165 from `d d g` jumpers, into ¼ '03, held off at power-up by an RC (`extensions.md` §2.2) | 1¼ |
+| the word: 2×'165 from jumpers (primary trunk + secondary `ddg000`), into a 2N7002, held off at power-up by an RC (`extensions.md` §2.2) | ≈ 2 + FET |
 | `/ANS` | tied low on the board: no part |
 | | **≈ 4½** — 74HC population, **≈ 3** |
 
@@ -305,7 +307,7 @@ so **moving the card moves all of it**:
 
 | | a plain line card | the baseband trunk card |
 |---|---|---|
-| the word (a12) | pin tied to ground: all ones, class line, no options | `11 101 d d g` from a '165: class trunk, its direction, its glare bit |
+| the word (a12) | pin tied to ground: all ones, class line, no options | class trunk + secondary `ddg000` from a 2×'165 |
 | `/ANS` (a13) | open: the port rings in cadence and gives ringback | tied low: a trunk that rang would give its caller ringback the instant it was seized, and chop forward A in the cadence (`extensions.md` §2.3) |
 | the port circuit | unchanged | unchanged — the same 5 packages of crosspoint and 3¼ of supervision |
 | the block | unchanged | unchanged |
@@ -326,11 +328,11 @@ so **moving the card moves all of it**:
   is not written down in `marker.md` and is not in the `calls` model. It
   should be cannot-complete. **Unsettled, and a reason to prefer an undialable
   seat — 06–07 in the operator bank are free of that.**
-- **The NO-FORWARD strap is per link, and this card is exactly one link** — so
-  the strap of `network.md` §3.3, which must be set at both ends of
+- **The NO-FORWARD jumper is per link, and this card is exactly one link** — so
+  the jumper of `network.md` §3.3, which must be set at both ends of
   one link, is one jumper on one card here, where on an MF8 card it is one
-  jumper a direction on the network card and does not sit in the shared word. A bypass link across a ring is the natural use of
-  a single-channel trunk, and it is also where the strap belongs.
+  jumper a direction on the network unit and does not sit in the shared word. A bypass link across a ring is the natural use of
+  a single-channel trunk, and it is also where the jumper belongs.
 
 ---
 
@@ -379,7 +381,7 @@ direction. There is no saving to be had — **a trunk card sits on the card side
 its block like every other card**, which is §2.3's trunk socket and the premise
 of this whole document.
 
-The rest of §2.4 stands: the card takes `HCLK`, `HB`, `SLOT` and `TX_OCT` from
+The rest of §2.4 stands: the card takes `HCLK`, `LINE_HB`, `SLOT` and `TX_OCT` from
 the block, and the cable still has ten taps however many trunks are fitted.
 
 ---
@@ -388,7 +390,7 @@ the block, and the cable still has ten taps however many trunks are fitted.
 
 - **§2 and §3.5.** The socket is `common-cards.md` §1's and is an assignment
   there; what this card does with each pin is read off §3's own description and
-  not off a board. No connector, no bench. `TX_HB` as `/SLOT1` is arithmetic off
+  not off a board. No connector, no bench. `LOOP_HB` as `/SLOT1` is arithmetic off
   the cell count and still wants a scope against `channel-cards.md` §2's encoder
   (`clocks.md` §7), even though the derivation itself is now settled.
 - **The recovered clock has no pin out of a channel slot** (§3.5). a7 is an
@@ -403,7 +405,7 @@ the block, and the cable still has ten taps however many trunks are fitted.
   line and a card that uses it, or it goes.
 - **The card.** Nothing drawn. The link-down detector's constant is unchosen; the
   A-lead RC is named as "tens of microseconds" and not worked. §3.5 makes the
-  detector the enable on the word's '03, which is one gate input and has not
+  detector the enable on the word's 2N7002 gate, which is one FET and has not
   been drawn either.
 - **A dialled port whose class is trunk** (§4). Not in `marker.md`, not in
   the `calls` model.

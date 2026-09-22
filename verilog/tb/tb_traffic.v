@@ -853,7 +853,7 @@ module tb_traffic #(
         $display("     \"erlangs\" is every LINK in the network taken together, counted once.");
 
         // ---- 2. the links ------------------------------------------------
-        $display("\n  2. Every link, a phase: erlangs on its eight channels, the high-water mark,");
+        $display("\n  2. Every link, a phase: erlangs on its six channels, the high-water mark,");
         $display("     and the marker's own \"every trunk this way is busy\" event (counters.md 9).");
         $display("  %-14s %-10s %7s %5s %9s %9s", "link", "phase", "erlang", "high",
                  "Erlang B", "no trunk");
@@ -949,7 +949,7 @@ module tb_traffic #(
             a3 = ch_ms[r_phases-1][bs_i][bs_d] / ph_ms[r_phases-1];
             $display("     the busiest spoke link at peak carried %0.2f E of its 8", a3);
             wantn(a3 < 8.0, $rtoi(a3 * 100),
-                  "no link carried more than its eight channels");
+                  "no link carried more than its six channels");
         end
         if (bh_i >= 0) begin
             a3 = ch_ms[r_phases-1][bh_i][bh_d] / ph_ms[r_phases-1];

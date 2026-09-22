@@ -75,7 +75,7 @@ any average rate at the same 7.8 ns of jitter.
 | Capture, 32 bits | 4 × SN74LV165A at 3.3 V | parallel-in from the bus — the LV-A family's inputs take 5 V at a 3.3 V supply, so the capture register **is** the level shifter. Loaded by a PIO-timed pulse ~50 ns after the domain's clock edge, against a data-valid window of 1.6 µs (`mf8-backplane.md` §5); shifted out to the Pico at ~10 MHz |
 | Drive, 16 bits | 2 × 74HCT595 at 5 V | serial-in from the Pico — HCT thresholds accept 3.3 V — and **the output latch clock is the bus clock itself**, so the outputs change on the clock edge in hardware, exactly as `mf8-backplane.md` §3 requires of a card |
 | Per-line enable | 4 × 74HCT125, enables from a third '595 | any driven line can be released. Default at power-up: everything released — role M |
-| Clock source, optional | 4.096 MHz oscillator, 74HC4040, 74HC393 | `TX_CLK`, `TX_HB`, `TX_OCT`, `FILL` for roles T, C and L, made as a trunk card makes them. Unfitted, the `clk` state machine makes them (§2.1). A second oscillator, or `clk` fed period words by DMA, puts a second domain a known number of ppm away |
+| Clock source, optional | 4.096 MHz oscillator, 74HC4040, 74HC393 | `TX_CLK`, `LOOP_HB`, `TX_OCT`, `FILL` for roles T, C and L, made as a trunk card makes them. Unfitted, the `clk` state machine makes them (§2.1). A second oscillator, or `clk` fed period words by DMA, puts a second domain a known number of ppm away |
 | Clocks in | ¼ SN74LV165A-class buffer | `TX_CLK`, `TX_OCT`, `RX_CLK`, `RX_OCT` to four Pico pins |
 
 Per 15.6 µs frame the Pico shifts 32 bits in and 16 out, 5 µs of a 10 MHz
@@ -93,7 +93,7 @@ cable** maps the 32 inputs and 16 outputs onto the connector a role faces:
 The trunk card's analog section and nothing else: 75176, transformer, the §9.5
 filter, the comparator, the §9.7 rate plug. Its comparator output goes to one
 Pico pin through the LV buffer; its driver input comes from one Pico pin through
-an HCT gate. The encoder state machine is **clocked by `HB`** — from the
+an HCT gate. The encoder state machine is **clocked by `LINE_HB`** — from the
 adapter's chain or from `clk` — so the line rate is exact; the receiver state
 machine runs at the full system clock and times intervals, as §9.4's hardware
 does.
@@ -135,9 +135,9 @@ The power supply moves off slot 7, to the end of the backplane.
 | `cap_r` | R — waits on `RX_CLK` | pulses the R-side '165 load, shifts 16 bits in, pushes one word per frame to DMA |
 | `cap_t` | T — waits on `TX_CLK` | the same for the T-side monitor inputs |
 | `drv_t` | T — waits on `TX_CLK` | pulls one word per frame from DMA and shifts it into the '595s before the next edge latches it |
-| `dm_tx` | T — waits on `HB` | differential Manchester encoder: `mf8-spec.md` §9.2's truth table, one bit per two `HB` edges; pico-examples' `differential_manchester` is the starting point |
+| `dm_tx` | T — waits on `LINE_HB` | differential Manchester encoder: `mf8-spec.md` §9.2's truth table, one bit per two `LINE_HB` edges; pico-examples' `differential_manchester` is the starting point |
 | `dm_rx` | free-running, full system clock | the §9.4 interval classifier — dead time, 0.75-cell threshold, the `MID` pairing that self-heals — emitting bits with no clock, as `fast.mono_decode` does; **not** the fixed-delay sampler of the pico-examples receiver, which has no dead time |
-| `clk` | the source of T, or of an offset R | `HB`, `TX_CLK`, `TX_OCT` and `FILL` on pins, from the 128 MHz system clock at an exact divider; or one period word per cycle from DMA, for a programmed ppm offset |
+| `clk` | the source of T, or of an offset R | `LINE_HB`, `TX_CLK`, `TX_OCT` and `FILL` on pins, from the 128 MHz system clock at an exact divider; or one period word per cycle from DMA, for a programmed ppm offset |
 | `cfg` | — | the enable and configuration '595 |
 
 Core 0: USB and the host protocol. Core 1: the role — the framer of

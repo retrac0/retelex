@@ -52,10 +52,9 @@ transit could not tell which call a second message belonged to.
 
 ## 2. The bearer: the spare S bit
 
-The 16-bit frame (`mf8-unit.md` §4.2) already has six S states free at 4 kHz
-(10–15) and R as a seat of its own. **This document's x, stealing a guard
-pad, is the 8-bit predecessor.** If SS0 is adopted onto the live unit it
-sits in those spare states, and R is not x.
+**This document's x steals a guard pad on the live 8-bit / six-channel
+frame.** The not-taken 16-bit frame (`mf8-unit.md` §4.2) had six S states free
+at 4 kHz and R as a seat of its own; that path is not used.
 
 `mf8-spec.md` §3.5 recorded two ways of freeing one of the S lane's eight states
 on the six-channel line
@@ -69,7 +68,7 @@ frees **x, one bit a superframe: 8 kbps a link, and no voice channel spent.**
 | **Receive** | the A '259's Q0 holds x from state 0, and one XOR checks state 4 against it (`mf8-spec.md` §3.5). `MUTE` clears the '259, so a dead link reads x = 0, idle |
 | **What it costs the frame** | a chance false acquisition in 1 of 28 attempts, where the fixed guard gives 1 in about 500 (`mf8-spec.md` §3.5) |
 | **The pin** | x belongs to the trunk slot; its pin on the trunk card's connector is to be assigned. On a channel slot the `RAI` pin was reserved for this bit on the MF8 shelf; the exchange leaves it spare (`extensions.md` §2.1), and a channel card never sees the S lane |
-| **Remote alarm** | **Decided: x is the remote alarm on every MF8 link, and between exchanges it carries SS0 as well.** One rule serves both. An end holds x at 1 while its own receiver is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. A message never holds x at 1 for more than 17 ms (the start bit and 16 data bits; the stop bit is 0), so a message never reads as the alarm. An SS0 receiver reads the alarm as a start bit with a bad stop bit, and discards it. A subscriber terminal (`terminal.md`) or a plain MF8 link uses x for the alarm alone. The trunk card needs no strap: it sends `MUTE` OR its SS0 transmitter, and no message ever goes to a terminal, because the marker sends `SEIZE` only on a trunk. What the alarm does at the far end is not modelled |
+| **Remote alarm** | **Decided: x is the remote alarm on every MF8 link, and between exchanges it carries SS0 as well.** One rule serves both. An end holds x at 1 while its own receiver is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. A message never holds x at 1 for more than 17 ms (the start bit and 16 data bits; the stop bit is 0), so a message never reads as the alarm. An SS0 receiver reads the alarm as a start bit with a bad stop bit, and discards it. A subscriber terminal (`terminal.md`) or a plain MF8 link uses x for the alarm alone. The trunk card needs no jumper: it sends `MUTE` OR its SS0 transmitter, and no message ever goes to a terminal, because the marker sends `SEIZE` only on a trunk. What the alarm does at the far end is not modelled |
 
 The alternatives:
 - **Give up channel 6** for 64 kbps. A link is then five voice channels, 1.36 E
@@ -139,7 +138,7 @@ takes 18 ms, so a genuine message always finds M up.
 | at | does |
 |---|---|
 | **the origin** | the register already keeps all four digits (its '670 holds four). 128 ms after the last pulse: if `b` is ours, it is a local call and **no trunk is touched**. Otherwise, seize a free trunk in each direction there is, all listening to the caller so that forward A is the caller's hook, as now. Send `SEIZE` on each. Keep the one whose claim rises and release the others. No claim 2 s after the `SEIZE` → cannot-complete |
-| **a transit** (`b` not ours) | hunt a free trunk in the other direction, write the two latches of the patch, and load that link's transmitter with its channel and the same `b h s`. A hub does this in each other direction and resolves the claim as the flood's hub does (`network.md` §3.2). If there is no free trunk, no other direction, or the exchange is strapped NO-FORWARD, it does nothing: the incoming trunk stays seized until the origin lets it go |
+| **a transit** (`b` not ours) | hunt a free trunk in the other direction, write the two latches of the patch, and load that link's transmitter with its channel and the same `b h s`. A hub does this in each other direction and resolves the claim as the flood's hub does (`network.md` §3.2). If there is no free trunk, no other direction, or the exchange is jumpered NO-FORWARD, it does nothing: the incoming trunk stays seized until the origin lets it go |
 | **the owner** (`b` ours) | parse the key or the line as a local call from the trunk (`marker.md` §2). Free: two writes, `CLAIM` set, backward A = 1, the line rings. Busy or empty: trunk to cannot-complete, `CLAIM` set, as today (`network.md` §3) |
 | **a busy transmitter** | the marker waits for it: 18 ms at most |
 
@@ -229,7 +228,7 @@ under it, where the live flood runs on any trunk that carries A
 
 ## 8. A standalone exchange
 
-**Neither is fitted.** A standalone exchange has no trunk blocks, no network card,
+**Neither is fitted.** A standalone exchange has no trunk blocks, no network unit,
 no monitors and no SS0 card. Its numbering jumper is at two digits, and nothing
 in the fabric or the marker waits for any of them (`network.md` §3, "Not
 fitted"; `mvp.md` §1).

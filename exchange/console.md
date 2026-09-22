@@ -130,7 +130,7 @@ still off — for longer than any word the marker can send. Then sixteen bits,
  /CON  ~~\________________________________________________/~~~~
  '244  ___________________/~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\_____      the console's
           | 32 periods, silent | 16 bits            | WR |
-                                                                       766 µs at 64 kHz
+                                                                       ≈ 400 µs at 128 kHz
 ```
 
 **In parts, at the marker: one flip-flop** — set by `/CON` low *and* the
@@ -154,25 +154,24 @@ not worth its conductor:
   when a person presses a key.
 
 **The one constraint: the silence outlasts the marker's longest word.** That is
-16½ `SCLK` periods at the marker's rate. `mainboard.md` §2.3 lets the marker
-run `SCLK` anywhere from 512 kHz down to 64 kHz — 32 µs to 258 µs — and the
-console's silence is 32 periods of `TX_CLK`, **500 µs: twice the slowest**.
+16½ `SCLK` periods at 128 kHz — **about 129 µs**. The console's silence is 32
+periods of the same `SCLK`, **250 µs: twice a word**.
 
 **Why finish the word, and not cut it and send it again.** A write is idempotent
 (`mainboard.md` §7: a second `WR` "writes the latch a second time, with the
 same data"), so the marker could be cut off at once and repeat the word when it
 gets the bus back. The lost write would be cured. The runt `WR` would not.
 
-**Two rates on one bus, on purpose.** The marker shifts at 512 kHz and the
-console at 64, off `TX_CLK`. The blocks' shift registers "have no phase, only
-content" (`mainboard.md` §2.3.2), so nothing has to agree.
+**One rate on the bus.** Marker and console both shift at 128 kHz
+(`mainboard.md` §2.3.2). The blocks' shift registers "have no phase, only
+content", so either master may drive.
 
 ### 2.4 HOLD
 
 The toggle keeps the tenure open after the word, or opens one with no word.
 **With a marker fitted, that stops the marker** — and nothing else. Calls in
 progress carry on, bit for bit (§10), because nobody is in charge of a call.
-Nothing new is set up: no dial tone, no register, no nail re-made after a
+Nothing new is set up: no dial tone, no register, no tied nail re-made after a
 release (`extensions.md` §3.1). Words keyed during a hold go out with no
 silence; the bus is already the console's. Dropping the toggle, the marker
 steers its probe and carries on from the port it stopped at.
@@ -183,17 +182,16 @@ no dial tone and says nothing about why.
 
 ### 2.5 What a word costs the marker
 
-| the tenure | measured | against |
+| the tenure | at 128 kHz | against |
 |---|---|---|
-| one word — WRITE, RELEASE | **766 µs** | the scanner spends 1 ms on one block |
-| two words — WRITE + BOTH, RELEASE + BOTH | **1 031 µs**, the two writes **266 µs** apart | one silence, not two: the second word wants none, the bus is already the console's |
-| PROBE: a word and the octet that answers it | **951 µs** | the octet is 125 µs, and up to another 125 waiting for its edge |
-| PROBE + BOTH | **1 499 µs** | **the only thing the console does that is longer than a block's visit** |
+| one word — WRITE, RELEASE | **≈ 400 µs** (250 µs silence + 125 µs word) | the scanner spends 1 ms on one block |
+| two words — WRITE + BOTH, RELEASE + BOTH | **≈ 530 µs**, the two writes **125 µs** apart | one silence, not two: the second word wants none, the bus is already the console's |
+| PROBE: a word and the octet that answers it | **≈ 525–650 µs** | the octet is 125 µs, and up to another 125 waiting for its edge |
+| PROBE + BOTH | **≈ 775–900 µs** | under a block's 1 ms visit |
 
-A scan of 64 ports is 9.02 ms with the console quiet; with a console word every
-16 ms on average — a rate no operator reaches — 9.19 ms mean, 10.75 ms worst.
-Against that, the origin's guard is 128 ms and a flood lasts seconds
-(`network.md` §3).
+A scan of 64 ports is about 8 ms with the console quiet; a console word every
+16 ms on average — a rate no operator reaches — barely moves it. Against that,
+the origin's guard is 128 ms and a flood lasts seconds (`network.md` §3).
 
 ---
 
@@ -301,7 +299,7 @@ amplifier and a jack — and three ties.
 
 To the fabric it is a port with a latch like any other, and **only the console
 ever writes it**. It is the converse of `features.md` §6's source, and it is
-also `extensions.md` §3.1's "speaker on a radio" with the nail taken off.
+also `features.md` §6's source: a radio anyone may dial, with the nail taken off.
 **Its own converse is the ring source of §6.3**: the same three ties with `A_TX`
 the other way up, and no decoder behind them.
 
@@ -440,7 +438,7 @@ release time later and got dial tone, and nothing was left held.
 - **Nobody is in charge afterwards.** The pair is an ordinary call from the
   instant it is made: either party hanging up releases both, and the console has
   nothing left to do. It is not remembered anywhere. A connection that must
-  survive a release is a **nail** (`extensions.md` §3.1), which is two cards'
+  survive a release is a **tied nail** (`extensions.md` §3.1), which is one card's
   jumpers and not a console word.
 - **A party who never answers rings for ever.** Nothing times a ringing port
   (`groups.md` §2.6). The operator releases it.
@@ -531,7 +529,7 @@ Three read-backs, and they are not the same kind of thing:
 | | what | where from | when | needs the marker? |
 |---|---|---|---|---|
 | **hook** | the port's `M` — off hook, and what the other end of its call sees as `E` | `HA[h]` in the port's own cell, **cable A** | **every frame, 15.6 µs**, for ever | **no** |
-| **`BUSY`, and the card's word** | busy, and what the card says it is (`extensions.md` §2.2) | `PB0`, `PB1`, in the octet after a **PROBE** word | once a tenure, 951 µs | no — and it stops the marker while it reads |
+| **`BUSY`, and the card's word** | busy, and what the card says it is (`extensions.md` §2.2) | `PB0`, `PB1`, in the octet after a **PROBE** word | once a tenure, ≈ 525–650 µs | no — and it stops the marker while it reads |
 | **who a port listens to** | the last word written to its latch | the watch (§3.2), on cable B | only when somebody writes it | no |
 
 **The hook, of both ends, all the time.** Two '151 on `HA[0..7]` picked by the
@@ -596,7 +594,7 @@ number appears.
 
 | | |
 |---|---|
-| **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's '165 unfitted, is a line with no options |
+| **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's 2×'165 unfitted, is a line with no options |
 | **its word** | *line*, today with class *operator* so that the 0 hunt finds it (`marker.md` §1). Under `groups.md` §2 that class goes: it is a plain line, and a second position is a card that **answers to** the pilot |
 | **`/ANS`** | open. It is a phone and it rings in cadence |
 | **reached by** | **key 0 only** as a subscriber (`operator.md` §2) |
@@ -648,7 +646,7 @@ something else wanted that undialable line seat.
 | taking and keeping the bus | 1 × 74HC74: the tenure, and RELEASE; ½ 74HC14 on the keys |
 | drivers | 1 × 74HC244 on `SDATA`, `SCLK`, `WR`, enabled after the silence; `/CON` from the tenure flip-flop |
 | **BOTH** (§1) | ¼ 74HC153 on the serial stream and ½ '74: **≈ 1½** |
-| **PROBE's capture** (§7.2) | 1 × '164 for the card's word, ½ '74 for `BUSY` and SEEN, the octet gate off `TX_OCT` and a 3-bit compare on `SLOTQ`: **≈ 2½** |
+| **PROBE's capture** (§7.2) | 2 × '164 for the card's 16-bit word, ½ '74 for `BUSY` and SEEN, the octet gate off `TX_OCT` and the 128 kHz tap: **≈ 3** |
 | | **≈ 11 packages** |
 | the watch (§3.2) | 2 × '164, '688, '574: **≈ 4**, the '164 pair shared with a lamp field |
 | the two hook lamps (§7.2) | 2 × '151 on `HA`, 2 flip-flops, the same compares: **≈ 2½** — **and a cable A tap**: `HA[0..7]`, `SLOTQ[2:0]`, `HCLK`, `TX_OCT`, 13 conductors. **Nothing, with a hook/busy panel beside it** (§7.3) |
@@ -698,8 +696,8 @@ and its cure, and every read-back of §7.2. 87 checks.**
 where the exchange has 16 and 256, the ring cadence at 3 ms on and 6 off where
 the exchange has 2 s and 4, and the register's no-digit timeout at 600 ms where
 the exchange has 10 s. It dials at 20 ms a pulse. Every figure quoted as "a
-release time", a cadence or a timeout scales with those; the bus figures — 766 µs,
-1 031, 951, 1 499, the scan, every count in the second table — are the exchange's
+release time", a cadence or a timeout scales with those; the bus figures — ≈ 400 µs,
+530, 525–650, under a block visit, the scan, every count in the second table — are the exchange's
 own, at its own 4.096 MHz.
 
 ---
@@ -757,7 +755,7 @@ own, at its own 4.096 MHz.
 - **An operator's habits.** Patch-then-lift is a rule a person has to keep, and
   nothing on the panel enforces it or shows that it was broken. Whether it
   survives a busy hour is not something a bench can say.
-- **The free-running `SCLK` strap** of `mainboard.md` §2.3.2 with two
+- **The free-running `SCLK` jumper** of `mainboard.md` §2.3.2 with two
   masters on the bus.
 - **Two consoles.** `/CON` would want to be open-drain and the silence is not an
   arbiter between them.

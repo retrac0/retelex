@@ -40,8 +40,9 @@ module mvp_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(sdata), .sclk(sclk), .wr(wr),
+            .con_n(1'b1), .scan_port(3'd0),
             .pb_busy(), .pb_word(), .port_busy(), .hc(), .ha(),
-            .slot(), .slotq(), .hclk(), .hb(), .tx_clk(),
+            .slot(), .slotq(), .hclk(), .line_hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k());
 

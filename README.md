@@ -49,7 +49,7 @@ General purpose architecture.  Chains, stars and rings are possible.
 ## Layout
 
 ```
-common/     the cards, and everything that belongs to neither shelf
+common/     the cards, and everything that belongs to neither shelf nor block
 mf8/        the MF8 carrier: frame, line, backplane
 exchange/   the exchange
 verilog/    the exchange in Verilog: rtl/, tb/, Makefile
@@ -67,29 +67,30 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 
 | | |
 |---|---|
+| [common/terms.md](common/terms.md) | one name per object: channel socket, stack header C, block ribbon, cables A/B, `LINE_HB` / `LOOP_HB`, card word / `/ANS`, and what not to call them |
 | [common/channel-cards.md](common/channel-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; each card's pins; signalling through the A bit, measured |
-| [common/common-cards.md](common/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one strap, and the connectors |
+| [common/common-cards.md](common/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one jumper, and the connectors |
 | [common/clocks.md](common/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from |
 | [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
 | [common/su-1.md](common/su-1.md) | SU-1 mk1 subscriber unit: native CVSD set, 4P4C handset, Autovon pad → dial pulses, two-board stack |
 | [common/sdu-1.md](common/sdu-1.md) | SDU-1 mk1 subscriber data unit: 32 kb/s insert-1 riser on SU-D; voice unit keeps the line code and `1100` |
 | [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
 | [common/tone-plan.md](common/tone-plan.md) | the tone plan: four tones in two timbres — the Australian warble for *progressing*, the old Bell buzz for *stop* — why a warble is one oscillator and not three, eight ROM planes as two switchable standards, and the analog card beside it |
-| [common/tone-card.md](common/tone-card.md) | the tone card: one generator holding a whole shelf on fast busy — a plain 2 × 16 channel card, the backplane strap field that lets one slot feed the others, and the only card in the set that drives and never listens |
+| [common/tone-card.md](common/tone-card.md) | the tone card: one generator holding a whole shelf on fast busy — a plain 2 × 16 channel card, the backplane jumper field that lets one slot feed the others, and the only card in the set that drives and never listens |
 | [common/circuit-review.md](common/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
 
 **mf8/** — the carrier
 
 | | |
 |---|---|
-| [mf8/mf8-spec.md](mf8/mf8-spec.md) | MF8 specification — frame, header, framer, cards, line code, circuits |
-| [mf8/mf8-backplane.md](mf8/mf8-backplane.md) | remote MF8 unit backplane — modules, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip |
+| [mf8/mf8-spec.md](mf8/mf8-spec.md) | MF8 specification — line frame, F word, framer, cards, line code, circuits |
+| [mf8/mf8-backplane.md](mf8/mf8-backplane.md) | MF8 shelf backplane — six channel slots, slot interface, three clock domains and where they meet, and the measured cost of the plesiochronous slip |
 | [mf8/mf8-psu.md](mf8/mf8-psu.md) | MF8 shelf power: 15–18 V in, regulated −48 V talk battery and ~80 Vrms / 20 Hz ring as two converter paths, split across noisy and quiet 100 × 100 end boards |
 | [mf8/mf8-trunk.md](mf8/mf8-trunk.md) | MF8 trunk split: Trunk-D / Trunk-A on 100 × 100, classifier on A, pass-header pinout |
 | [mf8/mf8-pico.md](mf8/mf8-pico.md) | the Pico adapter: host gateway to Asterisk, trunk and channel emulator, reference line terminal — the model as an instrument for the breadboard; the receiver's timing grid, measured |
 | [mf8/line-codes.md](mf8/line-codes.md) | nine line codes explored; differential Manchester against AMI |
 | [mf8/frame-rate.md](mf8/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
-| [mf8/mfspec.md](mf8/mfspec.md) | the predecessor this design replaced the header of |
+| [mf8/mfspec.md](mf8/mfspec.md) | the predecessor this design replaced the F word of |
 
 **exchange/**, **verilog/**, **falstad/**
 
@@ -120,8 +121,9 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | `exch.py` | the exchange: the fabric cell by cell, calls a millisecond at a time, the flood across a network, traffic. `exchange/README.md` lists its twenty runs |
 
 ```
-python3 sim/mf8.py            frame layer          (mf8.log)
-python3 sim/mf8_line.py       over the line        (mf8_line.log)
+python3 sim/mf8.py            frame layer (8-bit / 6 ch)  (mf8.log)
+python3 sim/mf8_line.py       over the line              (mf8_line.log)
+# measured, not taken: mf8_16.py, mf8_10.py, mf8_10_16.py, mf8_baud.py
 python3 sim/linecodes.py      line codes and rate  (linecodes.log)
 python3 sim/impulse_sweep.py  impulse falloff      (impulse_sweep.log, .csv)
 python3 sim/mf8_render.py     listenable renders   (mf8_render.log; wavs in out/)
@@ -149,7 +151,7 @@ third-party material. Rebuild them with `python3 sim/talkers.py --root <dev-clea
 
 ## What is settled and what is not
 
-Settled: the frame, the header, the framer, and that the carrier is transparent —
+Settled: the frame, the F word, the framer, and that the carrier is transparent —
 six talkers through the whole chain in both line codes add **+0.00 dB**.
 
 Not settled, and not settleable here: **the impulse rate on the target loops.**

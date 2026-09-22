@@ -10,11 +10,11 @@ module tb_word;
     localparam integer RING_ON = 200, RING_OFF = 400;
     localparam integer NS = 1_000_000;
 
-    // class form: {·, b, P, ·, class, 0}.  Bit 4 on a line is the retired `o`.
-    localparam [7:0] W_O   = 8'b0001_0010;   // line, old overflow bit — must not hunt
-    localparam [7:0] W_B   = 8'b0100_0010;   // busy-out
-    localparam [7:0] W_Z   = 8'b0001_1110;   // restricted, z (0-only)
-    localparam [7:0] W_OP  = 8'b0000_0100;   // class operator — not the target of digit 0
+    // class: {FF secondary, ppp, ccc, 2'b11}.  Bit 5 P, bit 6 b, bit 7 MBZ 0.
+    localparam [15:0] W_O   = {8'hFF, 8'b0000_0111};   // plain line class (no options)
+    localparam [15:0] W_B   = {8'hFF, 8'b0100_0111};   // busy-out
+    localparam [15:0] W_Z   = {8'hFF, 8'b0011_1111};   // restricted, z (bit 5); bit7 MBZ
+    localparam [15:0] W_OP  = {8'hFF, 8'b0000_1011};   // class operator — not the target of digit 0
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -29,7 +29,7 @@ module tb_word;
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_000F_0000),
                .LINE_WORD_20(W_O), .LINE_WORD_21(W_O),
-               .LINE_WORD_22(8'hFF), .LINE_WORD_23(8'hFF),
+               .LINE_WORD_22(16'hFFFF), .LINE_WORD_23(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
                .NREG(2), .NMON(1), .NRES(1))
@@ -51,7 +51,7 @@ module tb_word;
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_000F_0000),
                .LINE_WORD_20(W_B), .LINE_WORD_21(W_Z),
-               .LINE_WORD_22(W_OP), .LINE_WORD_23(8'hFF),
+               .LINE_WORD_22(W_OP), .LINE_WORD_23(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
                .NREG(2), .NMON(1), .NRES(1))
@@ -65,14 +65,13 @@ module tb_word;
        .wr_stb(wr2_stb), .wr_dst(wr2_dst), .wr_src(wr2_src),
        .wr_bsy(wr2_bsy), .wr_clm(wr2_clm));
 
-    // Nail pair 20↔21
+    // Tied nail: 20 names 21 only (one-sided two-write).  21 is a plain line.
     reg  [63:0] hookn = 0, txn = 0;
     wire [63:0] pbn, en;
-    localparam [7:0] NAIL20 = {1'b0, 6'o21, 1'b1};
-    localparam [7:0] NAIL21 = {1'b0, 6'o20, 1'b1};
+    localparam [15:0] NAIL20 = {8'hFF, 6'o21, 2'b00};
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_0003_0000),
-               .LINE_WORD_20(NAIL20), .LINE_WORD_21(NAIL21),
+               .LINE_WORD_20(NAIL20), .LINE_WORD_21(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
                .NREG(1), .NMON(1), .NRES(1))
@@ -82,6 +81,25 @@ module tb_word;
        .frame_stb(), .ring_cad_n(), .dt_bit(), .ng_bit(),
        .mon_held(), .mon_busy(), .mon_full(), .got_claim(), .dirs_held(),
        .fan_legs(), .res_used(), .port_busy(pbn), .regs_busy(),
+       .wq_ovf(), .n_defer(), .ev_cnt(),
+       .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
+
+    // Call nail: 20 names 21.  Nothing held until lift.
+    reg  [63:0] hookl = 0, txl = 0;
+    wire [63:0] pbl, el;
+    localparam [15:0] CALL20 = {8'hFF, 6'o21, 2'b10};
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
+               .LINE_PORTS(64'h0000_0000_0003_0000),
+               .LINE_WORD_20(CALL20), .LINE_WORD_21(16'hFFFF),
+               .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
+               .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
+               .NREG(1), .NMON(1), .NRES(1))
+    L (.clk(clk), .rst_n(rst_n),
+       .hook(hookl), .tx(txl), .rx(), .e(el),
+       .line_in(1'b0), .line_out(), .locked(),
+       .frame_stb(), .ring_cad_n(), .dt_bit(), .ng_bit(),
+       .mon_held(), .mon_busy(), .mon_full(), .got_claim(), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy(pbl), .regs_busy(),
        .wq_ovf(), .n_defer(), .ev_cnt(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
@@ -130,7 +148,7 @@ module tb_word;
     endtask
 
     initial begin
-        $display("WORD (RTL) -- retired o-bit, busy-out, restricted, nail.\n");
+        $display("WORD (RTL) -- retired o-bit, busy-out, restricted, tied nail, call nail.\n");
         #4000 rst_n = 1;
         wait_ms(80);
 
@@ -175,10 +193,10 @@ module tb_word;
         want(!pb2[6'o22], "digit 0 did not hunt class operator at 22");
         hook2 = 0; wait_ms(100);
 
-        // ---- nail --------------------------------------------------------
-        $display("  nail");
+        // ---- tied nail ---------------------------------------------------
+        $display("  tied nail");
         wait_ms(40);
-        want(pbn[6'o20] && pbn[6'o21], "nail: scanner wrote both latches");
+        want(pbn[6'o20] && pbn[6'o21], "tied nail: scanner wrote both latches");
         hookn[6'o20] = 1'b1;
         begin : nail_e
             integer t;
@@ -188,10 +206,29 @@ module tb_word;
                 wait_ms(1);
                 if (en[6'o21] === 1'b1) saw = 1;
             end
-            want(saw, "nail: lift rings the partner (E at 21)");
+            want(saw, "tied nail: lift rings the partner (E at 21)");
         end
         hookn = 0; wait_ms(120);
-        want(pbn[6'o20] && pbn[6'o21], "nail: re-nailed after release");
+        want(pbn[6'o20] && pbn[6'o21], "tied nail: re-nailed after release");
+
+        // ---- call nail: 20 names 21; nothing held idle; lift connects -----
+        $display("  call nail");
+        wait_ms(40);
+        want(!pbl[6'o20] && !pbl[6'o21], "call nail: idle holds nothing");
+        hookl[6'o20] = 1'b1;
+        begin : lift_e
+            integer t;
+            reg saw;
+            saw = 0;
+            for (t = 0; t < 80; t = t + 1) begin
+                wait_ms(1);
+                if (el[6'o21] === 1'b1) saw = 1;
+            end
+            want(saw, "call nail: lift rings dest (E at 21)");
+        end
+        want(pbl[6'o20] && pbl[6'o21], "call nail: both latches up after lift");
+        hookl = 0; wait_ms(120);
+        want(!pbl[6'o20] && !pbl[6'o21], "call nail: release leaves both free");
 
         $display("");
         if (errs) begin

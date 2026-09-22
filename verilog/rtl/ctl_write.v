@@ -28,7 +28,7 @@
 `timescale 1ns/1ps
 
 module ctl_write #(
-    parameter integer DIV = 8          // master clocks an SCLK period: 512 kHz
+    parameter integer DIV = 32         // master clocks an SCLK period: 128 kHz
 )(
     input            clk,
     input            rst_n,

@@ -25,8 +25,8 @@ again: all seven come back with their schematics intact.
 |---|---|---|
 | `CVSD-ENC` | LM311 with a pull-up, three-flip-flop run register, coincidence gates ('86, '32), syllabic RC, op-amp and PNP `Iabc` source, LM13700, integrator and follower. Pins `Y` and `SYL` are test points | `mf8-spec.md` §12.1, `circuit-review.md` §2.4 and §4 |
 | `CVSD-DEC` | the same engine with no comparator: `BIT` and `CLK` come from outside | the same |
-| `TX-CLK` | 128 kHz half-bit clock `HB`; half a 74HC112 divides it by two for the bit clock `H` | §9.1 |
-| `DM-ENC` | `EN = H + /bit`, then a 74HC112 half with J = K = EN, clocked by `HB`'s falling edge. `/bit` is the encoder flip-flop's own `/Q`, so the gate is one quarter of a '32 | §9.2, `circuit-review.md` §1 |
+| `TX-CLK` | 128 kHz half-bit clock `LOOP_HB`; half a 74HC112 divides it by two for the bit clock `H` | §9.1 |
+| `DM-ENC` | `EN = H + /bit`, then a 74HC112 half with J = K = EN, clocked by `LOOP_HB`'s falling edge. `/bit` is the encoder flip-flop's own `/Q`, so the gate is one quarter of a '32 | §9.2, `circuit-review.md` §1 |
 | `LINE` | the pair as the slicer sees it: the transmit bit as ±`LEVEL` volts, plus `NOISE`, plus a 40 kHz ring (τ 60 µs) started by each edge on `IMP`; then the two-RC input filter at 128 kHz. `SUM` is the line before the filter | §9.5; the ring is `phy.plant_noise`'s |
 | `DM-RX` | slicer with ±50 mV hysteresis, transition detector ('86 and an RC), dead time ('221), interval classifier ('123), `LONG` and `MID`, recovered clock `RXC`, carrier detect `CD`. `RXD` and `DT` are test points | §9.4, §9.6, on `circuit-review.md` §3's two-phase timing |
 | `RECON` | 3rd-order 3.4 kHz reconstruction low-pass | §12.1 |

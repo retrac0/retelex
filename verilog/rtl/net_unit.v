@@ -31,7 +31,7 @@ module net_unit #(
     input      [5:0] p_port,
     input            p_m,
     input            p_busy,
-    input      [7:0] p_word,
+    input     [15:0] p_word,
 
     // origin: this register consumed key 1
     input  [NREG-1:0]    flood_go,
@@ -72,18 +72,24 @@ module net_unit #(
     localparam [5:0] EV_GLARE   = 6'o04,
                      EV_NOTRUNK = 6'o10;
 
+    // extensions.md 2.2: trunk direction/glare in secondary tag 10,
+    // payload {dd, g, 000} at bits [15:10].
     wire       p_plain  = &p_word;
     wire       p_none   = ~|p_word;
     wire [1:0] p_type   = p_word[1:0];
+    wire [1:0] p_tag    = p_word[9:8];
+    wire [5:0] p_pay    = p_word[15:10];
     wire       p_form   = !p_plain && (p_type == 2'b11);
     wire [2:0] p_cls    = p_plain ? C_LINE :
                           (!p_none && p_type == 2'b00) ? C_NONE :
                           (p_type == 2'b01 || p_type == 2'b10) ? C_LINE :
                           p_form  ? p_word[4:2] : C_NONE;
-    wire       is_trunk = (p_cls == C_TRUNK) || TRUNK_MASK[p_port];
-    wire [1:0] p_dir    = (p_cls == C_TRUNK) ? p_word[6:5]
-                                             : TRUNK_DIR[p_port*2 +: 2];
-    wire       p_g      = (p_cls == C_TRUNK) && p_word[7];
+    wire       trunk_sec_ok = (p_cls == C_TRUNK) && (p_tag == 2'b10) &&
+                              (p_pay[2:0] == 3'b000) && ~|p_word[7:5];
+    wire       is_trunk = trunk_sec_ok || TRUNK_MASK[p_port];
+    wire [1:0] p_dir    = trunk_sec_ok ? p_pay[5:4]
+                                       : TRUNK_DIR[p_port*2 +: 2];
+    wire       p_g      = trunk_sec_ok && p_pay[3];
     wire       p_n      = is_trunk && STRAP_N[p_dir];
     wire       p_free   = !p_busy && !p_m;
 

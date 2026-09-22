@@ -38,7 +38,7 @@
 // NOT BUSY -- and a '259 is transparent while addressed, so a lamp could be
 // wrongly cleared and hold that until its block's next visit, up to a scan
 // later.  INH costs half a package and removes the question.  A word is 31 us
-// at 512 kHz and the field is blind for it; the lamp it would have written is
+// at 128 kHz and the field is blind for it; the lamp it would have written is
 // written on the next frame, 15.6 us later.
 //
 // INH_EN = 0 is the CONTROL, not an option: the same stack with the one-shot
@@ -97,7 +97,7 @@ module common_card #(
 
     // ---- half a '123: retriggerable, about a cell ----------------------
     // Any SCLK edge reloads it, so INH stands through a whole word however
-    // the marker clocks it -- 64 kHz to 512 kHz, gated or free-running.
+    // the marker clocks it -- 128 kHz, gated or free-running.
     reg [7:0] osh;
     always @(posedge clk or negedge rst_n)
         if (!rst_n)                        osh <= 8'd0;

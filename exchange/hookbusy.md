@@ -101,7 +101,7 @@ orange reads the panel perfectly from the column alternation.
 
 The seventeenth card is the stack's **interface card** — the only tap on the
 two exchange cables, the only driver onto **control** and **LEB**, and the
-left-hand end of all four through-headers. (RTL still calls the module
+left-hand end of all four hookbusy stack headers. (RTL still calls the module
 `common_card`; the board is this.) Its front edge is bare 2HP and is the
 panel's **slot legend**. It carries no lamps.
 
@@ -120,7 +120,7 @@ panel's **slot legend**. It carries no lamps.
 | the inhibit | ½ 74HC123, retriggerable, about a cell and a half |
 | the control buffer | 1 × 74HC244 — six of eight bits onto the control bus |
 | decoupling | 100 nF a package, at the '244 and the '138 |
-| connectors | cable A tap, cable B tap; four stack headers (through toward the lamps) |
+| connectors | cable A tap, cable B tap; four **hookbusy stack** headers (through toward the lamps) |
 | | **≈ 4½ packages** |
 
 **No shunt column and no MODE.** This card is one position and one job.
@@ -150,7 +150,7 @@ taken: nothing on this card writes a latch.
 
 ### 3.3 Stack-side headers
 
-Four through-headers, pin 1 at the front (lamp) edge. The interface card is
+Four **hookbusy stack** headers, pin 1 at the front (lamp) edge. The interface card is
 the left end: its receptacles face the first lamp card; the cable taps and the
 legend face out.
 
@@ -224,13 +224,13 @@ an undriven instant reads *not busy* — and a '259 is transparent while address
 so a lamp is wrongly **cleared** and holds that until its block's next visit, up
 to a scan later.
 
-Half a package removes the question. A word is 31 µs at 512 kHz and the field is
+Half a package removes the question. A word is 125 µs at 128 kHz and the field is
 blind for it; the lamp it would have written is written on the next frame, 15.6
 µs later. §7.2 measures both halves of that.
 
 **`INH` timing.** Any edge on cable `SCLK` retriggers the '123. The output pulse
 is about **1½ cells** (RTL `INH_TICKS = 12` at 4.096 MHz ≈ 2.93 µs against a
-1.95 µs cell). The RC (or the second half of the '123 strapped as a fixed
+1.95 µs cell). The RC (or the second half of the '123 jumpered as a fixed
 width) is set on the bench; the number is arithmetic until then.
 
 ### 3.7 Signal flow
@@ -517,7 +517,7 @@ wants, and it is a jumper, not a different card.
   identical to the hook field, eight packages instead of twelve, refreshed every
   frame and working with no marker. Cable A is a 64-way carrying 31 signals with
   one spare pin, so this is not a change to make today — but `HB[0..7]` belongs
-  on §8's list of what a future cable should carry, beside `HB`, `RX_OCT` and
+  on §8's list of what a future cable should carry, beside `LINE_HB`, `RX_OCT` and
   `/CON`, which are the precedent for cable A growing at all.
 - **`mainboard.md` §9** still has `M` unlisted as a conductor. If cable A is
   ever respun, that and a `BUSY` highway are the two open items, and pin 1 is

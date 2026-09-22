@@ -14,7 +14,7 @@ with a network unit and monitors added. The mini-marker of `mini-marker.md` is
 a marker: it is allowed to stay fitted when those go in.
 
 > **Status: proposed.** The split is the one `network.md` §3.2 already named —
-> the marker hunts a class and knows nothing of directions; the network card
+> the marker hunts a class and knows nothing of directions; the network unit
 > holds the flood — and that `marker.v` had folded the flood back into the
 > marker. The ribbons are the ones `register.md` §6, `monitor.md` §6 and
 > `marker.md` §4 already carry, written as a contract so a second marker or a
@@ -38,7 +38,7 @@ a marker: it is allowed to stay fitted when those go in.
 |---|---|---|---|
 | **Marker** | yes | scans, probes, attaches a register to a caller, writes latches, hunts a class if it has one | mini-marker (`mini-marker.md`); the class marker (`marker.md`); later, one that reads nails and answers-to |
 | **Register** | yes | counts pulses on one caller's M, holds four digits, `restart`, `gone` | `register.md` §4's pulse collector; later, the same store with a DTMF writer (`register.md` §7) |
-| **Network unit** | no | origin flood, transit forward, resolvers, own-code, guard, CLAIM writes | a one-direction jig (strapped trunk ports, no `/HUNT_INH`); the card of `network.md` §3.2 |
+| **Network unit** | no | origin flood, transit forward, resolvers, own-code, guard, CLAIM writes | a one-direction jig (jumpered trunk ports, no `/HUNT_INH`); the card of `network.md` §3.2 |
 | **Monitor** | no, and not on this tap | reads `e b` off a trunk's M, holds a claim until acked | `monitor.md`; a one-cell pool on a bring-up block |
 
 **A local call never needs the last two.** `h s` is the marker and a register.
@@ -107,14 +107,14 @@ serialiser.
 | latch writes | seize / forward / CLAIM / drop; `CLAIM` is bit 0 of the word (`mainboard.md` §2.3) |
 
 **Key `1` is not a highway and not a hunt the marker completes.** With a
-network unit fitted (a strap, or the card present), the marker consumes the
+network unit fitted (a jumper, or the card present), the marker consumes the
 digit at once, restarts, drops dial tone, and raises `flood_go`. It does not
 learn a direction and it does not wait for a claim. Without the unit, `1` is
 highway 1 (`protocol.md` §5). The diode that used to live on the marker lives
 on the unit, which is why a solo exchange can dial `1 s`.
 
 **A trunk's M is never a call request at the marker.** Class trunk, or a
-strapped mask on a mini-marker that does not read the word, is the unit's:
+jumpered mask on a mini-marker that does not read the word, is the unit's:
 hold the port busy listening to idle, and forward. Leave this as `M · /BUSY`
 and a flood seizes a register at every hop.
 
@@ -143,7 +143,7 @@ without a new marker (`mvp.md` §5, `network.md` §3.2):
 
 The mini-marker has no hunt, so `/HUNT_INH` is unused. It still puts `M` (and
 `BUSY`) out, and it still accepts the attach / `CLAIM` / `restart` side of §2.2.
-A one-direction bring-up hunts by a **strapped port mask**, not by the word.
+A one-direction bring-up hunts by a **jumpered port mask**, not by the word.
 
 `mainboard.md` §9: `M` has never been listed as a conductor on cable B. It
 belongs to this tap, not to the block ribbon.
@@ -180,8 +180,8 @@ The same marker — including the mini-marker — plus:
 
 | fit | |
 |---|---|
-| network unit | own-code jumpers `e b`, the origin guard strap, one seize-bank a register, the forwarder; resolvers only at a hub |
-| block 1 | MF8 trunk card (six channels), `/ANS` low, word = class trunk + direction (or a strap mask if the marker does not read the word) |
+| network unit | own-code jumpers `e b`, the origin guard jumper, one seize-bank a register, the forwarder; resolvers only at a hub |
+| block 1 | MF8 trunk card (six channels), `/ANS` low, word = class trunk + direction (or a jumper mask if the marker does not read the word) |
 | monitors | two or three on that block (`monitor.md` §4) |
 
 Origin: key `1` → `flood_go` → the unit seizes one free trunk every direction,
@@ -195,7 +195,7 @@ direction (one direction: hold only). Monitor match → `CLAIM`, attach a
 register to the trunk, the register reads `h s` as from a phone.
 
 A two-exchange chain is that list with one direction and no resolver. Hub
-fan-out and the glare / no-forward strap are the same unit with more parts
+fan-out and the glare / no-forward jumper are the same unit with more parts
 (`network.md` §3.2–3.3). They are not a smarter marker.
 
 ---

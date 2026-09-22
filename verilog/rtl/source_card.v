@@ -10,7 +10,7 @@
 `timescale 1ns/1ps
 
 module source_card #(
-    parameter [7:0]  WORD = 8'h06,            // class 011 source, form 0
+    parameter [15:0] WORD = 16'h000F,         // class 011 source, type 11; high byte unused
     parameter [15:0] SEED = 16'hACE1
 )(
     input        clk,
@@ -29,8 +29,17 @@ module source_card #(
     assign a_tx  = 1'b0;                      // a source never answers
     assign ans_n = 1'b0;                      // and never rings
 
-    reg [7:0] sr = WORD;
-    always @(posedge clk) if (frame_stb)
-        sr <= tx_oct ? WORD : {1'b0, sr[7:1]};
+    reg [15:0] sr = WORD;
+    reg [4:0]  div = 5'd0;
+    always @(posedge clk) begin
+        if (frame_stb && tx_oct) begin
+            sr  <= WORD;
+            div <= 5'd0;
+        end else if (div == 5'd31) begin
+            sr  <= {1'b0, sr[15:1]};
+            div <= 5'd0;
+        end else
+            div <= div + 1'b1;
+    end
     assign word_pin = sr[0];
 endmodule

@@ -48,12 +48,12 @@ that:
 
 **Use the 74HC112.** It is the only one of the three for which §9.2's drawing
 and its timing note are both true as written: the JK and the divider that makes
-`H` take the same falling edge of `HB`, the JK reads `H` from before it, and the
+`H` take the same falling edge of `LINE_HB`, the JK reads `H` from before it, and the
 condition is the one §9.2 states — the '393's clock-to-Q against the JK's hold
 time, a few nanoseconds at most. Check it against the parts, as §9.2 says.
 
 A rising-edge part on the falling-edge chain also works, and has no race at all
-— it samples half an `HB` period after `H` last moved — but every decision moves
+— it samples half an `LINE_HB` period after `H` last moved — but every decision moves
 a quarter-cell early. Bit *n* is then read 0.25 cell into counter cell *n*
 rather than 0.5, so `mf8-backplane.md` §5's transmit margins become setup from
 1.25 cells (2.44 µs, was 2.93) and hold 1.46 µs (was 0.98), and the mux has

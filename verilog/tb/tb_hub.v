@@ -46,7 +46,7 @@ module tb_hub #(
     localparam [1:0] N = 2'd0, S = 2'd1, E = 2'd2, W = 2'd3;
 
     // the trunk channels of the hub's four blocks (net_site: 1, 3, 4, 5)
-    localparam [63:0] HUBT = 64'h0000_FFFF_FF00_FF00;
+    localparam [63:0] HUBT = 64'h0000_EEEE_EE00_EE00;
 
     reg clk_h=0, clk_a=0, clk_b=0, clk_c=0, clk_d=0, rst_n=0;
     always #122.0703 clk_h = ~clk_h;

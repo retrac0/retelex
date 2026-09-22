@@ -151,7 +151,7 @@ request.
 - Share cable B with a console. Bring-up with the console is `mvp.md` §6.3
   (latches by hand) and does not need this marker; it does not yield `/CON`.
 - Hold more than one caller. A second phone waits for the register.
-- Become the class marker by adding straps. The class marker is a different
+- Become the class marker by adding jumpers. The class marker is a different
   card. Fit it, and unplug this — or don't: a network unit does not need the
   class marker.
 
@@ -166,7 +166,7 @@ one `pulse_reg` with `restart` tied off unless a network unit is wired.
 States:
 
 ```
-IDLE → (M · /BUSY, register free, not a strapped trunk) → COLLECT
+IDLE → (M · /BUSY, register free, not a jumpered trunk) → COLLECT
      → (two highway digits) → PROBE
      ↘ bad first digit / nodig → 03, IDLE
      ↘ flood_go (unit fitted, key 1) → YIELD  (the unit owns the call)
@@ -188,7 +188,7 @@ sequencer. It grows the **hooks** a unit already needs from a class marker:
 |---|---|
 | key `1` | consume, restart, drop dial tone, `flood_go` — not highway 1 |
 | `restart` | wired, so `e b h s` land in four slots |
-| trunk ports | a strapped mask: `M · /BUSY` there is not a caller. The unit holds and forwards |
+| trunk ports | a jumpered mask: `M · /BUSY` there is not a caller. The unit holds and forwards |
 | probe out | scanned port, M, `BUSY` (no word: the unit hunts by the same mask) |
 | claim attach | the unit asks; attach the register to that trunk; later writes keep `CLAIM` |
 | YIELD | the unit signals `local` / `done` / `nogo`; this marker does not wait for a claim itself |

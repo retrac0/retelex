@@ -52,7 +52,7 @@ module tb_stress #(
     // lines fill blocks 2-7: ports 20-77, dialled as their own h s
     localparam [63:0] LP = 64'hFFFF_FFFF_FFFF_0000;
     localparam integer NLINE = 48;
-    localparam [63:0] TR = 64'h0000_0000_0000_FF00;     // the trunk's eight channels (block 1)
+    localparam [63:0] TR = 64'h0000_0000_0000_EE00;     // the trunk's six channels (block 1: 11-13,15-17)
 
     // B runs on its own crystal: mf8-backplane.md 2's plesiochronous case, which
     // is what any two ends of a link are.  A slip should cost a bit, not a call.
@@ -72,7 +72,7 @@ module tb_stress #(
     wire        a2b, b2a, lk_a, lk_b, fs_a, fs_b, rc_a, rc_b;
 
     // A is 22 and faces E; B is 23 and faces W.  With PAIR = 0 B is not there
-    // and A's trunk card sees no carrier, so its eight channels read unequipped
+    // and A's trunk card sees no carrier, so its six channels read unequipped
     // and the key `1` finds nothing to seize: the standalone exchange.
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2), .LINE_PORTS(LP),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -207,7 +207,7 @@ module tb_stress #(
 
     // counters.md 9 rests on one invariant: a claim is always written BUSY,
     // so BSY = 0 with CLM = 1 is a pattern NO latch write ever carries and an
-    // event strap can never count a call.  wr_stb is a real write and nothing
+    // event jumper can never count a call.  wr_stb is a real write and nothing
     // else -- an event word does not raise it -- so this counts violations.
     integer n_gclm = 0;
     always @(posedge clk_a) if (ws_a && !wb_a && wc_a) n_gclm = n_gclm + 1;
@@ -617,10 +617,10 @@ module tb_stress #(
         $display("      -- each one a wrong number, before the marker took to deferring)");
 
         // ---- counters.md 9: what the event words counted --------------
-        // Five counter cards on each exchange's ribbon, strapped for a word
+        // Five counter cards on each exchange's ribbon, jumpered for a word
         // with G = 0 -- one that writes to no block.  Nothing here is checked
         // against an expected number: the traffic is random.  What IS checked
-        // is that no such word ever reached a strap meant for a call, which is
+        // is that no such word ever reached a jumper meant for a call, which is
         // the invariant below.
         $display("");
         $display("  event words on the ribbon (counters.md 9)%s:",
@@ -638,7 +638,7 @@ module tb_stress #(
         want(ev_a[15:0] == ev_a[31:16] + ev_a[47:32] + ev_a[63:48] + ev_a[79:64],
            "A's event codes account for every event word");
         want(n_gclm == 0,
-           "no latch write carried CLM without BSY -- the event strap is safe");
+           "no latch write carried CLM without BSY -- the event jumper is safe");
         wantn($countones(pb_a & TR) == 0, $countones(pb_a & TR),
               "no trunk channel left seized");
 

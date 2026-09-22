@@ -46,7 +46,8 @@ module mini_marker #(
     output reg [5:0] wr_dst,
     output reg [5:0] wr_src,
     output reg       wr_bsy,
-    output reg       wr_clm
+    output reg       wr_clm,
+    output     [2:0] scan_port
 );
     // ---------------- the register, one, inside --------------------------
     wire        r_busy, r_gone, r_nodig;
@@ -76,6 +77,7 @@ module mini_marker #(
     reg       visit;
     reg       pv, p_valid;
     reg [2:0] pb_blk;
+    assign scan_port = scan[2:0];
 
     // ---------------- write queue (four deep) and serialiser -------------
     // { BSY, SRC, DST }.  G is always 1, CLAIM always 0.

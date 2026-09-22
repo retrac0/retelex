@@ -1,6 +1,6 @@
 # MF8 backplane — modules, interfaces and clocking
 
-The exchange is a trunk card, eight channel slots and a passive backplane. This
+The exchange is a trunk card, six channel slots and a passive backplane. This
 document defines every interface along the chain
 
 ```
@@ -47,7 +47,7 @@ to exactly one of them.
 
 | domain | source | rate | on the backplane as |
 |---|---|---|---|
-| **T** — transmit | the trunk card's 4.096 MHz crystal, through the `mf8-spec.md` §9.1 chain | 512 kHz line, 64 kHz frame, 8 kHz superframe | `TX_CLK`, `TX_HB`, `TX_OCT`, `FILL` |
+| **T** — transmit | the trunk card's 4.096 MHz crystal, through the `mf8-spec.md` §9.1 chain | 512 kHz line, 64 kHz frame, 8 kHz superframe | `TX_CLK`, `LOOP_HB`, `TX_OCT`, `FILL` |
 | **R** — receive | recovered from the trunk pair by the §9.4 classifier: transition-timed, no clock | 64 kHz frame, 8 kHz superframe, nominal | `RX_CLK`, `RX_OCT`, `C_RX`, `A_RX`, `MUTE` |
 | **P** — each phone | the phone's upstream, recovered at the line card by its own §9.4 receiver; one per line, loop-timed to T if the phone loop-times, free-running otherwise | 64 kHz bit strobe | never on the backplane |
 
@@ -93,7 +93,7 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | signal | driver | loads | domain | rate | meaning |
 |---|---|---|---|---|---|
 | `TX_CLK` | TC | all slots | T | 64 kHz | the frame clock. Rising edge = the start of bit 0 (F). Every T-domain output on every card changes on this edge and only on it. Also the subscriber line's bit clock |
-| `TX_HB` | TC | line cards | T | 128 kHz | half-bit clock for the subscriber line's differential-Manchester encoder — the next tap of the same '4040 chain |
+| `LOOP_HB` | TC | line cards | T | 128 kHz | half-bit clock for the subscriber line's differential-Manchester encoder — the next tap of the same '4040 chain |
 | `TX_OCT` | TC | PCM and data cards | T | 8 kHz | one frame wide, at superframe state 7: the octet boundary (`mf8-spec.md` §6) |
 | `FILL` | TC | every `C_TX` through 4.7 kΩ | T | 32 kHz | `TX_CLK` ÷ 2 — one bit per frame alternating, the `1010` empty-slot fill of §12.3 |
 | `C_TX[n]` | slot *n* | TC frame mux input *n*'s bit | T | 64 kb/s | slot *n*'s channel bit for this frame |
@@ -108,7 +108,7 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | `+5 V`, `GND` | PSU | all | | | logic |
 | `±12 V` | PSU | E&M cards, comparators | | | analog |
 | `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `channel-cards.md` §3.4 |
-| `RING`, `RING RET` | shelf ring generator on the Noisy PSU (`mf8-psu.md`) | FXS layers only, by a strap per layer | | 20 Hz, ~80 Vrms | the ringing bus of `channel-cards.md` §3.4; cadence is far-end A; never reaches a line, data or E&M card |
+| `RING`, `RING RET` | shelf ring generator on the Noisy PSU (`mf8-psu.md`) | FXS layers only, by a jumper per layer | | 20 Hz, ~80 Vrms | the ringing bus of `channel-cards.md` §3.4; cadence is far-end A; never reaches a line, data or E&M card |
 
 Two things are deliberately absent. **No slot-ID pins:** slot *n*'s `C_TX`,
 `A_TX`, `C_RX` and `A_RX` are wired to input and output *n* of the trunk card's
@@ -138,7 +138,7 @@ phantom. Signalling is the held patterns of §2 of that document.
 | `UP_STB` | SL → CH | P | transition-timed, ~64 kHz | the receiver's bit strobe |
 | `ON_HOOK` | SL → CH | level | 4 ms RC, comparator 0.85 / 0.70 | the `1100` detector of `subscriber-line.md` §3 |
 | `DN_D` | CH → SL | T | changes on `TX_CLK` | the bit to send to the phone |
-| `TX_CLK`, `TX_HB` | CH → SL | T | | the encoder's bit and half-bit clocks, straight from the bus |
+| `TX_CLK`, `LOOP_HB` | CH → SL | T | | the encoder's bit and half-bit clocks, straight from the bus |
 | `UP_CD` | SL → CH | level | 2 cells | carrier on the upstream (§9.6); folded into `ON_HOOK` by the detector's violation term, kept for the panel |
 
 For the **E&M card**, I2 is four-wire audio at the level `mf8-spec.md` §12.1's
@@ -167,14 +167,15 @@ uses.
 
 | at the trunk card | in / out | domain | timing |
 |---|---|---|---|
-| `C_TX[0..7]` | in, to the '150 | T | sampled during that channel's C seat of each frame (§5) |
-| `A_TX[0..7]` | in, to the signalling mux | T | sampled at bit 8 of the frame at the superframe state of that C seat |
-| `TX_CLK`, `TX_HB`, `TX_OCT`, `FILL` | out | T | from the '393 chain, buffered |
+| `C_TX[1..6]` | in, to '151 inputs 1, 2, 3, 5, 6, 7 | T | sampled during bit `CBIT[n]` of each frame (§5) |
+| `A_TX[1..6]` | in, to the signalling '151 inputs 1, 2, 3, 5, 6, 7 | T | sampled at bit 4 of the frame at superframe state `CBIT[n]` |
+| `TX_CLK`, `LOOP_HB`, `TX_OCT`, `FILL` | out | T | from the '393 chain, buffered |
 
-The signalling mux follows the C seats (bits 1–7 and 9), not a 3-bit `SLOT`.
-Guard pads sit at states 0 and 8 (`mf8-spec.md` §3.2). On an *exchange* the
-unit sits on collect T and this I3 is eight appearances, not a stack header
-(`mf8-unit.md` §5).
+The signalling mux and the frame mux use the same input numbering because the
+guard sits at states 0 and 4 (`mf8-spec.md` §3.2): the S superframe mirrors the
+frame, so slot *n*'s A bit is at superframe state `CBIT[n]` as its C bit is at
+frame bit `CBIT[n]`. On an *exchange* the trunk card taps the highway
+(`mf8-unit.md` §1) instead of this stack header.
 
 ### I4, I5 — the trunk pair
 
@@ -184,8 +185,8 @@ unit sits on collect T and this I3 is eight appearances, not a stack header
 
 | at the trunk card | in / out | domain | timing |
 |---|---|---|---|
-| `C_RX[0..7]` | out, two '174s (or a '259) written on the C seats | R | all eight written before `RX_CLK` |
-| `A_RX[0..7]` | out, the §11 '259 addressed by the superframe map, written at bit 8 | R | output *n* at the C seat's superframe state; cleared while not locked |
+| `C_RX[1..6]` | out, a 74HC259 addressed by the receiver's bit counter, D = the recovered data, write = the recovered bit strobe | R | output *n* written during bit `CBIT[n]`; all six written before `RX_CLK` |
+| `A_RX[1..6]` | out, the §11 '259 addressed by the superframe counter, written at bit 4 | R | output *n* written at superframe state `CBIT[n]`; cleared while not locked |
 | `RX_CLK`, `RX_OCT` | out | R | from the receiver's counters |
 | `MUTE`, `LOCK`, `CD` | out | R | §13 |
 
@@ -300,16 +301,16 @@ at 200 and 20.7 at 1 000.
 
 **Form factor (decided): 100 × 100 mm spacer-stack** — channel layers, Trunk-D /
 Trunk-A (`mf8-trunk.md`), Quiet / Noisy PSU (`mf8-psu.md`). The pin table below
-is unchanged; it is what through-header **C** must present. **C geometry and the
+is unchanged; it is what stack header **C** must present. **C geometry and the
 gateway slot are deferred.**
 
 | | |
 |---|---|
 | Cards | **100 × 100 mm** (stack). Was: Eurocard 100 × 160 |
 | Positions | six channel layers + Trunk-D + Trunk-A + Quiet PSU + Noisy PSU (gateway deferred) |
-| Channel interconnect | roles below on a through-stack header; shell still open (`common-cards.md` §7.1) |
+| Channel interconnect | roles below on stack header C; shell still open (`common-cards.md` §7.1) |
 | Bus length | stack ≪ 25 cm; electrically short; no termination |
-| Clock drivers | one 74HC244 on **Trunk-D** for `TX_CLK`, `TX_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series |
+| Clock drivers | one 74HC244 on **Trunk-D** for `TX_CLK`, `LOOP_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series |
 | Ground | logic `GND`; `−48 RET` and `RING RET` separate, star at the PSU (`mf8-psu.md` §7) |
 | Fusing | −48 V through a 100 mA PTC per channel layer |
 | Ring | ~80 Vrms, 20 Hz; **cadence is the far A bit**, not a local cadence rail |
@@ -319,7 +320,7 @@ gateway slot are deferred.**
 | pin | a | c |
 |---|---|---|
 | 1 | `TX_CLK` | `+5 V` |
-| 2 | `TX_HB` | `GND` |
+| 2 | `LOOP_HB` | `GND` |
 | 3 | `TX_OCT` | `+5 V` |
 | 4 | `FILL` | `GND` |
 | 5 | `C_TX[n]` | `+12 V` |
@@ -329,21 +330,21 @@ gateway slot are deferred.**
 | 9 | `C_RX[n]` | `−48 V` (fused) |
 | 10 | `A_RX[n]` | `−48 RET` |
 | 11 | `MUTE` | `GND` |
-| 12 | `TYPE0` (reserved) | `RING` (FXS slots only, strapped) |
-| 13 | `TYPE1` (reserved) | `RING RET` |
-| 14 | `RAI` (reserved) | `GND` |
+| 12 | **card word** (was `TYPE0`) | `RING` (FXS slots only, jumpered) |
+| 13 | **`/ANS`** (was `TYPE1`) | `RING RET` |
+| 14 | `RAI` — spare | `GND` |
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
-The exchange uses two of the three reserved pins (`exchange/extensions.md`
-§2.1): a12 carries the port's word, its class and options one bit a frame, and
-a13 is `/ANS`, whether the port rings. a14 stays spare. A card only ever pulls
-the two to ground, and this shelf leaves them unconnected, so a card built for
-the exchange works here unchanged. The remote alarm that `mf8-spec.md` §3.5
+The exchange uses a12 and a13 (`exchange/extensions.md` §2.1): a12 carries the
+**card word**, its class and options one bit a frame, and a13 is `/ANS`, whether
+the port rings. a14 stays spare. A card only ever pulls the two to ground, and
+this shelf leaves them unconnected, so a card built for the exchange works here
+unchanged. The remote alarm that `mf8-spec.md` §3.5
 puts on x is between trunk cards, and reaches the panel from the trunk-card slot
 as `LOCK` and `CD` do.
 
-`RING` sits on the power row between ground pins, and the strap that brings it
+`RING` sits on the power row between ground pins, and the jumper that brings it
 to a layer is fitted only for an FXS card; every other layer's pin c12 is left
 open. Cadence is not generated here: the far end's A bit opens and closes the
 FXS ring relay. `LOCK` and `CD` go to the panel from Trunk-D and no channel card

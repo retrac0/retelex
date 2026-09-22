@@ -1,7 +1,7 @@
 // trunk_site -- one exchange with a trunk block and a block of lines.
 //
-//   block 1   an MF8 exchange unit: eight tie-trunk channels at ports 10-17.
-//             The unit takes the whole highway (mf8-unit.md 5).  Port 00 is
+//   block 1   an MF8 trunk card: six tie-trunk channels at ports 11-13/15-17.
+//             The trunk card taps the highway (mf8-unit.md 1).  Port 00 is
 //             the silence a cleared latch listens to; 04 would be the operator.
 //   block 2   two line cards, ports 20 and 21.
 //
@@ -43,7 +43,7 @@ module trunk_site #(
     wire [7:0]  tk_c_tx, tk_a_tx, tk_word;
 
     exch_top #(.BLOCK_FITTED(8'b0000_0110),                 // blocks 1 and 2
-               .PORT_FITTED (64'h0000_0000_0003_FF00),      // 10-17, 20, 21
+               .PORT_FITTED (64'h0000_0000_0003_EE00),      // 11-13/15-17, 20, 21
                .PORT_RINGS  (64'hFFFF_FFFF_FFFF_0000),      // trunks tie /ANS low
                .RBT_IS_FILL(1'b1),
                .T_RISE(T_RISE), .T_FALL(T_FALL),
@@ -51,8 +51,9 @@ module trunk_site #(
     u_exch (.clk(clk), .rst_n(rst_n),
             .c_tx(c_tx), .a_tx(a_tx), .word(word), .c_rx(c_rx), .a_rx(a_rx),
             .sdata(sdata), .sclk(sclk), .wr(wr),
+            .con_n(1'b1), .scan_port(3'd0),
             .pb_busy(), .pb_word(), .port_busy(), .hc(), .ha(),
-            .slot(slot), .slotq(), .tick(tick), .hclk(), .hb(), .tx_clk(),
+            .slot(slot), .slotq(), .tick(tick), .hclk(), .line_hb(), .tx_clk(),
             .frame_stb(frame_stb), .tx_oct(tx_oct), .rx_oct(),
             .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k());
 
