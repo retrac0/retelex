@@ -38,8 +38,9 @@ card (`channel-cards.md` §2).
 
 The shelf CVSD codec **R** riser (`cvsd-codec.md`) is a different host and
 header. SU-A reuses the same engine parts with a phone-specific **S** header
-(§5). The same **S** accepts **SDU-1** (`sdu-1.md`) instead of SU-A: a 32 kb/s
-data riser; SU-D still owns the line code and `1100`.
+(§5). The same **S** accepts **SDU-1** (`sdu-1.md`) as a data-only riser, or
+both engines on one dual-mode riser with a panel switch (§6). SU-D still owns
+the line code and `1100`.
 
 ---
 
@@ -58,11 +59,14 @@ Unchanged from `subscriber-line.md` §§1–5. Summarised for the unit:
 Phone logic (`subscriber-line.md` §4):
 
 ```
-TX   = ON-HOOK or dial break  ?  1100  :  CVSD encoder
-encoder input = dial off-normal ? silence : microphone
+TX   = ON-HOOK or dial break  ?  1100  :  BIT_ENC from the S riser
+encoder input = dial off-normal ? silence : microphone   (voice path)
 ring = RING · ON-HOOK                                 → sounder
 decoder input = RING ? 1010 : Q ;  audio muted while ON-HOOK
 ```
+
+On a voice-only set, `BIT_ENC` is the CVSD encoder. Dual-mode (§6) steers
+`BIT_ENC` / `BIT_DEC` between CVSD and insert-1; the `1100` mux stays on SU-D.
 
 **Mute while off-normal** is mandatory so makes carry `1010` and the register
 sees a fixed shortening (`subscriber-line.md` §5, `register.md` §1.1).
@@ -75,9 +79,10 @@ sees a fixed shortening (`subscriber-line.md` §5, `register.md` §1.1).
 |---|---|
 | **Pad** | 4×4 momentary keys, Autovon / DTMF layout (§4) |
 | **Hook** | cradle or switchhook; open = on-hook |
-| **Handset** | 4P4C on SU-A |
+| **Handset** | 4P4C on SU-A (or the voice half of a dual-mode riser) |
 | **Line** | two pairs (RJ45 or terminal block on SU-D) — tip/ring of each pair; no third pair |
-| **Sounder** | piezo / transducer on SU-A, driven by `RING` |
+| **Sounder** | piezo / transducer on the voice path, driven by `RING` |
+| **Mode** | on a dual-mode set only: panel **VOICE / DATA** (§6) |
 
 No exchange channel socket. No DTMF generator on the pad in mk1: every key
 is a pulse count. In-band DTMF remains possible later through the codec if a
@@ -189,15 +194,60 @@ Mic and ear stay on SU-A; they do not cross S as primary audio. `MUTE` and
 | Ringer | driver from `RING` to piezo / transducer |
 | Header | **S** mate |
 
+### 5.4 Populations on S
+
+| population | riser | face |
+|---|---|---|
+| **Voice only** | SU-A | handset, no DTE |
+| **Data only** | SDU-1 (`sdu-1.md`) | DTE, no handset |
+| **Dual mode** | one board with both engines (§6) | handset + DTE + **VOICE / DATA** switch |
+
+One mating on S. Dual mode does not stack SU-A and SDU-1 as two layers.
+
 ---
 
-## 6. Against the exchange
+## 6. Dual mode — panel switch
+
+A dual-mode set keeps **both** the type-A CVSD path and the insert-1 path on
+one riser. A panel switch **VOICE / DATA** selects which engine drives
+`BIT_ENC` and which listens to `BIT_DEC`. SU-D is unchanged: seize, dial
+breaks (`1100`), ring, and phantom do not depend on the switch.
+
+```
+                 ┌─ VOICE ─► CVSD enc ──┐
+  mic / TXD ────┤                      ├──► BIT_ENC → SU-D TX mux
+                 └─ DATA ──► insert-1 ──┘
+
+  BIT_DEC ← SU-D ┬─ VOICE ─► CVSD dec → ear
+                 └─ DATA ──► insert-1 → RXD
+```
+
+| | |
+|---|---|
+| **Switch** | maintained, two positions; silk **VOICE** / **DATA**. No centre off required |
+| **What it steers** | `BIT_ENC` source and `BIT_DEC` sink only. Hook, pad, `MUTE`, `RING`, clocks stay common |
+| **When to throw** | before or during a call; there is no in-band mode digit and no far-end handshake |
+| **Wrong setting** | the far end hears **noise** (or insert-1 stays in hunt / DTE mark). Same class of failure as voice↔shelf-data today (`channel-cards.md` §1, `features.md` §8) |
+| **Exchange** | sees a plain CVSD line card either way. Mode is not in the word and not on A. A *data line* class remains optional hygiene so the marker can refuse known-bad setups; the switch does not need it to work |
+
+Coordination is operational: both ends on VOICE, or both on DATA, or accept
+garbage until they match. Flipping mid-call is allowed and ugly.
+
+Mk1 dual-mode parts: SU-A engine + SDU-1 encode/decode/DTE on one 100 × 100
+riser, plus a 74HC157 (or equivalent) on the switch, 4P4C and the DTE
+connector both stuffed. Power budget is the sum; ±12 still required for the
+codec half.
+
+---
+
+## 7. Against the exchange
 
 Lift, wait, dial `h s`: a register on the line card's port counts the breaks
 on A (derived from the `1100` detector). Dial `1 e b h s` and the same pulses
 ride the flood (`network.md` §3). Nothing in the exchange is different from a
 rotary phone on a CVSD line card. The tester cousin with no handset is
-`pulse-gen.md`; SU-1 is the set with the codec and the ear.
+`pulse-gen.md`; SU-1 is the set with the codec and the ear. Dual-mode DATA
+is still that line: opaque C bits once off-hook (`sdu-1.md` §9).
 
 RTL: `verilog/rtl/su1.v` — phone digital on the simplified four-wire
 subscriber interface (`line_card.v`). Full differential-Manchester PHY stays
@@ -206,9 +256,10 @@ ring trip, and a local call.
 
 ---
 
-## 7. Not measured / deferred
+## 8. Not measured / deferred
 
 - **PCB.** Outline and S pin map locked; schematic and copper not drawn.
+- **Dual-mode riser layout** and the VOICE/DATA switch bounce into `BIT_ENC`.
 - **Phantom PSU** efficiency, rail noise into the codec, and feed imbalance
   (`subscriber-line.md` §7).
 - **Free-run slip** vs loop-timed upstream — open, same as the line doc.

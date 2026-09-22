@@ -6,8 +6,12 @@ Two boards in a spacer stack; no schematic or copper yet.
 | Project | Role | Copies |
 |---|---|---|
 | [`su_d/`](su_d/) | Line PHY, phantom PSU, dial/hook digital, keypad, crystal — **100 × 100 mm** base | 1 per set |
-| [`su_a/`](su_a/) | Type-A enc + dec + recon, 4P4C, sidetone, ringer — **100 × 100 mm** riser | 1 per set |
-| (later) `sdu_1/` | Data riser on the same **S** — see `common/sdu-1.md`; not provisioned here yet | 0 or 1 (not with SU-A) |
+| [`su_a/`](su_a/) | Type-A enc + dec + recon, 4P4C, sidetone, ringer — **100 × 100 mm** riser | 1 if voice-only |
+| (later) `sdu_1/` | Data-only riser on the same **S** — `common/sdu-1.md` | 1 if data-only |
+| (later) `su_ad/` | Dual-mode riser: both engines + **VOICE / DATA** switch — `su-1.md` §6 | 1 if dual-mode |
+
+Voice-only, data-only, and dual-mode are **alternative** S populations — never
+two risers stacked.
 
 ## Locked for this design pass
 

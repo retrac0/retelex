@@ -4,9 +4,10 @@ A freestanding **synchronous data NT** on the two-pair subscriber line of
 `subscriber-line.md`. It does **not** touch the pair: the **subscriber voice
 unit** (SU-1’s SU-D, or an equivalent line base) owns differential Manchester,
 phantom power, `1100` / zeros signalling, and the hook and ring detectors.
-SDU-1 is a **pass-through riser** on mezzanine header **S** in place of the
-CVSD audio board (SU-A). The exchange still sees an ordinary CVSD subscriber
-line card (`channel-cards.md` §2).
+SDU-1 is a **pass-through riser** on mezzanine header **S**: either alone in
+place of the CVSD audio board (SU-A), or as the **DATA** half of a dual-mode
+riser with a panel switch (`su-1.md` §6). The exchange still sees an ordinary
+CVSD subscriber line card (`channel-cards.md` §2).
 
 > **Status: proposed.** The insert-1 alphabet and the hook/ring margins are
 > checked in analysis against `subscriber-line.md` §3’s detectors (below).
@@ -23,8 +24,9 @@ line card (`channel-cards.md` §2).
                   CVSD line card ──► exchange
 ```
 
-SU-A (codec / handset) is **not fitted** when SDU-1 is fitted. One riser at a
-time on S.
+**Populations.** Data-only: SDU-1 on S, SU-A not fitted. Dual-mode: both
+engines on one riser; **VOICE / DATA** selects which drives `BIT_ENC`
+(`su-1.md` §6). Do not stack SU-A and SDU-1 as two layers on S.
 
 ---
 
@@ -54,19 +56,20 @@ Declared silk rate: **32 kb/s**. The wire remains a 64 kb/s CVSD-shaped plug.
 | Dial pad + pulse sequencer | **SU-D** | same Autovon → pulses as `su-1.md` §4 |
 | Insert-1 encode / decode | **SDU-1** | §3 |
 | DTE (RS-422, clocks, control) | **SDU-1** | §5 |
-| CVSD codec / handset / sounder | **absent** | SU-A not stacked |
+| CVSD codec / handset / sounder | **absent** on data-only; present on dual-mode (`su-1.md` §6) | switch steers `BIT_*` |
 
 SU-D’s interface law is unchanged (`su-1.md` §2):
 
 ```
-TX   = ON-HOOK or dial break  ?  1100  :  BIT_ENC     ← BIT_ENC from SDU-1
-BIT_DEC = RING ? 1010 : Q                            ← into SDU-1 decode
+TX   = ON-HOOK or dial break  ?  1100  :  BIT_ENC     ← from SDU-1, or dual-mode switch
+BIT_DEC = RING ? 1010 : Q                            ← into SDU-1 decode (when DATA)
 ring  = RING · ON-HOOK                               ← RI to DTE; no piezo required
 ```
 
 SDU-1 never drives the pair and never generates `1100`. When the set is
 on-hook, SU-D substitutes `1100` and SDU-1’s encoder is don’t-care (hold mark
-or high-Z on `BIT_ENC` per §6).
+or high-Z on `BIT_ENC` per §6). On dual-mode **VOICE**, the insert-1 path is
+deselected the same way — don’t-care on its `BIT_ENC` leg.
 
 ---
 
@@ -179,13 +182,13 @@ halved rate):
 | `DTR` | in | seize: DTR true → off-hook request to SU-D (§6) |
 | `DSR` | out | from SU-D carrier / not `MUTE` / decode lock (mk1: AND of the three) |
 | `RI` | out | `RING` from S (cadenced zeros on the line) |
-| `RTS`/`CTS` | — | strapped or looped in mk1; no flow control in the code |
+| `RTS`/`CTS` | — | jumpered or looped in mk1; no flow control in the code |
 
 Electrical: **RS-422** differential on a rear/DTE connector (shelf data card
 practice). Logic on the board is HC at +5.
 
 No octet alignment in mk1: the subscriber plug has no superframe. Byte packing
-is the DTE’s problem, or a later strap.
+is the DTE’s problem, or a later jumper.
 
 ---
 
@@ -255,6 +258,9 @@ insert-1 into a 32 kb/s DTE.
 Connecting this NT through the fabric to a **64 kb/s shelf data card** without
 an insert-1 peer is a rate/code mismatch — label the port.
 
+A dual-mode peer left on **VOICE** while this end is on **DATA** is the same
+kind of failure: noise / hunt, no exchange alarm (`su-1.md` §6).
+
 ---
 
 ## 10. Not measured / deferred
@@ -262,8 +268,9 @@ an insert-1 peer is a rate/code mismatch — label the port.
 - Bench confirm of XOR2 / ones RC with real insert-1 vs `subline.py` thresholds.
 - Loop-timing on SU-D (open, same as `su-1.md` §7).
 - GAL vs MSI for the framer; exact hunt constant N.
-- Async DTE (UART ≤ 32 kBaud into a bit packer) as a later strap.
+- Async DTE (UART ≤ 32 kBaud into a bit packer) as a later jumper.
 - Exchange-side insert-1 tail for calls into shelf data ports.
+- Dual-mode combined riser layout and switch (`su-1.md` §6) — proposed, not drawn.
 - PCB: outline 100 × 100 mm riser assumed; not drawn.
 
 ---
@@ -272,7 +279,7 @@ an insert-1 peer is a rate/code mismatch — label the port.
 
 | doc | |
 |---|---|
-| `su-1.md` | voice unit; SU-D base and S pin map this riser reuses |
+| `su-1.md` | voice unit; SU-D base, S pin map, **dual-mode switch** (§6) |
 | `subscriber-line.md` | pair law, `1100` / zeros, detectors |
 | `channel-cards.md` §2 | CVSD line card (exchange end of this call) |
 | `channel-cards.md` §4 | shelf 64 kb/s data card — different socket, full rate, no insert-1 |
