@@ -4,7 +4,8 @@ Additions to the exchange. Each is a card, or a few jumpers on one. None
 changes the fabric, and none needs a memory part. Test lines are features that
 are lines, in the manner of `features.md`. **Whatever sits behind a port
 says everything about it** (§2): one pin says whether it rings, and one serial
-word says its class, its options, a trunk's direction and what it is nailed to.
+word says its class, its options, a trunk's direction, what it answers to, a
+call nail, or a tied nail.
 A hotline to another exchange is a card that dials. The traffic counters count
 what the marker already does.
 
@@ -72,14 +73,14 @@ and the caller leaves by hanging up.
 it, in two places.** One pin, `/ANS`, says the one thing the port's own gates
 need at every instant: whether the port rings. One serial word says the rest,
 and only the marker reads it: what the port is, its options, which way it goes
-if it is a trunk, and what it is nailed to if it is nailed. The block keeps no
+if it is a trunk, what it answers to, a call nail, or a tied nail. The block keeps no
 per-port settings, so **move a card and all of it moves with the card.**
 
-> **Proposed, not applied here** (`groups.md`): the word's unused quarter,
-> bit 0 and bit 7 both set, becomes *a plain line that answers to `h s`*, and a
-> call that cannot be completed at the number dialled hunts for a port that
-> answers to it. That replaces §2.4's run of adjacent `o` ports and class
-> *operator*. Pin `a14` stays spare; a secondary word is retired.
+> **In the word** (`groups.md`): type `01` is *a plain line that answers to
+> `h s`*, and a call that cannot be completed at the number dialled hunts for a
+> port that answers to it. That replaces the run of adjacent `o` ports and class
+> *operator*. Type `10` is a *call nail to `h s`*. Pin `a14` stays spare; the old
+> secondary **pin** is retired (tagged secondary on `a12` remains).
 
 ### 2.1 The pins
 
@@ -88,86 +89,229 @@ none of them (`mf8-backplane.md` §8). The exchange uses two:
 
 | pin | on the MF8 shelf | in the exchange | at the port | on the card |
 |---|---|---|---|---|
-| a12 | `TYPE0`: reserved | **the word** (§2.2) | a pull-up: open reads "no word" | tied to ground on a plain line card; otherwise an open-drain output, ¼ 74HC03 |
-| a13 | `TYPE1`: reserved | **`/ANS`** (§2.3) | a pull-up: open reads "rings" | tied to ground on a card that never rings |
-| a14 | `RAI`: reserved | spare | | |
+| a12 | not connected | **card word** (§2.2) | ~680 Ω pull-up: open reads "no word" | tied to ground on a plain line card; otherwise open-drain, **2N7002** |
+| a13 | not connected | **`/ANS`** (§2.3) | a pull-up: open reads "rings" | tied to ground on a card that never rings |
+| a14 | spare | spare | | |
 
-A card only ever pulls the two pins to ground, and the MF8 shelf leaves them
-unconnected, so a card built for the exchange works unchanged in an MF8 shelf.
+MF8 reserved a12–a14 under the old names `TYPE0` / `TYPE1` / `RAI`; the live
+names are **card word** and **`/ANS`** (`terms.md`). A card only ever pulls the
+two pins to ground, and the MF8 shelf leaves them unconnected, so a card built
+for the exchange works unchanged in an MF8 shelf.
 Row *c* keeps all seven of its grounds.
 
 - **A card** says it for its one port.
 - **A trunk card** says it for each of its six channels: a word line and an
   `/ANS` line a channel (`network.md` §1, `terminal.md` §3). An MF8
-  trunk card on a tie trunk sends one word to all six from one 74HC165, since its
+  trunk card on a tie trunk sends one word to all six from two 74HC165
+  daisy-chained, since its
   link goes one way, and ties all six `/ANS` lines low. A trunk card is six
   cards' worth of ports in one. **A single-channel trunk card is one port's
   worth**, and sits in any slot (`network.md` §1.1).
 - **An empty slot** says nothing: unequipped, and nothing points at it.
 
-### 2.2 The word
+### 2.2 The card word
 
-One 8-bit word a port, one bit a frame, every `CLK_8K` period. The scanner rests
-on each port for one **`CLK_8K`** period (125 µs; socket `TX_OCT` / a3), so the
-marker has the whole word at the end of every visit (`marker.md` §4, `clocks.md`
-§1). The pin is low for a 1.
+One **16-bit** card word a port, shifted at **128 kHz** (`LOOP_HB` / a2 — the same rate
+as `SCLK`), loaded every **`CLK_8K`**. The scanner still rests **one `CLK_8K`
+period** (125 µs) per port, so sixteen bit-times fit the visit with no scan
+slowdown (`marker.md` §3–4, `clocks.md` §1). The pin is low for a 1.
+(`CLK_8K` is the exchange name for socket `TX_OCT` / a3 — an 8 kHz edge, not
+an 8-bit word.) Bit-time *n* is `WORD[n]` (LSB first on the wire).
+
+**Why this fits.** The probe's word and `BUSY` muxes are addressed by the
+marker's named port (`DST[2:0]` in the serial control word), not by `SLOT`
+(`fabric.md` §1). For the whole visit `PB` holds that card's pin steady, so the
+marker may clock sixteen bits at 128 kHz. Highways stay on `SLOT`; only the
+probe is scanner-addressed.
+
+**Primary (0–7) is enough for a one-chip card.** The second `'165` is optional;
+when unfitted, strap the daisy-chain so bits 8–15 read all ones (`FF`). Tie
+trunks always fit both chips (one shared word for all six channels).
 
 ```
- frame of the octet    0    1  2  3    4  5  6  7
- what the port is      0    c  c  c    p  p  p  p     its class, and four options that depend on the class
- a nail                1    h  h  h    s  s  s  0     the port this one is nailed to (§3.1)
- a plain line          1    1  1  1    1  1  1  1     the pin tied to ground: class line, no options
- nothing               0    0  0  0    0  0  0  0     an empty slot; a card out of service; a trunk whose link is down
+bit-time      01  234  567  89  101112  131415
+field         tt  aaa  bbb  TT  ppp     ppp
+
+CONSTANTS
+plain         11  111  111  11  111     111
+none/OOS      00  000  000  00  000     000
+
+PORT FORMS  (secondary idle = FF)
+tied nail     00  hhh  sss  11  111     111
+answers-to    01  hhh  sss  11  111     111
+call nail     10  hhh  sss  11  111     111   local only
+
+CLASS FORMS  type=11, class ccc in 2–4, options ppp in 5–7
+unequip       11  000  ---  ..  ...     ...   (not sent)
+line          11  001  Pb0  11  111     111   idle sec
+operator      11  010  0b0  11  111     111
+source        11  011  000  11  111     111
+outside       11  100  000  11  111     111
+trunk         11  101  000  10  ddg     000   sec required
+data          11  110  0b0  11  111     111
+restricted    11  111  zb0  11  111     111   ¬z → local floor
+
+SECONDARY EXTENSIONS  (tag ≠ 11; only listed pairs)
+class+cover   11  ccc  ppp  01  hhh     sss   not trunk
+ans+alias     01  hhh  sss  01  hhh     sss   second local answers-to
+ans field A   01  hhh  sss  00  000     000   reserved layout; ignored (§2.2.1)
+ans field B   01  hhh  sss  10  LUK     000   hunt-condition flags (§2.2.1)
+              01  hhh  sss  10  111     111   field B, no feature
+net nail      10  hhh  sss  00  eee     bbb   RESERVED/OOS
+
+any other tag×primary / MBZ=1 / tag11∧payload≠111111  →  OOS
+
+LEGEND
+  tt          type (0–1): 00 tied nail · 01 answers-to · 10 call nail · 11 class
+  aaa / bbb   primary (2–7): port hhhsss, or class ccc + options ppp
+  TT          secondary tag (8–9) — one tag a word (field A XOR field B)
+  ppp ppp     secondary payload (10–15); meaning from (type × TT)
+  hhh sss     local port (hundreds / units, octal)
+  eee bbb     remote exchange (network nail; reserved)
+  ccc         class code (see CLASS FORMS)
+  ppp         primary options, or payload octal triplets
+  P           priority (line)
+  b           busy-out / busy-inbound
+  z           0-only (restricted); clear → local-only floor
+  ddg         trunk direction (dd=N/E/S/W) + glare; ttt MBZ 0
+  LUK         field B: local-only / unequipped-owner / busy-owner (§2.2.1)
+  0           must-be-zero (MBZ); a 1 → OOS
+  FF          secondary 11 111 111 — no extension / unfitted chip
+  --- / ..    unused / not sent
 ```
 
-| class `c c c` | | options `p p p p` (frames 4–7) |
+| bit-times | meaning |
+|---|---|
+| **0–1** | type: `00` tied nail · `01` answers-to · `10` call nail · `11` class |
+| **2–7** | local `h h h s s s`, or class `c c c` + options `p p p` |
+| **8–9** | **secondary tag** |
+| **10–15** | **secondary payload** (meaning from the tag) |
+
+#### Primary options `p p p` (bit-times 5–7)
+
+| class `c c c` | | options (5–7) |
 |---|---|---|
-| 000 | unequipped | |
-| 001 | line | `o · b ·` — overflow, spare, busy-out, spare (§2.4) |
-| 010 | operator | `o · · ·` — overflow in the same bit as a line |
-| 011 | source: a radio, a clock, a test tone (`features.md` §6) | |
-| 100 | outside line | |
-| 101 | tie trunk | `d d g n`: its direction, N 00, E 01, S 10, W 11; the glare bit; and `n`, which keeps a flood from being forwarded into this link or out of it, so that a ring does not circle (`network.md` §1, §3.3) |
-| 110 | data line | `o · · ·` — overflow in the same bit as a line |
-| 111 | restricted | `z w b L` — 0-only, warm, busy-inbound, local-only (§2.4). Was *conference leg* |
+| 000 | unequipped | — |
+| 001 | line | `P b **0**` — priority, busy-out; bit 7 **MBZ 0** |
+| 010 | operator | `0 b 0` |
+| 011 | source | `000` MBZ |
+| 100 | outside line | `000` MBZ |
+| 101 | tie trunk | `000` MBZ — direction and glare only in the secondary |
+| 110 | data line | `0 b 0` |
+| 111 | restricted | `z b **0**` — bit 7 **must be 0**; if ¬z, floor as local-only (§2.4) |
 
-**Bit order is shared where the marker's test is the same.** Frame 4 is overflow
-on every class that hunts (`line`, `operator`, `data`). Frame 6 is busy-out /
-busy-inbound — one terminating not-free test. Frame 5 is warm on restricted and
-spare on a line. Restricted's dialling bits take the two slots that do not
-overlap: `z` in frame 4, `L` in frame 7. A trunk's `d d g n` does not share
-meaning with these and keeps its own map.
+Shared frames: bit 6 is busy-out / busy-inbound on every class that uses `b`; bit 5 is
+priority on a line and `z` on restricted. **Must-be-zero bits are decoder-enforced:**
+a 1 where MBZ is required → out of service, not a soft ignore.
+
+#### Secondary tag (8–9) and payload (10–15)
+
+Unfitted / unused secondary → **`FF`** (tag `11`, payload all ones). Tag `11` with
+any other payload → OOS. Never treat bare ones in 10–15 as exchange/port `77`.
+
+**One tag a word.** Fields A and B are alternate encodings of bits 8–9, not two
+payloads on one card. A word carries A **or** B **or** alias/cover **or** `FF` —
+never A and B together. Do not pack `e b h s` across two tags; the only 12-bit
+remote form is primary `h s` plus one 6-bit payload, and that is the **network
+nail** (call nail + tag `00` + `eee bbb`), not answers-to.
+
+Decode keys on the **(primary type × tag)** pair, not the tag alone.
+
+| tag 8–9 | valid with | payload 10–15 | |
+|---|---|---|---|
+| `11` | any primary | must be `111111` | no extension |
+| `00` | call nail `10` only | `e e e b b b` | **reserved / OOS until a dialler exists** — then dest = `1` + that + primary `h s`. Must not fall back to local |
+| `00` | **answers-to `01`** | must be `000000` | **field A** — layout reserved as `eee bbb`; marker ignores; any non-zero → OOS (§2.2.1) |
+| `01` | class, not trunk | `h h h s s s` | secondary answers-to / cover beside class+options |
+| `01` | **answers-to `01`** | `h h h s s s` | **second local answers-to** (dual membership) |
+| `10` | trunk class `101` | `d d g 0 0 0` | direction N/E/S/W, glare; `ttt` **MBZ 0**. Trunks always fit this chip |
+| `10` | **answers-to `01`** | `L U K 0 0 0` or `111111` | **field B** hunt-condition flags, or no feature (§2.2.1) |
+| other pairings | | | **OOS** (fail closed) |
+
+##### 2.2.1 Answers-to secondary: field A, field B, dual membership
+
+| | form | marker |
+|---|---|---|
+| **Idle** | secondary `FF` | answers to primary `h s` only |
+| **Dual membership** | tag `01`, payload second `h s` | hunt matches **either** primary or payload. One phone in two local groups (e.g. covers two desks). Prefer this over burning field A |
+| **Field A** | tag `00`, payload **`000000` only** | accepted; **no action**. Layout staked as `eee bbb` so tag `00` means the same bit shape as a network nail; action stays on call-nail when a sender exists. Non-zero payload → OOS (fail closed). Not a remote dest, not cover, not overflow |
+| **Field B** | tag `10`, payload `L U K 000` or `111111` | qualifies when this member may be taken (§ below). `111111` = no feature (unconditional). `U`∧`K` both set → OOS. Any other pattern → OOS |
+
+**Field B flags** (bit-times 10–15 = `L U K 0 0 0`):
+
+| bit | | the marker, on an answers-to hunt |
+|---|---|---|
+| `L` | **local callers only** | skip this member when the caller is a claimed trunk (`ctx_clm`) — desk overflow for internal calls, not network |
+| `U` | **unequipped owner only** | take only when the dialled/pilot port failed the probe as unequipped / OOS / empty — night service (announcement when 04 is switched out), not when it is merely busy |
+| `K` | **busy owner only** | take only when that port failed as busy / busy-out / already held — cover while the owner is in a call |
+| `000` | **MBZ** | must be 0 |
+
+Unconditional members (`FF`, dual without B, field B `111111`, or `LUK` all clear) stay eligible for every hunt reason. `L` may combine with `U` or `K`. Class options (`P`, `b`, `z`) stay on **class+cover** (tag `01` beside class) — not in field B.
+
+**What these bits do not buy.** Remote cover, roaming, multi-exchange hunt, overflow to `1 e b h s`, call waiting, transfer, camp-on, distinctive ring, hunt rank, or a conference LEG mark: the marker leaves after two latch writes, latches name one local port, and the flood has no sender (`groups.md` §2.6, §3.4). Hop-by-hop nails and dialling-card hotlines remain the network paths.
+
+The no-forward strap stays on the network unit, one jumper a compass direction
+(`network.md` §3.3) — not in the word (six channels share one word).
+
+#### Whole-word constants and decode order
+
+| word | meaning |
+|---|---|
+| all ones | plain line (grounded pin) |
+| all zeros | no word / OOS / link down |
+| primary OK + secondary `FF` | no extension |
+| bad primary/tag/MBZ | OOS — no hunt, nail, or seizure side-effect |
+
+Decode: (1) all ones → plain line; (2) all zeros → none; (3) primary; (4) if
+secondary ≠ `FF`, accept only a listed tag×primary pair with MBZ payload bits
+clear; else OOS.
+
+**Incremental fit:** (1) primary-only cards, secondary strapped `FF`; (2) tag
+`01` class+cover, and answers-to + tag `01` dual membership; (3) trunks tag
+`10` + `ddg000`; (4) tag `00` network nails only with a sender; (5) answers-to
+field A (zeros only) and field B (`LUK000` / `111111`) — members that stayed on
+`FF` are untouched.
+
+Three 6-bit port forms plus class-and-options do not fit beside four option bits
+in the primary, so class has **three**. Tied nail to 00 collides with all zeros
+(unequipped) — and 00 is never a line. Answers-to 77, call nail to 77 and **tied
+nail to 77** are free as primary destinations.
 
 - **A plain line card carries no part and no jumper for this.** Its word pin is
   tied to ground, which reads all ones, and that means a line with no options.
   Plain lines are most of an exchange. Only a card with something more to say
   carries the word's parts.
-- **The word's parts**: a 74HC165 loaded from jumpers on `CLK_8K` (`TX_OCT`) and shifted on
-  `TX_CLK`, into ¼ 74HC03: **≈ 1¼ packages**. A line card has the footprint, and
-  it is fitted when the card is to be an operator's position, restricted (class
-  111, including warm), in a hunt group, busy-out / busy-inbound, or
-  nailed.
-- **Held off at power-up.** The '03's second input is an RC of about 100 ms. A
-  card just plugged in sends nothing until its '165 is loading properly. Without
-  this a random byte reads as a nail one time in four. A trunk card also gates
-  that input with "link up", so a dead link sends nothing and is never hunted.
-- **A nailed port sends no class.** It is never hunted, dialled or a call
+- **The word's parts**: two 74HC165 (daisy-chained) loaded from jumpers on
+  `CLK_8K` (`TX_OCT` / a3) and shifted on **`LOOP_HB` (a2, 128 kHz)**, into a
+  **2N7002** (gate from the serial output, held off at power-up by an RC of about
+  100 ms): **≈ 2 packages + FET**. Primary chip alone + strap to ones on the
+  chain input is a complete simple card; the second chip is the optional
+  extension. A line card has the footprint. The port's pull-up is **~680 Ω**.
+  `LOOP_HB` is already on the socket for the CVSD encoder; a word card that is
+  not a CVSD line still takes a2 for the shift clock.
+- **Held off at power-up.** The FET gate stays low through the RC until the
+  '165s are loading properly. Without
+  this a random word is a tied nail, a call nail or an answers-to about three times in
+  four. A trunk card also gates that enable with "link up", so a dead link sends
+  nothing and is never hunted. A trunk whose secondary is missing or not tag `10`
+  is unequipped (not hunted).
+- **A tied-nail port sends no class.** It is never hunted, dialled or a call
   request (§3.1), so the marker never needs one. Whether it rings is `/ANS`.
-- **Out of service** is no word at all: a switch in the '03's enable, or the
+  The dest of a one-sided tied nail keeps whatever word it already had.
+- **Out of service** is no word at all: a switch in the FET gate, or the
   ground link opened on a plain card. The port reads unequipped. A call to it
   gets cannot-complete and its lifting is ignored. On a trunk card, a switch a
   channel takes one channel out of the hunt.
 - **The tone cards at 01–03 need no word.** The marker reaches them by
   address and never reads their class (`fabric.md` §3.5).
 - **The block**: a fourth '151 commutates the eight word pins onto the probe bus
-  beside `BUSY` (`fabric.md` §2, §3.1). **The marker**: a 74HC164 takes the
-  word in, a 74HC30 finds all ones, and a few gates sort the rest: bit 0 = 0 is
-  a class and its options; bit 0 = 1 with bit 7 = 0 is a nail; all ones is a
-  plain line; anything else is no word.
-- **What is given up.** A word pin shorted to ground reads as a free line, where
-  a shorted class pin would have read as some other class. And a class takes a
-  whole visit to read: no cost in the scan, and up to 250 µs when the marker
-  probes a dialled port out of turn, waiting for the octet edge.
+  beside `BUSY`, **addressed by `DST[2:0]` of the serial control word** (the port
+  the marker named), not by `SLOT`. **The marker**: two 74HC164 take the word in
+  at 128 kHz over the visit, a 74HC30 finds all ones, and a few gates read type
+  from bit-times 0–1 and the secondary tag from 8–9.
+- **What is given up.** A word pin shorted to ground reads as a free line.
+  Probing a dialled port out of turn still costs up to one `CLK_8K` period
+  (125 µs) to collect sixteen bits, waiting for the visit to fill.
 
 ### 2.3 Ringing, and lines that answer at once
 
@@ -204,53 +348,66 @@ on the board. Only a subscriber terminal's channels set them by jumper
 
 The option bits are read only by the marker. None needs a part anywhere but the
 card's word and a term in a test the marker already makes. Shared bits keep the
-same frame on every class that uses them (§2.2).
+same frame on every class that uses them (§2.2). There are **three**, in frames
+5–7: class took frames 2–4, and the fourth option bit was spent on the two type
+bits that name a 6-bit port.
 
-#### Line (`001`), and overflow wherever it sits
+#### Line (`001`)
 
 | frame | bit | | the marker |
 |---|---|---|---|
-| 4 | `o` | **overflow**: a hunt group | a dialled port that is not free, and whose `o` is set, passes the call to the next port, and so on until a port is free or a port that is not free has `o` clear: then cannot-complete. **A hunt group is a run of adjacent ports with `o` set on all but the last, and its number is its first port's.** A sales desk, a pool of data ports, a conference bridge (`conference.md` §6). Slot order inside the run decides who rings first, and an announcement card can sit last. Two groups may sit side by side. A member has no number of its own that does not overflow. Same bit on class *operator* and *data line* |
-| 5 | `·` | **spare** | one bit free on class line |
-| 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone, and an `o` hunt walks on. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
-| 7 | `·` | **spare** | one bit free on class line |
+| 5 | `P` | **priority** | under register overload, a `P` line is given the next free register before a non-`P` line that is already waiting (§2.4.1) |
+| 6 | `b` | **busy-out** (DND as busy) | on a **terminating** call, the port is **not free** — same path as `BUSY` set: the caller hears **busy** tone. **Lifting still gets a register and dial tone**; outbound is unchanged. Against out of service (§2.2): OOS is unequipped both ways (lift ignored). Against a latch make-busy (`console.md` §4): this mark is in the word and survives hang-up. Same bit and test as restricted *busy-inbound* |
+| 7 | `0` | **MBZ** | must read 0; a 1 → OOS (§2.2). Reserved for a future primary feature |
 
 **Why busy, not cannot-complete.** Cannot-complete (fast busy / reorder) means the
 number cannot be completed — empty slot, wrong digit, restricted dialling.
 Busy-out means “this phone is not taking calls,” which is what a busy line
-already says, and it is what a hunt group needs so a member can leave the group
-without ending the run. Distinctive DND tone would be a second source and a
-second marker steer; not worth it.
+already says. Distinctive DND tone would be a second source and a second marker
+steer; not worth it.
 
-Warm is not on class *line*. A courtesy / lift / help phone is **restricted with
-`w`** below.
+**Overflow `o` is retired** (`groups.md`). A hunt group is a port that *answers
+to* the number people dial, not a run of adjacent ports.
+
+**Warm is not an option.** A courtesy / lift / help phone is a **call nail**
+(§2.2): on lift, connect as if dialled `h s`, with no register. Call nail to 04
+is the operator, and holds nothing while idle. Against a tied nail (§3.1): a
+tied nail rings one fixed phone and holds two latches for good.
 
 #### Restricted (`111`)
 
-Class *restricted* is a lobby phone, a public phone, or a **warm** phone: the
-same free test and ringing as a line. The class itself is unsafe to miss — a
-jumper the user cannot clear — so dialling limits and warm live in the options,
-not in clearing the class. Conference bridge legs remain class *line* with
-`/ANS` low (`conference.md` §6).
+Class *restricted* is a lobby or public phone: the same free test and ringing as
+a line. The class itself is unsafe to miss — a jumper the user cannot clear — so
+dialling limits live in the options, not in clearing the class. Conference
+bridge legs remain class *line* with `/ANS` low (`conference.md` §6).
 
 | frame | bit | | the marker |
 |---|---|---|---|
-| 4 | `z` | **0-only** | only digit **0** completes (hunt operator). Any other first key → cannot-complete. Wins over `L` if both are set |
-| 5 | `w` | **warm** | its lifting is routed as if it had dialled 0, with no register, as a CO line ringing in is (`marker.md` §3). It can still be dialled by its number. Against a nail (§3.1): a nail rings one fixed phone and holds two latches for good; a warm line rings whichever operator's position is free, and holds nothing while idle |
+| 5 | `z` | **0-only** | only digit **0** completes (pilot 04, then answers-to). Any other first key → cannot-complete |
 | 6 | `b` | **busy-inbound** | same terminating not-free / busy path as a line's busy-out. Lift and outbound unchanged |
-| 7 | `L` | **local-only** | **9** and (networked) **1** → cannot-complete; no flood. Own-exchange lines and operator only |
+| 7 | `0` | **MBZ** | must read 0; a 1 → OOS (would otherwise collide with all-ones plain line when secondary is `FF`) |
 
-**Floor.** If `z` and `L` are both clear, and `w` is clear, the marker still
-treats the caller as **local-only** — a bare restricted card never opens a
-flood. Campus-only and CO-ok / no-flood profiles are not used. **Warm with
-dialling limits:** `w` wins on lift (no register, hunt 0); if the warm phone is
-later given a register by some other path, `z` / `L` / floor still apply. A
-help point that may only reach the operator is `w` and `z` together.
+**Floor.** If `z` is clear, the marker treats the caller as **local-only** — a bare
+restricted card never opens a flood (**9** and networked **1** → cannot-complete).
+Campus-only and CO-ok profiles are not used. Option `L` is **retired**; the floor
+replaces it. A help point that may only reach the operator is **call nail to 04**:
+it never gets a register, so `z` is not needed on that path.
+
+`z b` both set with bit 7 clear is offered. `z b 1` is OOS, not a plain line.
 
 A data line (class 110) is a line the marker will not connect to a voice port,
 and the reverse: the mismatch `channel-cards.md` §1 warns is "loud, locked, not
 squelched". The check is made where both classes can be read, which is inside
 one exchange. A call from another exchange arrives on a trunk.
+
+#### 2.4.1 Priority under register overload
+
+One flip-flop, `PWAIT`. A scan that finds a `P` line wanting a register and not
+getting one sets it at port 77. While it is set, a non-`P` line does not take a
+free register even if one is idle; a `P` line still does. A scan that finds no
+`P` line still waiting clears it, and the next non-`P` waiter is served. A
+single line lifting into an idle exchange is never delayed: `PWAIT` is clear
+until a priority lift has been refused. `make priority`.
 
 ---
 
@@ -264,30 +421,27 @@ after release, because the release clears both latches. A nailed-up
 connection is `mvp.md` §6's bring-up step 3 made permanent, and brought up
 by the scanner from jumpers on the two cards.
 
-### 3.1 The nail word
+### 3.1 The tied-nail word
 
-Each card that may be nailed holds its partner's port number in jumpers, and
-sends it as its word (§2.2) in place of its class:
-
-```
- frame of the octet    0     1–3    4–6    7
- a nail                1     h      s      0
-```
+One card holds the dest port in jumpers and sends it as its word (§2.2) in place
+of its class. Type `00`, dest in frames 2–7; all zeros is excepted (an empty
+slot, so **tied nail to 00 is the missing code** — and 00 is never a line).
 
 | | |
 |---|---|
-| **The card** | the word's parts (§2.2), with the partner's port in the jumpers. A plain line card to be nailed has them fitted, and its ground link opened |
-| **The marker** | **a nail** is bit 0 = 1 and bit 7 = 0. An empty slot reads all zeros and a plain line all ones, and neither is a nail |
-| **The rule** | checked at each port before any other: **a nail and `BUSY` clear → write this port's latch to the nail's port, with `BUSY` set.** A port with a nail is never free. It is never hunted, never connected by a dialled number, and its lifting is never a call request or a seizure |
-| **Release** | nothing stops it. When a nailed pair's call ends, the release detectors clear both latches as on any call (`marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The port circuit is unchanged |
-| **After `/RESET`, or a card plugged in** | the first scan writes every nail, within 8 ms. The cards are the only record of the nails, and nothing else is needed |
-| **Both ends** | each card names the other, and each port is written from its own card. A card naming a port whose card does not name it back is a one-way nail. That is right for a listener on a source, a speaker on a radio say (`features.md` §6). For a phone it is dead: it lifts and nothing rings |
+| **The card** | the word's parts (§2.2), with the dest in the jumpers. A plain line card to be nailed has them fitted, and its ground link opened |
+| **The marker** | type `00` and not all zeros. An empty slot reads all zeros and a plain line all ones, and neither is a tied nail |
+| **The rule** | checked at each port before any other: **a tied nail and `BUSY` clear → write this port to the dest and the dest to this port, both with `BUSY` set.** One visit, two writes. A port that sends a tied nail is never free, never hunted, never connected by a dialled number, and its lifting is never a call request or a seizure |
+| **The dest** | keeps whatever word it already had — a class, an answers-to, a call nail. While the tied nail holds it is `BUSY`. Do **not** nail a source: the second write would `BUSY` the radio, and a source is never written (`features.md` §6). A radio or a clock is class *source*; listeners dial it |
+| **Release** | nothing stops it. When the pair's call ends, the release detectors clear both latches as on any call (`marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The dest is free in that gap. The port circuit is unchanged |
+| **After `/RESET`, or a card plugged in** | the first scan writes every nail, within 8 ms. The nailing cards are the only record, and nothing else is needed |
+| **One end is enough** | for two phones, or a phone onto a line. A trunk on a hop-by-hop path still sends a nail of its own (§3.3), so it is never a trunk to the flood or the monitor |
 | **The console** | can still point two latches at each other by hand, as bring-up step 3 does — one key, two crossed words in one tenure (`console.md` §1, §6). **It rings nothing**: with both phones on hook the pair is held by nothing, so an operator rings each end from a source first and pairs them once both have answered. It is a call, and it clears when it is released; nothing remembers it, which is the whole difference from a nail |
 | **Counters** | a nail's writes are not calls (§4) |
 
-The nail word replaces a nail card that wrote nails from a diode matrix: a '161,
+The tied-nail word replaces a nail card that wrote nails from a diode matrix: a '161,
 a '138 and up to 88 diodes for four connections at most. There is no limit on
-the number of nails, and changing one is two cards' jumpers.
+the number of nails, and changing a local pair is one card's jumpers.
 
 ### 3.2 Ringdown
 
@@ -314,15 +468,19 @@ exchange and over copper ties. Across MF8 it is async oversampled data only
 
 ### 3.3 Across the network: nailed hop by hop
 
-A nail word names a port of its own exchange, because a latch can name nothing
+A tied-nail word names a port of its own exchange, because a latch can name nothing
 else (`protocol.md` §3). A channel held end to end across exchanges is
 nailed at every exchange on the way, each exchange nailing its own pair:
 
 ```
- exchange 22      phone A ↔ trunk channel toward 23            A's card and the channel's word name each other
- exchange 23      channel from 22 ↔ channel toward 24          the two channels' words, on two trunk cards
- exchange 24      channel from 23 ↔ phone B                    the channel's word and B's card
+ exchange 22      phone A ↔ trunk channel toward 23            A's card names the channel, or the channel names A
+ exchange 23      channel from 22 ↔ channel toward 24          one of the two channels names the other
+ exchange 24      channel from 23 ↔ phone B                    B's card names the channel, or the channel names B
 ```
+
+A trunk that is a dest and keeps its class is still a trunk to the monitor and
+the flood in the 8 ms after release. **Nail the trunk end too** — each names the
+other, two one-sided nails — so neither looks like a trunk.
 
 - **Ringdown works both ways, as in §3.2.** Forward A is A's hook and backward A
   is B's. No claim is involved, so each end sees the other answer. Trunk ports
@@ -365,22 +523,24 @@ whose pulses the flood carries live: no change to the exchange, and no sender.
 
 A phone that dials a stored number when it is lifted does the same with no card
 at all. The number may also be `h s` of the card's own exchange: a hotline that
-holds nothing while idle, where a nail rings faster and holds two latches.
+holds nothing while idle. A **call nail** (§2.2) does that dest with no dialler:
+on lift, connect as if dialled `h s`. A **tied nail** rings faster and holds two
+latches.
 
 A tester who wants to **drive a register and the flood without a handset** is
 the same live A with the number keyed rather than jumpered: `pulse-gen.md`.
 
 ### 3.5 Which to use
 
-| | nail (§3.1) | nailed hop by hop (§3.3) | a card that dials (§3.4) |
+| | tied nail (§3.1) | nailed hop by hop (§3.3) | a card that dials (§3.4) |
 |---|---|---|---|
 | reaches | its own exchange | another exchange, by a fixed path | anywhere in the network |
-| named by | the partner's port, on each card | a port at each exchange, on each card and trunk card | the number, on one card |
+| named by | the dest port, on one card | a dest at each exchange; a trunk dest sends a nail too | the number, on one card |
 | the far end rings | at the lift | at the lift | 4–6 s after dial tone |
 | the far end lifting rings the near end | yes | yes | only with a dialling card there too |
 | answer seen | yes | yes | at claim |
 | holds while idle | two latches | a channel on every link crossed | nothing |
-| parts | ≈ 1¼ a card | ≈ 1¼ a card or channel, at every exchange on the path | ≈ 8 a card |
+| parts | ≈ 2 + FET a card | ≈ 2 + FET a card or channel, at every exchange on the path | ≈ 8 a card |
 
 The first ring burst waits for the shared cadence in every column: up to 4 s
 more.
@@ -427,11 +587,11 @@ hundred call-seconds, comes from.
 | | parts | where |
 |---|---|---|
 | test lines | a tone card; a card with only its word; a 74HC74 | line slots |
-| the word and `/ANS` | nothing on a plain line card; ≈ 1¼ on any other; two pull-ups a port; ≈ 3 at the marker | the cards, the block, the marker |
+| the card word and `/ANS` | nothing on a plain line card; ≈ 2 + FET on any other; two ~680 Ω pull-ups a port; ≈ 3 at the marker | the cards, the block, the marker |
 | lines that answer at once | `/ANS` tied low on the card | the card |
-| restricted lines, hunt groups, warm, busy-out | class *restricted* with `z w b L` (warm on frame 5); line `o · b ·`; shared frames for `o`/`b` only | the cards, the marker |
-| nailed-up connections | the card's word | the cards |
-| nailed hop by hop | a word of its own on each trunk card channel that may be nailed | trunk cards |
+| restricted lines, hunt groups, call nail, busy-out | class *restricted* with `z b 0` (local floor if ¬z); line `P b 0`; call nail a 6-bit form; shared frame 6 for `b`; secondary tagged per §2.2 (dual membership, field A zeros-only, field B `LUK`) | the cards, the marker |
+| nailed-up connections | one card's word, two writes | the nailing card |
+| nailed hop by hop | a nail on each trunk that must not look like a trunk | trunk cards |
 | hotlines to another exchange | ≈ 8 on each hotline card | the card |
 | traffic counters | ≈ 10 | a counter card beside the marker |
 
@@ -448,16 +608,17 @@ network.
   bring-up step 3, which the model does not run as a scenario, and the scanner's
   nail rule is not in it.
 - **The milliwatt's level** through the encoder half, and its ROM image's seam.
-- **The word as gates**: the '165's load against `CLK_8K`, the probe's capture
+- **The word as gates**: the 2×'165 load against `CLK_8K`, the probe's capture
   in the scanned port's cell, the all-ones detector, the power-up hold-off, and
   a plain card's ground link against a fault that reads the same.
 - **`/ANS` alone forming `ON`**, drawn.
-- **The line options in the marker**: restricted `z` / `L` (0-only; local-only,
-  with local floor if both clear), overflow hunt on shared frame 4, restricted
-  warm (`w`) on lift against the call-request rule, and busy `b` on shared frame 6
-  (terminating not-free / busy; outbound still a call request).
-- **The nail rule**: its place ahead of the call-request rule, and the 8 ms after
-  a release in which a nailed port is idle.
+- **The line options in the marker**: restricted `z` (0-only) with local-only
+  floor if ¬z; priority `P` on frame 5; call nail on type `10`; busy `b` on
+  shared frame 6; secondary tag/payload per §2.2 including dual membership
+  (answers-to + tag `01`), field A zeros-only, and field B `LUK`. `make word`,
+  `make priority`, `make groups`.
+- **The nail rule**: one-sided two-write, its place ahead of the call-request
+  rule, and the 8 ms after a release in which the dest is idle. `make word`.
 - **A nail now needs the scanner after every release.** With the marker stopped,
   a nailed pair works until its first release and not after. If a nail must
   survive that, the release can be held off as well: a '259 a block, latching

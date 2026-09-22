@@ -62,11 +62,12 @@ module marker #(
 
     // the probe, so a network unit can watch the scan (common-control.md 2.2)
     output     [5:0] probe_port,
+    output     [2:0] scan_port,          // live scanner[2:0] for the probe mux
     output           probe_visit,
     output           probe_valid,
     output           probe_m,
     output           probe_busy,
-    output     [7:0] probe_word,
+    output     [15:0] probe_word,
 
     // network unit.  Tie the inputs off when HAS_NET = 0.
     output reg [NREG-1:0]    flood_go,
@@ -120,22 +121,26 @@ module marker #(
     // every one of them -- but it still shifts through every '164 and still
     // pulses WR.  So the marker can REPORT on the bus, and the one-'164 counter
     // card of counters.md 1, which discards bits 15-8 and cannot see G,
-    // counts an event with a plain strap.
+    // counts an event with a plain jumper.
     //
     // BSY = 0 with CLM = 1 is the whole of the trick.  A claim is always
     // written BUSY (every push below with c = 1 has b = 1), so that combination
-    // is one no latch write ever carries, and a strap that asks for it can
+    // is one no latch write ever carries, and a jumper that asks for it can
     // never count a call.  Sixty-four codes sit under it; these are five.
     localparam [5:0] EV_WAITREG = 6'o01,   // a caller wanting service found no register
                      EV_NODIG   = 6'o02,   // a register gave up: no digit dialled
                      EV_WQOVF   = 6'o03;   // the write queue overran (a model part)
 
     // ---------------- scanner and probe ---------------------------------
+    // One CLK_8K period a port (socket TX_OCT).  PB word/BUSY are held on
+    // DST[2:0] (block.v), so the card's 16-bit word at 128 kHz fills in one
+    // visit — eight ports a ms, 8 ms a scan (extensions.md 2.2, marker.md 3).
     reg [5:0] scan;
     reg       m_acc, b_acc;
-    reg [7:0] wsr;
+    reg [15:0] wsr;
+    reg [4:0]  wdiv;                   // 4.096 MHz / 32 = 128 kHz
     reg       p_m, p_busy;
-    reg [7:0] p_word;
+    reg [15:0] p_word;
     reg [5:0] p_port;
     reg       visit;
 
@@ -148,38 +153,89 @@ module marker #(
     reg       pv, p_valid;
     reg [2:0] pb_blk;
 
-    wire [7:0] wsr_next = {pb_word, wsr[7:1]};
-    // extensions.md 2.2 — two type bits (frames 0–1), then class+3 options
-    // or a 6-bit port:
+    // LSB-first on the pin (bit-time 0 = WORD[0]): first sample ends in [0].
+    wire       w_take    = (wdiv == 5'd31);
+    wire [15:0] wsr_next = {pb_word, wsr[15:1]};
+    // extensions.md 2.2 — primary (bits 7–0): type + class/options or h s.
+    // Secondary: tag [9:8], payload [15:10].  Unfitted → FF.
     //   00 hhhhhh      tied nail (all zeros = unequipped)
     //   01 hhhhhh      answers to h s
     //   10 hhhhhh      call nail: on lift, connect as if dialled h s
-    //   11 ccc ppp     class form (3 options); all ones = plain line
+    //   11 ccc ppp     class form; all ones = plain line
     wire       p_plain  = &p_word;
     wire       p_none   = ~|p_word;
     wire [1:0] p_type   = p_word[1:0];
-    wire       p_form   = !p_plain && (p_type == 2'b11);
-    wire       p_ans    = (p_type == 2'b01);
-    wire       p_cnail  = (p_type == 2'b10);
-    wire       p_nail   = !p_none && (p_type == 2'b00);
+    wire [1:0] p_tag    = p_word[9:8];
+    wire [5:0] p_pay    = p_word[15:10];
+    wire       p_sec_ff = (p_word[15:8] == 8'hFF);
+    // MBZ: restricted bit7 must be 0; line/oper/data bit7 must be 0;
+    // trunk primary options must be 000; tag 11 requires payload ones.
+    wire       p_form_raw = !p_plain && (p_type == 2'b11);
+    wire [2:0] p_cls_raw  = p_form_raw ? p_word[4:2] : 3'd0;
+    wire       p_opt_bad  = p_form_raw && (
+                              (p_cls_raw == C_REST  && p_word[7]) ||
+                              (p_cls_raw == C_LINE  && p_word[7]) ||
+                              (p_cls_raw == C_OPER  && (p_word[7] || p_word[5])) ||
+                              (p_cls_raw == C_DATA  && (p_word[7] || p_word[5])) ||
+                              (p_cls_raw == C_SRC   && |p_word[7:5]) ||
+                              (p_cls_raw == C_OUT   && |p_word[7:5]) ||
+                              (p_cls_raw == C_TRUNK && |p_word[7:5]));
+    // Answers-to secondary (extensions.md §2.2.1): FF idle; tag 00 field A
+    // zeros only; tag 01 dual membership; tag 10 field B LUK000 or 111111.
+    wire       p_ans_a    = (p_tag == 2'b00) && (p_pay == 6'b000000);
+    wire       p_ans_dual = (p_tag == 2'b01);
+    wire       p_ans_b_nf = (p_tag == 2'b10) && (p_pay == 6'b111111);
+    wire       p_ans_b_fl = (p_tag == 2'b10) && (p_pay[2:0] == 3'b000) &&
+                              !(p_pay[4] && p_pay[3]);   // U∧K → OOS
+    wire       p_ans_sec  = (p_type == 2'b01) &&
+                              (p_sec_ff || p_ans_a || p_ans_dual ||
+                               p_ans_b_nf || p_ans_b_fl);
+    wire       p_tag_bad  =
+                              (!p_sec_ff && p_tag == 2'b11) ||
+                              // tag 00: answers-to field A (zeros) OK; else
+                              // reserved/OOS (call-nail network until dialler)
+                              (p_tag == 2'b00 && p_type != 2'b01) ||
+                              // trunk must have tag 10 and ttt=000
+                              (p_cls_raw == C_TRUNK &&
+                               !(p_tag == 2'b10 && p_pay[2:0] == 3'b000)) ||
+                              // tag 01: class+cover (not trunk) or answers-to dual
+                              (p_tag == 2'b01 &&
+                               !(p_type == 2'b01 ||
+                                 (p_form_raw && p_cls_raw != C_TRUNK))) ||
+                              // tag 10: trunk or answers-to field B; else OOS
+                              (p_tag == 2'b10 && p_type != 2'b01 &&
+                               !(p_form_raw && p_cls_raw == C_TRUNK)) ||
+                              // tied nail: secondary must be FF
+                              (!p_sec_ff && p_type == 2'b00) ||
+                              // answers-to: only listed secondaries
+                              (p_type == 2'b01 && !p_ans_sec) ||
+                              // call nail: only FF secondary for now
+                              (p_type == 2'b10 && !p_sec_ff);
+    wire       p_oos    = p_opt_bad || p_tag_bad;
+    wire       p_form   = p_form_raw && !p_oos;
+    wire       p_ans    = (p_type == 2'b01) && !p_oos;
+    wire       p_cnail  = (p_type == 2'b10) && !p_oos && p_sec_ff; // local only
+    wire       p_nail   = !p_none && (p_type == 2'b00) && !p_oos;
     wire [5:0] p_hs     = p_word[7:2];             // dest / answers-to / call-nail
     wire [2:0] p_cls    = p_plain ? C_LINE :
+                          p_oos   ? C_NONE :
                           p_nail  ? C_NONE :
                           (p_ans || p_cnail) ? C_LINE :
                           p_form  ? p_word[4:2] : C_NONE;
     wire [5:0] p_nail_to = p_hs;
-    wire [5:0] p_ans_to  = p_hs;
+    // Field B L/U/K (extensions.md §2.2.1); 111111 or non-B → unconditional.
+    wire       p_b_L     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[5];
+    wire       p_b_U     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[4];
+    wire       p_b_K     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[3];
     wire [5:0] p_cnail_to = p_hs;
-    // Line options: frame 5 priority; frame 6 busy-out.  Overflow `o` is
-    // retired by groups.md.  Restricted z is frame 5 (warm is a call nail to 04).
+    // Line options: frame 5 priority; frame 6 busy-out.  Restricted z is
+    // frame 5; bit 7 MBZ.  Floor: restricted ∧ ¬z → local-only.
     wire       p_pri    = p_form && (p_cls == C_LINE) && p_word[5];
     wire       p_bout   = p_form && p_word[6] &&
                           (p_cls == C_LINE || p_cls == C_OPER ||
                            p_cls == C_DATA || p_cls == C_REST);
     wire       p_z      = p_form && (p_cls == C_REST) && p_word[5];
-    wire       p_L      = p_form && (p_cls == C_REST) && p_word[7];
-    // Bare restricted floors to local-only (extensions.md 2.4).
-    wire       p_local  = p_form && (p_cls == C_REST) && (p_L || (!p_z && !p_L));
+    wire       p_local  = p_form && (p_cls == C_REST) && !p_z;
     wire       p_free   = !p_busy && !p_m;
     wire       p_term   = p_free && !p_bout;               // terminating / hunt free
 
@@ -250,7 +306,10 @@ module marker #(
     reg       hunt_busy;
     reg [3:0] hunt_owner;
     reg       hb;                      // the hunt was taken THIS cycle (blocking)
-
+    // Field B conditions: why the owner probe failed, and caller origin.
+    reg       hunt_own_oos;            // dialled/pilot was unequipped / OOS / empty
+    reg       hunt_own_busy;           // dialled/pilot was busy / busy-out / held
+    reg       hunt_from_trunk;         // caller is a claimed trunk (ctx_clm)
     localparam [5:0] PILOT_0 = 6'o04;  // groups.md: digit 0 → call 04
 
     // ---------------- a call: one of these a register --------------------
@@ -266,6 +325,7 @@ module marker #(
     reg [NREG-1:0] f1, f2, ctx_clm;
 
     assign probe_port  = p_port;
+    assign scan_port   = scan[2:0];
     assign probe_visit = visit;
     assign probe_valid = p_valid;
     assign probe_m     = p_m;
@@ -350,7 +410,7 @@ module marker #(
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            scan <= 0; m_acc <= 0; b_acc <= 0; wsr <= 0;
+            scan <= 0; m_acc <= 0; b_acc <= 0; wsr <= 0; wdiv <= 0;
             p_m <= 0; p_busy <= 0; p_word <= 0; p_port <= 0; visit <= 0;
             pv <= 0; p_valid <= 0; pb_blk <= 0;
             wh <= 0; wt <= 0; wst <= 0; probe_dirty <= 1'b1; wq_ovf <= 1'b0;
@@ -368,6 +428,7 @@ module marker #(
             hunt_arm <= 0; hunt_run <= 0; hunt_done <= 0; hunt_ok <= 0;
             hunt_cls <= 0; hunt_port <= 0; hunt_ans <= 0;
             hunt_num <= 0;
+            hunt_own_oos <= 0; hunt_own_busy <= 0; hunt_from_trunk <= 0;
             hunt_busy <= 0; hunt_owner <= 0;
             f1 <= 0; f2 <= 0; ctx_clm <= 0;
             hans <= 0;
@@ -399,22 +460,34 @@ module marker #(
                 end
 
             // ---- probe -------------------------------------------------
-            // M, BUSY and the card's word all arrive in this port's own cell:
-            // the highways and both probe-bus commutators are addressed by SLOT.
-            if (tick == 3'd4 && slotq == scan[2:0]) begin
+            // M still arrives in this port's own cell on HA.  BUSY and the
+            // card's word ride PB held on DST[2:0] for the visit — sixteen
+            // bits at 128 kHz (4.096 MHz / 32) fill one octet.  The /32
+            // counter is retimed on CLK_8K with the cards' parallel load.
+            if (tick == 3'd4 && slotq == scan[2:0])
                 m_acc <= ha[scan[5:3]];
-                b_acc <= pb_busy;
-                wsr   <= wsr_next;              // one bit a frame, eight in a visit
-            end
             if (oct_stb) begin
-                p_m <= m_acc; p_busy <= b_acc; p_word <= wsr; p_port <= scan;
+                // Bit 15 of the visit that just ended (w_take) lands here with
+                // the card's load of the next word; then start the new visit.
+                p_m <= m_acc;
+                p_busy <= w_take ? pb_busy : b_acc;
+                p_word <= w_take ? wsr_next : wsr;
+                p_port <= scan;
                 p_valid <= pv;
                 visit <= 1'b1;
+                wsr   <= 16'd0;
+                b_acc <= pb_busy;
+                wdiv  <= 5'd0;
                 // A re-point cannot finish before the visit it governs, so a
                 // disturbed visit is REPEATED, not lost.
                 if (pv) scan <= scan + 1'b1;
                 pv    <= 1'b1;
-            end
+            end else if (w_take) begin
+                wsr   <= wsr_next;
+                b_acc <= pb_busy;
+                wdiv  <= 5'd0;
+            end else
+                wdiv  <= wdiv + 1'b1;
             // ... and so is a visit the console's tenure touched: from /CON
             // falling until the marker has steered the probe again.
             if (ser_busy || ser_req || pb_blk != scan[5:3] || yield || con_req)
@@ -486,8 +559,16 @@ module marker #(
                     hunt_arm <= 1'b0; hunt_run <= 1'b1;
                 end else if (hunt_run) begin
                     if (hunt_ans) begin
-                        // groups.md §2: first free port that answers to hunt_num
-                        if (!hunt_ok && p_ans && p_ans_to == hunt_num && p_term) begin
+                        // groups.md §2 / extensions.md §2.2.1: first free port
+                        // that answers to hunt_num (primary, dual alias, or
+                        // class+cover), subject to field B L/U/K.
+                        if (!hunt_ok && p_term &&
+                            ((p_ans && (p_hs == hunt_num ||
+                                        (p_tag == 2'b01 && p_pay == hunt_num))) ||
+                             (p_form && p_tag == 2'b01 && p_pay == hunt_num)) &&
+                            (!p_b_L || !hunt_from_trunk) &&
+                            (!p_b_U || hunt_own_oos) &&
+                            (!p_b_K || hunt_own_busy)) begin
                             hunt_ok <= 1'b1; hunt_port <= p_port;
                         end
                     end else if (!hunt_ok && p_cls == hunt_cls && p_term) begin
@@ -626,6 +707,10 @@ module marker #(
                         conn = 1'b1;
                     end else begin
                         // busy, empty, trunk, self, busy-out, … → answers-to
+                        hunt_own_oos  <= p_none || p_oos;
+                        hunt_own_busy <= p_busy || p_bout ||
+                                         (!p_free && !p_none && !p_oos);
+                        hunt_from_trunk <= ctx_clm[r];
                         hans[r] <= 1'b1; mst[r] <= M_WANT;
                     end
                 end
@@ -674,6 +759,10 @@ module marker #(
                     pair_or_listen(warm_from, warm_to, (p_cls == C_SRC), 1'b0);
                     warm_run <= 1'b0; warm_probe <= 1'b0;
                 end else if (!hunt_busy && !hb) begin
+                    hunt_own_oos  <= p_none || p_oos;
+                    hunt_own_busy <= p_busy || p_bout ||
+                                     (!p_free && !p_none && !p_oos);
+                    hunt_from_trunk <= 1'b0;
                     take_ans_hunt(4'hF, warm_to);
                     warm_probe <= 1'b0;
                 end

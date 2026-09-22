@@ -21,17 +21,20 @@ The short answers, before the detail:
   to `h s` that cannot be completed there is offered to it. A group is named by
   the number people dial, so there is no second numbering to keep, no limit on
   how many groups, and no rule about which slots.
-- **One `'165`, or none.** The word gets one new form, *a plain line that answers
-  to `h s`*, in the last unused quarter of its code space. A second operator's
-  position, a member of a hunt group, a phone that covers another and a meet-me
-  bridge leg all say it with the parts a nail takes today.
-- **No second byte.** A port that already carries class or options cannot also
-  *answer to* a number in this plan: use a plain member beside it, or the old
-  `o` run. Warm stays on restricted (`extensions.md` §2.4). Pin `a14` stays spare.
+- **Two `'165` daisy-chained, or none.** The word is **16 bits** (`extensions.md`
+  §2.2). Three 6-bit forms fill the primary: *answers to `h s`*, *call nail to
+  `h s`*, and a tied nail. A second operator's position, a member of a hunt
+  group, a phone that covers another and a meet-me bridge leg all say *answers
+  to* with the same parts a tied nail takes.
+- **Tagged secondary on the same pin.** Class+options with a cover number uses
+  tag `01` and payload `h s` (bits 8–9 / 10–15). Primary answers-to + tag `01` is
+  dual membership. Field A / field B are tag `00` / `10` per `extensions.md`
+  §2.2.1. Pin `a14` stays spare. A plain *answers-to* member needs only the
+  primary chip (secondary strapped `FF`).
 - **A bridge is a group, at no cost**: its legs answer to its number (or keep the
   `o` run of `conference.md` §6), as ordinary lines with `/ANS` low.
-- **§6** (extensions that ring together through a bridge) and **§3–§4** (secondary
-  word) are **set aside** with class 111 and the fifth `'151`.
+- **§6** (extensions that ring together through a bridge) and the old `a14`
+  secondary pin are **set aside**; cover rides the tagged secondary instead.
 
 > **Status: measured in simulation.** The answers-to form and hunt are in
 > `verilog` (`make groups`) and in `exch.py calls`. The adjacent `o` run and
@@ -72,14 +75,14 @@ the run should become a comparison, and the question is what to compare.
 
 **Not the whole word.** Comparing a busy member's word with every other port's
 makes a group of the ports whose words are equal, and that needs a group number
-in the word. A line's options have two bits spare (frames 5 and 7); restricted uses all four
-(`z w b L`, with `w` = warm) (`extensions.md` §2.4).
-Spending all four of a class's option bits gives sixteen groups at most, shared
+in the word. A line's options have one bit spare (frame 7); restricted uses all
+three (`z b 0`) (`extensions.md` §2.4).
+Spending all three of a class's option bits gives eight groups at most, shared
 by everything in the exchange that hunts, and a second numbering beside the one
 people dial. That is the tight encoding. §2 is the loose one, and it needs no
 group numbers at all.
 
-**The trunk hunt stays as it is.** The glare bit and the strap differ between
+**The trunk hunt stays as it is.** The glare bit and the jumper differ between
 trunks that face the same way, and what is wanted there is one trunk *each* way,
 not the first free.
 
@@ -89,36 +92,35 @@ not the first free.
 
 ### 2.1 The form
 
-The word of `extensions.md` §2.2 has two forms and two constants, and a
-quarter of its codes — bit 0 and bit 7 both set, short of all ones — mean "no
-word". That quarter is a number:
+The word of `extensions.md` §2.2 already has a 6-bit *answers to* form:
 
 ```
- frame of the octet    0    1  2  3    4  5  6  7
- class and options     0    c  c  c    p  p  p  p     as it is                         (extensions.md §2.2)
- a nail                1    h  h  h    s  s  s  0     as it is                         (extensions.md §3.1)
- answers to            1    h  h  h    s  s  s  1     NEW: a plain line that answers to h s
- a plain line          1    1  1  1    1  1  1  1     the pin tied to ground
- nothing               0    0  0  0    0  0  0  0     an empty slot; out of service; a link down
+ frame of the octet    0  1    2  3  4    5  6  7
+ tied nail             0  0    h  h  h    s  s  s     one-sided two-write                (extensions.md §3.1)
+ answers to            0  1    h  h  h    s  s  s     a plain line that answers to h s
+ call nail             1  0    h  h  h    s  s  s     on lift, connect as if dialled h s
+ class                 1  1    c  c  c    p  p  p     class, and three options          (extensions.md §2.2)
+ a plain line          1  1    1  1  1    1  1  1     the pin tied to ground
+ nothing               0  0    0  0  0    0  0  0     an empty slot; out of service; a link down
 ```
 
 | | |
 |---|---|
-| **The card** | the word's parts as they are, ≈ 1¼ packages, with the number in the jumpers. It is a plain line in every other respect: class line, no options. Whether it rings is still `/ANS`, so an announcement card at the end of a hunt ties that pin low and says the rest in this form |
-| **The marker** | bit 0 set, bit 7 set, and not all ones: the nail's own decode with bit 7 taken the other way |
-| **77** | cannot be answered to in this form, which would be all ones. A group takes another number |
-| **Power-up** | a random byte is a nail or a number one time in two, where it was a nail one time in four. The hold-off of `extensions.md` §2.2 already covers it, and a number held for 100 ms is harmless where a nail is not |
+| **The card** | the word's parts as they are, ≈ 1 package + FET, with the number in the jumpers. It is a plain line in every other respect: class line, no options. Whether it rings is still `/ANS`, so an announcement card at the end of a hunt ties that pin low and says the rest in this form |
+| **The marker** | type `01` |
+| **77** | answers-to 77, call nail to 77 and tied nail to 77 are free. Tied nail to 00 is the all-zeros collision, and 00 is never a line |
+| **Power-up** | a random byte is a 6-bit form about three times in four. The hold-off of `extensions.md` §2.2 already covers it, and a number held for 100 ms is harmless where a tied nail is not |
 
 ### 2.2 The rule
 
 ```
- called = h s     from the dial · from a key · 04, for a warm restricted line and for a CO line ringing in
+ called = h s     from the dial · from a key · 04, for a call nail to 04 and for a CO line ringing in
    probe h s      as now.  Free, and a port this caller may be given → connect, two writes.  A source → one write
    otherwise      hunt, in fixed order from 00: the first free port that answers to h s → connect
    none           cannot-complete
 
  first key   0    called = 04
-             8    called = a pilot, strapped in the matrix.  No strap → cannot-complete, as now
+             8    called = a pilot, jumpered in the matrix.  No jumper → cannot-complete, as now
              9    hunt class outside line, as now             1    the network, as now
 ```
 
@@ -157,8 +159,9 @@ word". That quarter is a number:
 | **a hunt group** | its members answer to the number people dial. A sales desk at 55 is the phone at 55 and two more, in any slots, that answer to 55. Any number of groups. The number may be an empty slot's, and then every member is found by the hunt |
 | **a second operator's position, and the night announcement** | lines that answer to 04. Class *operator* is not needed: its code is spare, and the first position's card carries no word at all |
 | **night service** | the operator's out-of-service switch (`extensions.md` §2.2): 04 reads unequipped, and 0 goes on to whoever answers to 04 |
-| **cover** | a secretary's phone answers to 23. It rings when 23 is busy, switched out or pulled, and only then |
-| **a call-in bank on one digit** | key 8 strapped to a pilot, and the bank's lines answer to it |
+| **cover** | a secretary's phone answers to 23. It rings when 23 is busy, switched out or pulled, and only then. Field B `K` limits a member to busy-only; `U` to unequipped-only (`extensions.md` §2.2.1) |
+| **two groups** | answers-to + tag `01` + a second `h s`: one phone answers to both numbers |
+| **a call-in bank on one digit** | key 8 jumpered to a pilot, and the bank's lines answer to it |
 | **a message at the end** | an announcement card (`features.md` §3), `/ANS` low, that answers to the number and sits after the group's last member |
 | **a bridge** | §5 |
 
@@ -177,7 +180,7 @@ word". That quarter is a number:
 | | |
 |---|---|
 | the comparison | a 74HC688: the word's six bits of number against the called number |
-| the called number | from the digit store, as now, or from straps for 0 and 8: a 74HC244 onto the comparator's other side. The diode matrix gives a key a class or a number, where it gave a class |
+| the called number | from the digit store, as now, or from jumpers for 0 and 8: a 74HC244 onto the comparator's other side. The diode matrix gives a key a class or a number, where it gave a class |
 | the form | two gates beside the nail's |
 | | **≈ 3 packages, an estimate**, in place of the ≈ 2 of `conference.md` §6's run, which is not built. The class comparator stays, for 9 and for trunks |
 
@@ -196,20 +199,25 @@ the hunt is in use for under three seconds of the hour.
   charge of a call, and nothing is (`marker.md` §5). No width of word buys
   them.
 - **Another exchange.** The number is `h s`. A number elsewhere is four digits,
-  and the network has no sender to send them (`extensions.md` §3.4).
+  and the network has no sender to send them (`extensions.md` §3.4). Field A is
+  not that address: tags `00` and `10` are mutually exclusive on one word, and
+  remote dest stays on the reserved network nail (call nail + tag `00`).
+- **Two groups on one card.** Dual membership is answers-to + tag `01` + a
+  second `h s` (`extensions.md` §2.2.1), not field A.
+- **Night vs busy cover.** Field B flags `U` / `K` distinguish unequipped-owner
+  from busy-owner members; unconditional members still take both.
 
 ---
 
-## 3–4. Set aside: the secondary word
+## 3–4. Secondary cover and answers-to extensions (tagged, not a second pin)
 
-> **Retired with the conference / secondary-word path.** A second `'165` on
-> `a14`, a fifth `'151` onto `PB2`, and the trade of what goes in which byte,
-> lived here so a port could carry class/options *and* an *answers to* /
-> *lifts to* number. Conference legs were the main customer; they no longer
-> need it. Without that path: a restricted phone (class `111`) cannot also
-> *answer to* a number in the same word — use a plain cover member or the `o`
-> run; warm (`w`) is lift-to-operator only, not an arbitrary *lifts to*
-> number; one phone covers one number, not two. Pin `a14` is spare again.
+> **Retired as a second pin on `a14`.** Class+options *and* an *answers to*
+> number ride **secondary tag `01`** with payload `h s` on the same word
+> (`extensions.md` §2.2). **Primary answers-to + tag `01`** is dual membership:
+> the card answers to both the primary and the payload. Pin `a14` stays spare.
+> Field A (tag `00`, zeros only) and field B (tag `10`, `LUK` / `111111`) are
+> claimed per `extensions.md` §2.2.1 — one tag a word, never both. Idle
+> secondary remains `FF`.
 
 ---
 
@@ -219,15 +227,15 @@ the hunt is in use for under three seconds of the hour.
 last, its number its first leg's. **Its legs answer to its number instead.**
 
 ```
-                70   71   72   73   │ strap │   74   75   76   77
+                70   71   72   73   │ jumper │   74   75   76   77
 
-  answer to     70   70   70   70   │   ○   │   74   74   74   74      strap out: two bridges of four
-                70   70   70   70   │   ●   │   70   70   70   70      strap in: one bridge of eight
+  answer to     70   70   70   70   │   ○   │   74   74   74   74      jumper out: two bridges of four
+                70   70   70   70   │   ●   │   70   70   70   70      jumper in: one bridge of eight
 ```
 
-- **74 and 70 differ in one bit, and the strap that joins the party bus forces
+- **74 and 70 differ in one bit, and the jumper that joins the party bus forces
   it** on four legs, where it carried the overflow bits (`conference.md` §5).
-  It is still one strap, and still nothing on it can disagree with
+  It is still one jumper, and still nothing on it can disagree with
   anything else.
 - **The marker's run goes**: its flip-flop, its comparator of the scanner
   against the digit store, its ≈ 2 packages and its rule that a run never
@@ -268,9 +276,9 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 
 | where | what |
 |---|---|
-| `extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); `o` may be re-defined for busy→group; `w` kept as *lifts to 04*; class *operator*'s code spare; class *restricted* at 111; **a14 stays spare** |
+| `extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); call nail a form of its own; `o` retired; class *operator*'s code spare; class *restricted* at 111 with `z b 0`; **a14 stays spare**; tagged secondary for cover; answers-to dual membership (tag `01`); field A zeros-only; field B `LUK` |
 | `marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
-| `features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the strap carries; legs as ordinary lines |
+| `features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the jumper carries; legs as ordinary lines |
 | `fabric.md` §3.5 | class 111 *restricted* |
 | `protocol.md` §5, `network.md` §2–3 | 0 and 8 as numbers; nothing of the hunt itself |
 | `mvp.md`, `rtl.md`, the `calls` model, `verilog` | 0 as a call to 04; the hunt; no conference class; no `PB2` |
@@ -279,11 +287,15 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 
 ## 9. Not measured
 
-- **All of it.** None of this is in `calls` or in `verilog`, and the run it
-  replaces never was either.
+- **Package counts and a bench build.** The answers-to hunt, dual membership,
+  and field B `LUK` are in `verilog` (`make groups`); the adjacent `o` run it
+  replaces never was. Night-service `U` against a real operator OOS switch, and
+  `L` against a claimed trunk caller, are not separately exercised beyond the
+  RTL checks.
 - **The form's decode** beside the nail's and the all-ones detector, and the
-  power-up hold-off against a byte that is now a nail or a number one time in
-  two.
+  power-up hold-off against a word that is now a nail or a number. A random
+  16-bit secondary is accepted more often than the old byte odds in §2.1; the
+  100 ms hold-off still covers it.
 - **A failed probe that hunts.** Every call to a busy number takes the one hunt.
   §2.5's load is arithmetic on `marker.md` §6's calling rate, not a run.
 - **Taking a port at the visit that finds it**, against a direct call to that
@@ -292,3 +304,6 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
   it lands.
 - **A meet-me bridge as *answers to*** (§5), against the `o` run already in
   `conference.md` §6.
+- **An answers-to that is a source.** A radio that answers to a number: the
+  hunt's free test passes (a source is never `BUSY`), and the connect is one
+  write. Not run.

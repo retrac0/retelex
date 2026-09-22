@@ -3,6 +3,8 @@
 //   1. Hunt group: 21 answers to 20.  23 dials 20 while 20 is busy → 21.
 //   2. Digit 0 → pilot 04.
 //   3. Cover: 04 busy; 21 answers to 04; dial 0 → 21.
+//   4. Dual membership: 22 answers to 20 and 25; dial 25 → 22.
+//   5. Field B K: 21 answers to 04 with K; busy 04 → 21; unequipped 04 skips K.
 `timescale 1ns/1ps
 
 module tb_groups;
@@ -13,9 +15,15 @@ module tb_groups;
     localparam integer PAUSE  = 60_000_000;
     localparam [5:0] DIALTONE = 6'o01;
 
-    // answers to port N: {1, N[5:0], 1}
-    localparam [7:0] ANS20 = {1'b1, 6'o20, 1'b1};
-    localparam [7:0] ANS04 = {1'b1, 6'o04, 1'b1};
+    // answers to port N: {FF, hs, 2'b01}
+    localparam [15:0] ANS20 = {8'hFF, 6'o20, 2'b01};
+    localparam [15:0] ANS04 = {8'hFF, 6'o04, 2'b01};
+    // Dual: primary answers-to 20, tag 01 payload 25
+    localparam [15:0] DUAL20_25 = {6'o25, 2'b01, 6'o20, 2'b01};
+    // Field B K-only (busy owner): LUK = 001, MBZ 000
+    localparam [15:0] ANS04_K = {6'b001000, 2'b10, 6'o04, 2'b01};
+    // Field B U-only (unequipped owner)
+    localparam [15:0] ANS04_U = {6'b010000, 2'b10, 6'o04, 2'b01};
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -28,11 +36,11 @@ module tb_groups;
 
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_000F_0010),
-               .LINE_WORD_04(8'hFF),
-               .LINE_WORD_20(8'hFF),
+               .LINE_WORD_04(16'hFFFF),
+               .LINE_WORD_20(16'hFFFF),
                .LINE_WORD_21(ANS20),
-               .LINE_WORD_22(ANS20),
-               .LINE_WORD_23(8'hFF),
+               .LINE_WORD_22(DUAL20_25),
+               .LINE_WORD_23(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
                .NREG(2), .NMON(1), .NRES(1))
@@ -52,8 +60,8 @@ module tb_groups;
     wire [5:0]  wr2_src, wr2_dst;
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_0003_0010),
-               .LINE_WORD_04(8'hFF),
-               .LINE_WORD_20(8'hFF),
+               .LINE_WORD_04(16'hFFFF),
+               .LINE_WORD_20(16'hFFFF),
                .LINE_WORD_21(ANS04),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
@@ -68,12 +76,61 @@ module tb_groups;
        .wr_stb(wr2_stb), .wr_dst(wr2_dst), .wr_src(wr2_src),
        .wr_bsy(wr2_bsy), .wr_clm(wr2_clm));
 
-    reg [5:0] last_dt = 6'h3f, last_dt2 = 6'h3f;
+    // Site C: field B K on 21; 04 is a real line.  Site D: field B U on 21; 04 empty.
+    reg  [63:0] hook3 = 0, tx3 = 0;
+    wire [63:0] pb3;
+    wire        wr3_stb, wr3_bsy, wr3_clm;
+    wire [5:0]  wr3_src, wr3_dst;
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
+               .LINE_PORTS(64'h0000_0000_0003_0010),
+               .LINE_WORD_04(16'hFFFF),
+               .LINE_WORD_20(16'hFFFF),
+               .LINE_WORD_21(ANS04_K),
+               .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
+               .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
+               .NREG(2), .NMON(1), .NRES(1))
+    C (.clk(clk), .rst_n(rst_n),
+       .hook(hook3), .tx(tx3), .rx(), .e(),
+       .line_in(1'b0), .line_out(), .locked(),
+       .frame_stb(), .ring_cad_n(), .dt_bit(), .ng_bit(),
+       .mon_held(), .mon_busy(), .mon_full(), .got_claim(), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy(pb3), .regs_busy(),
+       .wq_ovf(), .n_defer(), .ev_cnt(),
+       .wr_stb(wr3_stb), .wr_dst(wr3_dst), .wr_src(wr3_src),
+       .wr_bsy(wr3_bsy), .wr_clm(wr3_clm));
+
+    reg  [63:0] hook4 = 0, tx4 = 0;
+    wire [63:0] pb4;
+    wire        wr4_stb, wr4_bsy, wr4_clm;
+    wire [5:0]  wr4_src, wr4_dst;
+    // 04 unequipped (not in LINE_PORTS); 21 has U flag
+    net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
+               .LINE_PORTS(64'h0000_0000_0003_0000),
+               .LINE_WORD_20(16'hFFFF),
+               .LINE_WORD_21(ANS04_U),
+               .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
+               .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
+               .NREG(2), .NMON(1), .NRES(1))
+    D (.clk(clk), .rst_n(rst_n),
+       .hook(hook4), .tx(tx4), .rx(), .e(),
+       .line_in(1'b0), .line_out(), .locked(),
+       .frame_stb(), .ring_cad_n(), .dt_bit(), .ng_bit(),
+       .mon_held(), .mon_busy(), .mon_full(), .got_claim(), .dirs_held(),
+       .fan_legs(), .res_used(), .port_busy(pb4), .regs_busy(),
+       .wq_ovf(), .n_defer(), .ev_cnt(),
+       .wr_stb(wr4_stb), .wr_dst(wr4_dst), .wr_src(wr4_src),
+       .wr_bsy(wr4_bsy), .wr_clm(wr4_clm));
+
+    reg [5:0] last_dt = 6'h3f, last_dt2 = 6'h3f, last_dt3 = 6'h3f, last_dt4 = 6'h3f;
     always @(posedge clk) begin
         if (wr_stb && wr_bsy && !wr_clm && wr_src == DIALTONE)
             last_dt <= wr_dst;
         if (wr2_stb && wr2_bsy && !wr2_clm && wr2_src == DIALTONE)
             last_dt2 <= wr2_dst;
+        if (wr3_stb && wr3_bsy && !wr3_clm && wr3_src == DIALTONE)
+            last_dt3 <= wr3_dst;
+        if (wr4_stb && wr4_bsy && !wr4_clm && wr4_src == DIALTONE)
+            last_dt4 <= wr4_dst;
     end
 
     integer errs = 0, chk = 0;
@@ -107,6 +164,28 @@ module tb_groups;
             #PAUSE;
         end
     endtask
+    task dial3_from(input [5:0] p, input integer d);
+        integer n, i;
+        begin
+            n = (d == 0) ? 10 : d;
+            for (i = 0; i < n; i = i + 1) begin
+                hook3[p] = 1'b0; #BRK_NS;
+                hook3[p] = 1'b1; #MK_NS;
+            end
+            #PAUSE;
+        end
+    endtask
+    task dial4_from(input [5:0] p, input integer d);
+        integer n, i;
+        begin
+            n = (d == 0) ? 10 : d;
+            for (i = 0; i < n; i = i + 1) begin
+                hook4[p] = 1'b0; #BRK_NS;
+                hook4[p] = 1'b1; #MK_NS;
+            end
+            #PAUSE;
+        end
+    endtask
 
     task await_dt(input [5:0] who);
         integer t;
@@ -120,6 +199,20 @@ module tb_groups;
         begin
             last_dt2 = 6'h3f; t = 0;
             while (last_dt2 !== who && t < 200) begin #1_000_000; t = t + 1; end
+        end
+    endtask
+    task await_dt3(input [5:0] who);
+        integer t;
+        begin
+            last_dt3 = 6'h3f; t = 0;
+            while (last_dt3 !== who && t < 200) begin #1_000_000; t = t + 1; end
+        end
+    endtask
+    task await_dt4(input [5:0] who);
+        integer t;
+        begin
+            last_dt4 = 6'h3f; t = 0;
+            while (last_dt4 !== who && t < 200) begin #1_000_000; t = t + 1; end
         end
     endtask
 
@@ -176,6 +269,36 @@ module tb_groups;
         #200_000_000;
         want(pb2[6'o21], "0 with 04 busy → cover at 21");
         hook2 = 0; #50_000_000;
+
+        // ---- 4. dual membership: 22 answers to 20 and 25 -----------------
+        $display("  dual membership");
+        hook[6'o23] = 1'b1;
+        await_dt(6'o23);
+        dial_from(6'o23, 2); dial_from(6'o23, 5);   // dial 25 (empty) → 22
+        #150_000_000;
+        want(port_busy[6'o22], "dial 25 → dual member 22");
+        hook = 0; #200_000_000;
+
+        // ---- 5. field B K: busy 04 → 21; field B U: empty 04 → 21 --------
+        $display("  field B K / U");
+        hook3[6'o04] = 1'b1;
+        await_dt3(6'o04);
+        dial3_from(6'o04, 2); dial3_from(6'o04, 7);
+        #50_000_000;
+        want(pb3[6'o04], "K setup: 04 busy");
+        hook3[6'o20] = 1'b1;
+        await_dt3(6'o20);
+        dial3_from(6'o20, 0);
+        #200_000_000;
+        want(pb3[6'o21], "0 with 04 busy → field-B K member 21");
+        hook3 = 0; #50_000_000;
+
+        hook4[6'o20] = 1'b1;
+        await_dt4(6'o20);
+        dial4_from(6'o20, 0);                   // 04 unequipped → U member
+        #200_000_000;
+        want(pb4[6'o21], "0 with 04 unequipped → field-B U member 21");
+        hook4 = 0; #50_000_000;
 
         $display("");
         if (errs) begin

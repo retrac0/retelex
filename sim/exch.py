@@ -331,6 +331,10 @@ class Card:
     local_only = False
     nail = None
     answers_to = None         # port number this plain line covers (groups.md §2)
+    answers_to2 = None        # second local answers-to (extensions.md §2.2.1 dual)
+    hunt_L = False            # field B: local callers only
+    hunt_U = False            # field B: unequipped-owner only
+    hunt_K = False            # field B: busy-owner only
     def __init__(self): self.M = 0; self.key = None
     def step(self, ex, p, t): pass
     def sound(self): return 'silence'
@@ -343,10 +347,11 @@ class Tone(Card):
 
 def _card_opts(card, priority=False, overflow=False, busy_out=False, rings=True,
                restricted=False, z_only=False, warm=False, local_only=False, nail=None,
-               answers_to=None):
+               answers_to=None, answers_to2=None, hunt_L=False, hunt_U=False, hunt_K=False):
     """Apply extensions.md §2.4 options plus groups.md §2 answers_to.  Bare
     restricted floors to local-only when z and L are clear and warm is clear.
-    overflow is accepted but ignored (the o-run is retired)."""
+    overflow is accepted but ignored (the o-run is retired).
+    answers_to2 / hunt_L|U|K are extensions.md §2.2.1."""
     card.priority = priority
     card.overflow = overflow
     card.busy_out = busy_out
@@ -357,6 +362,10 @@ def _card_opts(card, priority=False, overflow=False, busy_out=False, rings=True,
     card.local_only = local_only
     card.nail = nail
     card.answers_to = answers_to
+    card.answers_to2 = answers_to2
+    card.hunt_L = hunt_L
+    card.hunt_U = hunt_U
+    card.hunt_K = hunt_K
     if restricted and not z_only and not local_only and not warm:
         card.local_only = True
     return card
@@ -369,11 +378,12 @@ class Phone(Card):
     def __init__(self, script=(), answer=None, cls=LINE, keylen=80,
                  priority=False, overflow=False, busy_out=False, rings=True,
                  restricted=False, z_only=False, warm=False, local_only=False, nail=None,
-                 answers_to=None):
+                 answers_to=None, answers_to2=None, hunt_L=False, hunt_U=False, hunt_K=False):
         super().__init__(); self.cls = cls; self.script = sorted(script, key=lambda e: e[0])
         self.answer = answer; self.keylen = keylen; self.rung = 0; self.key_end = -1
         _card_opts(self, priority, overflow, busy_out, rings,
-                   restricted, z_only, warm, local_only, nail, answers_to)
+                   restricted, z_only, warm, local_only, nail, answers_to,
+                   answers_to2, hunt_L, hunt_U, hunt_K)
     def step(self, ex, p, t):
         if self.key is not None and t >= self.key_end:
             self.key = None
@@ -399,11 +409,12 @@ class Announce(Card):
     def __init__(self, cls=LINE, answer=300, play=3000, name='announcement',
                  priority=False, overflow=False, busy_out=False, rings=True,
                  restricted=False, z_only=False, warm=False, local_only=False, nail=None,
-                 answers_to=None):
+                 answers_to=None, answers_to2=None, hunt_L=False, hunt_U=False, hunt_K=False):
         super().__init__(); self.cls = cls; self.answer = answer; self.play = play
         self.name = name; self.rung = 0; self.left = 0
         _card_opts(self, priority, overflow, busy_out, rings,
-                   restricted, z_only, warm, local_only, nail, answers_to)
+                   restricted, z_only, warm, local_only, nail, answers_to,
+                   answers_to2, hunt_L, hunt_U, hunt_K)
     def step(self, ex, p, t):
         if self.M:
             self.left -= 1
@@ -574,12 +585,29 @@ class Exchange:
         if q == a or not self.free(q):
             return False
         self.connect(a, q); return True
+    def _answers_num(self, card, q0):
+        """True if this card's word answers to q0 (primary and/or dual alias)."""
+        return card.answers_to == q0 or card.answers_to2 == q0
     def _probe_or_answers(self, a, q0):
-        """groups.md §2.2: probe dialled q0; else first free port with answers_to == q0."""
+        """groups.md §2.2: probe dialled q0; else first free port that answers to q0.
+        Field B L/U/K (extensions.md §2.2.1) qualify members."""
         if self._try_terminate(a, q0):
             return
+        own_cls = self.cls(q0)
+        own_oos = own_cls == UNEQ
+        own_busy = (not own_oos) and (q0 == a or not self.free(q0))
+        from_trunk = self.cls(a) == TRUNK
         for p in range(NP):
-            if self.card[p].answers_to == q0 and self._try_terminate(a, p):
+            c = self.card[p]
+            if not self._answers_num(c, q0):
+                continue
+            if c.hunt_L and from_trunk:
+                continue
+            if c.hunt_U and not own_oos:
+                continue
+            if c.hunt_K and not own_busy:
+                continue
+            if self._try_terminate(a, p):
                 return
         self.nogo(a, f'no answer to {oc(q0)}')
     def marker_digit(self, r, k, t):
