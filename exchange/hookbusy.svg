@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Hook/busy lamp field</title>
+  <desc id="desc">Eight paired columns of hook and busy LEDs, slots 0–7.
+  Busy LEDs sit on the underside of the busy boards so each block is a tight pair.
+  Port 23 is lit as a call.</desc>
+
+  <defs>
+    <style type="text/css"><![CDATA[
+      .frame { fill: #1a1a1a; stroke: #e8e8e8; stroke-width: 1.5; }
+      .legend { fill: #2a2a2a; stroke: #555; stroke-width: 1; }
+      .label { fill: #999; font: 11px ui-sans-serif, system-ui, sans-serif; }
+      .hook-off { fill: #2a2a2a; stroke: #3d9e6a; stroke-width: 1.2; }
+      .hook-on  { fill: #3d9e6a; stroke: #3d9e6a; stroke-width: 1.2; }
+      .busy-off { fill: #2a2a2a; stroke: #d4783a; stroke-width: 1.2; }
+      .busy-on  { fill: #d4783a; stroke: #d4783a; stroke-width: 1.2; }
+      .leader { fill: none; stroke: #555; stroke-width: 1; }
+      .note { fill: #777; font: 10px ui-sans-serif, system-ui, sans-serif; }
+    ]]></style>
+  </defs>
+
+  <rect class="frame" x="8" y="8" width="704" height="244" rx="3"/>
+
+  <!-- slot legend -->
+  <rect class="legend" x="12" y="34" width="28" height="156" rx="2"/>
+  <text class="label" x="24" y="26" text-anchor="middle">s</text>
+  <text class="label" x="24" y="49" text-anchor="middle" dominant-baseline="middle">0</text>
+  <text class="label" x="24" y="67" text-anchor="middle" dominant-baseline="middle">1</text>
+  <text class="label" x="24" y="85" text-anchor="middle" dominant-baseline="middle">2</text>
+  <text class="label" x="24" y="103" text-anchor="middle" dominant-baseline="middle">3</text>
+  <text class="label" x="24" y="121" text-anchor="middle" dominant-baseline="middle">4</text>
+  <text class="label" x="24" y="139" text-anchor="middle" dominant-baseline="middle">5</text>
+  <text class="label" x="24" y="157" text-anchor="middle" dominant-baseline="middle">6</text>
+  <text class="label" x="24" y="175" text-anchor="middle" dominant-baseline="middle">7</text>
+
+  <!-- eight block pairs: hook (green) + busy (orange), nearly touching -->
+  <text class="label" x="79.5" y="26" text-anchor="middle">0</text>
+  <circle class="hook-off" cx="72.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="72.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="86.7" cy="175" r="6.2"/>
+  <text class="label" x="164.5" y="26" text-anchor="middle">1</text>
+  <circle class="hook-off" cx="157.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="157.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="171.7" cy="175" r="6.2"/>
+  <text class="label" x="249.5" y="26" text-anchor="middle">2</text>
+  <circle class="hook-off" cx="242.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="85" r="6.2"/>
+  <circle class="hook-on" cx="242.3" cy="103" r="6.2"/>
+  <circle class="busy-on" cx="256.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="242.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="256.7" cy="175" r="6.2"/>
+  <text class="label" x="334.5" y="26" text-anchor="middle">3</text>
+  <circle class="hook-off" cx="327.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="327.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="341.7" cy="175" r="6.2"/>
+  <text class="label" x="419.5" y="26" text-anchor="middle">4</text>
+  <circle class="hook-off" cx="412.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="412.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="426.7" cy="175" r="6.2"/>
+  <text class="label" x="504.5" y="26" text-anchor="middle">5</text>
+  <circle class="hook-off" cx="497.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="497.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="511.7" cy="175" r="6.2"/>
+  <text class="label" x="589.5" y="26" text-anchor="middle">6</text>
+  <circle class="hook-off" cx="582.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="582.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="596.7" cy="175" r="6.2"/>
+  <text class="label" x="674.5" y="26" text-anchor="middle">7</text>
+  <circle class="hook-off" cx="667.3" cy="49" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="49" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="67" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="67" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="85" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="85" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="103" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="103" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="121" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="121" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="139" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="139" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="157" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="157" r="6.2"/>
+  <circle class="hook-off" cx="667.3" cy="175" r="6.2"/>
+  <circle class="busy-off" cx="681.7" cy="175" r="6.2"/>
+
+  <!-- port 23, a call -->
+  <line class="leader" x1="249.5" y1="111.2" x2="249.5" y2="192"/>
+  <text class="label" x="249.5" y="206" text-anchor="middle">port 23</text>
+
+  <text class="note" x="377" y="246" text-anchor="middle">facing LEDs ≈ body gap  ·  street = block pitch</text>
+</svg>
