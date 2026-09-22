@@ -600,10 +600,14 @@ class Exchange:
             elif k == '9':
                 q = self.hunt(EXT)
                 self.connect(a, q) if q is not None else self.nogo(a, 'no free class 3')
-            elif k == '1':                            # the network's key: seize a trunk.  The flood itself is
-                q = self.hunt(TRUNK)                  # exch.py net; no scenario here fits a trunk card, so the
-                self.nogo(a, 'no free class 4' if q is None else 'the flood is not modelled here')
-            elif k not in '234567':                   # hunt finds nothing, as on a standalone exchange
+            elif k == '1':
+                q = self.hunt(TRUNK)
+                if q is not None:
+                    # the flood itself is exch.py net
+                    self.nogo(a, 'the flood is not modelled here')
+                else:
+                    return                          # highway 1; wait for s
+            elif k not in '234567':                   # 8 and the rest
                 self.nogo(a, f'first key {k}')
             else:
                 return
@@ -887,8 +891,8 @@ def calls():
         tries += [(t0, 'off')] + ev + [(end + 600, 'on')]
     scene('19. The minimum exchange (mvp.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
           '      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;\n'
-          '      then 20 dials the four first keys that find nothing here -- 0 (no operator), 9 (no outside line),\n'
-          '      1 (no network card) and 8 (spare) -- and then 25 (an empty slot) and 20 (itself).',
+          '      then 20 dials the first keys that find nothing here -- 0 (no operator), 9 (no outside line)\n'
+          '      and 8 (spare) -- then 1 as a highway and hangs up, then 25 (an empty slot) and 20 (itself).',
           layout({0o20: P_([(100, 'off')] + ev1 + [(7000, 'on'), (16500, 'on')] + tries, answer=1500),
                   0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, tones=False),
           40500, [0o20, 0o21], regs=1)

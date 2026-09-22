@@ -172,7 +172,7 @@ module con_site #(
             .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
     end endgenerate
 
-    marker #(.NREG(NREG), .NRES(1), .DIALTONE(PDT), .NOGO(PNG),
+    marker #(.NREG(NREG), .DIALTONE(PDT), .NOGO(PNG),
              .HAS_NET(1'b0), .HAS_CON(!NAIVE)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .tick(tick), .frame_stb(frame_stb),
@@ -184,8 +184,14 @@ module con_site #(
         .reg_ndig(r_ndig), .reg_digits(r_digits), .reg_held(r_held),
         .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk), .reg_release(r_release),
-        .mon_claim(1'b0), .mon_port(6'd0), .mon_ack(),
-        .any_claimed(), .dirs_held(), .fan_legs(), .res_used(),
+        .probe_port(), .probe_visit(), .probe_valid(),
+        .probe_m(), .probe_busy(), .probe_word(),
+        .flood_go(), .flood_caller(),
+        .net_restart({NREG{1'b0}}), .net_done({NREG{1'b0}}),
+        .net_nogo({NREG{1'b0}}), .net_local({NREG{1'b0}}),
+        .net_att(1'b0), .net_att_port(6'd0),
+        .net_nw(4'd0), .net_wdst(48'd0), .net_wsrc(48'd0),
+        .net_wbsy(8'd0), .net_wclm(8'd0), .net_wev(8'd0),
         .wq_ovf(wq_ovf), .n_defer(),
         .wr_stb(wr_stb), .wr_dst(wr_dst), .wr_src(wr_src),
         .wr_bsy(wr_bsy), .wr_clm(wr_clm),

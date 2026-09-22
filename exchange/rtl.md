@@ -2,9 +2,10 @@
 
 `verilog/` is the exchange of these documents in synthesisable Verilog: the
 fabric, the mainboard and its serial control bus, the supervision, MF8 trunk
-cards, and the common control — marker, registers, seekers. Eight testbenches
-run it, up to three exchanges in a chain making dialled calls over the pulse
-flood.
+cards, and the common control — marker, registers, a network unit, monitors.
+Eight testbenches run it, up to three exchanges in a chain making dialled calls
+over the pulse flood. The flood is `net_unit`, not the marker
+(`common-control.md`).
 
 This document is the part that matters to the design rather than to the code:
 **ten things the documents did not say, or said in a way that does not survive

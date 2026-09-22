@@ -1,23 +1,25 @@
 # The exchange — a mini-marker for bring-up
 
-A jig that makes local calls on a single exchange while the real marker is
-still too much. Two phones dial `h s`, one rings, they talk, either hangs up,
-and nobody is in charge of the call. It reads **M and `BUSY` only**. It does
-not look at a card's option word. It does not implement a 1-prefix, a flood, a
-class hunt, or a register pool. One pulse collector lives **inside** it.
+A marker that makes local calls on a single exchange: two phones dial `h s`,
+one rings, they talk, either hangs up, and nobody is in charge of the call. It
+reads **M and `BUSY` only**. It does not look at a card's option word. It does
+not hunt a class. One pulse collector lives **inside** it.
 
-It is not a parameter of the marker of `marker.md`. You unplug it when that
-marker and its register pool go in. Cards stay; this common-control does not.
+It is a marker, not a parameter of the marker of `marker.md`. Cards stay. You
+may unplug it when a class marker and its register pool go in; you may also
+leave it fitted and add a network unit and monitors, which is a pulse-flood
+exchange (`common-control.md` §4). The ribbons are the same either way.
 
 This is also not the outpulsing register-sender `network.md` §9 set aside.
-There are no trunks here. The "register" is `register.md` §4's pulse collector
-(`pulse_reg` in RTL), the same listener, with `restart` tied off because nothing
-consumes a prefix.
+The "register" is `register.md` §4's pulse collector (`pulse_reg` in RTL),
+the same listener. `restart` is tied off until a network unit is fitted,
+because nothing then consumes a prefix.
 
 > **Status: proposed, measured in simulation.** `make mini` runs two lines on
 > block 2 through seize, a two-digit call each way, busy, self, an empty
 > number, the first keys that go nowhere, abandon, and the no-digit timeout.
-> Nothing has been on a bench.
+> The flood path of §8 is specified against `common-control.md` and has not
+> been tied as a site. Nothing has been on a bench.
 
 ---
 
@@ -35,9 +37,10 @@ does not hunt a class. With none fitted, seize and cannot-complete write the
 caller's latch at those numbers anyway, and the caller hears silence — the
 same as `mvp.md` §2.
 
-**Not fitted, and not missed:** the card-word probe, a class matrix, a hunt,
-a second register, trunks, monitors, a network card, nails, answers-to, the
-console's `/CON`, event words, `CLAIM`.
+**Not fitted, and not missed for local calls:** the card-word probe, a class
+matrix, a hunt, a second register, trunks, monitors, a network unit, nails,
+answers-to, the console's `/CON`, event words. §8 is what a network unit adds
+without replacing this marker.
 
 The option word pin may still wiggle. Nothing here samples it. `pb_word` is
 not a port of the module.
@@ -139,16 +142,18 @@ request.
 
 ---
 
-## 6. What it will not do
+## 6. What it will not do on its own
 
 - Read a card word, hunt a class, or follow a nail or an answers-to.
-- Treat `1` as `1 e b h s`. Standalone numbering still has 10–17 as lines;
-  this jig will complete `1 s` if that port is free. It will not open a flood.
+- Treat `1` as `1 e b h s` **until a network unit is fitted** (§8). Standalone
+  numbering still has 10–17 as lines; this marker will complete `1 s` if that
+  port is free.
 - Share cable B with a console. Bring-up with the console is `mvp.md` §6.3
-  (latches by hand) and does not need this jig; this jig does not yield `/CON`.
+  (latches by hand) and does not need this marker; it does not yield `/CON`.
 - Hold more than one caller. A second phone waits for the register.
-- Become the real marker by adding straps. The real marker is a different
-  card. Fit it, and unplug this.
+- Become the class marker by adding straps. The class marker is a different
+  card. Fit it, and unplug this — or don't: a network unit does not need the
+  class marker.
 
 ---
 
@@ -157,13 +162,38 @@ request.
 `verilog/rtl/mini_marker.v`: a scanner, a BUSY/M probe with the same
 `p_valid` rule as the marker (a visit while the serialiser named another
 block is discarded — `rtl.md`), a four-deep write queue, `ctl_write`, and
-one `pulse_reg` with `restart` tied off. States:
+one `pulse_reg` with `restart` tied off unless a network unit is wired.
+States:
 
 ```
-IDLE → (M · /BUSY, register free) → COLLECT → (two highway digits) → PROBE
-                                         ↘ bad first digit / nodig → 03, IDLE
+IDLE → (M · /BUSY, register free, not a strapped trunk) → COLLECT
+     → (two highway digits) → PROBE
+     ↘ bad first digit / nodig → 03, IDLE
+     ↘ flood_go (unit fitted, key 1) → YIELD  (the unit owns the call)
 PROBE → visit called, free → pair writes, IDLE
       ↘ busy / self / gone → 03 or just IDLE
+YIELD → unit `local` → COLLECT; `done` → IDLE; `nogo` → 03, IDLE
 ```
 
-`make mini` is the bench.
+`make mini` is the bench without a unit.
+
+---
+
+## 8. With a network unit
+
+The ribbons of `common-control.md` §2.2. This marker does not grow a flood
+sequencer. It grows the **hooks** a unit already needs from a class marker:
+
+| | |
+|---|---|
+| key `1` | consume, restart, drop dial tone, `flood_go` — not highway 1 |
+| `restart` | wired, so `e b h s` land in four slots |
+| trunk ports | a strapped mask: `M · /BUSY` there is not a caller. The unit holds and forwards |
+| probe out | scanned port, M, `BUSY` (no word: the unit hunts by the same mask) |
+| claim attach | the unit asks; attach the register to that trunk; later writes keep `CLAIM` |
+| YIELD | the unit signals `local` / `done` / `nogo`; this marker does not wait for a claim itself |
+
+A two-exchange chain is this marker, that unit, monitors on block 1, and an
+MF8 trunk card. Resolvers, 0, 9, nails and the word stay off. That is a
+pulse-flood compatible exchange (`common-control.md` §4), not a growth of
+this file into `marker.md`.

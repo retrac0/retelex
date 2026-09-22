@@ -4,19 +4,23 @@ The smallest exchange that does automatic calls: two phones dial each other with
 two digits, one rings, the other hears it ringing, they talk, and either can
 hang up first, with nobody in charge of the call. Every part of it is a part of
 the full exchange (`fabric.md`, `marker.md`). It grows into the
-48-line exchange and then into a network by adding cards, never by changing
-what is already fitted.
+48-line exchange by adding cards, never by changing the fabric or the line
+cards. Common control is a family you may swap: a mini-marker stays a marker
+when a network unit is added (`common-control.md`). A network is those
+cards, not a different marker.
 
 > **Status: proposed; measured in simulation as a whole.** `exch.py calls` 19
-> runs exactly this configuration: two rotary phones, one register, no tone
+> runs this configuration: two rotary phones, one register, no tone
 > cards, nothing else. It makes a call each way, releases in both orders, then
-> dials 0, 9, 1 and 8 — the four first keys that go nowhere on an exchange this
-> small — and then an empty number and the caller's own number. Every latch ends
-> idle; `exch.log` is the run. The package counts come from the parts lists of
-> `fabric.md` §3 and §5 and `channel-cards.md`, except the marker's, which is
-> estimated by function (§2). **The register is a pool member and takes no
-> port**, matching the design (`marker.md` §4). No circuit has been drawn, and
-> nothing has been on a bench.
+> dials 0, 9 and 8 — the first keys that go nowhere on an exchange this
+> small — then `1` as a highway and hangs up, then an empty number and the
+> caller's own number. Digit `1` as a highway is the standalone map
+> (`protocol.md` §5); the timestamps in §4 for 0, 9, 8, 25 and 20 are from
+> that run. Every latch ends idle. The package counts come from the parts
+> lists of `fabric.md` §3 and §5 and `channel-cards.md`, except the marker's,
+> which is estimated by function (§2). **The register is a pool member and
+> takes no port**, matching the design (`marker.md` §4). No circuit has been
+> drawn, and nothing has been on a bench.
 
 ---
 
@@ -32,9 +36,9 @@ what is already fitted.
 |---|---|---|
 | Clock card | `HCLK`, `SLOT`, `SLOTQ`, `TX_CLK`, `TX_OCT`, `FILL`, `RING_CAD`, the 1 kHz `TICK` (`fabric.md` §2) | 10 |
 | Block 2, its shared parts | commutators, strobe and write decoders, highway drivers and receivers (`fabric.md` §3.1) | 13 |
-| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** | 17 |
-| Marker | scanner, probe, sequencer, and a diode matrix whose only job here is to send 0, 1 and 9 to hunts that find nothing and 8 straight to cannot-complete (§2, §4) | 15–20, estimated |
-| One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`marker.md` §4) | 9 |
+| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** — a port circuit exists only with its card on a ribbon tap (`fabric.md` §5.1) | 17 |
+| Marker | scanner, probe, sequencer. 0 and 9 go to hunts that find nothing; 8 to cannot-complete; **1 is a highway** (§2, §4). The mini-marker of `mini-marker.md` is this job with no word and no hunt | 15–20, estimated; the mini-marker is less |
+| One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`marker.md` §4). On the mini-marker it lives on the same card; the ribbon is the same (`common-control.md` §2.1) | 9 |
 | | **exchange logic** | **≈ 70** |
 | Two line cards | **either** the analog FXS card, ≈ 11 packages, a transformer and a ring relay each, plus one ring generator for the shelf's `RING` bus (20 Hz, ≈ 90 V rms); **or** the CVSD subscriber line card, ≈ 10 packages and two transformers each, with no ring generator and nothing above the 48 V feed, for the CVSD phone (`channel-cards.md` §2, §3) | per card |
 | Power | 5 V for the logic; the 48 V feed | |
@@ -66,8 +70,8 @@ Everything absent reads as idle, and idle is what every rule already expects:
 | the probe bus `PB` when an absent block is selected | **a pull-down on `BUSY`'s wire and a pull-up on the word's**: not busy, and no word, which is class 000 (`extensions.md` §2.2) | the scanner steps all 64 ports whatever is fitted |
 | the ringback card | `RBT` strapped to `FILL` | a caller hears silence while the other phone rings |
 | tone cards | the marker's hunt for dial tone and cannot-complete finds nothing, and the caller's latch is written cleared | silence where the tone would be; the call still completes (`exch.py calls` 12b, 19) |
-| the network card, and the trunk ports with it | the key `1` goes to a class-4 hunt, and there is no class-4 port to find | `1` gives cannot-complete, which is what a standalone exchange should say. Nothing is strapped to say so (`network.md` §2, §3.1) |
-| `/HUNT_INH` | pulled up: *accept*, so a hunt is the plain first-free-of-a-class | the one input by which a card not yet fitted will later steer a hunt (`marker.md` §4) |
+| the network unit, and the trunk ports with it | digit `1` is a highway: 10–17 are ordinary lines, none fitted here | a local `1 s` that lands on an empty slot is silence or cannot-complete the way any empty number is. The flood is the unit, which is not here (`common-control.md` §3, `protocol.md` §5) |
+| `/HUNT_INH` | pulled up: *accept*, so a hunt is the plain first-free-of-a-class | the one input by which a card not yet fitted will later steer a hunt (`marker.md` §4, `common-control.md` §2.4) |
 
 **The marker, estimated by function.** It is the one piece without a parts list
 in `marker.md`. The count is a sketch to size the minimum, not a design:
@@ -80,7 +84,7 @@ in `marker.md`. The count is a sketch to size the minimum, not a design:
 | the word out: parallel load, sixteen bits on `SDATA` (`mainboard.md` §2.3) | 2 × 74HC165 |
 | sequencer: state count, decode, the class tests, and `/HUNT_INH` into the hunt (pulled up, so nothing here drives it) | 74HC163, 74HC138, 2–3 gate packages |
 | control bus drivers — four lines now, the probe's M and word among them (§5) | 74HC244 |
-| prefix key → class | a few diodes |
+| prefix key → class | a few diodes. **Not** key `1`: that diode lives on the network unit |
 
 ---
 
@@ -132,20 +136,19 @@ is free. From `exch.py calls` 19:
 |---|---|---|---|
 | 0 | no operator fitted: the class-2 hunt finds nothing → cannot-complete | 19.888 | yes |
 | 9 | no outside line fitted: the class-3 hunt finds nothing → cannot-complete | 23.288 | yes |
-| 1 | the network's key: no trunk fitted, so the class-4 hunt finds nothing → cannot-complete | 25.988 | yes |
+| 1 then hang up | highway 1: dial tone off, waiting for `s`; hang-up frees the register, no cannot-complete latch | — | yes |
 | 8 | spare: cannot-complete, and no hunt at all | 29.688 | yes |
 | 2 5 | 25 is an empty slot, class 000 → cannot-complete | 33.788 | yes |
 | 2 0 | its own number, busy → cannot-complete | 38.788 | yes |
 
-**The four first keys are refused on the first digit**, 128 ms after its last
-pulse — `1` at 25.988, its one pulse having ended at 25.860 — where a wrong
-two-digit number waits for the second. `1` is the one of them a caller will dial
-out of habit, because it is what every number on a network begins with
-(`network.md` §2); it costs the exchange nothing to refuse, and one diode
-to send to the hunt. What would have followed the key never matters here, and
-two of the things that may follow it are not implemented anywhere: `1 8` and
-`1 9` are reserved for out of the network, and are cannot-complete on every
-exchange today (`network.md` §6).
+**0, 9 and 8 are refused on the first digit**, 128 ms after its last pulse.
+`1` is a highway on a standalone exchange (`protocol.md` §5): 10–17 are
+ordinary lines, none fitted here, and hanging up mid-number is abandon
+(`mini-marker.md` §5). The flood is a network unit, which is not here
+(`common-control.md` §3). What would have followed the key on a network never
+matters, and two of the things that may follow it are not implemented anywhere:
+`1 8` and `1 9` are reserved for out of the network, and are cannot-complete on
+every networked exchange today (`network.md` §6).
 
 Every latch idle and every `BUSY` clear at the end. At no time did a port hear a
 call it was not in.
@@ -154,16 +157,22 @@ call it was not in.
 
 ## 5. Growing it
 
-Nothing fitted changes. Each row is cards and populated parts, and each is
-measured or specified where the last column says. **That holds for the network
-too**: everything it needs is on the network card, including the trunks an
-origin seizes — a '574 a direction in a bank a register — which is why the
-marker and the registers here are the ones a networked exchange has
-(`network.md` §3.2). Two things the minimum must carry for that to be
+Nothing fitted on the fabric or the line cards changes. Each row is cards and
+populated parts, and each is measured or specified where the last column says.
+**Common control may be swapped** (`common-control.md`): the mini-marker, the
+class marker, and a network unit speak the same ribbons, so a flood is not a
+new marker.
+
+**That holds for the network too**: everything it needs is on the network unit,
+including the trunks an origin seizes — a '574 a direction in a bank a
+register — which is why the registers here are the ones a networked exchange
+has (`network.md` §3.2). Two things the minimum must carry for that to be
 true, and does: **the marker's probe on the control bus**, the scanned port's M
 and its word beside `PORT`, `SRC`, `BUSY` and `WR` on the '244s it already has;
 and **`/HUNT_INH`**, one pulled-up input to the hunt, which reads *accept*
-until a card drives it.
+until a card drives it. A mini-marker has no hunt, so `/HUNT_INH` is unused; it
+still puts M out, and it still takes the attach / `CLAIM` / `restart` side of
+the ribbon, which is enough for a one-direction flood (`common-control.md` §4).
 
 | to add | fit | where |
 |---|---|---|
@@ -175,7 +184,7 @@ until a card drives it.
 | the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `features.md` §4 |
 | outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
 | lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `terminal.md` |
-| the network | a trunk block at 10–17 (and further groups in blocks 2+), the network card and two or three monitors a block, and the exchange's own code `e b` jumpered on the card. Local numbers in 20–77 stay `h s`; standalone had freed 1 as a highway digit, and fitting the network card makes 1 the flood again. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9` | `network.md`, `monitor.md` |
+| the network | a trunk block at 10–17 (and further groups in blocks 2+), the network unit and two or three monitors a block, and the exchange's own code `e b` jumpered on the unit. Local numbers in 20–77 stay `h s`; standalone had `1` as a highway, and fitting the unit makes `1` the flood again. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9`. The marker already fitted — mini-marker or class marker — stays (`common-control.md` §4) | `network.md`, `monitor.md` |
 
 ---
 
@@ -193,9 +202,11 @@ until a card drives it.
    **With the console setting up each call, this is a manual board with no
    marker at all.**
 4. **The mini-marker** (`mini-marker.md`). One register inside, two digits,
-   no card word, no 1-prefix. Dial 20 and 21. Throw it away when the real
-   marker goes in.
-5. **The marker and the register.** Dial.
+   no card word. Dial 20 and 21. This **is** a marker: a network unit and
+   monitors can plug in on its ribbons (`common-control.md` §4). Unplug it
+   when a class marker is wanted for 0, 9, nails, or the word.
+5. **The class marker and the register pool.** Dial 0 and 9; empty slots
+   read unequipped.
 
 ---
 
@@ -205,9 +216,10 @@ until a card drives it.
   function, and the block's and port's counts are `fabric.md`'s parts lists
   by function.
 - **`/HUNT_INH` and the probe on the control bus** (§5). Both are proposed here
-  so that the network can be added without touching a fitted marker or register,
-  and neither is in the `calls` model, which has no probe bus and hunts by
-  reading the class directly.
+  so that the network unit can be added without touching a fitted marker or
+  register, and neither is in the `calls` model, which has no probe bus and hunts
+  by reading the class directly. Digit `1` as a highway in `calls` 19 is the
+  standalone map; the flood is `exch.py net`.
 - **The pull-downs on `PB`, and `RBT` strapped to `FILL`.** The fabric model
   measured absent blocks on the highways (`exch.py fabric` 2). The `calls` model
   has no probe bus and no `RBT` wire.

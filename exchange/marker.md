@@ -3,9 +3,10 @@
 The common control of one exchange: how a port says what it is, how a number is
 read, how the marker finds what was asked for, and how a call ends with nobody
 in charge of it. The fabric the marker writes to is `protocol.md`; the
-cards it hunts for are `features.md`. A bring-up jig with no card word and
-no 1-prefix — one register inside, two digits, then throw it away — is
-`mini-marker.md`.
+cards it hunts for are `features.md`. A simpler marker — two digits, no
+card word, one register inside — is `mini-marker.md`. Both are markers:
+they speak the same ribbons, and a network unit plugs into either
+(`common-control.md`). The flood is not in this document.
 
 > **Status: proposed, measured in simulation.** `exch.py calls` runs one exchange
 > a millisecond at a time — ports, latches, `BUSY`, class marks, release
@@ -71,8 +72,9 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
  first key   2–7   highway h; wait for the slot digit s, 0–7; called = h s
              0     hunt class 2
              9     hunt class 3
-             1     networked: 1 e b h s (opens the flood)
-                   standalone: highway 1; wait for s — 10–17 are ordinary lines
+             1     standalone: highway 1; wait for s — 10–17 are ordinary lines
+                   network unit fitted: consume at once, restart, `flood_go`
+                   (`common-control.md` §2.2). The unit owns the rest
              8 * # class 6
  called      class 0, 4 or 7 → class 6     class 5 or 6 → listen to it (one write)
              itself → class 6               not free (BUSY or busy `b`), overflow set → try next
@@ -81,13 +83,13 @@ the ports that answer to it, 0 becomes a call to 04, and class *operator* and
              busy `b` does not block a call request
 ```
 
-Whether `1` is the flood or highway 1 is the network strap: network card fitted,
-or the jumper that says the same with none (`protocol.md` §5). A number on
-another exchange is `1 e b h s`: the key, the exchange's code, then the line.
-The key opens the flood. If the `e b` that follows is this exchange's own, the
-trunks are released and what follows is parsed exactly as above
+Whether `1` is the flood or highway 1 is whether a network unit is fitted
+(`protocol.md` §5, `common-control.md` §3). A number on another exchange
+is `1 e b h s`: the key, the exchange's code, then the line. The **unit**
+opens the flood. If the `e b` that follows is this exchange's own, the unit
+releases the trunks and restarts; what follows is parsed exactly as above
 (`network.md` §3). `e` and `b` are 0–7. Either being 8 or 9 is reserved:
-the trunks are released and the caller gets class 6. A local number in 20–77 is
+the unit releases the trunks and the caller gets class 6. A local number in 20–77 is
 the same two digits alone or networked; **`h s` after `1 e b` means the same
 port**. Ports 00–07 are never dialled (0 is the operator key). Ports 10–17 are
 lines when standalone and undialable when networked.
@@ -117,9 +119,12 @@ a nail is never free and never a call request (`extensions.md` §3.1).
 request. Class 1 or 2: give a free register the caller's number; point the
 caller at dial tone. Class 3 — a CO line ringing in, from a caller who cannot
 dial — **is routed as if it had dialled 0**, and so is a **restricted** line
-whose word says warm (`extensions.md` §2.4). Class 4 is the network card's, and a hunt
-for one is steered by that card on `/HUNT_INH` (§4): the marker hunts the class
-and never knows which way a trunk faces.
+whose word says warm (`extensions.md` §2.4). Class 4 is the **network unit's**, never a
+caller: the marker does not attach a register to a trunk. A hunt for a trunk
+is steered by that unit on `/HUNT_INH` (§4), or the unit watches the scan
+itself (`common-control.md` §2.2): the marker hunts the class and never
+knows which way a trunk faces. An incoming claim is the unit asking for a
+register on that port, `CLAIM` already written.
 
 ---
 
@@ -132,7 +137,7 @@ and never knows which way a trunk faces.
 | Probe | the port's own listen structure — two '151 and a flip-flop — on the M highway and the probe bus (`BUSY` and the card's word, which a 74HC164 takes in over the visit), addressed by the scanner or by the digit store. A port probed out of the scanner's turn is read for one whole octet, up to 250 µs. **The marker reads ports the way ports read each other.** M and the word go out on the control bus as well, so that a card may watch the scan without the marker knowing what it is looking for (`network.md` §3.2) |
 | Sequencer | a state counter and decode. Its whole output is latch writes on the control bus — one sixteen-bit word shifted out on `SDATA`, then `WR` (`mainboard.md` §2.3) — which is multi-master: the operator's console drives it by hand. Its hunt takes one input, `/HUNT_INH`, pulled up on the backplane: a card may reject the port the probe is on and the hunt walks on. Nothing else may steer a hunt, and with no card fitted the line reads *accept* |
 | Diode matrix | prefix key → class. Nothing else: no addresses, no translation |
-| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero would be an operator flash-transfer consult (`register.md` §6.1): deferred — transfer is console-only for now (`operator.md` §3); attaches today load `SRC` = 00. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network card**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2) |
+| Registers | `register.md` §4, one to three of them. The marker's scanner is their finder: it hands a free register the caller's port number **and optional held party `SRC`**, the register's own probe — two '151 and a flip-flop on the M highway — reads the caller's hook, and its digits and `SRC` come back on a ribbon. It lets go on `register.md`'s CLR (hook down 256 ms), the no-digit timeout, or the marker's word. **No port, no class.** `SRC` non-zero would be an operator flash-transfer consult (`register.md` §6.1): deferred — transfer is console-only for now (`operator.md` §3); attaches today load `SRC` = 00. On a networked exchange the trunks it seized for its caller are held in a bank of its own **on the network unit**, so a register is the same ~12 packages whether the exchange stands alone or not (`network.md` §3.2, `common-control.md` §2.1) |
 
 A connection is two writes — caller listens to called, called listens to caller
 — and the marker is finished with the call.
@@ -176,7 +181,7 @@ Every one of these ends with every latch idle and every `BUSY` clear
 | an empty slot; 1; 8; 2 then 9 | class 6 |
 | abandoned while ringing | the called phone stops ringing at once (E fell) and is free 300 ms later |
 | abandoned while dialling | **the register lets go by itself**: the hook it is watching stays down 256 ms |
-| off-hook, nothing dialled | class 6 after 10 s, register freed; the port stays busy until the phone is hung up. On a network call the origin releases its trunks first, 5 s after the key (`network.md` §3–4) |
+| off-hook, nothing dialled | class 6 after 10 s, register freed; the port stays busy until the phone is hung up. On a network call the origin's **unit** releases its trunks first, 5 s after the key (`network.md` §3–4) |
 | two callers dialling each other | both get class 6 |
 | a called phone lifting 3 ms before the test | reads busy: M is part of the free test |
 | one register, two callers | the second gets dial tone 1.9 s late: when the first has dialled, and the freed register has settled (§5.2) |

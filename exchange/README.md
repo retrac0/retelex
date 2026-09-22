@@ -38,12 +38,13 @@ line. 8 and 9 stay special in the code.
 | | |
 |---|---|
 | [mvp.md](mvp.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
+| [common-control.md](common-control.md) | **proposed**: marker, register, network unit and monitor as replaceable units; the ribbons of levels between them; the solo exchange and a basic pulse flood on the same tap |
 | [protocol.md](protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
 | [fabric.md](fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts and cards, bring-up |
 | [big-exchange.md](big-exchange.md) | **analysis**: a bigger fabric in 74HC is possible — 128 ports costs a third octal digit, and there is nothing honest to do with it; the exchange stays **8 × 8**, 64 ports, 512 kHz, one highway one MF8 group after conversion (`exch.py timing` 6) |
 | [mainboard.md](mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
-| [marker.md](marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line |
-| [mini-marker.md](mini-marker.md) | **bring-up jig**: one register inside, two-digit local calls, no card word, no 1-prefix — throw it away when the real marker is fitted (`make mini`) |
+| [marker.md](marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line. The flood is the network unit (`common-control.md`) |
+| [mini-marker.md](mini-marker.md) | **a marker**: one register inside, two-digit local calls, no card word — stays a marker if a network unit is added (`make mini`) |
 | [features.md](features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), data |
 | [conference.md](conference.md) | **proposed, switch measured**: meet-me conference block — attaches to the mainboard buses, private party bus, two×4 or one×8 bit-switched bridges, no codec |
 | [register.md](register.md) | the register: dial pulses into a digit store in 74HC, pulse correction, measured end to end |
@@ -118,7 +119,8 @@ Decided and not yet modelled as a whole: **the network, the *pulse flood*.** All
 call dialled with the key `1` opens a flood, and the caller's own dial pulses, the
 exchange's code `e b` and the line, go down it live. Every exchange's monitor
 hears them and the owner drops the call in. A local call, `h s`, never touches a
-trunk. No
+trunk. The flood lives on the **network unit**, not in the marker
+(`common-control.md`). No
 sender, no matrix, no route table. The monitor's two rules are measured — no
 wrong number in 1 500 calls at any pause a register can read — and the rest is
 timed by arithmetic on measured constants. **`net` is the second pass, and it

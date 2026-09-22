@@ -7,7 +7,7 @@ SHELL := /bin/bash
 # is about two orders of magnitude faster and is what to use while working --
 # the network testbench is 3 s of model time, which is minutes under Icarus and
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
-RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/marker.v rtl/mini_marker.v \
+RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/net_unit.v rtl/marker.v rtl/mini_marker.v \
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/pulse_gen.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
@@ -226,7 +226,9 @@ lint:
 	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module mf8_trunk_card \
 	    rtl/mf8_trunk_card.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v
 	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module marker \
-	    rtl/marker.v
+	    rtl/marker.v rtl/ctl_write.v
+	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module net_unit \
+	    rtl/net_unit.v
 	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module mini_marker \
 	    rtl/mini_marker.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v
 

@@ -16,8 +16,9 @@
 // how the two special prefixes cost nothing:
 //
 //   the key 1      "the digit the flood consumes" (network.md 2).  The
-//                  marker acts on it and restarts, so e b h s land in slots
-//                  0-3 -- exactly four, which is why the store is four deep
+//                  marker or the network unit acts on it and restarts, so
+//                  e b h s land in slots 0-3 -- exactly four, which is why
+//                  the store is four deep (common-control.md 2.1)
 //   our own e b    restart again, and h s land in slots 0-1: from there the
 //                  call is indistinguishable from a local one, because it is
 `timescale 1ns/1ps

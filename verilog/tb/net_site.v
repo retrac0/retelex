@@ -2,8 +2,8 @@
 //
 //   block 0   dial tone at 01, busy at 02 (optional), cannot-complete at 03;
 //             04-07 the operator bank when fitted.  Never an MF8 trunk group.
-//   block 1   first MF8 trunk group at 10-17 facing DIR0 -- the exchange unit
-//             takes the whole highway (mf8-unit.md 5).  Port 00 is silence for
+//   block 1   first MF8 trunk group at 11-13/15-17 facing DIR0 -- the trunk
+//             card taps the highway (mf8-unit.md 1).  Port 00 is silence for
 //             a cleared latch; 04 is an operator seat on a tone-less map.
 //   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
 //             whole blocks with them for a stress run
@@ -14,17 +14,17 @@
 //             trunk block -- "a flood reaches a hub on one block"
 //
 // An exchange with one direction is an end of a chain; with two it is a transit,
-// and its marker forwards a seizure from one into the other; with three or four
+// and its network unit forwards a seizure from one into the other; with three or four
 // it is a HUB, and a seizure is fanned out into every other direction at once
-// and held in a resolver until one of them claims (network.md 3.2).
+// and held in a resolver until one of them claims (network.md 3.2, common-control.md).
 `timescale 1ns/1ps
 
 module net_site #(
     parameter [2:0]   OWN_E = 3'd2,
     parameter [2:0]   OWN_B = 3'd2,
     // How many directions this exchange has, and for each its direction, its
-    // glare bit and its strap, as the card's word carries them
-    // (extensions.md 2.2).  N=0 S=1 E=2 W=3.
+    // glare bit (in the card's word) and its no-forward strap (STRAP_N on the
+    // marker, not in the word).  N=0 S=1 E=2 W=3.
     parameter integer NDIR = 1,
     parameter [1:0]   DIR0 = 2'd2,
     parameter         G0 = 1'b0,
@@ -46,9 +46,9 @@ module net_site #(
     // Which ports hold line cards.  The default is the two of mvp.md 1;
     // a stress run fills whole blocks with them.
     parameter [63:0]  LINE_PORTS = 64'h0000_0000_0003_0000,
-    // Per-port line words (extensions.md 2.2 / groups.md 2.1).
+    // Per-port line words (extensions.md 2.2).
     // Default all-ones = grounded plain line.
-    // Class form: {·, b, P, ·, class, 0}; answers-to: {1, hss, 1}; nail: {0, hss, 1}.
+    // Class: {ppp, ccc, 2'b11}; answers {hs, 2'b01}; call nail {hs, 2'b10}; tied nail {hs, 2'b00}.
     parameter [7:0]   LINE_WORD_04 = 8'hFF,
     parameter [7:0]   LINE_WORD_20 = 8'hFF,
     parameter [7:0]   LINE_WORD_21 = 8'hFF,
@@ -95,17 +95,21 @@ module net_site #(
 
     // Which block each direction's trunk group sits on: 1, then 3, 4 and 5 —
     // block 0 is tones + the operator bank; block 2 is the lines.
-    localparam [7:0] WORD0 = {N0, G0, DIR0, 3'b101, 1'b0};   // class 101, form 0
-    localparam [7:0] WORD1 = {N1, G1, DIR1, 3'b101, 1'b0};
-    localparam [7:0] WORD2 = {N2, G2, DIR2, 3'b101, 1'b0};
-    localparam [7:0] WORD3 = {N3, G3, DIR3, 3'b101, 1'b0};
+    // Class form: 11 ccc ppp.  Trunk options d d g in frames 5–7; n is STRAP_N.
+    localparam [7:0] WORD0 = {G0, DIR0, 3'b101, 2'b11};
+    localparam [7:0] WORD1 = {G1, DIR1, 3'b101, 2'b11};
+    localparam [7:0] WORD2 = {G2, DIR2, 3'b101, 2'b11};
+    localparam [7:0] WORD3 = {G3, DIR3, 3'b101, 2'b11};
+    localparam [3:0] STRAP_N = ({3'b000, N0} << DIR0) | ({3'b000, N1} << DIR1)
+                             | ({3'b000, N2} << DIR2) | ({3'b000, N3} << DIR3);
 
-    // The exchange unit takes all eight slots of its block.  Port 00 stays
-    // unfitted ("a cleared latch listens to 00", mvp.md 2); tones are 01-03.
-    localparam [63:0] TRUNKS = 64'h0000_0000_0000_FF00
-                             | ((NDIR >= 2) ? 64'h0000_0000_FF00_0000 : 64'd0)
-                             | ((NDIR >= 3) ? 64'h0000_00FF_0000_0000 : 64'd0)
-                             | ((NDIR >= 4) ? 64'h0000_FF00_0000_0000 : 64'd0);
+    // Six trunk channels a block (slots 1-3, 5-7).  Port 00 stays unfitted
+    // ("a cleared latch listens to 00", mvp.md 2); tones are 01-03; slots
+    // 0 and 4 of a trunk block are free.
+    localparam [63:0] TRUNKS = 64'h0000_0000_0000_EE00
+                             | ((NDIR >= 2) ? 64'h0000_0000_EE00_0000 : 64'd0)
+                             | ((NDIR >= 3) ? 64'h0000_00EE_0000_0000 : 64'd0)
+                             | ((NDIR >= 4) ? 64'h0000_EE00_0000_0000 : 64'd0);
     localparam [63:0] PF = LINE_PORTS
                          | 64'h0000_0000_0000_000E     // tones at 01, 02, 03
                          | TRUNKS;
@@ -211,7 +215,7 @@ module net_site #(
                       .HIT(HIT), .ID(ID), .CLR(CLR)) u_mon (
                 .clk(clk), .rst_n(rst_n), .oct_stb(oct_stb), .tick_1k(tick_1k),
                 .m(t_a_tx[g*8 +: 8]), .busy(pbusy[B*8 +: 8]),
-                .chan_mask(8'b1111_1111),
+                .chan_mask(8'b1110_1110),
                 .claim(mc_v[g]), .claim_port(mp_v[g*6 +: 6]),
                 .claim_ack(mack_v[g]), .held(mh_v[g]), .all_busy(mf_v[g]), .cells());
         end else begin : absent
@@ -311,9 +315,20 @@ module net_site #(
         .clk(clk), .rst_n(rst_n), .sdata(sdata), .sclk(sclk), .wr(wr),
         .clr(1'b0), .count(ev_ntrk_c), .match());
 
-    marker #(.NREG(NREG), .NRES(NRES), .OWN_E(OWN_E), .OWN_B(OWN_B),
+    wire [5:0]  pr_port;
+    wire        pr_visit, pr_valid, pr_m, pr_busy;
+    wire [7:0]  pr_word;
+    wire [NREG-1:0] flood_go, net_restart, net_done, net_nogo, net_local;
+    wire [6*NREG-1:0] flood_caller;
+    wire        net_att;
+    wire [5:0]  net_att_port;
+    wire [3:0]  net_nw;
+    wire [8*6-1:0] net_wdst, net_wsrc;
+    wire [7:0]  net_wbsy, net_wclm, net_wev;
+
+    marker #(.NREG(NREG),
              .DIALTONE(PDT), .NOGO(PNG),
-             .HAS_NET(1'b1), .T_GUARD(T_GUARD), .T_CLAIM(T_CLAIM)) u_mk (
+             .HAS_NET(1'b1)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .tick(tick), .frame_stb(frame_stb),
         .oct_stb(oct_stb), .tick_1k(tick_1k),
@@ -324,10 +339,34 @@ module net_site #(
         .reg_restart(r_restart),
         .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk),
         .reg_release(r_release),
-        .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),
-        .any_claimed(got_claim), .dirs_held(dirs_held),
-        .fan_legs(fan_legs), .res_used(res_used), .wq_ovf(wq_ovf),
+        .probe_port(pr_port), .probe_visit(pr_visit), .probe_valid(pr_valid),
+        .probe_m(pr_m), .probe_busy(pr_busy), .probe_word(pr_word),
+        .flood_go(flood_go), .flood_caller(flood_caller),
+        .net_restart(net_restart), .net_done(net_done),
+        .net_nogo(net_nogo), .net_local(net_local),
+        .net_att(net_att), .net_att_port(net_att_port),
+        .net_nw(net_nw), .net_wdst(net_wdst), .net_wsrc(net_wsrc),
+        .net_wbsy(net_wbsy), .net_wclm(net_wclm), .net_wev(net_wev),
+        .wq_ovf(wq_ovf),
         .n_defer(n_defer), .wr_stb(wr_stb), .wr_dst(wr_dst),
         .wr_src(wr_src), .wr_bsy(wr_bsy), .wr_clm(wr_clm),
         .con_n(1'b1), .bus_oe());
+
+    net_unit #(.NREG(NREG), .NRES(NRES), .OWN_E(OWN_E), .OWN_B(OWN_B),
+               .NOGO(PNG), .STRAP_N(STRAP_N),
+               .T_GUARD(T_GUARD), .T_CLAIM(T_CLAIM)) u_net (
+        .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
+        .visit(pr_visit), .p_valid(pr_valid), .p_port(pr_port),
+        .p_m(pr_m), .p_busy(pr_busy), .p_word(pr_word),
+        .flood_go(flood_go), .flood_caller(flood_caller),
+        .reg_gone(r_gone), .reg_brk(r_brk),
+        .reg_ndig(r_ndig), .reg_digits(r_digits),
+        .restart(net_restart), .go_local(net_local),
+        .done(net_done), .nogo(net_nogo),
+        .mon_claim(mclaim), .mon_port(mport), .mon_ack(mack),
+        .att_req(net_att), .att_port(net_att_port),
+        .nw(net_nw), .wdst(net_wdst), .wsrc(net_wsrc),
+        .wbsy(net_wbsy), .wclm(net_wclm), .wev(net_wev),
+        .any_claimed(got_claim), .dirs_held(dirs_held),
+        .fan_legs(fan_legs), .res_used(res_used));
 endmodule

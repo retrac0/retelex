@@ -1,16 +1,15 @@
 // mini_marker -- bring-up common control.  mini-marker.md.
 //
 // A scanner, a probe of M and BUSY, a sequencer, and one register inside.
-// It does not read a card's option word, does not hunt a class, and does not
-// treat 1 as a prefix.  Two digits h s, two latch writes, and it leaves.
-// Unplug it when the marker of marker.md goes in.
+// It does not read a card's option word and does not hunt a class.
+// Two digits h s, two latch writes, and it leaves.
+// Digit 1 is a highway until a network unit is fitted (mini-marker.md 8).
 //
 //   first key   1-7   highway h; wait for the slot digit s; called = h s
 //               0 8 9 and 11-16   cannot-complete
 //
-// The register is pulse_reg with restart tied off: nothing consumes a prefix,
-// so the store never needs to begin again.  This is not network.md 9's
-// outpulsing sender.  There are no trunks.
+// The register is pulse_reg.  restart is tied off here: nothing consumes a
+// prefix until a unit is wired.  This is not network.md 9's outpulsing sender.
 `timescale 1ns/1ps
 
 module mini_marker #(

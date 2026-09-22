@@ -292,6 +292,7 @@ is not acceptable. This is arithmetic on assumed calling rates, not a measuremen
 |---|---|
 | `FREE` / `release` | clears the store, `N`, and `SRC`, and restarts the finder |
 | `attach` + `attach_port` + `attach_src` | seize the register for this caller; `attach_src` is the held party or `00` |
+| `restart` | begin the store again, caller unchanged. The network unit pulses this too (`common-control.md` §2.1): key `1`, then own `e b` |
 
 **Parts for `SRC`.** Six bits loaded at attach and cleared when the register is
 freed: half a 74HC174, or six bits of a second '670 if one is already on the

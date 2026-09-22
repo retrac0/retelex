@@ -97,8 +97,8 @@ network, or tops up a direction. It is not a route for an exchange's traffic.
 ## 2. Numbers
 
 **A line is dialled `h s` from its own exchange, and `1 e b h s` from anywhere.**
-Nothing is strapped for it: an exchange with no network card gives
-cannot-complete for `1`, and otherwise parses the same digits.
+Nothing is strapped for it: an exchange with no network unit treats
+`1` as a highway (`protocol.md` §5), and otherwise parses the same digits.
 
 ```
  local         4 7           line 47 of this exchange.  No trunk is touched
@@ -153,7 +153,7 @@ in order to pass it on.
  origin    the FIRST digit is in, and it is 1.  (0 and 9 are local hunts, and 2–7 begins a local
            number: none of them touches a trunk.)
            Seize one free trunk in EVERY direction the exchange has, all listening to the CALLER:
-           their remaining digits go down the flood as they dial them.  The network card holds the
+           their remaining digits go down the flood as they dial them.  The network unit holds the
            trunks seized for this register (§3.2), which goes on counting:
            our own e b → release the trunks, carry on locally.  An e or a b of 8 or 9 →
            reserved: release the trunks, cannot-complete.  Else, when a trunk has claimed, release the
@@ -246,11 +246,11 @@ falling through every patch at once; each port clears itself 256 ms later, and
 *and* one toward 24. 22 hears a `b` of 5 and lets go; 25 claims; backward A rises
 on the trunk toward 24; the origin keeps it and releases the other.
 
-| the network card | |
+| the network unit | |
 |---|---|
 | Holds | the own-code jumpers, `e` and `b`, three bits each; the forward-on-seizure sequence; the seize and await-claim sequence and its guard, with the **three-way strap that sets the guard's tap** (`monitor.md` §3.5) beside the code jumpers; **the trunks an origin seized**, a '574 a direction in a bank a register; the direction states and the claim comparator; at a hub, **the fan-out resolvers** (§3.2) |
-| Where the rest of it is | nowhere. **Everything the network needs is on this card.** The fabric, the ports, the registers, the marker and the release rule are the standalone exchange's, unchanged, so an exchange joins a network by plugging cards in (§3.2, `mvp.md` §5) |
-| Not fitted | `1` gives cannot-complete, and the trunk ports are empty: the standalone exchange |
+| Where the rest of it is | nowhere. **Everything the network needs is on this unit.** The fabric, the ports, the registers, the marker and the release rule are the standalone exchange's, unchanged, so an exchange joins a network by plugging cards in (§3.2, `mvp.md` §5, `common-control.md`). The marker may be the mini-marker of `mini-marker.md` |
+| Not fitted | `1` is a highway (`protocol.md` §5). The trunk ports are empty: the standalone exchange |
 
 ### 3.2 Hubs: three or four directions
 
@@ -283,7 +283,7 @@ call until then, in a **resolver**:
 | **Seeing the claim** | the scanner visits every port every 8 ms. At each visit a counter runs the stored leg addresses, the resolvers' and the seizure banks', past one shared 74HC688 while the probe reads M off the control bus, well inside the 125 µs visit: **≈ 3 packages**, shared, on the card |
 | **The origin** | the trunks it seized are held on the network card, one 74HC574 a direction the exchange has, in a bank a register: two '574 a bank at an exchange on a chain. The register counts the digits and says when to let go; the card holds the addresses and writes the latches. This replaces the card's two '174, which held only one pending network call at a time. **The bank is on the card and not in the register**, so joining a network does not reach into a register already fitted |
 | **How many** | every call dialled with `1` anywhere in the network passes the hub, for 2.2–3.2 s, the time `e` and `b` take. With 30 % of calls leaving, eight exchanges of 48 lines put 0.26 E on the hub's resolvers: two are all busy 2.6 % of the time, three 0.2 %. Twenty put 0.64 E: three 2.3 %, four 0.4 %. **Three at a hub, four at the centre of a score of exchanges** |
-| **The marker** | **nothing.** It hunts a class as it always did and knows nothing of directions: the card watches the same probe and pulls `/HUNT_INH` at a port whose word faces the wrong way, so the hunt walks on (`marker.md` §4). The direction states — the origin's scan, a transit latching the incoming trunk's direction and hunting the others, the resolver's states — are **≈ 4 packages**, on the card |
+| **The marker** | **nothing of the flood.** It consumes key `1`, restarts, raises `flood_go`, and otherwise hunts a class as it always did, knowing nothing of directions (`common-control.md` §2.2). The unit watches the same probe and pulls `/HUNT_INH` at a port whose word faces the wrong way, so the hunt walks on — or the unit hunts trunks itself, which is what a mini-marker needs, having no hunt. The direction states — the origin's scan, a transit latching the incoming trunk's direction and hunting the others, the resolver's states — are **≈ 4 packages**, on the unit. A claim is the unit's: it writes `CLAIM` and asks the marker for a register on that port |
 | **Timing** | a hub adds up to three writes to the flood's hop, about 4 ms, and up to one scan and a write to the claim's way back, 10 ms. The origin's guard covers ten hops at a slow marker's 12 ms on its 128 ms tap, twenty-one on its 256 ms one, and a hub counts as a hop and a third (`monitor.md` §3.5). **On the 128 ms tap no exchange should be more than about eight hops from another**: a hub with four chains of four is eight across |
 | **Loops** | a tree of chains and stars needs no strap. A ring anywhere, through a hub or not, is broken by strapping one of its links (§3.3) |
 | **Monitors** | two a trunk block, as everywhere: a flood reaches a hub on one block |
@@ -296,18 +296,20 @@ registers, the marker or the release rule, and after the claim a call through a
 hub is two latches like any other.
 
 **What the standalone exchange must carry for that to be true**, and carries
-anyway (`mvp.md` §5):
+anyway (`mvp.md` §5, `common-control.md` §2.4):
 
 - **the probe on the control bus.** The scanned port's M and its word go out
   beside `PORT`, `SRC`, `BUSY` and `WR`, on the '244s the marker already has. A
-  card that wants to watch the scan can.
+  card that wants to watch the scan can. A mini-marker puts M and `BUSY` out
+  and not the word; the unit then hunts by a strapped port mask.
 - **one pulled-up input, `/HUNT_INH`.** A hunt takes it; nothing drives it when
-  no card is fitted, which reads as *accept*, and the hunt is the plain
+  no unit is fitted, which reads as *accept*, and the hunt is the plain
   first-free-of-a-class it always was. It is the only way anything may steer a
-  hunt, and it keeps the marker from ever learning what a direction is.
-- **the diode for key `1`**, which sends it to a class-4 hunt. With no trunk
-  port fitted that hunt finds nothing and the caller gets cannot-complete
-  (§2, `mvp.md` §4).
+  hunt, and it keeps the marker from ever learning what a direction is. Unused
+  on a mini-marker.
+- **the register ribbon, including `restart`.** The unit consumes key `1` and
+  own `e b` through that line. There is no diode for `1` on the marker:
+  without the unit, `1` is a highway (`protocol.md` §5).
 
 **How big the card is.** The jumpers and the two sequences, ≈ 4 for the
 direction states, ≈ 3 for the comparator, and a '574 a direction in each

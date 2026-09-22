@@ -44,21 +44,22 @@ its trunk ports' M lines directly — it never touches the fabric.
            (M is already high when a monitor comes free → this seizure is never counted)
            (the port was busy at the last visit → this is a CLAIM coming back, not a seizure: §3.3)
  counting  a break of 8 ms or more is a pulse; 128 ms of make ends the digit   — register.md §2's windows
- decide    the first digit is this exchange's e       → read one digit more
-           the second is this exchange's b            → CLAIM: ask the marker
+           decide    the first digit is this exchange's e       → read one digit more
+           the second is this exchange's b            → CLAIM: ask the network unit
            either is 8 or 9                           → reserved (network.md §2: e and b are 0–7,
                                                         and a 0 is ten pulses): let go
            either is anything else                    → let go, at once
  done      nothing more is read until the trunk releases (M low for 256 ms)
 ```
 
-**It reads two digits and no more.** On a claim the marker re-points the trunk
-into the local fabric with the latch's `CLAIM` bit set, clears the onward patch,
-**and gives a free register the trunk's port number** — the trunk is now a line
-like any other, so the register reads `h s`, or 0, or 9, from its hook as it
-would from a phone's. The caller's next digit is at least 370 ms away (their pause
+**It reads two digits and no more.** On a claim the **network unit** re-points
+the trunk into the local fabric with the latch's `CLAIM` bit set, clears the
+onward patch, **and asks the marker for a free register on the trunk's port
+number** — the trunk is now a line like any other, so the register reads `h s`,
+or 0, or 9, from its hook as it would from a phone's (`common-control.md`
+§2.3). The caller's next digit is at least 370 ms away (their pause
 less the 128 ms already spent), against a hunt of 8 ms. No register free: the
-marker points the trunk at the cannot-complete tone — *claimed, cannot complete*
+unit points the trunk at the cannot-complete tone — *claimed, cannot complete*
 — and the caller hears it at once.
 
 An incoming call therefore costs the register pool one register for two digits,
@@ -152,8 +153,9 @@ a pulse is then lost: the cell goes to *done*, the marker never hears, the trunk
 sits busy pointed at idle, and the caller times out to cannot-complete. That is
 a call this exchange owned and never took, which is the loss §4 exists to bound.
 
-A claim must therefore be **held until the marker acknowledges it**, and the
-marker must take one at a time. It is also what §3.3 of `network.md`
+A claim must therefore be **held until the network unit acknowledges it**, and
+the unit must take one at a time. The marker sees only the attach that follows.
+It is also what §3.3 of `network.md`
 already assumes: a ring delivers a call to its owner twice, and relies on the
 second claim being processed and finding the line busy.
 
@@ -399,9 +401,9 @@ select taken away, and a compare added.
 count-then-clear ordering as the register applies (`circuit-review.md` §3): the
 edge enables the count and clears the timer a tick later.
 
-**To the network card:** `CLAIM_REQ` and the channel (3 bits). **From it:** an
+**To the network unit:** `CLAIM_REQ` and the channel (3 bits). **From it:** an
 acknowledge that frees the monitor. **Jumpers:** `e` and `b`, four bits each,
-the network card's own-code jumpers bussed to the monitors. Each is the digit's
+the unit's own-code jumpers bussed to the monitors. Each is the digit's
 pulse count as the counter holds it, so a 0 is jumpered `1010`, ten pulses, and
 the compare is all four bits. 8 and 9 are never jumpered, so neither can match.
 

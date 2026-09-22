@@ -38,12 +38,15 @@ rack, and the module boundaries are the connectors.
                                                              (mainboard.md 2.3)
 
  marker            scanner, probe, hunt in fixed order from 00, the number
-                   parsing of 2, the flood at both ends, and the fan-out and
-                   RESOLVERS of a hub                         (marker.md,
-                                                              network.md 3)
- mini_marker       bring-up jig: one pulse_reg inside, two-digit local calls,
-                   M and BUSY only, no card word, no 1-prefix
-                                                             (mini-marker.md)
+                   parsing of 2.  Flood, forwarder and resolvers are net_unit
+                                                             (marker.md,
+                                                              common-control.md)
+ net_unit          origin flood, transit forward, resolvers, CLAIM writes
+                                                             (network.md 3,
+                                                              common-control.md)
+ mini_marker       a marker: one pulse_reg inside, two-digit local calls,
+                   M and BUSY only, no card word; flood_go / CLAIM hooks
+                   for a network unit                        (mini-marker.md)
  pulse_reg         a register, one of a POOL: no port, no class, reads its
                    caller's hook off HA through its own probe; four-digit store
                    plus a 6-bit SRC held-party field for operator transfer
@@ -99,7 +102,7 @@ make priority  extensions.md 2.4.1: a priority lift waits out non-priority under
 make word     the card word: class, nail, answers-to, plain FF, zero
 make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
-make mini     mini-marker.md: two lines, one register, no card word, no 1-prefix
+make mini     mini-marker.md: two lines, one register, no card word; 1 is a highway
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
 make ring-open    the same ring with the strap OUT: the flood circles
