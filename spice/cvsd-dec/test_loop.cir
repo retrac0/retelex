@@ -1,0 +1,29 @@
+* Loopback: type-A encoder → type-A decoder (+ reconstruction)
+* 1 kHz tone at nominal line level (0.15 rms of FS)
+
+.include models.inc
+.include ../cvsd-enc/enc_a.sub
+.include dec_a.sub
+.include recon.sub
+
+Vdd vdd 0 DC 5
+Vcc vcc 0 DC 12
+Vee vee 0 DC -12
+
+Vclk clk 0 PULSE(0 5 7.8125u 1n 1n 7.8115u 15.625u)
+Vaud audio 0 SIN(0 0.212132 1k 0 0 0)
+
+Xenc audio clk bit nbit y_enc syl_enc vdd vcc vee cvsd_enc_a
+Xdec bit   clk y_dec syl_dec vdd vcc vee cvsd_dec_a
+Xrec y_dec audio_out vcc vee cvsd_recon
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+
+.control
+  tran 1u 25m
+  set filetype=ascii
+  wrdata out/loop time audio y_enc y_dec audio_out bit syl_enc syl_dec
+  quit
+.endc
+
+.end

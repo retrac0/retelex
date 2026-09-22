@@ -1,0 +1,48 @@
+* CVSD decoder A — breadboard baseline
+* Same engine as enc_a without the LM311: BIT and CLK from outside.
+* mf8-spec.md §12.1, circuit-review.md §2.4 / §4, falstad CVSD-DEC
+*
+* Pins: BIT CLK Y SYL VDD VCC VEE
+
+.subckt cvsd_dec_a BIT CLK Y SYL VDD VCC VEE
+
+* Run register — first flop samples external BIT
+Xd0 BIT CLK Q  NQ  HC74_DFF
+Xd1 Q   CLK Q1 NQ1 HC74_DFF
+Xd2 Q1  CLK Q2 NQ2 HC74_DFF
+Rnq1 NQ1 0 1Meg
+Rnq2 NQ2 0 1Meg
+
+* Coincidence: /COIN = (Q⊕Q1)∨(Q1⊕Q2)
+Aadc [Q Q1 Q2] [qd q1d q2d] hc_adc
+Ax01 [qd q1d] x01d hc_xor
+Ax12 [q1d q2d] x12d hc_xor
+Aor  [x01d x12d] ncd hc_or
+Adac [ncd] [NCOIN] hc_dac
+
+R1 NCOIN SYL 51.1k
+R2 SYL 0 2.55Meg
+Csyl SYL 0 100n
+
+* Iabc: ½ TL072 + 2N3906
+Rvref VDD VA 100
+Cvref VA 0 100u
+Xoa SYL VA_EMIT VCC VEE BASE TL072
+Qp IABC BASE VA_EMIT Q2N3906
+Rset VA VA_EMIT 30.9k
+
+* LM13700 half: ±224 mV from Q / NQ
+Rd1 Q   INP 47k
+Rd2 INP 0   2.2k
+Rd3 NQ  INN 47k
+Rd4 INN 0   2.2k
+Rlin LIN 0 100Meg
+Rbin BIN 0 100Meg
+Rbuf BUF 0 100Meg
+Xota LIN INP INN IABC INT VCC VEE BIN BUF HALF13700
+
+Cint INT 0 10n
+Rint INT 0 100k
+Xfoll INT Y VCC VEE Y TL072
+
+.ends cvsd_dec_a
