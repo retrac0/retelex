@@ -1,0 +1,17 @@
+* Solo run — encoder a
+.include models.inc
+.include enc_a.sub
+Vdd vdd 0 5
+Vcc vcc 0 12
+Vee vee 0 -12
+Vclk clk 0 PULSE(0 5 7.8125u 1n 1n 7.8115u 15.625u)
+Vaud audio 0 SIN(0 0.212132 1k 0 0 0)
+Xenc audio clk bit nbit y syl vdd vcc vee cvsd_enc_a
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 1u 25m
+  set filetype=ascii
+  wrdata out/a time audio y bit syl
+  quit
+.endc
+.end

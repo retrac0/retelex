@@ -1,0 +1,55 @@
+* CVSD encoder A — breadboard baseline
+* LM311 + TL072 (Iabc + follower) + LM13700 + 74HC74/86/32
+* mf8-spec.md §12.1, circuit-review.md §2.4 / §4, falstad CVSD-ENC
+*
+* Pins: AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+.subckt cvsd_enc_a AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+* LM311 PARTS macromodel: OC off (pull-up high) when IN+ > IN−.
+* + = AUDIO, − = Y → AUDIO > Y → bit 1 (cvsd.py).
+Xcmp AUDIO Y VCC VEE CMP 0 LM311
+Rpull CMP VDD 4.7k
+
+* Run register — three 74HC74 halves
+Xd0 CMP CLK BIT NBIT HC74_DFF
+Xd1 BIT CLK Q1  NQ1  HC74_DFF
+Xd2 Q1  CLK Q2  NQ2  HC74_DFF
+Rnq1 NQ1 0 1Meg
+Rnq2 NQ2 0 1Meg
+
+* Coincidence: /COIN = (BIT⊕Q1)∨(Q1⊕Q2) — low on run-of-three
+Aadc [BIT Q1 Q2] [bd q1d q2d] hc_adc
+Ax01 [bd q1d] x01d hc_xor
+Ax12 [q1d q2d] x12d hc_xor
+Aor  [x01d x12d] ncd hc_or
+Adac [ncd] [NCOIN] hc_dac
+
+* Syllabic filter: τ=5 ms, ratio ≈51
+R1 NCOIN SYL 51.1k
+R2 SYL 0 2.55Meg
+Csyl SYL 0 100n
+
+* Iabc: TL072 + 2N3906, EMIT tracks SYL, Iabc=(VA−SYL)/Rset
+Rvref VDD VA 100
+Cvref VA 0 100u
+Xoa SYL VA_EMIT VCC VEE BASE TL072
+Qp IABC BASE VA_EMIT Q2N3906
+Rset VA VA_EMIT 30.9k
+
+* LM13700 half: diodes open (LIN), buffer unused (BIN/BUF open)
+Rd1 BIT  INP 47k
+Rd2 INP  0   2.2k
+Rd3 NBIT INN 47k
+Rd4 INN  0   2.2k
+Rlin LIN 0 100Meg
+Rbin BIN 0 100Meg
+Rbuf BUF 0 100Meg
+Xota LIN INP INN IABC INT VCC VEE BIN BUF HALF13700
+
+* Integrator + TL072 follower
+Cint INT 0 10n
+Rint INT 0 100k
+Xfoll INT Y VCC VEE Y TL072
+
+.ends cvsd_enc_a

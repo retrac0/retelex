@@ -1,0 +1,40 @@
+* TL072 / TL071 single op-amp — TI Boyle macromodel (PARTS), ±15 V characterisation.
+* One section of a TL072 dual.  Pins: +IN −IN VCC VEE OUT
+*
+* Source: TI / National PARTS release (public macromodel), widely redistributed.
+
+.SUBCKT TL072 1 2 3 4 5
+*
+C1   11 12 3.498E-12
+C2    6  7 15.00E-12
+DC    5 53 DX
+DE   54  5 DX
+DLP  90 91 DX
+DLN  92 90 DX
+DP    4  3 DX
+EGND 99  0 POLY(2) (3,0) (4,0) 0 .5 .5
+FB    7 99 POLY(5) VB VC VE VLP VLN 0 4.715E6 -5E6 5E6 5E6 -5E6
+GA    6  0 11 12 188.5E-6
+GCM   0  6 10 99 5.961E-9
+IEE  10  4 DC 230.0E-6
+HLIM 90  0 VLIM 1K
+Q1   11  2 13 QX
+Q2   12  1 14 QX
+R2    6  9 100.0E3
+RC1   3 11 5.305E3
+RC2   3 12 5.305E3
+RE1  13 10 1.877E3
+RE2  14 10 1.877E3
+REE  10 99 869.6E3
+RO1   8  5 50
+RO2   7 99 50
+RP    3  4 9.082E3
+VB    9  0 DC 0
+VC    3 53 DC 2.200
+VE   54  4 DC 2.200
+VLIM  7  8 DC 0
+VLP  91  0 DC 40
+VLN   0 92 DC 40
+.MODEL DX D(IS=800.0E-18)
+.MODEL QX NPN(IS=800.0E-18 BF=166.7)
+.ENDS TL072

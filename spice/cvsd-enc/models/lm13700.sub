@@ -1,0 +1,22 @@
+* LM13700 half — datasheet macromodel (convergent)
+* Iout = Iabc · tanh(Vd / (2·Vt)), bias pin sinks to VSS.
+* Linearizing diodes (LIN) and buffer (BIN/BUF) left unused — open / tied off.
+*
+* Pins: LIN INP INN IAB OUT VCC VSS BIN BUF
+* Matches deanm1278 / idea2ic pin order so enc_*.sub stay unchanged.
+*
+* Refs: TI LM13700 datasheet transfer; circuit-review.md §4 (±224 mV → full steer).
+
+.SUBCKT HALF13700 LIN INP INN IAB OUT VCC VSS BIN BUF
+* Sense bias current into IAB (toward VSS)
+Viabc IAB VSS DC 0
+* Core OTA
+Bota 0 OUT I = { i(Viabc) * tanh(v(INP,INN) / (2*0.026)) }
+Rout OUT 0 100Meg
+* Unused pins: weak ties so floating nodes don't orphan
+Rlin LIN VSS 100Meg
+Rbin BIN VSS 100Meg
+Rbuf BUF VSS 100Meg
+* Supply load (quiescent ~1 mA class, datasheet order)
+Rq VCC VSS 24k
+.ENDS HALF13700

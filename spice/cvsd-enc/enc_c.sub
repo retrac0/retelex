@@ -1,0 +1,46 @@
+* CVSD encoder C — no LM13700
+* Passive integrator (same C∥R as A); ±Iabc via CD4066-class switches
+* and a 2N3904 current mirror.
+*
+* Pins: AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+.subckt cvsd_enc_c AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+Xcmp AUDIO Y VCC VEE CMP 0 LM311
+Rpull CMP VDD 4.7k
+
+Xd0 CMP CLK BIT NBIT HC74_DFF
+Xd1 BIT CLK Q1  NQ1  HC74_DFF
+Xd2 Q1  CLK Q2  NQ2  HC74_DFF
+Rnq1 NQ1 0 1Meg
+Rnq2 NQ2 0 1Meg
+
+Aadc [BIT Q1 Q2] [bd q1d q2d] hc_adc
+Ax01 [bd q1d] x01d hc_xor
+Ax12 [q1d q2d] x12d hc_xor
+Aor  [x01d x12d] ncd hc_or
+Adac [ncd] [NCOIN] hc_dac
+
+R1 NCOIN SYL 51.1k
+R2 SYL 0 2.55Meg
+Csyl SYL 0 100n
+
+Rvref VDD VA 100
+Cvref VA 0 100u
+Xoa SYL VA_EMIT VCC VEE BASE TL072
+Qp NODE BASE VA_EMIT Q2N3906
+Rset VA VA_EMIT 30.9k
+
+* BIT=1: source Iabc into INT; BIT=0: mirror-sink Iabc from INT
+.model SW4066 SW(Vt=2.5 Von=4.5 Voff=0.5 Ron=80 Roff=100Meg)
+Ssrc NODE INT BIT 0 SW4066
+Smirr NODE IABC NBIT 0 SW4066
+Qm IABC IABC VEE Q2N3904
+Qs INT IABC VEE Q2N3904
+Rbleed NODE 0 10Meg
+
+Cint INT 0 10n
+Rint INT 0 100k
+Xfoll INT Y VCC VEE Y TL072
+
+.ends cvsd_enc_c

@@ -1,0 +1,46 @@
+* CVSD encoder D — same as A, but LM358 for both op-amp sections
+* (Iabc servo + integrator follower).  LM311 + LM13700 + 74HC unchanged.
+*
+* Pins: AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+.subckt cvsd_enc_d AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
+
+Xcmp AUDIO Y VCC VEE CMP 0 LM311
+Rpull CMP VDD 4.7k
+
+Xd0 CMP CLK BIT NBIT HC74_DFF
+Xd1 BIT CLK Q1  NQ1  HC74_DFF
+Xd2 Q1  CLK Q2  NQ2  HC74_DFF
+Rnq1 NQ1 0 1Meg
+Rnq2 NQ2 0 1Meg
+
+Aadc [BIT Q1 Q2] [bd q1d q2d] hc_adc
+Ax01 [bd q1d] x01d hc_xor
+Ax12 [q1d q2d] x12d hc_xor
+Aor  [x01d x12d] ncd hc_or
+Adac [ncd] [NCOIN] hc_dac
+
+R1 NCOIN SYL 51.1k
+R2 SYL 0 2.55Meg
+Csyl SYL 0 100n
+
+Rvref VDD VA 100
+Cvref VA 0 100u
+Xoa SYL VA_EMIT VCC VEE BASE LM358
+Qp IABC BASE VA_EMIT Q2N3906
+Rset VA VA_EMIT 30.9k
+
+Rd1 BIT  INP 47k
+Rd2 INP  0   2.2k
+Rd3 NBIT INN 47k
+Rd4 INN  0   2.2k
+Rlin LIN 0 100Meg
+Rbin BIN 0 100Meg
+Rbuf BUF 0 100Meg
+Xota LIN INP INN IABC INT VCC VEE BIN BUF HALF13700
+
+Cint INT 0 10n
+Rint INT 0 100k
+Xfoll INT Y VCC VEE Y LM358
+
+.ends cvsd_enc_d
