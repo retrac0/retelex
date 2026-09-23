@@ -1,0 +1,46 @@
+* Analog tone front-end — tone-plan.md §5, up to the CVSD encoder input
+*
+* Pins: AUDIO CAD VCC VEE
+*   AUDIO  — leveled baseband (~NOMINAL_RMS when CAD high and running)
+*   CAD    — cadence gate, high = on (low mutes toward 0 through a soft RC)
+*   VCC/VEE — ±12 V
+*
+* Param GATE: 0 = pure, 1 = soft (4 ms RC envelope), 2 = hard square gate
+* Param LEVEL: scale into the encoder (trim pot stand-in)
+*
+* Carrier: Wien sine ~425 Hz (½ TL072). LFO: Schmitt square ~25 Hz (½ TL072).
+* Wien here is only the carrier — not the dropped four-quadrant warble path.
+
+.subckt tone_front AUDIO CAD VCC VEE params: GATE=0 LEVEL=0.11
+
+Xcar CAR_RAW VCC VEE wien_osc R=10k C=37.4n
+Xlfo LFO_RAW VCC VEE schmitt_osc Rtim=182k Ctim=100n
+
+Cac CAR_RAW CAR 1u
+Rbleed CAR 0 100k
+
+Blfo_sq LFO_SQ 0 V = u(V(LFO_RAW))
+
+* Soft envelope: 4 ms RC on the square (tone-plan.md §5 table)
+Rsoft LFO_SQ ENV 40k
+Csoft ENV 0 100n
+
+Bpure PURE 0 V = V(CAR)
+Bsoft SOFT 0 V = V(CAR) * V(ENV)
+Bhard HARD 0 V = u(V(LFO_SQ) - 0.5) * V(CAR)
+Bsel PRE 0 V = u(0.5 - GATE) * V(PURE)
++             + u(GATE - 0.5) * u(1.5 - GATE) * V(SOFT)
++             + u(GATE - 1.5) * V(HARD)
+
+* Cadence mute: ~4 ms RC on CAD (envelope), multiply, then a short audio RC
+* (~0.15 ms) to kill the remaining break click without eating the 425 Hz carrier.
+Rcad CAD CAD_S 40k
+Ccad CAD_S 0 100n
+Bmute RAW 0 V = V(PRE) * V(CAD_S) / 5
+Rpost RAW MUTE 10k
+Cpost MUTE 0 15n
+
+Blev AUDIO 0 V = V(MUTE) * LEVEL
+Rload AUDIO 0 100k
+
+.ends tone_front

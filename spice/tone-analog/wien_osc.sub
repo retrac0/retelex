@@ -1,0 +1,27 @@
+* Wien-bridge sine oscillator — one TL072 section
+* f = 1 / (2 π R C); soft diode clip for amplitude
+* Pins: OUT VCC VEE
+*
+* Instance:  X1 out vcc vee wien_osc R=10k C=37.4n   → ~425 Hz
+
+.subckt wien_osc OUT VCC VEE params: R=10k C=37.4n
+
+* Series RC from OUT to bridge node B
+Rs OUT A {R}
+Cs A B {C}
+* Parallel RC to ground
+Rp B 0 {R}
+Cp B 0 {C}
+
+* Non-inverting gain ≈ 3+ with soft clip
+Rgnd MINUS 0 10k
+Rf OUT MINUS 22k
+D1 OUT CLIP Dclamp
+D2 CLIP MINUS Dclamp
+Rclip CLIP MINUS 1k
+.model Dclamp D(IS=1e-14 N=1.8)
+
+Xamp B MINUS VCC VEE OUT TL072
+.ic v(B)=0.1 v(A)=0
+
+.ends wien_osc

@@ -43,7 +43,7 @@ nothing.
 
 | | |
 |---|---|
-| Ports | **11–13, 15–17** first: one MF8 link on block 1, six channels on the wire seats; slots 10 and 14 free (`protocol.md` §5). The trunk card taps `HC[h]`/`HA[h]` and inserts F and S (`mf8-unit.md` §1, `mainboard.md` §2.4). **Further groups in blocks 2+** at the cost of those lines. **Block 0 is never an MF8 trunk group** — 01–03 are tones, 04–07 the operator bank; 06–07 may take single-channel trunks (`network.md` §1.1). On a standalone exchange, 1 is a highway digit and there is no trunk block |
+| Ports | **11–13, 15–17** first: one MF8 link on block 1, six channels on the wire seats; slots 10 and 14 free (`protocol.md` §5). The unit is a **block adapter** on the **block header** (`fabric.md` §5.2, `mf8-unit.md` §1): it drives those six appearances, inserts F and S on the line, and asserts `MUTE_BLK` while unlocked. **Further groups in blocks 2+** at the cost of those lines. **Block 0 is never an MF8 trunk group** — 01–03 are tones, 04–07 the operator bank; 06–07 may take single-channel trunks (`network.md` §1.1). On a standalone exchange, 1 is a highway digit and there is no trunk block |
 | Directions | an exchange faces **up to four directions, N, S, E and W, and a direction is not a class.** Every trunk port is class trunk, and **says so in the primary and which way its link goes in the secondary** (tag `10`, payload `ddg000` — `extensions.md` §2.2). An MF8 trunk card sends one word to its six channels, from two 74HC165 daisy-chained, and ties their `/ANS` lines low so that none rings (a subscriber terminal sets each channel apart, `terminal.md` §3). A single-channel card sends its own (§1.1). One group or two in a direction — six channels, or twelve, or seven with a single-channel card beside an MF8 one — makes no difference to anything but the words: the hunt is for a free trunk facing that way, in fixed order. A trunk card sends its word only while its link is up, so a trunk whose link is down reads unequipped and is never hunted |
 | The link | an MF8 pair each way — or, between exchanges in one rack or room, copper: a **local highway trunk** of eight channels (`local-trunk.md`), or a single-channel baseband card (`baseband.md`); or any other carrier that does what §1.1 asks |
 | The far end | another exchange's trunk block makes the link a tie trunk. A stock MF8 shelf of channel cards makes the same link, from the same trunk card, six lines of this exchange (`terminal.md`) |
@@ -79,11 +79,13 @@ it is**, which is the one most carriers fail on and this one does not (§5.1 of
 | **Link down** | stop sending its word, so that its port reads unequipped and is never hunted, and let A fall, so that a call in progress releases |
 | **The word** | class trunk, its direction and its glare bit (`extensions.md` §2.2), and `/ANS` tied low |
 
-So a direction may be carried by an MF8 trunk's six channels, the usual case; by
-a **local eight-channel highway trunk** between exchanges in one room or
-adjacent racks (`local-trunk.md`) — whole block, T + C, copper `C`/`A`
-highways with `HCLK` carried so each receive path is master-timed by the far
-end; by a single-channel copper card on an IDC tap of the block ribbon (`baseband.md`); by a
+So a direction may be carried by an MF8 trunk's six channels, the usual case —
+**block adapter** on the **block header**, rear the MF8 pair (`mf8-unit.md`
+§1); by a **local eight-channel highway trunk** between exchanges in one room or
+adjacent racks (`local-trunk.md`) — same header, copper `C`/`A` highways with
+`HCLK` carried so each receive path is master-timed by the far end; by a
+single-channel copper card on a
+**slot** of the block ribbon (`baseband.md`); by a
 single-channel card, one trunk over a pair or two, for example two CVSD line
 interfaces back to back (`subscriber-line.md`), not designed; or by a
 voice-band card on a leased circuit or a radio — the E&M card of

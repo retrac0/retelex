@@ -39,8 +39,12 @@ TB_groups := tb/net_site.v tb/tb_groups.v
 TB_pulse_gen := tb/net_site.v tb/tb_pulse_gen.v
 TB_su1 := tb/net_site.v tb/tb_su1.v
 TB_mini := tb/mini_site.v tb/tb_mini.v
+TB_mini_net := tb/mini_net_site.v tb/bitpath.v tb/tb_mini_net.v
+TB_mini_leaf := tb/mini_net_site.v tb/bitpath.v tb/tb_mini_leaf.v
+TB_mini_load := tb/mini_net_site.v tb/tb_mini_load.v
+TB_mini_rate := tb/mini_net_site.v tb/tb_mini_rate.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini mini_net mini_leaf
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -240,9 +244,86 @@ synth: $(BUILD)
 	hierarchy -top exch_top\nproc; opt; fsm; opt; memory; opt\ntechmap; opt\nstat -top exch_top\n' > $(BUILD)/synth.ys
 	@yosys -s $(BUILD)/synth.ys 2>&1 | tail -n 30
 
+# 74HC package BOMs: map to tech/hc/, keep MSI as blackboxes, pack into DIP
+# counts.  See tech/hc/README.md.
+HC_SH := tech/hc/synth_hc.sh
+
+RTL_exch_top    := $(RTL)
+RTL_mini_marker := rtl/mini_marker.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v
+RTL_marker      := rtl/marker.v rtl/ctl_write.v
+RTL_net_unit    := rtl/net_unit.v
+
+synth-hc-exch: $(BUILD)
+	@RTL_FILES="$(RTL_exch_top)" BUILD=$(BUILD) $(HC_SH) exch_top \
+	    'chparam -set BLOCK_FITTED 255 -set PORT_FITTED 18446744073709551615 exch_top'
+
+synth-hc-mini: $(BUILD)
+	@RTL_FILES="$(RTL_mini_marker)" BUILD=$(BUILD) $(HC_SH) mini_marker
+
+synth-hc-marker: $(BUILD)
+	@RTL_FILES="$(RTL_marker)" BUILD=$(BUILD) $(HC_SH) marker
+
+synth-hc-net: $(BUILD)
+	@RTL_FILES="$(RTL_net_unit)" BUILD=$(BUILD) $(HC_SH) net_unit
+
+synth-hc: synth-hc-exch synth-hc-mini synth-hc-marker synth-hc-net
+
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth clean pulse-gen mini iv-pulse-gen
+.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth synth-hc synth-hc-exch synth-hc-mini synth-hc-marker synth-hc-net clean pulse-gen mini mini-net mini-leaf mini-load mini-rate iv-pulse-gen
 pulse-gen: pulse_gen
 iv-pulse-gen: iv-pulse_gen
+mini-net: mini_net
+mini-leaf: mini_leaf
+
+# Mini-marker load matrix: solo / solo wider / pair / chain.
+mini-load: $(BUILD)
+	@mkdir -p $(BUILD)/vl/miniload0 $(BUILD)/vl/miniload1 \
+	    $(BUILD)/vl/miniload2 $(BUILD)/vl/miniload3
+	@fail=0; \
+	echo "==== MODE 0 solo 8 lines ===="; \
+	verilator $(VLFLAG) -GMODE=0 --top-module tb_mini_load \
+	    --Mdir $(BUILD)/vl/miniload0 -o tb_ml0 $(RTL) $(TB_mini_load) \
+	    > $(BUILD)/vl-miniload0.log 2>&1 || (cat $(BUILD)/vl-miniload0.log; false); \
+	$(BUILD)/vl/miniload0/tb_ml0 2>&1 | grep -v '^- ' || fail=1; \
+	echo "==== MODE 1 solo 16 lines blocks 2+3 ===="; \
+	verilator $(VLFLAG) -GMODE=1 --top-module tb_mini_load \
+	    --Mdir $(BUILD)/vl/miniload1 -o tb_ml1 $(RTL) $(TB_mini_load) \
+	    > $(BUILD)/vl-miniload1.log 2>&1 || (cat $(BUILD)/vl-miniload1.log; false); \
+	$(BUILD)/vl/miniload1/tb_ml1 2>&1 | grep -v '^- ' || fail=1; \
+	echo "==== MODE 2 pair mini+unit under load ===="; \
+	verilator $(VLFLAG) -GMODE=2 --top-module tb_mini_load \
+	    --Mdir $(BUILD)/vl/miniload2 -o tb_ml2 $(RTL) $(TB_mini_load) \
+	    > $(BUILD)/vl-miniload2.log 2>&1 || (cat $(BUILD)/vl-miniload2.log; false); \
+	$(BUILD)/vl/miniload2/tb_ml2 2>&1 | grep -v '^- ' || fail=1; \
+	echo "==== MODE 3 chain 22=23=24 under load ===="; \
+	verilator $(VLFLAG) -GMODE=3 --top-module tb_mini_load \
+	    --Mdir $(BUILD)/vl/miniload3 -o tb_ml3 $(RTL) $(TB_mini_load) \
+	    > $(BUILD)/vl-miniload3.log 2>&1 || (cat $(BUILD)/vl-miniload3.log; false); \
+	$(BUILD)/vl/miniload3/tb_ml3 2>&1 | grep -v '^- ' || fail=1; \
+	exit $$fail
+
+# Call-rate sweep: solo and 5-node star, several idle means.
+mini-rate: $(BUILD)
+	@mkdir -p $(BUILD)/rate $(BUILD)/vl/rate-solo $(BUILD)/vl/rate-star
+	@fail=0; \
+	echo "==== build solo ===="; \
+	verilator $(VLFLAG) -GSHAPE=0 -GSECS=3 --top-module tb_mini_rate \
+	    --Mdir $(BUILD)/vl/rate-solo -o tb_mr $(RTL) $(TB_mini_rate) \
+	    > $(BUILD)/rate/vl-solo.log 2>&1 || (cat $(BUILD)/rate/vl-solo.log; false); \
+	echo "==== build star ===="; \
+	verilator $(VLFLAG) -GSHAPE=1 -GSECS=3 --top-module tb_mini_rate \
+	    --Mdir $(BUILD)/vl/rate-star -o tb_mr $(RTL) $(TB_mini_rate) \
+	    > $(BUILD)/rate/vl-star.log 2>&1 || (cat $(BUILD)/rate/vl-star.log; false); \
+	for idle in 2000 1000 500 250 120; do \
+	  echo "==== solo idle=$$idle ===="; \
+	  $(BUILD)/vl/rate-solo/tb_mr +idle=$$idle 2>&1 | tee $(BUILD)/rate/s0-i$$idle.log | grep -v '^- ' || fail=1; \
+	done; \
+	for idle in 2000 1000 500 250 120; do \
+	  echo "==== star idle=$$idle ===="; \
+	  $(BUILD)/vl/rate-star/tb_mr +idle=$$idle 2>&1 | tee $(BUILD)/rate/s1-i$$idle.log | grep -v '^- ' || fail=1; \
+	done; \
+	echo "---- summary ----"; \
+	grep '^RESULT cps=' $(BUILD)/rate/s*.log || true; \
+	exit $$fail

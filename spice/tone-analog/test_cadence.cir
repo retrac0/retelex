@@ -1,0 +1,21 @@
+* Soft warble with cadence mute on CAD (stand-in for the 16-jumper mask)
+.include models.inc
+.include schmitt_osc.sub
+.include wien_osc.sub
+.include tone_front.sub
+
+Vcc vcc 0 12
+Vee vee 0 -12
+* 0.512 s on / 0.512 s off — busy-ish, short enough for a 1.2 s run
+Vcad cad 0 PULSE(0 5 0 1u 1u 512m 1024m)
+
+Xfront audio cad vcc vee tone_front GATE=1 LEVEL=0.18
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 50u 1200m uic
+  set filetype=ascii
+  wrdata out/cadence time audio cad
+  quit
+.endc
+.end

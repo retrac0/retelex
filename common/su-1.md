@@ -15,9 +15,10 @@ card (`channel-cards.md` §2).
 
 ```
   handset ── 4P4C ──► SU-A (audio / codec)
-                         ║ S  (board-to-board)
-  Autovon pad ─────────► SU-D (line / dial / power)
-                         ║
+  mic jack ─────────► SU-D (base: speaker, PTT, dial)
+  speaker  ◄───────── SU-D
+  line out ◄───────── SU-D
+                         ║ S
                     two pairs + 48 V phantom
                          ║
                     CVSD line card ──► exchange
@@ -32,14 +33,19 @@ card (`channel-cards.md` §2).
 | **Line** | two pairs, 64 kbps differential Manchester, 128 kBaud — `subscriber-line.md` §1 |
 | **Power** | 48 V phantom on the centre taps; local rails +5 / ±12 derived on SU-D |
 | **Codec** | type-A enc + dec + recon in the set (`mf8-spec.md` §12.1) — not on the line card |
-| **Handset** | 4P4C jack on SU-A (mic, ear, common, spare or sidetone return) |
+| **Handset** | standard **4P4C** (RJ9 / RJ22) jack on SU-A for a **600 Ω** modular handset (§3.1) |
+| **Speaker** | loudspeaker on the **base (SU-D)** — ringer and conference listen (§3.2) |
+| **Mic jack** | input jack on the base; jumper selects it in speaker mode (§3.2) |
+| **Line out** | fixed-level jack on the base from decoder recon (§3.2) |
 | **Dial** | sixteen keys, Autovon labels, **pulse only** — same 1–16 map as `pulse-gen.md` §4 |
-| **Clocking (mk1)** | free-run crystal on SU-D. Loop-timing from the downstream is open (`subscriber-line.md` §7) |
+| **Audio face** | **HANDSET / SPEAKER** toggle; **LIVE / PTT** toggle; **PTT** button; volumes **handset / loudspeaker / ring** (§3.2) |
+| **Clocking** | **no local crystal** — loop-timed from the recovered downstream (§5) |
+| **Line LED** | ~1 Hz blink from recovered RX clock — dark if no carrier (§5) |
 
 The shelf CVSD codec **R** riser (`cvsd-codec.md`) is a different host and
 header. SU-A reuses the same engine parts with a phone-specific **S** header
-(§5). The same **S** accepts **SDU-1** (`sdu-1.md`) as a data-only riser, or
-both engines on one dual-mode riser with a panel switch (§6). SU-D still owns
+(§6.1). The same **S** accepts **SDU-1** (`sdu-1.md`) as a data-only riser, or
+both engines on one dual-mode riser with a panel switch (§7). SU-D still owns
 the line code and `1100`.
 
 ---
@@ -60,13 +66,15 @@ Phone logic (`subscriber-line.md` §4):
 
 ```
 TX   = ON-HOOK or dial break  ?  1100  :  BIT_ENC from the S riser
-encoder input = dial off-normal ? silence : microphone   (voice path)
-ring = RING · ON-HOOK                                 → sounder
-decoder input = RING ? 1010 : Q ;  audio muted while ON-HOOK
+encoder input = dial off-normal || mic gated off ? silence : microphone
+ring = RING · ON-HOOK                                 → base speaker (ringer)
+decoder input = RING ? 1010 : Q ;  handset ear muted while ON-HOOK
+speaker talk = SPEAKER · OFF-HOOK · decoder audio
 ```
 
-On a voice-only set, `BIT_ENC` is the CVSD encoder. Dual-mode (§6) steers
-`BIT_ENC` / `BIT_DEC` between CVSD and insert-1; the `1100` mux stays on SU-D.
+On a voice-only set, `BIT_ENC` is the CVSD encoder. Dual-mode (§7) steers
+`BIT_ENC` / `BIT_DEC` between CVSD and the data path (insert-1, or RAW64 when
+nailed — `sdu-1.md` §3.6); the `1100` mux stays on SU-D.
 
 **Mute while off-normal** is mandatory so makes carry `1010` and the register
 sees a fixed shortening (`subscriber-line.md` §5, `register.md` §1.1).
@@ -79,15 +87,97 @@ sees a fixed shortening (`subscriber-line.md` §5, `register.md` §1.1).
 |---|---|
 | **Pad** | 4×4 momentary keys, Autovon / DTMF layout (§4) |
 | **Hook** | cradle or switchhook; open = on-hook |
-| **Handset** | 4P4C on SU-A (or the voice half of a dual-mode riser) |
-| **Line** | two pairs (RJ45 or terminal block on SU-D) — tip/ring of each pair; no third pair |
-| **Sounder** | piezo / transducer on the voice path, driven by `RING` |
-| **Mode** | on a dual-mode set only: panel **VOICE / DATA** (§6) |
+| **Handset** | standard **4P4C** on SU-A for a **600 Ω** modular handset (§3.1) |
+| **Speaker** | loudspeaker on **SU-D** (base) — ringer + conference listen (§3.2) |
+| **Mic jack** | input jack on **SU-D**; board jumper enables it in **SPEAKER** mode (§3.2) |
+| **Line out** | output jack on **SU-D** — fixed line level from recon (§3.2) |
+| **HANDSET / SPEAKER** | maintained toggle — where receive audio goes (§3.2) |
+| **LIVE / PTT** | maintained toggle — mic always open vs push-to-talk (§3.2) |
+| **PTT** | momentary button — opens mic when **PTT** mode is selected |
+| **Volumes** | three face pots: **handset**, **loudspeaker**, **ring** (§3.1–§3.2) |
+| **Line** | two pairs (RJ45 or terminal block on SU-D) |
+| **Line LED** | ~1 Hz from recovered RX clock (§5) — dark when the line is dead |
+| **Mode** | on a dual-mode set only: panel **VOICE / DATA** (§7) |
 
 No exchange channel socket. No DTMF generator on the pad in mk1: every key
 is a pulse count. In-band DTMF remains possible later through the codec if a
 tone source is added; the network flood still needs pulse on A
 (`network.md` §3).
+
+### 3.1 Handset — 4P4C, 600 Ω
+
+A stock modular telephone handset on a **4P4C** cord (also called RJ9 / RJ22).
+The jack is on the SU-A face (or the voice half of a dual-mode riser).
+
+**Pinout** — jack viewed from the front, contacts up, latch down (same silk as
+most desk-set handset jacks):
+
+| pin | handset | SU-A |
+|---|---|---|
+| 1 | earpiece | receiver drive, **600 Ω** |
+| 2 | microphone | mic input (with bias if the capsule needs it) |
+| 3 | microphone | mic return |
+| 4 | earpiece | receiver return |
+
+Pins 1–4 and 2–3 are the two pairs of a standard handset cord. A straight or
+handset-reversed cord both work if the pairs stay pairs.
+
+| | |
+|---|---|
+| **Ear** | output amp after the reconstruction LPF. Face pot **handset** sets gain — min to comfortable loud; stop before clipping the capsule (`cvsd-codec.md` FS class). Muted on-hook and when **SPEAKER** is selected |
+| **Mic** | handset capsule into the mic source mux (§3.2); bias / pad as needed. Fixed encode level (no face mic pot) |
+| **Sidetone** | local pad on SU-A, after the **handset** pot (tracks ear level); handset path only |
+| **Hook** | cradle switch on SU-D, **not** in the handset cord |
+
+```
+  BIT_DEC ──► CVSD DEC ──► RECON ─┬─►[ handset ]──► ear amp ──► 4P4C ear
+                                  │         │
+                                  │         └── sidetone ──► (handset path)
+                                  └── AUDIO_RX on S ──► SU-D loudspeaker + line out (§3.2)
+```
+
+Ringing is **not** injected into the 4P4C and is **not** through the **handset** pot.
+
+### 3.2 Base speaker, mic jack, line out, and talk controls
+
+The **loudspeaker** lives on **SU-D** (the base). It is both the **ringer** and
+the **conference / hands-free** listen path. Ring level and talk level are
+**separate** pots. **Line out** is a fixed-level tap of the same recon for
+recording / monitor — not through any face pot.
+
+| control | board | |
+|---|---|---|
+| **HANDSET / SPEAKER** | SU-D | **HANDSET:** decoder → handset ear (SU-A); loudspeaker silent except when ringing on-hook. **SPEAKER:** decoder → loudspeaker amp; handset ear muted |
+| **handset** | SU-A | earpiece volume (§3.1) |
+| **loudspeaker** | SU-D | conference / hands-free listen gain (recon → speaker amp). Does **not** set ring loudness |
+| **ring** | SU-D | local ring-tone level into the speaker amp when `RING · ON-HOOK` |
+| **Mic jack** | SU-D | input jack; **board jumper `MICJ`**: when set, **SPEAKER** mode takes mic from this jack; when clear, **SPEAKER** mode still uses the handset mic. **HANDSET** mode always uses the handset mic. Fixed mic gain after the source mux |
+| **Line out** | SU-D | unbalanced jack; fixed line level from `AUDIO_RX` (pre–**loudspeaker** / **handset** pots). Always fed when recon is live — independent of **HANDSET / SPEAKER**. No local ring tone on this jack |
+| **LIVE / PTT** | SU-D | **LIVE:** mic gated on whenever off-hook (and not dial-muted). **PTT:** mic gated off unless the **PTT** button is held |
+| **PTT** | SU-D | momentary; active only in **PTT** mode |
+
+```
+                    ┌─ HANDSET mic ─────────────────────┐
+  mic sources ─────┤                                    ├──► gate ──► ENC
+                    └─ jack (if MICJ · SPEAKER) ─────────┘     │
+                                                              │ LIVE: on when off-hook
+                                                              │ PTT:  on when PTT held
+                                                              │ always off when dial off-normal
+
+  RECON (AUDIO_RX) ──┬──►[ loudspeaker ]──►┐
+                     │                      ├──► speaker amp ──► loudspeaker
+                     │   RING · ON-HOOK ──► ring tone ──►[ ring ]──┘
+                     └──► fixed pad ──► line-out jack
+```
+
+| | |
+|---|---|
+| **Ringer** | `RING · ON-HOOK` gates a **local** ring tone into the speaker amp through the **ring** pot — not the CVSD stream of zeros, and not the **loudspeaker** pot. No separate piezo required |
+| **Conference listen** | off-hook + **SPEAKER**: far-end audio from recon through the **loudspeaker** pot. Acoustic path is open; operator discipline (and PTT) limit howl-round |
+| **Line out** | same recon as conference listen, fixed pad to consumer line level (~−10 dBV class). Independent of **HANDSET / SPEAKER** and of the face pots; local ring tone stays off this jack |
+| **Gate** | mic gate is silence into the encoder (same node as dial off-normal mute). `MUTE` on S still covers dial; `MIC_EN` on S carries LIVE/PTT state to SU-A if the gate lives there |
+
+S carries talk audio both ways for this feature: **`AUDIO_RX`** (recon → speaker and line out) and **`AUDIO_TX`** (selected mic toward the encoder when the jack feeds SU-A, or mic already on SU-A). Digital **`SPK`** and **`MIC_EN`** ride former spare/test pins (§6.1).
 
 ---
 
@@ -109,11 +199,11 @@ cannot-complete (`marker.md` §2). They exist so a register can count them
 and so Autovon precedence can be given a dial-plan meaning later — **not in
 mk1**.
 
-**Timebase (mk1):** crystal path only — **10 pps, 60/40**, seize wait
-500–800 ms before the first digit, 700 ms interdigit, ~20 ms debounce,
-one-key lockout while a train is out, **one-deep queue**. Same structure
-as `pulse-gen.md` §2.1 / §3, but `TICK` comes from the **on-board** crystal
-divided, not shelf `TX_OCT`. No RC/DIP adjustable source on the set.
+**Timebase:** **10 pps, 60/40**, seize wait 500–800 ms before the first digit,
+700 ms interdigit, ~20 ms debounce, one-key lockout while a train is out,
+**one-deep queue**. Same structure as `pulse-gen.md` §2.1 / §3, but `TICK`
+comes from the **recovered downstream** clock divided (§5), not a local
+crystal and not shelf `TX_OCT`. No RC/DIP adjustable source on the set.
 
 The dial contact is the pulse sequencer: breaks assert the on-hook pattern
 (`1100` on the line; on the simplified RTL interface, `m` drops as
@@ -121,7 +211,41 @@ The dial contact is the pulse sequencer: breaks assert the on-hook pattern
 
 ---
 
-## 5. Two boards
+## 5. Clocking and line LED — loop-timed, no crystal
+
+The set has **no local oscillator**. The exchange transmits continuously on
+the downstream pair (`subscriber-line.md` §1). Differential Manchester always
+carries transitions (`mf8-spec.md` §9), so the §9.4 receiver recovers a bit
+strobe whenever the line is up — idle `1010`, ringing zeros, or speech.
+
+```
+ downstream pair ──► §9.4 RX ──► recovered bit / half-bit clock
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    ▼                 ▼                 ▼
+              RX_CLK (64 k)     TX_CLK (= RX)      ÷ → ~1 Hz LED
+              to decoder        upstream TX         face “line live”
+              and S             dialer TICK
+                                encoder
+```
+
+| | |
+|---|---|
+| **TX timing** | upstream encoder and `1100` / payload TX run on the **recovered** clock (hard lock or a small DPLL — `line-codes.md` §2.2 C). Slip-free toward the exchange |
+| **S clocks** | `TX_CLK` and `RX_CLK` on S are both derived from that recovery (may be the same net on mk1) |
+| **Dialer** | 1 kHz `TICK` = recovered 64 kHz ÷ 64 |
+| **Line LED** | recovered clock ÷ ~64 000 → **≈ 1 Hz** blink. Watches **RX only**, never the upstream |
+| **Dark LED** | no carrier, cut pair, or unpowered set — same “no downstream ⇒ no clock” fact that rejected carrier-off signalling (`subscriber-line.md` §6) |
+| **Not** | a wall-clock 1.000 Hz; tracks the exchange crystal (±ppm), which is invisible at 1 Hz |
+
+Short LOF / reacquire may stutter the LED for a moment. That is acceptable.
+
+This closes the phone-side half of `subscriber-line.md` §7’s clocking open:
+**SU-1 is loop-timed.** A free-run crystal population is not taken.
+
+---
+
+## 6. Two boards
 
 Stack of two **100 × 100 mm** boards, **0.4″ (10.16 mm)** pitch — same
 spacer family as `cvsd-codec.md` / `pcb/hookbusy/`. SU-D is the base (line
@@ -129,12 +253,12 @@ face); SU-A is the riser (handset face).
 
 | board | role |
 |---|---|
-| **SU-D** | line PHY, phantom PSU, dial / hook digital, keypad, local crystal, header **S** |
-| **SU-A** | type-A enc + dec + recon, 4P4C, sidetone pad, ringer driver |
+| **SU-D** | line PHY, phantom PSU, dial / hook, clock recovery, line LED, **loudspeaker + loudspeaker VOL + ring VOL**, **mic jack**, **line out**, **HANDSET/SPEAKER**, **LIVE/PTT**, **PTT**, local ring tone, header **S** |
+| **SU-A** | type-A enc + dec + recon, **4P4C 600 Ω** handset, **handset VOL**, sidetone, mic mux / gate |
 
 PCB stub: `pcb/su-1/README.md`. Schematic and copper are not drawn.
 
-### 5.1 Mezzanine header **S**
+### 6.1 Mezzanine header **S**
 
 Keyed **2×12** 0.1″ stackable (mate on SU-D top / SU-A bottom). Names from
 SU-A's view. Same rails and bit/clock idea as shelf **R**, plus phone
@@ -152,14 +276,14 @@ controls that R deliberately omits.
 | 8 | `RX_CLK` | in | 64 kHz decoder sample — separate net |
 | 9 | `BIT_ENC` | out | encoder → SU-D line TX mux |
 | 10 | `BIT_DEC` | in | to decoder (after SU-D `RING→1010` gate) |
-| 11 | `AUDIO_TX` | — | reserved / sense (mic path is local on SU-A) |
-| 12 | `AUDIO_RX` | — | reserved / sense (ear path is local on SU-A) |
+| 11 | `AUDIO_TX` | in | mic from SU-D jack path (when `MICJ` · SPEAKER); else unused |
+| 12 | `AUDIO_RX` | out | recon (pre–handset-volume) → SU-D speaker amp and line out |
 | 13 | `GND` | — | audio return |
-| 14 | `MUTE` | in | encoder silence while dial off-normal |
-| 15 | `RING` | in | sounder arm; also forces decoder `1010` on SU-D before `BIT_DEC` |
+| 14 | `MUTE` | in | dial off-normal — encoder silence |
+| 15 | `RING` | in | ringer on SU-D; forces decoder `1010` on SU-D before `BIT_DEC` |
 | 16 | `/OE` | in | optional; pull-down to run |
-| 17 | `SYL_E` | out | test |
-| 18 | `SYL_D` | out | test |
+| 17 | `SPK` | in | 1 = **SPEAKER** mode (mute handset ear; enable talk into speaker) |
+| 18 | `MIC_EN` | in | 1 = mic gate open (LIVE, or PTT held) |
 | 19 | `Y_E` | out | test |
 | 20 | `Y_D` | out | test |
 | 21 | `GND` | — | |
@@ -167,10 +291,11 @@ controls that R deliberately omits.
 | 23 | `GND` | — | spare / key |
 | 24 | `GND` | — | |
 
-Mic and ear stay on SU-A; they do not cross S as primary audio. `MUTE` and
-`RING` do.
+`AUDIO_RX` / `AUDIO_TX` are analog about ground. `SPK` / `MIC_EN` / `MUTE` /
+`RING` are 0 / +5 V HC. Handset ear and sidetone stay on SU-A; the base
+speaker, mic jack, and line out live on SU-D.
 
-### 5.2 Parts on SU-D (rough)
+### 6.2 Parts on SU-D (rough)
 
 | block | parts |
 |---|---|
@@ -180,54 +305,63 @@ Mic and ear stay on SU-A; they do not cross S as primary audio. `MUTE` and
 | Detectors | LM339 RC hook (`1100`) and ring (zeros) — `subscriber-line.md` §3 |
 | Pattern gens | `1100` (bit clock ÷ 4); idle / mute `1010` |
 | Dial / hook | `pulse-gen.md` §5 circuit adapted (~11 HC packages), Autovon keys, hook switch |
-| Clocks | local crystal → 64 kHz / 128 kHz / 1 kHz `TICK` |
+| Clocks | §9.4 recovered strobe → 64 kHz / 128 kHz / 1 kHz `TICK`; optional DPLL |
+| Line LED | recovered ÷ ~64k → ~1 Hz driver |
+| Speaker | loudspeaker + amp; **loudspeaker** pot (talk); **ring** pot + local ring-tone oscillator gated by `RING` |
+| Mic jack | input jack; `MICJ` jumper; fixed gain onto `AUDIO_TX` |
+| Line out | jack + fixed pad from `AUDIO_RX` (no face pot; no ring tone) |
+| Talk UI | **HANDSET/SPEAKER**, **LIVE/PTT**, **PTT** → `SPK` / `MIC_EN` on S |
 | Power | 48 V phantom → +5, ±12 DC-DC; protection gas tube / PTC / TVS |
 | Connector | line pairs + **S** |
 
-### 5.3 Parts on SU-A (rough)
+### 6.3 Parts on SU-A (rough)
 
 | block | parts |
 |---|---|
 | Codec | type A as `cvsd-codec.md` §4–5 — LM311, LM13700, 3× TL072, 3× '74, '86, '32, 2× 2N3906 |
-| Recon | 3.4 kHz LPF on decoder |
-| Handset | 4P4C; mic bias; ear drive; sidetone pad |
-| Ringer | driver from `RING` to piezo / transducer |
+| Recon | 3.4 kHz LPF → `AUDIO_RX` and handset path |
+| Handset | **4P4C** jack, **600 Ω**; **handset** pot + ear amp; sidetone after that pot |
+| Mic mux / gate | handset mic vs `AUDIO_TX`; open only if `MIC_EN`; also silenced by dial `MUTE` |
 | Header | **S** mate |
 
-### 5.4 Populations on S
+No piezo on SU-A — the base speaker is the ringer.
+
+### 6.4 Populations on S
 
 | population | riser | face |
 |---|---|---|
 | **Voice only** | SU-A | handset, no DTE |
 | **Data only** | SDU-1 (`sdu-1.md`) | DTE, no handset |
-| **Dual mode** | one board with both engines (§6) | handset + DTE + **VOICE / DATA** switch |
+| **Dual mode** | one board with both engines (§7) | handset + DTE + **VOICE / DATA** switch |
 
 One mating on S. Dual mode does not stack SU-A and SDU-1 as two layers.
 
 ---
 
-## 6. Dual mode — panel switch
+## 7. Dual mode — panel switch
 
-A dual-mode set keeps **both** the type-A CVSD path and the insert-1 path on
+A dual-mode set keeps **both** the type-A CVSD path and the SDU-1 data path on
 one riser. A panel switch **VOICE / DATA** selects which engine drives
 `BIT_ENC` and which listens to `BIT_DEC`. SU-D is unchanged: seize, dial
-breaks (`1100`), ring, and phantom do not depend on the switch.
+breaks (`1100`), ring, and phantom do not depend on the switch. On **DATA**,
+rate is insert-1 32 kb/s by default, or RAW64 when both ends are nailed
+(`sdu-1.md` §3.6).
 
 ```
                  ┌─ VOICE ─► CVSD enc ──┐
   mic / TXD ────┤                      ├──► BIT_ENC → SU-D TX mux
-                 └─ DATA ──► insert-1 ──┘
+                 └─ DATA ──► SDU-1 ─────┘
 
   BIT_DEC ← SU-D ┬─ VOICE ─► CVSD dec → ear
-                 └─ DATA ──► insert-1 → RXD
+                 └─ DATA ──► SDU-1 → RXD
 ```
 
 | | |
 |---|---|
 | **Switch** | maintained, two positions; silk **VOICE** / **DATA**. No centre off required |
-| **What it steers** | `BIT_ENC` source and `BIT_DEC` sink only. Hook, pad, `MUTE`, `RING`, clocks stay common |
+| **What it steers** | `BIT_ENC` / `BIT_DEC` only. Hook, pad, speaker UI, `MUTE` / `RING` / `SPK` / `MIC_EN`, clocks stay on the voice path logic |
 | **When to throw** | before or during a call; there is no in-band mode digit and no far-end handshake |
-| **Wrong setting** | the far end hears **noise** (or insert-1 stays in hunt / DTE mark). Same class of failure as voice↔shelf-data today (`channel-cards.md` §1, `features.md` §8) |
+| **Wrong setting** | the far end hears **noise** (or data hunt / DTE mark). Same class of failure as voice↔shelf-data today (`channel-cards.md` §1, `features.md` §8) |
 | **Exchange** | sees a plain CVSD line card either way. Mode is not in the word and not on A. A *data line* class remains optional hygiene so the marker can refuse known-bad setups; the switch does not need it to work |
 
 Coordination is operational: both ends on VOICE, or both on DATA, or accept
@@ -240,7 +374,7 @@ codec half.
 
 ---
 
-## 7. Against the exchange
+## 8. Against the exchange
 
 Lift, wait, dial `h s`: a register on the line card's port counts the breaks
 on A (derived from the `1100` detector). Dial `1 e b h s` and the same pulses
@@ -256,13 +390,17 @@ ring trip, and a local call.
 
 ---
 
-## 8. Not measured / deferred
+## 9. Not measured / deferred
 
 - **PCB.** Outline and S pin map locked; schematic and copper not drawn.
 - **Dual-mode riser layout** and the VOICE/DATA switch bounce into `BIT_ENC`.
+- **Speaker / handset acoustic howl** in SPEAKER + LIVE; PTT discipline assumed.
+- **Local ring tone** into the speaker amp — timbre; level is the **ring** pot (independent of **loudspeaker**).
 - **Phantom PSU** efficiency, rail noise into the codec, and feed imbalance
   (`subscriber-line.md` §7).
-- **Free-run slip** vs loop-timed upstream — open, same as the line doc.
+- **DPLL vs hard lock** of upstream TX to the recovered strobe — decided
+  loop-timed (§5); circuit not drawn or measured.
+- **Line LED** divide exactness and blink through LOF / ring bursts.
 - **Real key bounce** and cradle chatter against the debounce.
 - **Autovon precedence** dial-plan meanings for FO/F/I/P.
 - **DTMF from the pad** — not fitted in mk1.

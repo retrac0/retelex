@@ -1,0 +1,29 @@
+* Ringback — soft warble + §5.2 UK-style cadence (10.2 s run → 10 s WAV)
+* Mask 1101 1000 0000 0000 at 256 ms/step:
+*   0.512 on, 0.256 off, 0.512 on, 2.816 off  (UK/AU 0.4/0.2/0.4/2.0 on this grid)
+* Period 4.096 s; 10 s covers two full cycles plus a bit.
+.include models.inc
+.include schmitt_osc.sub
+.include wien_osc.sub
+.include tone_front.sub
+
+Vcc vcc 0 12
+Vee vee 0 -12
+
+* Three 4.096 s periods: 2 on, 1 off, 2 on, 11 off @ 256 ms
+Vcad cad 0 PWL(0 5 0.512 5 0.512001 0 0.768 0 0.768001 5
++ 1.280 5 1.280001 0 4.096 0 4.096001 5 4.608 5 4.608001 0
++ 4.864 0 4.864001 5 5.376 5 5.376001 0 8.192 0 8.192001 5
++ 8.704 5 8.704001 0 8.960 0 8.960001 5 9.472 5 9.472001 0
++ 10.300 0)
+
+Xfront audio cad vcc vee tone_front GATE=1 LEVEL=0.18
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 40u 10.3 uic
+  set filetype=ascii
+  wrdata out/rbt time audio cad
+  quit
+.endc
+.end

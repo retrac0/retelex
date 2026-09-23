@@ -17,12 +17,13 @@ The short answers, before the detail:
   pins, one port, any slot. It uses no −48 V, no `RING` and no ±12 V.
 - **The block's card side is not a bus.** Electrically it is a star: per-slot
   lines point to point, and only the clocks and the rails are common. Physically
-  that star rides a **block ribbon**; the IDC taps along it *are* the
-  channel sockets (`fabric.md` §5.1). It is the MF8 channel slot of
+  that star rides a **block ribbon** ending at the **block header**; the
+  **slots** along it *are* the channel sockets (`fabric.md` §5.1). It is the
+  MF8 channel slot of
   `mf8-backplane.md` §8, with the block standing where the MF8 trunk card stands.
 - **A port circuit is fitted only with its card.** Shared block logic
-  (commutators, highway drivers) is on the board at the block ribbon's root; the
-  crosspoint and supervision come with the card at the tap.
+  (commutators, highway drivers) is on the board behind the block header; the
+  crosspoint and supervision come with the card at the slot.
 - **What does not swap is the monitor.** A trunk on a block needs a monitor pool
   on that block, and a monitor is not a card.
 
@@ -30,8 +31,9 @@ The short answers, before the detail:
 > `exch.py fabric` 8, already reported by `protocol.md` §4 as "a copper tie
 > between two exchanges"; every other figure is cited from where it was measured.
 > §3.5's pin usage is an assignment, not a measurement — it is what the documents
-> already imply, written out, against the socket `common-cards.md` §1 now holds. §6 is a correction to `mainboard.md` §2.4 and
-> is reasoning against `verilog`, not a run. No circuit has been drawn.
+> already imply, written out, against the socket `common-cards.md` §1 now holds. §6 is why
+> an MF8 unit mates the **block header**, not `HC[h]` — reasoning against `verilog`,
+> not a run. No circuit has been drawn.
 
 ---
 
@@ -81,12 +83,12 @@ is common, the board is position-wired, and the card knows nothing", carried dow
 one more level — and it is the third time the same bargain is struck in this
 design.
 
-**Physically the star is a block ribbon** off the block's shared board
-(`fabric.md` §5.1). The same connector family as §2.2's channel socket; IDC
-taps along the block ribbon *are* the channel sockets. Commons are continuous;
-each tap takes that slot's six private lines. It is not a multi-drop bus for the
-per-slot signals, and it is not eight sockets standing on a flat mainboard of
-eighty packages.
+**Physically the star is a block ribbon** off the **block header** on the
+shared board (`fabric.md` §5.1). The same connector family as §2.2's channel
+socket; **slots** along the block ribbon *are* the channel sockets. Commons are
+continuous; each slot takes that seat's six private lines. It is not a
+multi-drop bus for the per-slot signals, and it is not eight sockets standing
+on a flat mainboard of eighty packages.
 
 The fastest thing on it is `LOOP_HB` at 128 kHz, against 1.024 MHz on the
 mainboard. Electrically it is nothing: a short block ribbon, `mf8-backplane.md`
@@ -97,10 +99,11 @@ the block standing in the MF8 trunk card's seat. A block presents the same
 channel socket as an MF8 shelf without a line — which is the reason
 `terminal.md` works at all, and the reason a card built for one works unchanged
 in the other. An MF8 *trunk*
-group taps the highway ribbon (`mf8-unit.md` §1); it does not collect the
-star on T. The **local eight-channel highway trunk** does use T + C
-(`local-trunk.md`, `fabric.md` §5.2): eight seats of copper in highway shape,
-where this card is one seat on an IDC tap of the block ribbon.
+group is a **block adapter** on the **block header** (`mf8-unit.md` §1); it does
+not tap the highway. The **local eight-channel highway trunk** is another
+**block adapter** on that header (`local-trunk.md`, `fabric.md` §5.2): eight
+seats of copper in highway shape, where this card is one seat on a **slot** of the
+block ribbon.
 
 ### 2.2 The channel socket
 
@@ -360,13 +363,14 @@ So:
 
 ---
 
-## 6. A correction to `mainboard.md` §2.4
+## 6. Why an MF8 unit must not tap `HC[h]`
 
-§2.4 says of an MF8 trunk card: "It taps its *own block's* `HC[h]` and `HA[h]`,
-which are already its transmitter's multiplexed frame."
+An older `mainboard.md` §2.4 said of an MF8 trunk card: "It taps its *own
+block's* `HC[h]` and `HA[h]`, which are already its transmitter's multiplexed
+frame."
 
 **They are not.** `HC[h]` is the commutation of the block's eight `C_TX` —
-what the trunk card has just taken *off* the line — so a transmitter fed from it
+what the trunk unit has just taken *off* the line — so a transmitter fed from it
 would loop the link back on itself. A transmitter needs the six ports' `C_RX`,
 which are private to each port and appear on no highway; `HA[h]` is wrong the
 same way, carrying the far end's M where the transmitter needs each port's
@@ -374,15 +378,14 @@ same way, carrying the far end's M where the transmitter needs each port's
 [mf8_trunk_card.v](../verilog/rtl/mf8_trunk_card.v), which takes `port_c_rx`
 and `port_a_rx` in and drives `port_c_tx` and `port_a_tx` out.
 
-The sentence looks like `fabric.md` §1.1's "the commutator is, part for
-part, the trunk transmitter's frame mux" read as identity where it was meant as
-likeness: the same part doing the same job, in two places, one for each
-direction. There is no saving to be had — **a trunk card sits on the card side of
-its block like every other card**, which is §2.3's trunk socket and the premise
-of this whole document.
+That is why the exchange face is the **block header** (`fabric.md` §5.2,
+`mf8-unit.md` §1): card-side appearances, not H. The likeness in `fabric.md`
+§1.1 — commutator and frame mux are the same *kind* of part — is not an
+identity with the pair.
 
-The rest of §2.4 stands: the card takes `HCLK`, `LINE_HB`, `SLOT` and `TX_OCT` from
-the block, and the cable still has ten taps however many trunks are fitted.
+The rest of `mainboard.md` §2.4 stands: the unit takes `HCLK`, `LINE_HB`,
+`SLOT` and `TX_OCT` from the block, and the cable still has ten taps however
+many trunks are fitted.
 
 ---
 

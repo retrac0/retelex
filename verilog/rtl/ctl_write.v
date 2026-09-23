@@ -27,6 +27,10 @@
 // WR is pulsed in the middle of an SCLK half-period, which is 2.3.2's one rule.
 `timescale 1ns/1ps
 
+// Kept hierarchical for synth-hc: pack.py bills each instance as 2 × HC165
+// (the parallel-load serialiser of mainboard.md 2.3).  The small bit of FSM
+// beside the shift register is absorbed into that line for now.
+(* keep_hierarchy *)
 module ctl_write #(
     parameter integer DIV = 32         // master clocks an SCLK period: 128 kHz
 )(

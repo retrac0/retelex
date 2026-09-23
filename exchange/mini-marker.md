@@ -18,8 +18,10 @@ because nothing then consumes a prefix.
 > **Status: proposed, measured in simulation.** `make mini` runs two lines on
 > block 2 through seize, a two-digit call each way, busy, self, an empty
 > number, the first keys that go nowhere, abandon, and the no-digit timeout.
-> The flood path of §8 is specified against `common-control.md` and has not
-> been tied as a site. Nothing has been on a bench.
+> `make mini-net` ties this marker to a network unit on one MF8 link (§8): a
+> local call and a dialled flood. `make mini-load` bursts traffic on solo,
+> pair, and chain shapes (one register a site) and checks the jam clears.
+> Nothing has been on a bench.
 
 ---
 
@@ -77,7 +79,8 @@ a new call request.
 
 Two digits, octal as dialled. Ten pulses are 0, the same `oct()` as the
 marker. Digit `1` is a **highway**, not a prefix: no `restart`, no flood, no
-`e b`.
+`e b` — unless the **LEAF** jumper is set (`leaf-uplink.md`, §9): then `1`
+hunts an uplink trunk and does not take a slot digit.
 
 ```
  first key   1–7   highway h; drop dial tone (caller listens to 00); wait for s
@@ -162,27 +165,33 @@ request.
 `verilog/rtl/mini_marker.v`: a scanner, a BUSY/M probe with the same
 `p_valid` rule as the marker (a visit while the serialiser named another
 block is discarded — `rtl.md`), a four-deep write queue, `ctl_write`, and
-one `pulse_reg` with `restart` tied off unless a network unit is wired.
+one `pulse_reg`. Parameter `HAS_NET` is the jumper: with none, `restart` is
+tied off and digit `1` is a highway; with the unit fitted, the §8 hooks are
+live. `LEAF` (exclusive of `HAS_NET`) makes digit `1` an uplink hunt over
+`UPLINK_MASK`. `TRUNK_MASK` names ports that are never callers when `HAS_NET`.
 States:
 
 ```
 IDLE → (M · /BUSY, register free, not a jumpered trunk) → COLLECT
      → (two highway digits) → PROBE
      ↘ bad first digit / nodig → 03, IDLE
-     ↘ flood_go (unit fitted, key 1) → YIELD  (the unit owns the call)
+     ↘ LEAF key 1 → UPLINK hunt → pair or 03, IDLE
+     ↘ flood_go (HAS_NET, key 1) → YIELD  (the unit owns the call)
 PROBE → visit called, free → pair writes, IDLE
       ↘ busy / self / gone → 03 or just IDLE
 YIELD → unit `local` → COLLECT; `done` → IDLE; `nogo` → 03, IDLE
 ```
 
-`make mini` is the bench without a unit.
+`make mini` is the bench without a unit. `make mini-net` is one with.
+`make mini-leaf` is LEAF uplink to a tone-offering parent.
 
 ---
 
 ## 8. With a network unit
 
 The ribbons of `common-control.md` §2.2. This marker does not grow a flood
-sequencer. It grows the **hooks** a unit already needs from a class marker:
+sequencer. It grows the **hooks** a unit already needs from a class marker.
+In RTL they are behind `HAS_NET` (the jumper) and a `TRUNK_MASK`:
 
 | | |
 |---|---|
@@ -192,8 +201,19 @@ sequencer. It grows the **hooks** a unit already needs from a class marker:
 | probe out | scanned port, M, `BUSY` (no word: the unit hunts by the same mask) |
 | claim attach | the unit asks; attach the register to that trunk; later writes keep `CLAIM` |
 | YIELD | the unit signals `local` / `done` / `nogo`; this marker does not wait for a claim itself |
+| write drain | the unit's latch-write burst into this marker's serialiser |
 
 A two-exchange chain is this marker, that unit, monitors on block 1, and an
-MF8 trunk card. Resolvers, 0, 9, nails and the word stay off. That is a
-pulse-flood compatible exchange (`common-control.md` §4), not a growth of
-this file into `marker.md`.
+MF8 trunk card (`make mini-net`). Resolvers, 0, 9, nails and the word stay
+off. That is a pulse-flood compatible exchange (`common-control.md` §4), not
+a growth of this file into `marker.md`.
+
+---
+
+## 9. Leaf uplink (no network unit)
+
+Jumper **LEAF** (mutually exclusive with **HAS_NET**): digit `1` hunts the
+first free port in `UPLINK_MASK` (block 1 trunks), patches the caller, and
+leaves. The parent must offer dial tone on that seize — full marker
+**offers-tone** bit, or a mini parent with those trunks unmasked.
+`leaf-uplink.md` is the contract. `make mini-leaf` is the bench.

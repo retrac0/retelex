@@ -179,7 +179,7 @@ module marker #(
                               (p_cls_raw == C_DATA  && (p_word[7] || p_word[5])) ||
                               (p_cls_raw == C_SRC   && |p_word[7:5]) ||
                               (p_cls_raw == C_OUT   && |p_word[7:5]) ||
-                              (p_cls_raw == C_TRUNK && |p_word[7:5]));
+                              (p_cls_raw == C_TRUNK && |p_word[7:6]));
     // Answers-to secondary (extensions.md §2.2.1): FF idle; tag 00 field A
     // zeros only; tag 01 dual membership; tag 10 field B LUK000 or 111111.
     wire       p_ans_a    = (p_tag == 2'b00) && (p_pay == 6'b000000);
@@ -230,11 +230,13 @@ module marker #(
     wire [5:0] p_cnail_to = p_hs;
     // Line options: frame 5 priority; frame 6 busy-out.  Restricted z is
     // frame 5; bit 7 MBZ.  Floor: restricted ∧ ¬z → local-only.
+    // Trunk option bit 5 = offers-tone (leaf-uplink.md).
     wire       p_pri    = p_form && (p_cls == C_LINE) && p_word[5];
     wire       p_bout   = p_form && p_word[6] &&
                           (p_cls == C_LINE || p_cls == C_OPER ||
                            p_cls == C_DATA || p_cls == C_REST);
     wire       p_z      = p_form && (p_cls == C_REST) && p_word[5];
+    wire       p_offers = p_form && (p_cls == C_TRUNK) && p_word[5];
     wire       p_local  = p_form && (p_cls == C_REST) && !p_z;
     wire       p_free   = !p_busy && !p_m;
     wire       p_term   = p_free && !p_bout;               // terminating / hunt free
@@ -801,12 +803,13 @@ module marker #(
                         push(p_port, 6'o00, 1'b1, 1'b0);
                     end
                 end else if (p_cls == C_LINE || p_cls == C_OPER ||
-                             p_cls == C_REST) begin
+                             p_cls == C_REST || p_offers) begin
                     // a caller: the first free register.  None free, and the
                     // caller simply waits -- the scanner will be back in 8 ms.
                     // Under PWAIT, a non-priority line waits even with a free
                     // register until a full revolution finds no priority lift
                     // still wanting one (extensions.md 2.4.1).
+                    // offers-tone trunks (leaf-uplink.md) take the same path.
                     already = 1'b0;
                     pick = -1;
                     for (r = 0; r < NREG; r = r + 1) begin

@@ -109,7 +109,7 @@ panel's **slot legend**. It carries no lamps.
 > cable→control split (`common_card.v`, `tb_panel.v`). The '244 is a port split
 > in the model — transparent assigns — so the bench does not prove drive
 > current; it proves that lamp cards see only the buffered nets. Mechanics,
-> the IDC taps and the '123's RC are not drawn.
+> the ribbon slots and the '123's RC are not drawn.
 
 ### 3.1 Parts
 

@@ -1,0 +1,31 @@
+* OTA AM — OUT ∝ ENV · CARRIER
+*
+* Pins: CARRIER ENV OUT VCC VEE
+*   CARRIER — bipolar tone (raw; attenuated inside to ±~200 mV)
+*   ENV     — non-negative control (Iabc ∝ ENV)
+*   OUT     — product, AC-ish around 0
+*
+* Uses one HALF13700. Small-signal: Iout ≈ Iabc · Vd/(2·Vt), Vd from CARRIER.
+
+.subckt am CARRIER ENV OUT VCC VEE
+
+* Iabc: ENV → current into IAB (HALF13700 senses to VSS). Floor keeps OTA alive.
+* ~20 µA at ENV=1 V
+Biabc 0 IAB I = 2u + V(ENV) / 50e3
+
+* Carrier → ±224 mV class differential (enc_a attenuator family)
+Rd1 CARRIER INP 47k
+Rd2 INP 0 2.2k
+Rd3 0 INN 2.2k
+Rlin LIN VEE 100Meg
+Rbin BIN VEE 100Meg
+Rbuf BUF VEE 100Meg
+
+Xota LIN INP INN IAB IOUT VCC VEE BIN BUF HALF13700
+
+* Current → voltage; AC couple so a DC Iabc pedestal does not sit on OUT
+Rout IOUT 0 10k
+Cac IOUT OUT 1u
+Rbleed OUT 0 100k
+
+.ends am

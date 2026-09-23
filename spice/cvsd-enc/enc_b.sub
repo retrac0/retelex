@@ -13,17 +13,7 @@ Rpull CMP VDD 4.7k
 Dcln 0 CMP DCLAMP
 .model DCLAMP D(IS=1e-14 RS=10)
 
-Xd0 CMP CLK BIT NBIT HC74_DFF
-Xd1 BIT CLK Q1  NQ1  HC74_DFF
-Xd2 Q1  CLK Q2  NQ2  HC74_DFF
-Rnq1 NQ1 0 1Meg
-Rnq2 NQ2 0 1Meg
-
-Aadc [BIT Q1 Q2] [bd q1d q2d] hc_adc
-Ax01 [bd q1d] x01d hc_xor
-Ax12 [q1d q2d] x12d hc_xor
-Aor  [x01d x12d] ncd hc_or
-Adac [ncd] [NCOIN] hc_dac
+Xlogic CMP CLK BIT NBIT NCOIN CVSD_LOGIC
 
 R1 NCOIN SYL 51.1k
 R2 SYL 0 2.55Meg

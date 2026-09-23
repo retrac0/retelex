@@ -1,0 +1,8 @@
+* Mark rising-edge clear — RC differentiator into soft pulse (~30–80 ns)
+.subckt MARK_EDGE MARK CLR
+Rdel MARK md 2.2k
+Cdel md 0 15p
+Bclr CLR 0 V=2.5*(1+tanh(100*(v(MARK)-v(md)-1.2)))
+Rcl CLR 0 100k
+Ccl CLR 0 2p
+.ends MARK_EDGE

@@ -1,0 +1,35 @@
+* 50 V differential surge, then AMI traffic — TVS + RX clamps protect 74HC
+.include models.inc
+.include ami_tx.sub
+.include ami_rx.sub
+
+Vdd vdd 0 5
+Vee vee 0 -5
+Vdrv_p vdrv_p 0 12
+Vdrv_n vdrv_n 0 -12
+
+Vh h 0 PULSE(0 5 1u 2n 2n 1.951u 3.90625u)
+Vhs hs 0 PULSE(0 5 3.5u 2n 2n 1.951u 3.90625u)
+
+* Quiet, then ones after surge
+Vb b 0 PWL(0 0 50u 0 50.01u 5 160u 5)
+
+Xenc b h ep em AMI_ENC
+Xtx ep em tip ring vdrv_p vdrv_n AMI_TX
+
+* 50 V tip–ring through 200 Ω, 20–35 µs
+Vsurge surg 0 PULSE(0 50 20u 50n 50n 15u 1)
+Rsurge surg tip 200
+Rhold ring 0 50
+
+Xrx tip ring mark mark_a vdd vee AMI_RX_FRONT
+Xdec mark hs bit strobe AMI_DEC_LATCH
+
+.option method=gear reltol=2e-3 abstol=1n rshunt=1e12
+.control
+  tran 50n 160u
+  set filetype=ascii
+  wrdata out/surge time tip ring mark bit vdd
+  quit
+.endc
+.end

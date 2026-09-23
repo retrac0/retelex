@@ -1,11 +1,11 @@
 # The exchange — subscriber terminals: six lines over an MF8 link
 
-A trunk block (`network.md` §1) is an MF8 trunk card on six of eight port
-circuits (slots 1–3 and 5–7). It does not know what is at the far end of its
+A trunk block (`network.md` §1) is an MF8 **block adapter** on six of eight
+header appearances (slots 1–3 and 5–7). It does not know what is at the far end of its
 link. If the far end is another exchange's trunk block, the link is a tie
 trunk. If it is a stock MF8 shelf of channel cards, the link is **six lines of
 this exchange at another site**: a subscriber terminal. The exchange end is
-the same card either way, with its channels saying line and not trunk. The
+the same unit either way, with its channels saying line and not trunk. The
 terminal is MF8 as it stands, and no card in it knows that an exchange is at
 the other end.
 

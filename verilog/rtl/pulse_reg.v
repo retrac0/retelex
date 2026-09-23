@@ -51,7 +51,8 @@ module pulse_reg #(
     // wants to tell them apart, so this is one conductor on the ribbon that
     // already carries the digits.
     output reg        nodig,
-    output            brk            // a break just counted (network.md 3's guard)
+    output            brk,           // a break just counted (network.md 3's guard)
+    output            hook           // live M as the register hears it
 );
     // the probe: a listener's two selects and a flip-flop, at mid-cell
     reg  m_cap;
@@ -59,6 +60,7 @@ module pulse_reg #(
     always @(posedge clk or negedge rst_n)
         if (!rst_n)   m_cap <= 1'b0;
         else if (w)   m_cap <= ha[port[5:3]];
+    assign hook = m_cap;
 
     wire [4:0] p_cnt;
     wire       p_stb, p_clr, p_counting;

@@ -1,0 +1,29 @@
+* OTA-law log → syllabic LPF → antilog envelope
+*
+* Pins: IN ENV VCC VEE
+*   IN   — band-limited audio (any polarity)
+*   ENV  — non-negative envelope, roughly tracks |IN| after τ
+*
+* Law matches HALF13700's Vt: Vlog = Vt·ln(1+|x|/Vref), then exp restore.
+* Param TAU: envelope time constant (default 10 ms).
+
+.subckt logenv IN ENV VCC VEE params: TAU=10m VREF=0.05
+
+* Full-wave magnitude (precision abs stand-in; keeps the deck convergent)
+Babs ABS 0 V = abs(V(IN))
+Rabs ABS 0 100k
+
+* Log (OTA-law Vt = 26 mV)
+Blog LRAW 0 V = 0.026 * log(1 + V(ABS) / VREF)
+Rlraw LRAW 0 100k
+
+* Syllabic LPF: τ = R·C
+Rlp LRAW LPF 100k
+Clp LPF 0 {TAU / 100k}
+Rbleed LPF 0 10Meg
+
+* Antilog → ENV ≥ 0
+Bexp ENV 0 V = VREF * (exp(V(LPF) / 0.026) - 1)
+Renv ENV 0 100k
+
+.ends logenv

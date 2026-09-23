@@ -2,8 +2,8 @@
 //
 //   block 0   dial tone at 01, busy at 02 (optional), cannot-complete at 03;
 //             04-07 the operator bank when fitted.  Never an MF8 trunk group.
-//   block 1   first MF8 trunk group at 11-13/15-17 facing DIR0 -- the trunk
-//             card taps the highway (mf8-unit.md 1).  Port 00 is silence for
+//   block 1   first MF8 trunk group at 11-13/15-17 facing DIR0 -- block
+//             adapter on the block header (mf8-unit.md 1).  Port 00 is silence for
 //             a cleared latch; 04 is an operator seat on a tone-less map.
 //   block 2   line cards: 20 and 21 by default, and LINE_PORTS may fill
 //             whole blocks with them for a stress run
@@ -259,7 +259,7 @@ module net_site #(
             .release_it(r_release[gr]), .restart(r_restart[gr]),
             .busy(r_busy[gr]), .port(), .src(r_held[gr*6 +: 6]),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*20 +: 20]),
-            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
+            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]), .hook());
     end endgenerate
 
     // Up to four pools, one marker.  The selection is REGISTERED and holds

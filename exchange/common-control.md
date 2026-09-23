@@ -181,7 +181,7 @@ The same marker — including the mini-marker — plus:
 | fit | |
 |---|---|
 | network unit | own-code jumpers `e b`, the origin guard jumper, one seize-bank a register, the forwarder; resolvers only at a hub |
-| block 1 | MF8 trunk card (six channels), `/ANS` low, word = class trunk + direction (or a jumper mask if the marker does not read the word) |
+| block 1 | MF8 block adapter (six channels on the block header), `/ANS` low, word = class trunk + direction (or a jumper mask if the marker does not read the word) |
 | monitors | two or three on that block (`monitor.md` §4) |
 
 Origin: key `1` → `flood_go` → the unit seizes one free trunk every direction,
@@ -222,9 +222,9 @@ origin seized live in a bank **on the unit** (`network.md` §3.2).
 
 - **A third master on cable B.** `mainboard.md` §2.3 is marker or console. The
   unit as a master is specified here and in `network.md` §3.2; the RTL still
-  drains the unit's writes through the marker's serialiser.
+  drains the unit's writes through the marker's (or mini-marker's) serialiser.
 - **The probe's `M` as a pin.** `mainboard.md` §9.
-- **Mini-marker plus a network unit as a bench.** `make mini` is the marker
-  alone; `make net` is the class marker plus the unit. The ribbons of §2 are
-  why the first pair should run; they have not been tied as a site.
+- **Mini-marker plus a network unit as a hub.** `make mini-net` is a
+  one-direction chain: local call and a dialled flood. `make net` is the class
+  marker plus the unit, including hubs. Multi-direction mini has not been run.
 - **Swapping a marker on a live fabric.** Specified; not tried.

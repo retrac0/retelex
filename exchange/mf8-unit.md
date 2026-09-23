@@ -1,29 +1,33 @@
-# The exchange — eight-channel MF8 split (not taken)
+# The exchange — MF8 unit (six-channel live on the block header; eight-channel not taken)
 
-The fabric and MF8 share one 3-bit `SLOT` counter: eight 64 kbps cells at
-512 kbps. A trunk block's highway **is** an MF8 frame with F and S given back
-as ports (`fabric.md` §1.1). That identity is why a group is **six channels**
-on slots 1–3 and 5–7, why the trunk card taps `HC[h]`/`HA[h]` instead of
-sitting on the channel star (`mainboard.md` §2.4), and why those ports cannot
-move in the map.
+**Exchange face (adopted).** Live MF8 is a **block adapter** on the **block
+header** (`fabric.md` §5.2) — the same star collect as local-trunk. It drives
+appearances **1–3 and 5–7**; **0 and 4** are unequipped / `FILL` on the fabric.
+F and S exist only on the line. Transmit samples `C_RX` / `A_RX` off the
+header; receive drives `C_TX` / `A_TX`. Not a tap of `HC[h]` / `HA[h]`
+(`baseband.md` §6, `mf8_trunk_card.v`).
 
-**This document proposed splitting them** so MF8 could carry eight payload
-channels on a line of its own. That path is **not taken.** Trunks use the
-**8-bit six-channel** frame of `mf8-spec.md` / `mf8.py` — F and S opposite,
-512 kbps / 1.024 MBaud — fused with the highway as §1 describes.
+**Frame (adopted).** The **8-bit six-channel** frame of `mf8-spec.md` /
+`mf8.py` — F and S opposite, 512 kbps / 1.024 MBaud. Inside the unit the line
+mux may still share the fabric's `SLOT` count for payload seats; that is
+frame-shape fusion, not a highway tap.
 
-> **Status: not taken.** Measured as analysis: 10-bit and 16-bit eight-channel
-> headers (`mf8_10.py`, `mf8_10_16.py`, `mf8_16.py`), PHY timers (`mf8_baud.py`),
-> and a block-adapter face on T + C (`fabric.md` §5.2). **Live MF8 trunks are
-> six channels in eight bits.** The 8 × 8 fabric, the port map of
-> `protocol.md` §5, and `mf8_trunk_card.v` follow that. Keep this file as the
-> record of the eight-channel split that was set aside.
+**Eight-channel payload split (not taken).** This file also records the
+measured path to eight payload channels on a line of its own (10-bit and
+16-bit headers, PHY timers, full eight appearances live). That path is set
+aside. The 8 × 8 fabric, the port map of `protocol.md` §5, and
+`mf8_trunk_card.v` follow six channels.
+
+> **Status.** Exchange face and six-channel frame: **adopted** as above.
+> Eight-channel split: **not taken** — keep §§3–4 and the eight-appearance
+> sketch in §5 as the record of what was set aside. §5's header contract is
+> live for six channels (six of eight appearances driven).
 
 ---
 
-## 1. What is fused today
+## 1. What is fused today (frame shape, not the highway)
 
-An MF8 frame and a highway cell are the same shape:
+An MF8 *line* frame and a highway cell are the same shape:
 
 ```
  bit / slot:  0     1      2      3      4     5      6      7
@@ -33,24 +37,26 @@ An MF8 frame and a highway cell are the same shape:
 ```
 
 One 3-bit address is the channel's C bit, its A bit's superframe state, its
-input on the trunk card's mux and `'259`, and its port (`protocol.md` §5).
-The block commutator is the trunk transmitter's frame mux (`mf8-spec.md`
-§10) without the line code. The trunk card inserts F at slot 0 and S at slot 4
-and gives those two seats back as ordinary ports. Transmit in
-`mf8_trunk_card.v` is one mux on `SLOT`:
+input on the unit's mux and `'259`, and its port (`protocol.md` §5). The
+block commutator builds `HC[h]` from the eight `C_TX` on the **block header**.
+The unit's *line* transmitter inserts F at bit 0 and S at bit 4 and muxes
+payload from appearances 1–3 and 5–7. Transmit in `mf8_trunk_card.v` is one
+mux on `SLOT`:
 
 ```
 tx_bit = (slot == 0) ? F : (slot == 4) ? S : C[slot]
 ```
 
-That is the whole of the fusion, and it is why six channels over MF8 cost
-nothing extra in the commutator. It is also the whole of the mess:
+with `C[slot]` taken from `port_c_rx` — the header appearances — not from
+`HC[h]`. That is the whole of the frame-shape fusion, and it is why six
+channels over MF8 cost nothing extra for the *address*. It is also the whole
+of the map mess:
 
 | | what the identity forces |
 |---|---|
 | **Channel count** | six, not eight. F and S occupy two of eight bits, and they are load-bearing (`mf8-spec.md` §3) |
-| **Map** | a group is slots 1–3 and 5–7 of one block. Slots 0 and 4 are leftovers. Block 0 is forbidden, because 00–07 are tones and the operator bank |
-| **Socket** | the trunk card taps `HC[h]`/`HA[h]` (`mainboard.md` §2.4). It is not eight channel cards. The 2 × 32 trunk/gateway shell (`common-cards.md` §7.2) is a different part from the 2 × 16 star |
+| **Map** | a group is slots 1–3 and 5–7 of one block. Slots 0 and 4 are leftovers on the fabric (unequipped). Block 0 is forbidden, because 00–07 are tones and the operator bank |
+| **Face** | **block adapter** on the **block header** (`fabric.md` §5.2). Six appearances live; `MUTE_BLK` on the commons. The 2 × 32 trunk/gateway shell (`common-cards.md` §7.2) is the *shelf's* part, not this |
 | **Data cards** | keyed to seats 1–3 on an MF8 shelf, because two data cards three apart can hold a wrong alignment (`mf8-spec.md` §5, `channel-cards.md` §4.3) |
 | **Terminals** | six remote lines, numbered `h1–h3` and `h5–h7` (`terminal.md`) |
 
@@ -68,27 +74,28 @@ code. The exchange unit takes eight `C`/`A` pairs from eight channel sockets
 and muxes them onto the line. The two streams meet only as eight bits a frame
 at the socket, which is what a line card already is (`protocol.md` §1).
 
-**B. Fuse.** Finish what `fabric.md` §1.1 began: the highway *is* the MF8
-frame, eight slots, eight payload channels, F and S gone from the bitstream or
-moved into a wider cell. The trunk card keeps tapping `HC[h]`. Slot number is
-still wire position.
+**B. Fuse eight payload.** Finish what an older `fabric.md` §1.1 began: the
+highway *is* the MF8 frame, eight slots, eight payload channels, F and S gone
+from the bitstream or moved into a wider cell. Slot number is still wire
+position. That path needs a 10- or 16-slot highway or a new F/S story — **not
+taken**, and not a reason to tap `HC[h]`.
 
-| | A, split | B, fuse, eight payload |
+| | A, split (eight payload) | B, fuse eight payload |
 |---|---|---|
-| **What it costs in parts** | the trunk card already has a frame mux, a signalling mux and a framer (`mf8-spec.md` §§10–11). Split, those stay and stop sharing the block's `'151`. A decade (or 4-bit) counter and a wider mux replace the free `SLOT` address. A handful of packages, on one card | at six channels, **nothing**: the commutator is the mux. At eight, either a new header with no dedicated F and S, or a 10- or 16-slot highway |
+| **What it costs in parts** | the trunk card already has a frame mux, a signalling mux and a framer (`mf8-spec.md` §§10–11). Split, those stay and stop sharing `SLOT` as the line address. A decade (or 4-bit) counter and a wider mux replace the free `SLOT` address. A handful of packages, on one card | at six channels the *address* is free (`SLOT`); at eight, either a new header with no dedicated F and S, or a 10- or 16-slot highway |
 | **What it costs the fabric** | nothing. 8 × 8, `HCLK`, the latch, the cable, octal `h s` | a 10-slot wire is not octal and not a `'151`. A 16-slot wire is `big-exchange.md`, a new family, every port already fitted |
 | **What it costs the F word** | a new frame to measure, with F and S still seats. §4 | F and S out of an 8-bit 512 kbps stream. `mf8-spec.md` §3.2 is why F alone is not enough, and why the guard is a second lane. That work would be redone from scratch, against data cards that can carry any byte |
-| **The board** | **block adapter on collect T**, plus commons C. Same `C`/`A`/word/`/ANS` a slot; `MUTE_BLK` on C (`fabric.md` §5.2). §5 | a tap on `HC`/`HA`. It does not appear as eight cards |
+| **The board** | **block adapter** on the **block header** — already the live six-channel face; eight appearances live | same header would still be required; tapping `HC`/`HA` is refused (`baseband.md` §6) |
 | **The map** | a group is eight ports of one block. They can sit in any block 1–7 (§6) | wire position is still slot. "Anywhere" is still a whole block, and only if F and S no longer steal 0 and 4 |
-| **Clocks** | the unit owns its line-rate crystal and `LINE_HB`. 4.096 MHz stays off the cable, which `mainboard.md` §8 already wanted. Fabric `LINE_HB` remains for `SLOTQ` | at 512 kbps the tap is `HCLK`. At 1.024 Mbps `LINE_HB` is 2.048 MHz on the cable, which §8 was written to avoid |
+| **Clocks** | the unit owns its line-rate crystal and `LINE_HB`. 4.096 MHz stays off the cable, which `mainboard.md` §8 already wanted. Fabric `LINE_HB` remains for `SLOTQ` | at 512 kbps the line bit can share `HCLK`. At 1.024 Mbps `LINE_HB` is 2.048 MHz on the cable, which §8 was written to avoid |
 
-**Decided here, if this is adopted: A.** Eight payload channels and a
-board that is eight channel slots on the block-adapter face are the same
-requirement, and they are the requirement that B cannot meet on this
-fabric. Fusion is the right description of what the six-channel trunk
-card does *today*. It is not a path to eight.
+**Decided.** Exchange face: **block adapter** for live six-channel (§1). Eight
+payload channels: **not taken** — A would be required; B cannot meet it on this
+fabric. Fusion of *frame shape* with `SLOT` remains the six-channel line mux
+(§1); it is not a path to eight.
 
-The rest of this document is A.
+The rest of this document is the A sketch (eight appearances) and the
+measurements that closed the eight-channel frame choices.
 
 ---
 
@@ -310,7 +317,7 @@ the alarm — the rule `mf8-spec.md` §3.5 already decided for x, on a seat
 of its own, so it does not steal a guard pad. K0–K3 are condition
 levels, both ways, the same shape as A: a bit a frame, an RC and a
 Schmitt. Battery at a terminal, AIS, a door, a spare. They are not
-switched. They do not appear on T.
+switched. They do not appear on the block header.
 
 S still carries the eight A bits and the two pads. Superframe states
 10–15 of S are a second, slower spare (6 × 4 kHz) if SS0 wants a
@@ -343,7 +350,7 @@ when octet alignment rode a phase the F word did not pin. F pins it.
 State 7 is the first octet's last bit; state 15 is the second's. A PCM
 card transfers when the low three bits are 111, as it does today, twice
 a superframe. The 10-bit frame had to add a counter for this. The
-16-bit frame gives it back. `TX_OCT` on C is still the exchange's 8 kHz
+16-bit frame gives it back. `TX_OCT` on the header commons is still the exchange's 8 kHz
 and still loads the word's 2×`'165`.
 
 **Eight C plus F and S opposite cannot avoid one payload pair at
@@ -444,13 +451,16 @@ small change to the spec. They are a different carrier.
 
 ---
 
-## 5. The exchange unit — an MF8 adapter on T
+## 5. The exchange unit — an MF8 block adapter
 
-The thing that was a highway tap at six channels, and a sketch at eight: one
-MF8 pair each way on the rear, and on the fabric side a **block adapter** —
-eight ordinary slot appearances plus `MUTE_BLK`, on the reusable T + C face
-(`fabric.md` §5.2). MF8 occupies a block because an eight-channel group is one
-failure domain, one monitor and one hunt unit. It does not *define* that face;
+**Live six-channel** mates this face and drives six of eight appearances (§1).
+The eight-channel sketch below is the same header with all eight live — **not
+taken** as a frame, but the pin contract is what six-channel already uses.
+
+One MF8 pair each way on the rear, and on the fabric side a **block adapter** —
+eight ordinary slot appearances plus `MUTE_BLK`, on the reusable **block header**
+(`fabric.md` §5.2). MF8 occupies a block because a trunk group is one
+failure domain, one monitor and one hunt unit. It does not *define* that header;
 "MF8 is a block" is packaging, not the contract.
 
 The short answers, before the pins:
@@ -458,47 +468,47 @@ The short answers, before the pins:
 - **Electrically it is eight cards**, within `common-cards.md` §1.2, plus the
   one block-scoped pin the contract adds (`MUTE_BLK`). Same six per-slot
   signals, same word, same `/ANS`. The commutator is unchanged; the block
-  gains an OR gate and a jumper when T is stuffed for an adapter.
-- **Mechanically it mates T + C**, not eight IDC taps on the block ribbon. The
-  contract refuses the eight-tap board (`fabric.md` §5.2). One board (two:
-  Trunk-D and Trunk-A), one block, nothing else on those taps.
+  gains an OR gate and a jumper when the header is stuffed for an adapter.
+- **Mechanically it mates the block header**, not eight slots on the block ribbon.
+  The contract refuses the eight-slot board (`fabric.md` §5.2). One board (two:
+  Trunk-D and Trunk-A), one block, nothing else on those slots.
 - **It does not tap `HC`/`HA`.** `baseband.md` §6 already said that tap
   would loop the link. Verilog never did it. Split makes the face match
   the signals.
 - **`MUTE` cannot live on a11.** a11 is a common input, tied to "locked"
   in an exchange (`baseband.md` §2.3). Link-down is this adapter's, and
-  `MUTE_BLK` on C is the busy force the contract exists to carry.
+  `MUTE_BLK` on the header commons is the busy force the contract exists to carry.
 
 ```
   block h, eight port circuits                    MF8 unit (D + A)
-  T: C_RX[0..7], A_RX[0..7]  ──▶  hold, TX mux, F, S  ── pass ── encoder  ══ line out
-  T: C_TX[0..7], A_TX[0..7]  ◀──  '174, RX demux, framer  ◀── classifier  ◀══ line in
-  T: word[0..7], /ANS[0..7]  ◀──  2×'165 / jumpers, /ANS tied or per slot
-  C: TX_CLK, TX_OCT, FILL     ──▶  payload domain, the word, idle
-  C: MUTE_BLK                 ◀──  not locked  →  block ORs into BUSY
+  hdr appearances: C_RX/A_RX[0..7]  ──▶  hold, TX mux, F, S  ── pass ── encoder  ══ line out
+  hdr appearances: C_TX/A_TX[0..7]  ◀──  '174, RX demux, framer  ◀── classifier  ◀══ line in
+  hdr appearances: word, /ANS[0..7] ◀──  2×'165 / jumpers, /ANS tied or per slot
+  hdr commons: TX_CLK, TX_OCT, FILL ──▶  payload domain, the word, idle
+  hdr commons: MUTE_BLK             ◀──  not locked  →  block ORs into BUSY
 ```
 
-### 5.1 This adapter on the contract face
+### 5.1 This adapter on the block header
 
-T + C, dual footprint, `MUTE_BLK`, and what any adapter owes the block are
-`fabric.md` §5.2. This section is only what the MF8 unit puts on that face
-and on its own rear.
+The **block header**, dual footprint, `MUTE_BLK`, and what any block adapter
+owes the block are `fabric.md` §5.2. This section is only what the MF8 unit
+puts on that header and on its own rear.
 
 | | shell | what this unit does |
 |---|---|---|
-| **T** | type B, 64-way — the contract's collect | eight tie-trunk appearances: shared word, `/ANS` tied low (or per slot on a terminal). Column map and per-pin behaviour §5.3 |
-| **C** | 2 × 5 — the contract's commons | listens to `TX_CLK` / `TX_OCT` / `FILL`; drives `MUTE_BLK` from link lock (§5.4) |
+| **appearances** | type B, 64-way — the header collect | eight tie-trunk appearances: shared word, `/ANS` tied low (or per slot on a terminal). Column map and per-pin behaviour §5.3 |
+| **commons** | 2 × 5 — the header commons | listens to `TX_CLK` / `TX_OCT` / `FILL`; drives `MUTE_BLK` from link lock (§5.4) |
 | **pass** | `mf8-trunk.md` §2 | D ⇄ A. Unchanged: `TX_BIT`, `LINE_HB`, `RX_BIT`, `RX_STB`, `/CD` |
-| **rear** | `common-cards.md` §7.3 | the pair each way, off Trunk-A only. Not on T, not on H |
+| **rear** | `common-cards.md` §7.3 | the pair each way, off Trunk-A only. Not on the header, not on H |
 
-A block stuffed as this group does not populate the block-ribbon IDC taps. The eight
-port circuits still sit behind T (`fabric.md` §5.2). Mixing a line card with
+A block stuffed as this group does not populate the block-ribbon slots. The eight
+port circuits still sit behind the header (`fabric.md` §5.2). Mixing a line card with
 this unit on the same block is not a configuration — both because the
 contract forbids it and because a group is eight channels on one link.
 
 **The 2 × 32 trunk/gateway shell is not this board.** That is the MF8
 *shelf's* trunk slot (`common-cards.md` §7.2), where channel cards face a
-stack header. This unit faces a block through T + C. Same pin *roles* on
+stack header. This unit faces a block through the **block header**. Same pin *roles* on
 each appearance as a channel card; eight of them collected, not one wide
 connector with `SLOT` and `LINE_HB` on it.
 
@@ -512,7 +522,7 @@ line. A transmitter fed from it loops the link. What the transmitter
 needs is the eight ports' `C_RX` / `A_RX`, which are private to each
 port and appear on no highway.
 
-So the unit sits on T — the block-adapter collect (`fabric.md` §5.2), not
+So the unit mates the **block header** (`fabric.md` §5.2), not
 a highway tap. The block still has its commutator: eight `C_TX` into the
 `'151` on `SLOT` is how this block's highway is made, whether those pins
 come from line cards or from this adapter. Split, that `'151` is only a
@@ -524,7 +534,7 @@ now.
 ### 5.2½ The conversion — 16-bit line, 8-slot highway
 
 The unit plugs into a block and **takes that block's highway**: stuffing
-T here means `HC[h]` / `HA[h]` *are* this group's eight channels, after
+the header here means `HC[h]` / `HA[h]` *are* this group's eight channels, after
 the block's own `'151` has commutated them. The MF8 pair on the rear is
 not that highway. The conversion is this unit.
 
@@ -558,18 +568,18 @@ does for any stuffing. A listener on another block who has this group
 in a latch sees eight ordinary 64 kbps squares.
 
 The fabric does not know there is an MF8 line. The line does not know
-there is a `'151`. They meet as eight `C`/`A` pairs on T.
+there is a `'151`. They meet as eight `C`/`A` pairs on the block header.
 
-### 5.3 T — what this adapter does with each appearance
+### 5.3 Appearances — what this adapter does with each
 
 Direction is the *card's* view, as `common-cards.md` §1: `out` is the
-adapter driving the block. The column map is the block-adapter contract's
+adapter driving the block. The column map is the block header's
 (`fabric.md` §5.2); this table is what the MF8 unit does with each pin.
 Slot *n* is line channel C*n*: bits 1–7 of the frame at *n* = 0..6, bit 9
 at *n* = 7 (S sits at bit 8; there is no hole in the sockets). Straight
 across, after the conversion of §5.2½.
 
-| T | | | what this unit does with it |
+| appearances | | | what this unit does with it |
 |---|---|---|---|
 | a, col *n*+1 | `C_TX[n]` | **out** | incoming C off the line, through the two `'174`s of §5.5 into the block's C commutator. `FILL` while not locked |
 | a, col *n*+9 | `A_TX[n]` | **out** | incoming A, through the RC and Schmitt of `mf8-spec.md` §14. Held 0 while not locked, so every M falls |
@@ -581,21 +591,21 @@ across, after the conversion of §5.2½.
 | c, 25–32 | `+5 V` / `GND` | in | **the only rail.** No `±12 V`, no `−48 V`, no `RING`. Same as the baseband trunk card |
 
 The unit drives four pins a slot, and only four — the same four
-`common-cards.md` §1.2 allows a card. Commons on T do not exist. a2
-`LOOP_HB`, a7 `RX_CLK`, a8 `RX_OCT`, a11 `MUTE` are P pins the unit never
-sees: the first is for a CVSD line card (`clocks.md` §4), the next two
-are `TX_CLK` / late `TX_OCT` in an exchange, and MUTE-as-input is tied
-locked because a block had no link. This unit *is* the link, and its
+`common-cards.md` §1.2 allows a card. Commons are not on the appearances
+shell. a2 `LOOP_HB`, a7 `RX_CLK`, a8 `RX_OCT`, a11 `MUTE` are ribbon-slot
+pins the unit never sees: the first is for a CVSD line card (`clocks.md` §4),
+the next two are `TX_CLK` / late `TX_OCT` in an exchange, and MUTE-as-input
+is tied locked because a block had no link. This unit *is* the link, and its
 mute is generated here, not read here.
 
 **a12 is still where a trunk differs from a line**, as
 `baseband.md` §3.5 had it for one channel: the word is conditional on a
 wire outside the card. Eight times, one enable.
 
-### 5.4 C — this adapter's use of the commons
+### 5.4 Commons — this adapter's use of the header commons
 
 Odd pins signal, even ground — the ribbon idiom, same as the pass. Pin
-roles are the contract's (`fabric.md` §5.2); values here are this unit's:
+roles are the block header's (`fabric.md` §5.2); values here are this unit's:
 
 | pin | | pin | |
 |---|---|---|---|
@@ -605,16 +615,16 @@ roles are the contract's (`fabric.md` §5.2); values here are this unit's:
 | 7 | `MUTE_BLK` **out** — asserted with `MUTE` (not locked, or no carrier) | 8 | `GND` |
 | 9 | spare: recovered-clock lead if a loop-timed slave is ever designed. Open until then | 10 | `GND` |
 
-The block ORs `MUTE_BLK` into its `BUSY` commutator — all eight inputs, or the `'151`'s output, one gate, jumpered in when T is stuffed for an adapter (`fabric.md` §5.2). Pulled down on the block so an unfitted C does not busy a line stuffing.
+The block ORs `MUTE_BLK` into its `BUSY` commutator — all eight inputs, or the `'151`'s output, one gate, jumpered in when the header is stuffed for an adapter (`fabric.md` §5.2). Pulled down on the block so an unfitted commons shell does not busy a ribbon stuffing.
 
 `LOCK` and `CD` lamps face the operator from Trunk-D, as `mf8-trunk.md`
-already had them. They are not on C and not on T. The panel may take
+already had them. They are not on the header. The panel may take
 them off the board; they clock nothing.
 
-**Why `MUTE_BLK` is on C, not a11 or a14**, is the contract's (`fabric.md`
+**Why `MUTE_BLK` is on the header commons, not a11 or a14**, is the contract's (`fabric.md`
 §5.2). This unit asserts it with `MUTE` (not locked, or no carrier). The
-block's part, one gate, is the only change on the fabric side of T. A
-line-card stuffing leaves it off.
+block's part, one gate, is the only change on the fabric side of the header. A
+ribbon stuffing leaves it off.
 
 ### 5.5 Clocks: the payload is the exchange's, the line is the unit's
 
@@ -626,7 +636,7 @@ The line is 1024 kbps / 2.048 MBaud, and `LINE_HB` is this unit's.
 
 **The unit owns the line oscillator: 4.096 MHz, tap Q1, `LINE_HB` 2.048 MHz.**
 That is `mf8-spec.md` §9.1's crystal, doing the job it was picked for.
-It does not ride H, C or T. The clock card's 4.096 MHz stays on the
+It does not ride H or the block header. The clock card's 4.096 MHz stays on the
 clock card for the fabric, as `mainboard.md` §8 wanted. A 10-bit line
 would have needed 2.560 MHz; this unit does not.
 
@@ -685,7 +695,7 @@ unequipped until the 2×`'165` is loading (`extensions.md` §2.2).
 
 R, the remote alarm (`mf8-spec.md` §3.5), is generated here: held 1
 while `MUTE`, bit 11 of the frame. S keeps both pads. It is not a pin
-on T. A channel card never sees it. K0–K3 are levels on D: lamps on
+on the block header. A channel card never sees it. K0–K3 are levels on D: lamps on
 the unit, or a scan, not fabric ports.
 
 ### 5.7 Trunk-D / Trunk-A
@@ -696,22 +706,22 @@ other face.
 
 | | today, on an MF8 shelf | this unit |
 |---|---|---|
-| **Trunk-D** | stack header C: clocks, `MUTE`, six C/A toward six channel layers | **T + C**: eight C/A toward the block, `MUTE_BLK` instead of shelf `MUTE`, no stack `'244`, no empty-slot pulls (the block already pulls an unfitted `C_TX` to `FILL`) |
+| **Trunk-D** | stack header C: clocks, `MUTE`, six C/A toward six channel layers | **block header**: eight C/A toward the block, `MUTE_BLK` instead of shelf `MUTE`, no stack `'244`, no empty-slot pulls (the block already pulls an unfitted `C_TX` to `FILL`) |
 | **Trunk-A** | pair, encoder, classifier, magnetics | the same. Rate-plug timers on A at the 1024 kbps row `mf8-spec.md` §9.7 already has |
-| **outline** | 100 × 100, spacer-stack | not required to be 100 × 100. It has to mate T and C on a block and present A at the rear. Two boards, pass between them, same split |
+| **outline** | 100 × 100, spacer-stack | not required to be 100 × 100. It has to mate the block header on a block and present A at the rear. Two boards, pass between them, same split |
 
 D no longer drives `RX_CLK` / `RX_OCT` / `MUTE` onto a shelf. Those nets
-are the exchange's, on cable A, and C brings D only what it listens to.
+are the exchange's, on cable A, and the header commons bring D only what it listens to.
 The framer still makes lock from `RX_BIT`, `RX_STB` and `/CD`.
 
 ### 5.8 What the block still has to be
 
 The unit is a block adapter: eight cards electrically, within the contract
 (`fabric.md` §5.2). Everything that was never a card, and the eight port
-circuits a card would have brought to an IDC tap, stay on the block
-behind T.
+circuits a card would have brought to a ribbon slot, stay on the block
+behind the header.
 
-- **Eight port circuits**, behind T: the latch, the three `'151`s, the
+- **Eight port circuits**, behind the header: the latch, the three `'151`s, the
   capture `'74`, the supervision of `fabric.md` §3.5. Fitted with the group,
   not along the ribbon. `/ANS` tied low means a trunk port does not ring, as
   that section already required.
@@ -720,10 +730,10 @@ behind T.
 - **A monitor pool** (`monitor.md` §1, `baseband.md` §4). A group is
   still one block, so a monitor still reads that block's M — which is
   this unit's `A_TX`. Fitting the unit in a block of lines is what
-  stuffing T for it *means*; a block with no monitor can pass a flood
+  stuffing the header for it *means*; a block with no monitor can pass a flood
   and cannot own a call. `MUTE`/`BUSY` is still one force, which is why
   §6.2 does not scatter.
-- **The `MUTE_BLK` OR** of §5.4, jumpered in. A line stuffing leaves it
+- **The `MUTE_BLK` OR** of §5.4, jumpered in. A ribbon stuffing leaves it
   off.
 - **Nothing on H.** The unit is not a tap. The cable still has ten taps
   however many groups are fitted (`mainboard.md` §2.4, the part that
@@ -759,11 +769,11 @@ A handful, on one card, as §2 said. The fabric does not pay it.
 
 | | this unit | a channel card on P | the shelf trunk | the baseband trunk |
 |---|---|---|---|---|
-| face | T + C block-adapter contract (`fabric.md` §5.2) | one IDC tap on the block ribbon | 2 × 32 stack header (`common-cards.md` §7.2) | one IDC tap on the block ribbon |
+| face | **block header** / **block adapter** (`fabric.md` §5.2) | one **slot** on the block ribbon | 2 × 32 stack header (`common-cards.md` §7.2) | one **slot** on the block ribbon |
 | ports | eight, one link | one | six (eight after adoption), one link | one |
 | line | MF8, on A | the subscriber pair, on R | MF8, on A | four conductors, on R |
 | `+5 V` only | yes | no, except the data card and this family's trunks | no: it drives a shelf that wants ±12 and −48 | yes |
-| sits beside a line on the same block | no: it is the adapter stuffing of that star | yes | no | yes (`network.md` §1.1) |
+| sits beside a line on the same block | no: it is the non-breakout mate of that star | yes | no | yes (`network.md` §1.1) |
 
 The far end of the link is either another of these units (a tie) or a
 stock MF8 shelf of channel cards (a terminal). That shelf's trunk is
@@ -838,9 +848,9 @@ flying C/A tails and a map the hardware does not have. Monitors sit on a
 trunk *block* and read that block's M. `MUTE_BLK` forces a *block's*
 `BUSY`. A dead link that had to busy-out eight scattered ports is eight
 forces, not one. Direction hunt would still find them (the word is on
-the card), and that is not enough. That is why the block-adapter contract
+the card), and that is not enough. That is why the block header
 collects a whole star (`fabric.md` §5.2): assignment anywhere in this
-document means **any block 1–7**, by stuffing T for this adapter there —
+document means **any block 1–7**, by stuffing the header for this adapter there —
 not because MF8 somehow *is* a block, but because an eight-channel group
 is one failure domain.
 
@@ -895,14 +905,14 @@ Done in the live tree. The list is the edits, not a surprise.
 | [mf8-spec.md](../mf8/mf8-spec.md) | 16-bit frame, F = 0xFFFE, guard 0,8, eight C + P, R, K0–K3, §5 seating C0/C7, §10–11 `'150` / 4-bit counter, title |
 | [frame-rate.md](../mf8/frame-rate.md) | N = 14 with eight switched and six overhead, octet = q[2:0] |
 | [mf8-backplane.md](../mf8/mf8-backplane.md) | eight channel slots on the shelf, not six |
-| [mf8-trunk.md](../mf8/mf8-trunk.md) | eight C/A pairs on Trunk-D; the exchange face is T + C, not stack header C; `TX_BIT` at 1024 kbps |
+| [mf8-trunk.md](../mf8/mf8-trunk.md) | eight C/A pairs on Trunk-D; the exchange face is the **block header**, not stack header C; `TX_BIT` at 1024 kbps |
 | [protocol.md](protocol.md) §5 | the map of §6.1; delete "a link's channels sit where they are on the wire" as an identity |
-| [fabric.md](fabric.md) §1.1, §5.2 | delete "a trunk block's highway is an MF8 frame with F and S given back"; the commutator is only a commutator; **T + C is the block-adapter contract** (eight slot appearances + `MUTE_BLK`); `MUTE_BLK` OR on an adapter stuffing |
+| [fabric.md](fabric.md) §1.1, §5.2 | delete "a trunk block's highway is an MF8 frame with F and S given back"; the commutator is only a commutator; **block header** is the star collect (eight slot appearances + `MUTE_BLK`); `MUTE_BLK` OR when a **block adapter** mates it |
 | [network.md](network.md) | 10–17 first group of eight; further groups 20–27, …; one word to eight channels; `MUTE_BLK` is the `BUSY` force that section named |
 | [topology.md](topology.md) | §1's table and the tandem line; Erlang rows for 8 / 16 / 24 / 32 |
 | [terminal.md](terminal.md) | eight remote lines, `h0–h7`; K bits from the shelf |
-| [mainboard.md](mainboard.md) §2.4 | the unit is on T, not a highway tap; line `LINE_HB` 2.048 MHz is not on the cable |
-| [block-stack.md](block-stack.md) | T's map is the block-adapter contract on 8 × 8 (`fabric.md` §5.2); an adapter stuffing omits the riser of P |
+| [mainboard.md](mainboard.md) §2.4 | the unit is on the **block header**, not a highway tap; line `LINE_HB` 2.048 MHz is not on the cable |
+| [block-stack.md](block-stack.md) | the block header's map is the star collect on 8 × 8 (`fabric.md` §5.2); a block adapter omits the block-ribbon breakout |
 | [observers.md](observers.md) | the silkscreen: row 1 is eight trunks |
 | [common-cards.md](common-cards.md) | exchange-side 2 × 32 not used for this unit; shelf trunk slot still a stack header, eight wide; C is not P |
 | [channel-cards.md](channel-cards.md) §4.3 | data-card keying: not C0 and C7 together |
@@ -944,7 +954,7 @@ pair at the F-lane spacing is C0 and C7; the voice residual releases in
 slow S states; four five-apart pairs. **Closed by `mf8_baud.py`:** plug
 arithmetic and relative eye at 512 / 640 / 1024 kbps. **Open:** which
 eight-channel frame to freeze. **Closed in §5:** the unit is an MF8
-adapter on T + C (`fabric.md` §5.2), not eight IDC taps and not H;
+**block adapter** on the **block header** (`fabric.md` §5.2), not eight ribbon slots and not H;
 `MUTE_BLK` is the `BUSY` force.
 
 What is not open, if this is adopted: whether the highway and the MF8 line

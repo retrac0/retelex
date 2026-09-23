@@ -18,6 +18,7 @@
 // to prevent.
 `timescale 1ns/1ps
 
+(* keep_hierarchy *)          // one 74HC259 — do not flatten for synth-hc BOM
 module hc259 (
     input            clk,       // the model's one domain; the part has no clock
     input            clr_n,     // /CLR, asynchronous, clears all eight

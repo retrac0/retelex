@@ -1,0 +1,13 @@
+* AMI three-level driver — EP/EM (0/5) → ±VDRV on the pair.
+* 56 V back-to-back zeners (anode–anode) for surge; no forward clamp on signal.
+.subckt AMI_TX EP EM TIP RING VDRV_P VDRV_N
+Btip tip_i 0 V=v(VDRV_P)/5*v(EP)+v(VDRV_N)/5*v(EM)
+Bring ring_i 0 V=-v(tip_i)
+Rs_t tip_i TIP 50
+Rs_r ring_i RING 50
+* Bidirectional TVS ≈56 V: anode–anode zeners
+Dz1 TIP tvs_m TVS56
+Dz2 RING tvs_m TVS56
+Rcm_t TIP 0 100k
+Rcm_r RING 0 100k
+.ends AMI_TX

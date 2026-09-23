@@ -1,0 +1,17 @@
+* Schmitt RC oscillator — one TL072 section
+* f ≈ 1 / (2.2 · Rtim · Ctim)  for equal divider on +IN (β = 0.5)
+* Pins: OUT VCC VEE
+*
+* Instance:  X1 out vcc vee schmitt_osc Rtim=10.7k Ctim=100n
+
+.subckt schmitt_osc OUT VCC VEE params: Rtim=10.7k Ctim=100n
+
+Rth1 OUT TH {Rtim}
+Rth2 TH 0 {Rtim}
+Rcharge OUT TIM {Rtim}
+Ctim TIM 0 {Ctim}
+Xamp TH TIM VCC VEE OUT TL072
+* Kick so the Boyle deck leaves the metastable midpoint in .tran uic
+.ic v(TIM)=0.2
+
+.ends schmitt_osc

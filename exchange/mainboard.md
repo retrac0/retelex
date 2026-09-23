@@ -212,14 +212,17 @@ sixteen highways on 0.05-inch pitch is not worth the one cable it saves; each
 subrack takes its rails from its own PSU slot as `mf8-backplane.md` §8 has it,
 and the mainboard carries `+5 V` and ground only.
 
-**The MF8 trunk card is not a bus tap either.** It sits on its block and
-taps `HC[h]` / `HA[h]` (`mainboard.md` §2.4, `mf8-unit.md` §1): those are
-the commutation of this block's `C_TX` / `A_TX`, which is what goes on the
-line after F and S are inserted. It takes `HCLK`, `LINE_HB`, `SLOT` and
-`CLK_8K` (`TX_OCT`) from the clock card through the block. Fabric `LINE_HB` is also the
-line half-bit clock at 1.024 MHz. So the cable has ten taps — eight
-blocks, the clock card and common control — however many trunks are
-fitted.
+**The MF8 trunk unit is not a bus tap either.** It is a **block adapter** on
+its block's **block header** (`fabric.md` §5.2, `mf8-unit.md` §1): eight
+card-side appearances, six live (1–3, 5–7), `MUTE_BLK` on the commons. It
+does not tap `HC[h]` / `HA[h]` — those are the commutation of this block's
+`C_TX` / `A_TX` after the unit has already driven them. Transmit needs the
+ports' `C_RX` / `A_RX` off the header (`baseband.md` §6). It takes `HCLK`,
+`LINE_HB`, `SLOT` and `CLK_8K` (`TX_OCT`) from the clock card through the
+block (and the header commons). Fabric `LINE_HB` is also the line half-bit
+clock at 1.024 MHz for the fused six-channel frame. So the cable has ten
+taps — eight blocks, the clock card and common control — however many
+trunks are fitted.
 
 **Registers, resolvers and the marker share one tap.** A register's probe reads
 its caller's hook off `HA` and regenerates its own strobes from `HCLK` and

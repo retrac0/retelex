@@ -1,0 +1,27 @@
+* AMI RX front end — clamp to ±5 V, diff, LP @ ~256 kHz, |v|, peak, mark
+.subckt AMI_RX_FRONT TIP RING MARK MARK_A VDD VEE
+Rt TIP RING 120
+Rin_t TIP mid_t 1k
+Rin_r RING mid_r 1k
+Dc1 mid_t VDD Dclamp
+Dc2 VEE mid_t Dclamp
+Dc3 mid_r VDD Dclamp
+Dc4 VEE mid_r Dclamp
+.model Dclamp D(Is=1e-14 Rs=0.5 Cjo=2p)
+Bdiff se 0 V=v(mid_t)-v(mid_r)
+Rse se 0 1Meg
+Rlp1 se lp1 620
+Clp1 lp1 0 1n
+Rlp2 lp1 lp2 620
+Clp2 lp2 0 1n
+Babs abs 0 V=abs(v(lp2))
+Rabs abs 0 1Meg
+Dpk abs peak Dclamp
+Cpk peak 0 22n
+Rpk peak 0 47k
+Bthr thr 0 V=max(0.4*v(peak),0.15)
+Rthr thr 0 1Meg
+Bmark MARK 0 V=2.5*(1+tanh(80*(v(abs)-v(thr))))
+Raa abs MARK_A 1k
+Caa MARK_A 0 2p
+.ends AMI_RX_FRONT

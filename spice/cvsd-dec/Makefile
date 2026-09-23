@@ -4,7 +4,7 @@
 NGSPICE ?= ngspice
 OUT := out
 
-.PHONY: all loop check clean
+.PHONY: all loop check talkers talkers-fast clean
 
 all: loop check
 
@@ -16,6 +16,14 @@ loop: $(OUT)
 
 check:
 	python3 check.py
+
+# Full talker campaign: 1 s × talkers 1–7, 3-way parallel (~15–20 min).
+talkers:
+	python3 talker_snr.py --seconds 1 -j 3
+
+# Quicker smoke: 0.25 s × three talkers (speech-onset aligned).
+talkers-fast:
+	python3 talker_snr.py --talkers 1,4,6 --seconds 0.25 -j 3
 
 clean:
 	rm -rf $(OUT)

@@ -261,11 +261,12 @@ it in the register, writing the same store as the dial.
 - **§2's switching transients** (+33.6 dB into all-ones, +2.0 dB and
   −66.5 dB into `1100`) are still from a scratch script. Everything else here
   is `subline.py`, and `subline.log` is the run.
-- **Clocking of the upstream.** A phone loop-timed from the downstream gives a
-  slip-free upstream and needs a DPLL or PLL in the phone (`line-codes.md`
-  §2.2 C); a phone on its own crystal slips one CVSD bit every ~150 ms at
-  100 ppm, which the codec should not hear. Neither is designed or measured,
-  and the same question exists between the two directions of the trunk.
+- **Clocking of the upstream.** **Decided for the packaged phone (`su-1.md`
+  §5): loop-timed from the downstream** — no local crystal; recovered §9.4
+  strobe clocks TX, the dialer, and a ~1 Hz line LED (dark without carrier).
+  Hard lock vs DPLL (`line-codes.md` §2.2 C) is not yet drawn or measured. A
+  free-run crystal phone is **not taken**. The same loop-time question remains
+  open between the two directions of a trunk.
 - **Glare.** A hook closure during a ring burst feeds the decoder a few ms of
   zeros before the exchange switches. §4's `1010` substitution while RING is
   detected covers it by reasoning only.

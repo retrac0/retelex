@@ -27,6 +27,9 @@ Usage:  python3 sim/mf8_line.py            everything, ~25 min
         python3 sim/mf8_line.py clean      clean line, both codes, per channel
         python3 sim/mf8_line.py noise      Gaussian sweep
         python3 sim/mf8_line.py plant      impulse and attenuation
+
+AMI path (`rx_ami`) is shared with MF2: `sim/mf2_line.py` calls it at
+line=256e3.  Hardware sketch for that PHY: mf2/ami.md.
 """
 import sys, gc, time, numpy as np
 from scipy import signal
@@ -59,47 +62,64 @@ def sources(secs=SECS):
 
 # ----------------------------------------------------------------- the line
 
-def _lp(x, fc, order=2):
-    b, a = signal.butter(order, min(0.99, 2 * fc / FS), btype='low')
+def _lp_at(x, fc, fs, order=2):
+    b, a = signal.butter(order, min(0.99, 2 * fc / fs), btype='low')
     return signal.lfilter(b, a, x)
 
 
-def rx_dm(ln, sd=0.0, imp=0.0, atten=1.0, seed=1):
-    """spec.md 5-6: differential Manchester, hysteretic slicer, 0.75-cell
-    monostable interval classifier.  No clock anywhere on the timing path."""
+def rx_dm(ln, sd=0.0, imp=0.0, atten=1.0, seed=1, *,
+          line=LINE, os=OS, cable=CABLE):
+    """Differential Manchester: hysteretic slicer, 0.75-cell monostable
+    interval classifier.  No clock on the timing path (mf8-spec.md §9.4).
+
+    `line` / `os` default to MF8 512 kbps; MF2 passes line=256e3 for a
+    same-bit-rate DM reference against AMI (`mf2_line.py`)."""
+    fs = line * os
     rng = np.random.default_rng(seed)
-    x = np.repeat(fast.dm_encode(ln).astype(np.float64) * 2 - 1, OS // 2)
-    x = _lp(x, CABLE, 1); x /= np.abs(x).max()
+    x = np.repeat(fast.dm_encode(ln).astype(np.float64) * 2 - 1, os // 2)
+    x = _lp_at(x, cable, fs, 1); x /= np.abs(x).max()
     if atten != 1.0:
         x *= atten
     if sd:
         x += rng.normal(0, sd, len(x))
     if imp:
-        x += phy.plant_noise(len(x), FS, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
-    w = fast.slice_hyst(_lp(x, 2 * LINE, 2), 0.05)
+        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
+    w = fast.slice_hyst(_lp_at(x, 2 * line, fs, 2), 0.05)
     del x; gc.collect()
-    b = fast.mono_decode(w, OS, thr=0.75, dead=0.25)
+    b = fast.mono_decode(w, os, thr=0.75, dead=0.25)
     del w; gc.collect()
     return b
 
 
-def rx_ami(ln, sd=0.0, imp=0.0, atten=1.0, seed=1):
-    """AMI: one symbol per bit, so half the symbol rate and a receive filter
-    at 512 kHz.  Clock is an 8x DPLL off the local 4.096 MHz crystal
-    (line-codes.md 2.2 option C), modelled by sampling at FS/4."""
+def rx_ami(ln, sd=0.0, imp=0.0, atten=1.0, seed=1, *,
+           line=LINE, os=OS, cable=CABLE):
+    """AMI encoder/decoder used by MF8 plant runs and by MF2.
+
+    One symbol per bit; receive filter at `line` Hz.  Clock is an 8× DPLL off
+    the local 4.096 MHz crystal (line-codes.md §2.2 option C), modelled by
+    sampling at fs/4 into `fast.ami_decode` (same rule as `phy.ami_decode`).
+
+    Hardware sketch: `mf2/ami.md`.  Do not fork this path for MF2 — change
+    rate via `line=` only."""
+    fs = line * os
     rng = np.random.default_rng(seed)
-    x = np.repeat(fast.ami_encode(ln), OS)
-    x = _lp(x, CABLE, 1); x /= np.abs(x).max()
+    x = np.repeat(fast.ami_encode(ln), os)
+    x = _lp_at(x, cable, fs, 1); x /= np.abs(x).max()
     if atten != 1.0:
         x *= atten
     if sd:
         x += rng.normal(0, sd, len(x))
     if imp:
-        x += phy.plant_noise(len(x), FS, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
-    x = _lp(x, LINE, 2)
-    b = fast.ami_decode(x[::4], OS // 4, thresh=0.5)
+        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
+    x = _lp_at(x, line, fs, 2)
+    b = fast.ami_decode(x[::4], os // 4, thresh=0.5)
     del x; gc.collect()
     return b
+
+
+def _lp(x, fc, order=2):
+    """MF8 default-rate lowpass (kept for any local callers)."""
+    return _lp_at(x, fc, FS, order)
 
 
 CODES = {'diff Manchester': rx_dm, 'AMI': rx_ami}

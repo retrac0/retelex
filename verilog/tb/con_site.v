@@ -171,7 +171,7 @@ module con_site #(
             .release_it(r_release[gr]), .restart(r_restart[gr]),
             .busy(r_busy[gr]), .port(), .src(r_held[gr*6 +: 6]),
             .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*20 +: 20]),
-            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]));
+            .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]), .hook());
     end endgenerate
 
     marker #(.NREG(NREG), .DIALTONE(PDT), .NOGO(PNG),

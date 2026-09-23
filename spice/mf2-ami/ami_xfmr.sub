@@ -1,0 +1,6 @@
+* Optional 1:1 isolation transformer (≥33 mH class; 3.3 mH here for 256 kBaud sim)
+.subckt AMI_XFMR A B TIP RING
+Lp A B 3.3m
+Ls TIP RING 3.3m
+K1 Lp Ls 0.99
+.ends AMI_XFMR

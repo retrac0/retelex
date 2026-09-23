@@ -1,0 +1,60 @@
+/* 74HC SSI — flip-flop cells only for dfflibmap.
+ * Combinational mapping uses abc -g + tech/hc/hc_map.v (ABC's liberty
+ * reader segfaults on this Yosys build).
+ */
+library(hc_ssi) {
+  delay_model : generic_cmos;
+  revision : 1.1;
+
+  cell(HC74_DFF) {
+    area : 0.5;
+    ff("IQ", "IQN") {
+      clocked_on : "CP";
+      next_state : "D";
+    }
+    pin(CP) { direction : input; clock : true; }
+    pin(D)  { direction : input; }
+    pin(Q)  { direction : output; function : "IQ"; }
+  }
+
+  cell(HC74_DFF_NCLR) {
+    area : 0.5;
+    ff("IQ", "IQN") {
+      clocked_on : "CP";
+      next_state : "D";
+      clear      : "CDN'";
+    }
+    pin(CP)  { direction : input; clock : true; }
+    pin(D)   { direction : input; }
+    pin(CDN) { direction : input; }
+    pin(Q)   { direction : output; function : "IQ"; }
+  }
+
+  cell(HC74_DFF_NPRE) {
+    area : 0.5;
+    ff("IQ", "IQN") {
+      clocked_on : "CP";
+      next_state : "D";
+      preset     : "SDN'";
+    }
+    pin(CP)  { direction : input; clock : true; }
+    pin(D)   { direction : input; }
+    pin(SDN) { direction : input; }
+    pin(Q)   { direction : output; function : "IQ"; }
+  }
+
+  cell(HC74_DFF_NCLR_NPRE) {
+    area : 0.5;
+    ff("IQ", "IQN") {
+      clocked_on : "CP";
+      next_state : "D";
+      clear      : "CDN'";
+      preset     : "SDN'";
+    }
+    pin(CP)  { direction : input; clock : true; }
+    pin(D)   { direction : input; }
+    pin(CDN) { direction : input; }
+    pin(SDN) { direction : input; }
+    pin(Q)   { direction : output; function : "IQ"; }
+  }
+}

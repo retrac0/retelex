@@ -28,10 +28,11 @@ and any number of ports can listen to the same one.
 
 A highway is one wire where eight ports take turns.  It is eight bit
 positions to a 64 kHz frame, 512 kbps — every position a port, no line
-code, and the clock on a wire of its own.  On a trunk block that wire
-**is** the MF8 line frame without the line code: F and S occupy slots 0 and 4,
-and the six payload channels sit at 1–3 and 5–7 (`mf8-spec.md` §2,
-`mf8-unit.md` §1).
+code, and the clock on a wire of its own.  An MF8 trunk group's *line*
+still has that eight-bit shape with F and S at bits 0 and 4 (`mf8-spec.md`
+§2); the fabric highway of that block is ordinary `HC[h]` from the eight
+`C_TX` on the **block header** — seats 0 and 4 unequipped, the unit
+inserting F and S on the way to the pair (`mf8-unit.md` §1).
 
 Every card puts out one bit a frame on its `C_TX` pin and holds it for the whole
 frame (it changes at the frame edge, as on the MF8 backplane). The block's
@@ -109,10 +110,11 @@ What follows from the shape:
   from the scanner while the marker owns the bus, so a visit does not need a
   fresh serial word a port; `/BLK` still comes from the once-a-block steer. A
   console `PROBE` uses the serial word's `DST[2:0]` instead.
-- **A trunk block's highway is an MF8 frame with F and S given back**: the six
-  payload channels sit at slots 1–3 and 5–7; slots 0 and 4 are ordinary ports
-  on that block (`protocol.md` §5). The commutator *is* the trunk transmitter's
-  frame mux without the line code (`mf8-spec.md` §10).
+- **An MF8 trunk group uses six of eight seats**: the **block adapter** drives
+  appearances 1–3 and 5–7; 0 and 4 are unequipped on the fabric (`protocol.md`
+  §5). F and S exist on the line. The unit's line mux may still address payload
+  with `SLOT` (`mf8-unit.md` §1, `mf8_trunk_card.v`). The commutator remains only
+  a commutator — likeness to the old frame mux, not identity with the pair.
 
 **Why eight by eight.** Sixty-four is the product; the split decides the parts.
 More slots on a wire means a faster wire (16 slots is 1.024 Mbps); more wires
@@ -154,7 +156,7 @@ of the twenty conductors this table used to list.
 
 | function | part | notes |
 |---|---|---|
-| Commutators: `C`, `A` | 2 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Exactly the trunk transmitter's frame mux (`mf8-spec.md` §10) without F and S |
+| Commutators: `C`, `A` | 2 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Same job as an MF8 shelf's frame mux (`mf8-spec.md` §10), without F and S — likeness, not a tap of the pair |
 | Commutators: `BUSY`, the word | 2 × 74HC151 | addressed by the **scanner's** `DST[2:0]` (live from the marker while it owns the bus; from the serial word on a console `PROBE`). Steady on `PB` for the visit |
 | Ringback substitution ahead of the `C` commutator | 2 × 74HC157 | port *k* sends `RBT` instead of its card's `C_TX` while it is being rung (§3.5) |
 | Strobe decoder | 74HC138 | addressed by `SLOTQ`; `HCLK` on an active-low enable, so line *k* is low for **the second half of cell *k*** and its falling edge is the middle of the cell |
@@ -305,9 +307,11 @@ off one tap is this:
 ```
   fabric cable A ──▶ mainboard (block shunt: HC / HA / `/BLK`) ──▶ block shared board (§3.1)
                                                           │
-                                                          └─ **block ribbon** (2 × 16)
+                                                          └─ **block header**  (§5.2)
                                                                │
-                                               IDC tap 0 … IDC tap 7   ← channel sockets
+                                                    **block ribbon** (breakout)
+                                                               │
+                                                    slot 0 … slot 7  ← channel sockets
                                                                │
                                                     card + port circuit (§3.2, §3.5)
                                                     only when that slot is fitted
@@ -318,91 +322,95 @@ write decoders, highway drivers and receivers, the serial word path: ≈ 15¼
 packages of §3.1. It drives `HC[h]` / `HA[h]`, listens to every highway, and
 answers `/BLK`. It does not hold eight idle port circuits.
 
-**The card side is a star on a block ribbon.** Electrically it is still §2 /
-`baseband.md` §2.1: six signals a slot point to point, clocks and rails common,
-no slot-ID, nothing contending. Physically that star is carried on a **block
-ribbon** in the same connector family as the channel socket (`common-cards.md`
-§1). The IDC taps along the block ribbon *are* the channel sockets. Commons run
-the length; per-slot lines peel to one tap. It is a loom that preserves the
-star, not a multi-drop bus for `C_TX`.
+**The card side is a star.** Electrically it is still §2 / `baseband.md` §2.1:
+six signals a slot point to point, clocks and rails common, no slot-ID, nothing
+contending. The **block header** is that star collected on the shared board.
+The usual stuffing **breaks it out**: a **block ribbon** in the same connector
+family as the channel socket (`common-cards.md` §1) ends at the header; the
+**slots** along the ribbon *are* the channel sockets. Commons run the length;
+per-slot lines peel to one slot. It is a loom that preserves the star, not a
+multi-drop bus for `C_TX`.
 
 **A port circuit is populated only with its card.** The ≈ 8¼ packages of §3.2 and
-§3.5 — latch, selects, capture, supervision — sit with the card at that tap, not
-as empty seats on the shared board. An unfitted tap leaves the commutator input
+§3.5 — latch, selects, capture, supervision — sit with the card at that slot, not
+as empty seats on the shared board. An unfitted slot leaves the commutator input
 pulled to `FILL`, A and `BUSY` at 0, and no word: unequipped (`mvp.md` §2). The
 MVP fits two port circuits on one block and leaves the other six out; that is the
 normal growth rule, not a special case.
 
-**What a line-card installation is.** Card + its port circuit on one block-ribbon
-tap. Shared logic and the highway stay on the block end of the block ribbon. Two
-blocks of eight fitted ports fill an 84 HP subrack beside their cards; in SO-16
-the shared board alone is a single Eurocard. Forty-eight lines are then about
-500 packages of line cards, 640 of fabric and a hundred of common control.
+**What a line-card installation is.** Card + its port circuit on one ribbon
+slot. Shared logic and the highway stay on the shared board behind the block
+header. Two blocks of eight fitted ports fill an 84 HP subrack beside their
+cards; in SO-16 the shared board alone is a single Eurocard. Forty-eight lines
+are then about 500 packages of line cards, 640 of fabric and a hundred of
+common control.
 
-### 5.2 The block-adapter face — T + C
+### 5.2 The block header — and the block adapter
 
-A second stuffing of the same star: one board that is **eight ordinary slot
-appearances** electrically, collected at the block end of the block ribbon,
-instead of eight IDC taps. That face is a fabric contract for an eight-appearance
-adapter.
-**MF8 trunks do not use it** — they tap the highway (`mf8-unit.md` §1).
-`mf8-unit.md` measured an eight-channel split that would have; that path is
-not taken.
+A second stuffing of the same star: one board mates the **block header**
+directly — eight ordinary slot appearances electrically — and the block ribbon
+is not populated. That board is a **block adapter**. The header is the fabric
+contract; the adapter is any non-breakout mate of it.
+**Live six-channel MF8** is a block adapter on this header (`mf8-unit.md` §1):
+appearances 1–3 and 5–7 live, 0 and 4 unequipped, rear the MF8 pair. The
+eight-channel payload split measured in that file is **not taken**.
 
 **Principle.** Each appearance is the same six per-slot signals a channel card
-uses on an IDC tap of the block ribbon (`common-cards.md` §1), same four pins a card may drive,
+uses on a ribbon slot (`common-cards.md` §1), same four pins a card may drive,
 same word and `/ANS`. The block's commutator, latches, captures and supervision
-are unchanged: they sit behind the collect as they sit behind a tap. The adapter
+are unchanged: they sit behind the header as they sit behind a slot. The adapter
 does not tap `HC`/`HA`. What is block-scoped — one force that busies all eight
-ports together — is not smuggled onto a slot pin; it is a pin of its own.
+ports together — is not smuggled onto a slot pin; it is a pin of its own on the
+header commons.
 
 ```
   fabric cable A ──▶ mainboard ──▶ block shared board (§3.1)
                                │
-                               ├─ P: **block ribbon** → IDC taps = channel sockets (line stuffing)
-                               │
-                               └─ T + C: collect of the star (adapter stuffing)
-                                    eight port circuits still behind T
+                               └─ **block header**
+                                    ├─ breakout: **block ribbon** → slots = channel sockets
+                                    └─ non-breakout: **block adapter**
+                                         eight port circuits still behind the header
 ```
 
-**Dual footprint, one stuffing.** A block kept as lines populates the block-ribbon
-taps (P). A block kept as an adapter group mates **T** and **C** and does not
-populate those taps. Mixing a line card with an adapter on the same block is
-not a configuration: there is nowhere to plug the card, and the group's
-busy-out is block-wide. Eight ribbon plugs on one board are refused — the taps
-are spaced for separate cards, and a11 still would not carry a busy force.
+**Dual footprint, one stuffing.** A block kept as lines populates the ribbon
+slots off the header. A block kept as an adapter group mates a **block adapter**
+to the header and does not populate those slots. Mixing a line card with an
+adapter on the same block is not a configuration: there is nowhere to plug the
+card, and the group's busy-out is block-wide. Eight ribbon plugs on one board
+are refused — the slots are spaced for separate cards, and a11 still would not
+carry a busy force.
 
 | | shell | what |
 |---|---|---|
-| **T** | DIN 41612 type B, 64-way | eight slots of `C_TX`, `A_TX`, `C_RX`, `A_RX`, word, `/ANS`, plus `+5 V` and `GND`. Column *s* in each group of eight is slot *s*. Direction is the *card's* view: `out` is the adapter driving the block. Column assignment is this contract's; the measured-and-not-taken adapter's per-pin behaviour is `mf8-unit.md` §5.3 |
-| **C** | 2 × 5, odd signal even ground, keyed | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out**; one spare. Commons T does not carry |
+| **appearances** | DIN 41612 type B, 64-way | eight slots of `C_TX`, `A_TX`, `C_RX`, `A_RX`, word, `/ANS`, plus `+5 V` and `GND`. Column *s* in each group of eight is slot *s*. Direction is the *card's* view: `out` is the adapter driving the block. Column assignment is this contract's; the measured-and-not-taken adapter's per-pin behaviour is `mf8-unit.md` §5.3 |
+| **commons** | 2 × 5, odd signal even ground, keyed | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out**; one spare. Commons the appearances shell does not carry |
 
 **`MUTE_BLK`.** Asserted by the adapter when the group must not be hunted —
 link down, unlocked, no carrier, or whatever failure domain that adapter owns.
 The block ORs it into its `BUSY` commutator (all eight inputs, or the `'151`'s
-output — one gate), jumpered in when T is stuffed for an adapter. Pulled so an
-unfitted C does not busy a line stuffing. It is not a11 (common listen-only,
-tied locked in an exchange) and not a14 on slot 0 (per-slot spare that still
-wants eight taps). One dedicated pin is the path `network.md` §1 named.
+output — one gate), jumpered in when the header is stuffed for an adapter.
+Pulled so an unfitted commons shell does not busy a ribbon stuffing. It is not
+a11 (common listen-only, tied locked in an exchange) and not a14 on slot 0
+(per-slot spare that still wants eight ribbon seats). One dedicated pin is the
+path `network.md` §1 named.
 
-**What an adapter owes the block.** Drive the four card-side pins a slot
+**What a block adapter owes the block.** Drive the four card-side pins a slot
 (`C_TX`, `A_TX`, word, `/ANS`) within `common-cards.md` §1.2. On group failure:
 hold `A_TX` at 0, present `FILL` on `C_TX` or float the words as unequipped, and
-assert `MUTE_BLK`. Take `TX_CLK` / `TX_OCT` / `FILL` from C. Own whatever line
-or plant sits on its rear; the fabric never sees that rear.
+assert `MUTE_BLK`. Take `TX_CLK` / `TX_OCT` / `FILL` from the header commons.
+Own whatever line or plant sits on its rear; the fabric never sees that rear.
 
-**What the block still has.** Eight port circuits behind T, the commutators
-including word and `BUSY`, a monitor pool that reads this block's M, the
-`MUTE_BLK` OR when jumpered. Nothing on H for the adapter. A line stuffing
-leaves the OR off.
+**What the block still has.** Eight port circuits behind the header, the
+commutators including word and `BUSY`, a monitor pool that reads this block's M,
+the `MUTE_BLK` OR when jumpered. Nothing on H for the adapter. A ribbon
+stuffing leaves the OR off.
 
-**Who uses it.** The **local eight-channel highway trunk** (`local-trunk.md`)
-is the proposed user: T + C, rear a highway-shaped copper copy of eight `C`/`A`
-cells with far-mastered receive clocks. A conference block that wants the same
-collect would mate T and C with a different rear. Single-channel trunks and
-six-channel MF8 stay on the highway tap / block ribbon (`network.md` §1.1,
-`mf8-unit.md` §1). Scatter across arbitrary ports is out of scope for this
-face: one failure domain, one monitor, one `MUTE_BLK`.
+**Who uses it.** **Live MF8** (`mf8-unit.md` §1) and the **local eight-channel
+highway trunk** (`local-trunk.md`) are the two block adapters: same header,
+different rear (MF8 pair vs highway-shaped copper). A conference block that
+wants the same header would mate with a different rear. Single-channel trunks
+sit on a ribbon slot (`network.md` §1.1). Scatter across arbitrary ports is out
+of scope for this header: one failure domain, one monitor, one `MUTE_BLK`.
 
 ---
 
@@ -438,7 +446,7 @@ could still be wrong.
 
 1. **Clock card alone**: `HCLK`, `SLOT`, `SLOTQ` a quarter cell behind it, `TX_CLK`,
    `FILL`. Scope `SLOTQ` against `HCLK`.
-2. **One block, shared board only, no IDC taps fitted.** Every `C_TX` pulled to
+2. **One block, shared board only, no ribbon slots fitted.** Every `C_TX` pulled to
    `FILL`: `HC[h]` is `1010`. Strobe line *k* low for the second half of cell *k*
    and at no other time — trigger on any edge outside it, with the block warm and
    cold (§5.1).

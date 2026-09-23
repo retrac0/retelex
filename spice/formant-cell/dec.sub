@@ -1,0 +1,28 @@
+* Formant-cell decoder — one channel
+*
+* Pins: LINE AUDIO VCC VEE
+*   LINE  — narrowband AM in
+*   AUDIO — env × fixed ~1 kHz excitation (robotic; no pitch tracker)
+
+.subckt formant_dec LINE AUDIO VCC VEE
+
+* Same LINE bandpass as enc (reject out-of-band junk)
+Ch1a LINE H1a 100n
+Rh1a H1a 0 4.0k
+Xh1a H1a HP1a VCC VEE HP1a TL072
+Ch1b HP1a H1b 100n
+Rh1b H1b 0 4.0k
+Xh1b H1b HP VCC VEE HP TL072
+Rl1 HP L1 13k
+Cl1 L1 0 10n
+Xl1 L1 BPL VCC VEE BPL TL072
+
+Xenv BPL ENV VCC VEE logenv TAU=10m
+
+* Synthesis carrier ~1 kHz
+Vcrx CRX 0 SIN(0 1.0 1000 0 0 0)
+Rcrx CRX 0 100k
+
+Xam CRX ENV AUDIO VCC VEE am
+
+.ends formant_dec

@@ -69,12 +69,12 @@ not built.
 
 This is `fabric.md` §1.1, not a new bargain:
 
-The highway is eight slots of 512 kbps NRZ. The MF8 line is the same
-stream at 512 kbps: F at slot 0, S at slot 4, six payload channels on
-1–3 and 5–7. The trunk card taps `HC[h]`/`HA[h]` and inserts the F word
-(`mf8-unit.md` §1). One highway is one group of six. Eight highways are
-eight groups; block 0 never takes one, so seven groups on this fabric
-(`protocol.md` §5).
+The highway is eight slots of 512 kbps NRZ. The MF8 *line* is the same
+stream at 512 kbps: F at bit 0, S at bit 4, six payload channels on
+1–3 and 5–7. The unit is a **block adapter** on the **block header** and
+inserts F and S on the way to the pair (`mf8-unit.md` §1). One highway is
+one group of six. Eight highways are eight groups; block 0 never takes one,
+so seven groups on this fabric (`protocol.md` §5).
 
 A 16-slot highway would still be a different exchange — two `'151`s, a
 third octal digit, every port already fitted. An 8 × 8 does not ask for

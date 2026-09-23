@@ -45,7 +45,7 @@ rack, and the module boundaries are the connectors.
                                                              (network.md 3,
                                                               common-control.md)
  mini_marker       a marker: one pulse_reg inside, two-digit local calls,
-                   M and BUSY only, no card word; flood_go / CLAIM hooks
+                   M and BUSY only, no card word; HAS_NET / TRUNK_MASK hooks
                    for a network unit                        (mini-marker.md)
  pulse_reg         a register, one of a POOL: no port, no class, reads its
                    caller's hook off HA through its own probe; four-digit store
@@ -106,6 +106,10 @@ make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
 make su1      su-1.md: Autovon pad, mute, ring trip, a local call
 make mini     mini-marker.md: two lines, one register, no card word; 1 is a highway
+make mini-net mini-marker.md 8: mini-marker + network unit, one MF8 link, a flood
+make mini-leaf leaf-uplink.md: LEAF dials 1 → parent offers-tone → local call
+make mini-load mini-marker under load: solo 8/16 lines, pair, and chain 22=23=24
+make mini-rate mini-marker call-rate sweep: solo and 5-node star (idle means)
 make iv       the whole suite again under Icarus, as the reference
 make chain-delay  the chain with 20 ms of CARRIER on every link
 make ring-open    the same ring with the jumper OUT: the flood circles
@@ -765,6 +769,8 @@ They are counted, reported and left out of both sides.
 
 ## What it costs
 
+### Generic cells (`make synth`)
+
 `make synth`, all eight blocks and all 64 ports fitted, after `techmap`:
 
 | | |
@@ -773,12 +779,33 @@ They are counted, reported and left out of both sides.
 | flip-flops | 2 856 |
 | of which, the two release detectors | **1 920** — 30 of every port's 44 |
 
-That last row is the honest difference between this and the hardware. In 74HC
-the two detectors are a diode, two resistors, a capacitor and a Schmitt gate
-each: **an RC, not a counter.** The RTL has to count frames to get 16 ms and
-256 ms, and two 15-bit counters a port is two thirds of the whole design's
-flip-flops. Anyone putting this on an FPGA pays that; anyone building it in
-74HC does not.
+### 74HC packages (`make synth-hc`)
+
+Maps SSI to HC00 / 02 / 04 / 08 / 32 / 74, keeps `mux8` as HC151 and
+`ctl_write` as 2 × HC165.  Run `make synth-hc` (or `synth-hc-exch` /
+`synth-hc-mini` / `synth-hc-marker` / `synth-hc-net`) — details in
+[`tech/hc/`](tech/hc/).
+
+| part | `exch_top` | `mini_marker` | `marker` | `net_unit` |
+|---|---:|---:|---:|---:|
+| HC00 | 2 666 | 325 | 6 829 | 2 624 |
+| HC02 | 877 | 27 | 195 | 128 |
+| HC04 | 212 | 11 | 46 | 46 |
+| HC08 | 1 074 | 131 | 2 386 | 1 587 |
+| HC32 | 437 | 61 | 1 242 | 276 |
+| HC74 | 1 496 | 116 | 227 | 190 |
+| HC151 | 32 | — | — | — |
+| HC165 | — | 2 | 2 | — |
+| **TOTAL** | **6 794** | **673** | **10 927** | **4 851** |
+
+That last generic-synth row is still the honest difference between this and the
+hardware. In 74HC the two detectors are a diode, two resistors, a capacitor and
+a Schmitt gate each: **an RC, not a counter.** The RTL has to count frames to
+get 16 ms and 256 ms, and two 15-bit counters a port is two thirds of the whole
+design's flip-flops — and most of `exch_top`'s 1 496 × HC74. Anyone putting this
+on an FPGA pays that; anyone building it in 74HC does not. The HC BOMs above
+**still count those counters** so the number matches what this Verilog
+synthesizes; substituting RC/`HC14` is the next lever.
 
 ## Two things the RTL settled
 

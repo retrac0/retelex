@@ -90,14 +90,23 @@ module mini_site #(
     endgenerate
 
     mini_marker #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG),
-                  .DIALTONE(PDT), .NOGO(PNG))
+                  .DIALTONE(PDT), .NOGO(PNG), .HAS_NET(1'b0))
     u_mk (.clk(clk), .rst_n(rst_n),
           .slotq(slotq), .tick(tick), .frame_stb(frame_stb),
           .oct_stb(oct_stb), .tick_1k(tick_1k),
           .ha(ha), .pb_busy(pb_busy),
           .sdata(sdata), .sclk(sclk), .wr(wr),
-          .reg_busy(reg_busy), .wq_ovf(wq_ovf),
+          .probe_port(), .scan_port(scan_port),
+          .probe_visit(), .probe_valid(), .probe_m(), .probe_busy(),
+          .probe_word(),
+          .flood_go(), .flood_caller(),
+          .net_restart(1'b0), .net_done(1'b0), .net_nogo(1'b0),
+          .net_local(1'b0), .net_att(1'b0), .net_att_port(6'd0),
+          .net_nw(4'd0), .net_wdst(48'd0), .net_wsrc(48'd0),
+          .net_wbsy(8'd0), .net_wclm(8'd0), .net_wev(8'd0),
+          .reg_busy(reg_busy), .reg_gone(), .reg_nodig(), .reg_brk(),
+          .reg_ndig(), .reg_digits(),
+          .wq_ovf(wq_ovf),
           .wr_stb(wr_stb), .wr_dst(wr_dst), .wr_src(wr_src),
-          .wr_bsy(wr_bsy), .wr_clm(wr_clm),
-          .scan_port(scan_port));
+          .wr_bsy(wr_bsy), .wr_clm(wr_clm));
 endmodule

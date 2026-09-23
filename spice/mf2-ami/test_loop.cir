@@ -1,0 +1,42 @@
+* MF2 AMI loopback @ 256 kBaud
+* TX crystal H; RX samples on HS = H + ½ cell (mid-bit), stand-in for locked DPLL.
+.include models.inc
+.include ami_tx.sub
+.include ami_rx.sub
+
+Vdd vdd 0 5
+Vee vee 0 -5
+Vdrv_p vdrv_p 0 12
+Vdrv_n vdrv_n 0 -12
+
+* Symbol clock 256 kHz (starts at 1 µs)
+Vh h 0 PULSE(0 5 1u 2n 2n 1.951u 3.90625u)
+* Mid-cell sample clock: H + ½ cell + RX front-end group delay (~0.55 µs)
+* (stand-in for locked DPLL mid tap — ami.md §4)
+Vhs hs 0 PULSE(0 5 3.5u 2n 2n 1.951u 3.90625u)
+
+* All ones 0–60 µs, then 1 0 1 1 0 0 1 0
+Vb b 0 PWL(
++ 0 5 60u 5
++ 60.01u 5 63.906u 5
++ 63.907u 0 67.812u 0
++ 67.813u 5 71.718u 5
++ 71.719u 5 75.625u 5
++ 75.626u 0 79.531u 0
++ 79.532u 0 83.437u 0
++ 83.438u 5 87.343u 5
++ 87.344u 0 120u 0)
+
+Xenc b h ep em AMI_ENC
+Xtx  ep em tip ring vdrv_p vdrv_n AMI_TX
+Xrx  tip ring mark mark_a vdd vee AMI_RX_FRONT
+Xdec mark hs bit strobe AMI_DEC_LATCH
+
+.option method=gear reltol=2e-3 abstol=1n rshunt=1e12
+.control
+  tran 20n 120u
+  set filetype=ascii
+  wrdata out/loop time b ep em tip mark bit strobe
+  quit
+.endc
+.end

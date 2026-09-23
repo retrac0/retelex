@@ -1,0 +1,20 @@
+* Pure tone — carrier only (mod jumper open)
+.include models.inc
+.include schmitt_osc.sub
+.include wien_osc.sub
+.include tone_front.sub
+
+Vcc vcc 0 12
+Vee vee 0 -12
+Vcad cad 0 5
+
+Xfront audio cad vcc vee tone_front GATE=0 LEVEL=0.11
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 20u 400m uic
+  set filetype=ascii
+  wrdata out/pure time audio
+  quit
+.endc
+.end

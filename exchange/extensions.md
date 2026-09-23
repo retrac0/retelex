@@ -196,13 +196,15 @@ LEGEND
 | 010 | operator | `0 b 0` |
 | 011 | source | `000` MBZ |
 | 100 | outside line | `000` MBZ |
-| 101 | tie trunk | `000` MBZ — direction and glare only in the secondary |
+| 101 | tie trunk | `t 0 0` — **t** = offers-tone (`leaf-uplink.md`); bits 6–7 MBZ. Direction and glare only in the secondary |
 | 110 | data line | `0 b 0` |
 | 111 | restricted | `z b **0**` — bit 7 **must be 0**; if ¬z, floor as local-only (§2.4) |
 
 Shared frames: bit 6 is busy-out / busy-inbound on every class that uses `b`; bit 5 is
-priority on a line and `z` on restricted. **Must-be-zero bits are decoder-enforced:**
-a 1 where MBZ is required → out of service, not a soft ignore.
+priority on a line, `z` on restricted, and **offers-tone** on a tie trunk
+(`leaf-uplink.md`). **Must-be-zero bits are decoder-enforced:**
+a 1 where MBZ is required → out of service, not a soft ignore. On a trunk, bits
+6–7 are MBZ; bit 5 may be 1.
 
 #### Secondary tag (8–9) and payload (10–15)
 

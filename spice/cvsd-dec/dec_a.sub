@@ -6,19 +6,8 @@
 
 .subckt cvsd_dec_a BIT CLK Y SYL VDD VCC VEE
 
-* Run register — first flop samples external BIT
-Xd0 BIT CLK Q  NQ  HC74_DFF
-Xd1 Q   CLK Q1 NQ1 HC74_DFF
-Xd2 Q1  CLK Q2 NQ2 HC74_DFF
-Rnq1 NQ1 0 1Meg
-Rnq2 NQ2 0 1Meg
-
-* Coincidence: /COIN = (Q⊕Q1)∨(Q1⊕Q2)
-Aadc [Q Q1 Q2] [qd q1d q2d] hc_adc
-Ax01 [qd q1d] x01d hc_xor
-Ax12 [q1d q2d] x12d hc_xor
-Aor  [x01d x12d] ncd hc_or
-Adac [ncd] [NCOIN] hc_dac
+* Digital run register + XOR/OR; DAC only Q/NQ (OTA) and NCOIN (syllabic)
+Xlogic BIT CLK Q NQ NCOIN CVSD_LOGIC
 
 R1 NCOIN SYL 51.1k
 R2 SYL 0 2.55Meg

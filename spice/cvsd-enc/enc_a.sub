@@ -11,19 +11,8 @@
 Xcmp AUDIO Y VCC VEE CMP 0 LM311
 Rpull CMP VDD 4.7k
 
-* Run register — three 74HC74 halves
-Xd0 CMP CLK BIT NBIT HC74_DFF
-Xd1 BIT CLK Q1  NQ1  HC74_DFF
-Xd2 Q1  CLK Q2  NQ2  HC74_DFF
-Rnq1 NQ1 0 1Meg
-Rnq2 NQ2 0 1Meg
-
-* Coincidence: /COIN = (BIT⊕Q1)∨(Q1⊕Q2) — low on run-of-three
-Aadc [BIT Q1 Q2] [bd q1d q2d] hc_adc
-Ax01 [bd q1d] x01d hc_xor
-Ax12 [q1d q2d] x12d hc_xor
-Aor  [x01d x12d] ncd hc_or
-Adac [ncd] [NCOIN] hc_dac
+* Digital run register + XOR/OR coincidence (one ADC, one DAC)
+Xlogic CMP CLK BIT NBIT NCOIN CVSD_LOGIC
 
 * Syllabic filter: τ=5 ms, ratio ≈51
 R1 NCOIN SYL 51.1k

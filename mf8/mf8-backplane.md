@@ -174,8 +174,8 @@ uses.
 The signalling mux and the frame mux use the same input numbering because the
 guard sits at states 0 and 4 (`mf8-spec.md` §3.2): the S superframe mirrors the
 frame, so slot *n*'s A bit is at superframe state `CBIT[n]` as its C bit is at
-frame bit `CBIT[n]`. On an *exchange* the trunk card taps the highway
-(`mf8-unit.md` §1) instead of this stack header.
+frame bit `CBIT[n]`. On an *exchange* the trunk unit is a **block adapter** on
+the **block header** (`mf8-unit.md` §1) instead of this stack header.
 
 ### I4, I5 — the trunk pair
 

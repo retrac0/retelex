@@ -85,11 +85,12 @@ module net_unit #(
                           (p_type == 2'b01 || p_type == 2'b10) ? C_LINE :
                           p_form  ? p_word[4:2] : C_NONE;
     wire       trunk_sec_ok = (p_cls == C_TRUNK) && (p_tag == 2'b10) &&
-                              (p_pay[2:0] == 3'b000) && ~|p_word[7:5];
-    wire       is_trunk = trunk_sec_ok || TRUNK_MASK[p_port];
+                              (p_pay[2:0] == 3'b000) && ~|p_word[7:6];
+    // offers-tone (bit 5): not a flood seat (leaf-uplink.md).
+    wire       is_trunk = (trunk_sec_ok && !p_word[5]) || TRUNK_MASK[p_port];
     wire [1:0] p_dir    = trunk_sec_ok ? p_pay[5:4]
                                        : TRUNK_DIR[p_port*2 +: 2];
-    wire       p_g      = trunk_sec_ok && p_pay[3];
+    wire       p_g      = trunk_sec_ok && !p_word[5] && p_pay[3];
     wire       p_n      = is_trunk && STRAP_N[p_dir];
     wire       p_free   = !p_busy && !p_m;
 

@@ -1,0 +1,40 @@
+* Formant-cell encoder — one channel
+*
+* Pins: AUDIO LINE VCC VEE
+*   AUDIO — speech / tone in
+*   LINE  — AM packed into ~400–1200 Hz
+*
+* BP_in ~300–3400 Hz, carrier_tx 800 Hz, BP_line 400–1200 Hz, τ_env 10 ms.
+
+.subckt formant_enc AUDIO LINE VCC VEE
+
+* --- BP_in: HPF ~300 Hz then LPF ~3400 Hz (1st-order each), buffered ---
+Ch1 AUDIO H1 100n
+Rh1 H1 0 5.6k
+Xh1 H1 HP VCC VEE HP TL072
+Rl1 HP L1 4.7k
+Cl1 L1 0 10n
+Xl1 L1 BPIN VCC VEE BPIN TL072
+
+Xenv BPIN ENV VCC VEE logenv TAU=10m
+
+* Transport carrier ~800 Hz
+Vctx CTX 0 SIN(0 1.0 800 0 0 0)
+Rctx CTX 0 100k
+
+Xam CTX ENV AMRAW VCC VEE am
+
+* --- BP_line: 2nd-order-ish HPF ~400 Hz + LPF ~1200 Hz ---
+Ch2a AMRAW H2a 100n
+Rh2a H2a 0 4.0k
+Xh2a H2a HP2a VCC VEE HP2a TL072
+Ch2b HP2a H2b 100n
+Rh2b H2b 0 4.0k
+Xh2b H2b HP2 VCC VEE HP2 TL072
+Rl2 HP2 L2 13k
+Cl2 L2 0 10n
+Xl2 L2 LINEDC VCC VEE LINEDC TL072
+Cout LINEDC LINE 1u
+Rout LINE 0 100k
+
+.ends formant_enc

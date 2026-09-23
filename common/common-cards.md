@@ -385,9 +385,9 @@ assignments below are pin *positions*, and survive the choice of shell.
 
 ### 7.2 The trunk and gateway slot, 2 × 32
 
-**The exchange trunk card is not this slot.** It taps the highway
-(`mf8-unit.md` §1). This 2 × 32 is the *shelf's* trunk and gateway header:
-six C/A pairs.
+**The exchange trunk unit is not this slot.** It is a **block adapter** on the
+**block header** (`mf8-unit.md` §1, `fabric.md` §5.2). This 2 × 32 is the
+*shelf's* trunk and gateway header: six C/A pairs.
 
 Row *a* of a 2 × 32 holds 32, and one of those wants to be the key. So "row *a*
 signals, row *c* power" does not survive here, and the two indicator levels are

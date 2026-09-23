@@ -6,9 +6,9 @@ stream. No line code, no F and S, no crystal of its own. It is the copper peer
 of an MF8 trunk group for runs inside a room or between adjacent racks — eight
 payload seats where fused MF8 gives six.
 
-> **Status: proposed.** Nothing measured on a bench. The face is
-> `fabric.md` §5.2; the clocking rule is stated here; package counts are a
-> sketch. No RTL and no `exch.py` model yet.
+> **Status: proposed.** Nothing measured on a bench. It is a **block adapter**
+> on the **block header** (`fabric.md` §5.2); the clocking rule is stated here;
+> package counts are a sketch. No RTL and no `exch.py` model yet.
 
 ---
 
@@ -18,15 +18,15 @@ payload seats where fused MF8 gives six.
  exchange 22, block h                         exchange 23, block k
  eight port circuits                         eight port circuits
       │                                           │
-   T + C ◀── local-trunk unit ══ C_hw, A_hw,    ══ unit ──▶ T + C
+ block header ◀── local-trunk unit ══ C_hw, A_hw, ══ unit ──▶ block header
                  HCLK, TX_CLK each way
 ```
 
-Each end occupies a whole block **1–7**, stuffed as an **adapter** (`fabric.md`
-§5.2): T + C face the unit; the block-ribbon IDC taps are not populated; eight port
-circuits sit behind T. Every port is class trunk, one shared direction word,
-`/ANS` tied low. The marker, the flood and the monitors treat the group as they
-treat any other trunk block.
+Each end occupies a whole block **1–7**, stuffed as a **block adapter**
+(`fabric.md` §5.2): the unit mates the block header; the block-ribbon slots are
+not populated; eight port circuits sit behind the header. Every port is class
+trunk, one shared direction word, `/ANS` tied low. The marker, the flood and
+the monitors treat the group as they treat any other trunk block.
 
 **The wire is highway-shaped, not a tap of `HC[h]`.** Eight cells a frame at
 512 kbps, `C` and `A` on separate conductors, ordered by `SLOT`. Transmit is a
@@ -52,7 +52,7 @@ stuffing. Feeding the transmitter from `HC[h]` would loop the link
 | | this unit | baseband trunk (`baseband.md`) | fused MF8 (`mf8-unit.md` §1) |
 |---|---|---|---|
 | channels | **eight** | one | six (F, S steal 0 and 4) |
-| face | **T + C** adapter | one IDC tap on the block ribbon | highway tap `HC`/`HA` |
+| face | **block adapter** on the block header | one **slot** on the block ribbon | **block adapter** on the block header (six of eight appearances) |
 | wire | highway-shaped `C`+`A` + clocks | one `C` + one A (± clock) | MF8 pair, line code, framer |
 | map | `h0–h7` all trunks | any single slot | `h1–h3`, `h5–h7` |
 | reach | short: room / adjacent racks | short; RS-422 between racks | MF8 reach |
@@ -64,28 +64,28 @@ not enough.
 
 ---
 
-## 3. The face — T + C
+## 3. The face — block header
 
-Exactly `fabric.md` §5.2. This document is the first proposed user of that
-contract.
+Exactly `fabric.md` §5.2. Live MF8 uses the same header (`mf8-unit.md` §1);
+this document is the eight-channel copper rear on that contract.
 
 | | |
 |---|---|
-| **T** | eight appearances: `C_TX` / `A_TX` out, `C_RX` / `A_RX` in, word, `/ANS` |
-| **C** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out** |
-| **rear** | the highway-shaped link (§5), not on T, not on H |
+| **appearances** | eight: `C_TX` / `A_TX` out, `C_RX` / `A_RX` in, word, `/ANS` |
+| **commons** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out** |
+| **rear** | the highway-shaped link (§5), not on the header, not on H |
 
 **Word.** Two 74HC165 daisy-chained to all eight: class trunk, direction N/E/S/W, glare `g`
 (`extensions.md` §2.2). Gated by link-up (§6). Power-up RC as usual.
 
 **`/ANS`.** Tied low on the board. Trunks do not ring.
 
-**`MUTE_BLK`.** Asserted while link down. The block ORs it into `BUSY` when T is
-stuffed for this unit. Monitors still read this block's M — the unit's
+**`MUTE_BLK`.** Asserted while link down. The block ORs it into `BUSY` when the
+header is stuffed for this unit. Monitors still read this block's M — the unit's
 `A_TX`.
 
-**Eight port circuits** behind T: latch, selects, capture, supervision. Claim
-OR on A as for any trunk block (`fabric.md` §3.1).
+**Eight port circuits** behind the header: latch, selects, capture, supervision.
+Claim OR on A as for any trunk block (`fabric.md` §3.1).
 
 ---
 
@@ -201,9 +201,9 @@ No 4.096 MHz, no classifier, no magnetics in the baseline.
 
 ## 9. Bring-up
 
-1. **Link alone.** Two units, T unterminated or looped (`C_RX` tied to `C_TX`
-   on a jig). Far `HCLK` present both ways; `MUTE_BLK` falls; scope `C_hw`
-   against far `HCLK`, and the `'174` write against local `TX_CLK`.
+1. **Link alone.** Two units, header appearances unterminated or looped (`C_RX`
+   tied to `C_TX` on a jig). Far `HCLK` present both ways; `MUTE_BLK` falls;
+   scope `C_hw` against far `HCLK`, and the `'174` write against local `TX_CLK`.
 2. **One block stuffed, no far end.** Eight ports unequipped; `MUTE_BLK` high;
    lamp field dark on hook / lit on busy (`observers.md`).
 3. **Far end a second exchange.** Seize one channel from the console; speech;
@@ -212,8 +212,8 @@ No 4.096 MHz, no classifier, no magnetics in the baseline.
 4. **Flood.** One networked call across the group; monitor sees dial pulses on
    A (`monitor.md`).
 
-Step 1 does not need the fabric. Step 2 is `fabric.md` §7 with adapter
-stuffing.
+Step 1 does not need the fabric. Step 2 is `fabric.md` §7 with a block adapter
+on the header.
 
 ---
 
@@ -234,7 +234,7 @@ stuffing.
 
 | | |
 |---|---|
-| face | `fabric.md` §5.2 |
+| block header / block adapter | `fabric.md` §5.2 |
 | one-channel copper | `baseband.md` |
 | six-channel MF8 | `mf8-unit.md` §1, `network.md` §1 |
 | carrier rules | `network.md` §1.1 |

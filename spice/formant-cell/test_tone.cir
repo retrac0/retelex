@@ -1,0 +1,22 @@
+* Tone AM check — 500 Hz sine → enc → LINE
+.include models.inc
+.include logenv.sub
+.include am.sub
+.include enc.sub
+
+Vcc vcc 0 12
+Vee vee 0 -12
+
+* Drive: 500 Hz @ ~0.3 V peak (inside BP_in)
+Vin audio 0 SIN(0 0.3 500 0 0 0)
+
+Xenc audio line vcc vee formant_enc
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 20u 200m uic
+  set filetype=ascii
+  wrdata out/tone time line audio
+  quit
+.endc
+.end

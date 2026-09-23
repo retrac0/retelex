@@ -3,9 +3,10 @@
 //
 // This is the exchange logic and nothing else -- mvp.md 1's "= 70 packages".
 // Cards are not in here: the module's edge is the channel-slot pins of
-// mf8-backplane.md 8, so whatever plugs into a port plugs in from outside, and
-// a port has no idea what it is.  The highway conductors and the cell clocks
-// come out too, because that is where an MF8 trunk card taps its own block.
+// mf8-backplane.md 8 (and, for a trunk block, the block-header appearances),
+// so whatever plugs into a port plugs in from outside, and a port has no idea
+// what it is.  The highway conductors and the cell clocks come out too, for
+// observers and for a block adapter that takes clocks from the block.
 //
 // Everything is parameterised and nothing is global, so more than one exchange
 // may be instantiated, each on its own crystal.

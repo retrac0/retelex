@@ -36,7 +36,7 @@ cards, not a different marker.
 |---|---|---|
 | Clock card | `HCLK`, `SLOT`, `SLOTQ`, `TX_CLK`, `TX_OCT`, `FILL`, `RING_CAD`, the 1 kHz `TICK` (`fabric.md` §2) | 10 |
 | Block 2, its shared parts | commutators, strobe and write decoders, highway drivers and receivers (`fabric.md` §3.1) | 13 |
-| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** — a port circuit exists only with its card on an IDC tap of the block ribbon (`fabric.md` §5.1) | 17 |
+| Two port circuits | each a crosspoint of 5 and supervision of 3¼ (`fabric.md` §3.2, §3.5). **The block's other six port circuits are not populated** — a port circuit exists only with its card on a **slot** of the block ribbon (`fabric.md` §5.1) | 17 |
 | Marker | scanner, probe, sequencer. 0 and 9 go to hunts that find nothing; 8 to cannot-complete; **1 is a highway** (§2, §4). The mini-marker of `mini-marker.md` is this job with no word and no hunt | 15–20, estimated; the mini-marker is less |
 | One register | `register.md` §4's pulse counter, reading the caller's hook off the M highway through its own probe (`marker.md` §4). On the mini-marker it lives on the same card; the ribbon is the same (`common-control.md` §2.1) | 9 |
 | | **exchange logic** | **≈ 70** |

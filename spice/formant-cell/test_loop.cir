@@ -1,0 +1,26 @@
+* Encode↔decode loop — AM "formant" (500 Hz tone, depth via level)
+.include models.inc
+.include logenv.sub
+.include am.sub
+.include enc.sub
+.include dec.sub
+
+Vcc vcc 0 12
+Vee vee 0 -12
+
+* Synthetic formant: 500 Hz carrier amplitude-modulated at ~5 Hz
+* (slow envelope so logenv τ=10 ms can track)
+Bin audio 0 V = 0.35 * (0.55 + 0.45 * cos(2*pi*5*time)) * cos(2*pi*500*time)
+Rin audio 0 100k
+
+Xenc audio line vcc vee formant_enc
+Xdec line out vcc vee formant_dec
+
+.option method=gear reltol=1e-3 abstol=1n rshunt=1e12
+.control
+  tran 20u 400m uic
+  set filetype=ascii
+  wrdata out/loop time out line audio
+  quit
+.endc
+.end
