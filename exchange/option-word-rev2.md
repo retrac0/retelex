@@ -38,98 +38,92 @@ chips where it used to fit one, which is what §2 reorders to make explicit.
 ## 2. The layout
 
 Printed in wire order, bit-time 0 leftmost, every field LSB first, as
-`extensions.md` §2.2 prints its own.
+`extensions.md` §2.2 prints its own. **Every anchor stays where it was**: `tt`
+at bit-times 0–1, the class family at 2–3, the secondary tag at 8–9. So every
+prefix decode in §2.2's *"Reading only the first bits"* survives unchanged, and
+the monitor's four bits and the port watch's octet cost exactly what they cost
+today.
 
 ```
-bit-time        0     1 2 3     4 5 6 7
-PRIMARY         E     - - -     - - - -        the first '165, or a grounded pin
-
-  E = 1   one chip.  ccc = class, oooo = options.  The secondary reads FF.
-  E = 0   two chips. aaaaaaa = target bits 0–6.
-
-bit-time        8 9   10 11 12   13 14 15
-SECONDARY       a a    k  k  k    v  v  v      fitted only when E = 0
-                aa = target bits 7–8   kkk = the kind   vvv = kind-specific
+bit-time      0 1   2 3 4 5   6 7   8 9   10 11 12   13 14 15
+tied nail     0 0   s s s s   h h   0 1    ·  ·  ·    H  H  H     dest HHH hh ssss
+call nail     1 0   s s s s   h h   0 1    ·  ·  ·    H  H  H
+answers-to    0 1   s s s s   h h   1 0    L  U  K    H  H  H     number + conditions
+class form    1 1   a a m     p p p 1 1    1  1  1    1  1  1     unchanged, FF above
 ```
+
+The nine-bit target is `HHH hh ssss` — five highway bits split across the two
+chips, four slot bits in the primary. The three bits it needs in the secondary
+are literally the `000` MBZ that `marker.v` reads as `p_pay[5:3]` today.
+
+**Where the room came from.** §2.2 says "Beside `FF` there are six pairings…
+**Every other one is out of service, fail closed**." Four types × four tags is
+sixteen pairings: four are `FF`, three live, three reserved — leaving **six
+already out of service**, each carrying six payload bits where a nine-bit port
+needs three. This layout spends two of them. Four stay unspent, so the word is
+not full.
 
 ### 2.1 Constants
 
 ```
-plain line      1  111  1111  |  (no secondary)     a grounded pin, no part fitted
-none / OOS      0  000  0000  |  0000 0000          no card, held off, or link down
+plain line    1 1   1 1 1   1 1 1   1 1    1  1  1    1  1  1   a grounded pin, no part
+none / OOS    0 0   0 0 0   0 0 0   0 0    0  0  0    0  0  0   no card, held off, link down
 ```
 
-Both are what they were. All ones falls inside the class forms as *line, no
-options*, so a plain line still says everything it needs to with a wire to
-ground; all zeros is still caught first and means nothing is there.
+Both are kept, and **one improves**. All ones is still the plain line, and now
+doubly guaranteed: a port form can never carry tag `11`, so the constant no
+longer rests solely on *restricted*'s frame-7 MBZ. All zeros is still
+none/OOS — and better, because no legal word carries tag `00` any more, which
+retires §2.2's wart *"tied nail to 00 collides with all zeros"*. **Port 000
+becomes an expressible destination.**
 
-### 2.2 Class forms — `E = 1`, one chip
+### 2.2 The rule that inverts, and the bug it closes
 
-```
-  ccc   oooo
-  111   1111   line, no options            ← the all-ones constant lands here
-  111   PbD1   line: priority, busy-out, data
-  110   zb00   restricted: z b, frame 7 MBZ
-  101   0000   outside line
-  100   0000   source
-  011   0000   tone trunk (offers-tone seat, `leaf-uplink.md` §3)
-  010   gdd0   trunk: glare, then direction (`network.md` §1)
-  001   ----   reserved → OOS
-  000   ----   unequipped, never sent
-```
+**For a port form, an `FF` secondary is now out of service.** Today it means
+"no extension", and `marker.v:233/241` enforces exactly that.
 
-The class is three bits as before; the option field gains a bit, because the
-type field that used to sit at bit-times 0–1 is now the single `E` bit.
+It has to invert, because at nine-bit ports a target-bearing card needs two
+'165 regardless — 2 + 9 = 11 > 8. Without the inversion, a far card whose
+second chip is unfitted, unseated, or still inside its ~100 ms power-up RC
+reads tag `11`, which today is a legal near nail naming a real port, and the
+marker does two latch writes to the wrong port.
 
-### 2.3 Address forms — `E = 0`, two chips
-
-```
-  kkk
-  000  tied nail     target = dest h s              vvv = 111
-  001  answers-to    the number this port answers to  vvv = 111, or L U K (§4)
-  010  call nail     on lift, connect as if dialled the target   vvv = 111
-  011  cover         target = the coverer           vvv = the covered class
-  100  spare
-  101  spare
-  110  spare
-  111  ILLEGAL → OOS                ← what an unfitted secondary reads
-```
+Inverting costs nothing and **closes a fail-open that is in the design now**: a
+*conditions* card with its secondary missing currently reads `FF` =
+unconditional, so a night-service-only member is eligible for every hunt.
 
 ---
 
-## 3. The three properties this keeps
+## 3. The properties this keeps
 
-**The fitting rule is the first bit.** `E` is bit-time 0, so a reader knows
-before anything else whether a second '165 is fitted. A card that carries no
-target fits one chip and straps the daisy-chain exactly as `extensions.md` §2.2
-already has it; a card that carries a target fits two. Nothing else has to be
-read to know which.
+**Every prefix decode survives.** `tt` at 0–1 and the family at 2–3 are where
+§2.2 put them, so a reader of the first four bit-times still gets the family,
+and nothing that reads only the first bits has to change.
 
-**The first four bit-times still decode.** §2.2 leans on "a reader of the first
-four bit-times gets the right answer" for the family. Here bits 0–3 give `E`
-and the whole class, which is strictly more than the old `tt aa`.
+**A class card still fits one chip.** A class form carries no port: ten bits,
+`FF` above, one '165 — or none at all for a plain line, which is still a pin
+tied to ground. **Keeping sixteen bits saves no package on any card that
+survives it**, because a target-bearing card needs two '165 at nine-bit ports
+whichever width is chosen. What it saves is the socket pin of §6.
 
-**An unfitted secondary fails safe, for nothing.** `kkk` lives in the
-*secondary*, so a card whose primary says `E = 0` but whose second '165 was
-never fitted reads `kkk = 111` and goes out of service. That is §2.2's "every
-other pairing → OOS" preserved without reserving a block, a slot or a class
-code — and it is the reason the kind field moved out of the primary.
+**An unfitted secondary fails safe** — §2.2 above.
 
 ---
 
-## 4. Conditions fold into `answers-to`
+## 4. Conditions
 
-`extensions.md` §2.2.1 spends bit-times 8–9 as a tag, so dual membership and the
-condition flags are alternate encodings and "a two-group member cannot be
-conditional and a conditional member cannot be in two groups".
+Conditions stay where `extensions.md` §2.2.1 put them — the `10` pairing beside
+an `answers-to` — and the flags keep their meanings: `L` local callers only,
+`U` unequipped owner only, `K` busy owner only, `U` ∧ `K` still OOS.
 
-With dual membership gone (§5) the tag is gone with it. Conditions become the
-`vvv` field of an ordinary `answers-to`: `111` is unconditional — §2.2.1's own
-"`111111` is no feature" — and any other pattern is `L U K` as that section
-defines them. `U` ∧ `K` is still OOS.
+One thing re-spells. The payload's low three bits are now the target's `HHH`,
+so "unconditional" is no longer `111111` but **`LUK = 000`**, which §2.2.1
+already lists as equivalent ("`L U K` all clear ... stay eligible for every
+hunt reason"). The `000` MBZ guard after the flags goes with the bits.
 
-**Every member may now be conditional.** That restriction was an artefact of
-the shared tag, not of the feature.
+And the restriction §2.2.1 records — "a two-group member cannot be conditional
+and a conditional member cannot be in two groups" — disappears with dual
+membership (§5). **Every member may now be conditional.**
 
 ---
 
@@ -137,47 +131,61 @@ the shared tag, not of the feature.
 
 | | was | why it goes |
 |---|---|---|
-| **network nail** | `10 SSS HHH \| 00 bbb eee` | RESERVED, never implemented — dead until a sender exists (`network.md` §9) |
+| **network nail** | `10 SSS HHH \| 00 bbb eee` | RESERVED, and now **permanently impossible**: `1 e b h s` is fifteen bits at nine-bit ports and will never fit sixteen again |
 | **netwide fwd** | `01 SSS HHH \| 00 bbb eee` | RESERVED, same |
 | **class flags** | `11 aam ppp \| 10 ··· ···` | RESERVED, "the last unspent space" |
-| **dual membership** | `01 sss hhh \| 01 sss hhh` | **does not fit.** Two nine-bit targets is eighteen bits before any kind code, against sixteen |
+| **dual membership** | `01 sss hhh \| 01 sss hhh` | **does not fit.** Two nine-bit targets is twenty-two bits against sixteen |
+| **class beside a number** | `cover`: `11 aam ppp \| 01 sss hhh` | a class, its options and a nine-bit port is nineteen bits |
 
-The first three cost nothing; they were tag space that was never spent.
+The three reserved forms cost nothing today — but the first two are now closed
+off for good, not merely deferred, and `network.md` §9's sender would not
+reopen them.
 
 **Dual membership is a real loss.** `extensions.md` §2.2.1 calls it "the one
 secondary feature the marker can actually carry out — one comparator, matched
 against either number, measured in `make groups`", and its use is *one phone in
 two local groups: a desk that covers two numbers*. There is no one-card
 substitute, because it is the desk's own card that claims both numbers and
-`cover` points the other way. A desk that must answer two numbers now needs
-either two ports or a hunt arrangement that does not exist.
+`cover` points the other way.
 
-What it buys is §4, three spare kinds where the old layout had none, and a word
-that fits the visit.
+**Class beside a number is the quieter loss, and it costs two features.** The
+*cover* feature itself survives as `answers-to` + `K`, which `groups.md` §2.3
+already describes it as — but only on a **plain line**. What cannot be spelled
+any more is a card that needs a class *and* a number:
+
+- the **data pool** (`features.md` §8): class *line* with the `D` option, plus
+  the pool's number;
+- a **restricted** or **busied-out** position that also answers to a number.
 
 ---
 
 ## 6. The alternative not taken: a faster shift clock
 
-256 kHz is 4.096 MHz ÷ 16, a clean tap of the existing chain, and gives
-**thirty-two bit-times a visit** instead of sixteen. That carries every form
-including the reserved ones and dual membership, with a third '165 available in
-the same idiom — fitted only where needed, strapped to FF where not.
+Sixteen is a **visit** number. 1/128 kHz = 7.8125 µs and sixteen of those is
+125.000 µs, one `CLK_8K` period. The RTL is exact about it: `marker.v:152`'s
+`wdiv` is a ÷32 of 4.096 MHz, `w_take` fires at `wdiv == 31`, and `wdiv` is
+re-zeroed on `oct_stb` — **sixteen samples a visit and no seventeenth**. The
+ceiling is the marker's sampler, not the '165's shift edges. Twenty-four bits
+at 128 kHz is 187.5 µs and cannot be made to fit.
 
-It is not taken here because it has not been checked against `SCLK` (also
-128 kHz), `LOOP_HB`, and the MF8 half-bit clock, and because it changes a
-conductor on the block header rather than a table on a page. It is the better
-answer if it is free.
+256 kHz would give 93.75 µs for twenty-four bits, with eight bit-times spare,
+and it is **free in the divider**: `clocks.md` §1's ÷16 tap is the one row in
+that table with no customer, and it is already at every block on cable A.
 
-Worth recording either way: §2.2 rejects word-steered probing because "a
-sixteen-bit word at 128 kHz is 125 µs and so is a visit, so steering by word
-would saturate the bus and leave no room for a write". At 256 kHz the word is
-62.5 µs and half the visit comes free — which is the out-of-turn probing
-`marker.md` §4 carries as intent and `marker.v` does not implement.
+**It is not free at the socket.** a2 carries 128 kHz to three customers — the
+CVSD encoder, the word's two '165 and the control bus — and it is a
+block-common net, so it cannot be raised for one slot: doubling it stops every
+CVSD phone encoding. The clock would have to arrive on **a14, the last spare
+socket pin**, which `common-cards.md` §1.2 classes with a12–a14 as a per-slot
+open-drain declaration — "pull low, or leave open. Never drive high". Driving
+it reverses that, ends the property that lets an exchange card sit unchanged in
+an MF8 shelf, and obliges every word-bearing card to carry a pull-down so it is
+safe in a shelf where a14 is unconnected.
 
-This layout and the faster clock are not exclusive. The reorder is worth having
-on its own, because it puts the fitting rule in the first bit and keeps the
-common card at one chip.
+So the faster clock is **available at a price**, not impossible. It is not
+taken here because §2 keeps sixteen bits without spending the last pin, and
+because what it would buy back — dual membership, class-beside-a-number, and
+two reserved forms — is a smaller thing than the socket contract.
 
 ---
 
@@ -197,11 +205,15 @@ common card at one chip.
 
 ## 8. Not measured
 
-- **The visit arithmetic against the RTL.** 16 bits at 128 kHz is 125 µs on
-  paper; no bench has clocked a '165 through a visit.
-- **Whether `vvv` is enough for `cover`.** Three bits is exactly a class code
-  under §2.2, and this layout assumes the class stays three bits.
-- **The 256 kHz clock of §6** — against `SCLK`, `LOOP_HB`, the MF8 half-bit
-  clock, and every '165 and '164 in the tree.
-- **What a plant actually needs.** The case for dropping dual membership is a
-  bit budget, not a survey of how many desks cover two numbers.
+- **The visit arithmetic against a bench.** Sixteen bits at 128 kHz is 125 µs
+  on paper and exact in `marker.v`'s `wdiv`; no scope has followed a '165
+  through a visit.
+- **The inverted `FF` rule against the power-up RC.** §2.2's argument is that a
+  card still inside its ~100 ms RC must read OOS rather than a near nail. The
+  RC is `extensions.md` §2.2's own figure and has not been measured.
+- **What a plant needs.** Dropping dual membership and class-beside-a-number is
+  a bit budget, not a survey of how many desks cover two numbers or how many
+  data pools an exchange wants.
+- **Whether nine-bit ports survive at all.** The card word is only one of three
+  things that a 512-port exchange breaks; the flood guard and the one-highway-
+  one-MF8-group rule are the others, and neither is bought with bits.
