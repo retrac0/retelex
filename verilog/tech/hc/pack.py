@@ -40,33 +40,80 @@ MSI = {
     "ctl_write": Counter({"HC165": 2}),
     "hc164": Counter({"HC164": 1}),
     "hc165": Counter({"HC165": 1}),
+    "hc393": Counter({"HC393": 1}),
+    "hc4040": Counter({"HC4040": 1}),
+    "hc163": Counter({"HC163": 1}),
+    "hc175": Counter({"HC175": 1}),
+    "hc670": Counter({"HC670": 1}),
+    "hc174": Counter({"HC174": 1}),
+    "hc157": Counter({"HC157": 1}),
+    "hc138": Counter({"HC138": 1}),
+    # Hand BOM for the shared register (register.md §4), ≈ 12 packages.
+    "pulse_reg": Counter({
+        "HC393": 1, "HC151": 1, "HC175": 1, "HC86": 1,
+        "HC4040": 1, "HC74": 2, "HC163": 1, "HC670": 2,
+        "HC174": 1, "HC08": 1,
+    }),
+    # Hand BOM for mini-marker core without the register (mvp.md §2 sketch).
+    "mini_core": Counter({
+        "HC393": 1, "HC151": 1, "HC74": 2, "HC157": 2,
+        "HC163": 1, "HC138": 1, "HC08": 2, "HC244": 1,
+        "HC670": 1,
+    }),
+}
+
+# Partial-package MSI: count instances, then ceil into packages
+MSI_PART = {
+    "hc74_dff": ("HC74", 2),    # 2 FFs per HC74
+    "hc86_xor2": ("HC86", 4),   # 4 XOR per HC86
 }
 
 # Preferred print order for the BOM table
 ORDER = [
-    "HC00", "HC02", "HC04", "HC08", "HC32", "HC74",
-    "HC151", "HC164", "HC165", "HC259",
+    "HC00", "HC02", "HC04", "HC08", "HC32", "HC74", "HC86",
+    "HC138", "HC151", "HC157", "HC163", "HC164", "HC165", "HC174", "HC175",
+    "HC244", "HC259", "HC393", "HC4040", "HC670",
 ]
 
 
-def walk(mod: dict, modules: dict, ssi: Counter, msi: Counter, skip: set[str]) -> None:
+# Match both plain and $paramod$…\name elaborations
+def msi_key(t: str) -> str | None:
+    if t in MSI:
+        return t
+    if t in MSI_PART:
+        return t
+    # Yosys paramod: $paramod$<hash>\pulse_reg
+    if "\\" in t:
+        base = t.rsplit("\\", 1)[-1]
+        if base in MSI:
+            return base
+        if base in MSI_PART:
+            return base
+    return None
+
+
+def walk(mod: dict, modules: dict, ssi: Counter, msi: Counter,
+         part: Counter, skip: set[str]) -> None:
     """Accumulate SSI cells and MSI instances under mod (not descending into MSI)."""
     for cell in mod.get("cells", {}).values():
         t = cell.get("type", "")
-        if t in MSI:
-            msi.update(MSI[t])
+        key = msi_key(t)
+        if key is not None and key in MSI:
+            msi.update(MSI[key])
+            continue
+        if key is not None and key in MSI_PART:
+            part[key] += 1
             continue
         if t in SSI:
             ssi[t] += 1
             continue
         if t in modules and t not in skip:
-            walk(modules[t], modules, ssi, msi, skip)
-        # else: input/output/$scopeinfo/blackbox — ignore
+            walk(modules[t], modules, ssi, msi, part, skip)
 
 
 def pack_ssi(ssi: Counter) -> Counter:
     """Bin gate/FF cells into whole packages (ceil)."""
-    gates: Counter = Counter()  # package → gate count
+    gates: Counter = Counter()
     per: dict[str, int] = {}
     for cell, n in ssi.items():
         pkg, gpp = SSI[cell]
@@ -78,6 +125,16 @@ def pack_ssi(ssi: Counter) -> Counter:
     return out
 
 
+def pack_part(part: Counter) -> Counter:
+    gates: Counter = Counter()
+    per: dict[str, int] = {}
+    for cell, n in part.items():
+        pkg, gpp = MSI_PART[cell]
+        gates[pkg] += n
+        per[pkg] = gpp
+    return Counter({pkg: math.ceil(n / per[pkg]) for pkg, n in gates.items()})
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} build/synth_<top>.json", file=sys.stderr)
@@ -87,8 +144,6 @@ def main() -> int:
         data = json.load(f)
 
     modules = data["modules"]
-    # Top = the only module that is not an MSI leaf and has the design name,
-    # or the one marked top / the largest.  Prefer explicit attribute.
     top_name = None
     for name, mod in modules.items():
         attrs = mod.get("attributes", {})
@@ -96,8 +151,8 @@ def main() -> int:
             top_name = name
             break
     if top_name is None:
-        # Yosys sometimes stores top as a module without submodules named after file
-        candidates = [n for n in modules if n not in MSI and not n.startswith("$")]
+        skip = set(MSI) | set(MSI_PART)
+        candidates = [n for n in modules if n not in skip and not n.startswith("$")]
         if not candidates:
             print("no top module found", file=sys.stderr)
             return 1
@@ -105,11 +160,13 @@ def main() -> int:
 
     ssi: Counter = Counter()
     msi: Counter = Counter()
-    walk(modules[top_name], modules, ssi, msi, skip=set(MSI))
+    part: Counter = Counter()
+    skip = set(MSI) | set(MSI_PART)
+    walk(modules[top_name], modules, ssi, msi, part, skip)
     pkgs = pack_ssi(ssi)
     pkgs.update(msi)
+    pkgs.update(pack_part(part))
 
-    # Also report raw SSI gate counts for honesty
     print(f"top: {top_name}")
     print(f"source: {path}")
     print()
@@ -121,21 +178,25 @@ def main() -> int:
         print("  (none)")
     print()
     print("MSI instances:")
-    # Recount raw MSI module instances for the report
     raw_msi: Counter = Counter()
 
     def count_msi(mod: dict) -> None:
         for cell in mod.get("cells", {}).values():
             t = cell.get("type", "")
-            if t in MSI:
-                raw_msi[t] += 1
-            elif t in modules and t not in MSI:
+            key = msi_key(t)
+            if key is not None:
+                raw_msi[key] += 1
+            elif t in modules and msi_key(t) is None and t not in skip:
                 count_msi(modules[t])
 
     count_msi(modules[top_name])
     if raw_msi:
         for t, n in sorted(raw_msi.items()):
-            bill = ", ".join(f"{c}×{p}" for p, c in MSI[t].items())
+            if t in MSI:
+                bill = ", ".join(f"{c}×{p}" for p, c in MSI[t].items())
+            else:
+                pkg, gpp = MSI_PART[t]
+                bill = f"{pkg} (÷{gpp})"
             print(f"  {t:24s} {n:6d}  → {bill}")
     else:
         print("  (none)")
@@ -144,15 +205,15 @@ def main() -> int:
     print(f"  {'part':8s} {'qty':>6s}")
     total = 0
     seen = set()
-    for part in ORDER:
-        if part in pkgs:
-            q = pkgs[part]
-            print(f"  {part:8s} {q:6d}")
+    for part_name in ORDER:
+        if part_name in pkgs:
+            q = pkgs[part_name]
+            print(f"  {part_name:8s} {q:6d}")
             total += q
-            seen.add(part)
-    for part, q in sorted(pkgs.items()):
-        if part not in seen:
-            print(f"  {part:8s} {q:6d}")
+            seen.add(part_name)
+    for part_name, q in sorted(pkgs.items()):
+        if part_name not in seen:
+            print(f"  {part_name:8s} {q:6d}")
             total += q
     print(f"  {'TOTAL':8s} {total:6d}")
     return 0
