@@ -7,3 +7,7 @@ out/
 *.so
 __pycache__/
 *.pyc
+
+# Stray tool output: iverilog's default -o name, ABC's shell history.
+a.out
+abc.history
