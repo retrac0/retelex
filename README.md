@@ -74,6 +74,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
 | [common/su-1.md](common/su-1.md) | SU-1 mk1 subscriber unit: native CVSD set, 4P4C handset, Autovon pad → dial pulses, two-board stack |
 | [common/sdu-1.md](common/sdu-1.md) | SDU-1 mk1: 32 kb/s insert-1 on raw biphase (switched); RAW64 strap for nailed 64 kb/s |
+| [common/stu-1.md](common/stu-1.md) | STU-1 mk1 test set: the lineman's butt set — two §9.4 front ends, one a direction, a two-column lamp field that names the fault, a violation counter on real copper, the phantom in volts |
 | [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
 | [common/tone-plan.md](common/tone-plan.md) | the tone plan: four tones in two timbres — the Australian warble for *progressing*, the old Bell buzz for *stop* — why a warble is one oscillator and not three, eight ROM planes as two switchable standards, and the analog card beside it |
 | [common/tone-card.md](common/tone-card.md) | the tone card: one generator holding a whole shelf on fast busy — a plain 2 × 16 channel card, the backplane jumper field that lets one slot feed the others, and the only card in the set that drives and never listens |

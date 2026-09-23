@@ -79,7 +79,7 @@ in `marker.md`. The count is a sketch to size the minimum, not a design:
 | function | parts |
 |---|---|
 | scanner: a 6-bit count, eight ports a millisecond | 74HC393 |
-| probe: M from `HA` (highway select, slot select, capture); `BUSY` and the card's word from `PB`, the word into a shift register over the visit | 2 × 74HC151, 74HC74, 74HC164, 74HC30 |
+| probe: M from `HA` (highway select, slot select, capture); `BUSY` and the card's word from `PB`, the word into a shift register over the visit — sixteen bit-times, so two `'164`; a card that wants only the class family takes four of them and one (`extensions.md` §2.2) | 2 × 74HC151, 74HC74, 2 × 74HC164, 74HC30 |
 | what goes into the control word's `DST`/`SRC`: the scanner, the register's digits, or a fixed address | 3 × 74HC157 |
 | the word out: parallel load, sixteen bits on `SDATA` (`mainboard.md` §2.3) | 2 × 74HC165 |
 | sequencer: state count, decode, the class tests, and `/HUNT_INH` into the hunt (pulled up, so nothing here drives it) | 74HC163, 74HC138, 2–3 gate packages |
@@ -180,9 +180,9 @@ the ribbon, which is enough for a one-direction flood (`common-control.md` §4).
 | lines 30–77 | blocks 3–7, ≈ 80 packages each when full | `fabric.md` §5 |
 | dial tone, busy, cannot-complete, ringback | tone cards at 01–03 (`protocol.md` §5), and the ringback card on the `RBT` bus. The marker reaches the switched tones by address; a source never listens, so it needs no port circuit | `features.md` §2; `fabric.md` §3.5 |
 | more registers | three at 48 lines of dial phones | `marker.md` §6 |
-| an operator (0) | a phone on any line card whose word says operator (the card's 2×'165 fitted: `extensions.md` §2.2). 0 hunts that class in fixed order from 00, so 04 is its home once block 0 is fitted; 05–07 and dialable line slots follow | `operator.md`; `calls` 9 |
+| an operator (0) | a phone on any line card whose word **answers to 04** (the card's '165 fitted: `extensions.md` §2.2, `groups.md` §2). 0 calls 04 and then hunts the ports that answer to it, in fixed order from 00, so 04 is its home once block 0 is fitted; 05–07 and dialable line slots follow | `operator.md`; `calls` 9 |
 | the console | a busy-lamp field and keys on the control bus: a manual board, and the bring-up tool | `features.md` §4 |
-| outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line. 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
+| outside lines (9) | FXO cards in their exchange build, in any line slots; their word says outside line (class 101). 9 takes the first free one in fixed order. A CO ringing in is routed as if it had dialled 0, so fit an operator first | `features.md` §5; `calls` 10, 11 |
 | lines at another site | an MF8 link on a block of lines, whose channels become lines *h*1–*h*3 and *h*5–*h*7, and a stock MF8 shelf of line cards at the far end. It is a trunk block whose channels say line | `terminal.md` |
 | the network | a trunk block at 10–17 (and further groups in blocks 2+), the network unit and two or three monitors a block, and the exchange's own code `e b` jumpered on the unit. Local numbers in 20–77 stay `h s`; standalone had `1` as a highway, and fitting the unit makes `1` the flood again. A line on any exchange is `1 e b h s`, and another exchange's outside line is `1 e b 9`. The marker already fitted — mini-marker or class marker — stays (`common-control.md` §4) | `network.md`, `monitor.md` |
 

@@ -10,11 +10,12 @@ module tb_word;
     localparam integer RING_ON = 200, RING_OFF = 400;
     localparam integer NS = 1_000_000;
 
-    // class: {FF secondary, ppp, ccc, 2'b11}.  Bit 5 P, bit 6 b, bit 7 MBZ 0.
-    localparam [15:0] W_O   = {8'hFF, 8'b0000_0111};   // plain line class (no options)
-    localparam [15:0] W_B   = {8'hFF, 8'b0100_0111};   // busy-out
-    localparam [15:0] W_Z   = {8'hFF, 8'b0011_1111};   // restricted, z (bit 5); bit7 MBZ
-    localparam [15:0] W_OP  = {8'hFF, 8'b0000_1011};   // class operator — not the target of digit 0
+    // class: {FF secondary, ppp, ccc, 2'b11}.  Bit 5 P, bit 6 b, bit 7 D.
+    localparam [15:0] W_O   = {8'hFF, 8'b0000_1111};   // line 011, no options
+    localparam [15:0] W_B   = {8'hFF, 8'b0100_1111};   // busy-out
+    localparam [15:0] W_Z   = {8'hFF, 8'b0011_1111};   // restricted 111, z (bit 5); bit7 MBZ
+    localparam [15:0] W_RSV = {8'hFF, 8'b0001_0011};   // reserved class 100 — always OOS
+    localparam [15:0] W_TON = {8'hFF, 8'b0001_1011};   // tone trunk 110: offers dial tone on seize
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;
@@ -25,9 +26,10 @@ module tb_word;
     wire        wr_stb, wr_bsy, wr_clm;
     wire [5:0]  wr_dst, wr_src;
 
-    // 20=o, 21=o, 22=plain (end of hunt), 23=caller
+    // 20=o, 21=o, 22=plain (end of hunt), 23=caller, 04=a tone trunk
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
-               .LINE_PORTS(64'h0000_0000_000F_0000),
+               .LINE_PORTS(64'h0000_0000_000F_0010),
+               .LINE_WORD_04(W_TON),
                .LINE_WORD_20(W_O), .LINE_WORD_21(W_O),
                .LINE_WORD_22(16'hFFFF), .LINE_WORD_23(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
@@ -43,7 +45,7 @@ module tb_word;
        .wr_stb(wr_stb), .wr_dst(wr_dst), .wr_src(wr_src),
        .wr_bsy(wr_bsy), .wr_clm(wr_clm));
 
-    // Busy-out + restricted + operator on a second site
+    // Busy-out + restricted + the reserved class on a second site
     reg  [63:0] hook2 = 0, tx2 = 0;
     wire [63:0] pb2, e2;
     wire        wr2_stb, wr2_bsy, wr2_clm;
@@ -51,7 +53,7 @@ module tb_word;
     net_site #(.OWN_E(3'd2), .OWN_B(3'd2), .DIR0(2'd2),
                .LINE_PORTS(64'h0000_0000_000F_0000),
                .LINE_WORD_20(W_B), .LINE_WORD_21(W_Z),
-               .LINE_WORD_22(W_OP), .LINE_WORD_23(16'hFFFF),
+               .LINE_WORD_22(W_RSV), .LINE_WORD_23(16'hFFFF),
                .T_RISE(T_RISE), .T_FALL(T_FALL), .RING_ON(RING_ON), .RING_OFF(RING_OFF),
                .HIT(HIT), .ID(ID), .CLR(CLR), .T_GUARD(16), .T_CLAIM(250),
                .NREG(2), .NMON(1), .NRES(1))
@@ -148,7 +150,7 @@ module tb_word;
     endtask
 
     initial begin
-        $display("WORD (RTL) -- retired o-bit, busy-out, restricted, tied nail, call nail.\n");
+        $display("WORD (RTL) -- retired o-bit, busy-out, restricted, reserved class, tone trunk, tied nail, call nail.\n");
         #4000 rst_n = 1;
         wait_ms(80);
 
@@ -190,8 +192,26 @@ module tb_word;
         dial2(6'o21, 0);                          // digit 0 → pilot 04 (unfitted)
         wait_ms(80);
         want(b_src == NOGO, "restricted z: digit 0 with no 04 → cannot-complete");
-        want(!pb2[6'o22], "digit 0 did not hunt class operator at 22");
+        want(!pb2[6'o22], "digit 0 did not hunt the reserved class at 22");
         hook2 = 0; wait_ms(100);
+
+        // ---- the reserved class reads out of service ---------------------
+        $display("  reserved class");
+        b_src = 6'h3f;
+        hook2[6'o23] = 1'b1; wait_ms(40);
+        dial2(6'o23, 2); dial2(6'o23, 2);          // 22 — the reserved class
+        wait_ms(80);
+        want(b_src == NOGO, "reserved class: dialled 22 → cannot-complete");
+        want(!pb2[6'o22], "reserved class: 22 was never written");
+        hook2 = 0; wait_ms(100);
+
+        // ---- tone trunk: a seizure is a caller (leaf-uplink.md 3) --------
+        $display("  tone trunk");
+        last_src = 6'h3f; last_dst = 6'h3f;
+        hook[6'o04] = 1'b1; wait_ms(80);
+        want(last_dst == 6'o04 && last_src == 6'o01,
+             "tone trunk: seize → register and dial tone");
+        hook[6'o04] = 1'b0; wait_ms(100);
 
         // ---- tied nail ---------------------------------------------------
         $display("  tied nail");

@@ -20,10 +20,11 @@ module tb_groups;
     localparam [15:0] ANS04 = {8'hFF, 6'o04, 2'b01};
     // Dual: primary answers-to 20, tag 01 payload 25
     localparam [15:0] DUAL20_25 = {6'o25, 2'b01, 6'o20, 2'b01};
-    // Field B K-only (busy owner): LUK = 001, MBZ 000
-    localparam [15:0] ANS04_K = {6'b001000, 2'b10, 6'o04, 2'b01};
-    // Field B U-only (unequipped owner)
-    localparam [15:0] ANS04_U = {6'b010000, 2'b10, 6'o04, 2'b01};
+    // Condition flags, L U K at bit-times 10/11/12 (extensions.md 2.2.1),
+    // written here MSB-first as the payload field: K-only (busy owner).
+    localparam [15:0] ANS04_K = {6'b000100, 2'b10, 6'o04, 2'b01};
+    // U-only (unequipped owner)
+    localparam [15:0] ANS04_U = {6'b000010, 2'b10, 6'o04, 2'b01};
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;

@@ -16,8 +16,8 @@ module tb_priority;
     localparam integer T_RISE = 16, T_FALL = 64;   // fast release for the bench
     localparam integer RING_ON = 200, RING_OFF = 400;
     localparam integer NS = 1_000_000;
-    // class 001, P=1, b=0, spare=0  -- extensions.md 2.2 / 2.4.1
-    localparam [15:0] WORD_PRI = {8'hFF, 8'b0010_0111};
+    // class line 011, P=1, b=0, D=0  -- extensions.md 2.2 / 2.4.1
+    localparam [15:0] WORD_PRI = {8'hFF, 8'b0010_1111};
 
     reg clk = 0, rst_n = 0;
     always #122.0703 clk = ~clk;

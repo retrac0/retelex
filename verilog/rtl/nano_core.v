@@ -69,6 +69,12 @@ module nano_core #(
     output reg       ser_bsy, ser_clm, ser_g,
 
     output     [2:0] scan_port,
+    // The two strobes that go with SCAN on cable B (mainboard.md 2.3.3).
+    // ADVANCE is the scanner's own count enable gated by the clock, so a
+    // visit with no ADVANCE is a repeated one; START is a NOR of the six
+    // counter outputs, high through port 00's visit.
+    output           scan_adv,
+    output           scan_start,
     output reg       wr_stb,
     output reg [5:0] wr_dst,
     output reg [5:0] wr_src,
@@ -95,6 +101,8 @@ module nano_core #(
     reg        probe_dirty;
 
     assign scan_port = scan[2:0];
+    assign scan_adv    = oct_stb & pv;
+    assign scan_start  = (scan == 6'd0);
 
     // ---- write engine ----------------------------------------------------
     localparam WS_DT = 3'd0,   // caller <- dial tone, BUSY

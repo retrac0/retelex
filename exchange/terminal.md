@@ -93,7 +93,7 @@ A tie trunk's six channels all send one word, trunk and its direction
 | at the terminal | its channel says | what the port does |
 |---|---|---|
 | CVSD subscriber line card, FXS card | a plain line: word line to ground, `/ANS` open | rings in cadence, gives ringback |
-| data card | data line; `/ANS` low if `DSR` should follow `DTR` without the cadence | never connected to a voice port of this exchange |
+| data card | a line with option `D` (`extensions.md` §2.4); `/ANS` low if `DSR` should follow `DTR` without the cadence | never connected to a voice port of this exchange |
 | FXO card, exchange build (`features.md` §5) | outside line, `/ANS` low | 9 hunts it: an outside line at the terminal's site. A CO ringing in is routed as 0 |
 | a phone on any station card | operator | a second position, hunted after 04 |
 | a loopback test line (`extensions.md` §1) | line, `/ANS` low | a test of the link from any phone (§5) |
@@ -105,7 +105,7 @@ A tie trunk's six channels all send one word, trunk and its direction
 cards' worth of ports in one. The block already commutates each port's word
 separately (`fabric.md` §3.1). On the trunk card a jumper a channel takes the
 word line to ground (a plain line), to the card's shared 2×74HC165 (one 16-bit
-word, jumpered), or to a 2×'165 of the channel's own. A second jumper sets `/ANS`. A tie
+word, jumpered), or to a '165 of the channel's own. A second jumper sets `/ANS`. A tie
 trunk jumpers all six to the shared word and ties every `/ANS` low. A terminal
 jumpers each to what the card at the far end of that channel is: the cards at the
 terminal cannot send their own, because MF8 carries only `C` and A. **Label both

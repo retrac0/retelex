@@ -66,31 +66,33 @@ module net_unit #(
     output reg [3:0] fan_legs,
     output reg [3:0] res_used
 );
-    localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
-               C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_REST = 3'd7;
+    localparam C_NONE = 3'd0, C_SRC  = 3'd1, C_TRUNK= 3'd2, C_LINE = 3'd3,
+               C_RSVD = 3'd4, C_OUT  = 3'd5, C_TONE = 3'd6, C_REST = 3'd7;
 
     localparam [5:0] EV_GLARE   = 6'o04,
                      EV_NOTRUNK = 6'o10;
 
-    // extensions.md 2.2: trunk direction/glare in secondary tag 10,
-    // payload {dd, g, 000} at bits [15:10].
+    // extensions.md 2.2: a trunk says everything in its primary octet —
+    // class trunk (family 01, member 0), glare at frame 5, direction at
+    // frames 6-7 — and its secondary is FF.  A tone trunk (C_TONE) is the
+    // family's other member and is never a flood seat (leaf-uplink.md).
     wire       p_plain  = &p_word;
     wire       p_none   = ~|p_word;
     wire [1:0] p_type   = p_word[1:0];
-    wire [1:0] p_tag    = p_word[9:8];
-    wire [5:0] p_pay    = p_word[15:10];
+    wire       p_sec_ff = (p_word[15:8] == 8'hFF);
     wire       p_form   = !p_plain && (p_type == 2'b11);
     wire [2:0] p_cls    = p_plain ? C_LINE :
                           (!p_none && p_type == 2'b00) ? C_NONE :
                           (p_type == 2'b01 || p_type == 2'b10) ? C_LINE :
                           p_form  ? p_word[4:2] : C_NONE;
-    wire       trunk_sec_ok = (p_cls == C_TRUNK) && (p_tag == 2'b10) &&
-                              (p_pay[2:0] == 3'b000) && ~|p_word[7:6];
-    // offers-tone (bit 5): not a flood seat (leaf-uplink.md).
-    wire       is_trunk = (trunk_sec_ok && !p_word[5]) || TRUNK_MASK[p_port];
-    wire [1:0] p_dir    = trunk_sec_ok ? p_pay[5:4]
-                                       : TRUNK_DIR[p_port*2 +: 2];
-    wire       p_g      = trunk_sec_ok && !p_word[5] && p_pay[3];
+    // The unit has no out-of-service decode of its own, so the FF check is
+    // what stands in for one: without it a random word would be a live flood
+    // seat once in 32 instead of once in 8192 (extensions.md 2.2, hold-off).
+    wire       p_trunk_cls = p_form && p_sec_ff && (p_cls == C_TRUNK);
+    wire       is_trunk = p_trunk_cls || TRUNK_MASK[p_port];
+    wire [1:0] p_dir    = p_trunk_cls ? p_word[7:6]
+                                      : TRUNK_DIR[p_port*2 +: 2];
+    wire       p_g      = p_trunk_cls && p_word[5];
     wire       p_n      = is_trunk && STRAP_N[p_dir];
     wire       p_free   = !p_busy && !p_m;
 

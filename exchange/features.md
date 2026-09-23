@@ -10,9 +10,10 @@ circuits — except that what is switched here is CVSD.
 > **Status: proposed.** Measured in simulation: every card's *behaviour as a
 > port* (`exch.py calls`), the announcement's bit stream and seams
 > (`exch.py announce`), and the conference bridge's speech detector, floor and
-> switch (`exch.py confer`, `conference.md`); `exch.log` is the run. *Source*,
-> *data line* and *restricted* are proposed class codes in `fabric.md`
-> §3.5, not yet in `marker.md` or the `calls` model. Class *conference* is
+> switch (`exch.py confer`, `conference.md`); `exch.log` is the run. *Source*
+> and *restricted* are class codes of `fabric.md` §3.5; a **data line** is a
+> line with option `D`, not a class of its own (`extensions.md` §2.4). The
+> `calls` model keeps the older numbers. Class *conference* is
 > **retired**: a leg is a line (`conference.md` §6). None of the cards has a
 > circuit yet, and nothing has been on a bench.
 
@@ -29,7 +30,7 @@ second writer to the same store (`register.md` §7) and would need the caller's
 
 ---
 
-## 2. Tones (class 5, class 6) — analog
+## 2. Tones (class *source*, 001) — analog
 
 One slot, one tone: a 555-style or discrete carrier into one encoder half of
 `mf8-spec.md` §12.1, with pots for the carrier frequency and the warble rate, a
@@ -65,7 +66,7 @@ and fifty spurious lines (`sim/tones.py warble`).
 
 ---
 
-## 3. Announcement (class 2, or class 6) — the one ROM
+## 3. Announcement (a line, or a source) — the one ROM
 
 A recorded message needs **no codec at all**: a ROM, an address counter and a
 shift register put a CVSD bit stream straight on `C_TX`. The image is made with
@@ -77,8 +78,8 @@ sent (`exch.py announce`):
 | Size | 8 kB a second: 4.5 s is 36 000 bytes; **8 s fills a 64 kB part** |
 | Quality | the codec's own figure for that recording — 16.96 dB segSNR for the 4 s of one talker used |
 | As a port | on-hook until rung; answers 300 ms after E rises (M = 1), plays, drops M — and the release rule has the caller back at dial tone 0.3 s after the message ends (`exch.py calls` 9c) |
-| As class 2 | the last operator position: the night or all-busy message |
-| As class 6 | a looping cannot-complete message in place of a tone: a source, never busy |
+| As a line answering to 04 | the last operator position: the night or all-busy message (`groups.md` §2) |
+| As a source | a looping cannot-complete message in place of a tone: never busy, one write |
 
 **The seams.** The port sends `FILL` until it answers, then the image, then
 `FILL`; a loop joins the image's end to its start. `FILL` free-runs, so an image
@@ -105,12 +106,13 @@ memory is the syllabic filter's, not the 1 ms integrator's. Record the silence.
 
 ---
 
-## 4. Operator (class 2) and the console
+## 4. Operator (a line that answers to 04) and the console
 
 **Two things on one desk** (`operator.md` §1): the **position** is a phone on a
-line card whose word says operator (`extensions.md` §2.2); the **console** is
-keys on the control bus. 0 hunts class 2 in fixed order from 00; **04 is the
-default home**, not a requirement (`operator.md` §2). 05 is the nominal night
+line card whose word says it answers to 04 (`extensions.md` §2.2, `groups.md`
+§2); the **console** is keys on the control bus. 0 calls 04 and then hunts the
+ports that answer to it, in fixed order from 00; **04 is the default home**, not
+a requirement (`operator.md` §2). 05 is the nominal night
 announcement or backup; 06–07 take more operators or single-channel trunks
 (`protocol.md` §5). Further positions may sit in any dialable line slot.
 
@@ -132,7 +134,7 @@ that sends no word has no class, so a hunt never takes it.
 
 ---
 
-## 5. External trunk (class 3): the FXO card needs one change
+## 5. Outside line (class 101): the FXO card needs one change
 
 `channel-cards.md` §3.5's FXO card sends `A_TX` = *ringing present*. On an extended
 line that is right. On an exchange it is not (`exch.py calls` 11):
@@ -163,11 +165,11 @@ a tone:
                                No free test; the source is never BUSY and its latch is never written
 ```
 
-`marker.md` §2 does exactly that for classes 5 and 6, so a radio whose word
-says class 6, at 75, is dialled as 75 today. What it lacks is a class of its own: at
-class 6 it would also be hunted as cannot-complete if the card at 03 were
-pulled. **Proposed: one class, *source*, for everything that talks and never
-listens, the two tones included.** The marker reaches dial tone and
+`marker.md` §2 does exactly that for a source, so a radio at 75 is dialled as
+75. What the older map lacked was a class of its own: sharing the
+cannot-complete code, the radio would also have been hunted as a tone if the
+card at 03 were pulled. **One class, *source* (001), for everything that talks
+and never listens, the two tones included.** The marker reaches dial tone and
 cannot-complete by their fixed addresses, 01 and 03, not by a hunt, so no source
 is ever hunted and the class means only "one write" (`fabric.md` §3.5).
 
@@ -195,11 +197,11 @@ circuit, marker, and what it is not.
 A data card is a line. A call to it is set up like any other and the fabric
 passes its bits exactly (`protocol.md` §4). In-band tones sit in the stream
 until answer; E rising — `DSR` — marks it. A terminal can dial by pulsing `DTR`
-(`marker.md` §7). Under the marker as it stands a phone that dials a data
-port hears noise, and nothing prevents it. **Proposed: a class of its own, *data
-line*** (`extensions.md` §2.2, §2.4). The marker will not connect a data line
-to a voice port, or the reverse, and gives cannot-complete. A run of data ports
-with their overflow bits set is a pool with one number. The check is made inside
+(`marker.md` §7). Under a marker that cannot read it a phone that dials a data
+port hears noise, and nothing prevents it. **The word says so: a line with
+option `D`** (`extensions.md` §2.4). The marker will not pair a data line with
+a voice port, or the reverse. A pool of data ports under one number is an
+*answers-to* group like any other (`groups.md` §2). The check is made inside
 one exchange: a call from another exchange arrives on a trunk.
 
 A card facing another codec transcodes on the card: the FXS card already does,
@@ -215,10 +217,10 @@ and a DNVT card is two codecs back to back.
   measured DTMF through the codec, not these tones.
 - **A ROM image's start against a free-running `FILL`** in gates; the seam table is
   the bit streams, not the counter's start logic.
-- **The two new classes in the marker.** *Source* and *data line* are proposed
-  here and in `fabric.md` §3.5. Class *conference* is retired: a leg is a
+- **The two new classes in the marker.** *Source* and *tone trunk* are settled
+  here and in `fabric.md` §3.5; *data line* is now a line's option `D`. Class *conference* is retired: a leg is a
   line (`conference.md` §6). The `calls` model still has a conference leg as a
   line and tones as classes 5 and 6.
 - **A CO's ring cadence ANDed with `RING_CAD`** at the operator's phone: the phone
   rings only when both are on. Feed the operator's ring from E alone when the
-  caller is class 3, or accept it.
+  caller is an outside line, or accept it.

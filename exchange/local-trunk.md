@@ -75,7 +75,7 @@ this document is the eight-channel copper rear on that contract.
 | **commons** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out** |
 | **rear** | the highway-shaped link (§5), not on the header, not on H |
 
-**Word.** Two 74HC165 daisy-chained to all eight: class trunk, direction N/E/S/W, glare `g`
+**Word.** One 74HC165 to all eight: class trunk, direction N/E/S/W and glare `g`, all three in the primary octet
 (`extensions.md` §2.2). Gated by link-up (§6). Power-up RC as usual.
 
 **`/ANS`.** Tied low on the board. Trunks do not ring.
@@ -175,7 +175,7 @@ line numbers and gives eight channels where an MF8 group on that block gives
 six.
 
 At 1 % blocking, eight channels carry **3.13 E** (`erlang_cap`); six carry
-1.91 E. Glare still wants the word's `g` bit.
+1.91 E. Glare still wants the word's `g` bit, now frame 5 of the primary.
 
 ---
 
@@ -192,8 +192,8 @@ Not drawn.
 | RX demux holds | 2 × '174 (C); A levels or a second '174 | 2–3 |
 | Local crossing | 2 × '174 on local `TX_CLK` | 2 |
 | A path | RC + Schmitt, eight ways (or shared after demux) | ≈ 1–2 |
-| Card word, `/ANS`, `MUTE_BLK`, link-down | ≈ 3¼ + ½ | ≈ 4 |
-| | **≈ 14–18** | beside the eight port circuits the block already has |
+| Card word, `/ANS`, `MUTE_BLK`, link-down | ≈ 2¼ + ½ | ≈ 3 — one `'165`, not two |
+| | **≈ 13–17** | beside the eight port circuits the block already has |
 
 No 4.096 MHz, no classifier, no magnetics in the baseline.
 

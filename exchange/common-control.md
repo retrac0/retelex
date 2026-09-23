@@ -157,8 +157,8 @@ No network unit, no monitor, no trunk card.
 
 ```
  first key   1–7   highway h; wait for s; called = h s
-             0     hunt class 2, or cannot-complete if this marker has no hunt
-             9     hunt class 3, or cannot-complete
+             0     04, then whoever answers to it — cannot-complete if this marker has no hunt
+             9     hunt class outside line, or cannot-complete
              8 * # cannot-complete
 ```
 
@@ -206,7 +206,7 @@ fan-out and the glare / no-forward jumper are the same unit with more parts
 |---|---|---|---|---|
 | card word | no | yes | uses it if present, else a port mask | yes |
 | class hunt | no | yes | hunts trunks by watching the scan | the same, plus resolvers |
-| `/HUNT_INH` | unused | pulled up | unused if it hunts itself; drives it if the marker hunts class 4 | the same |
+| `/HUNT_INH` | unused | pulled up | unused if it hunts itself; drives it if the marker hunts class trunk | the same |
 | key `1` | highway, or `flood_go` if the unit is fitted | the same | consumes it | the same |
 | 0, 9 | cannot-complete | hunt | — | — |
 | nails, answers-to, restricted | no | yes | — | — |

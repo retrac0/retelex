@@ -28,8 +28,9 @@ The short answers, before the detail:
   to* with the same parts a tied nail takes.
 - **Tagged secondary on the same pin.** Class+options with a cover number uses
   tag `01` and payload `h s` (bits 8–9 / 10–15). Primary answers-to + tag `01` is
-  dual membership. Field A / field B are tag `00` / `10` per `extensions.md`
-  §2.2.1. Pin `a14` stays spare. A plain *answers-to* member needs only the
+  dual membership, and tag `10` carries the condition flags (`extensions.md`
+  §2.2.1). Tag `00` is an exchange code and belongs to the reserved network
+  nail alone. Pin `a14` stays spare. A plain *answers-to* member needs only the
   primary chip (secondary strapped `FF`).
 - **A bridge is a group, at no cost**: its legs answer to its number (or keep the
   `o` run of `conference.md` §6), as ordinary lines with `/ANS` low.
@@ -200,12 +201,17 @@ the hunt is in use for under three seconds of the hour.
   them.
 - **Another exchange.** The number is `h s`. A number elsewhere is four digits,
   and the network has no sender to send them (`extensions.md` §3.4). Field A is
-  not that address: tags `00` and `10` are mutually exclusive on one word, and
-  remote dest stays on the reserved network nail (call nail + tag `00`).
+  not that address at all: a remote dest stays on the two reserved tag-`00`
+  forms — the **network nail** (call nail: on lift, dial `1 e b h s`) and the
+  **net-wide forward** (answers-to: a call arriving here goes to `1 e b h s`).
+  Both wait on a sender; neither may fall back to a local number.
 - **Two groups on one card.** Dual membership is answers-to + tag `01` + a
-  second `h s` (`extensions.md` §2.2.1), not field A.
-- **Night vs busy cover.** Field B flags `U` / `K` distinguish unequipped-owner
-  from busy-owner members; unconditional members still take both.
+  second `h s` (`extensions.md` §2.2.1). Its two fields are twelve bits, which
+  would hold a net-wide address — but a second local number is a thing the
+  marker can act on today and a remote one is not, so the forward went to tag
+  `00` and dual membership kept tag `01`.
+- **Night vs busy cover.** The condition flags `U` / `K` distinguish
+  unequipped-owner from busy-owner members; unconditional members take both.
 
 ---
 
@@ -215,8 +221,9 @@ the hunt is in use for under three seconds of the hour.
 > number ride **secondary tag `01`** with payload `h s` on the same word
 > (`extensions.md` §2.2). **Primary answers-to + tag `01`** is dual membership:
 > the card answers to both the primary and the payload. Pin `a14` stays spare.
-> Field A (tag `00`, zeros only) and field B (tag `10`, `LUK` / `111111`) are
-> claimed per `extensions.md` §2.2.1 — one tag a word, never both. Idle
+> Field A is retired: an answers-to with a remote address cannot mean anything,
+> because the hunt is local. The condition flags (tag `10`, `LUK` / `111111`)
+> stand, one tag a word (`extensions.md` §2.2.1). Idle
 > secondary remains `FF`.
 
 ---
@@ -257,7 +264,16 @@ last, its number its first leg's. **Its legs answer to its number instead.**
 > marker cannot tell a leg from a cover phone that answers to the same number.
 > Meet-me (§5) and ordinary hunt groups (§2) remain. Re-open only with a way to
 > mark a leg that is not a class — layout, a pin, or another word form.
-> (Code `111` is now *restricted*, not spare.)
+> (Code `111` is now *restricted*; code `100`, class *operator*'s old one, is
+> the word's spare.)
+>
+> **There is now a candidate for that mark.** A class word with secondary tag
+> `10` is the one pairing the card word has not spent — six bits beside any
+> class but the trunk family, reserved and fail-closed
+> (`extensions.md` §2.2, "the space still unspent"). A leg would be an ordinary
+> line carrying one flag, at the cost of the second `'165` on a leg module and
+> no class code at all. Nothing else here is re-opened by it: the marker pass
+> that told *leg* from *phone* still has to be written.
 
 ---
 
@@ -276,7 +292,7 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 
 | where | what |
 |---|---|
-| `extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); call nail a form of its own; `o` retired; class *operator*'s code spare; class *restricted* at 111 with `z b 0`; **a14 stays spare**; tagged secondary for cover; answers-to dual membership (tag `01`); field A zeros-only; field B `LUK` |
+| `extensions.md` §2.2, §2.4 | §2.1's form (*answers to*); call nail a form of its own; `o` retired; class *operator* retired and its code `100` reserved; class *restricted* at 111 with `z b 0`; **a14 stays spare**; tagged secondary for cover; answers-to dual membership (tag `01`); condition flags `LUK` on tag `10` |
 | `marker.md` §1–§4 | reading a number becomes §2.2; 0 is a call to 04; the diode matrix gives a number as well as a class; two calls at one visit; no conference class; restricted is a class |
 | `features.md` §4; `conference.md` §1, §3, §5–§6 | the operator; the party bus; what the jumper carries; legs as ordinary lines |
 | `fabric.md` §3.5 | class 111 *restricted* |
@@ -288,7 +304,7 @@ A stands alone. A meet-me bridge needs only A (or the `o` run of
 ## 9. Not measured
 
 - **Package counts and a bench build.** The answers-to hunt, dual membership,
-  and field B `LUK` are in `verilog` (`make groups`); the adjacent `o` run it
+  and the condition flags `LUK` are in `verilog` (`make groups`); the adjacent `o` run it
   replaces never was. Night-service `U` against a real operator OOS switch, and
   `L` against a claimed trunk caller, are not separately exercised beyond the
   RTL checks.

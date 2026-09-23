@@ -43,8 +43,8 @@ channels; 70 and 74 free as on any trunk block). Leaf trunks sit at **10–17**.
 |---|---|---|
 | Marker | full marker + network unit (owns floods), or mini+unit | mini-marker, **no** network unit, **no** monitors |
 | Digit `1` | network key / flood (`HAS_NET`) | **LEAF**: hunt uplink; not highway, not flood |
-| This link | **offers-tone** (`t = 1`) on 70–77 | ordinary trunks 10–17; seize → caller → dial tone |
-| Flood ties elsewhere | `t = 0` as today | none on this exchange |
+| This link | class **tone trunk** on 70–77 | ordinary trunks 10–17; seize → caller → dial tone |
+| Flood ties elsewhere | class **trunk**, as today | none on this exchange |
 | Local lines | `h s` | `2–7` + `s` (and `0` / `8` / `9` as cannot-complete unless fitted) |
 | `0` / `8` / `9` on the leaf | as the central is built | cannot-complete unless fitted. On a **nanomarker** leaf (`nano-marker.md`) all three are one key: `0` hunts the operator and a misdialled 8 or 9 lands there too, and no prefix 8 or outside-line 9 can ever be told apart from it. Reaching the central over the uplink is unaffected — those pulses are the central's register |
 
@@ -100,20 +100,22 @@ Convention for several leaves off one central: further groups on 22
 
 ## 3. Offers-tone (both ends of this plant)
 
-Trunk class form (`extensions.md` §2.2): primary options `t 0 0`.
+**Offers-tone is a class, not a bit** (`extensions.md` §2.2): *tone trunk*, the
+trunk family's second member, family `01` member 1.
 
-| bit | | |
+| | | |
 |---|---|---|
-| **5** `t` | **offers-tone** | on seize (`M · /BUSY`), this port is a **caller**: attach a register, present dial tone. **Not** a pulse-flood hunt/monitor seat |
-| 6–7 | MBZ | a 1 → OOS as today |
+| class **tone trunk** | on seize (`M · /BUSY`), this port is a **caller**: attach a register, present dial tone. **Not** a pulse-flood hunt/monitor seat | |
+| options 5–7 | MBZ `000` — a tone seat faces no direction and carries no glare, because the flood never hunts it. A 1 → OOS | |
 
-On **central 22**, group 70–77 is jumpered `t = 1`. On the **leaf**, trunks
-10–17 may use the same bit, or a mini without a word treats fitted trunks on
+On **central 22**, group 70–77 is jumpered class *tone trunk*. On the **leaf**,
+trunks 10–17 may say the same, or a mini without a word treats fitted trunks on
 that block as tone-access (`TONE0` in the RTL site). Flood ties on the central
-keep `t = 0`. The network unit and monitors **ignore** offers-tone ports when
+stay class *trunk*. The network unit and monitors **ignore** offers-tone ports when
 seizing or forwarding a flood. One seat, one seize meaning.
 
-Secondary direction/glare unchanged (`tag 10`, `ddg`).
+A tone seat's whole word is one octet and a `FF` secondary: one '165, like
+every other card.
 
 ---
 

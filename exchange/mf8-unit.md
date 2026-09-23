@@ -483,7 +483,7 @@ The short answers, before the pins:
   block h, eight port circuits                    MF8 unit (D + A)
   hdr appearances: C_RX/A_RX[0..7]  ──▶  hold, TX mux, F, S  ── pass ── encoder  ══ line out
   hdr appearances: C_TX/A_TX[0..7]  ◀──  '174, RX demux, framer  ◀── classifier  ◀══ line in
-  hdr appearances: word, /ANS[0..7] ◀──  2×'165 / jumpers, /ANS tied or per slot
+  hdr appearances: word, /ANS[0..7] ◀──  '165 / jumpers, /ANS tied or per slot
   hdr commons: TX_CLK, TX_OCT, FILL ──▶  payload domain, the word, idle
   hdr commons: MUTE_BLK             ◀──  not locked  →  block ORs into BUSY
 ```
@@ -667,9 +667,10 @@ not use it.
 
 ### 5.6 The word, `/ANS`, and link-down
 
-A tie trunk sends one word to all eight from two 74HC165 daisy-chained and ties every
-`/ANS` low (`network.md` §1, `extensions.md` §2.1). Direction N/E/S/W
-and the glare bit are the jumpers on that 2×`'165`. The no-forward jumper
+A tie trunk sends one word to all eight from a single 74HC165 and ties every
+`/ANS` low (`network.md` §1, `extensions.md` §2.1). Class, direction N/E/S/W
+and the glare bit are the jumpers on that `'165`, all of them in its primary
+octet, and its secondary reads `FF`. The no-forward jumper
 stays on the network unit, one jumper a direction (`network.md` §3.3),
 not on this unit.
 
@@ -760,8 +761,8 @@ this board's:
 | RX A + overhead | `'259` on the eight C seats; `'174` for R and K | ≈ 2 |
 | P | XOR tree | a gate or two |
 | A: RC, Schmitt, eight times; K and R if they debounce like A | 2 × `'14`, plus RC | 2 |
-| Card word, `/ANS`, `MUTE_BLK` | ≈ 3¼ + ½ | ≈ 3¾ |
-| | **≈ 16–20 on D** | today's 14–16 plus eight-not-six and the overhead FFs |
+| Card word, `/ANS`, `MUTE_BLK` | ≈ 2¼ + ½ | ≈ 2¾ — one `'165`, not two (§5.6) |
+| | **≈ 15–19 on D** | today's 14–16 plus eight-not-six and the overhead FFs |
 
 A handful, on one card, as §2 said. The fabric does not pay it.
 

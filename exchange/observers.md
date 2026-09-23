@@ -1,7 +1,7 @@
 # The exchange — four cards that only listen
 
 `counters.md` built a traffic counter as a card that *only listens*: three of
-the cable's thirty-eight conductors, no `/BLK`, no shunt column, no probe, and no
+the cable's forty-three conductors, no `/BLK`, no shunt column, no probe, and no
 connection to the marker at all. **It is not the only such card.** Everything an
 operator or a technician wants to see is already on the two cables, because the
 fabric is a broadcast and the control bus is a broadcast, and nothing in the
@@ -214,14 +214,15 @@ class's **signature**, which is more useful than its name:
 
 | class | in the field |
 |---|---|
-| **line** (1) | both lamps together, and the hook lamp flickering while they dial |
-| **operator** (2) | a line, at 04, usually the busiest lamp on the panel |
-| **external trunk** (3) | hook lit by ringing before anyone has done anything; §2 |
-| **tie trunk** (4) | busy alone for the length of a flood, then hook if it claimed. §4.4 |
-| **tone, source** (5, 6) | **both dark always.** Working and idle look identical, and a pulled tone card looks the same again (`marker.md` §3: the next class-5 port serves, and with none the call still completes in silence) |
+| **line** (011) | both lamps together, and the hook lamp flickering while they dial |
+| **the operator's position** | a line at 04 that answers to its own number, usually the busiest lamp on the panel |
+| **outside line** (101) | hook lit by ringing before anyone has done anything; §2 |
+| **tie trunk** (010) | busy alone for the length of a flood, then hook if it claimed. §4.4 |
+| **tone trunk** (110) | busy, then hook, with no flood before it: a seizure that is a caller (`leaf-uplink.md` §3) |
+| **source** (001) | **both dark always.** Working and idle look identical, and a pulled tone card looks the same again (the next source port serves, and with none the call still completes in silence) |
 | **announcement** | dark, then hook 300 ms after it is rung, then dark |
 | **conference bridge leg** | the leg's hook is its caller's hook, one lamp a leg |
-| **unequipped** (0) | both dark |
+| **unequipped** (000) | both dark |
 
 ### 4.4 A flood is visible, and nothing else makes it visible
 
@@ -258,7 +259,7 @@ things beside it, and it is the answer to *who rang 23?*
 | the strobes | 1 × 74HC138 on `SLOTQ`, `HCLK` on `/E` — the register's trick (`mainboard.md` §2.2) |
 | the moment, the wire | 2 × 74HC151: strobe *s*, and `HA[h]`. **This is a port's own listen structure** |
 | hook and `BUSY` | 1 × 74HC74, two lamps |
-| the card's word | 1 × 74HC164 off `PB1`, gated to whole octets. 8 LEDs, three of them the class |
+| the card's word | 1 × 74HC164 off `PB1`, gated to whole octets. 8 LEDs: the type, the class as a family and a member, and the three option bits — which on a trunk are its glare and its direction |
 | armed, seen, stale | ½ 74HC74 and gates, two lamps, one key |
 | | **≈ 10 packages, ≈ 20 LEDs, two wheels, one key** |
 
@@ -282,16 +283,17 @@ operator:**
 - **Across a trunk it names the trunk port and nothing beyond it.** The distant
   caller is not knowable here, by anything, ever — the flood carries no calling
   number and the claim carries no address (`network.md` §3). What the card
-  *can* add is the trunk's own word, which carries its direction
-  (`extensions.md` §2.2): the trace ends with "in from the west", and the rest
+  *can* add is the trunk's own word, which carries its direction in the same
+  octet as its class (`extensions.md` §2.2) — so the one '164 above is the whole
+  of it: the trace ends with "in from the west", and the rest
   is a telephone call to the other exchange's operator. At a hub the shadow of a
   trunk port also catches every tie-through and resolver write, which is several
   a call.
 
 **The class beside the shadow is what tells an empty slot from an idle line** —
 the one thing §4.3 says the field cannot do. Set the wheels to a dark pair of
-lamps: class 0 is an empty slot, all ones is a plain line card, class 001 is an
-explicit line word, a dest form is a dest, and no word at all is a card held off at
+lamps: family `00` is an empty slot or the reserved code, all ones is a plain
+line card, family `11` member 0 is an explicit line word, a dest form is a dest, and no word at all is a card held off at
 power-up or taken out of service (`extensions.md` §2.2, `common-cards.md` §2).
 
 ---
@@ -395,7 +397,7 @@ the cure is a ULN2803 a row and no change anywhere else.
   in a rack, and whether amber at 2 mA a die is the same brightness as the other
   two. The fallback is two grids and 16HP.
 - **The watch's word display** assumes the card's word is aligned to `CLK_8K`
-  (`extensions.md` §2.2's 2×'165 loaded on `CLK_8K` / `TX_OCT`), so sixteen
+  (`extensions.md` §2.2's '165 loaded on `CLK_8K` / `TX_OCT`), so sixteen
   bits of `PB1` from a `CLK_8K` edge are the word. If a block's selection changes
   mid-visit the shifted word is garbage; the gate that suppresses that is named
   here and not drawn.

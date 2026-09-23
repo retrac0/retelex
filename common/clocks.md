@@ -36,7 +36,7 @@ They are the same chain:
 | 32 | **128 kHz** | **`LOOP_HB`** — the next '4040 tap | **`/SLOT[1]`** — §4; **`SCLK`** on a jumper; **word shift** on a2 | **a2** | the CVSD encoder; the option word's **2×`'165`**; control bus |
 | 64 | 64 kHz | **`TX_CLK`** | **`TX_CLK`** = `/SLOT[2]` | **a1**, and **a7** as `RX_CLK` | every card, every port, everything |
 | 128 | 32 kHz | **`FILL`** | **`FILL`** | **a4** | every unfitted `C_TX`; any card that must send silence |
-| 512 | 8 kHz | **`TX_OCT`** | **`CLK_8K`** (= `TX_OCT` on a3) | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's **2×'165**; the exchange's scanner and monitors |
+| 512 | 8 kHz | **`TX_OCT`** | **`CLK_8K`** (= `TX_OCT` on a3) | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's **'165**; the exchange's scanner and monitors |
 | 4096 | 1 kHz | — | **`TICK`** | — | the marker and the registers |
 
 **The exchange's cell is MF8's line bit.** A block commutates eight ports

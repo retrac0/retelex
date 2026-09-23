@@ -58,7 +58,7 @@ table: **six of the fourteen signal pins.**
 |---|---|---|---|
 | a1 | `TX_CLK` | in | the encoder's clock. The generator's T half runs on it |
 | a2 | `LOOP_HB` | — | nothing here encodes a line |
-| a3 | `TX_OCT` | ○ | loads the word's 2×'165 where it is fitted — §5 |
+| a3 | `TX_OCT` | ○ | loads the word's '165 where it is fitted — §5 |
 | a4 | `FILL` | — | the encoder's own `1010` at silence is the idle, and the cadence mutes its **input** rather than its output, so there is never a pattern to substitute |
 | a5 | `C_TX[n]` | **out** | the tone, into the commutator. The bus-driver population takes a second copy off the same node, **not** off this pin — one output, one load, as every other card has |
 | a6 | `A_TX[n]` | **out** | **held low** |
@@ -251,7 +251,7 @@ of fast busy needs no one's permission.
 
 - **At ports 01–03** the marker reaches the tone cards by address and never
   reads their class (`extensions.md` §2.2), so the word needs no part at all.
-- **Anywhere else**, a 2×'165 with class 011 *source* (`fabric.md` §3.5), so
+- **Anywhere else**, a '165 with class 001 *source* (`fabric.md` §3.5), so
   that the card is never busy and any number of listeners can be switched to it.
 
 Either way a13 is tied low, for the reason every card that must not be rung in

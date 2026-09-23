@@ -180,7 +180,7 @@ so a call in progress releases.
 
 **No valid receive pair for 100–200 ms** is link down:
 
-- gate the word's 2×'165 off (open-drain held off) — unequipped, leaves the hunt
+- gate the word's '165 off (open-drain held off) — unequipped, leaves the hunt
 - force `A_TX` low — M falls, the port's release rule runs
 
 Idle tones make this free: a live idle hop always presents the far send pair;
@@ -205,9 +205,9 @@ or the baseband trunk; any slot that may hold a single-channel trunk
 
 | pin | | | what this card does with it |
 |---|---|---|---|
-| a1 | `TX_CLK` | in | the encoder's clock; shifts the word's 2×'165 |
+| a1 | `TX_CLK` | in | the encoder's clock; shifts the word's '165 |
 | a2 | `LOOP_HB` | — | nothing encodes a digital line |
-| a3 | `TX_OCT` | in | loads the word's 2×'165 |
+| a3 | `TX_OCT` | in | loads the word's '165 |
 | a4 | `FILL` | — | codec idle is its own `1010` |
 | a5 | `C_TX[n]` | **out** | encoder out, in T |
 | a6 | `A_TX[n]` | **out** | dual-tone detector (§4), gated low on link-down. M at the port |
@@ -216,7 +216,7 @@ or the baseband trunk; any slot that may hold a single-channel trunk
 | a9 | `C_RX[n]` | in | into the decoder |
 | a10 | `A_RX[n]` | in | through a short RC and Schmitt to the tone gate: high silences the send pair. E as it stands — `/ANS` is low, a trunk never rings |
 | a11 | `MUTE` | — | unused; link-down is §5 on a12 |
-| a12 | card word | **out**, o.d. | class trunk `11 101 000` + secondary tag `10` payload `d d g 000` (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §5's link-down detector** |
+| a12 | card word | **out**, o.d. | class trunk, primary `11 01 0` with `g d d` in frames 5–7, secondary `FF` (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §5's link-down detector** |
 | a13 | `/ANS` | **out** | tied low on the board |
 | a14 | spare | — | open |
 | c5, c7 | `±12 V` | in | codec, oscillators, detectors, hybrid amps |
@@ -243,7 +243,7 @@ of the hunt — fail-safe, if surprising at bring-up.
 | recv detectors + AND | two filters and a gate, or one MT8870 footprint |
 | A path RC + Schmitt | ¼ 74HC14 |
 | link-down | ½ 74HC123 |
-| the word | ≈ 2 + FET — 2×'165 and 2N7002, as baseband |
+| the word | ≈ 1 + FET — one '165 and 2N7002, as baseband |
 | `/ANS` | tied low: no part |
 
 No package total is claimed until a schematic exists. It is clearly more than

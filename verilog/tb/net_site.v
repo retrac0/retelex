@@ -95,13 +95,13 @@ module net_site #(
 
     // Which block each direction's trunk group sits on: 1, then 3, 4 and 5 —
     // block 0 is tones + the operator bank; block 2 is the lines.
-    // Class form + tagged secondary (extensions.md 2.2):
-    // primary 11 101 000; tag 10; payload {DIR, G, 000}.
-    // WORD = {DIR, G, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11}
-    localparam [15:0] WORD0 = {DIR0, G0, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
-    localparam [15:0] WORD1 = {DIR1, G1, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
-    localparam [15:0] WORD2 = {DIR2, G2, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
-    localparam [15:0] WORD3 = {DIR3, G3, 3'b000, 2'b10, 3'b000, 3'b101, 2'b11};
+    // Class form, primary only (extensions.md 2.2): class trunk 010, glare at
+    // frame 5, direction at frames 6-7, secondary FF.
+    // WORD = {8'hFF, DIR, G, 3'b010, 2'b11}
+    localparam [15:0] WORD0 = {8'hFF, DIR0, G0, 3'b010, 2'b11};
+    localparam [15:0] WORD1 = {8'hFF, DIR1, G1, 3'b010, 2'b11};
+    localparam [15:0] WORD2 = {8'hFF, DIR2, G2, 3'b010, 2'b11};
+    localparam [15:0] WORD3 = {8'hFF, DIR3, G3, 3'b010, 2'b11};
     localparam [3:0] STRAP_N = ({3'b000, N0} << DIR0) | ({3'b000, N1} << DIR1)
                              | ({3'b000, N2} << DIR2) | ({3'b000, N3} << DIR3);
 

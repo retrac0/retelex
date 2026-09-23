@@ -28,10 +28,10 @@ and specifies both cards.
 
 | category | reached by | image | cadence | gate |
 |---|---|---|---|---|
-| **dial** | class 5, port 01 | **A** — 425 ∿ 25, the Australian warble | continuous | none |
+| **dial** | a source at port 01, by address | **A** — 425 ∿ 25, the Australian warble | continuous | none |
 | **ringback** | the `RBT` bus | **A** | double pulse, 4.096 s | `NOR(Q17, Q15)` |
-| **busy** | class 6, port 02 | **B** — 600 ∿ 120, the old Bell buzz | 0.512 / 0.512 s | `Q15` |
-| **cannot-complete** | class 6 by address, port 03 | **B** | 0.256 / 0.256 s | `Q14` |
+| **busy** | a source at port 02, by address | **B** — 600 ∿ 120, the old Bell buzz | 0.512 / 0.512 s | `Q15` |
+| **cannot-complete** | a source at port 03, by address | **B** | 0.256 / 0.256 s | `Q14` |
 
 `x ∿ y` is a carrier of *x* amplitude-modulated at *y*: three equally spaced
 lines. **The letters are distinct images, not ROM bits** — what has to be
@@ -47,7 +47,7 @@ tell apart, and in a one-frequency plan they differ only in speed. Here they
 differ in speed *and* pitch, and neither can be mistaken for the low warble that
 means the call is progressing.
 
-**Why a fourth tone.** `marker.md` §3's class 6 is "cannot-complete: busy /
+**Why a fourth tone.** The older map had one class for "cannot-complete: busy /
 error tone" — one destination for both. Splitting them needs a second source
 port, and the marker already computes the free test that would steer it. Under
 the proposed class codes both tone ports are class *source* **reached by

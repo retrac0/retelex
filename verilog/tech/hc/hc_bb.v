@@ -29,6 +29,7 @@ module mini_core #(
     input ser_busy, output ser_req, ser_strobe,
     output [5:0] ser_dst, ser_src, output ser_bsy, ser_clm, ser_g,
     output [5:0] probe_port, output [2:0] scan_port,
+    output scan_adv, scan_start,
     output probe_visit, probe_valid, probe_m, probe_busy,
     output flood_go, output [5:0] flood_caller,
     input net_restart, net_done, net_nogo, net_local, net_att,
@@ -62,6 +63,7 @@ module nano_core #(
     input ser_busy, output ser_req, ser_strobe,
     output [5:0] ser_dst, ser_src, output ser_bsy, ser_clm, ser_g,
     output [2:0] scan_port,
+    output scan_adv, scan_start,
     output wr_stb, output [5:0] wr_dst, wr_src, output wr_bsy, wr_clm
 ); endmodule
 module nano_reg #(

@@ -41,6 +41,8 @@ module nano_marker #(
     output           sclk,
     output           wr,
     output     [2:0] scan_port,
+    output           scan_adv,
+    output           scan_start,
     output           reg_busy,
     output           reg_gone,
     output           reg_nodig,
@@ -96,7 +98,7 @@ module nano_marker #(
         .ser_busy(ser_busy), .ser_req(ser_req), .ser_strobe(ser_strobe),
         .ser_dst(ser_dst), .ser_src(ser_src),
         .ser_bsy(ser_bsy), .ser_clm(ser_clm), .ser_g(ser_g),
-        .scan_port(scan_port),
+        .scan_port(scan_port), .scan_adv(scan_adv), .scan_start(scan_start),
         .wr_stb(wr_stb), .wr_dst(wr_dst), .wr_src(wr_src),
         .wr_bsy(wr_bsy), .wr_clm(wr_clm)
     );

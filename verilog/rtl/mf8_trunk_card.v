@@ -22,8 +22,8 @@
 `timescale 1ns/1ps
 
 module mf8_trunk_card #(
-    parameter [15:0]  WORD = 16'b000_0_00_10_000_101_11,
-        // tag 10, payload ddg=000 (N), primary trunk 101 options 000
+    parameter [15:0]  WORD = 16'b11111111_00_0_010_11,
+        // secondary FF; primary: dd=00 (N), g=0, class trunk 010, type 11
     parameter integer T_A  = 128             // the A lead's RC and Schmitt: 2 ms in frames
 )(
     input            clk,

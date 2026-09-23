@@ -1,0 +1,69 @@
+MF2 REPEATERED SPAN -- non-reclocking regenerators
+  A biphase repeater is a comparator and a driver: no clock, no
+  one-shots, nothing per-rate but the input filter, nothing in the
+  hut to drift and no clock to slip against.  It restores amplitude
+  completely and edge timing not at all.
+  Cell 3906 ns.  The §9.4 classifier rounds a gap against
+  0.75 cell with +/-13% tolerance measured (mf8-spec.md §9.4), so
+  the peak-to-peak budget for displacement is about 1016 ns.
+  Window 1.0 s x 3 seeds, quiet.
+
+  1 km a section
+
+  repeaters     span    edge sd   edge p2p  % of cell   stray     lost   locked        BER
+          0     1.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          1     2.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          2     3.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          3     4.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          4     5.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          6     7.0k         0n         0n       0.0%       3        0    99.9%   0.00e+00
+          8     9.0k         0n         0n       0.0%       3        3    99.9%   0.00e+00
+         12    13.0k         0n         0n       0.0%       3        6    99.9%   0.00e+00
+         16    17.0k         0n         0n       0.0%       3        9    99.9%   0.00e+00
+         24    25.0k         1n       610n      15.6%       3       12    99.9%   0.00e+00
+         32    33.0k       478n      1953n      50.0%      15    73626    99.9%   0.00e+00
+
+  1.5 km a section
+
+  repeaters     span    edge sd   edge p2p  % of cell   stray     lost   locked        BER
+          0     1.5k        67n       244n       6.2%       3        0    99.9%   0.00e+00
+          1     3.0k       134n       488n      12.5%       3        0    99.9%   0.00e+00
+          2     4.5k       204n       732n      18.8%       3        0    99.9%   0.00e+00
+          3     6.0k       279n      1099n      28.1%       3        0    99.9%   0.00e+00
+          4     7.5k       371n      1831n      46.9%       3     9981     0.0%   1.00e+00
+          6    10.5k       381n      1831n      46.9%       3   458025     0.0%   1.00e+00
+            (stopped: 1.5 km is done at 3 repeaters)
+
+  2 km a section
+
+  repeaters     span    edge sd   edge p2p  % of cell   stray     lost   locked        BER
+          0     2.0k        79n       244n       6.2%       3        0    99.9%   0.00e+00
+          1     4.0k       170n       732n      18.8%       3        0    99.9%   0.00e+00
+          2     6.0k       303n      1831n      46.9%       3      306    63.6%   4.22e-01
+          3     8.0k       356n      1831n      46.9%       3   276627     0.0%   1.00e+00
+            (stopped: 2 km is done at 1 repeaters)
+
+  SPAN LIMIT -- the last hop count that still decodes
+
+      section  repeaters   total span
+           1k         24        25.0k
+         1.5k          3         6.0k
+           2k          1         4.0k
+
+  "locked" is the fraction of the clip the framer held, and BER is
+  scored INSIDE that -- so read the two together: a high BER with a
+  low locked% is a chain that broke, and so is a low BER with one.
+  The span limit below requires locked > 95% as well as BER = 0.
+
+  Edges are matched to the nearest ideal edge within half a cell,
+  after the chain's bulk delay -- one input filter a section -- is
+  removed, because a constant delay is not distortion.  "stray" is
+  an edge the chain invented and "lost" one it swallowed; either is
+  what a biphase slip is made of.
+
+  The displacement accumulates as a BIAS, not a random walk: each
+  section's comparator fires a little late or a little early on the
+  same side every time, and the next section re-launches that as a
+  real edge.  So the lever is where the slicing level sits -- DC
+  restore and threshold centring -- not gain, and not more sections.
+

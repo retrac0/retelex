@@ -1,55 +1,61 @@
-MF2 AMI @ 256 kbps — 24 AWG buried pair + urban impulse
-  √f law ref: 12 dB @ 256 kHz / 1.7 km (frame-rate.md §3); AGC after cable
-  Urban impulse: 40/s, amp 1–5× (post-AGC) peak, τ 8–80 µs, ring 20–120 kHz
-  Window: 2.0 s × 3 seeds
+MF2 section length @ 256 kbps -- 24 AWG buried pair
+  sqrt(f) law ref: 12 dB @ 256 kHz / 1.7 km (frame-rate.md §3); ideal AGC after the cable
+  loss quoted at each code's own symbol rate: diff Manchester 512 kBaud, AMI 256 kBaud
+  urban impulse: 40/s, amp 1-5x peak, tau 8-80 us, ring 20-120 kHz
+  window: 2.0 s x 3 seeds
 
-  quiet, 1.7 km
-    cable             1.7 km, 12.0 dB @ 256 kHz (amp ×0.2512 before AGC)
-    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
-    BER (mean ch)     0.000e+00
-    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
-    time down         0.03%
-    longest clean     1999 ms mean across seeds
-  urban/industrial 40/s, 1.7 km
-    cable             1.7 km, 12.0 dB @ 256 kHz (amp ×0.2512 before AGC)
-    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
-    BER (mean ch)     1.592e-03
-    sync loss         8.50 LOF/s   (17.0 events / 2.0s)
-    time down         0.57%
-    longest clean     359 ms mean across seeds
+  MODEL CAVEATS (both optimistic, see docstring): zero-phase cable,
+  impulses injected after AGC.  Ranking is sound; kilometres are not
+  a bench number.
 
-  quiet, 3 km
-    cable             3 km, 21.2 dB @ 256 kHz (amp ×0.0873 before AGC)
-    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
-    BER (mean ch)     2.615e-02
-    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
-    time down         25.08%
-    longest clean     1498 ms mean across seeds
-  urban/industrial 40/s, 3 km
-    cable             3 km, 21.2 dB @ 256 kHz (amp ×0.0873 before AGC)
-    acquired / scored 3/3 seeds acquired, 2/3 with usable audio window
-    BER (mean ch)     3.106e-02
-    sync loss         11.83 LOF/s   (23.7 events / 2.0s)
-    time down         7.83%
-    longest clean     222 ms mean across seeds
+  DIFF MANCHESTER -- 512 kBaud on the pair
+    0.8 km, quiet                  8.0 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    0.8 km, urban 40/s             8.0 dB  3/3 acq  BER 5.497e-03   42.00 LOF/s    2.71% down     126 ms clean
+    1.2 km, quiet                 12.0 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    1.2 km, urban 40/s            12.0 dB  3/3 acq  BER 7.484e-03   41.33 LOF/s    2.69% down     126 ms clean
+    1.7 km, quiet                 17.0 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    1.7 km, urban 40/s            17.0 dB  3/3 acq  BER 5.120e-03   42.50 LOF/s    2.78% down     126 ms clean
+    2.5 km, quiet                 25.0 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    2.5 km, urban 40/s            25.0 dB  3/3 acq  BER 5.622e-03   42.67 LOF/s    2.79% down     126 ms clean
+    3 km, quiet                   29.9 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    3 km, urban 40/s              29.9 dB  3/3 acq  BER 5.858e-03   41.83 LOF/s    2.81% down     126 ms clean
 
-  quiet, 5 km
-    cable             5 km, 35.3 dB @ 256 kHz (amp ×0.0172 before AGC)
-    acquired / scored 0/3 seeds acquired, 0/3 with usable audio window
-    BER (mean ch)     1.000e+00
-    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
-    time down         100.00%
-    longest clean     0 ms mean across seeds
-  urban/industrial 40/s, 5 km
-    cable             5 km, 35.3 dB @ 256 kHz (amp ×0.0172 before AGC)
-    acquired / scored 0/3 seeds acquired, 0/3 with usable audio window
-    BER (mean ch)     1.000e+00
-    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
-    time down         100.00%
-    longest clean     0 ms mean across seeds
+  AMI -- 256 kBaud on the pair
+    0.8 km, quiet                  5.6 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    0.8 km, urban 40/s             5.6 dB  3/3 acq  BER 1.206e-03    7.50 LOF/s    0.51% down     382 ms clean
+    1.2 km, quiet                  8.5 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    1.2 km, urban 40/s             8.5 dB  3/3 acq  BER 1.270e-03    6.83 LOF/s    0.47% down     407 ms clean
+    1.7 km, quiet                 12.0 dB  3/3 acq  BER 0.000e+00    0.00 LOF/s    0.03% down    1999 ms clean
+    1.7 km, urban 40/s            12.0 dB  3/3 acq  BER 1.592e-03    8.50 LOF/s    0.57% down     359 ms clean
+    2.5 km, quiet                 17.6 dB  3/3 acq  BER 6.966e-03    0.00 LOF/s   24.07% down    1518 ms clean
+    2.5 km, urban 40/s            17.6 dB  3/3 acq  BER 1.428e-02   10.50 LOF/s   13.04% down     260 ms clean
+    3 km, quiet                   21.2 dB  3/3 acq  BER 2.615e-02    0.00 LOF/s   25.08% down    1498 ms clean
+    3 km, urban 40/s              21.2 dB  3/3 acq  BER 3.106e-02   11.83 LOF/s    7.83% down     222 ms clean
 
-  Sync loss = framer LOF (re-acquire after +2/−1 trip).
-  BER scored inside the longest contiguous locked run, aligned to TX.
-  At 5 km the √f cable closes the AMI eye even with ideal AGC —
-  expect no lock; 1.7 km is the project single-span reference.
+  SECTION LENGTH -- quiet: the longest distance with BER = 0,
+  0 LOF/s and every seed acquired
+
+    diff Manchester      3 km   (not bounded by this sweep)
+    AMI                  1.7 km
+
+  IMPULSE -- LOF/s at 40 impulses/s, against distance
+
+    code                    0.8 km    1.2 km    1.7 km    2.5 km      3 km
+    diff Manchester          42.00     41.33     42.50     42.67     41.83
+    AMI                       7.50      6.83      8.50     10.50     11.83
+
+  Quiet reach, DM / AMI = 1.76x, where the sqrt(f)
+  arithmetic predicts 0.71x the other way because DM
+  occupies twice the band.  The arithmetic measures the wrong
+  thing: with ideal AGC the section is closed by DISPERSION, not
+  by flat loss.  The monostable classifier decides on transition
+  timing RATIOS (0.75 cell), which a tilted channel scales without
+  breaking; AMI decides on amplitude against a peak-derived
+  threshold, which is what dispersion attacks.
+
+  The two limits are independent.  DM buys section length and pays
+  in impulse: about 5-6x AMI's breaks per second, and that ratio is
+  FLAT with distance, so no shorter section buys it back.  This is
+  line-codes.md §4 (AMI ~1/6 the breaks) reproduced at MF2's rate on
+  the buried pair for the first time.
 

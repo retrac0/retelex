@@ -594,8 +594,8 @@ number appears.
 
 | | |
 |---|---|
-| **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's 2×'165 unfitted, is a line with no options |
-| **its word** | *line*, today with class *operator* so that the 0 hunt finds it (`marker.md` §1). Under `groups.md` §2 that class goes: it is a plain line, and a second position is a card that **answers to** the pilot |
+| **the card** | any station card: an FXS card or a CVSD line card (`channel-cards.md`). A plain one, with the word's '165 unfitted, is a line with no options |
+| **its word** | *line* that **answers to** 04, which is how the 0 hunt finds it (`groups.md` §2). Class *operator* is retired; a second position is another card that answers to the same pilot |
 | **`/ANS`** | open. It is a phone and it rings in cadence |
 | **reached by** | **key 0 only** as a subscriber (`operator.md` §2) |
 | **not reached by** | its own number. Ports 00–07 are never dialled, because 0 is the operator key |
@@ -625,7 +625,7 @@ is deferred (`operator.md` §5).
 |---|---|
 | a second position / night announcement | nominally 05, then 06–07, then any dialable line slot. 0's fixed order from 00 reaches 04 first (`marker.md` §3) |
 | night service | the out-of-service switch on 04's word (`extensions.md` §2.2). 04 reads unequipped, and 0 goes on down the hunt |
-| single-channel trunks at 06–07 | class trunk in the word; direction hunt finds them. They do not need an MF8 group on block 0 |
+| single-channel trunks at 06–07 | class trunk in the word, its direction in the same octet; the direction hunt finds them. They do not need an MF8 group on block 0 |
 | no position fitted | 0 gives cannot-complete. Nothing else changes: a console with a ring source needs no position, and a CO line ringing in — which is routed as 0 — gets cannot-complete too, so an exchange with incoming trunks wants one |
 
 ### 8.3 The bank and the tones

@@ -101,15 +101,18 @@ What follows from the shape:
   through a resistor, exactly as an empty MF8 slot is, so whoever listens there
   hears CVSD silence.
 - **The marker reads ports the same way.** `BUSY` and each card's word are commutated
-  by two more '151s onto wires only the marker sees, and its probe is a
-  listener's two selects and a flip-flop, **addressed by the port in the serial
-  control word (`DST[2:0]`) — the scanner — not by `SLOT`**. So for a whole visit
+  by two more '151s onto `PB[1:0]`, and its probe is a
+  listener's two selects and a flip-flop, **addressed by `SCAN[2:0]` — the
+  scanner's own low three bits, on the cable (`mainboard.md` §2.3.3) — not by
+  `SLOT`**. So for a whole visit
   `PB` holds that card's pin steady, and a **16-bit** word at 128 kHz fits one
   octet (`extensions.md` §2.2). Highway commutators stay on `SLOT`. The probe
-  select is the scanner's low three bits — the same field as `DST[2:0]` — taken
-  from the scanner while the marker owns the bus, so a visit does not need a
-  fresh serial word a port; `/BLK` still comes from the once-a-block steer. A
-  console `PROBE` uses the serial word's `DST[2:0]` instead.
+  select is three conductors driven straight from the scanner while the marker
+  owns the bus, so a visit does not need a fresh serial word a port — which it
+  could not have, since a word is 125 µs and so is a visit; `/BLK` still comes
+  from the once-a-block steer. A console `PROBE` uses the serial word's
+  `DST[2:0]` instead (`block.v`:108). **`PB` is therefore readable by any card
+  on the ribbon, not only the marker** — `inprogress.md` is the first.
 - **An MF8 trunk group uses six of eight seats**: the **block adapter** drives
   appearances 1–3 and 5–7; 0 and 4 are unequipped on the fabric (`protocol.md`
   §5). F and S exist on the line. The unit's line mux may still address payload
@@ -128,7 +131,7 @@ eight puts a single '151 on each axis and runs the wires at MF8's own line rate
 
 One clock domain. Everything below is on the mainboard or a ribbon between
 blocks; all 74HC at 5 V. **`mainboard.md` is this table in full** — the
-thirty-eight signals, the two cables that carry them, the pinouts, and what the
+forty-three signals, the two cables that carry them, the pinouts, and what the
 cable costs §4's margins (18 ns of 743). **The latch write is serial**
 (`mainboard.md` §2.3): one sixteen-bit word on one wire, broadcast, in place
 of the twenty conductors this table used to list.
@@ -143,7 +146,9 @@ of the twenty conductors this table used to list.
 | `FILL`, `/RING_CAD`, `TICK` | clock card | 32 kHz idle pattern; 2 s / 4 s, low true; 1 kHz |
 | `RBT` | **the ringback tone card**, through a buffer on the card | the ringback bit stream. One of the fabric-wide references and carried with them, but an analog tone oscillator through a CVSD encoder does not belong on the clock card, so this one conductor is driven from a tone card's rear connector and **pulled to `FILL` at the clock card when none is fitted** (`mainboard.md` §2.1, `tone-card.md` §5) |
 | `HC[0..7]`, `HA[0..7]` | block *h* drives wire *h* | the highways. **One driver a wire**; every block listens to all sixteen through its own receivers. `HA` is also the marker's M highway |
-| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a dest form (`extensions.md` §2.2), **sixteen bits at 128 kHz** over the visit. Commutated by `DST[2:0]` of the control word (the scanner's port); only the marker reads them, so eight blocks share two wires |
+| `PB[1:0]` | the block the marker's probe has selected, tri-state | `BUSY`, and the card's word: its class and options, or a dest form (`extensions.md` §2.2), **sixteen bits at 128 kHz** over the visit. Commutated by `SCAN[2:0]`; eight blocks share two wires |
+| `SCAN[2:0]` | marker | **the port `PB` is showing**, stepping at 8 kHz — one port a visit. On cable B (`mainboard.md` §2.3.3), so a listener can tell whose `BUSY` and whose word it has. Under `/CON` the probe follows the word's `DST[2:0]` instead |
+| `ADVANCE`, `START` | marker | **the scanner stepped**, and **a pass begins**. No block reads them; they are on the cable so a listener can de-duplicate a repeated visit without a comparison and find the pass boundary without counting wraps — and so the three can be held against each other to catch a failed conductor (`mainboard.md` §2.3.4) |
 | `SDATA`, `SCLK` | marker, or the console | the latch write as one sixteen-bit word — `DST[5:0]`, `SRC[5:0]`, `BSY`, `CLM`, a guard bit — shifted to every block at once. Two '164 take it in and a '138 turns `DST[5:3]` into the eight lines the shunt picks `/BLK` off, so a block still needs no address and no comparator: "layout, not logic" (`mainboard.md` §2.3) |
 | `WR`, `/RESET` | the same | the write, gated with `/BLK` and the guard bit; and the clear. **`/RESET` is the signal on the bus a glitch can hurt most**, and is filtered at every block; `SCLK` is the one it can hurt next, and costs one call (`mainboard.md` §7) |
 | `/CON` | console | the console has the bus: marker goes high-Z |
@@ -157,7 +162,7 @@ of the twenty conductors this table used to list.
 | function | part | notes |
 |---|---|---|
 | Commutators: `C`, `A` | 2 × 74HC151 | addressed by `SLOT`; input *k* is port *k*. Same job as an MF8 shelf's frame mux (`mf8-spec.md` §10), without F and S — likeness, not a tap of the pair |
-| Commutators: `BUSY`, the word | 2 × 74HC151 | addressed by the **scanner's** `DST[2:0]` (live from the marker while it owns the bus; from the serial word on a console `PROBE`). Steady on `PB` for the visit |
+| Commutators: `BUSY`, the word | 2 × 74HC151 | addressed by **`SCAN[2:0]`** off cable B (live from the marker's scanner while it owns the bus; from the serial word's `DST[2:0]` on a console `PROBE`). Steady on `PB` for the visit |
 | Ringback substitution ahead of the `C` commutator | 2 × 74HC157 | port *k* sends `RBT` instead of its card's `C_TX` while it is being rung (§3.5) |
 | Strobe decoder | 74HC138 | addressed by `SLOTQ`; `HCLK` on an active-low enable, so line *k* is low for **the second half of cell *k*** and its falling edge is the middle of the cell |
 | Write decoder | 74HC138 | `/BLK`·`WR`·`G` enables; `DST[2:0]` picks the latch to clock |
@@ -250,26 +255,37 @@ gates never see the class at all.
 **The class is in the card's word** (`extensions.md` §2.2), which only the
 marker reads:
 
-| class | | class | |
-|---|---|---|---|
-| 000 | unequipped | 100 | outside line |
-| 001 | line | 101 | tie trunk. Its direction, N, S, E or W, and its glare bit are among the word's option bits. The no-forward jumper is one plug a direction on the network unit, not in the word (`network.md` §3.3) |
-| 010 | operator | 110 | data line |
-| 011 | source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 111 | **restricted**: a lobby or public phone; options `z b 0` (`extensions.md` §2.4). Warm is a call nail to 04. Conference leg as a class is retired: a bridge leg is an ordinary line |
+The three bits are a **family** of two and a **member** of one, so that the first
+four bit-times of the word name the family and nothing else need be read
+(`extensions.md` §2.2):
+
+| family | member 0 | member 1 |
+|---|---|---|
+| `00` — **none** | 000 unequipped: an empty slot, or a card held off | 100 **reserved**: the spare code, and any word carrying it is out of service |
+| `10` — **attached** | 001 source: a radio, a clock, a test tone (`features.md` §6). Dial tone at 01, busy at 02 and cannot-complete at 03 are sources too, and need no word, since the marker reaches them by address | 101 outside line |
+| `01` — **trunk** | 010 tie trunk. Its direction, N, S, E or W, and its glare bit **are the word's option bits** — frame 5 glare, frames 6–7 direction. The no-forward jumper is one plug a direction on the network unit, not in the word (`network.md` §3.3) | 110 tone trunk: a trunk that offers dial tone on seize instead of taking a flood (`leaf-uplink.md` §3). It faces no direction and carries no glare |
+| `11` — **subscriber** | 011 line; options `P b D`, where `D` is a data line (`extensions.md` §2.4) | 111 **restricted**: a lobby or public phone; options `z b 0`. Warm is a call nail to 04. Conference leg as a class is retired: a bridge leg is an ordinary line |
+
+Class *operator* is retired with the adjacent `o` run: an operator's position is a
+line that answers to 04 (`groups.md` §2), and its code is the spare above.
 
 **All ones is not class 111.** It is a separate constant: a plain line card ties
-its word pin to ground and reads `11111111`, which means *line, no options*,
-with no part (`extensions.md` §2.2, `common-cards.md` §2). Class 001 is the
+its word pin to ground and reads sixteen ones, which means *line, no options*,
+with no part (`extensions.md` §2.2, `common-cards.md` §2). Class 011 is the
 same class when a card shifts an explicit word because it has options to say.
+The constant falls inside the subscriber family, so a reader of the first four
+bit-times gets the right answer for it without a carve-out; what keeps a *legal*
+class word off the constant is restricted's must-be-zero frame 7.
 An empty slot sends no word and reads 000. An earlier form carried the class on
 three pins and took "rings" from one of its bits, which tied the codes to the
 ringing. With the class in the word and `/ANS` on a pin, the codes are free, and
 a plain line card says both with no part: its word pin tied to ground, its `/ANS`
 pin open.
 
-This renumbers `marker.md` §1's classes, adds *source*, *data line* and
-*restricted*, and has the marker reach the two tones by address rather than by
-hunt. It is **proposed, not yet applied there or in the `calls` model**.
+This renumbers `marker.md` §1's classes, adds *source*, *tone trunk* and
+*restricted*, retires *operator* and *data line* as classes, and has the marker
+reach the two tones by address rather than by hunt. It is in the RTL
+(`make word`); the `calls` model keeps the older numbers by its own note.
 
 ---
 

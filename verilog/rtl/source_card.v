@@ -10,7 +10,7 @@
 `timescale 1ns/1ps
 
 module source_card #(
-    parameter [15:0] WORD = 16'h000F,         // class 011 source, type 11; high byte unused
+    parameter [15:0] WORD = 16'hFF07,         // class 001 source, type 11, secondary FF
     parameter [15:0] SEED = 16'hACE1
 )(
     input        clk,

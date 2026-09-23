@@ -62,7 +62,13 @@ module marker #(
 
     // the probe, so a network unit can watch the scan (common-control.md 2.2)
     output     [5:0] probe_port,
-    output     [2:0] scan_port,          // live scanner[2:0] for the probe mux
+    output     [2:0] scan_port,
+    // The two strobes that go with SCAN on cable B (mainboard.md 2.3.3).
+    // ADVANCE is the scanner's own count enable gated by the clock, so a
+    // visit with no ADVANCE is a repeated one; START is a NOR of the six
+    // counter outputs, high through port 00's visit.
+    output           scan_adv,
+    output           scan_start,
     output           probe_visit,
     output           probe_valid,
     output           probe_m,
@@ -106,10 +112,15 @@ module marker #(
     input             con_n,
     output            bus_oe
 );
-    // fabric.md 3.5 / extensions.md 2.2 — class in the word, not the old
-    // marker.md §1 renumbering.  111 is restricted (conference-as-class retired).
-    localparam C_NONE = 3'd0, C_LINE = 3'd1, C_OPER = 3'd2, C_SRC  = 3'd3,
-               C_OUT  = 3'd4, C_TRUNK= 3'd5, C_DATA = 3'd6, C_REST = 3'd7;
+    // fabric.md 3.5 / extensions.md 2.2 — class in the word.  The code is a
+    // family in word[3:2] and a member in word[4], so bit-times 0-3 alone say
+    // which family: 1111 subscriber, 1101 trunk, 1110 source/outside, 1100
+    // neither.  C_RSVD (100) is class operator's old code, retired with the
+    // adjacent o-run: an operator's position is a line that answers to 04.
+    // C_TONE (110) is the freed data-line code: an offers-tone trunk seat.
+    // A data line is C_LINE with word[7] (D) set.
+    localparam C_NONE = 3'd0, C_SRC  = 3'd1, C_TRUNK= 3'd2, C_LINE = 3'd3,
+               C_RSVD = 3'd4, C_OUT  = 3'd5, C_TONE = 3'd6, C_REST = 3'd7;
 
     // ---------------- the event word (counters.md 9) ------------------
     // What a pure listener cannot see, because nothing is WRITTEN when it
@@ -161,50 +172,63 @@ module marker #(
     //   00 hhhhhh      tied nail (all zeros = unequipped)
     //   01 hhhhhh      answers to h s
     //   10 hhhhhh      call nail: on lift, connect as if dialled h s
-    //   11 ccc ppp     class form; all ones = plain line
+    //   11 aa m ppp    class form: family, member, options; all ones = plain line
+    // Tag 01 is a local port (cover / dual membership), tag 10 the condition
+    // flags, tag 00 an exchange code (the network nail — reserved, OOS until a
+    // sender exists).  A trunk carries its direction and glare in ppp and its
+    // secondary is FF, so it is a one-'165 card.
     wire       p_plain  = &p_word;
     wire       p_none   = ~|p_word;
     wire [1:0] p_type   = p_word[1:0];
     wire [1:0] p_tag    = p_word[9:8];
     wire [5:0] p_pay    = p_word[15:10];
     wire       p_sec_ff = (p_word[15:8] == 8'hFF);
-    // MBZ: restricted bit7 must be 0; line/oper/data bit7 must be 0;
-    // trunk primary options must be 000; tag 11 requires payload ones.
+    // MBZ: restricted bit7 must be 0 (that alone keeps a legal class word off
+    // the all-ones plain-line constant); source, outside and tone trunk take no
+    // options at all; the reserved class has no legal word.  A line spends all
+    // three frames (P b D) and a trunk all three (g dd), so neither has one.
     wire       p_form_raw = !p_plain && (p_type == 2'b11);
     wire [2:0] p_cls_raw  = p_form_raw ? p_word[4:2] : 3'd0;
     wire       p_opt_bad  = p_form_raw && (
                               (p_cls_raw == C_REST  && p_word[7]) ||
-                              (p_cls_raw == C_LINE  && p_word[7]) ||
-                              (p_cls_raw == C_OPER  && (p_word[7] || p_word[5])) ||
-                              (p_cls_raw == C_DATA  && (p_word[7] || p_word[5])) ||
+                              (p_cls_raw == C_RSVD) ||
                               (p_cls_raw == C_SRC   && |p_word[7:5]) ||
                               (p_cls_raw == C_OUT   && |p_word[7:5]) ||
-                              (p_cls_raw == C_TRUNK && |p_word[7:6]));
-    // Answers-to secondary (extensions.md §2.2.1): FF idle; tag 00 field A
-    // zeros only; tag 01 dual membership; tag 10 field B LUK000 or 111111.
-    wire       p_ans_a    = (p_tag == 2'b00) && (p_pay == 6'b000000);
+                              (p_cls_raw == C_TONE  && |p_word[7:5]));
+    // Answers-to secondary (extensions.md §2.2.1): FF idle; tag 01 dual
+    // membership; tag 10 the condition flags, L U K at bit-times 10/11/12 —
+    // the payload's first three, printed in wire order — or 111111 for none.
+    // Field A is retired: an answers-to with a remote address cannot mean
+    // anything, because the hunt is local.
     wire       p_ans_dual = (p_tag == 2'b01);
     wire       p_ans_b_nf = (p_tag == 2'b10) && (p_pay == 6'b111111);
-    wire       p_ans_b_fl = (p_tag == 2'b10) && (p_pay[2:0] == 3'b000) &&
-                              !(p_pay[4] && p_pay[3]);   // U∧K → OOS
+    wire       p_ans_b_fl = (p_tag == 2'b10) && (p_pay[5:3] == 3'b000) &&
+                              !(p_pay[1] && p_pay[2]);   // U∧K → OOS
     wire       p_ans_sec  = (p_type == 2'b01) &&
-                              (p_sec_ff || p_ans_a || p_ans_dual ||
+                              (p_sec_ff || p_ans_dual ||
                                p_ans_b_nf || p_ans_b_fl);
     wire       p_tag_bad  =
                               (!p_sec_ff && p_tag == 2'b11) ||
-                              // tag 00: answers-to field A (zeros) OK; else
-                              // reserved/OOS (call-nail network until dialler)
-                              (p_tag == 2'b00 && p_type != 2'b01) ||
-                              // trunk must have tag 10 and ttt=000
-                              (p_cls_raw == C_TRUNK &&
-                               !(p_tag == 2'b10 && p_pay[2:0] == 3'b000)) ||
-                              // tag 01: class+cover (not trunk) or answers-to dual
+                              // tag 00 is an exchange code: it puts the
+                              // primary's port at another exchange.  Two forms
+                              // use it -- the network nail (call nail: dial
+                              // 1 e b h s on lift) and the net-wide forward
+                              // (answers-to: a call arriving here goes there).
+                              // Both are reserved and OOS until a sender
+                              // exists; a tied nail or a class cannot carry a
+                              // remote port at all.  So: OOS everywhere.
+                              (p_tag == 2'b00) ||
+                              // tag 01: a local port — cover beside a class
+                              // (never the trunk family, word[3:2] == 10), or
+                              // dual membership beside an answers-to
                               (p_tag == 2'b01 &&
                                !(p_type == 2'b01 ||
-                                 (p_form_raw && p_cls_raw != C_TRUNK))) ||
-                              // tag 10: trunk or answers-to field B; else OOS
-                              (p_tag == 2'b10 && p_type != 2'b01 &&
-                               !(p_form_raw && p_cls_raw == C_TRUNK)) ||
+                                 (p_form_raw && p_word[3:2] != 2'b10))) ||
+                              // tag 10: the condition flags, answers-to only.
+                              // The trunk has left this tag for the primary,
+                              // and beside a class it is the word's one
+                              // unspent space -- reserved, so OOS here too.
+                              (p_tag == 2'b10 && p_type != 2'b01) ||
                               // tied nail: secondary must be FF
                               (!p_sec_ff && p_type == 2'b00) ||
                               // answers-to: only listed secondaries
@@ -224,19 +248,21 @@ module marker #(
                           p_form  ? p_word[4:2] : C_NONE;
     wire [5:0] p_nail_to = p_hs;
     // Field B L/U/K (extensions.md §2.2.1); 111111 or non-B → unconditional.
-    wire       p_b_L     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[5];
-    wire       p_b_U     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[4];
-    wire       p_b_K     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[3];
+    wire       p_b_L     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[0];
+    wire       p_b_U     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[1];
+    wire       p_b_K     = p_ans && (p_tag == 2'b10) && !p_ans_b_nf && p_pay[2];
     wire [5:0] p_cnail_to = p_hs;
-    // Line options: frame 5 priority; frame 6 busy-out.  Restricted z is
-    // frame 5; bit 7 MBZ.  Floor: restricted ∧ ¬z → local-only.
-    // Trunk option bit 5 = offers-tone (leaf-uplink.md).
+    // Line options: frame 5 priority, frame 6 busy-out, frame 7 D — a data
+    // line, which the marker will not pair with a voice port.  Restricted z is
+    // frame 5; bit 7 MBZ.  Floor: restricted ∧ ¬z → local-only.  A trunk's
+    // frames are g dd and the marker reads none of them; offers-tone is a
+    // class of its own now (C_TONE, leaf-uplink.md).
     wire       p_pri    = p_form && (p_cls == C_LINE) && p_word[5];
     wire       p_bout   = p_form && p_word[6] &&
-                          (p_cls == C_LINE || p_cls == C_OPER ||
-                           p_cls == C_DATA || p_cls == C_REST);
+                          (p_cls == C_LINE || p_cls == C_REST);
     wire       p_z      = p_form && (p_cls == C_REST) && p_word[5];
-    wire       p_offers = p_form && (p_cls == C_TRUNK) && p_word[5];
+    wire       p_data   = p_form && (p_cls == C_LINE) && p_word[7];
+    wire       p_offers = p_form && (p_cls == C_TONE);
     wire       p_local  = p_form && (p_cls == C_REST) && !p_z;
     wire       p_free   = !p_busy && !p_m;
     wire       p_term   = p_free && !p_bout;               // terminating / hunt free
@@ -328,6 +354,8 @@ module marker #(
 
     assign probe_port  = p_port;
     assign scan_port   = scan[2:0];
+    assign scan_adv    = oct_stb & pv;
+    assign scan_start  = (scan == 6'd0);
     assign probe_visit = visit;
     assign probe_valid = p_valid;
     assign probe_m     = p_m;
@@ -697,7 +725,7 @@ module marker #(
                     // (groups.md §2) — replaces the adjacent `o` overflow run.
                     if (conn)
                         nogo(r);
-                    else if (p_term && (p_cls == C_LINE || p_cls == C_OPER ||
+                    else if (p_term && ((p_cls == C_LINE && !p_data) ||
                                         p_cls == C_REST || p_cls == C_SRC ||
                                         p_cnail)) begin
                         pair_or_listen(caller[r], called[r],
@@ -756,7 +784,7 @@ module marker #(
 
             // ---- call nail / outside: probe warm_to, then answers-to
             if (warm_run && warm_probe && visit && p_valid && p_port == warm_to) begin
-                if (p_term && (p_cls == C_LINE || p_cls == C_OPER ||
+                if (p_term && ((p_cls == C_LINE && !p_data) ||
                                p_cls == C_REST || p_cls == C_SRC || p_cnail)) begin
                     pair_or_listen(warm_from, warm_to, (p_cls == C_SRC), 1'b0);
                     warm_run <= 1'b0; warm_probe <= 1'b0;
@@ -802,7 +830,7 @@ module marker #(
                         warm_run <= 1'b1; warm_probe <= 1'b1;
                         push(p_port, 6'o00, 1'b1, 1'b0);
                     end
-                end else if (p_cls == C_LINE || p_cls == C_OPER ||
+                end else if ((p_cls == C_LINE && !p_data) ||
                              p_cls == C_REST || p_offers) begin
                     // a caller: the first free register.  None free, and the
                     // caller simply waits -- the scanner will be back in 8 ms.

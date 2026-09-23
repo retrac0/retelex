@@ -44,7 +44,7 @@ module tb_mini_leaf;
        .port_busy(), .reg_busy(), .wq_ovf(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    // Parent: offers-tone on DIR0 trunks (bit t); no flood.
+    // Parent: class tone trunk on DIR0 trunks; no flood.
     mini_net_site #(.HAS_NET(1'b0), .LEAF(1'b0), .TONE0(1'b1), .NDIR(1),
                     .OWN_E(3'd2), .OWN_B(3'd3), .DIR0(2'd3), .G0(1'b1),
                     .T_RISE(T_RISE), .T_FALL(T_FALL),

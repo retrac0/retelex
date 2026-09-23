@@ -226,7 +226,7 @@ one a channel:
 
 ```
  scanner   a 3-bit counter on the 8 kHz octet mark steps the block's eight slots, one a visit,
-           reads the slot's word over the visit, and attends only a slot whose word says trunk.  A block may hold an MF8 card beside idle,
+           reads the first bit-times of the slot's word, and attends only a slot whose word says trunk -- `1101`, the trunk family.  A block may hold an MF8 card beside idle,
            the operator or the tones, or a single-channel trunk among lines (network.md §1.1),
            and a subscriber lifting is never read as a seizure.  For channel k:
            M[k] high, and low at the last visit  → a fresh seizure, at most 1 ms old
@@ -394,7 +394,7 @@ select taken away, and a compare added.
 |---|---|
 | scanner | ½ 74HC393 |
 | M at the scanner's channel; M at its last visit | 74HC151; 74HC259 and a 74HC151 |
-| the scanned slot's word, trunk or not: the block's word commutator held on `DST[2:0]`, sixteen bits at 128 kHz | 2 × 74HC164 and a gate, ≈ 2½ |
+| the scanned slot's word, trunk or not: the block's word commutator held on `DST[2:0]`. The family is bit-times 0–3 and the flood seat is bit-time 4, so five bit-times at 128 kHz settle it and the rest of the visit is ignored (`extensions.md` §2.2) | 1 × 74HC164 and a gate, ≈ 1½ |
 | free-monitor pick, gating | 74HC00, 74HC08 |
 
 **≈ 8½ packages a monitor, ≈ 6½ shared: ≈ 24 for a block with two, ≈ 32 with three.** The same

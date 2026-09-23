@@ -147,7 +147,7 @@ in the set — and it is the only one that needs a2 and a4.**
 |---|---|---|---|
 | a1 | `TX_CLK` | in | `H` into the downstream encoder (§2.1), and the clock of both synchronizer stages of §2.3 — the one 74HC175 that crosses `C_RX[n]` and the receiver's latch into T |
 | a2 | `LOOP_HB` | in | **128 kHz.** Downstream encoder clock, and the option-word **2×`'165`** shift when that footprint is populated (`extensions.md` §2.2). Without it the card cannot be fitted: `clocks.md` §4 |
-| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word's 2×'165 where that footprint is populated — an operator's position, a restricted phone (class 111), a hunt group, a call nail, a tied nail (`extensions.md` §2.2) |
+| a3 | `TX_OCT` | ○ | nothing in the base card. It loads the word's '165 where that footprint is populated — a restricted phone (class 111), a hunt group, a call nail, a tied nail (`extensions.md` §2.2). An operator's position needs no class: it is a line that answers to 04 |
 | a4 | `FILL` | in | the bus's `1010`, sent **downstream to the phone** while it is on-hook and not being rung. a data input of §2.3's ¾ 74HC157, and the reason the card carries no oscillator and no idle-pattern generator |
 | a5 | `C_TX[n]` | **out** | `Q_s`: the upstream receiver's data latch, resynchronized to `TX_CLK` |
 | a6 | `A_TX[n]` | **out** | `NOT ON_HOOK`, off §2.2's LM339 through ¼ 74HC04. Off-hook, held through dial pulses by the 4 ms RC and the violation term |
@@ -156,7 +156,7 @@ in the set — and it is the only one that needs a2 and a4.**
 | a9 | `C_RX[n]` | in | through two 74HC74 stages on `TX_CLK` to `C_RX_s`, then downstream to the phone while it is off-hook |
 | a10 | `A_RX[n]` | in | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`: **ring the phone.** With it asserted and the phone on-hook the card sends all-zeros downstream, which is the ringer's own detector at the far end (`subscriber-line.md` §4) |
 | a11 | `MUTE` | in | ORed into the `ON_HOOK` select, so an off-hook phone hears `1010` through an outage rather than the receiver's last latched bits (§2.3). **Two cards in the set read this pin and this is one** |
-| a12 | card word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The 2×'165 footprint is on the board and unpopulated |
+| a12 | card word | **out** | **tied to a row-*c* ground**: all ones, a plain line with no options (`common-cards.md` §2). The '165 footprint is on the board and unpopulated |
 | a13 | `/ANS` | — | **open.** The port rings in cadence and gives the caller ringback, which is what a telephone wants |
 | a14 | spare | ○ | open |
 | c1, c3 | `+5 V` | in | all the logic |
@@ -325,7 +325,7 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 |---|---|---|---|---|
 | a1 | `TX_CLK` | ● | ● | the encoder's clock. The engine's T half runs on it and only on it (§3.2) |
 | a2 | `LOOP_HB` | — | — | nothing on this card encodes a line. Its line is analog and the only modulation on the board is the codec |
-| a3 | `TX_OCT` | ○ | ● | loads the word's 2×'165, which the FXO always carries (class 100, *outside line*) and the FXS carries only where the line is more than a plain line |
+| a3 | `TX_OCT` | ○ | ● | loads the word's '165, which the FXO always carries (class 101, *outside line*) and the FXS carries only where the line is more than a plain line |
 | a4 | `FILL` | — | — | **the engine's own `1010` at silence is the idle**, so the card needs no fill pattern. That is the same property the tone card leans on (`tone-card.md` §3) |
 | a5 | `C_TX[n]` | ● | ● | the encoder out, in T |
 | a6 | `A_TX[n]` | ● | ● | **FXS:** loop current flowing — the 10–15 mA opto of §3.4, the phone is off-hook. **FXO:** ringing present, and *which* ringing is §5 of `common-cards.md`'s OFFICE / SEIZE jumper: raw in the CO's cadence, or held 5 s and ORed with the loop closed. The jumper is on this pin's meaning, not on a pin of its own |
@@ -334,7 +334,7 @@ offers, and the FXO takes `+5 V` and `±12 V` and nothing else.
 | a9 | `C_RX[n]` | ● | ● | into the decoder, in R |
 | a10 | `A_RX[n]` | ● | ● | through the §14 RC (τ = 2 ms) and ¼ 74HC14 to `A_RX_f`. **FXS:** drive the ring relay, which connects the `RING` bus and disconnects the feed while it is connected; ring trip drops it within 200 ms whatever this pin says (§3.4). **FXO:** close the loop; low opens it, and that is how dial pulses leave (§3.5) |
 | a11 | `MUTE` | — | — | **not read, and arguably should be.** See below |
-| a12 | card word | GND | 2×'165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 100, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
+| a12 | card word | GND | one '165 | **FXS:** tied to a row-*c* ground — all ones, a plain line. **FXO:** class 101, so the marker knows it is an outside line and 9 hunts it (`common-cards.md` §2) |
 | a13 | `/ANS` | open | low | **FXS:** open, and the phone rings in cadence. **FXO:** tied low — an outside line must never be rung, and must not give its caller ringback |
 | a14 | spare | ○ | ○ | open |
 | c1, c3 | `+5 V` | ● | ● | the logic and the engine's digital half |
@@ -474,10 +474,10 @@ six C plus F and S opposite.
 | A filter | ¼ 74HC14 |
 | Bond jumper and link | a 3-position jumper, one header |
 | Async population | MAX232 in place of the RS-422 parts |
-| Option word (when fitted) | 2 × 74HC165, 2N7002, RC hold-off (`extensions.md` §2.2) |
+| Option word (when fitted) | 74HC165, 2N7002, RC hold-off (`extensions.md` §2.2); a second '165 only for a secondary |
 
-**≈ 4 packages** without the word; **≈ 6 + FET** with it. No longer the cheapest
-card in the shelf once the word is populated (`common-cards.md` §2).
+**≈ 4 packages** without the word; **≈ 5 + FET** with it, and ≈ 6 + FET only where
+a secondary is fitted as well (`common-cards.md` §2).
 
 ### 4.5 Bring-up
 

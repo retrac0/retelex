@@ -101,7 +101,8 @@ make regs     marker.md 6's axis: NREG = 1, 2, 3 at a fixed 48-line load
 make traffic  a NETWORK under demand that is not smooth: bursts, herds, peak
 make sclk     mainboard.md 7: a spurious SCLK edge mid-shift, and that it heals
 make priority  extensions.md 2.4.1: a priority lift waits out non-priority under overload
-make word     the card word: class, answers-to, call nail, tied nail, plain FF, zero
+make word     the card word: class family and member, the reserved class, a
+              tone trunk, answers-to, call nail, tied nail, plain FF, zero
 make groups   groups.md §2: answers-to hunt, digit 0 → pilot 04, cover
 make pulse_gen pulse-gen.md: hex buttons, 10 pps, a call with no handset
 make su1      su-1.md: Autovon pad, mute, ring trip, a local call
@@ -840,8 +841,9 @@ trunk let go.
 
 **Closed: the word's encoding** (`common-cards.md` §2). All ones is the
 constant *plain line*, from a grounded pin — `line_card.v`'s default `WORD`.
-Class 001 is an explicit word for a line that has options to say. The marker
-treats both as `C_LINE` (all-ones via the 74HC30 of `extensions.md` §2.2).
+Class 011 — family `11`, member 0 — is an explicit word for a line that has
+options to say. The marker treats both as `C_LINE` (all-ones via the 74HC30 of
+`extensions.md` §2.2).
 
 ## Next
 

@@ -68,22 +68,40 @@ def _lp_at(x, fc, fs, order=2):
 
 
 def rx_dm(ln, sd=0.0, imp=0.0, atten=1.0, seed=1, *,
-          line=LINE, os=OS, cable=CABLE):
+          line=LINE, os=OS, cable=CABLE, cable_km=None,
+          imp_amp=(0.5, 3.0), imp_tau=(20e-6, 200e-6),
+          imp_ring=(15e3, 80e3)):
     """Differential Manchester: hysteretic slicer, 0.75-cell monostable
     interval classifier.  No clock on the timing path (mf8-spec.md §9.4).
 
-    `line` / `os` default to MF8 512 kbps; MF2 passes line=256e3 for a
-    same-bit-rate DM reference against AMI (`mf2_line.py`)."""
+    `line` / `os` default to MF8 512 kbps; MF2 is this code at line=256e3
+    (mf2/spec.md §8, the Q3 rate plug of mf8-spec.md §9.7).
+
+    `cable_km`: if set, replace the flat `cable` LP with `phy.pair_24awg`
+    (√f buried-pair law), exactly as `rx_ami` does.  DM at bit rate `line`
+    occupies twice AMI's band, so the same pair costs it √2 more dB — which
+    is what a span run measures rather than assumes.  Impulses are added
+    *after* the cable (not attenuated with the signal — conservative).
+
+    Leaving `cable_km` unset keeps the flat-cable path this function has
+    always had, so mf8_line.log's baselines stand."""
     fs = line * os
     rng = np.random.default_rng(seed)
     x = np.repeat(fast.dm_encode(ln).astype(np.float64) * 2 - 1, os // 2)
-    x = _lp_at(x, cable, fs, 1); x /= np.abs(x).max()
+    if cable_km is not None:
+        x = phy.pair_24awg(x, fs, length_km=cable_km)
+    else:
+        x = _lp_at(x, cable, fs, 1)
+    peak = np.abs(x).max()
+    if peak > 0:
+        x /= peak
     if atten != 1.0:
         x *= atten
     if sd:
         x += rng.normal(0, sd, len(x))
     if imp:
-        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
+        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=imp_amp,
+                             tau_s=imp_tau, ring_hz=imp_ring, seed=seed + 7)
     w = fast.slice_hyst(_lp_at(x, 2 * line, fs, 2), 0.05)
     del x; gc.collect()
     b = fast.mono_decode(w, os, thr=0.75, dead=0.25)

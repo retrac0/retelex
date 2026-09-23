@@ -1,0 +1,125 @@
+MF2 smoke: lock_bit=152 false=False lof=0 frames=7961 PASS
+
+THE F WORD -- candidates on a 4-bit frame
+
+  Longest run of consecutive frames in which a payload lane matches a
+  candidate word.  A lane that matches for 32 frames is an acquisition
+  the framer cannot tell from the real thing.
+
+  candidate                                 CVSD speech  CVSD silence      constant 0     constant 1    random data  octet 1011001
+  11111110  period 8, this spec                       0              0              0              0              8              0
+  11111100  period 8                                  0              0              0              0              8              0
+  11110000  period 8                                  0              0              0              0              8              0
+  10101010  period 2 -- cannot pin an 8-state SF             88          24000              0              0              8              0
+  11001100  period 4 -- cannot pin an 8-state SF              0              0              0              0              8              0
+
+  Runs are in frames.  Acquisition is 32 (mf2/spec.md §4), so any
+  candidate reaching 32 on a payload lane is a word a data card can
+  imitate.  Period-4 and period-2 words are excluded structurally, not
+  by this table: they cannot pin an 8-state superframe, so the octet
+  counter and RX_OCT would have no phase (mf2/spec.md §6).
+
+SUPERFRAME PHASE -- wrong phases admitted
+
+  Every hook state x every bit alignment = 16 start-ups a payload.
+  "false" is an acquisition at a wrong bit alignment; "held" is one
+  still wrong when the clip ends.
+
+  payload                                                F only        F + guard
+  CVSD speech both channels                          0/16 false       0/16 false
+  CVSD idle both channels                            0/16 false       0/16 false
+  constant 0 both                                    0/16 false       0/16 false
+  constant 1 both                                    0/16 false       0/16 false
+  random data both                                   0/16 false       0/16 false
+  the F word in C1, idle in C2                       4/16 false       0/16 false
+  the F word in both                                12/16 false       0/16 false
+
+  "F only" takes the guard out of the RECEIVER's check while the
+  transmitter still sends it, which is what isolates the guard's
+  contribution.  MF8 closed this at 0 wrong phases with F + guard
+  (mf8-spec.md §3.3); the pass bar for MF2 is the same, 0 in the
+  right-hand column.  These payloads are the benign ones -- the
+  adversarial pair (F word against the guard pattern) is in `seats`,
+  and it is not 0.
+
+THE GUARD -- S at two states, and why 0,4 = 0,1
+
+  The guard is a second, independent condition on a lane the F word
+  does not occupy.  It must reject a period-2 idle lane AND a lane
+  carrying the F word (mf2/spec.md §3.2).
+
+  guard                                          F word in C1, idle       F word in both            idle both          speech both
+  states 0,4 = 0,1   same parity, this spec                    0/16                 0/16                 0/16                 0/16
+  states 0,4 = 1,0   same parity, swapped                      0/16                 0/16                 0/16                 0/16
+  states 0,2 = 0,1   same parity, closer                       0/16                 0/16                 0/16                 0/16
+  states 1,5 = 0,1   would displace A1, A2                     0/16                 0/16                 0/16                 0/16
+  state 0 only        one bit, no parity pair                  4/16                 0/16                 0/16                 0/16
+
+  False acquisitions per payload.  A guard that lets the F-word lane
+  through has not done its job; the geometry rule is two states of the
+  SAME parity carrying values different from each other and from F
+  (mf8-spec.md §3.2, and mf2/spec.md §3.2 for L = 4).
+
+S POSITION -- half a frame from F, not beside it
+
+  At a wrong bit alignment the check reads two lanes SBIT apart.  A
+  wrong alignment is a HOLE when both carry fixed content that
+  satisfies the check: the framer acquires it and nothing releases it.
+  Analytically, every byte a data card could carry, in every seat,
+  under all 4 hook states, CVSD idle elsewhere:
+
+  S at bit 1, beside F     [F][S][C1][C2]
+    one data card, bytes that hold a wrong alignment:  seat 1: 0  seat 2: 1
+      seat 2: 0xFB
+    two data cards, the F word in one and every byte in the other:
+      unsafe pairs  (1,2)
+
+  S at bit 2, opposite F   [F][C1][S][C2]  this spec
+    one data card, bytes that hold a wrong alignment:  seat 1: 0  seat 2: 0
+    two data cards, the F word in one and every byte in the other:
+      unsafe pairs  (1,2)
+
+  On a 4-bit frame the unique opposite spacing is s = 2 (2s = 0 mod 4).
+  At skew 2 the receiver reads F and S swapped onto each other, so the
+  F word lands on itself and the guard fails.  Skews 1 and 3 read
+  (C1, C2) -- the only payload pair -- which is the seating problem
+  below.
+
+SLOT RULES -- what may sit in the two seats
+
+  1. Exhaustive and analytic: every byte, every seat, every hook
+     state, CVSD idle elsewhere.
+
+     one data card, bytes that hold:  seat 1: 0  seat 2: 0
+     two data cards, the F word in one and every byte in the other:
+       seats 1,2: holds, 520 (byte, hook state) combinations
+
+  2. The framer, all 4 hook states x 4 skews (16 start-ups).
+
+  layout                                                false         held
+    seat 1 = F word, seat 2 = voice                      0/16         0/16
+    seat 2 = F word, seat 1 = voice                      0/16         0/16
+    seat 1 = F word, seat 2 = guard pattern              4/16         4/16
+    seat 2 = F word, seat 1 = guard pattern              0/16         0/16
+    both seats = F word                                  0/16         0/16
+    two data cards, random content                       0/16         0/16
+    one data card (0xB2), one voice                      0/16         0/16
+    two voice cards                                      0/16         0/16
+
+  3. The residual: the F word in one seat and VOICE in the other.
+     The guard lands on voice, which satisfies it by chance, and the
+     framer acquires when that happens 4 superframes running.  Speech
+     at nominal line level (0.15 rms, as mf2_line.py).
+     Over 30 s of speech that is once in 3077 attempts at that skew.
+
+     tracking                                    acquired  released, frames      mean  never
+     frame counter only                             24/24                 -         -     24
+     frame counter + guard counter (this spec)      24/24            22-262   1.40 ms      0
+
+  THE RULE.  MF8 forbids data cards three seats apart and has six
+  seats, so the rule costs it almost nothing.  On MF2 the F-to-S
+  spacing IS the only two channel seats: the forbidden pair is the
+  entire payload.  There is no seat to move to, so TWO DATA CARDS ARE
+  NOT A CONFIGURATION -- keying must enforce it mechanically, and the
+  silkscreen must not reuse MF8's "seats 1-3" story (mf2/spec.md §5).
+

@@ -362,7 +362,7 @@ rate is insert-1 32 kb/s by default, or RAW64 when both ends are nailed
 | **What it steers** | `BIT_ENC` / `BIT_DEC` only. Hook, pad, speaker UI, `MUTE` / `RING` / `SPK` / `MIC_EN`, clocks stay on the voice path logic |
 | **When to throw** | before or during a call; there is no in-band mode digit and no far-end handshake |
 | **Wrong setting** | the far end hears **noise** (or data hunt / DTE mark). Same class of failure as voice↔shelf-data today (`channel-cards.md` §1, `features.md` §8) |
-| **Exchange** | sees a plain CVSD line card either way. Mode is not in the word and not on A. A *data line* class remains optional hygiene so the marker can refuse known-bad setups; the switch does not need it to work |
+| **Exchange** | sees a plain CVSD line card either way. Mode is not in the word and not on A. A line's *data* bit `D` remains optional hygiene so the marker can refuse known-bad setups; the switch does not need it to work |
 
 Coordination is operational: both ends on VOICE, or both on DATA, or accept
 garbage until they match. Flipping mid-call is allowed and ugly.

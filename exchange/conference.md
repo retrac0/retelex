@@ -40,7 +40,7 @@ jumper (or by fitting two 4-leg modules vs one 8-leg module).
 | **On the party bus** | **leg modules** — detector, floor, `DATA` drive — not mini exchange blocks. The exchange sees **one** block number and eight ports, not nested `/BLK` identity |
 
 **Why the party bus never leaves the block.** The channel slot has one pin spare
-(`a14`, `extensions.md` §2.1), and the mainboard cable is thirty-eight
+(`a14`, `extensions.md` §2.1), and the mainboard cable is forty-three
 signals identical at every tap (`mainboard.md` §1). Five more bussed
 signals would have to borrow line-feed and ringing pins — ninety volts of
 ringing beside a 74HC input — or grow the cable. Neither is worth paying for

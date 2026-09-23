@@ -262,10 +262,11 @@ exchange's code, then the line — that reaches a line on any exchange, are
 (old MF8 names `TYPE0` / `TYPE1` / `RAI`) and connects none of them. The
 exchange uses the first two (`extensions.md` §2):
 
-- **card word, on a12**: eight bits, one a frame, every octet. Two type bits,
-  then a class and three options (a trunk's direction and glare, a line's
-  priority and busy-out, restricted `z` / `L` / `b`), or a 6-bit port: answers
-  to, a call nail, or a tied nail. Class *restricted* is a class of its own. The block
+- **card word, on a12**: sixteen bits at 128 kHz, over the port's visit. Two
+  type bits, then a class — a family of two bits and a member of one — with
+  three options (a trunk's glare and direction, a line's priority, busy-out and
+  data bit, restricted `z` and `b`), or a 6-bit port: answers to, a call nail,
+  or a tied nail. Class *restricted* is a class of its own. The block
   commutates it onto one wire that only the marker reads, and the marker's
   scanner reads the whole card word at each visit. **A plain line card ties the pin
   to ground**, which reads all ones and means a line with no options: no part

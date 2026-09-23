@@ -14,7 +14,7 @@ RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pu
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/pulse_gen.v rtl/su_dial.v rtl/su1.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
-         rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v \
+         rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v rtl/inprog.v \
          $(HC_MSI)
 BUILD := build
 
@@ -34,6 +34,7 @@ TB_traffic := tb/net_site.v tb/tb_traffic.v
 TB_stats  := tb/tb_stats.v
 TB_console := tb/con_site.v tb/bitpath.v tb/tb_console.v
 TB_panel  := tb/tb_panel.v
+TB_inprog := tb/net_site.v tb/tb_inprog.v
 TB_tone   := tb/tb_tone.v
 TB_tonex  := tb/tb_tonex.v
 TB_sclk   := tb/tb_sclk.v
@@ -49,7 +50,7 @@ TB_mini_leaf := tb/mini_net_site.v tb/bitpath.v tb/tb_mini_leaf.v
 TB_mini_load := tb/mini_net_site.v tb/tb_mini_load.v
 TB_mini_rate := tb/mini_net_site.v tb/tb_mini_rate.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini nano mini_net mini_leaf
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini nano mini_net mini_leaf inprog
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -69,6 +70,9 @@ $(SIMS): %: $(BUILD)
 # Icarus is ~100x slower, so the traffic run is offered a tenth of the calls
 # there: it checks that the two simulators agree, not the erlang figures.
 IVPAR_erlang := -Ptb_erlang.NCALLS=25
+# ... and the calls-in-progress bench leaves its dialling to Verilator: the
+# directed scanner and the off-hook checks are what the two must agree on.
+IVPAR_inprog := -Ptb_inprog.CALLS=0
 # ... and the console's two traffic runs are a tenth as long.
 IVPAR_console := -Ptb_console.TRAFFIC_MS=500
 

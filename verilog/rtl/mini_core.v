@@ -45,6 +45,12 @@ module mini_core #(
     // probe out
     output     [5:0] probe_port,
     output     [2:0] scan_port,
+    // The two strobes that go with SCAN on cable B (mainboard.md 2.3.3).
+    // ADVANCE is the scanner's own count enable gated by the clock, so a
+    // visit with no ADVANCE is a repeated one; START is a NOR of the six
+    // counter outputs, high through port 00's visit.
+    output           scan_adv,
+    output           scan_start,
     output           probe_visit,
     output           probe_valid,
     output           probe_m,
@@ -92,6 +98,8 @@ module mini_core #(
     reg  [2:0] pb_blk;
 
     assign scan_port   = scan[2:0];
+    assign scan_adv    = oct_stb & pv;
+    assign scan_start  = (scan == 6'd0);
     assign probe_port  = p_port;
     assign probe_visit = visit;
     assign probe_valid = p_valid;

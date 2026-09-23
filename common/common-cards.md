@@ -96,7 +96,7 @@ lines, and the property that matters is unchanged.
 The four cards of this document, the tone card of `tone-card.md`, the exchange's
 baseband trunk card (`baseband.md` §3.5), and the dual-tone POTS trunk
 (`pots-trunk.md` §6), which share the same socket and the same argument.
-● = the card uses the pin; ○ = only where the optional **2×'165** word footprint
+● = the card uses the pin; ○ = only where the optional **'165** word footprint
 is fitted; — = no connection on the card.
 
 | pin | | CVSD line | FXS | FXO | data | E&M | tone | baseband | pots-t |
@@ -112,7 +112,7 @@ is fitted; — = no connection on the card.
 | a9 | `C_RX[n]` | ● | ● | ● | ● | ● | **—** | ● | ● |
 | a10 | `A_RX[n]` | ● | ● | ● | ● | ● | — | ● | ● |
 | a11 | `MUTE` | ● | — | — | ● | — | — | — | — |
-| a12 | card word | GND | GND | 2×'165 | 2×'165 | GND or 2×'165 | 2×'165, or none at 01–03 | 2×'165 | 2×'165 |
+| a12 | card word | GND | GND | '165 | '165 | GND or '165 | '165, or none at 01–03 | '165 | '165 |
 | a13 | `/ANS` | open | open | low | low | open or low | low | low | low |
 | a14 | spare | ○ | ○ | ○ | ○ | ○ | ○ | — | — |
 | c5, c7 | `±12 V` | — | ● | ● | — | ● | ● | — | ● |
@@ -219,31 +219,37 @@ reads class 000 — unequipped. The card is fitted, the phone is live, and nothi
 can ever be hunted to it or dialled to it.
 
 **Resolved: every card in the set carries its own word source, and the footprint
-is on every board.** Two 74HC165 daisy-chained into a **2N7002**, held off at
-power-up by an RC on the FET gate (`extensions.md` §2.2) — ≈ 2 packages plus the
-FET, shifted by **`LOOP_HB` (a2, 128 kHz)** and loaded by
+is on every board.** One 74HC165 into a **2N7002**, held off at
+power-up by an RC on the FET gate (`extensions.md` §2.2) — ≈ 1 package plus the
+FET, and a second '165 daisy-chained only where a secondary is wanted, which no
+card in this set now needs. Shifted by **`LOOP_HB` (a2, 128 kHz)** and loaded by
 `TX_OCT`, both of which are on the socket in an MF8 shelf and in an exchange block. Two of the four cards
 leave it unpopulated and tie a12 to a row-*c* ground instead. In an MF8 shelf
 the pin is unconnected either way: a grounded pin goes nowhere, and a populated
-2×'165 shifts its word into an open circuit, harmlessly, for ever.
+'165 shifts its word into an open circuit, harmlessly, for ever.
 
 **The word's encoding is settled** in `extensions.md` §2.2: tagged 16-bit word,
 primary enough alone, secondary optional (`FF` when absent). Proof table:
 
 ```
  bit-time  0  1    2  3  4    5  6  7     8  9     10…15
- tied nail 0  0    h  h  h    s  s  s     1  1     1…1     (secondary FF)
- answers   0  1    h  h  h    s  s  s     1  1     1…1
- call nail 1  0    h  h  h    s  s  s     1  1     1…1     (tag 00 reserved)
- class     1  1    c  c  c    p  p  p     tag      payload
+ tied nail 0  0    s  s  s    h  h  h     1  1     1…1     (secondary FF)
+ answers   0  1    s  s  s    h  h  h     1  1     1…1
+ call nail 1  0    s  s  s    h  h  h     1  1     1…1     (tag 00 = a network nail)
+ class     1  1    a  a  m    p  p  p     tag      payload
  plain     all sixteen ones
  nothing   all sixteen zeros
 ```
 
+Printed in wire order, LSB of each field first, as `extensions.md` §2.2 now is:
+a port's **units digit goes first**. A class is a family `a a` and a member `m`,
+so bit-times 0–3 alone say subscriber (`1111`), trunk (`1101`), source or outside
+line (`1110`), or neither (`1100`).
+
 All ones is a **constant**, not a class field, and it is what a grounded pin
-produces. Class 001 is for a card that shifts a word because it has something
+produces. Class 011 is for a card that shifts a word because it has something
 else to say. [line_card.v](../verilog/rtl/line_card.v)'s default `WORD` is
-`16'hFFFF`; the marker maps all ones to `C_LINE` beside class 001.
+`16'hFFFF`; the marker maps all ones to `C_LINE` beside class 011.
 
 **So, card by card:**
 
@@ -251,20 +257,22 @@ else to say. [line_card.v](../verilog/rtl/line_card.v)'s default `WORD` is
 |---|---|---|---|
 | CVSD subscriber line | **grounded**: all ones, a plain line | **open**: the port rings | a phone. No part on either pin |
 | POTS converter, FXS | **grounded** | **open** | a phone |
-| POTS converter, FXO | **2×'165**, class 100 *outside line* | **tied low** | an outside line must never be rung in cadence, and must not give its caller ringback (`fabric.md` §3.5) |
-| Data card | **2×'165**, class 110 *data line* | **tied low** | so the marker refuses to connect a phone to it (`features.md` §8) |
-| E&M, facing a station | **grounded**, or a 2×'165 if it answers to a number | **open** | E rings it |
-| E&M, facing a PBX | **2×'165**, class 100 | **tied low** | a tie to a foreign switch is an outside line, not a network trunk: it carries no direction word and takes no part in the flood |
-| Baseband trunk (`baseband.md`) | **2×'165**, class trunk; direction/glare in secondary tag `10` | **tied low** | a copper tie; `/ANS` low so it never rings |
-| Dual-tone POTS trunk (`pots-trunk.md`) | **2×'165**, class trunk; direction/glare in secondary tag `10` | **tied low** | a voice-band tie on a dry pair; not an FXO |
+| POTS converter, FXO | **one '165**, class 101 *outside line* | **tied low** | an outside line must never be rung in cadence, and must not give its caller ringback (`fabric.md` §3.5) |
+| Data card | **one '165**, class *line* 011 with `D` set (frame 7) | **tied low** | so the marker refuses to pair it with a voice port (`features.md` §8). Class 110 *data line* is retired; `D` is a line's option |
+| E&M, facing a station | **grounded**, or one '165 if it answers to a number | **open** | E rings it |
+| E&M, facing a PBX | **one '165**, class 101 | **tied low** | a tie to a foreign switch is an outside line, not a network trunk: it carries no direction word and takes no part in the flood |
+| Baseband trunk (`baseband.md`) | **one '165**, class trunk 010; glare at frame 5, direction at frames 6–7 | **tied low** | a copper tie; `/ANS` low so it never rings |
+| Dual-tone POTS trunk (`pots-trunk.md`) | **one '165**, class trunk 010; glare and direction in the same three frames | **tied low** | a voice-band tie on a dry pair; not an FXO |
 
 A card that needs both a class (e.g. *restricted*) and an *answers to* number
-uses secondary tag `01` and payload `h s` (`extensions.md` §2.2); pin `a14`
-stays spare. Call nail remains its own primary form.
+uses secondary tag `01` and payload `h s` (`extensions.md` §2.2), and is the only
+kind of card that fits the second '165; pin `a14` stays spare. Call nail remains
+its own primary form.
 
-**Cost of the decision.** The data card goes from 4 packages to ≈ 6 + FET and is no
-longer the cheapest card in the shelf (`channel-cards.md` §4.4); the FXO population
-gains the same. The two line cards gain a wire.
+**Cost of the decision.** The data card goes from 4 packages to ≈ 5 + FET
+(`channel-cards.md` §4.4); the FXO population gains the same. The two line cards
+gain a wire. A trunk card gains one package, not two, since its direction and
+glare are primary options and its secondary is `FF`.
 
 ---
 
@@ -457,7 +465,7 @@ conductors at all and the wiring field can be re-punched without touching it.
 | document | |
 |---|---|
 | `mf8-backplane.md` §8, `baseband.md` §2.2 | joined into §1 here. Neither is wrong; there were two copies |
-| `verilog/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 001 is an explicit word. `line_card.v`'s default `WORD` is `16'hFFFF`; the marker treats both as `C_LINE` |
+| `verilog/README.md`, "the word's encoding" | **closed** (§2). All ones is the constant *plain line*, from a grounded pin; class 011 is an explicit word. `line_card.v`'s default `WORD` is `16'hFFFF`; the marker treats both as `C_LINE` |
 | `baseband.md` §2.3, first bullet | **closed** (`clocks.md` §4). `LOOP_HB` = `/SLOT[1]`, one inverter a block |
 | `channel-cards.md` §3.5 | the FXO gains §5's jumper. `features.md` §5's "the exchange build of the FXO card" becomes the SEIZE position of that jumper, not a second board |
 | `channel-cards.md` §4.4 | the data card is ≈ 6 + FET packages, not 4, and no longer the cheapest card in the shelf |

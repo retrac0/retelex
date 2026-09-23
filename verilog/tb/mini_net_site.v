@@ -25,7 +25,7 @@ module mini_net_site #(
     parameter [1:0]   DIR3  = 2'd1,
     parameter         G3    = 1'b0,
     parameter         N3    = 1'b0,
-    // Trunk primary options bit 5 = offers-tone (extensions.md / leaf-uplink.md).
+    // TONEn: the trunk is class tone trunk, not class trunk (leaf-uplink.md 3).
     parameter         TONE0 = 1'b0,
     parameter         TONE1 = 1'b0,
     parameter         TONE2 = 1'b0,
@@ -63,15 +63,17 @@ module mini_net_site #(
     output        wr_bsy, wr_clm
 );
     localparam PDT = 6'o01, PBSY = 6'o02, PNG = 6'o03;
-    // options[2:0] = {MBZ, MBZ, t}; t in bit 5 of the 16-bit word.
-    localparam [2:0] OPT0 = {2'b00, TONE0};
-    localparam [2:0] OPT1 = {2'b00, TONE1};
-    localparam [2:0] OPT2 = {2'b00, TONE2};
-    localparam [2:0] OPT3 = {2'b00, TONE3};
-    localparam [15:0] WORD0 = {DIR0, G0, 3'b000, 2'b10, OPT0, 3'b101, 2'b11};
-    localparam [15:0] WORD1 = {DIR1, G1, 3'b000, 2'b10, OPT1, 3'b101, 2'b11};
-    localparam [15:0] WORD2 = {DIR2, G2, 3'b000, 2'b10, OPT2, 3'b101, 2'b11};
-    localparam [15:0] WORD3 = {DIR3, G3, 3'b000, 2'b10, OPT3, 3'b101, 2'b11};
+    // Offers-tone is a class now: tone trunk 110, options MBZ -- it is no
+    // flood seat, so it faces no direction and carries no glare.  A flood
+    // trunk is class 010 with G at frame 5 and DIR at frames 6-7.
+    localparam [15:0] WORD0 = TONE0 ? {8'hFF, 3'b000, 3'b110, 2'b11}
+                                    : {8'hFF, DIR0, G0, 3'b010, 2'b11};
+    localparam [15:0] WORD1 = TONE1 ? {8'hFF, 3'b000, 3'b110, 2'b11}
+                                    : {8'hFF, DIR1, G1, 3'b010, 2'b11};
+    localparam [15:0] WORD2 = TONE2 ? {8'hFF, 3'b000, 3'b110, 2'b11}
+                                    : {8'hFF, DIR2, G2, 3'b010, 2'b11};
+    localparam [15:0] WORD3 = TONE3 ? {8'hFF, 3'b000, 3'b110, 2'b11}
+                                    : {8'hFF, DIR3, G3, 3'b010, 2'b11};
     localparam [3:0]  STRAP_N = ({3'b000, N0} << DIR0) | ({3'b000, N1} << DIR1)
                               | ({3'b000, N2} << DIR2) | ({3'b000, N3} << DIR3);
 

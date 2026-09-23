@@ -22,7 +22,7 @@ exchange is doing are `observers.md` and `hookbusy.md`.
 |---|---|---|
 | what it is | a **phone** on a station card | keys and wheels that emit the marker's control word |
 | where | a channel slot (default **04**) | cable B; no port, no latch, no number |
-| reached by | key **0** (class *operator* hunt) | nothing — it is not dialled |
+| reached by | key **0** (04, then whoever answers to it) | nothing — it is not dialled |
 | alone | answers 0, dials out, talks | bring-up and maintenance without a phone |
 | needs the other for | **transfer**, busy ports, force-release, observe, hand patch | a talking party (or a ring-source card) |
 
@@ -44,9 +44,9 @@ exchange the number appears.
 
 | | |
 |---|---|
-| **the card** | any station card: FXS or CVSD line (`channel-cards.md`). The word's **2×`'165`** fitted for class *operator* |
+| **the card** | any station card: FXS or CVSD line (`channel-cards.md`). The word's **`'165`** fitted, saying *answers to 04* |
 | **`/ANS`** | open — it rings in cadence |
-| **reached by** | **key 0 only** as a subscriber. 0 hunts class *operator* in fixed order from 00 (`marker.md` §3). From another exchange: `1 e b 0`, the same key once the far monitor has claimed (`network.md` §3) |
+| **reached by** | **key 0 only** as a subscriber. 0 calls 04, then hunts the ports that answer to it, in fixed order from 00 (`marker.md` §3). From another exchange: `1 e b 0`, the same key once the far monitor has claimed (`network.md` §3) |
 | **not reached by** | its own number when it sits at 00–07 — those ports are never dialled, because 0 is the operator key (`protocol.md` §5) |
 | **to the console** | a number on the `SRC` wheels (`console.md` §7.1) |
 
@@ -56,9 +56,10 @@ undialable line seats — operator, night/backup, more positions or single-chann
 trunks. Further positions may sit in any dialable line slot; the hunt finds them.
 Nothing in a block or the marker knows the number.
 
-Under `groups.md` §2 class *operator* is retired: the first position is a plain
-line at 04, and a second seat **answers to** that pilot. Until that lands, class
-*operator* is how 0 finds the phone.
+Class *operator* is retired (`groups.md` §2, `fabric.md` §3.5): the first
+position is a plain line at 04, and a second seat **answers to** that pilot. Its
+old code `100` is the word's reserved one, and a card that still sends it reads
+out of service.
 
 ### 2.2 More than one, and none
 

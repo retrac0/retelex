@@ -237,9 +237,9 @@ rail**, which is the lightest load on the socket of anything in the set.
 
 | pin | | | what this card does with it |
 |---|---|---|---|
-| a1 | `TX_CLK` | in | **three jobs.** It re-times incoming `C` through the ½ '74 in the local-clock jumper of §3.2; it shifts the word's 2×'165; and it is the waveform driven down §3.3's clock conductor, where that conductor is fitted |
+| a1 | `TX_CLK` | in | **three jobs.** It re-times incoming `C` through the ½ '74 in the local-clock jumper of §3.2; it shifts the word's '165; and it is the waveform driven down §3.3's clock conductor, where that conductor is fitted |
 | a2 | `LOOP_HB` | — | nothing on this card encodes a line |
-| a3 | `TX_OCT` | in | loads the word's 2×'165, so the sixteen bits repeat every `CLK_8K` |
+| a3 | `TX_OCT` | in | loads the word's '165, so the sixteen bits repeat every `CLK_8K` |
 | a4 | `FILL` | — | the port already idles to `FILL` through its own commutator input (`fabric.md` §3.3), and an idle far end sends it down the line. The card generates no idle pattern |
 | a5 | `C_TX[n]` | **out** | incoming `C` off the line, re-timed: one bit a frame into the block's `C` commutator |
 | a6 | `A_TX[n]` | **out** | incoming A off the line, through the RC and ¼ '14. This is M at the port |
@@ -248,7 +248,7 @@ rail**, which is the lightest load on the socket of anything in the set.
 | a9 | `C_RX[n]` | in | straight out on the line, 64 kb/s NRZ, changing at the local frame edge |
 | a10 | `A_RX[n]` | in | straight out on the line. E as it stands, since `/ANS` is low and a trunk never rings (§4) |
 | a11 | `MUTE` | — | tied to "locked" at every socket in a block, and real only in an MF8 shelf. This card's link-down detector is its own, on a12 |
-| a12 | card word | **out**, o.d. | class trunk `11 101 000` + secondary tag `10` payload `d d g 000` from the 2×'165 (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
+| a12 | card word | **out**, o.d. | class trunk, primary `11 01 0` with `g d d` in frames 5–7, secondary `FF`, from one '165 (`extensions.md` §2.2). Held off at power-up by the RC, **and gated by §3.3's link-down detector**, so a cut cable reads unequipped and the trunk leaves the hunt |
 | a13 | `/ANS` | **out** | tied low on the board. No part |
 | a14 | spare | — | open |
 | a16, c2, c4, c6, c8, c11, c14, c16 | `GND` | in | |
@@ -290,12 +290,14 @@ trunk-card capability and this card carries voice and async only.
 | incoming `C`, re-timed | ½ 74HC74 |
 | incoming A: RC, diode, Schmitt | ¼ 74HC14 |
 | link-down detector (§3.3) | ½ 74HC123 |
-| the word: 2×'165 from jumpers (primary trunk + secondary `ddg000`), into a 2N7002, held off at power-up by an RC (`extensions.md` §2.2) | ≈ 2 + FET |
+| the word: one '165 from jumpers (class trunk, glare and direction in its options), into a 2N7002, held off at power-up by an RC (`extensions.md` §2.2) | ≈ 1 + FET |
 | `/ANS` | tied low on the board: no part |
-| | **≈ 4½** — 74HC population, **≈ 3** |
+| | **≈ 3½** — 74HC population, **≈ 2** |
 
-The data card is four packages and `channel-cards.md` §4.4 calls it "the cheapest
-card in the shelf". This ties it, and in the 74HC population beats it.
+The data card is four packages without its word and `channel-cards.md` §4.4
+calls it "the cheapest card in the shelf". This **beats** it, and in the 74HC
+population beats it twice over — a trunk's direction and glare ride in the
+primary octet, so one `'165` says everything.
 
 ---
 
@@ -310,7 +312,7 @@ so **moving the card moves all of it**:
 
 | | a plain line card | the baseband trunk card |
 |---|---|---|
-| the word (a12) | pin tied to ground: all ones, class line, no options | class trunk + secondary `ddg000` from a 2×'165 |
+| the word (a12) | pin tied to ground: all ones, class line, no options | class trunk with glare and direction in its options, from one '165 |
 | `/ANS` (a13) | open: the port rings in cadence and gives ringback | tied low: a trunk that rang would give its caller ringback the instant it was seized, and chop forward A in the cadence (`extensions.md` §2.3) |
 | the port circuit | unchanged | unchanged — the same 5 packages of crosspoint and 3¼ of supervision |
 | the block | unchanged | unchanged |

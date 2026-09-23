@@ -6,7 +6,7 @@ counter card beside the marker". It does not need to be. **The control bus is a
 broadcast** (`mainboard.md` §2.3) — the marker's whole output is one
 sixteen-bit word shifted out on `SDATA` and strobed by `WR`, and every tap on
 the ribbon sees it. A counter can therefore be a card that *only listens*: three
-of the cable's thirty-eight signals, no `/BLK`, no shunt column, no probe, no
+of the cable's forty-three signals, no `/BLK`, no shunt column, no probe, no
 clock, and no connection to the marker at all.
 
 This document is the peg-count half of `extensions.md` §4, built that way.
