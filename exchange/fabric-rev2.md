@@ -8,9 +8,9 @@ eight, and the **minimum configuration is no dearer than today**.
 
 `A` does not leave the highway. It is time-interleaved into one sacrificed slot
 a block (§4), which is what deletes the eight `HA` conductors and the A
-highway-select at every port. What leaves the highway is the **marker's copy of
-M**, which moves to a third probe commutator (§2.1) — a different access
-pattern for the same bit.
+highway-select at every port. The marker keeps reading M off the highway; it
+simply counts frames to know when to look (§2.1), using a `frame_stb` it
+already receives and does not use.
 
 The card socket is untouched: six signals a slot, point to point, no slot-ID.
 **A card cannot tell the difference** (§6).
@@ -53,7 +53,7 @@ Against `fabric.md` §3.1, item by item. Only four lines move.
 |---|---|---|
 | commutators: `C`, `A` | 2 × '151, both on `SLOT` | **2 × '151, unchanged in count** — the `A` commutator is re-addressed by `frame_in_oct` and its output wired into the `C` commutator's **freed input 4** (§4). No output mux, no input mux |
 | probe commutators: `BUSY`, the word | 2 × '151 on `SCAN[2:0]` | unchanged |
-| **probe commutator: `M`** | — | **+1 × '151** on the eight ports' `a_tx`, addressed by `SCAN` like the other two, driving a third `PB` conductor — §2.1 |
+| `u_cb`'s select | `pb_sel` (`SCAN`-held) | **`slot`** — zero packages, and it repairs the busy lamp field by construction (§10.4). Needs one line at the marker |
 | ringback substitution | 2 × '157 | unchanged |
 | strobe decoder | '138 on `SLOTQ` | '138 **+ ½ '157** to address it from the A index during the A cell, so a port's existing slot-select picks up its `A` (§4.1) |
 | write decoder | '138 | unchanged |
@@ -63,51 +63,44 @@ Against `fabric.md` §3.1, item by item. Only four lines move.
 | backward `A` on a claimed trunk | 2 × '32 | unchanged — `A` out = E + `CLAIM` still |
 | receivers | 4 × '244 for **sixteen** highways plus clocks, counts, the serial pair | **−1** at eight highways, since `HA` is gone; **+2** at 32, which must all be received |
 | drivers | '244 for `HC[h]`, `HA[h]`, `PB` | unchanged — `HA[h]` gone, the third `PB` takes its place |
-| | **≈15¼** | **≈15¾ at 8 highways, ≈19¾ at 32** |
+| | **≈15¼** | **≈14¾ at 8 highways, ≈17¾ at 32** |
 
 The A fold is **free at the block**: the commutator count does not move,
 because the sacrificed slot frees exactly the commutator input the A stream
 needs. The block grows only with the **highway count**, because it must receive
 every highway to fan out to its eight ports.
 
-### 2.1 Why the block grows a third probe commutator
+### 2.1 Two consumers of `A`, and why the marker needs no probe
 
-There are two consumers of `A` and they are different in kind:
+There are two consumers and they are different in kind:
 
 | | who | how many at once | mechanism |
 |---|---|---|---|
 | **fabric path** | every port in a call, reading its *correspondent's* `A` | up to 64, each pointing elsewhere | broadcast highway + a per-port mux. **Unavoidable** |
-| **probe path** | the marker, the registers, the monitors, reading the *scanned* port's hook | one, at one port | point-and-read on `SCAN` |
+| **probe path** | the marker, reading the *scanned* port's hook | one, at one port | point-and-read on `SCAN` |
 
-Today the marker is a second kind of *highway* reader —
-`ha[scan[5:3]]` gated by `slotq == scan[2:0]` — so the marker's scan rate is
-chained to how often `A` appears on the highway. Folded into one slot a block,
-`A` appears once per 109 µs instead of once a frame, and a marker that dwells
-less than a visit would miss it.
+A probe can never serve the first: 64 ports each want a different port's `A` in
+the same instant, which is what a highway is for. So **`A` stays on the highway
+and the fold does not touch the ports or the trunks** (§6).
 
-One '151 a block on the ports' own `a_tx` — the same `a_com` vector `u_ca`
-already gathers — addressed by `SCAN` exactly as `BUSY` is, presents the same
-bit the other way.
+The marker is the awkward case, because today it is a second kind of *highway*
+reader — `ha[scan[5:3]]` gated by `slotq == scan[2:0]`, the port's own cell.
+Folded, a port's `A` is no longer in its own cell; it is in the sacrificed cell
+of frame *p*.
 
-**What it deletes is narrower than it looks.** `ha`, `slotq` and `tick` appear
-at no line of `marker.v` but its port list and the capture at `:497-498`, and
-the same two lines are `mini_core.v:93` and `nano_core.v:95` — so it is worth
-about two packages **at each marker** and nothing anywhere else:
+**The marker already has what it needs to follow that.** `marker.v:31` declares
+`frame_stb` and uses it at no line; `oct_stb` is beside it. A 3-bit counter
+between them is `frame_in_oct` locally, and the capture becomes
+`slotq == A_SLOT && frame == scan[2:0]`.
 
-- **registers: nothing.** `pulse_reg.v:64-65` is `mux8 u_probe (.d(ha),
-  .s(port_q[5:3]))` gated by `slotq == port_q[2:0]` — its **own held caller**,
-  watched continuously for `register.md` §2's 8 ms break window. A probe shows
-  the *scanned* port once a pass. Different signal, different job.
-- **monitors: nothing.** `monitor.v:55-56` takes `m[7:0]` and `busy[7:0]`
-  direct off the block header and never touches highway or probe.
-- **console, port watch, lamp cards: nothing** — all wheel- or `SLOTQ`-addressed.
+**Half a package, on one card.** The alternative considered and rejected was a
+third probe commutator — a '151 a block on the ports' `a_tx`, on a third `PB`
+conductor. It reads M a little sooner, but it costs **one package a block** (8
+at 64 ports, 32 at 256) plus a conductor and a block-connector pin, to buy speed
+the levels pass does not need (§10.1). Counting frames at the marker is the
+cheaper half of the same job and gets cheaper as the exchange grows.
 
-It does delete §4.3's `m_acc` hazard by construction: M becomes a level, so
-there is no accumulator to clear.
-
-**`A` stays on the highway for the ports and the trunks.** A trunk forwards
-`port_a_rx` — what its port captured off the highway — so the fabric path is
-what holds a call up, and none of this touches it (§6).
+It does **not** delete §4.3's `m_acc` hazard, which stands and must be fixed.
 
 > **`fabric.md` §3.1's total does not match its own list.** Summing the parts it
 > prints gives 18¼, not the ≈15¼ it states. The deltas above are sound; the
@@ -290,7 +283,7 @@ block shunt, cable B's existing signals.
 | | today | this, minimum (8 hw) | this, 32 hw |
 |---|---|---|---|
 | a port | 8¼ | **8** | 11½ |
-| a block | ≈15¼ (but see §2) | ≈15¾ | ≈19¾ |
+| a block | ≈15¼ (but see §2) | ≈14¾ | ≈17¾ |
 | highway conductors | **16** | **8** | **32** |
 | cable A signals | 31 + 1 spare | 31 | 47 |
 | block header | 48 | 48 | 48 |
@@ -332,34 +325,36 @@ The 125 µs visit is **the card word's** sixteen bit-times at 128 kHz. `M` and
 `BUSY` are levels and need none of it. Separating them is worth a great deal —
 but only to the things levels decide.
 
-### 10.1 The levels floor is one CELL, not one frame
+### 10.1 The levels pass, frame-locked
 
 `block.v:110` already commutates all eight of a block's `A` per cell —
-`mux8 u_ca (.d(a_com), .s(slot), .y(ha_out))` — and `marker.v:497-498` captures
-at `tick == 4 && slotq == scan[2:0]`. **A scanner whose low bits track `SLOT`
-matches in every cell**, so the floor is 1.953 µs a port.
+`mux8 u_ca (.d(a_com), .s(slot), .y(ha_out))` — so on an **unfolded** fabric a
+scanner tracking `SLOT` matches in every cell and the floor is 1.953 µs a port.
 
-| M + BUSY pass | 64 | 128 | 256 | 512 |
-|---|---|---|---|---|
-| today, word-bearing (`N+B` visits) | 9.00 ms | 18.0 | 36.0 | 72.0 |
-| slot-locked, present 16-bit re-point | 1.125 ms | 2.25 | 4.50 | 9.00 |
-| slot-locked, `SCAN` widened | **0.125 ms** | 0.25 | 0.50 | 1.00 |
-| **word pass — the floor for anything needing class** | *8.00 ms* | *16.0* | *32.0* | *64.0* |
+**Folded, the scan is frame-locked instead**: set `SCAN[2:0]` = `frame_in_oct`,
+and in frame *f* the marker points at port *f* while port *f*'s `A` sits in the
+A cell of that frame. Eight ports an octet, 125 µs, then the block re-point at
+`marker.v:538`, another 125 µs — **250 µs a block**.
 
-What limits it is not settling (~0.25 µs round trip on `mainboard.md` §5.3's own
-cable model, 8× inside a cell) but two architectural facts: **`BUSY` is
-`SCAN`-addressed where `M` is `SLOT`-addressed** (`block.v:108, 111`), and the
-block re-point at `marker.v:538` costs 125 µs and becomes 89 % of a fast pass.
+| ports | today (`N+B` word-bearing visits) | **this: frame-locked, folded, no PB2** | word pass — hunts |
+|---|---|---|---|
+| 64 | 9.0 ms | **2.0 ms** | 8.0 ms |
+| 128 | 18.0 ms | **4.0 ms** | 16.0 ms |
+| 256 | 36.0 ms | **8.0 ms** | 32.0 ms |
+| 512 | 72.0 ms | 16.0 ms | 64.0 ms |
 
-**Widening `SCAN` is right even at today's rate**: the pass goes (N + B) → N
-visits — `mainboard.md` §2.3.4's measured 72 → 64 — and deletes four
-probe-disturbance mechanisms. Per block it is a second '138 into a fourth shunt
-column, the idiom `block.v:75` already uses, so §1's refusal of slot-ID pins
-survives. Cable B goes 26-way → 34-way (40 at 512 ports), and the graceful
-degradation `SCAN[2:0]` had does not survive: it is a hard cutover.
+At 256 ports — the size the word pass caps the exchange at anyway — the levels
+pass is 8 ms, inside the 9 ms today's 64-port exchange already lives with.
 
-**The fold costs the levels scan exactly 8×**, since a folded port's `A` appears
-once per eight frames. §2.1's `M` probe buys it back and then some.
+**`SCAN` is not widened.** Widening it to the full port address would delete the
+125 µs block re-point and take the pass to 0.125–1.0 ms, but nothing needs that:
+it is a hard cutover to a 34-way cable B with no graceful degradation, where
+`SCAN[2:0]` today degrades gracefully because `DST` steering still works. The
+re-point stays, and with it `mainboard.md` §3.2's siting argument and the
+26-way.
+
+Settling is not the limit either way: the `SCAN`-out / `PB`-back round trip on
+`mainboard.md` §5.3's own cable model is ~0.25 µs, eight times inside a cell.
 
 ### 10.2 Words cannot be read faster, at any scan rate
 
@@ -385,16 +380,24 @@ Two places need it in the same visit as M, or without M at all:
 
 So a deferred word is two visits for every real request, not one.
 
-### 10.4 A bug at HEAD, and the fix that converges
+### 10.4 A bug at HEAD, and its fix
 
 `lamp_card.v:61, 65-66` takes `d = pb0` while addressing its '259 by `slotq`,
 against `block.v:111`'s `SCAN`-held `PB0` — so **one port's `BUSY` is written
 into all eight positions** of that block's lamp field.
 
 The repair is to slot-commutate `u_cb`: `block.v:111`, `.s(pb_sel)` → `.s(slot)`.
-**Zero packages**, and it is exactly what `common_card.v:26-30` and
-`hookbusy.md` §3.5 already claim happens "by construction".
+**Zero packages**, and it makes `common_card.v:26-30` and `hookbusy.md` §3.5's
+"by construction" claim true.
 
-It is also precisely what the per-cell levels scan needs, since `BUSY` must then
-track `SLOT` like `M`. The two are one change — but a package deal: it requires
-the marker to slot-lock, or the marker loses its `BUSY` read.
+It is **not** free of consequence, and an earlier draft of this document was
+wrong to call it the same change as the scan. `marker.v:509` and `:517` sample
+`pb_busy` as a held level, precisely because `u_cb` is `SCAN`-addressed today.
+Slot-commutating it obliges the marker to gate the capture:
+
+```
+if (tick == 3'd4 && slotq == scan[2:0]) b_acc <= pb_busy;
+```
+
+which is what `nano_core.v:95` already does. One line, no packages — but a
+separate change from the scan, to be made deliberately.
