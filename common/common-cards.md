@@ -193,7 +193,7 @@ Three properties hold in an MF8 shelf and in an exchange block and are what make
 
 - **No slot-ID pins.** A card never knows where it is (`mf8-backplane.md` §3,
   `baseband.md` §2.1).
-- **Point to point, never a bus.** Seven signals a slot, nothing shared, nothing
+- **Point to point, never a bus.** Six signals a slot on seven per-slot pins, nothing shared, nothing
   addressed, nothing contending; only the clocks and the rails are common.
 - **An unfitted slot idles by resistor**: `C_TX[n]` pulled to `FILL` through
   4.7 kΩ and `A_TX[n]` to ground, so a pulled card leaves silence and on-hook
