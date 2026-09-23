@@ -106,6 +106,9 @@ alternative to one MF8 group.
 **A line is dialled `h s` from its own exchange, and `1 e b h s` from anywhere.**
 Nothing is jumpered for it: an exchange with no network unit treats
 `1` as a highway (`protocol.md` §5), and otherwise parses the same digits.
+A **PBX leaf** hung off a central has no code of its own: the network dials
+`1 <central e b> <group>` then a leaf extension after the leaf's dial tone
+(`leaf-uplink.md`).
 
 ```
  local         4 7           line 47 of this exchange.  No trunk is touched

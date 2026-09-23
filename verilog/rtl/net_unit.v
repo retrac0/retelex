@@ -39,7 +39,7 @@ module net_unit #(
     input  [NREG-1:0]    reg_gone,
     input  [NREG-1:0]    reg_brk,
     input  [3*NREG-1:0]  reg_ndig,
-    input  [20*NREG-1:0] reg_digits,
+    input  [16*NREG-1:0] reg_digits,
 
     output reg [NREG-1:0] restart,
     output reg [NREG-1:0] go_local,
@@ -94,8 +94,8 @@ module net_unit #(
     wire       p_n      = is_trunk && STRAP_N[p_dir];
     wire       p_free   = !p_busy && !p_m;
 
-    function [2:0] oct(input [4:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
-    function       isvc(input [4:0] c); isvc = (c == 5'd8) || (c == 5'd9) || (c > 5'd10); endfunction
+    function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0];  endfunction
+    function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
 
     localparam N_IDLE=3'd0, N_WANT=3'd1, N_HUNT=3'd2, N_NET=3'd3, N_WAITCL=3'd4;
 
@@ -141,7 +141,7 @@ module net_unit #(
     reg            bclm [0:7];
     reg            bev  [0:7];
     reg [2:0]      nd;
-    reg [4:0]      dg0, dg1;
+    reg [3:0]      dg0, dg1;
 
     task npush(input [5:0] pt, input [5:0] sr, input b, input c, input e);
         begin
@@ -287,8 +287,8 @@ module net_unit #(
             // ---- origin calls -------------------------------------------
             for (r = 0; r < NREG; r = r + 1) begin
                 nd  = reg_ndig  [r*3  +: 3];
-                dg0 = reg_digits[r*20 +: 5];
-                dg1 = reg_digits[r*20 + 5 +: 5];
+                dg0 = reg_digits[r*16 +: 4];
+                dg1 = reg_digits[r*16 + 4 +: 4];
 
                 if (hold[r] != 2'd0) hold[r] <= hold[r] - 1'b1;
 

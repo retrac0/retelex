@@ -29,7 +29,7 @@ module mini_core #(
     input            r_nodig,
     input            r_hook,
     input      [2:0] r_ndig,
-    input     [19:0] r_digits,
+    input     [15:0] r_digits,
     output reg       r_attach,
     output reg       r_release,
     output reg       r_restart_loc,
@@ -127,14 +127,14 @@ module mini_core #(
 
     assign flood_caller = caller;
 
-    function [2:0] oct(input [4:0] c);
+    function [2:0] oct(input [3:0] c);
         oct = c[3] ? 3'd0 : c[2:0];
     endfunction
 
-    wire [4:0] dg0 = r_digits[4:0];
-    wire [4:0] dg1 = r_digits[9:5];
+    wire [3:0] dg0 = r_digits[3:0];
+    wire [3:0] dg1 = r_digits[7:4];
     wire [2:0] nd  = r_ndig;
-    wire first_nogo = (dg0 < 5'd1) || (dg0 > 5'd7);
+    wire first_nogo = (dg0 < 4'd1) || (dg0 > 4'd7);
     wire is_trunk   = HAS_NET && TRUNK_MASK[p_port];
     wire leaf_mode  = LEAF && !HAS_NET;
 
@@ -230,11 +230,11 @@ module mini_core #(
                         push(caller, NOGO, 1'b1, ctx_clm);
                         r_release <= 1'b1; mst <= M_IDLE;
                         f1 <= 1'b0; ctx_clm <= 1'b0;
-                    end else if (HAS_NET && dg0 == 5'd1) begin
+                    end else if (HAS_NET && dg0 == 4'd1) begin
                         push(caller, 6'o00, 1'b1, ctx_clm);
                         r_restart_loc <= 1'b1; hold <= 2'd3;
                         flood_go <= 1'b1; mst <= M_YIELD;
-                    end else if (leaf_mode && dg0 == 5'd1) begin
+                    end else if (leaf_mode && dg0 == 4'd1) begin
                         push(caller, 6'o00, 1'b1, ctx_clm);
                         up_start <= scan; up_armed <= 1'b0;
                         mst <= M_UPLINK;

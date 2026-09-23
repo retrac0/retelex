@@ -55,7 +55,7 @@ module mini_marker #(
     output           reg_nodig,
     output           reg_brk,
     output     [2:0] reg_ndig,
-    output    [19:0] reg_digits,
+    output    [15:0] reg_digits,
     output           wq_ovf,
     output           wr_stb,
     output     [5:0] wr_dst,
@@ -65,7 +65,7 @@ module mini_marker #(
 );
     wire        r_busy, r_gone, r_nodig, r_brk, r_hook;
     wire [2:0]  r_ndig;
-    wire [19:0] r_digits;
+    wire [15:0] r_digits;
     wire        r_attach, r_release, r_restart_loc;
     wire [5:0]  r_aport;
     wire        restart_w = (HAS_NET && net_restart) | r_restart_loc;

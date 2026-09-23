@@ -10,7 +10,7 @@ Maps the exchange RTL onto common 74HC packages and reports a DIP package BOM.
 | `hc259` | HC259 | addressable latch |
 | `ctl_write` | 2 × HC165 | cable-B serialiser |
 | `hc393` `hc4040` `hc163` `hc175` `hc670` `hc174` … | named MSI | [`register.md`](../../../exchange/register.md) §4 parts |
-| `pulse_reg` | ≈ 12 (hand BOM) | whole register, blackboxed for `synth-hc-mini` |
+| `pulse_reg` | ≈ 11 (hand BOM) | whole register, blackboxed for `synth-hc-mini` |
 | `mini_core` | ≈ 12 (hand BOM) | scanner / probe / sequencer |
 
 **Why not `abc -liberty`?** On the Yosys 0.66 build in use here, ABC segfaults

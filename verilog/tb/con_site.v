@@ -158,7 +158,7 @@ module con_site #(
     wire [NREG-1:0]    r_busy, r_gone, r_brk, r_attach, r_release, r_restart;
     wire [NREG-1:0]    r_nodig;
     wire [3*NREG-1:0]  r_ndig;
-    wire [20*NREG-1:0] r_digits;
+    wire [16*NREG-1:0] r_digits;
     wire [6*NREG-1:0]  r_held;
     wire [5:0]         r_port, r_src;
     assign regs_busy = r_busy;
@@ -170,7 +170,7 @@ module con_site #(
             .ha(ha), .attach(r_attach[gr]), .attach_port(r_port), .attach_src(r_src),
             .release_it(r_release[gr]), .restart(r_restart[gr]),
             .busy(r_busy[gr]), .port(), .src(r_held[gr*6 +: 6]),
-            .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*20 +: 20]),
+            .ndig(r_ndig[gr*3 +: 3]), .digits(r_digits[gr*16 +: 16]),
             .gone(r_gone[gr]), .nodig(r_nodig[gr]), .brk(r_brk[gr]), .hook());
     end endgenerate
 

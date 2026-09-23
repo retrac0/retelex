@@ -48,10 +48,10 @@ MSI = {
     "hc174": Counter({"HC174": 1}),
     "hc157": Counter({"HC157": 1}),
     "hc138": Counter({"HC138": 1}),
-    # Hand BOM for the shared register (register.md §4), ≈ 12 packages.
+    # Hand BOM for the shared register (register.md §4), ≈ 11 packages.
     "pulse_reg": Counter({
         "HC393": 1, "HC151": 1, "HC175": 1, "HC86": 1,
-        "HC4040": 1, "HC74": 2, "HC163": 1, "HC670": 2,
+        "HC4040": 1, "HC74": 2, "HC163": 1, "HC670": 1,
         "HC174": 1, "HC08": 1,
     }),
     # Hand BOM for mini-marker core without the register (mvp.md §2 sketch).

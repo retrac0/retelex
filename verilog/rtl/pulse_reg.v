@@ -1,7 +1,7 @@
 // pulse_reg -- register.md §4 as 74HC MSI: probe, pulse_rx, digit store.
 //
-// Store is two HC670s (4×4 + MSBs) with a parallel level mirror the marker
-// reads.  Digit index is half an HC393.  Port / SRC sit in an HC174 each.
+// Store is one HC670 (four digits × four bits).  Digit index is half an
+// HC393.  Port / SRC sit in an HC174 each.  Count saturates at 15.
 // The no-digit timer is a 16-bit count on TICK (two HC4040s of binary width
 // in the BOM; the RTL uses one vector so NODIG parameters stay freestyle).
 `timescale 1ns/1ps
@@ -27,7 +27,7 @@ module pulse_reg #(
     output     [5:0]  src,
 
     output     [2:0]  ndig,
-    output     [19:0] digits,
+    output     [15:0] digits,
     output reg        gone,
     output reg        nodig,
     output            brk,
@@ -37,7 +37,7 @@ module pulse_reg #(
     wire [5:0] port_q, src_q;
     wire       seize = attach & ~busy_r;
 
-    wire [4:0] p_cnt;
+    wire [3:0] p_cnt;
     wire       p_stb, p_clr, p_counting;
     wire       nodig_hit;
     wire       free_e = release_it | (busy_r & (p_clr | nodig_hit));
@@ -86,24 +86,19 @@ module pulse_reg #(
 
     wire       wr = busy_r & p_stb & ~free_e;
     wire [1:0] wa_w = (restart && p_stb) ? 2'd0 : n_q1[1:0];
-    wire [3:0] lo_rd, hi_rd;
-    hc670 u_lo (
+    wire [3:0] dig_rd;
+    hc670 u_store (
         .clk(clk), .rst_n(rst_n),
-        .we(wr), .wa(wa_w), .wd(p_cnt[3:0]),
-        .ra(wa_w), .rd(lo_rd)
-    );
-    hc670 u_hi (
-        .clk(clk), .rst_n(rst_n),
-        .we(wr), .wa(wa_w), .wd({3'd0, p_cnt[4]}),
-        .ra(wa_w), .rd(hi_rd)
+        .we(wr), .wa(wa_w), .wd(p_cnt),
+        .ra(wa_w), .rd(dig_rd)
     );
 
-    reg [19:0] dig_r;
+    reg [15:0] dig_r;
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) dig_r <= 20'd0;
-        else if (seize | free_e | (restart & ~p_stb)) dig_r <= 20'd0;
-        else if (restart & p_stb) dig_r <= {15'd0, p_cnt};
-        else if (wr && (n_q1 < 4)) dig_r[n_q1*5 +: 5] <= p_cnt;
+        if (!rst_n) dig_r <= 16'd0;
+        else if (seize | free_e | (restart & ~p_stb)) dig_r <= 16'd0;
+        else if (restart & p_stb) dig_r <= {12'd0, p_cnt};
+        else if (wr && (n_q1 < 4)) dig_r[n_q1*4 +: 4] <= p_cnt;
     end
     assign digits = dig_r;
 
@@ -134,5 +129,5 @@ module pulse_reg #(
         end
     end
 
-    wire _unused = |{n_q2, lo_rd, hi_rd};
+    wire _unused = |{n_q2, dig_rd};
 endmodule

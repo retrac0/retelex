@@ -802,11 +802,11 @@ details in [`tech/hc/`](tech/hc/).
 | HC244 | 1 |
 | HC393 | 2 |
 | HC4040 | 1 |
-| HC670 | 3 |
-| **TOTAL** | **26** |
+| HC670 | 2 |
+| **TOTAL** | **25** |
 
-`mini_marker` is **26 packages**, in the hand-BOM ballpark of ~25–30 (register
-≈ 12 + mini core ≈ 12 + serialiser 2).  The earlier behavioral synthesis that
+`mini_marker` is **25 packages**, in the hand-BOM ballpark of ~24–28 (register
+≈ 11 + mini core ≈ 12 + serialiser 2).  The earlier behavioral synthesis that
 reported hundreds of packages was counting expanded counters and the call FSM
 as SSI.
 

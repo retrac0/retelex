@@ -183,7 +183,7 @@ YIELD → unit `local` → COLLECT; `done` → IDLE; `nogo` → 03, IDLE
 ```
 
 `make mini` is the bench without a unit. `make mini-net` is one with.
-`make mini-leaf` is LEAF uplink to a tone-offering parent.
+`make mini-leaf` is LEAF uplink toward a tone-offering central (`leaf-uplink.md`).
 
 ---
 
@@ -210,10 +210,15 @@ a growth of this file into `marker.md`.
 
 ---
 
-## 9. Leaf uplink (no network unit)
+## 9. PBX leaf (no network unit)
 
 Jumper **LEAF** (mutually exclusive with **HAS_NET**): digit `1` hunts the
 first free port in `UPLINK_MASK` (block 1 trunks), patches the caller, and
-leaves. The parent must offer dial tone on that seize — full marker
+leaves. The far end must offer dial tone on that seize — full marker
 **offers-tone** bit, or a mini parent with those trunks unmasked.
-`leaf-uplink.md` is the contract. `make mini-leaf` is the bench.
+
+The same plant in the other direction: the **central** keeps an offers-tone
+trunk group (e.g. 70–77) tied to the leaf's 10–17. Network-wide access is
+`1 <central e b> <g s>` then the leaf's two-digit extension after a second
+dial tone — the leaf has no flood code. `leaf-uplink.md` is the contract.
+`make mini-leaf` is the leaf→central half.

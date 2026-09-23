@@ -256,7 +256,7 @@ module mini_net_site #(
     wire [7:0]  net_wbsy, net_wclm, net_wev;
     wire        r_gone, r_brk;
     wire [2:0]  r_ndig;
-    wire [19:0] r_digits;
+    wire [15:0] r_digits;
 
     mini_marker #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG),
                   .DIALTONE(PDT), .NOGO(PNG),

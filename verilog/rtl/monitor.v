@@ -79,7 +79,7 @@ module monitor #(
     reg  [NMON-1:0]     c_want;              // decided to claim, not yet acknowledged
 
     wire [NMON-1:0]     d_stb, d_clr;
-    wire [5*NMON-1:0]   d_cnt;
+    wire [4*NMON-1:0]   d_cnt;
 
     assign cells    = c_held;
     assign held     = |c_held;
@@ -118,12 +118,12 @@ module monitor #(
         pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_rx (
             .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
             .arm(c_held[g]), .m(m[c_slot[g*3 +: 3]]),
-            .cnt(d_cnt[g*5 +: 5]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
+            .cnt(d_cnt[g*4 +: 4]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
             .counting(), .brk_stb());
     end endgenerate
 
     integer k;
-    reg [4:0] n;
+    reg [3:0] n;
     reg [2:0] v;
     reg       bad;
 
@@ -159,10 +159,10 @@ module monitor #(
             end
 
             for (k = 0; k < NMON; k = k + 1) if (c_held[k]) begin
-                n   = d_cnt[k*5 +: 5];
+                n   = d_cnt[k*4 +: 4];
                 // e and b are 0-7 and a dialled 0 is ten pulses; 8 and 9 reserved
-                v   = (n == 5'd10) ? 3'd0 : n[2:0];
-                bad = (n == 5'd8) || (n == 5'd9) || (n > 5'd10);
+                v   = (n == 4'd10) ? 3'd0 : n[2:0];
+                bad = (n == 4'd8) || (n == 4'd9) || (n > 4'd10);
 
                 if (d_stb[k]) begin
                     case (c_st[k*2 +: 2])

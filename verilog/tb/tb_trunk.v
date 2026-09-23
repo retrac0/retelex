@@ -167,9 +167,11 @@ module tb_trunk;
         wf(20);
 
         // ---- 2. a call from a line on A to a line on B ---------------------
-        $display("\n  2. A's line 20 calls B's line 20, over trunk channel 10.");
-        patch_a(6'o20, 6'o10); patch_a(6'o10, 6'o20);   // A: line 20 <-> trunk 10
-        patch_b(6'o10, 6'o20); patch_b(6'o20, 6'o10);   // B: trunk 10 <-> line 20
+        // Trunk traffic seats are slots 1-3/5-7 (ports 11-13/15-17).  Slot 0/4
+        // are F and S on the wire -- not channels (mf8_trunk_card, trunk_site).
+        $display("\n  2. A's line 20 calls B's line 20, over trunk channel 11.");
+        patch_a(6'o20, 6'o11); patch_a(6'o11, 6'o20);   // A: line 20 <-> trunk 11
+        patch_b(6'o11, 6'o20); patch_b(6'o20, 6'o11);   // B: trunk 11 <-> line 20
         wf(10);
         h20a = 1;                                       // A's 20 lifts
         wf(T_RISE + 20);
@@ -193,11 +195,11 @@ module tb_trunk;
         wf(T_FALL + 60);
 
         // ---- 4. the other way, and a second call at the same time ---------
-        $display("\n  4. B's 20 calls A's 20 on channel 10, and B's 21 calls A's 21 on channel 11.");
-        patch_a(6'o20, 6'o10); patch_a(6'o10, 6'o20);
-        patch_b(6'o10, 6'o20); patch_b(6'o20, 6'o10);
-        patch_a(6'o21, 6'o11); patch_a(6'o11, 6'o21);
-        patch_b(6'o11, 6'o21); patch_b(6'o21, 6'o11);
+        $display("\n  4. B's 20 calls A's 20 on channel 11, and B's 21 calls A's 21 on channel 12.");
+        patch_a(6'o20, 6'o11); patch_a(6'o11, 6'o20);
+        patch_b(6'o11, 6'o20); patch_b(6'o20, 6'o11);
+        patch_a(6'o21, 6'o12); patch_a(6'o12, 6'o21);
+        patch_b(6'o12, 6'o21); patch_b(6'o21, 6'o12);
         wf(10);
         h20b = 1; h21b = 1;                             // both of B's lines lift
         wf(T_RISE + 20);
@@ -207,10 +209,10 @@ module tb_trunk;
         want(e20a && e20b && e21a && e21b, "both calls answered at once");
         p_a20b20.clear; p_b20a20.clear; p_a21b21.clear; p_b21a21.clear;
         path_en = 1; wf(400); path_en = 0;
-        p_b20a20.report("speech B20 -> A20, channel 10");
-        p_a20b20.report("speech A20 -> B20, channel 10");
-        p_b21a21.report("speech B21 -> A21, channel 11");
-        p_a21b21.report("speech A21 -> B21, channel 11");
+        p_b20a20.report("speech B20 -> A20, channel 11");
+        p_a20b20.report("speech A20 -> B20, channel 11");
+        p_b21a21.report("speech B21 -> A21, channel 12");
+        p_a21b21.report("speech A21 -> B21, channel 12");
         chk = chk + 4;
         if (p_b20a20.best_err || p_a20b20.best_err ||
             p_b21a21.best_err || p_a21b21.best_err) errs = errs + 1;

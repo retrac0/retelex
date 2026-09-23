@@ -201,12 +201,11 @@ is never counted.
  74HC4040   on TICK, reset by RST         Q4 ─▶ HIT ┐
                                           Q8 ─▶ ID  ├─ D flip-flops, D = 1, clocked by the tap, cleared by RST
                                           Q9 ─▶ CLR ┘
- 74HC163 + FF   pulse count, on TICK  enable  EDGE · /BRK · HIT · /CLR          a break has just ended, and was a pulse
-                                      clear   STB, synchronous                  five bits, so 16 pulses is 16, not a wrap
+ 74HC163   pulse count, on TICK  enable  EDGE · /BRK · HIT · /CLR          a break has just ended, and was a pulse
+                                      clear   STB, synchronous                  **four bits: count saturates at 15**
  STB      = ID · /ID' · /BRK · (count ≠ 0)                                       ID' is ID a tick later
- 74HC670 + nibble  the store, four digits   write the count at N, while STB, in the tick's second half
-                                      four bits of each digit in the '670; the four MSBs in one nibble of a second '670
-                                      (pulse-gen.md 4: D is 16 pulses)
+ 74HC670   the store, four digits       write the count at N, while STB, in the tick's second half
+                                      four × four bits — one '670; no fifth bit, no second '670 for digits
  N          digit index               ½ 74HC393, advanced by STB's end
  RELEASE  = CLR · BRK                 the caller hung up, or the pair is cut
 ```
@@ -225,9 +224,9 @@ so the write completes before the edge that clears the '163.
 pulse, and `1010` is what an MT8870-class DTMF receiver presents for 0. Digits
 1–9 are `0001`–`1001` on both. Pulse and tone digits therefore share one store
 with no translation (§7). A decade '160 would read 0 as `0000`, which is the
-MT8870's D. Sixteen pulses — keypad D of `pulse-gen.md` — need the fifth bit:
-the store holds `10000`, which no MT8870 produces, and the marker's `isvc`
-treats it as service, as it does 11–15.
+MT8870's D. **The count stops at 15** (hex `F`): enough for \* # A–C as 11–14
+and a spare 15; keypad **D** as sixteen pulses is **not** in this width.
+`isvc` still treats 11–15 as service (`protocol.md` §5).
 
 | block | parts |
 |---|---|
@@ -236,13 +235,13 @@ treats it as service, as it does 11–15.
 | synchronizer, edge, `RST` | 74HC175, ¼ 74HC86 |
 | timer | 74HC4040 |
 | HIT, ID, CLR, ID' | 2 × 74HC74 |
-| pulse count | 74HC163 + 1 FF (five bits: 1–16) |
-| store | 74HC670 + one nibble of a second '670 |
-| held party `SRC` (§6.1) | ½ 74HC174 (six bits), or spare in a second '670 |
+| pulse count | 74HC163 (four bits: **1–15**, saturate) |
+| store | **one** 74HC670 (four digits × four bits) |
+| held party `SRC` (§6.1) | ½ 74HC174 (six bits), or spare elsewhere |
 | count ≠ 0, strobe and enable gating | 74HC4002, 74HC08 |
 
-**≈ 11½ packages, one register for the exchange** (§5). With the held field,
-≈ 12.
+**≈ 10½ packages, one register for the exchange** (§5). With the held field,
+≈ 11–12.
 
 ---
 

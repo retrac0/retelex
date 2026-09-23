@@ -26,7 +26,7 @@ module tb_pulse_gen;
     reg        g_hook = 0, g_xtal = 1, g_wdt = 0;
     reg [15:0] g_key = 16'hFFFF;
     wire       g_m, g_ctx, g_word, g_ans;
-    wire [4:0] rx_cnt;
+    wire [3:0] rx_cnt;
     wire       rx_stb, rx_clr;
 
     pulse_gen #(.T_OH(10), .T_ID(200), .DEBOUNCE(2), .T_DT(4)) u_g (
@@ -44,7 +44,7 @@ module tb_pulse_gen;
     reg        a_hook = 0;
     reg [15:0] a_key = 16'hFFFF;
     wire       a_m;
-    wire [4:0] ax_cnt;
+    wire [3:0] ax_cnt;
     wire       ax_stb;
 
     pulse_gen #(.PPS(8), .BREAK_PCT(67), .T_OH(10), .T_ID(200), .DEBOUNCE(2)) u_adj (
@@ -88,7 +88,7 @@ module tb_pulse_gen;
         end
     endtask
 
-    task expect_dig(input [4:0] n, input string what);
+    task expect_dig(input [3:0] n, input string what);
         integer guard;
         begin
             guard = 0;
@@ -234,21 +234,21 @@ module tb_pulse_gen;
         $display("  1. Crystal 10 pps 60/40, digit 5."); $fflush();
         g_hook = 1; utick(12);
         press(5'd5);
-        expect_dig(5'd5, "register counts 5");
+        expect_dig(4'd5, "register counts 5");
         want(g_brk >= 58 && g_brk <= 62, "break is 60 ticks");
         want(g_mk  >= 38 && g_mk  <= 42, "make is 40 ticks");
         g_hook = 0; utick(30);
 
-        // ---- 2. hex map, including D = 16 ----
+        // ---- 2. hex map, including D = 16 (register saturates at 15) ----
         $display("  2. Hex map: 0 * # A B C D."); $fflush();
         g_hook = 1; utick(12);
-        press(5'd10); expect_dig(5'd10, "0 is 10 pulses");
-        press(5'd11); expect_dig(5'd11, "* is 11 pulses");
-        press(5'd12); expect_dig(5'd12, "# is 12 pulses");
-        press(5'd13); expect_dig(5'd13, "A is 13 pulses");
-        press(5'd14); expect_dig(5'd14, "B is 14 pulses");
-        press(5'd15); expect_dig(5'd15, "C is 15 pulses");
-        press(5'd16); expect_dig(5'd16, "D is 16 pulses, not a wrap");
+        press(5'd10); expect_dig(4'd10, "0 is 10 pulses");
+        press(5'd11); expect_dig(4'd11, "* is 11 pulses");
+        press(5'd12); expect_dig(4'd12, "# is 12 pulses");
+        press(5'd13); expect_dig(4'd13, "A is 13 pulses");
+        press(5'd14); expect_dig(4'd14, "B is 14 pulses");
+        press(5'd15); expect_dig(4'd15, "C is 15 pulses");
+        press(5'd16); expect_dig(4'd15, "D is 16 pulses, register saturates at 15");
         g_hook = 0; utick(30);
 
         // ---- 3. adjustable 8 pps 67 % ----
@@ -262,7 +262,7 @@ module tb_pulse_gen;
                 @(posedge clk);
                 if (u_tick) guard = guard + 1;
             end
-            want(ax_stb && ax_cnt == 5'd1, "adjustable path counts 1");
+            want(ax_stb && ax_cnt == 4'd1, "adjustable path counts 1");
             @(posedge clk);
         end
         want(a_brk >= 80 && a_brk <= 88, "8 pps 67 %: break ~83 ticks");
@@ -274,7 +274,7 @@ module tb_pulse_gen;
         utick(12);
         want(g_m, "off-hook, no breaks during the seize delay");
         press(5'd1);
-        expect_dig(5'd1, "digit after the seize delay");
+        expect_dig(4'd1, "digit after the seize delay");
         g_hook = 0; utick(20);
 
         g_hook = 1; utick(12);
@@ -305,8 +305,8 @@ module tb_pulse_gen;
         press(5'd2);
         utick(30);                            // into the train
         press(5'd1);                          // queued
-        expect_dig(5'd2, "first queued digit is 2");
-        expect_dig(5'd1, "then the queued 1");
+        expect_dig(4'd2, "first queued digit is 2");
+        expect_dig(4'd1, "then the queued 1");
         g_hook = 0; utick(30);
 
         // ---- 5. originate: local, then the flood ----

@@ -29,7 +29,7 @@ module tb_su1;
     reg        g_e = 0;
     reg        g_cv = 0;
     wire       g_m, g_tx, g_ring, g_mute, g_bdec, g_offn;
-    wire [4:0] rx_cnt;
+    wire [3:0] rx_cnt;
     wire       rx_stb;
 
     su1 #(.T_OH(10), .T_ID(200), .DEBOUNCE(2)) u_g (
@@ -63,7 +63,7 @@ module tb_su1;
         end
     endtask
 
-    task expect_dig(input [4:0] n, input string what);
+    task expect_dig(input [3:0] n, input string what);
         integer guard;
         begin
             guard = 0;
@@ -193,21 +193,21 @@ module tb_su1;
         $display("  1. Crystal 10 pps 60/40, digit 5."); $fflush();
         g_hook = 1; utick(12);
         press(5'd5);
-        expect_dig(5'd5, "register counts 5");
+        expect_dig(4'd5, "register counts 5");
         want(g_brk >= 58 && g_brk <= 62, "break is 60 ticks");
         want(g_mk  >= 38 && g_mk  <= 42, "make is 40 ticks");
         g_hook = 0; utick(30);
 
-        // ---- 2. Autovon map: 0 * # FO F I P ----
+        // ---- 2. Autovon map: 0 * # FO F I P (register saturates at 15) ----
         $display("  2. Autovon map: 0 * # FO F I P."); $fflush();
         g_hook = 1; utick(12);
-        press(5'd10); expect_dig(5'd10, "0 is 10 pulses");
-        press(5'd11); expect_dig(5'd11, "* is 11 pulses");
-        press(5'd12); expect_dig(5'd12, "# is 12 pulses");
-        press(5'd13); expect_dig(5'd13, "FO is 13 pulses");
-        press(5'd14); expect_dig(5'd14, "F is 14 pulses");
-        press(5'd15); expect_dig(5'd15, "I is 15 pulses");
-        press(5'd16); expect_dig(5'd16, "P is 16 pulses");
+        press(5'd10); expect_dig(4'd10, "0 is 10 pulses");
+        press(5'd11); expect_dig(4'd11, "* is 11 pulses");
+        press(5'd12); expect_dig(4'd12, "# is 12 pulses");
+        press(5'd13); expect_dig(4'd13, "FO is 13 pulses");
+        press(5'd14); expect_dig(4'd14, "F is 14 pulses");
+        press(5'd15); expect_dig(4'd15, "I is 15 pulses");
+        press(5'd16); expect_dig(4'd15, "P is 16 pulses, register saturates at 15");
         g_hook = 0; utick(30);
 
         // ---- 3. mute while off-normal ----
@@ -222,7 +222,7 @@ module tb_su1;
             want(g_mute, "mute asserts for the train");
         end
         sample_mute(20, "muted tx toggles (1010-class)");
-        expect_dig(5'd3, "digit 3 still counted");
+        expect_dig(4'd3, "digit 3 still counted");
         g_hook = 0; g_cv = 0; utick(30);
 
         // ---- 4. ring · on-hook; bit_dec = 1010 while ringing ----

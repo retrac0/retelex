@@ -24,7 +24,7 @@ module mini_core #(
     input frame_stb, oct_stb, tick_1k,
     input [7:0] ha, input pb_busy,
     input r_busy, r_gone, r_nodig, r_hook,
-    input [2:0] r_ndig, input [19:0] r_digits,
+    input [2:0] r_ndig, input [15:0] r_digits,
     output r_attach, r_release, r_restart_loc, output [5:0] r_aport,
     input ser_busy, output ser_req, ser_strobe,
     output [5:0] ser_dst, ser_src, output ser_bsy, ser_clm, ser_g,
@@ -44,6 +44,6 @@ module pulse_reg #(
     input attach, input [5:0] attach_port, attach_src,
     input release_it, restart,
     output busy, output [5:0] port, src,
-    output [2:0] ndig, output [19:0] digits,
+    output [2:0] ndig, output [15:0] digits,
     output gone, nodig, brk, hook
 ); endmodule

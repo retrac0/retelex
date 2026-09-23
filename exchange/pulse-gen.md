@@ -121,9 +121,10 @@ a bench can drive them with no buttons fitted.
 13–16. The numbering plan does not use them: the marker's `isvc` still treats
 anything past 10 as service (`protocol.md` §5, `marker.md` §2), so a first
 digit of \* is cannot-complete. They exist so a register and a monitor can
-*count* them. Sixteen pulses do not fit a 4-bit '163; the register's count is
-five bits and the store's extra bits are a nibble of a second '670
-(`register.md` §4). That change is in the register, not on this card.
+*count* them. **The exchange register counts to 15 and stops** (four bits,
+one '670 for four digits — `register.md` §4). Hex **F** is in that width;
+sixteen-pulse **D** is not stored as 16 until the count grows again. This
+card may still emit 16 pulses; the register saturates.
 
 ---
 
@@ -152,7 +153,7 @@ five bits and the store's extra bits are a nibble of a second '670
 | seize delay | ½ 74HC123, or a '163 and the DIP |
 | buttons, debounce | 16 SMD, resistor network, ½ 74HC74 |
 | encode 16 pins to 1..16 | 2 × 74HC148 |
-| pulse count | ½ 74HC193 and one FF (five bits, so D loads 16) |
+| pulse count | ½ 74HC193 and one FF (five bits on **this** card so D can still load 16; the exchange register saturates at 15) |
 | RC astable (if fitted) | ¼ 74HC14, pot, C; ½ 74HC123 |
 
 **≈ 11 packages.** The hotline's eight, plus encode. Fitted only on this card.
