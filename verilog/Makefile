@@ -7,11 +7,15 @@ SHELL := /bin/bash
 # is about two orders of magnitude faster and is what to use while working --
 # the network testbench is 3 s of model time, which is minutes under Icarus and
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
-RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/net_unit.v rtl/marker.v rtl/mini_marker.v \
+HC_MSI := tech/hc/hc393.v tech/hc/hc4040.v tech/hc/hc163.v tech/hc/hc175.v \
+          tech/hc/hc670.v tech/hc/hc174.v tech/hc/hc74.v tech/hc/hc86.v \
+          tech/hc/hc151.v tech/hc/hc157.v tech/hc/hc138.v
+RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/net_unit.v rtl/marker.v rtl/mini_core.v rtl/mini_marker.v \
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
          rtl/line_card.v rtl/pulse_gen.v rtl/su1.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
-         rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v
+         rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v \
+         $(HC_MSI)
 BUILD := build
 
 TB_fabric := tb/tb_fabric.v
@@ -249,22 +253,22 @@ synth: $(BUILD)
 HC_SH := tech/hc/synth_hc.sh
 
 RTL_exch_top    := $(RTL)
-RTL_mini_marker := rtl/mini_marker.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v
-RTL_marker      := rtl/marker.v rtl/ctl_write.v
+RTL_mini_marker := rtl/mini_marker.v rtl/mini_core.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v rtl/mux8.v $(HC_MSI)
+RTL_marker      := rtl/marker.v rtl/ctl_write.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/mux8.v $(HC_MSI)
 RTL_net_unit    := rtl/net_unit.v
 
-synth-hc-exch: $(BUILD)
-	@RTL_FILES="$(RTL_exch_top)" BUILD=$(BUILD) $(HC_SH) exch_top \
-	    'chparam -set BLOCK_FITTED 255 -set PORT_FITTED 18446744073709551615 exch_top'
-
 synth-hc-mini: $(BUILD)
-	@RTL_FILES="$(RTL_mini_marker)" BUILD=$(BUILD) $(HC_SH) mini_marker
+	@RTL_FILES="rtl/mini_marker.v" HC_BB=tech/hc/hc_bb.v BUILD=$(BUILD) $(HC_SH) mini_marker
 
 synth-hc-marker: $(BUILD)
 	@RTL_FILES="$(RTL_marker)" BUILD=$(BUILD) $(HC_SH) marker
 
 synth-hc-net: $(BUILD)
 	@RTL_FILES="$(RTL_net_unit)" BUILD=$(BUILD) $(HC_SH) net_unit
+
+synth-hc-exch: $(BUILD)
+	@RTL_FILES="$(RTL_exch_top)" HC_BB=tech/hc/hc_bb.v BUILD=$(BUILD) $(HC_SH) exch_top \
+	    'chparam -set BLOCK_FITTED 255 -set PORT_FITTED 18446744073709551615 exch_top'
 
 synth-hc: synth-hc-exch synth-hc-mini synth-hc-marker synth-hc-net
 

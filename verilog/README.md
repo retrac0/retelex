@@ -781,31 +781,41 @@ They are counted, reported and left out of both sides.
 
 ### 74HC packages (`make synth-hc`)
 
-Maps SSI to HC00 / 02 / 04 / 08 / 32 / 74, keeps `mux8` as HC151 and
-`ctl_write` as 2 × HC165.  Run `make synth-hc` (or `synth-hc-exch` /
-`synth-hc-mini` / `synth-hc-marker` / `synth-hc-net`) — details in
-[`tech/hc/`](tech/hc/).
+Maps SSI to HC00 / 02 / 04 / 08 / 32 / 74.  MSI kept hierarchical: `mux8` as
+HC151, `ctl_write` as 2 × HC165, and shared `pulse_reg` / `mini_core` as the
+`register.md` §4 and `mvp.md` §2 hand BOMs.  Run `make synth-hc` (or
+`synth-hc-exch` / `synth-hc-mini` / `synth-hc-marker` / `synth-hc-net`) —
+details in [`tech/hc/`](tech/hc/).
 
-| part | `exch_top` | `mini_marker` | `marker` | `net_unit` |
-|---|---:|---:|---:|---:|
-| HC00 | 2 666 | 325 | 6 829 | 2 624 |
-| HC02 | 877 | 27 | 195 | 128 |
-| HC04 | 212 | 11 | 46 | 46 |
-| HC08 | 1 074 | 131 | 2 386 | 1 587 |
-| HC32 | 437 | 61 | 1 242 | 276 |
-| HC74 | 1 496 | 116 | 227 | 190 |
-| HC151 | 32 | — | — | — |
-| HC165 | — | 2 | 2 | — |
-| **TOTAL** | **6 794** | **673** | **10 927** | **4 851** |
+| part | `mini_marker` |
+|---|---:|
+| HC08 | 3 |
+| HC74 | 4 |
+| HC86 | 1 |
+| HC138 | 1 |
+| HC151 | 2 |
+| HC157 | 2 |
+| HC163 | 2 |
+| HC165 | 2 |
+| HC174 | 1 |
+| HC175 | 1 |
+| HC244 | 1 |
+| HC393 | 2 |
+| HC4040 | 1 |
+| HC670 | 3 |
+| **TOTAL** | **26** |
 
-That last generic-synth row is still the honest difference between this and the
-hardware. In 74HC the two detectors are a diode, two resistors, a capacitor and
-a Schmitt gate each: **an RC, not a counter.** The RTL has to count frames to
-get 16 ms and 256 ms, and two 15-bit counters a port is two thirds of the whole
-design's flip-flops — and most of `exch_top`'s 1 496 × HC74. Anyone putting this
-on an FPGA pays that; anyone building it in 74HC does not. The HC BOMs above
-**still count those counters** so the number matches what this Verilog
-synthesizes; substituting RC/`HC14` is the next lever.
+`mini_marker` is **26 packages**, in the hand-BOM ballpark of ~25–30 (register
+≈ 12 + mini core ≈ 12 + serialiser 2).  The earlier behavioral synthesis that
+reported hundreds of packages was counting expanded counters and the call FSM
+as SSI.
+
+Gate-level `make synth` is still the honest difference for the **port release
+detectors**.  In 74HC those are a diode, two resistors, a capacitor and a
+Schmitt gate each: **an RC, not a counter.** The RTL has to count frames to get
+16 ms and 256 ms, and two 15-bit counters a port is two thirds of the whole
+design's flip-flops.  Anyone putting this on an FPGA pays that; anyone building
+it in 74HC does not.
 
 ## Two things the RTL settled
 
