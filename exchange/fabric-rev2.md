@@ -85,11 +85,25 @@ chained to how often `A` appears on the highway. Folded into one slot a block,
 `A` appears once per 109 µs instead of once a frame, and a marker that dwells
 less than a visit would miss it.
 
-One '151 a block on the ports' own `a_tx`, addressed by `SCAN` exactly as
-`BUSY` already is, presents the same bit the other way. It **deletes**
-`mux8 u_probe` from `pulse_reg.v` and `nano_reg.v` and the `ha[…]` capture plus
-the `slotq` compare from `marker.v`, `mini_core.v` and `nano_core.v` — about a
-package on each of the marker, every register and every monitor.
+One '151 a block on the ports' own `a_tx` — the same `a_com` vector `u_ca`
+already gathers — addressed by `SCAN` exactly as `BUSY` is, presents the same
+bit the other way.
+
+**What it deletes is narrower than it looks.** `ha`, `slotq` and `tick` appear
+at no line of `marker.v` but its port list and the capture at `:497-498`, and
+the same two lines are `mini_core.v:93` and `nano_core.v:95` — so it is worth
+about two packages **at each marker** and nothing anywhere else:
+
+- **registers: nothing.** `pulse_reg.v:64-65` is `mux8 u_probe (.d(ha),
+  .s(port_q[5:3]))` gated by `slotq == port_q[2:0]` — its **own held caller**,
+  watched continuously for `register.md` §2's 8 ms break window. A probe shows
+  the *scanned* port once a pass. Different signal, different job.
+- **monitors: nothing.** `monitor.v:55-56` takes `m[7:0]` and `busy[7:0]`
+  direct off the block header and never touches highway or probe.
+- **console, port watch, lamp cards: nothing** — all wheel- or `SLOTQ`-addressed.
+
+It does delete §4.3's `m_acc` hazard by construction: M becomes a level, so
+there is no accumulator to clear.
 
 **`A` stays on the highway for the ports and the trunks.** A trunk forwards
 `port_a_rx` — what its port captured off the highway — so the fabric path is
@@ -285,15 +299,13 @@ block shunt, cable B's existing signals.
 
 ## 8. Open
 
-- **The scan architecture, and therefore the size.** `network.md` §3 makes a
-  flood hop "up to one scan and a write", and `monitor.md` §3.5's guard taps are
-  sized on 12 ms a hop — so on a 125 µs-per-port scan the pass caps the
-  exchange near 128–256 ports. But the 125 µs is the **card word's** 16 bit-times
-  at 128 kHz, and the word is only wanted *after* a lift is noticed. A hook-only
-  scan on `M` and `BUSY` needs one frame, not eight. With §2.1's `M` probe and
-  `SCAN` widened to the full port address, the pass is settling-limited and the
-  ceiling moves out by roughly 8×. **Not yet costed here**; until it is, treat
-  §1's larger shapes as unproven.
+- **The size ceiling stands, and §10 says why.** A levels-only scan is 8× to
+  72× faster than today, but it does not move the flood hop, because the hop is
+  a *hunt* and a hunt reads the card word at every port. The word rate is fixed
+  exchange-wide (§10.2), so a hunt is N × 125 µs whatever the scan does, and
+  `monitor.md` §3.5's guard is sized on that. **128–256 ports remains the
+  ceiling for a networked exchange.** What the fast scan buys is dial-tone
+  latency and call setup, not size.
 - **The numbering.** Three digits over 16 highways of 8 slots is 7 address bits
   in 9 digit bits. Highways 0–15 should dial **200–377** — first digit
   `01h[3]` — keeping 128 dense numbers and leaving first keys 0, 1, 4, 5, 6, 7
@@ -311,3 +323,78 @@ block shunt, cable B's existing signals.
 - No bench exists for a fabric with `A` folded, a third `PB` conductor, or a
   block wider than eight.
 - The ¼ '02 of §3.1 rests on spare gate fractions `fabric.md` §8 calls a sketch.
+
+---
+
+## 10. The scan, separated into levels and words
+
+The 125 µs visit is **the card word's** sixteen bit-times at 128 kHz. `M` and
+`BUSY` are levels and need none of it. Separating them is worth a great deal —
+but only to the things levels decide.
+
+### 10.1 The levels floor is one CELL, not one frame
+
+`block.v:110` already commutates all eight of a block's `A` per cell —
+`mux8 u_ca (.d(a_com), .s(slot), .y(ha_out))` — and `marker.v:497-498` captures
+at `tick == 4 && slotq == scan[2:0]`. **A scanner whose low bits track `SLOT`
+matches in every cell**, so the floor is 1.953 µs a port.
+
+| M + BUSY pass | 64 | 128 | 256 | 512 |
+|---|---|---|---|---|
+| today, word-bearing (`N+B` visits) | 9.00 ms | 18.0 | 36.0 | 72.0 |
+| slot-locked, present 16-bit re-point | 1.125 ms | 2.25 | 4.50 | 9.00 |
+| slot-locked, `SCAN` widened | **0.125 ms** | 0.25 | 0.50 | 1.00 |
+| **word pass — the floor for anything needing class** | *8.00 ms* | *16.0* | *32.0* | *64.0* |
+
+What limits it is not settling (~0.25 µs round trip on `mainboard.md` §5.3's own
+cable model, 8× inside a cell) but two architectural facts: **`BUSY` is
+`SCAN`-addressed where `M` is `SLOT`-addressed** (`block.v:108, 111`), and the
+block re-point at `marker.v:538` costs 125 µs and becomes 89 % of a fast pass.
+
+**Widening `SCAN` is right even at today's rate**: the pass goes (N + B) → N
+visits — `mainboard.md` §2.3.4's measured 72 → 64 — and deletes four
+probe-disturbance mechanisms. Per block it is a second '138 into a fourth shunt
+column, the idiom `block.v:75` already uses, so §1's refusal of slot-ID pins
+survives. Cable B goes 26-way → 34-way (40 at 512 ports), and the graceful
+degradation `SCAN[2:0]` had does not survive: it is a hard cutover.
+
+**The fold costs the levels scan exactly 8×**, since a folded port's `A` appears
+once per eight frames. §2.1's `M` probe buys it back and then some.
+
+### 10.2 Words cannot be read faster, at any scan rate
+
+`line_card.v:54` reloads on `frame_stb && tx_oct` and shifts on its own ÷32, so
+**every card in the exchange is in the same bit-time at the same instant**. The
+bus yields at most one port-word per 125 µs *exchange-wide*, whatever `SCAN`
+does. `extensions.md` §2.2 already says it: "it buys gates, not time."
+
+A short dwell is a **rotation** of a static word, not noise, and there is no
+cheap detector — the all-ones and all-zeros constants are rotation-invariant
+and no bit is spare. A fast scan needs a word-valid flag that no `PB1` listener
+has today.
+
+### 10.3 "The word only after a lift" does not hold as stated
+
+Two places need it in the same visit as M, or without M at all:
+
+- `marker.v:779` — `if (visit && p_valid && p_nail && !p_busy)`: a tied nail
+  fires with **no M term**, so `p_nail` is wanted on every visit. Deferring the
+  word silently stops re-establishing nails after a release.
+- `marker.v:813` — the seizure branch consumes `p_cnail` and the class fields
+  in the **same** visit as `p_m`.
+
+So a deferred word is two visits for every real request, not one.
+
+### 10.4 A bug at HEAD, and the fix that converges
+
+`lamp_card.v:61, 65-66` takes `d = pb0` while addressing its '259 by `slotq`,
+against `block.v:111`'s `SCAN`-held `PB0` — so **one port's `BUSY` is written
+into all eight positions** of that block's lamp field.
+
+The repair is to slot-commutate `u_cb`: `block.v:111`, `.s(pb_sel)` → `.s(slot)`.
+**Zero packages**, and it is exactly what `common_card.v:26-30` and
+`hookbusy.md` §3.5 already claim happens "by construction".
+
+It is also precisely what the per-cell levels scan needs, since `BUSY` must then
+track `SLOT` like `M`. The two are one change — but a package deal: it requires
+the marker to slot-lock, or the marker loses its `BUSY` read.
