@@ -6,12 +6,18 @@
 //
 // Pulse count is one HC163, saturates at 15 (register.md §4).  STB = rising
 // ID · /BRK · (count ≠ 0).
+//
+// CNTW = 3 is the nano-marker's register instead (nano-marker.md §3): half an
+// HC393 and one FF, counting 1..7, with the eighth break wrapping to 0 and
+// freezing there.  8, 9 and 0 then all read 0, which is what oct() made of
+// them anyway, and the '163 comes off the board.
 `timescale 1ns/1ps
 
 module pulse_rx #(
     parameter integer HIT = 8,
     parameter integer ID  = 128,
-    parameter integer CLR = 256
+    parameter integer CLR = 256,
+    parameter integer CNTW = 4
 )(
     input            clk,
     input            rst_n,
@@ -67,18 +73,41 @@ module pulse_rx #(
     hc74_dff u_idp (.clk(clk), .rst_n(rst_n),
         .tick(tick_1k), .clr(!arm), .d(id_q), .q(id_d));
 
-    // ---- HC163: 1..15, freeze at F (no wrap, no fifth FF) ----------------
+    // ---- the count: CNTW=4 an HC163, CNTW=3 half an HC393 ----------------
     wire cnt_en = edge_e & ~brk & hit_q & ~clr_q & arm & ~flush;
     wire [3:0] cq;
-    wire       ctc;
-    wire       at_max  = &cq;
-    wire       cnt_nz  = |cq;
+    wire       at_max, cnt_nz;
     wire       stb_raw = id_q & ~id_d & ~brk & cnt_nz & arm & ~flush;
+    wire       c_mr    = stb_raw | !arm;
 
-    hc163 u_cnt (
-        .clk(clk), .rst_n(rst_n), .tick(tick_1k),
-        .mr(stb_raw | !arm), .ce(cnt_en & ~at_max), .q(cq), .tc(ctc)
-    );
+    generate if (CNTW == 3) begin : cnt3
+        // 1..7, freeze at 0.  The wrap FF is what tells a dialled 0 (which
+        // has left the count at 0) from a digit nobody dialled: cnt_nz keeps
+        // the strobe, so the register still stores a digit worth 0.
+        wire [3:0] q1, q2;
+        wire       wrapped;
+        hc393 u_cnt (
+            .clk(clk), .rst_n(rst_n), .tick(tick_1k),
+            .mr1(c_mr), .ce1(cnt_en & ~wrapped), .q1(q1),
+            .mr2(1'b1), .ce2(1'b0), .q2(q2)
+        );
+        hc74_dff u_wrap (.clk(clk), .rst_n(rst_n),
+            .tick(tick_1k && (c_mr || (cnt_en && (q1[2:0] == 3'd7)))),
+            .clr(c_mr), .d(1'b1), .q(wrapped));
+        assign cq     = {1'b0, q1[2:0]};
+        assign at_max = wrapped;
+        assign cnt_nz = |q1[2:0] | wrapped;
+        wire   _unused_q2 = |{q2, q1[3]};
+    end else begin : cnt4
+        wire ctc;
+        hc163 u_cnt (
+            .clk(clk), .rst_n(rst_n), .tick(tick_1k),
+            .mr(c_mr), .ce(cnt_en & ~at_max), .q(cq), .tc(ctc)
+        );
+        assign at_max = &cq;
+        assign cnt_nz = |cq;
+        wire   _unused_tc = ctc;
+    end endgenerate
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -91,7 +120,7 @@ module pulse_rx #(
             counting <= cnt_nz & arm;
             if (tick_1k && arm) begin
                 if (stb_raw) begin
-                    cnt     <= cq;                 // 1..15
+                    cnt     <= cq;                 // 1..15, or 1..7 then 0
                     dig_stb <= 1'b1;
                 end
                 if (cnt_en) brk_stb <= 1'b1;
@@ -100,5 +129,5 @@ module pulse_rx #(
         end
     end
 
-    wire _unused_tc = ctc;
+    wire _unused_max = at_max;
 endmodule

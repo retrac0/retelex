@@ -222,3 +222,11 @@ trunk group (e.g. 70–77) tied to the leaf's 10–17. Network-wide access is
 `1 <central e b> <g s>` then the leaf's two-digit extension after a second
 dial tone — the leaf has no flood code. `leaf-uplink.md` is the contract.
 `make mini-leaf` is the leaf→central half.
+
+**Smaller still.** `nano-marker.md` squeezes this marker and its register onto
+one board — 25 packages against 33 — by counting pulses in three bits (8, 9
+and 0 all read 0), making the six-bit digit store the called number, and
+dropping the write queue. It keeps the LEAF uplink, adds an operator hunt on
+`0`, and gives up `8` and `9` as keys of their own. Its hunts skip an open
+slot by asking whether the card word exists, which this marker cannot do
+because it never looks at PB's word line at all.

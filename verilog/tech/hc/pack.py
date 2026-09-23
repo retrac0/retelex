@@ -48,17 +48,38 @@ MSI = {
     "hc174": Counter({"HC174": 1}),
     "hc157": Counter({"HC157": 1}),
     "hc138": Counter({"HC138": 1}),
-    # Hand BOM for the shared register (register.md §4), ≈ 11 packages.
+    # Hand BOM for the shared register (register.md §4), ≈ 15 packages.
+    # HC174 is 2 latches (PORT, SRC) plus 3 for the parallel mirror of the
+    # store: the '670 has one addressed read port, so the marker cannot read
+    # four digits off it at once and dig_r has to shadow it.
     "pulse_reg": Counter({
         "HC393": 1, "HC151": 1, "HC175": 1, "HC86": 1,
         "HC4040": 1, "HC74": 2, "HC163": 1, "HC670": 1,
-        "HC174": 1, "HC08": 1,
+        "HC174": 5, "HC08": 1,
     }),
     # Hand BOM for mini-marker core without the register (mvp.md §2 sketch).
+    # The write queue is four 15-bit slots, which is four '670s and a pointer
+    # pair, not the one '670 this entry used to claim.
     "mini_core": Counter({
+        "HC393": 1, "HC151": 1, "HC74": 3, "HC157": 2,
+        "HC163": 1, "HC138": 1, "HC08": 2, "HC244": 1,
+        "HC670": 4,
+    }),
+    # Hand BOM for the nanomarker's three-bit register (nano-marker.md §3).
+    # Against pulse_reg: no '163 (the count is half the '393), no '670 and no
+    # mirror (the store is six bits in a '174 and reads out in parallel), no
+    # SRC latch.  One more '74 for the wrap FF the three-bit count needs.
+    "nano_reg": Counter({
+        "HC393": 1, "HC151": 1, "HC175": 1, "HC86": 1,
+        "HC4040": 1, "HC74": 3, "HC174": 2, "HC08": 1,
+    }),
+    # Hand BOM for the nanomarker core without the register (nano-marker.md
+    # §4).  Against mini_core: no write queue at all, and one '174 for the far
+    # end of a pair write.
+    "nano_core": Counter({
         "HC393": 1, "HC151": 1, "HC74": 2, "HC157": 2,
         "HC163": 1, "HC138": 1, "HC08": 2, "HC244": 1,
-        "HC670": 1,
+        "HC174": 1,
     }),
 }
 

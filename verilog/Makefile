@@ -9,10 +9,10 @@ SHELL := /bin/bash
 # 22 s under Verilator.  Anything that passes under one must pass under the other.
 HC_MSI := tech/hc/hc393.v tech/hc/hc4040.v tech/hc/hc163.v tech/hc/hc175.v \
           tech/hc/hc670.v tech/hc/hc174.v tech/hc/hc74.v tech/hc/hc86.v \
-          tech/hc/hc151.v tech/hc/hc157.v tech/hc/hc138.v
-RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/net_unit.v rtl/marker.v rtl/mini_core.v rtl/mini_marker.v \
+          tech/hc/hc151.v tech/hc/hc157.v tech/hc/hc138.v tech/hc/hc148.v
+RTL   := rtl/mux8.v rtl/hc259.v rtl/ctl_write.v rtl/stats.v rtl/console.v rtl/pulse_rx.v rtl/pulse_reg.v rtl/monitor.v rtl/net_unit.v rtl/marker.v rtl/mini_core.v rtl/mini_marker.v rtl/nano_core.v rtl/nano_marker.v rtl/nano_reg.v \
          rtl/source_card.v rtl/tone_card.v rtl/port.v rtl/block.v rtl/clock_card.v rtl/mainboard.v \
-         rtl/line_card.v rtl/pulse_gen.v rtl/su1.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
+         rtl/line_card.v rtl/pulse_gen.v rtl/su_dial.v rtl/su1.v rtl/mf8_encoder.v rtl/mf8_decoder.v rtl/mf8_framer.v \
          rtl/mf8_trunk_card.v rtl/exch_top.v \
          rtl/lamp_card.v rtl/common_card.v rtl/hb_panel.v \
          $(HC_MSI)
@@ -43,12 +43,13 @@ TB_groups := tb/net_site.v tb/tb_groups.v
 TB_pulse_gen := tb/net_site.v tb/tb_pulse_gen.v
 TB_su1 := tb/net_site.v tb/tb_su1.v
 TB_mini := tb/mini_site.v tb/tb_mini.v
+TB_nano := tb/nano_site.v tb/tb_nano.v
 TB_mini_net := tb/mini_net_site.v tb/bitpath.v tb/tb_mini_net.v
 TB_mini_leaf := tb/mini_net_site.v tb/bitpath.v tb/tb_mini_leaf.v
 TB_mini_load := tb/mini_net_site.v tb/tb_mini_load.v
 TB_mini_rate := tb/mini_net_site.v tb/tb_mini_rate.v
 
-SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini mini_net mini_leaf
+SIMS   := fabric mvp two trunk net chain monitor pool hub ring erlang stress stats console traffic panel tone tonex sclk priority word groups pulse_gen su1 mini nano mini_net mini_leaf
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
@@ -240,6 +241,9 @@ lint:
 	    rtl/net_unit.v
 	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module mini_marker \
 	    rtl/mini_marker.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v
+	@verilator --lint-only -Wall -Wno-fatal -Irtl --top-module nano_marker \
+	    rtl/nano_marker.v rtl/nano_core.v rtl/nano_reg.v rtl/pulse_rx.v \
+	    rtl/ctl_write.v rtl/mux8.v $(HC_MSI)
 
 # The full 64-port exchange, every block fitted: cells and flip-flops.
 synth: $(BUILD)
@@ -254,11 +258,15 @@ HC_SH := tech/hc/synth_hc.sh
 
 RTL_exch_top    := $(RTL)
 RTL_mini_marker := rtl/mini_marker.v rtl/mini_core.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/ctl_write.v rtl/mux8.v $(HC_MSI)
+RTL_nano_marker := rtl/nano_marker.v rtl/nano_core.v rtl/nano_reg.v rtl/pulse_rx.v rtl/ctl_write.v rtl/mux8.v $(HC_MSI)
 RTL_marker      := rtl/marker.v rtl/ctl_write.v rtl/pulse_reg.v rtl/pulse_rx.v rtl/mux8.v $(HC_MSI)
 RTL_net_unit    := rtl/net_unit.v
 
 synth-hc-mini: $(BUILD)
 	@RTL_FILES="rtl/mini_marker.v" HC_BB=tech/hc/hc_bb.v BUILD=$(BUILD) $(HC_SH) mini_marker
+
+synth-hc-nano: $(BUILD)
+	@RTL_FILES="rtl/nano_marker.v" HC_BB=tech/hc/hc_bb.v BUILD=$(BUILD) $(HC_SH) nano_marker
 
 synth-hc-marker: $(BUILD)
 	@RTL_FILES="$(RTL_marker)" BUILD=$(BUILD) $(HC_SH) marker
@@ -270,16 +278,25 @@ synth-hc-exch: $(BUILD)
 	@RTL_FILES="$(RTL_exch_top)" HC_BB=tech/hc/hc_bb.v BUILD=$(BUILD) $(HC_SH) exch_top \
 	    'chparam -set BLOCK_FITTED 255 -set PORT_FITTED 18446744073709551615 exch_top'
 
-synth-hc: synth-hc-exch synth-hc-mini synth-hc-marker synth-hc-net
+synth-hc: synth-hc-exch synth-hc-mini synth-hc-nano synth-hc-marker synth-hc-net
 
 clean:
 	@rm -rf $(BUILD)
 
-.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth synth-hc synth-hc-exch synth-hc-mini synth-hc-marker synth-hc-net clean pulse-gen mini mini-net mini-leaf mini-load mini-rate iv-pulse-gen
+.PHONY: all iv $(SIMS) $(IVSIMS) chain-delay ring-open erlang-long stress-pair stress-overload console-naive trunk-ppm traffic-net traffic-models traffic-deep hub-fwd hub-leak regs lint synth synth-hc synth-hc-exch synth-hc-mini synth-hc-nano synth-hc-marker synth-hc-net clean pulse-gen mini mini-net mini-leaf mini-load mini-rate nano nano-noop iv-pulse-gen
 pulse-gen: pulse_gen
 iv-pulse-gen: iv-pulse_gen
 mini-net: mini_net
 mini-leaf: mini_leaf
+
+# The nanomarker with the operator hunt strapped off: 0, 8 and 9 all go back
+# to cannot-complete (nano-marker.md §5).
+nano-noop: $(BUILD)
+	@mkdir -p $(BUILD)/vl/nanonoop
+	@verilator $(VLFLAG) -GOP_EN=0 --top-module tb_nano \
+	    --Mdir $(BUILD)/vl/nanonoop -o tb_nano_noop $(RTL) $(TB_nano) \
+	    > $(BUILD)/vl-nanonoop.log 2>&1 || (cat $(BUILD)/vl-nanonoop.log; false)
+	@$(BUILD)/vl/nanonoop/tb_nano_noop 2>&1 | grep -v '^- '
 
 # Mini-marker load matrix: solo / solo wider / pair / chain.
 mini-load: $(BUILD)

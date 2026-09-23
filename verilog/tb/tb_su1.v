@@ -1,4 +1,5 @@
-// tb_su1 -- su-1.md: Autovon map, mute, ring trip, and a local call.
+// tb_su1 -- su-1.md: the pad, the two line patterns, mute, the talk UI,
+// the loop-timed clock and its LED, ring trip and glare, and a local call.
 `timescale 1ns/1ps
 
 module tb_su1;
@@ -13,34 +14,42 @@ module tb_su1;
         end
     endtask
 
-    // ---- unit: synthetic 1 kHz tick ----
-    reg clk = 0, rst_n = 0, u_tick = 0, u_frame = 0;
+    // ---- unit: the set runs on a recovered 64 kHz strobe, nothing else ----
+    // bit_stb every 10 clks, TICK_DIV 10, so TICK is still one per 100 clks
+    // and the millisecond numbers below read as they always did.
+    reg clk = 0, rst_n = 0, u_bit = 0, g_carrier = 1;
     always #5 clk = ~clk;
-    reg [6:0] tdiv = 0;
+    reg [6:0] bdiv = 0;
     always @(posedge clk) begin
-        u_tick  <= 1'b0;
-        u_frame <= 1'b0;
-        if (tdiv == 7'd99) begin tdiv <= 0; u_tick <= 1'b1; u_frame <= 1'b1; end
-        else tdiv <= tdiv + 1'b1;
+        u_bit <= 1'b0;
+        if (bdiv == 7'd9) begin bdiv <= 0; u_bit <= g_carrier; end
+        else bdiv <= bdiv + 1'b1;
     end
 
     reg        g_hook = 0;
     reg [15:0] g_key = 16'hFFFF;
     reg        g_e = 0;
     reg        g_cv = 0;
+    reg        g_rx = 0;
+    reg        g_spk = 0, g_pttm = 0, g_ptt = 0;
     wire       g_m, g_tx, g_ring, g_mute, g_bdec, g_offn;
+    wire       g_micen, g_earm, g_spken, g_led, g_tick;
     wire [3:0] rx_cnt;
     wire       rx_stb;
 
-    su1 #(.T_OH(10), .T_ID(200), .DEBOUNCE(2)) u_g (
-        .clk(clk), .rst_n(rst_n), .frame_stb(u_frame), .tick_1k(u_tick),
+    su1 #(.T_OH(10), .T_ID(200), .DEBOUNCE(2),
+          .TICK_DIV(10), .LED_DIV(64)) u_g (
+        .clk(clk), .rst_n(rst_n), .bit_stb(u_bit), .carrier(g_carrier),
         .hook_sw(g_hook), .key_n(g_key),
-        .rx(1'b0), .e(g_e), .cv_bit(g_cv),
+        .spk_sw(g_spk), .ptt_mode(g_pttm), .ptt(g_ptt),
+        .rx(g_rx), .e(g_e), .cv_bit(g_cv),
         .m(g_m), .tx(g_tx), .ring(g_ring), .mute(g_mute),
-        .bit_dec(g_bdec), .off_normal(g_offn));
+        .bit_dec(g_bdec), .off_normal(g_offn),
+        .mic_en(g_micen), .ear_mute(g_earm), .spk_en(g_spken),
+        .led(g_led), .tick_1k(g_tick));
 
     pulse_rx #(.HIT(8), .ID(128), .CLR(256)) u_rx (
-        .clk(clk), .rst_n(rst_n), .tick_1k(u_tick), .arm(g_hook), .m(g_m),
+        .clk(clk), .rst_n(rst_n), .tick_1k(g_tick), .arm(g_hook), .m(g_m),
         .cnt(rx_cnt), .dig_stb(rx_stb), .clear(), .counting(), .brk_stb());
 
     task utick(input integer n);
@@ -48,8 +57,51 @@ module tb_su1;
         begin
             for (i = 0; i < n; i = i + 1) begin
                 @(posedge clk);
-                while (!u_tick) @(posedge clk);
+                while (!g_tick) @(posedge clk);
             end
+        end
+    endtask
+
+    task ubit(input integer n);
+        integer i;
+        begin
+            for (i = 0; i < n; i = i + 1) begin
+                @(posedge clk);
+                while (!u_bit) @(posedge clk);
+            end
+        end
+    endtask
+
+    // The exchange's own test: X = Q ^ Q[n-2] is constantly 1 under 1100 and
+    // constantly 0 under 1010 (subscriber-line.md §2).  Sample the line the
+    // way the hook detector does and count both ways.
+    integer x_one, x_zero;
+    task sample_line(input integer n);
+        reg [2:0] h;
+        integer i;
+        begin
+            x_one = 0; x_zero = 0; h = 3'd0;
+            for (i = 0; i < n; i = i + 1) begin
+                ubit(1);
+                h = {h[1:0], g_tx};
+                if (i >= 2) begin
+                    if (h[2] != h[0]) x_one = x_one + 1;
+                    else              x_zero = x_zero + 1;
+                end
+            end
+        end
+    endtask
+
+    task expect_dig(input [3:0] n, input string what);
+        integer guard;
+        begin
+            guard = 0;
+            while (!rx_stb && guard < 4000) begin
+                @(posedge clk);
+                if (g_tick) guard = guard + 1;
+            end
+            want(rx_stb && rx_cnt == n, what);
+            @(posedge clk);
         end
     endtask
 
@@ -63,22 +115,9 @@ module tb_su1;
         end
     endtask
 
-    task expect_dig(input [3:0] n, input string what);
-        integer guard;
-        begin
-            guard = 0;
-            while (!rx_stb && guard < 4000) begin
-                @(posedge clk);
-                if (u_tick) guard = guard + 1;
-            end
-            want(rx_stb && rx_cnt == n, what);
-            @(posedge clk);
-        end
-    endtask
-
     reg        g_lastm = 1'b0;
     reg [9:0]  g_wcnt = 0, g_brk = 0, g_mk = 0;
-    always @(posedge clk) if (u_tick) begin
+    always @(posedge clk) if (g_tick) begin
         if (g_lastm != g_m) begin
             if (!g_lastm && g_m) g_brk <= g_wcnt;
             if ( g_lastm && !g_m) g_mk  <= g_wcnt;
@@ -86,21 +125,6 @@ module tb_su1;
         end else if (g_wcnt != 10'h3FF) g_wcnt <= g_wcnt + 1'b1;
         g_lastm <= g_m;
     end
-
-    // Sample tx while muted: expect alternating 1010-class pattern.
-    integer mute_hi, mute_lo;
-    task sample_mute(input integer n, input string what);
-        integer i;
-        begin
-            mute_hi = 0; mute_lo = 0;
-            for (i = 0; i < n; i = i + 1) begin
-                utick(1);
-                if (g_tx) mute_hi = mute_hi + 1;
-                else      mute_lo = mute_lo + 1;
-            end
-            want(g_mute && mute_hi > 0 && mute_lo > 0, what);
-        end
-    endtask
 
     // ---- originate: net_site, scaled windows ----
     localparam integer HIT = 1, ID = 16, CLR = 32;
@@ -148,11 +172,16 @@ module tb_su1;
        .fan_legs(), .res_used(), .port_busy(), .regs_busy(), .wq_ovf(), .n_defer(),
        .wr_stb(), .wr_dst(), .wr_src(), .wr_bsy(), .wr_clm());
 
-    su1 #(.PPS(50), .BREAK_PCT(60), .T_OH(40), .T_ID(60), .DEBOUNCE(2)) u_net (
-        .clk(clk_a), .rst_n(rst_net), .frame_stb(fs_net), .tick_1k(tick_a),
+    // Loop-timed off the exchange's own 64 kHz frame strobe: the set has no
+    // crystal, so the site's clock is the set's clock (su-1.md §5).
+    su1 #(.PPS(50), .BREAK_PCT(60), .T_OH(40), .T_ID(60), .DEBOUNCE(2),
+          .TICK_DIV(64), .LED_DIV(1024)) u_net (
+        .clk(clk_a), .rst_n(rst_net), .bit_stb(fs_net), .carrier(1'b1),
         .hook_sw(n_hook), .key_n(n_key),
+        .spk_sw(1'b0), .ptt_mode(1'b0), .ptt(1'b0),
         .rx(rx_a[6'o20]), .e(ln_a[6'o20]), .cv_bit(1'b0),
-        .m(su_m), .tx(su_tx), .ring(), .mute(), .bit_dec(), .off_normal());
+        .m(su_m), .tx(su_tx), .ring(), .mute(), .bit_dec(), .off_normal(),
+        .mic_en(), .ear_mute(), .spk_en(), .led(), .tick_1k());
 
     task npress(input [4:0] n);
         begin
@@ -181,16 +210,23 @@ module tb_su1;
         end
     endtask
 
-    integer bdec_hi, bdec_lo;
+    integer bdec_hi, bdec_lo, led_hi, led_lo, i;
 
     initial begin
-        $display("SU-1 (RTL) -- su-1.md, Autovon pad, mute, ring, a local call.\n");
+        $display("SU-1 (RTL) -- su-1.md: pad, line patterns, talk UI, LED, a call.\n");
         $fflush();
         #200 rst_n = 1;
         utick(5);
 
-        // ---- 1. 10 pps 60/40, digit 5 ----
-        $display("  1. Crystal 10 pps 60/40, digit 5."); $fflush();
+        // ---- 1. the line on-hook is 1100, the mute pattern is 1010 ----
+        $display("  1. The two held patterns (subscriber-line.md §2)."); $fflush();
+        g_hook = 0; ubit(4);
+        sample_line(40);
+        want(x_one == 38 && x_zero == 0,
+             "on-hook: Q^Q[n-2] is 1 throughout -- 1100");
+
+        // ---- 2. 10 pps 60/40, digit 5, and 1100 under the breaks ----
+        $display("  2. Loop-timed 10 pps 60/40, digit 5."); $fflush();
         g_hook = 1; utick(12);
         press(5'd5);
         expect_dig(4'd5, "register counts 5");
@@ -198,8 +234,8 @@ module tb_su1;
         want(g_mk  >= 38 && g_mk  <= 42, "make is 40 ticks");
         g_hook = 0; utick(30);
 
-        // ---- 2. Autovon map: 0 * # FO F I P (register saturates at 15) ----
-        $display("  2. Autovon map: 0 * # FO F I P."); $fflush();
+        // ---- 3. Autovon map: 0 * # FO F I P (register saturates at 15) ----
+        $display("  3. Autovon map: 0 * # FO F I P."); $fflush();
         g_hook = 1; utick(12);
         press(5'd10); expect_dig(4'd10, "0 is 10 pulses");
         press(5'd11); expect_dig(4'd11, "* is 11 pulses");
@@ -210,41 +246,78 @@ module tb_su1;
         press(5'd16); expect_dig(4'd15, "P is 16 pulses, register saturates at 15");
         g_hook = 0; utick(30);
 
-        // ---- 3. mute while off-normal ----
-        $display("  3. Mute while dial off-normal."); $fflush();
+        // ---- 4. mute while off-normal: the makes carry 1010 ----
+        $display("  4. Mute while dial off-normal (register.md §1.1)."); $fflush();
         g_hook = 1; g_cv = 1'b1; utick(12);
         want(!g_mute && g_tx == 1'b1, "talking: unmute, cv_bit on tx");
         press(5'd3);
         begin : wait_mute
             integer guard;
             guard = 0;
-            while (!g_mute && guard < 500) begin utick(1); guard = guard + 1; end
+            while (!(g_mute && !g_m) && guard < 500) begin utick(1); guard = guard + 1; end
             want(g_mute, "mute asserts for the train");
         end
-        sample_mute(20, "muted tx toggles (1010-class)");
+        sample_line(8);
+        want(x_one == 6 && x_zero == 0, "a break still carries 1100");
+        while (!g_m) utick(1);                   // into the make
+        sample_line(8);
+        want(x_zero == 6 && x_one == 0, "the make carries 1010, not speech");
         expect_dig(4'd3, "digit 3 still counted");
         g_hook = 0; g_cv = 0; utick(30);
 
-        // ---- 4. ring · on-hook; bit_dec = 1010 while ringing ----
-        $display("  4. Ring trip and decoder 1010."); $fflush();
+        // ---- 5. ring, decoder 1010, ring trip and glare ----
+        $display("  5. Ring, ring trip, and glare (subscriber-line.md §7)."); $fflush();
+        g_rx = 1'b1;
         g_hook = 0; g_e = 1; utick(4);
         want(g_ring, "RING · ON-HOOK arms the sounder");
+        want(g_spken && g_earm && !g_micen, "ringing: speaker on, ear muted, mic shut");
         bdec_hi = 0; bdec_lo = 0;
-        begin : samp_bdec
-            integer i;
-            for (i = 0; i < 20; i = i + 1) begin
-                utick(1);
-                if (g_bdec) bdec_hi = bdec_hi + 1;
-                else        bdec_lo = bdec_lo + 1;
-            end
+        for (i = 0; i < 20; i = i + 1) begin
+            ubit(1);
+            if (g_bdec) bdec_hi = bdec_hi + 1;
+            else        bdec_lo = bdec_lo + 1;
         end
-        want(bdec_hi > 0 && bdec_lo > 0, "bit_dec toggles while ringing");
-        g_hook = 1; utick(4);
-        want(!g_ring, "lift trips the ringer");
-        g_e = 0; g_hook = 0; utick(10);
+        want(bdec_hi > 0 && bdec_lo > 0, "bit_dec is 1010 while ringing");
+        // Glare: the hook closes inside the burst, before the exchange has
+        // switched its transmitter.  The set must leave 1010 at once.
+        g_hook = 1; @(posedge clk);
+        want(!g_ring && g_bdec == g_rx, "lift trips the ringer and drops 1010 at once");
+        g_e = 0; g_hook = 0; g_rx = 0; utick(10);
 
-        // ---- 5. local call: 20 dials 2 1 ----
-        $display("  5. SU-1 originates: 20 dials 2 1.");
+        // ---- 6. the talk UI (§3.2) ----
+        $display("  6. HANDSET / SPEAKER, LIVE / PTT."); $fflush();
+        g_hook = 1; g_spk = 0; g_pttm = 0; g_ptt = 0; utick(4);
+        want(g_micen && !g_earm && !g_spken, "HANDSET + LIVE: mic open, ear live");
+        g_spk = 1; utick(1);
+        want(g_micen && g_earm && g_spken, "SPEAKER: ear muted, loudspeaker on");
+        g_pttm = 1; utick(1);
+        want(!g_micen, "PTT mode, button up: mic shut");
+        g_ptt = 1; utick(1);
+        want(g_micen, "PTT held: mic open");
+        g_ptt = 0; g_pttm = 0; g_spk = 0;
+        press(5'd2);
+        while (!g_mute) utick(1);
+        want(!g_micen, "dial MUTE overrides LIVE");
+        g_hook = 0; utick(30);
+
+        // ---- 7. the loop-timed clock and its LED (§5) ----
+        $display("  7. Loop timing: no downstream, no clock."); $fflush();
+        led_hi = 0; led_lo = 0;
+        for (i = 0; i < 256; i = i + 1) begin
+            ubit(1);
+            if (g_led) led_hi = led_hi + 1; else led_lo = led_lo + 1;
+        end
+        want(led_hi > 0 && led_lo > 0, "LED blinks off the recovered clock");
+        g_carrier = 0;
+        repeat (400) @(posedge clk);
+        want(!g_led, "carrier lost: LED dark");
+        g_hook = 1;
+        repeat (4000) @(posedge clk);
+        want(!g_m, "no strobe, no seizure -- the set has no crystal");
+        g_hook = 0; g_carrier = 1; utick(20);
+
+        // ---- 8. local call: 20 dials 2 1 ----
+        $display("  8. SU-1 originates: 20 dials 2 1.");
         $fflush();
         rst_net = 1;
         #(20_000_000);

@@ -46,6 +46,7 @@ channels; 70 and 74 free as on any trunk block). Leaf trunks sit at **10–17**.
 | This link | **offers-tone** (`t = 1`) on 70–77 | ordinary trunks 10–17; seize → caller → dial tone |
 | Flood ties elsewhere | `t = 0` as today | none on this exchange |
 | Local lines | `h s` | `2–7` + `s` (and `0` / `8` / `9` as cannot-complete unless fitted) |
+| `0` / `8` / `9` on the leaf | as the central is built | cannot-complete unless fitted. On a **nanomarker** leaf (`nano-marker.md`) all three are one key: `0` hunts the operator and a misdialled 8 or 9 lands there too, and no prefix 8 or outside-line 9 can ever be told apart from it. Reaching the central over the uplink is unaffected — those pulses are the central's register |
 
 **LEAF** and solo highway-`1` are mutually exclusive with **HAS_NET** on the
 leaf. The leaf is not a network code: nothing dials `1 <leaf e b> …` to reach

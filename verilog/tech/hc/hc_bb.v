@@ -47,3 +47,29 @@ module pulse_reg #(
     output [2:0] ndig, output [15:0] digits,
     output gone, nodig, brk, hook
 ); endmodule
+module nano_core #(
+    parameter [5:0] DIALTONE = 6'o01, NOGO = 6'o03,
+    parameter LEAF = 1, parameter [2:0] UP_BLK = 3'd1,
+    parameter OP_EN = 1, parameter [2:0] OP_BLK = 3'd0
+)(
+    input clk, rst_n,
+    input [2:0] slotq, tick,
+    input oct_stb,
+    input [7:0] ha, input pb_busy, pb_word,
+    input r_busy, r_gone, r_nodig, r_hook,
+    input [1:0] r_ndig, input [5:0] r_digits, r_port,
+    output r_attach, r_release, output [5:0] r_aport,
+    input ser_busy, output ser_req, ser_strobe,
+    output [5:0] ser_dst, ser_src, output ser_bsy, ser_clm, ser_g,
+    output [2:0] scan_port,
+    output wr_stb, output [5:0] wr_dst, wr_src, output wr_bsy, wr_clm
+); endmodule
+module nano_reg #(
+    parameter integer HIT = 8, ID = 128, CLR = 256, NODIG = 12000
+)(
+    input clk, rst_n, input [2:0] slotq, tick, input tick_1k, input [7:0] ha,
+    input attach, input [5:0] attach_port, input release_it,
+    output busy, output [5:0] port,
+    output [1:0] ndig, output [5:0] digits,
+    output gone, nodig, brk, hook
+); endmodule

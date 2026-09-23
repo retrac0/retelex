@@ -18,7 +18,14 @@ when reading this liberty/genlib for combinational mapping. Flip-flops still
 come from the liberty file; gates are mapped with `abc -g AND,NAND,OR,NOR`
 and renamed onto HC cells by `hc_map.v`.
 
-`make synth-hc` in `verilog/` runs the tops.  For `mini_marker`,
-[`hc_bb.v`](hc_bb.v) supplies blackbox shells so `pulse_reg` and `mini_core`
-bill at the hand BOM (~26 packages total).  `pack.py` turns the Yosys JSON
-into package counts.
+`make synth-hc` in `verilog/` runs the tops.  For `mini_marker` and
+`nano_marker`, [`hc_bb.v`](hc_bb.v) supplies blackbox shells so `pulse_reg`,
+`mini_core`, `nano_reg` and `nano_core` bill at the hand BOM — 33 packages and
+25 respectively (`nano-marker.md` §6).  `pack.py` turns the Yosys JSON into
+package counts.
+
+The hand BOMs count what a board would actually carry.  Two of them used to
+be optimistic: `mini_core` billed its four-deep 15-bit write queue as one
+'670 when it is four, and `pulse_reg` did not bill the parallel mirror its
+'670 needs (one addressed read port cannot present four digits at once).
+Both are corrected, which is why `mini_marker` reads 33 and not 25.
