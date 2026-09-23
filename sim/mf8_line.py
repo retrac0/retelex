@@ -92,25 +92,38 @@ def rx_dm(ln, sd=0.0, imp=0.0, atten=1.0, seed=1, *,
 
 
 def rx_ami(ln, sd=0.0, imp=0.0, atten=1.0, seed=1, *,
-           line=LINE, os=OS, cable=CABLE):
+           line=LINE, os=OS, cable=CABLE, cable_km=None,
+           imp_amp=(0.5, 3.0), imp_tau=(20e-6, 200e-6),
+           imp_ring=(15e3, 80e3)):
     """AMI encoder/decoder used by MF8 plant runs and by MF2.
 
     One symbol per bit; receive filter at `line` Hz.  Clock is an 8× DPLL off
     the local 4.096 MHz crystal (line-codes.md §2.2 option C), modelled by
     sampling at fs/4 into `fast.ami_decode` (same rule as `phy.ami_decode`).
 
+    `cable_km`: if set, replace the flat `cable` LP with `phy.pair_24awg`
+    (√f buried-pair law).  Impulses are added *after* the cable (not attenuated
+    with the signal — conservative, line-codes.md).
+
     Hardware sketch: `mf2/ami.md`.  Do not fork this path for MF2 — change
     rate via `line=` only."""
     fs = line * os
     rng = np.random.default_rng(seed)
-    x = np.repeat(fast.ami_encode(ln), os)
-    x = _lp_at(x, cable, fs, 1); x /= np.abs(x).max()
+    x = np.repeat(fast.ami_encode(ln), os).astype(np.float64)
+    if cable_km is not None:
+        x = phy.pair_24awg(x, fs, length_km=cable_km)
+    else:
+        x = _lp_at(x, cable, fs, 1)
+    peak = np.abs(x).max()
+    if peak > 0:
+        x /= peak
     if atten != 1.0:
         x *= atten
     if sd:
         x += rng.normal(0, sd, len(x))
     if imp:
-        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7)
+        x += phy.plant_noise(len(x), fs, rate_hz=imp, amp=imp_amp,
+                             tau_s=imp_tau, ring_hz=imp_ring, seed=seed + 7)
     x = _lp_at(x, line, fs, 2)
     b = fast.ami_decode(x[::4], os // 4, thresh=0.5)
     del x; gc.collect()

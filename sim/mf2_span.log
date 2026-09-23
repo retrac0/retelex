@@ -1,0 +1,55 @@
+MF2 AMI @ 256 kbps — 24 AWG buried pair + urban impulse
+  √f law ref: 12 dB @ 256 kHz / 1.7 km (frame-rate.md §3); AGC after cable
+  Urban impulse: 40/s, amp 1–5× (post-AGC) peak, τ 8–80 µs, ring 20–120 kHz
+  Window: 2.0 s × 3 seeds
+
+  quiet, 1.7 km
+    cable             1.7 km, 12.0 dB @ 256 kHz (amp ×0.2512 before AGC)
+    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
+    BER (mean ch)     0.000e+00
+    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
+    time down         0.03%
+    longest clean     1999 ms mean across seeds
+  urban/industrial 40/s, 1.7 km
+    cable             1.7 km, 12.0 dB @ 256 kHz (amp ×0.2512 before AGC)
+    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
+    BER (mean ch)     1.592e-03
+    sync loss         8.50 LOF/s   (17.0 events / 2.0s)
+    time down         0.57%
+    longest clean     359 ms mean across seeds
+
+  quiet, 3 km
+    cable             3 km, 21.2 dB @ 256 kHz (amp ×0.0873 before AGC)
+    acquired / scored 3/3 seeds acquired, 3/3 with usable audio window
+    BER (mean ch)     2.615e-02
+    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
+    time down         25.08%
+    longest clean     1498 ms mean across seeds
+  urban/industrial 40/s, 3 km
+    cable             3 km, 21.2 dB @ 256 kHz (amp ×0.0873 before AGC)
+    acquired / scored 3/3 seeds acquired, 2/3 with usable audio window
+    BER (mean ch)     3.106e-02
+    sync loss         11.83 LOF/s   (23.7 events / 2.0s)
+    time down         7.83%
+    longest clean     222 ms mean across seeds
+
+  quiet, 5 km
+    cable             5 km, 35.3 dB @ 256 kHz (amp ×0.0172 before AGC)
+    acquired / scored 0/3 seeds acquired, 0/3 with usable audio window
+    BER (mean ch)     1.000e+00
+    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
+    time down         100.00%
+    longest clean     0 ms mean across seeds
+  urban/industrial 40/s, 5 km
+    cable             5 km, 35.3 dB @ 256 kHz (amp ×0.0172 before AGC)
+    acquired / scored 0/3 seeds acquired, 0/3 with usable audio window
+    BER (mean ch)     1.000e+00
+    sync loss         0.00 LOF/s   (0.0 events / 2.0s)
+    time down         100.00%
+    longest clean     0 ms mean across seeds
+
+  Sync loss = framer LOF (re-acquire after +2/−1 trip).
+  BER scored inside the longest contiguous locked run, aligned to TX.
+  At 5 km the √f cable closes the AMI eye even with ideal AGC —
+  expect no lock; 1.7 km is the project single-span reference.
+

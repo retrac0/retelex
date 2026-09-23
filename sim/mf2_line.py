@@ -23,9 +23,12 @@ Usage:  python3 sim/mf2_line.py            everything
         python3 sim/mf2_line.py clean      clean line, AMI + DM ref
         python3 sim/mf2_line.py noise      Gaussian sweep
         python3 sim/mf2_line.py plant      impulse and attenuation
+        python3 sim/mf2_line.py span      5 km 24 AWG + urban impulse; BER / sync loss
+
+`span` log: `sim/mf2_span.log`.
 """
 import sys, gc, time, numpy as np
-import audio, cvsd, mf2, mf8_line
+import audio, cvsd, mf2, mf8_line, phy
 
 RATE = mf2.RATE
 LINE = mf2.LINE                   # 256 kbps
@@ -34,6 +37,11 @@ FLEN = mf2.FLEN
 OS = 32                           # samples per line bit (same as mf8_line)
 CABLE = 1.8e6
 SECS = 1.0
+
+# Buried-pair reference (frame-rate.md §3): 12 dB @ 256 kbps over ~1.7 km
+SPAN_KM = 5.0
+REF_KM = 1.7
+REF_DB = 12.0
 
 
 def _rx_ami(ln, **kw):
@@ -192,7 +200,83 @@ def plant():
         print()
 
 
-TARGETS = {'clean': clean, 'noise': noise, 'plant': plant}
+def _span_loss_db(km=SPAN_KM, hz=LINE):
+    return REF_DB * (km / REF_KM) * (hz / 256e3) ** 0.5
+
+
+def span(secs=2.0, seeds=(1, 2, 3),
+         distances_km=(1.7, 3.0, 5.0), urban_imp=40.0):
+    """Buried 24 AWG span + urban/industrial impulse — BER and sync loss.
+
+    Cable: phy.pair_24awg (√f law from frame-rate.md §3).  Ideal AGC follows
+    the cable (re-peak), so failures are from *dispersion*, not flat gain.
+    Impulses: phy.plant_noise after the cable (not attenuated with the signal).
+
+    Default distances: project single-span ref (1.7 km), mid (3 km), and the
+    requested 5 km buried carrier.
+    """
+    print(f'MF2 AMI @ {LINE / 1e3:.0f} kbps — 24 AWG buried pair + urban impulse')
+    print(f'  √f law ref: {REF_DB:.0f} dB @ 256 kHz / {REF_KM} km '
+          f'(frame-rate.md §3); AGC after cable')
+    print(f'  Urban impulse: {urban_imp:.0f}/s, amp 1–5× (post-AGC) peak, '
+          f'τ 8–80 µs, ring 20–120 kHz')
+    print(f'  Window: {secs:.1f} s × {len(seeds)} seeds\n')
+
+    src, bits, p = sources(secs=secs)
+    A = [np.zeros(len(bits[0]), np.uint8) for _ in range(NCH)]
+    ln = mf2.build(bits, A)
+
+    def rx_factory(km, imp_rate, seed):
+        def rx(line, **kw):
+            return mf8_line.rx_ami(
+                line, line=LINE, os=OS, cable_km=km, imp=imp_rate, seed=seed,
+                imp_amp=(1.0, 5.0), imp_tau=(8e-6, 80e-6),
+                imp_ring=(20e3, 120e3), **kw)
+        return rx
+
+    def summarise(km, imp_rate, label):
+        loss = _span_loss_db(km)
+        bers, downs, lofs, cleans, locked_n, acquired = [], [], [], [], 0, 0
+        for sd in seeds:
+            r = measure(ln, rx_factory(km, imp_rate, sd), src, bits, p)
+            bers.append(float(np.nanmean(r['ber'])))
+            downs.append(r['down'])
+            lofs.append(r['lof'])
+            cleans.append(r['clean'])
+            ok = bool(r['locked'] and not np.isnan(r['seg'][0]))
+            locked_n += int(ok)
+            acquired += int(r['locked'])
+        ber = float(np.mean(bers))
+        down = float(np.mean(downs))
+        lof_s = float(np.mean(lofs)) / secs
+        clean = float(np.mean(cleans))
+        print(f'  {label}')
+        print(f'    cable             {km:g} km, {loss:.1f} dB @ 256 kHz '
+              f'(amp ×{10**(-loss/20):.4f} before AGC)')
+        print(f'    acquired / scored {acquired}/{len(seeds)} seeds acquired, '
+              f'{locked_n}/{len(seeds)} with usable audio window')
+        print(f'    BER (mean ch)     {ber:.3e}')
+        print(f'    sync loss         {lof_s:.2f} LOF/s   '
+              f'({float(np.mean(lofs)):.1f} events / {secs:.1f}s)')
+        print(f'    time down         {down:.2f}%')
+        print(f'    longest clean     {1000 * clean:.0f} ms mean across seeds')
+        return dict(km=km, loss_db=loss, ber=ber, down=down, lof_per_s=lof_s,
+                    clean=clean, locked=locked_n, acquired=acquired)
+
+    rows = []
+    for km in distances_km:
+        rows.append(summarise(km, 0.0, f'quiet, {km:g} km'))
+        rows.append(summarise(km, urban_imp,
+                              f'urban/industrial {urban_imp:.0f}/s, {km:g} km'))
+        print()
+    print('  Sync loss = framer LOF (re-acquire after +2/−1 trip).')
+    print('  BER scored inside the longest contiguous locked run, aligned to TX.')
+    print('  At 5 km the √f cable closes the AMI eye even with ideal AGC —')
+    print('  expect no lock; 1.7 km is the project single-span reference.')
+    return rows
+
+
+TARGETS = {'clean': clean, 'noise': noise, 'plant': plant, 'span': span}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):

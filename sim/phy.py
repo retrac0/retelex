@@ -268,6 +268,32 @@ def ami_decode(x, os_bit, thresh=0.5, peak=None, lock_after=16):
 
 # ------------------------------------------------------- telco plant impairments
 
+def pair_24awg(x, fs, length_km=5.0, ref_db=12.0, ref_km=1.7, ref_hz=256e3):
+    """Buried 24 AWG PIC pair: √f attenuation (frame-rate.md §3, scaled by length).
+
+    The project's single-span reference is `ref_db` at `ref_hz` over `ref_km`
+    (~1.7 km → 12 dB at 256 kbps).  Loss at length L and frequency f:
+
+        loss_dB(f) = ref_db · (L / ref_km) · sqrt(f / ref_hz)
+
+    Applied as a zero-phase FFT filter.  Propagation delay is not modelled
+    (framer cares about bits, not absolute delay).
+    """
+    x = np.asarray(x, dtype=np.float64)
+    n = len(x)
+    # rfft frequencies in Hz
+    f = np.fft.rfftfreq(n, d=1.0 / fs)
+    # DC: use the lowest bin's law but floor at f=0 → loss 0 is wrong for loop
+    # resistance; keep a small DC loss from the ref_hz curve at f→0 as 0, and
+    # let the first AC bins carry the skin-effect roll-off.
+    ratio = np.sqrt(np.maximum(f, 1.0) / ref_hz)
+    loss_db = ref_db * (length_km / ref_km) * ratio
+    loss_db[0] = ref_db * (length_km / ref_km) * 0.05   # tiny DC ohmic stand-in
+    H = 10.0 ** (-loss_db / 20.0)
+    X = np.fft.rfft(x)
+    return np.fft.irfft(X * H, n=n)
+
+
 def plant_noise(n, fs, rate_hz=10.0, amp=(1.0, 6.0), tau_s=(20e-6, 200e-6),
                 ring_hz=(15e3, 80e3), hum_hz=50.0, hum_amp=0.0, seed=0):
     """
