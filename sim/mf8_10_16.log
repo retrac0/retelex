@@ -1,0 +1,143 @@
+THE F WORD — 10-bit frame, 16-state superframe
+
+  F is a 16-bit word over the superframe (same as mf8_16.py).
+  Acquisition wants 32 consecutive matches.
+
+  Longest run of consecutive frames a payload lane matches the word.
+
+  word                                       CVSD speech  CVSD silence    constant 1    constant 0        random    octet 0xFE    octet 0xAA      period-2
+  1010..  period 2                                    23          8192             1             1            12             3          8192          8192
+  0101..  period 2, other                             23          8192             1             1            12             3          8192          8192
+  0111..1  one zero at 0                              16             3            15             1            18            15             3             3
+  1111..10  one zero at 15  (wrap)                    16             3            15             1            18            15             3             3
+  1111..01  one zero at 14                            16             3            15             1            18            15             3             3
+  1111111011111110  0xFE repeated                     13             3             7             1            20          8192             3             3
+  1111..00  two zeros                                 16             2            14             2            19             8             2             2
+
+  0xFFFE is the same wrap as the 16-bit line: one NAND of q3..q0.
+
+SUPERFRAME PHASE — 0xFFFE on a 10-bit frame
+
+  0xFFFE 1111111111111110
+
+     offset  match of 16   longest good run
+          0           16                 64
+          1           14                 14
+          2           14                 13
+          3           14                 12
+          4           14                 11
+          5           14                 10
+          6           14                  9
+          7           14                  8
+          8           14                  7
+          9           14                  8
+         10           14                  9
+         11           14                 10
+         12           14                 11
+         13           14                 12
+         14           14                 13
+         15           14                 14
+
+  wrong superframe phases admissible over all 256 hook states:
+  0
+
+SKEW — 10-bit frame, S at bit 5
+
+  Check reads bit 0 as F and bit 5 as S.  At skew d it reads
+  bit d as F and bit (d+5) mod 10 as S.
+
+   skew    as F    as S  what
+      0       F       S  true alignment
+      1      C0      C4  payload pair, five apart (C0,C4)
+      2      C1      C5  payload pair, five apart (C1,C5)
+      3      C2      C6  payload pair, five apart (C2,C6)
+      4      C3      C7  payload pair, five apart (C3,C7)
+      5       S       F  header on itself
+      6      C4      C0  payload pair, five apart (C4,C0)
+      7      C5      C1  payload pair, five apart (C5,C1)
+      8      C6      C2  payload pair, five apart (C6,C2)
+      9      C7      C3  payload pair, five apart (C7,C3)
+
+  Payload pairs five apart: (C0,C4) (C1,C5) (C2,C6) (C3,C7).
+  Four unkeyable pairs at an exchange (cf. one on 16-bit).
+
+GUARD — 10-bit frame, 16-state SF, pads on S
+
+  Default candidate 0,8 = 0,1 (same parity as mf8_16).  Half of ten
+  is odd, so 0,5 = 0,1 is the dead analogue (period-2 satisfies it).
+
+  layout                                 F word every  one data, worst   idle every  voice 4-run
+  0,8 = 0,1  (family)                        0 / 2560         0 / 2560     0 / 2560     1 in 337
+  0,5 = 0,1  (half of ten)                   0 / 2560      2304 / 2560     0 / 2560     1 in 627
+  0,6 = 0,1  (mf8_10 lean)                   0 / 2560         0 / 2560     0 / 2560     1 in 432
+  0,8 = 1,1  (F-word hole)                2304 / 2560      1024 / 2560     0 / 2560     1 in 427
+
+  Prefer 0,8 = 0,1 if clean: same decode as 16-bit, free octet counter.
+
+SLOT RULES — 10-bit × 16-SF, S at 5, word 0xFFFE, guard 0,8
+
+  Analytic hold on named layouts; PCM sample (not every octet×pair).
+
+  1. PCM sample — one card every seat, octets 0x00/0xFE/0xAA/0x55;
+     then F word vs those octets on every pair.
+
+     C0 one-card sample holds: none
+     C1 one-card sample holds: none
+     C2 one-card sample holds: none
+     C3 one-card sample holds: none
+     C4 one-card sample holds: none
+     C5 one-card sample holds: none
+     C6 one-card sample holds: none
+     C7 one-card sample holds: none
+     F word vs sample octet:
+       none hold
+
+  2. Named layouts.  Denominator 256 hooks × 9 wrong skews.
+
+  layout                                                      holds
+    C0 = F word, rest idle                                 0 / 2304
+    C1 = F word, rest idle                                 0 / 2304
+    C2 = F word, rest idle                                 0 / 2304
+    C3 = F word, rest idle                                 0 / 2304
+    C4 = F word, rest idle                                 0 / 2304
+    C5 = F word, rest idle                                 0 / 2304
+    C6 = F word, rest idle                                 0 / 2304
+    C7 = F word, rest idle                                 0 / 2304
+    C0 and C4 = F word (five apart); rest idle             0 / 2304
+    C1 and C5 = F word (five apart); rest idle             0 / 2304
+    C2 and C6 = F word (five apart); rest idle             0 / 2304
+    C3 and C7 = F word (five apart); rest idle             0 / 2304
+    eight data cards, random content                       0 / 2304
+    eight PCM cards carrying 0xFE                          0 / 2304
+    F word in every payload seat                           0 / 2304
+
+  3. Residual: F word in C0, VOICE in C4 (five apart).
+
+     Speech satisfies 0,8 four superframes running once in 337.
+     tracking                                    acquired  released, frames       mean  never
+     frame counter only                             24/24                 -          -     24
+     frame + guard counters                         24/24            90-306    2.83 ms      0
+
+
+LINE ERRORS — 10-bit × 16-SF, guard 0,8 = 0,1
+
+   line BER  locked frames  LOF events  of which guard  off-phase  time down
+      0e+00         199953           0               0          0      0.02%
+      1e-04         199953           0               0          0      0.02%
+      1e-03         199953           0               0          0      0.02%
+      1e-02         199905           0               0          0      0.05%
+      3e-02         199761           0               0          0      0.12%
+
+RESYNC after an induced slip, every slip size
+
+   slip   frames misaligned   frames to relock
+      1                   8                  8
+      2                  11                 11
+      3                   5                  5
+      4                  22                 22
+      5                   7                  7
+      6                  13                 13
+      7                  14                 14
+      8                  10                 10
+      9                  25                 25
+

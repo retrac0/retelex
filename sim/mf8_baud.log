@@ -1,0 +1,42 @@
+RATE PLUG — arithmetic (mf8-spec.md §9.7 shape)
+
+  slew fixed at 150 ns; classifier 0.75 cell; dead 0.2 cell;
+  remaining timing window after ±10% IC tolerance.
+
+    line     baud   filter  0.75 cell     dead       CD  slew %hc  ±10% win
+     512    1.024     1.00       1465      391     3906      15.4       146
+         8-bit / 6 C  (predecessor)
+     640    1.280     1.28       1172      312     3125      19.2       117
+         10-bit / 8 C (lean)
+    1024    2.048     2.00        732      195     1953      30.7        73
+         16-bit / 8 C (adopted)
+
+  At 2.048 MBaud the 150 ns slew is ~31% of a half-cell; at 1.280 MBaud
+  ~19%; at 1.024 MBaud ~15%.  Remaining ±10% window after the classifier
+  shrinks from ~147 ns (512k) to ~73 ns (1024k).
+
+EYE THROUGH THE MODEL — random bits, DM, cable 1.8 MHz, filter at baud
+
+  8000 bits × 4 seeds.  raw BER after mono_decode; atten scaled to
+  received peak before the RX filter.
+
+    line     sd  atten   mean raw BER
+     512   0.00   1.00        1.3e-04  8-bit / 6 C  (predecessor)
+     512   0.10   1.00        1.3e-04  8-bit / 6 C  (predecessor)
+     512   0.10   0.25        6.3e-05  8-bit / 6 C  (predecessor)
+     512   0.10   0.12        4.9e-01  8-bit / 6 C  (predecessor)
+
+     640   0.00   1.00        1.3e-04  10-bit / 8 C (lean)
+     640   0.10   1.00        1.3e-04  10-bit / 8 C (lean)
+     640   0.10   0.25        6.3e-05  10-bit / 8 C (lean)
+     640   0.10   0.12        4.9e-01  10-bit / 8 C (lean)
+
+    1024   0.00   1.00        1.3e-04  16-bit / 8 C (adopted)
+    1024   0.10   1.00        1.3e-04  16-bit / 8 C (adopted)
+    1024   0.10   0.25        4.4e-02  16-bit / 8 C (adopted)
+    1024   0.10   0.12        4.9e-01  16-bit / 8 C (adopted)
+
+  Relative: under the same 0.10 sd / 0.12 atten cell, the faster line
+  sees a smaller received fundamental against the fixed cable pole.
+  This is not a kilometre; it is why 0.50× vs 0.63× reach in frame-rate.md
+  is the right ordering to settle on a bench.
