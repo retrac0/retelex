@@ -76,9 +76,20 @@ Against `fabric.md` §3.1, item by item. Three lines move.
 The fold is **free at the block**: sacrificing a slot frees exactly the
 commutator input the `A` stream needs, so the commutator count does not move.
 
-> **`fabric.md` §3.1's total does not match its own list.** Summing the parts it
-> prints gives 18¼, not the ≈15¼ it states. The delta above is sound; the base
-> is not, and it needs a recount before anyone builds from it.
+> **`fabric.md` §3.1's stated total is right; its printed list is not.** The
+> list sums to 18¼ where the row beneath it prints ≈15¼. Fifteen and a quarter
+> is the figure four other places carry, and the only one that reproduces
+> `fabric.md` §5: a fitted block is 8 × 8¼ + 15¼ = 81¼, printed at `:314` as
+> ≈82, and eight of those is 656, printed at `:315` as ≈655. On 18¼ they would
+> be 84¼ and 674, which reproduce neither. `mainboard.md`:186 reaches it from
+> the other side — `mvp.md`'s 13 for the same shared parts, plus "≈3¼ added,
+> about one '244 freed: net ≈2¼ a block".
+>
+> Two of the three packages are the `2 × '32` backward-A row, which its own note
+> marks trunk-only ("used on trunk blocks; harmless elsewhere"), so on the
+> list's basis **a line block is 16¼ and a trunk block 18¼**. The third is the
+> "about one '244 freed" credit, taken in the total and never struck off the
+> receiver row. **The list is what needs editing, not the total.**
 
 ---
 
@@ -97,6 +108,12 @@ commutator input the `A` stream needs, so the commutator count does not move.
 | **a port** | **8¼** | **7½** |
 
 **The port gets cheaper.** It is the first change in this design that has.
+
+**Supervision genuinely does not move with the address.** Checked against the
+RTL rather than the prose: in `port.v`, `addr` appears at only `:55-57` — the
+two selects and `W` — and `:107-108`, the release clear and the write. Every
+supervision expression at `:69-80` reads `a_tx`, `e`, `fm`, `fe`, `claim`,
+`RINGS` and `ring_cad_n` and nothing else.
 
 **The one exposure**: the ¼ '02 assumes §3.5's spare gate fractions are really
 spare, and `fabric.md` §8 calls that count a sketch. If they are not, the port
