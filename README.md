@@ -72,7 +72,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | [common/common-cards.md](common/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one jumper, and the connectors |
 | [common/clocks.md](common/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from |
 | [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
-| [common/su-1.md](common/su-1.md) | SU-1 mk1 subscriber unit: native CVSD set, 4P4C handset, Autovon pad → dial pulses, two-board stack |
+| [common/su-1.md](common/su-1.md) | SU-1 mk1 subscriber unit: native CVSD set, 4P4C handset, Autovon pad → dial pulses, three boards (SU-D / SU-A / SU-K) |
 | [common/sdu-1.md](common/sdu-1.md) | SDU-1 mk1: 32 kb/s insert-1 on raw biphase (switched); RAW64 strap for nailed 64 kb/s |
 | [common/stu-1.md](common/stu-1.md) | STU-1 mk1 test set: the lineman's butt set — two §9.4 front ends, one a direction, a two-column lamp field that names the fault, a violation counter on real copper, the phantom in volts |
 | [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |

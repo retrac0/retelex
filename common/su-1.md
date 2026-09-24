@@ -15,10 +15,15 @@ card (`channel-cards.md` §2).
 
 ```
   handset ── 4P4C ──► SU-A (audio / codec)
-  mic jack ─────────► SU-D (base: speaker, PTT, dial)
+                         ║ S   64 k clocks, both bit streams
+  mic jack ─────────► SU-D (line PHY, PSU, speaker, talk UI, hook)
   speaker  ◄───────── SU-D
   line out ◄───────── SU-D
-                         ║ S
+                         ║ K   ribbon, nothing above 1 kHz
+  16 keys ──────────► SU-K (dial: encode + pulse sequencer)
+
+                    SU-D
+                         ║
                     two pairs + 48 V phantom
                          ║
                     CVSD line card ──► exchange
@@ -37,7 +42,7 @@ card (`channel-cards.md` §2).
 | **Speaker** | loudspeaker on the **base (SU-D)** — ringer and conference listen (§3.2) |
 | **Mic jack** | input jack on the base; jumper selects it in speaker mode (§3.2) |
 | **Line out** | fixed-level jack on the base from decoder recon (§3.2) |
-| **Dial** | sixteen keys, Autovon labels, **pulse only** — same 1–16 map as `pulse-gen.md` §4 |
+| **Dial** | sixteen keys, Autovon labels, **pulse only**, on their own board **SU-K** — same 1–16 map as `pulse-gen.md` §4 (§4, §6.5) |
 | **Audio face** | **HANDSET / SPEAKER** toggle; **LIVE / PTT** toggle; **PTT** button; volumes **handset / loudspeaker / ring** (§3.2) |
 | **Clocking** | **no local crystal** — loop-timed from the recovered downstream (§5) |
 | **Line LED** | ~1 Hz blink from recovered RX clock — dark if no carrier (§5) |
@@ -85,8 +90,8 @@ sees a fixed shortening (`subscriber-line.md` §5, `register.md` §1.1).
 
 | face | |
 |---|---|
-| **Pad** | 4×4 momentary keys, Autovon / DTMF layout (§4) |
-| **Hook** | cradle or switchhook; open = on-hook |
+| **Pad** | 4×4 momentary keys on **SU-K**, Autovon / DTMF layout (§4) |
+| **Hook** | cradle or switchhook wired to **SU-D**; open = on-hook. Read by SU-K over **K** (§6.5) |
 | **Handset** | standard **4P4C** on SU-A for a **600 Ω** modular handset (§3.1) |
 | **Speaker** | loudspeaker on **SU-D** (base) — ringer + conference listen (§3.2) |
 | **Mic jack** | input jack on **SU-D**; board jumper enables it in **SPEAKER** mode (§3.2) |
@@ -127,7 +132,7 @@ handset-reversed cord both work if the pairs stay pairs.
 | **Ear** | output amp after the reconstruction LPF. Face pot **handset** sets gain — min to comfortable loud; stop before clipping the capsule (`cvsd-codec.md` FS class). Muted on-hook and when **SPEAKER** is selected |
 | **Mic** | handset capsule into the mic source mux (§3.2); bias / pad as needed. Fixed encode level (no face mic pot) |
 | **Sidetone** | local pad on SU-A, after the **handset** pot (tracks ear level); handset path only |
-| **Hook** | cradle switch on SU-D, **not** in the handset cord |
+| **Hook** | cradle switch on SU-D, **not** in the handset cord; `HOOK` goes up to SU-K on **K** |
 
 ```
   BIT_DEC ──► CVSD DEC ──► RECON ─┬─►[ handset ]──► ear amp ──► 4P4C ear
@@ -181,7 +186,11 @@ S carries talk audio both ways for this feature: **`AUDIO_RX`** (recon → speak
 
 ---
 
-## 4. Keypad and dialer
+## 4. Keypad and dialer — SU-K
+
+All of this section is **one board, SU-K** (§6.5): keys, debounce, encode and
+sequencer together, with only `BREAK` and `OFF_NORM` leaving it on the **K**
+ribbon.
 
 Autovon physical layout; pulse counts identical to the hex map of
 `pulse-gen.md` §4 (FO/F/I/P = A–D = 13–16):
@@ -202,8 +211,9 @@ mk1**.
 **Timebase:** **10 pps, 60/40**, seize wait 500–800 ms before the first digit,
 700 ms interdigit, ~20 ms debounce, one-key lockout while a train is out,
 **one-deep queue**. Same structure as `pulse-gen.md` §2.1 / §3, but `TICK`
-comes from the **recovered downstream** clock divided (§5), not a local
-crystal and not shelf `TX_OCT`. No RC/DIP adjustable source on the set.
+comes from the **recovered downstream** clock divided on SU-D (§5) and arrives
+on **K** pin 3 — not a local crystal and not shelf `TX_OCT`. No RC/DIP
+adjustable source on the set.
 
 The dial contact is the pulse sequencer: breaks assert the on-hook pattern
 (`1100` on the line; on the simplified RTL interface, `m` drops as
@@ -233,7 +243,7 @@ strobe whenever the line is up — idle `1010`, ringing zeros, or speech.
 |---|---|
 | **TX timing** | upstream encoder and `1100` / payload TX run on the **recovered** clock (hard lock or a small DPLL — `line-codes.md` §2.2 C). Slip-free toward the exchange |
 | **S clocks** | `TX_CLK` and `RX_CLK` on S are both derived from that recovery (may be the same net on mk1) |
-| **Dialer** | 1 kHz `TICK` = recovered 64 kHz ÷ 64 |
+| **Dialer** | 1 kHz `TICK` = recovered 64 kHz ÷ 64, out to SU-K on **K** (§6.5) |
 | **Line LED** | recovered clock ÷ ~64 000 → **≈ 1 Hz** blink. Watches **RX only**, never the upstream |
 | **Dark LED** | no carrier, cut pair, or unpowered set — same “no downstream ⇒ no clock” fact that rejected carrier-off signalling (`subscriber-line.md` §6) |
 | **Not** | a wall-clock 1.000 Hz; tracks the exchange crystal (±ppm), which is invisible at 1 Hz |
@@ -245,16 +255,55 @@ This closes the phone-side half of `subscriber-line.md` §7’s clocking open:
 
 ---
 
-## 6. Two boards
+## 6. Three boards
 
-Stack of two **100 × 100 mm** boards, **0.4″ (10.16 mm)** pitch — same
-spacer family as `cvsd-codec.md` / `pcb/hookbusy/`. SU-D is the base (line
-face); SU-A is the riser (handset face).
+All three are **100 × 100 mm**, 1.6 mm. SU-D and SU-A stack at **0.4″
+(10.16 mm)** — same spacer family as `cvsd-codec.md` / `pcb/hookbusy/`. **SU-K**
+is not in that stack: it carries the pad and mounts to the panel on a ribbon
+(§6.5).
 
-| board | role |
-|---|---|
-| **SU-D** | line PHY, phantom PSU, dial / hook, clock recovery, line LED, **loudspeaker + loudspeaker VOL + ring VOL**, **mic jack**, **line out**, **HANDSET/SPEAKER**, **LIVE/PTT**, **PTT**, local ring tone, header **S** |
-| **SU-A** | type-A enc + dec + recon, **4P4C 600 Ω** handset, **handset VOL**, sidetone, mic mux / gate |
+| board | role | mounting |
+|---|---|---|
+| **SU-D** | line PHY, phantom PSU, hook, clock recovery, line LED, **loudspeaker + loudspeaker VOL + ring VOL**, **mic jack**, **line out**, **HANDSET/SPEAKER**, **LIVE/PTT**, **PTT**, local ring tone, headers **S** and **K** | base of the stack |
+| **SU-A** | type-A enc + dec + recon, **4P4C 600 Ω** handset, **handset VOL**, sidetone, mic mux / gate | riser on **S** |
+| **SU-K** | 16 Autovon keys, debounce, encode, pulse sequencer, seize and interdigit timing | panel, on **K** |
+
+> **SU-D is over a board even after SU-K left, and the count above is not
+> settled.** Costed at ~22 packages plus both transformers, four conductors of
+> gas tube / PTC / TVS, two switchers, the speaker amp and the face, SU-D is
+> ~9 500 mm² of courtyard with the face panel-mounted — 95 % of a bare
+> 100 × 100 before a track is laid, against the 33 % fill the only placed boards
+> in this tree reach (`pcb/hookbusy/`). `mf8-trunk.md` §1 already refuses a
+> *lighter* load than this on one 100 × 100 — "two line transformers with
+> creepage beside the classifier" — and `stu-1.md` §3 puts STU-1's switchers
+> "at the other end of the stack from a comparator whose hysteresis is fixed at
+> ~50 mV", which is exactly the comparator SU-D seats them next to. Splitting
+> SU-D again — a line board, a logic board, and an energy board carrying the
+> loudspeaker channel, as `stu-1.md`'s ST-D / ST-L / ST-P do — is **open**
+> (§9). The outline is not the problem; SU-D's contents are.
+
+### Why the dial is its own board
+
+1. **The pad sets its own outline.** A 4×4 pad at a usable ~15 mm pitch spans
+   45 mm between outer key centres and wants about **60 × 60 mm** of board once
+   margins and a bezel are allowed. On SU-D that was over a third of the base's
+   area, claimed in the one place the base can least spare it — the face, where
+   the speaker, three pots, three switches and two jacks already are. As its own
+   board the pad *is* the layout and the sequencer fills the strip behind it.
+2. **The pad is panel furniture; the stack is not.** Keys have to line up with a
+   bezel at whatever height and rake the case wants. Spacers are the datum for
+   SU-D / SU-A (`pcb/su-1/README.md`); the panel is the datum for the keys.
+   Tying the two together over-constrains both.
+3. **It matches the tree.** `stu-1.md` §12 gives this same circuit its own
+   board, ST-K, in a five-board set. SU-1 and STU-1 now cut the dialler out at
+   the same seam, so the two sets share the block instead of each adapting
+   `pulse-gen.md` §5 separately.
+
+Breaking SU-K out costs **no stack height**: SU-D + SU-A is still
+10.16 + 1.6 ≈ **11.8 mm**. It does **not** even out the set. The split is
+roughly **22 / 12 / 10** packages — SU-D still carries half the design and all
+of the magnetics, protection, switchers and face furniture, so the mean is not
+the distribution.
 
 PCB stub: `pcb/su-1/README.md`. Schematic and copper are not drawn.
 
@@ -300,19 +349,19 @@ speaker, mic jack, and line out live on SU-D.
 | block | parts |
 |---|---|
 | Line magnetics | 2× 1:1 ≥ 33 mH, centre taps out (`mf8-spec.md` §9.3) |
-| Downstream TX | §9.2 encoder + 75176 half + matching |
-| Upstream RX | §9.4 classifier at the 64 kbps plug |
-| Detectors | LM339 RC hook (`1100`) and ring (zeros) — `subscriber-line.md` §3 |
+| Upstream TX | §9.2 encoder + 75176 half + matching — the phone transmits **upstream** (§2) |
+| Downstream RX | §9.4 classifier at the 64 kbps plug — the phone receives **downstream** (§5) |
+| Detectors | LM339 ring (zeros) only — `subscriber-line.md` §3 gives the phone **X = Q**, not the exchange's `Q ⊕ Q[n−2]`, and the hook here is the cradle switch, so there is no density hook detector on the set |
 | Pattern gens | `1100` (bit clock ÷ 4); idle / mute `1010` |
-| Dial / hook | `pulse-gen.md` §5 circuit adapted (~11 HC packages), Autovon keys, hook switch |
-| Clocks | §9.4 recovered strobe → 64 kHz / 128 kHz / 1 kHz `TICK`; optional DPLL |
+| Hook | cradle switch, pull-up and ~20 ms RC; `HOOK` out on **K**. The dialler itself is SU-K (§6.5) |
+| Clocks | §9.4 recovered strobe → 64 kHz / 128 kHz / 1 kHz `TICK` (out on **K**); optional DPLL |
 | Line LED | recovered ÷ ~64k → ~1 Hz driver |
 | Speaker | loudspeaker + amp; **loudspeaker** pot (talk); **ring** pot + local ring-tone oscillator gated by `RING` |
 | Mic jack | input jack; `MICJ` jumper; fixed gain onto `AUDIO_TX` |
 | Line out | jack + fixed pad from `AUDIO_RX` (no face pot; no ring tone) |
 | Talk UI | **HANDSET/SPEAKER**, **LIVE/PTT**, **PTT** → `SPK` / `MIC_EN` on S |
 | Power | 48 V phantom → +5, ±12 DC-DC; protection gas tube / PTC / TVS |
-| Connector | line pairs + **S** |
+| Connector | line pairs + **S** + **K** |
 
 ### 6.3 Parts on SU-A (rough)
 
@@ -335,6 +384,73 @@ No piezo on SU-A — the base speaker is the ringer.
 | **Dual mode** | one board with both engines (§7) | handset + DTE + **VOICE / DATA** switch |
 
 One mating on S. Dual mode does not stack SU-A and SDU-1 as two layers.
+**K is not part of this** — every population dials the same way.
+
+### 6.5 SU-K — the dial, and header **K**
+
+SU-K is `pulse-gen.md` §5's sequencer with the adjustable sources left off. §4
+already rules them out — `TICK` is the recovered downstream, never a crystal and
+never a pot — so the `SRC` mux and the '14 astable go with them.
+
+| block | parts |
+|---|---|
+| Keys | 16 momentary, Autovon layout, ~15 mm pitch, pull-ups |
+| Debounce | ~20 ms, ½ 74HC74 + RC |
+| Encode 16 → 1..16 | 2× 74HC148 |
+| Pulse count | ½ 74HC193 + one FF — five bits, so **P** still loads 16 |
+| 60/40 break former | 74HC4017, ¼ 74HC4002 |
+| Interdigit pause, one-deep queue | 74HC393 |
+| Seize delay 500–800 ms | ½ 74HC123 |
+| Lockout, off-normal | ¼ 74HC86, ½ 74HC74 |
+
+**≈ 9–10 packages** — `pulse-gen.md` §5's eleven less the `SRC` mux and the RC
+astable. Treat that as arithmetic; nothing is routed.
+
+**SU-K is one of the tighter boards, not a loose one.** Ten DIPs with their
+passives and decoupling are ~2 800 mm² of courtyard. The strip behind a 60 × 60
+pad on a 100 × 100 board is 100 × 40 = 4 000 mm², which is **70 % courtyard
+fill** — against the 33 % the only placed boards in this tree actually reach
+(`pcb/hookbusy/`, both unrouted). Wrapping the logic into the L around the pad
+gives 6 400 mm² and 44 %, still above that. Either the pad and the sequencer
+share the board at a fill nothing here has demonstrated, or the pad is a key
+board and the sequencer stays on SU-D. **Not settled** (§9).
+
+At a real telephone pitch the problem is worse, not better: Bell / E.161 desk
+sets are ~19 mm centres, which makes the field ~75 × 75 = 5 600 mm² and leaves
+the sequencer nowhere on a 100 × 100. `stu-1.md` §12's ST-K uses **16 SMD keys**,
+which is the other way out.
+
+Header **K** is a keyed **2×5 0.1″** ribbon, not a mezzanine: SU-K's position is
+fixed by the bezel, not by the spacers.
+
+| pin | name | dir | |
+|---|---|---|---|
+| 1 | `GND` | — | |
+| 2 | `+5 V` | in | from SU-D. SU-K is all HC — no ±12 crosses K |
+| 3 | `TICK` | in | 1 kHz, recovered 64 kHz ÷ 64 on SU-D (§5) |
+| 4 | `GND` | — | |
+| 5 | `HOOK` | in | 1 = off-hook; cradle switch stays on SU-D (§3.1) |
+| 6 | `BREAK` | out | 1 during a dial break → SU-D's `1100` mux |
+| 7 | `OFF_NORM` | out | 1 while a train is out or queued → `MUTE` on **S** |
+| 8 | `GND` | — | |
+| 9 | `KEY_ANY` | out | spare / test: any key down |
+| 10 | `GND` | — | |
+
+**Nothing on K runs faster than 1 kHz.** `TICK` is the quickest signal on it and
+the breaks are 60 ms of every 100, so the ribbon can be dressed anywhere in the
+case without a thought for the ~50 mV hysteresis of the §9.4 comparator or for
+the codec's analog cluster. That is the opposite of **S**, where 64 kHz clocks
+and both bit streams cross the gap, and it is why the dialler is the block that
+can safely leave the stack while the receiver chain cannot (`stu-1.md` §3).
+
+**The hook stays on SU-D** even though it is a manual control like the keys.
+SU-D needs `HOOK` for the `1100` mux whatever the dialler is doing, and a phone
+that cannot go on-hook when the ribbon is unplugged is worse than one that
+cannot dial.
+
+**S is unchanged.** SU-K asserts `OFF_NORM`; SU-D passes it to SU-A as `MUTE` on
+S pin 14 exactly as before. The riser, `sdu-1.md` and the dual-mode population
+(§6.4) see no difference at all.
 
 ---
 
@@ -392,7 +508,28 @@ ring trip, and a local call.
 
 ## 9. Not measured / deferred
 
-- **PCB.** Outline and S pin map locked; schematic and copper not drawn.
+- **PCB.** Outlines and the **S** and **K** pin maps locked; schematic and
+  copper not drawn.
+- **SU-K mounting.** Panel on a ribbon is chosen (§6.5); bezel, key pitch, and
+  the ribbon's length and dress are not drawn. Whether the pad would rather be
+  the top of the spacer stack is not settled.
+- **Key pitch.** ~15 mm is assumed everywhere (§6, §6.5, `pcb/su-1/README.md`,
+  `stu-1.md` §9) and has never been checked against a hand. Real desk sets run
+  ~19 mm. The 60 × 60 field, and with it SU-K's fit, descends entirely from
+  this number.
+- **Component height in the 0.4″ gap.** `hookbusy.md` §4 is the tree's only
+  Z-axis figure — `10.16 − 1.6 board − 4 mm DIP = 4.5 mm` — and it was derived
+  for all-logic lamp cards. SU-1 is the first board in this family to put
+  magnetics and a switcher *in* the stack: a ≥ 33 mH can and a through-hole
+  isolated DC-DC brick are both taller than that gap, so neither can sit on a
+  middle layer. Stack **order** is constrained even though stack height is not.
+- **SU-D does not fit.** Its ~22 packages plus both transformers, four
+  conductors of gas tube / PTC / TVS, two switchers, the amp and the face are
+  ~9 500 mm² of courtyard with the face panel-mounted — 95 % of a bare
+  100 × 100, before a track. `mf8-trunk.md` §1 refuses a smaller load than this
+  on one board, and `stu-1.md` §3 puts the switchers at the far end of the
+  stack from the ~50 mV comparator that SU-D sits them beside. **Splitting SU-D
+  is open** — see the note at the head of §6.
 - **Dual-mode riser layout** and the VOICE/DATA switch bounce into `BIT_ENC`.
 - **Speaker / handset acoustic howl** in SPEAKER + LIVE; PTT discipline assumed.
 - **Local ring tone** into the speaker amp — timbre; level is the **ring** pot (independent of **loudspeaker**).

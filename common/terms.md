@@ -16,6 +16,7 @@ Other documents cite this list. They do not re-name these things.
 | **block ribbon** | the breakout of the block’s card-side star: loom of eight **slots**, ending at the **block header** (`fabric.md` §5.1) | “card-side ribbon”, bare “ribbon” for this object |
 | **slot** | one channel-socket appearance on the block ribbon — the seat a card plugs into | “IDC tap”; bare “slot” when `SLOT[2:0]` or dialled `s` is meant |
 | **block header** | the star collect on the shared board (`fabric.md` §5.2): eight appearances + commons (`MUTE_BLK`). The block ribbon ends here; a **block adapter** mates here instead | “face T”, “face C”, “T + C”; bare “header” when framing is meant |
+| **port card** | plugs into the block header's internal bus / ribbon | 
 | **block adapter** | the non-breakout mate of the same star — one board on the block header, ribbon slots not populated. Live users: MF8 (`mf8-unit.md` §1), local-trunk (`local-trunk.md`) | “collect unit”, “adapter stuffing” alone; “highway tap” for the exchange MF8 face |
 | **rear connector** | plant leave on the card (tip/ring, E&M, trunk pair); data DTE is the front edge | bare “connector” when this is meant |
 | **fabric cable A** | the 64-way IDC harness on the mainboard (`mainboard.md` §3) | bare “ribbon” / “cable” when A or B is meant |

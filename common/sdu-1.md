@@ -20,7 +20,10 @@ sees an ordinary CVSD subscriber line card (`channel-cards.md` §2).
 ```
   DTE ── RS-422 ──► SDU-1 (payload + DTE)           ← this document
                        ║ S  (board-to-board)
-  Autovon pad ───────► SU-D (line / dial / power)   ← su-1.md (biphase + 1100)
+                     SU-D (line / power / 1100)     ← su-1.md (biphase + 1100)
+                       ║ K
+  Autovon pad ───────► SU-K (dial)                  ← su-1.md §6.5
+                     SU-D
                        ║
                   two pairs + 48 V phantom
                        ║
@@ -40,7 +43,7 @@ engines on one riser; **VOICE / DATA** selects which drives `BIT_ENC`
 | **Line** | none on this board — SU-D’s two pairs, **raw** 64 kbps differential Manchester |
 | **Payload (switched)** | **32 kbps** insert-1 into the 64 kbps plug (§3) — default |
 | **Payload (nailed)** | **64 kbps raw** strap (§3.6) — fixed/nailed lines only |
-| **Role** | encode / decode at the NT; DTE face; seize / dial via SU-D when switched |
+| **Role** | encode / decode at the NT; DTE face; seize via SU-D and dial via SU-K when switched |
 | **Clocking** | slave to SU-D’s `TX_CLK` / `RX_CLK` on S — both from **recovered** downstream (`su-1.md` §5); no crystal on the set |
 | **Not** | a shelf data card (`channel-cards.md` §4); not a DM PHY; not a framed carrier |
 
@@ -56,9 +59,9 @@ nailed use only.
 | Differential Manchester TX/RX | **SU-D** | `mf8-spec.md` §9.2 / §9.4 — biphase on the pair |
 | Phantom 48 V → +5 / ±12 | **SU-D** | feeds S |
 | On-hook / dial-break pattern `1100` | **SU-D** | mux ahead of the line encoder |
-| Hook detector (`Q ⊕ Q[n−2]`) | **SU-D** / line card | `subscriber-line.md` §3 — not duplicated here |
+| Hook detect | **line card** (`Q ⊕ Q[n−2]`); on the set it is SU-D's cradle switch (**X = Q**) | `subscriber-line.md` §3 — not duplicated here |
 | Ring detector (ones density / zeros) | **SU-D** | arms `RING` on S |
-| Dial pad + pulse sequencer | **SU-D** | same Autovon → pulses as `su-1.md` §4 |
+| Dial pad + pulse sequencer | **SU-K** | its own board on ribbon **K** (`su-1.md` §6.5); `BREAK` and `OFF_NORM` into SU-D |
 | Insert-1 / raw payload | **SDU-1** | §3 |
 | DTE (RS-422, clocks, control) | **SDU-1** | §5 |
 | CVSD codec / handset / sounder | **absent** on data-only; present on dual-mode (`su-1.md` §7) | switch steers `BIT_*`; base speaker UI on SU-D stays |
@@ -149,7 +152,7 @@ GAL with the encode.
 
 | pattern | owner | SDU-1 |
 |---|---|---|
-| `1100` on-hook / dial break | SU-D TX mux | not generated; encoder bypassed |
+| `1100` on-hook / dial break | SU-D TX mux (`BREAK` from SU-K) | not generated; encoder bypassed |
 | all-zeros ringing (downstream) | exchange → SU-D | `RING` high; `BIT_DEC` already forced `1010` on SU-D before S |
 | `1010` idle fill | SU-D / bus | seen only when SU-D substitutes |
 
@@ -229,16 +232,17 @@ is the DTE’s problem, or a later jumper.
 | SU-D input | SDU-1 drives | |
 |---|---|---|
 | hook / seize | `DTR` → off-hook when true (wired to the cradle sense net or an OR with the physical hook) | data call looks like a lifted handset |
-| dial | Autovon pad on SU-D, unchanged | breaks still force `1100` on the line — **insert-1 mode only** |
-| `MUTE` | in from SU-D during pulse off-normal | encoder may free-run; line is `1100` anyway |
+| dial | Autovon pad on **SU-K**, unchanged | `BREAK` into SU-D still forces `1100` on the line — **insert-1 mode only** |
+| `MUTE` | in from SU-D during pulse off-normal (SU-K's `OFF_NORM`, passed through) | encoder may free-run; line is `1100` anyway |
 | `RING` | in | → `RI`; decoder already gets `1010` on `BIT_DEC` |
 | `BIT_ENC` | out | insert-1 or raw per §3.6, when off-hook and not muted |
 | `BIT_DEC` | in | matching decode |
 | `TX_CLK` / `RX_CLK` | in | 64 kHz |
 
-Mk1 **reuses the pad on SU-D** for dialling in insert-1 mode. A headless
-data-only face (DTR seize, no pad) is a population option. **RAW64**
-populations leave the pad unstuffed and the circuit nailed.
+Mk1 **reuses SU-K's pad** for dialling in insert-1 mode; nothing about the
+riser population reaches **K**. A headless data-only face (DTR seize, SU-K not
+fitted) is a population option — SU-D holds `BREAK` and `OFF_NORM` low with the
+ribbon unplugged. **RAW64** populations leave SU-K off and the circuit nailed.
 
 ---
 

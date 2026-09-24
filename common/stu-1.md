@@ -703,7 +703,7 @@ technician has to be for the set to say this.
 |---|---|---|
 | **ST-D** | 2× 75176, 2× TL072, 1× LM339, classifiers ('86, '221, '123, 2× '74), violation/carrier 3× '123, '08, '32 | **15** |
 | **ST-L** | 3× '74, '86, 2× LM339, 2× '157, 2× '4040, 1× '4040 counter, '32, '123, '4066, '08, 3× '244 | **18** |
-| **ST-K** | `pulse-gen.md` §5 entire — '393, '4017, ¼ '4002, '157, '86, 2× '74, '123, 2× '148, '193 + FF, ¼ '14 | **11** |
+| **ST-K** | `pulse-gen.md` §5 entire — '393, '4017, ¼ '4002, '157, '86, 2× '74, '123, 2× '148, '193 + FF, ¼ '14. SU-1's **SU-K** is this block less the `SRC` mux and the astable (`su-1.md` §6.5) | **11** |
 | **ST-P** | +5 boost, +12 boost, −12 inverter, 1× LM339 | **4** |
 | **ST-A** | `cvsd-codec.md` §5.1's type-A engine (LM311, LM13700, 3× TL072, 3× '74, '86, '32) + ear amp + mic mux/gate (`su-1.md` §6.3) + one mic gain stage | **13** + 2× 2N3906 |
 | | | **≈ 61 packages, 2 transistors** |
@@ -728,9 +728,13 @@ pessimistic error from billing expanded counters and an FSM as SSI, while
 `verilog/tech/hc/README.md` records a hand BOM corrected upward. `9d449f0`'s
 rule — bill whole packages — is what the table above follows. No
 packages-per-100 × 100 capacity is stated anywhere in the tree; the nearest data
-points are `cvsd-codec.md` §2's 10-package riser and `su-1.md` §6's two boards
-for a whole phone (§6.2's dialler ~11 plus §5.1's ≈ 10 + 2 gives ~36–40 over two
-boards, ~18–20 a board, against STU-1's 12.2). It is a placement question and
+points are `cvsd-codec.md` §2's 10-package riser and `su-1.md` §6's three boards
+for a whole phone (§6.5's dialler ~9–10 plus §5.1's ≈ 10 + 2 on the riser and the
+base's remainder gives ~36–40 over three boards). Since `su-1.md` §6.5 broke the
+dial out onto SU-K for the same reason ST-K exists, the two sets agree on the
+seam — but **not yet on the density**: costed directly rather than by remainder,
+SU-1's three boards come out near **22 / 12 / 10**, and SU-1's base carries in
+one board what STU-1 spends ST-D, ST-L and ST-P on. It is a placement question and
 nothing in this repository has been routed.
 
 ---
