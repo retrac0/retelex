@@ -606,8 +606,26 @@ codec itself 25.3 (`mf8-backplane.md` §7, under the codec law of that date).
 ±20 ppm is up to 40 between neighbours, so seven crossings are at most
 280 ppm-equivalent: between the measured rows, expected above the codec, and for
 `net` to score. **Voice and async oversampled data cross MF8; synchronous data
-and G.711 pass inside an exchange and over copper ties, not across MF8.** The
+and G.711 pass inside an exchange, not across MF8.** The
 clock card keeps a jumper and a footprint to slave to a trunk's `RX_CLK` later.
+
+**The network is plesiochronous, and stays so** (Joel, 2026-09-25). Every
+exchange runs on its own crystal; no clock card is slaved to a trunk, and no
+trunk re-frames octets. CVSD shrugs off a slip, and CVSD is the network's voice.
+What that fixes:
+
+| crosses | inside one exchange | a copper tie, two exchanges on one clock card | a copper tie on two clocks; MF8 |
+|---|---|---|---|
+| CVSD voice | yes | yes | yes: a slip is below the codec |
+| async data, oversampled, ≤ 9 600 bps | yes | yes | yes: a slip moves an edge 15.6 µs |
+| synchronous data (HDLC, bit-oriented) | yes | yes: bit-exact | **no**: a lost or doubled bit |
+| G.711, octet-framed data | yes: framed on `RX_OCT` | **no**: the octet phase is not the listener's (`baseband.md` §3.2) | **no** |
+
+The octet structure an exchange has costs nothing and stays: `TX_OCT` loads every
+card's word, `RX_OCT` serves a data card's single-chip codec inside one exchange
+(`channel-cards.md` §4.2), and MF8's superframe carries its F word and its
+signalling. What is not built is anything that carries octets or clocks *between*
+exchanges; §9 keeps what each would cost.
 
 ---
 
@@ -635,6 +653,30 @@ clock card keeps a jumper and a footprint to slave to a trunk's `RX_CLK` later.
   six exchanges, against 0.19 E now. Replaced by the key `1`, local numbers of two
   digits and a monitor that reads two digits.
 - **Making one exchange bigger than 64 ports** — `protocol.md` §3.1.
+- **Octets across a tie** (2026-09-25). A tie delays a byte two frames, one per
+  fabric, and each end frames on its own `SCAN`; measured, the two directions'
+  errors sum to 2 frames mod 8, so aligning the counters cannot fix both
+  (`baseband.md` §3.2). The fix is the octet marked on the link (a spare pair)
+  and a two-byte re-framer on the receiving card — a '164, a '374 and a '165
+  loaded on `TX_OCT · TX_CLK` — ≈ 3–4 packages a card; six of them on an MF8
+  unit. Set aside: nothing outside speaks G.711, and a G.711 endpoint's partner
+  would be one of our own.
+- **Slaving the clock cards** (2026-09-25). A PLL on the clock card — phase
+  comparator, loop filter, 4.096 MHz VCXO, ≈ 2–3 packages an exchange — locked
+  to one tie's clock conductor, timing flowing as a tree from one master, and a
+  2–4 bit elastic store on each tie card; the VCXO's holdover answers
+  `mf8-backplane.md` §2's objection that a slave's phones lose their clock with
+  the trunk. It would make copper ties slip-free for synchronous data. MF8's
+  receiver has no clock to give, so it would need a PLL of its own. Set aside
+  with the octets: nothing yet needs synchronous data between exchanges.
+- **A bigger slip buffer instead of a common clock** (2026-09-25). No buffer
+  corrects a frequency difference: at 40 ppm the far end sends 2.56 bits a
+  second more or fewer, and a buffer of *n* bits only turns a bit every 390 ms
+  into *n*/2 bits every *n*/2 × 390 ms. At 256 bits that is one damaged HDLC
+  frame a minute, which a retransmitting protocol carries, for ≈ 5 packages a
+  channel at each crossing. Slipping only whole flags between HDLC frames is
+  error-free but needs idle flags, ≈ 5–6 packages. Both set aside for the same
+  reason.
 
 ---
 

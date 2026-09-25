@@ -162,10 +162,15 @@ select, slot strobe, capture, re-time — with random data on every fitted port.
 | octets, a source sending bytes on `TX_OCT` | 255 of 255 right when the listener frames on **`RX_OCT` = `TX_OCT` + 1 frame**; 253 of 255 wrong if it does not |
 | an MF8 frame as a block's highway, its channels on slots 1–3 and 5–7 as §5 has them (`mf8.build` / `mf8.framer`) | bit-exact on the right ports; after a slipped line bit the framer re-frames once and **no channel lands on the wrong port**; 45 bits are wrong across the six, all in the 15 frames before the framer let go |
 | `A` through the S bit | 0 errors |
-| a copper tie between two exchanges | 0 errors at exactly 2 frames, one per fabric |
+| a copper tie between two exchanges | 0 errors at exactly 2 frames, one per fabric, on one clock. **Bits, not octets**: see below |
 
 Because the delay is one frame for every pair, the octet phase survives any
-connection: a DS0 stays a DS0 through the switch, and data passes bit-exact.
+connection inside one exchange: a DS0 stays a DS0 through the switch, and data
+passes bit-exact. **It does not survive a tie** (measured 2026-09-25): two frames
+of delay against each end's own `SCAN[2:0]` put the byte 1 − φ frames off one way
+and 1 + φ the other, for B's counter φ behind A's, whatever φ is
+(`baseband.md` §3.2; `network.md` §8 carries neither octets nor clocks between
+exchanges).
 
 **The marker may write a latch at any instant.** 4 000 writes at random cells:
 

@@ -30,6 +30,8 @@ The short answers, before the detail:
 > **Status: proposed. Nothing here is newly measured.** §3.2's same-clock case is
 > `exch.py fabric` 8, already reported by `protocol.md` §4 as "a copper tie
 > between two exchanges"; every other figure is cited from where it was measured.
+> §3.2's octet phase across a tie **was measured on 2026-09-25** by a scratch
+> bench of two exchanges on one clock (§3.2).
 > §3.5's pin usage is an assignment, not a measurement — it is what the documents
 > already imply, written out, against the socket `common-cards.md` §1 now holds. §6 is why
 > an MF8 unit mates the **block header**, not `HC[h]` — reasoning against `verilog`,
@@ -189,11 +191,22 @@ frame".
 
 | jumper | what it is | what crosses |
 |---|---|---|
-| **one clock** | both exchanges on one clock card, or the far end's `TX_CLK` on a fifth conductor with the clock card slaved to it — `network.md` §8 already keeps "a jumper and a footprint to slave to a trunk's `RX_CLK` later" | **bit-exact, two frames, one per fabric, octet phase preserved.** Synchronous 64 kb/s data and G.711 pass, which is exactly what `network.md` §8 means by "inside an exchange and over copper ties, not across MF8". Measured: `exch.py fabric` 8, 0 errors |
-| **two clocks** | ±20 ppm each, up to 40 between neighbours | one slip every 390 ms at 40 ppm, 780 at 20 — the same event MF8 has, and `mf8-backplane.md` §7 measured it at 34.6 dB below the clean decode against the codec's own 25.3. Voice fine. Async oversampled to 9 600 fine. **Synchronous data no**, and the octet phase is not held |
+| **two clocks — the network's case** | each exchange on its own ±20 ppm crystal, up to 40 between neighbours (`network.md` §8) | one slip every 390 ms at 40 ppm, 780 at 20 — the same event MF8 has, and `mf8-backplane.md` §7 measured it at 34.6 dB below the clean decode against the codec's own 25.3. Voice fine. Async oversampled to 9 600 fine. **Synchronous data no** |
+| **one clock** | both exchanges on one clock card: two exchanges in one rack, and nothing else. Slaving a clock card to a trunk is set aside (`network.md` §9) | **bit-exact at a fixed delay**, two frames, one per fabric. Synchronous bit-oriented data (HDLC) passes. Measured: `exch.py fabric` 8, 0 errors. **G.711 does not**, because the octet phase is not the listener's (below) |
 
 The card is the same either way; the jumper chooses whether the incoming flip-flop
 is clocked by the local frame edge or by the far end's.
+
+**The octet phase does not survive a tie, even on one clock** (measured
+2026-09-25, two exchanges on one master clock, B's scan released 0–7 frames after
+A's). Inside one exchange every pair is one frame late, so a listener framing on
+`RX_OCT` (`TX_OCT` a frame late) is right. Across a tie a byte is two frames late
+— one per fabric — while each end frames on its own `SCAN[2:0]`, which power-up
+sets independently. The errors, A→B and B→A, measured **1 − φ and 1 + φ frames**
+for B running φ frames behind A: they always sum to 2 mod 8, so no alignment of the
+two counters makes both directions right. Carrying G.711 across would need the
+octet marked on the link and re-framed on arrival: a spare pair and ≈ 3–4
+packages a card. Set aside with the network's clocking (`network.md` §8, §9).
 
 ### 3.3 Link down, which is the one thing four wires cannot do
 
@@ -268,19 +281,13 @@ trunk card also gates that input with *link up*, so a dead link sends nothing an
 is never hunted", on one channel instead of six. **The link-down detector is not
 a feature of the line interface; it is the enable on the word.**
 
-**a7, and the one thing the socket will not let this card do.** §3.2's top row
-wants the far end's clock slaved into the local clock card, which is what turns
-the pair synchronous and passes bit-exact 64 kb/s data. The card recovers that
-clock — it arrives on §3.3's conductor and is already in hand — and then has
-nowhere to put it: a7 `RX_CLK` is an **input**, common to all eight slots,
-driven by the block from cable A. On an MF8 shelf the same job is done from
-slot 0, where the trunk card drives a7 for the whole shelf; a channel card has no
-such pin and must not drive one. So the one-clock case needs a wire from this
-card's rear connector to the clock card's slaving input
-(`network.md` §8's "a jumper and a footprint"), outside this connector and
-outside the backplane. **Open**, and it is a decision rather than a measurement:
-either that wire exists, or bit-exact data between exchanges stays an MF8
-trunk-card capability and this card carries voice and async only.
+**a7, and why it no longer matters.** Slaving a clock card to this card's
+recovered clock would need a wire from the rear connector to the clock card,
+since a7 `RX_CLK` is an **input**, common to all eight slots. The network is
+plesiochronous (`network.md` §8, decided 2026-09-25), so no such wire is wanted:
+this card carries voice and async between exchanges on separate clocks, and
+bit-exact data only between two exchanges on one clock card, where the clock is
+already shared. The clock card's slaving footprint stays reserved and undesigned.
 
 ### 3.6 Parts
 
@@ -398,11 +405,6 @@ many trunks are fitted.
   not off a board. No connector, no bench. `LOOP_HB` as `/SLOT1` is arithmetic off
   the cell count and still wants a scope against `channel-cards.md` §2's encoder
   (`clocks.md` §7), even though the derivation itself is now settled.
-- **The recovered clock has no pin out of a channel slot** (§3.5). a7 is an
-  input driven by the block, so §3.2's one-clock case — the row that carries
-  bit-exact synchronous data — needs a wire from this card's rear connector to
-  the clock card's slaving input, which no document has. It is a decision, not
-  a measurement, and until it is taken this card carries voice and async only.
 - **`MUTE`'s polarity** at the socket, from `mf8-spec.md` §13, and whether any
   card in an exchange should ever see it asserted.
 - **`/HUNT_INH`** (§2.3): specified in three documents, present in none of the
