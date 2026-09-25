@@ -51,10 +51,10 @@ module top_min #(
     output     [63:0] port_busy,
 
     // MAXIMAL: /HW, the card word bus.  No card drives it on a minimal build,
-    // so it sits at its pull-up and reads all ones.  ALL ONES IS NOT A WORD --
-    // see mainboard.v -- so the class marker must pair a read with the BUSY it
-    // already has and treat a silent sixteen frames as unequipped.  Brought
-    // out so that fitting the class marker is fitting a card, not a rewire.
+    // so it sits at its pull-up.  A card pulls it low for a 1, so a reader
+    // that reads it low-true, as word_rx does, takes that as ALL ZEROS: NONE,
+    // what an absent card must read -- see mainboard.v.  Brought out so that
+    // fitting the class marker is fitting a card, not a rewire.
     output            hw_n,
 
     output     [`PW-1:0] probe_port,
@@ -69,7 +69,7 @@ module top_min #(
     output     [2:0]  mk_state
 );
     wire [2:0] slot, slotq, tick;
-    wire hclk, line_hb, cap_stb, tx_clk, clk_8k, rx_oct, oct_stb;
+    wire hclk, cap_stb, tx_clk, clk_8k, rx_oct, oct_stb;
     wire m_sdata, m_sclk, m_wr, m_oe;
     // the network half's lines, with nothing on the other end of the ribbon
     wire nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk, nc_ovf;
@@ -92,7 +92,7 @@ module top_min #(
         .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
-        .hclk(hclk), .line_hb(line_hb), .cap_stb(cap_stb), .tx_clk(tx_clk),
+        .hclk(hclk), .cap_stb(cap_stb), .tx_clk(tx_clk),
         .frame_stb(frame_stb), .clk_8k(clk_8k), .rx_oct(rx_oct),
         .oct_stb(oct_stb),
         .scan(scan), .pass_stb(pass_stb),
@@ -111,7 +111,7 @@ module top_min #(
     mini_marker #(.NODIG(NODIG)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
-        .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
+        .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .b_oe(m_oe),
         .hw_n(hw_n), .ureq_n(1'b1),
         .net_n(1'b1), .flood_go(nc_flood),
@@ -126,7 +126,7 @@ module top_min #(
 
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
-    wire _unused = &{1'b0, tick, hclk, line_hb, tx_clk, clk_8k, rx_oct,
+    wire _unused = &{1'b0, tick, hclk, tx_clk, clk_8k, rx_oct,
                      oct_stb, slot, nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk,
                      nc_ovf, nc_rport, 1'b0};
 endmodule

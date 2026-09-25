@@ -12,10 +12,11 @@ Everything else follows from that.
 > a marker-addressed one, nothing in the exchange is block-steered any more,
 > and `/BLK` survives only to select which card answers on `/HW`.
 
-> **Status: measured in simulation — 13 benches, 307 checks under Verilator,
-> and 25 faults each shown to turn its bench red (`make faults`).** Under Icarus
-> the eleven benches below `net` pass with the same counts; `net` and `chain`
-> take the longest there and are recorded when they finish. No gate delays, so
+> **Status: measured in simulation — 13 benches, 306 checks under Verilator,
+> and 25 faults each shown to turn its bench red (`make faults`).** Icarus is
+> retired from the test sequence (§4). Its last full run, on the RTL of commit
+> `63bafbb`, passed the eleven benches below `net` with the same counts. It was
+> stopped in `net` after an hour, and `chain` never ran. No gate delays, so
 > this cannot see `fabric.md` §3.2's hazard or confirm §4's nanoseconds. Nothing has been drawn and nothing has been on a bench. The
 > 4.7 kΩ pull-up on `/HA` is the one new electrical number and it has not been
 > analysed — see *What is not settled*.
@@ -123,24 +124,27 @@ clock domain at 4.096 MHz with strobes.
 
 | ÷ | rate | name | who wants it |
 |---|---|---|---|
-| 4 | 1.024 MHz | `LINE_HB` | the '175 that makes `SLOTQ`; MF8 trunk encoders |
+| 4 | 1.024 MHz | — | the '175 that makes `SLOTQ`, inside the clock card. **Not on the bus**: `LINE_HB` is dropped (§5) |
 | 8 | 512 kHz | `HCLK`, `SLOT[2:0]` | every C commutator, every strobe decoder |
 | 32 | 128 kHz | `LOOP_HB` = `/SLOT[1]`; `SCLK` | the CVSD encoder; the control bus |
-| 64 | 64 kHz | `TX_CLK` = `/SLOT[2]` | socket a1; **one bit-time on all three wires** |
-| 128 | 32 kHz | `FILL`, **and `SCAN[0]`** | the idle `1010`; the port field's low bit |
+| 64 | 64 kHz | `SLOT[2]`; `TX_CLK` = `/SLOT[2]`, made on each block | socket a1; **one bit-time on all three wires** |
+| 128 | 32 kHz | **`SCAN[0]`, which is `FILL`** | the port field's low bit; the idle `1010` |
 | | 32 kHz→1 kHz | **`SCAN[5:1]`** | the rest of the port field, 0..63 |
-| 512 | 8 kHz | `CLK_8K`, `RX_OCT` | socket a3/a8 |
-| 4096 | 1 kHz | `TICK`, **and `pass_stb`** | **the ports' RC detectors**, the registers, the marker; the pass boundary, replacing `START` |
+| 512 | 8 kHz | `TX_OCT` (`CLK_8K`), `RX_OCT`: `SCAN[2:0]` decoded on each block | socket a3/a8 |
+| 4096 | 1 kHz | **`SCAN[5]`, which is `TICK`**; its fall is `pass_stb` | the registers, the marker, the unit; the pass boundary, replacing `START` |
 
 `SCAN[5:0]` are **exactly** the six stages between `TX_CLK` and `TICK`, so the
 scanner costs no divider stage at all, and `pass_stb` is not a further tap — it
 **is** `TICK`, because 64 bit-times of 64 master ticks is 4096. `tb_clock`
 asserts that the two are the same edge.
 
-`FILL` and `SCAN[0]` are **the same divider stage**. `SCAN[0]` is now the port
-number's low bit rather than an A/`BUSY` phase, but it is the same ÷128 at
-32 kHz: invert one of them "locally" and the scan is off by a port and every
-reader takes its neighbour's hook. `tb_clock` asserts it every master tick.
+**Since 2026-09-25 only `SCAN` and `SLOT` are on the bus** (`mainboard.md`
+§3.5). `FILL` *is* `SCAN[0]` and `TICK` *is* `SCAN[5]`, the same divider
+stages, so neither has a pin. `TX_CLK`, `TX_OCT` and `RX_OCT` are one package
+on each block (`rtl/frame_decode.v`). That removes the trap this section used
+to warn of: with `FILL` and `SCAN[0]` on two pins, inverting one "locally" put
+the scan a port out and every reader took its neighbour's hook. There is one
+wire now, and nothing to invert against it.
 
 The ÷32 / 128 kHz row that used to sit here is gone. `LOOP_HB` and `SCLK` are
 in `clocks.md` §1 and on socket a2, but **`clock_card` does not bring either
@@ -153,7 +157,8 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
 
 ```
  exch              ONE exchange: the clock card, the mainboard, eight blocks
-   clock_card      the crystal, the divider, SLOT, SLOTQ, SCAN, FILL, cadence, TICK
+   clock_card      the crystal, the divider, SLOT, SLOTQ, SCAN, the ring cadence
+   frame_decode    each block's one package: TX_CLK, TX_OCT, RX_OCT, FILL and TICK off SLOT2 and SCAN
    mainboard       a ribbon: eight HC_OUT onto eight highways, the wired-ORs
                      into /HA, /HB and /HW.  No jumper, no shunt field, no /BLK
    block  x8       ITS OWN NUMBER -- one header jumper, a '148 to read it, a
@@ -249,28 +254,33 @@ headlines.
 ## 4. Running it
 
 ```
-make            every bench under Verilator
-make iv         every bench under Icarus
-make lint       every module on its own, -Wall
-make faults     every rule's check shown able to fail: faults.py
+make                every bench under Verilator
+make lint           every module on its own, -Wall
+make faults         every rule's check shown able to fail: faults.py
+make iv-<bench>     one bench under Icarus, by hand; not in the sequence
 make clean
 ```
 
-Verilator is what to use while working; Icarus is the reference. **Anything
-that passes under one must pass under the other** — one real bug has already
-been caught that way (a function called from a continuous assign, which Icarus
-did not re-evaluate when a signal read *inside* the function changed).
+**The test sequence is `make`, `make lint` and `make faults`**, all
+Verilator. Icarus was the reference and is **retired from it** (Joel,
+2026-09-25). It is too slow for the network benches: `tb_net` ran over an hour
+under it without finishing. The RTL stays in the language both accept
+(`STYLE.md` §5), so `make iv-<bench>` still runs a bench under Icarus. That is
+worth doing by hand after a change that leans on evaluation order. Icarus once
+caught a real bug that Verilator passed: a function called from a continuous
+assign, which Icarus did not re-evaluate when a signal read *inside* the
+function changed.
 
 | bench | proves |
 |---|---|
-| `clock` | the taps it brings out, their rate and phase; `SLOTQ` a quarter cell late; **`FILL == SCAN[0]`**; **`pass_stb` and `TICK` are the same edge**; a pass is 4096 master ticks; and that **`SCAN` steps on every frame edge with no exception** |
+| `clock` | the taps it brings out, and the block decode (`frame_decode`) made from them, their rate and phase; `SLOTQ` a quarter cell late; **`FILL == SCAN[0]`**; **`pass_stb` and `TICK` are the same edge**; a pass is 4096 master ticks; and that **`SCAN` steps on every frame edge with no exception** |
 | `fabric` | every source slot to every listening slot — **4 096 ordered pairs, bit-exact, one frame**; fan-out; and that an exchange with no port circuits pulls none of the three wires down |
 | `ctl` | the hotline set up by hand; the guard bit; an event word that pulses `WR` and writes nothing; a pointing word that never pulses `WR`; **`CLM` reaches the card as `A_RX`**; **the serialiser's rate measured** — every `SCLK` period 32 ticks, sixteen edges a word, 17 bit-times a written word; `/RESET` |
 | `ha` | the bit-time map **on both wires at once** — `/HA` is port *p*'s M and `/HB` is port *p*'s `BUSY` in bit-time *p*; the capture 36 master ticks (8.79 µs) into the frame; all 64 ports in order; a bare exchange never pulls either down; **E follows M within one pass**; and the 16 ms detector arming, sampled either side of the window |
 | `probe` | 64 ports a pass following the scan, one a pass when held, and **the per-port clear** |
 | `dial` | a rotary dial through the 1 kHz sampler, at the corners of `register.md` §3.1's **nominal** envelope, down to an ideal 28 ms break at 20 pps |
-| `mini` | `mvp.md` §3's call each way: seize within a pass, dial tone, `2 1`, the ringback substitution, ringing in cadence, answer, two-way voice, self-release; then `mini-marker.md` §5's wrong numbers, **`2 8` refused on the second key**, and **key 1 as highway 1 with no unit fitted** |
-| `debug` | the debugger card: a quiet exchange and a clean write light **nothing**; twelve faults injected one at a time, each lighting its own lamp and no other; and **`mainboard.md` §7's SCLK hazard** — one extra edge lights the lamp *and* loses the write, and the next clean word lands |
+| `mini` | `mvp.md` §3's call, 20 to 21: seize within a pass, dial tone, `2 1`, the ringback substitution, ringing in cadence, answer, two-way voice, self-release; then `mini-marker.md` §5's wrong numbers, **`2 8` refused on the second key**, and **key 1 as highway 1 with no unit fitted** |
+| `debug` | the debugger card: a quiet exchange and a clean write light **nothing**; eleven faults injected one at a time, each lighting its own lamp, and the two `STUCK` faults their `P00` lamp with it; and **`mainboard.md` §7's SCLK hazard** — one extra edge lights the lamp *and* loses the write, and the next clean word lands |
 | `line` | the CVSD line card with a phone on its two pairs: `1100` reads on-hook and speech off-hook, through the 4 ms RC; **a 60 ms dial break arrives 54 ms long** — the 6 ms `subscriber-line.md` §5 measures, reproduced; `A_RX` rings an on-hook phone and only an on-hook phone; a cut pair reads on-hook, not off; `MUTE` puts `1010` on an off-hook line; bits cross both ways in order |
 | `word` | a card's word off `/HW`: a trunk reads its class, glare and direction; a plain line all ones; an empty socket, an unfitted block, a card in its power-up RC and a cut link **all zeros**; the same octet at all eight phases; a read writes nothing and holds cable B 998 ticks; and two faults on the wire go red in the same run — `/HW` a frame late, and read at its wire level |
 | `tie` | two exchanges on two crystals and a baseband tie trunk, patched by hand: each end reads its own card's word; 32 bits cross each way in order; the hook crosses as M; `/ANS` is low; a cut cable drops both link detectors, reads NONE at both ends and drops A |
@@ -344,16 +354,18 @@ The code comments name the section; the documents have not been brought up yet.
 | `mainboard.md` §9 | both open items are answered: what re-drives the scanned port's M, and crosstalk on sixteen switching highways — there are ten conductors now, which is a better cure than `fabric.md` §6's |
 | `fabric.md` §6 | the economy form is **superseded**. It bought eight wires by spending edge margin; this buys six and spends none |
 | `clocks.md` §1 | `SCAN[5:0]` joins the table as six stages that were always there, and `pass_stb` is `TICK` rather than a further tap. The ÷32 `LOOP_HB`/`SCLK` row has **no signal on the clock card in this build** |
+| `mainboard.md` §2.1, §3.1; `clocks.md` §1; `mf8-spec.md` §9.1 | **`LINE_HB` is dropped from the bus** (Joel, 2026-09-25). Nothing in newimpl read it. The '175 that makes `SLOTQ` keeps its 1.024 MHz tap inside the clock card, so the fastest signals on the bus are now `HCLK`, `SLOT` and `SLOTQ`, at 512 kHz. An MF8 adapter makes its own 1.024 MHz half-bit clock |
+| `mainboard.md` §3.1–§3.3 | **one bus, not two cables** (Joel, 2026-09-25): 31 signals on one 2 × 25 header, `mainboard.md` §3.4, which also says how it is cabled. Where this tree still says "cable A" or "cable B", read it as a signal group |
+| `mainboard.md` §2.1; `clocks.md` §1; `common-cards.md` §1.1 | **`TX_CLK`, `TX_OCT`, `RX_OCT`, `FILL` and `TICK` left the bus** (Joel, 2026-09-25): each is another bus signal or one gate from one, and each block makes them for its sockets (`rtl/frame_decode.v`, `mainboard.md` §3.5). `FILL` *is* `SCAN0` and `TICK` *is* `SCAN5`; the marker and the unit take the 1 ms edge off `SCAN`; the debugger takes its pass off its own mirror and loses `FILL_SCAN0` |
 | `protocol.md` §3, `mvp.md` §2 | "an absent block's `A` wire to 0" / "`HA` = 0" — the same polarity inversion, in two more places |
-| `mini-marker.md` §1, §2, §4 | the probe reads `BUSY` off `/HB`, not off `PB`; the pass is 1 ms, not 8 ms |
 | `common-control.md` §2.1 | the register ribbon loses `attach_src`/`SRC` and gains `counting`/`hook` in the minimal build |
 | `common-control.md` §2.2 | the tap's `visit` is `probe_fresh`; the card word is **not** a field of the scanned sample any more, so a listener needs a second validity for it |
 | `register.md` §2 | `counting` is cleared one gate later than the '163's STB, because `pulse_reg` samples `cnt` in the strobe cycle |
 | `port-card.md` | the trailing `bbb bss sss` is a nine-bit address from the withdrawn `beafaf1` branch; and `:13`'s "64 A status bits multiplexed at 64 kHz" is the A half only, with no `BUSY`, no `SCAN` pin and a 1 ms pass |
 | the rewrite's plan, D6 | **three tops, not two.** `top_net` fits the network unit beside the mini marker; `top_max` is still to come. Joel's decision, 2026-09-25 |
-| `mainboard.md` §2.3, `mini-marker.md` §6, §8 | **cable B has a second master.** The unit has its own serialiser and a request line, `/UREQ`, on one of the 16-way's two spares; the marker yields between transactions; there is no grant, and the unit waits 1152 ticks — longer than the marker's longest transaction, a word read — before it drives. `mini-marker.md` §8's "write drain" into the marker's queue is gone |
+| `mainboard.md` §2.3; `common-control.md` §2.2 | **cable B has a second master.** The unit has its own serialiser and a request line, `/UREQ`, on one of the 16-way's two spares; the marker yields between transactions; there is no grant, and the unit waits 1152 ticks — longer than the marker's longest transaction, a word read — before it drives. `common-control.md` §2.2's drain of the unit's writes through the marker's serialiser is gone |
 | `common-control.md` §1, §2.3, §4; `monitor.md` §1, §3.3, §4, §6; `fabric.md` §5.2 | **the monitors are on the network unit**, not on the trunk block: each cell is a probe on `/HA` and `/HB` and a `pulse_rx`, one pool an exchange, attached when the unit reads a seizing port's word. BUSY is read in M's own bit-time, so the third term is live, not "at the last visit". No block wiring, no `chan_mask`, no `BLOCK` strap; `e` and `b` are the unit's own jumpers. `monitor.md` §4's per-block sizing must be re-derived for one pool |
-| `common-control.md` §2.4, §5; `mini-marker.md` §8; `network.md` §3.2 | **no trunk jumpers anywhere.** A trunk card says it is a trunk, which way it faces and its glare in its own word, and the marker and the unit each read it off `/HW` when they need it (Joel, 2026-09-25). `TRUNK_MASK`, `TRUNK_DIR` and `HAS_NET` are gone; "a one-direction bring-up hunts by a jumpered port mask" no longer holds |
+| `common-control.md` §2.2, §2.4, §5; `network.md` §3.2 | **no trunk jumpers anywhere.** A trunk card says it is a trunk, which way it faces and its glare in its own word, and the marker and the unit each read it off `/HW` when they need it (Joel, 2026-09-25). `TRUNK_MASK`, `TRUNK_DIR` and `HAS_NET` are gone; "a one-direction bring-up hunts by a jumpered port mask" no longer holds |
 | `common-control.md` §2.2 | **`/NET`**: the unit grounds it and the marker reads it, in place of "a jumper, or the card present". Unit-to-marker controls are one-tick `_stb` lines; `att` is a level held until the marker attaches or refuses, raised only once the `CLAIM` word has gone out |
 | `network.md` §3, §3.2; `topology.md` | **a hunt is a 17 ms sweep.** Reading words costs a quarter of a pass each, so the unit visits every port once on a stride of 17 and keeps, a direction, the lowest free trunk — or the highest where the word sets glare — then confirms each is still free before writing it. At a transit that is most of a hop: the 128 ms guard covers about six hops where the documents' 12 ms a hop gave ten |
 | `extensions.md` §2.2, `baseband.md` §3.5 | **the word's timing.** §2.2 shifts a card's '165 at 128 kHz on `LOOP_HB`; `/HW` is read at 64 kHz. The trunk card shifts on `TX_CLK` and loads in the first half of frame 7 (`TX_OCT · TX_CLK`, a quarter '08), so the load is released a half-frame before the edge that shifts; `baseband.md` §3.5's load on `TX_OCT` alone released it at that very edge |
@@ -429,8 +441,9 @@ capture (`port.v`'s `e_cap <= ~ha_n`).
   card, and `clocks.md` §3 forbids the second. **There are two such cards now**,
   the marker and the network unit.
 - **The MF8 block adapter is not written.** The adopted six-channel frame
-  transmits in the fabric's clock (`network.md` §1), which wants `LINE_HB` and
-  `SLOT[2:0]` at the adapter; the block header's commons carry `TX_CLK`,
+  transmits in the fabric's clock (`network.md` §1), which wants a 1.024 MHz
+  half-bit clock and `SLOT[2:0]` at the adapter. `LINE_HB` is no longer on the
+  bus (§5), so the adapter makes its 1.024 MHz itself, from `HCLK`; the block header's commons carry `TX_CLK`,
   `TX_OCT`, `FILL`, `MUTE_BLK` and one spare. The baseband tie card came first
   instead, and the header's pins are open.
 - **`channel-cards.md` §2.2's violation timer.** It reads "gap > 1.25 cells …

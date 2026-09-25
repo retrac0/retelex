@@ -115,7 +115,7 @@ which build wants it:
 ```
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
-    wire _unused = &{1'b0, tick, hclk, line_hb, tx_clk, clk_8k, rx_oct,
+    wire _unused = &{1'b0, tick, hclk, tx_clk, clk_8k, rx_oct,
                      oct_stb, slot, 1'b0};
 ```
 
@@ -185,9 +185,9 @@ bench does not sit through the real ten seconds twice."*
 ## 5. The language
 
 Verilog-2001, plus the SystemVerilog that **both** simulators accept. Verilator
-is what to use while working; Icarus is the reference; a construct one of them
-rejects is not in the language. Probed against Icarus 13.0 and Verilator
-5.050:
+runs the test sequence (§7). Icarus is retired from it, but it is kept for a
+cross-check by hand, so a construct either rejects is still not in the
+language. Probed against Icarus 13.0 and Verilator 5.050:
 
 | in | out |
 |---|---|
@@ -292,8 +292,12 @@ would be — so what is tested is the connector, which is what breaks.
 one it does not; the branch no case reaches; the hazard it cannot see. A
 bench read as proving more than it asserts is worse than no bench.
 
-Both simulators, always. A bench that passes under one and not the other is
-not done, and one real bug has been found only that way.
+**Verilator, always**: every bench, then `make lint` and `make faults`. Icarus
+was the reference and is **retired from the sequence** (Joel, 2026-09-25). It
+is too slow for the network benches: `tb_net` ran over an hour under it
+without finishing. It once found a real bug that Verilator passed (README §4),
+so after a change that leans on evaluation order, run the bench under it by
+hand with `make iv-<bench>`.
 
 ---
 

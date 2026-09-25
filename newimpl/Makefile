@@ -3,14 +3,16 @@ SHELL := /bin/bash
 
 # newimpl -- the exchange in Verilog, rebuilt around the folded A plane.
 #
-# Two simulators run the same testbenches.  Verilator is what to use while
-# working; Icarus is the reference.  Anything that passes under one must pass
-# under the other.
+# The test sequence is Verilator: `make` runs every bench, then `make lint`
+# and `make faults`.  Icarus is retired from it (2026-09-25): too slow for the
+# network benches -- tb_net ran over an hour under it without finishing.  The
+# RTL stays in the language both accept (STYLE.md 5), so `make iv-<bench>`
+# still runs one bench under Icarus, by hand.
 #
 # There is no chip library and no BOM flow here.  A '151 is an assign under a
 # comment that says so.
 
-RTL := rtl/clock_card.v rtl/port.v rtl/block.v rtl/mainboard.v rtl/exch.v \
+RTL := rtl/clock_card.v rtl/frame_decode.v rtl/port.v rtl/block.v rtl/mainboard.v rtl/exch.v \
        rtl/ctl_write.v rtl/word_rx.v rtl/ctl_queue.v \
        rtl/probe.v rtl/pulse_rx.v rtl/pulse_reg.v \
        rtl/mini_marker.v rtl/top_min.v rtl/debugger.v \
@@ -34,12 +36,12 @@ TB_net    := tb/site_net.v tb/tb_net.v
 TB_chain  := tb/site_net.v tb/tb_chain.v
 
 SIMS   := clock fabric ctl ha probe dial mini debug line word tie net chain
-IVSIMS := $(addprefix iv-,$(SIMS))
+IVSIMS := $(addprefix iv-,$(SIMS))    # by hand only: not in the sequence
 
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
-.PHONY: all lint clean faults $(SIMS) $(IVSIMS) iv
+.PHONY: all lint clean faults $(SIMS) $(IVSIMS)
 
 all: $(SIMS)
 
@@ -53,9 +55,8 @@ $(SIMS): %: | $(BUILD)
 	    $(RTL) $(TB_$*) > $(BUILD)/vl-$*.log 2>&1 || (cat $(BUILD)/vl-$*.log; false)
 	@$(BUILD)/vl/$*/tb_$*
 
-# Icarus: the reference.
-iv: $(IVSIMS)
-
+# Icarus: one bench at a time, by hand.  There is no `make iv`: every bench
+# under Icarus is hours, and it is not part of the test sequence.
 # A static pattern rule, not a bare pattern rule: make does not search
 # implicit rules for a target declared .PHONY.
 $(IVSIMS): iv-%: | $(BUILD)
@@ -71,7 +72,7 @@ $(IVSIMS): iv-%: | $(BUILD)
 # pulse_rx or mini_marker passed silently.  Collect the failures instead.
 lint:
 	@fail=0; \
-	for m in clock_card port block mainboard exch ctl_write word_rx ctl_queue probe \
+	for m in clock_card frame_decode port block mainboard exch ctl_write word_rx ctl_queue probe \
 	         pulse_rx pulse_reg mini_marker top_min debugger \
 	         dm_rx cvsd_line_card baseband_card net_unit top_net; do \
 	    if verilator --lint-only -Wall -Irtl --top-module $$m $(RTL); then \

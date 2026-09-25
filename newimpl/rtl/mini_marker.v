@@ -71,16 +71,15 @@ module mini_marker #(
     input                   clk,
     input                   rst_n,
 
-    // ---- cable A -----------------------------------------------------------
+    // ---- the bus: timing, scan and the planes ------------------------------
     input      [2:0]        slotq,
     input                   cap_stb,
     input                   frame_stb,
     input      [`SCANW-1:0] scan,
     input                   ha_n,          // M
     input                   hb_n,          // BUSY, the same bit-time
-    input                   tick_1k,
 
-    // ---- cable B, as a master ----------------------------------------------
+    // ---- the bus: the control lines, as a master ---------------------------
     output                  sdata,
     output                  sclk,
     output                  wr,
@@ -136,6 +135,10 @@ module mini_marker #(
                      S_YIELD = 3'd6;
 
     wire net = !net_n;
+
+    // TICK is SCAN5's fall, and the bus carries no line of its own for it: the
+    // 1 ms time base is the pass boundary, one gate on SCAN and the frame edge
+    wire tick_1k = frame_stb && (scan == {`SCANW{1'b0}});
 
     // ---- the probe.  Two '157s pick its address: the scan, or the port we
     //      are about to act on.

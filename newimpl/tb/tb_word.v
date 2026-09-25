@@ -62,7 +62,7 @@ module tb_word;
         .sdata(b_oe && b_sdata), .sclk(b_oe && b_sclk), .wr(b_oe && b_wr),
         .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
-        .hclk(), .line_hb(), .cap_stb(cap_stb), .tx_clk(tx_clk),
+        .hclk(), .cap_stb(cap_stb), .tx_clk(tx_clk),
         .frame_stb(frame_stb), .clk_8k(clk_8k), .rx_oct(rx_oct), .oct_stb(),
         .scan(scan), .pass_stb(), .fill(fill), .ring_cad_n(), .tick_1k(tick_1k),
         .port_busy(port_busy));

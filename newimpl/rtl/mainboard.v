@@ -93,13 +93,12 @@ module mainboard #(
     // marker points at a port with a word whose DST names it, and that one
     // card drives /HW for the next sixteen frames.
     //
-    // It idles HIGH like /HA and /HB, so a pointed port that is empty, pulled,
-    // or on an unfitted block reads all ones -- and all ones is what
-    // extensions.md 2.2 already calls unconditional, which is wrong for an
-    // absent card.  THE MARKER MUST NOT TAKE A WORD IT DID NOT SEE ARRIVE:
-    // pair every read with the BUSY it already has off /HB, and treat
-    // "no drain on any of sixteen frames" as unequipped rather than as FF.
-    // This is option-word-rev2.md 2's FF-fails-open bug, which is live in the
-    // old tree; the pull-up makes it reachable here too if it is ignored.
+    // It idles HIGH like /HA and /HB, and a card pulls it low for a 1
+    // (extensions.md 2.2).  So a pointed port that is empty, pulled, or on an
+    // unfitted block reads ALL ZEROS -- "none / OOS" -- and an absent card
+    // fails SAFE (word_rx.v).  THE TRAP IS FOR A READER THAT TAKES THE WIRE'S
+    // LEVEL AS THE BIT: it reads the same absence as all ones, which the word
+    // table calls unconditional.  That is the old tree's FF-fails-open bug,
+    // and the pull-up would make it reachable here too.
     assign hw_n = ~(|hw_pd_from_block);
 endmodule

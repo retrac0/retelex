@@ -222,10 +222,13 @@ origin seized live in a bank **on the unit** (`network.md` §3.2).
 ## 6. Not measured
 
 - **A third master on cable B.** `mainboard.md` §2.3 is marker or console. The
-  unit as a master is specified here and in `network.md` §3.2; the RTL still
-  drains the unit's writes through the marker's (or mini-marker's) serialiser.
+  unit as a master is specified here and in `network.md` §3.2. newimpl's RTL
+  has it as a second master, with its own serialiser and `/UREQ`
+  (`newimpl/README.md` §5); no console is built, so a third has not been run.
 - **The probe's `M` as a pin.** `mainboard.md` §9.
-- **Mini-marker plus a network unit as a hub.** `make mini-net` is a
-  one-direction chain: local call and a dialled flood. `make net` is the class
-  marker plus the unit, including hubs. Multi-direction mini has not been run.
+- **Mini-marker plus a network unit as a hub.** newimpl's `make net` and
+  `make chain` run the mini-marker with a unit at one and two directions; a
+  hub, three or four, has not been run. The retired tree's `make mini-net` was
+  a one-direction chain, and its `make net` the class marker plus the unit,
+  including hubs.
 - **Swapping a marker on a live fabric.** Specified; not tried.

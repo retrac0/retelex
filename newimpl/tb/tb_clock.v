@@ -2,7 +2,9 @@
 //
 // fabric.md 7 step 1, with two additions the fold asks for: FILL and SCAN[0]
 // must be the same waveform, and SCAN must step on every frame edge with no
-// exception whatever.
+// exception whatever.  Since 2026-09-25 the clock card drives neither FILL
+// nor TICK, TX_CLK, TX_OCT or RX_OCT: a block makes them from SLOT2 and SCAN
+// (frame_decode.v), and the checks that name them check that decode.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -35,18 +37,23 @@ module tb_clock;
     always #122.070 clk = ~clk;
 
     wire [2:0] tick, slot, slotq;
-    wire hclk, line_hb, cap_stb, tx_clk, frame_stb, clk_8k, rx_oct, oct_stb;
+    wire hclk, cap_stb, tx_clk, frame_stb, clk_8k, rx_oct, oct_stb;
     wire [`SCANW-1:0] scan;
     wire pass_stb, fill, ring_cad_n, tick_1k;
 
     clock_card u_clk (
         .clk(clk), .rst_n(rst_n),
-        .tick(tick), .hclk(hclk), .line_hb(line_hb),
+        .tick(tick), .hclk(hclk),
         .slot(slot), .slotq(slotq), .cap_stb(cap_stb),
-        .tx_clk(tx_clk), .frame_stb(frame_stb), .clk_8k(clk_8k),
-        .rx_oct(rx_oct), .oct_stb(oct_stb),
-        .scan(scan), .pass_stb(pass_stb),
-        .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
+        .frame_stb(frame_stb), .scan(scan), .ring_cad_n(ring_cad_n));
+
+    // The five lines that left the bus, as a block makes them from SLOT2 and
+    // SCAN.  Every check below that names one of them checks this decode.
+    frame_decode u_dec (
+        .slot2(slot[2]), .frame_stb(frame_stb), .scan(scan),
+        .tx_clk(tx_clk), .tx_oct(clk_8k), .rx_oct(rx_oct), .oct_stb(oct_stb),
+        .fill(fill), .tick_1k(tick_1k));
+    assign pass_stb = tick_1k;
 
     // A second card with the cadence cut to 8 ms / 16 ms.  Same counter, same
     // 1:2 shape, small enough to watch -- 2.048 s of the real one is 8.4
@@ -54,10 +61,8 @@ module tb_clock;
     wire cad_n;
     clock_card #(.RING_ON_MS(13'd8), .RING_OFF_MS(13'd16)) u_cad (
         .clk(clk), .rst_n(rst_n),
-        .tick(), .hclk(), .line_hb(), .slot(), .slotq(), .cap_stb(),
-        .tx_clk(), .frame_stb(), .clk_8k(), .rx_oct(), .oct_stb(),
-        .scan(), .pass_stb(),
-        .fill(), .ring_cad_n(cad_n), .tick_1k());
+        .tick(), .hclk(), .slot(), .slotq(), .cap_stb(),
+        .frame_stb(), .scan(), .ring_cad_n(cad_n));
 
     reg armed = 1'b0;
 
@@ -77,7 +82,6 @@ module tb_clock;
         // one of them "locally" and the whole A plane is off by a bit-time.
         if (fill    !== scan[0]) oops("FILL is not SCAN[0]");
         if (hclk    !== ~tick[2]) oops("HCLK is not /tick[2]");
-        if (line_hb !== tick[1])  oops("LINE_HB is not tick[1]");
         if (tx_clk  !== ~slot[2]) oops("TX_CLK is not /SLOT[2]");
         if (cap_stb !== (tick == `TICK_MID)) oops("cap_stb is not mid-cell");
 

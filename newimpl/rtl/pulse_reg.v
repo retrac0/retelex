@@ -19,8 +19,8 @@ module pulse_reg #(
     parameter [8:0]  ID    = 9'd128,
     parameter [8:0]  CLR   = 9'd256,
     // ms attached with no digit going in -- from seizure OR from the last digit
-    // (register.md 6, marker.md 4).  10 s is what every document and exch.py's
-    // T_NODIGIT say; the RTL carried 12000 with nothing naming it.
+    // (register.md 6; marker.md 5.1 and 8).  10 s is what every document and
+    // exch.py's T_NODIGIT say; the RTL carried 12000 with nothing naming it.
     parameter [15:0] NODIG = 16'd10000
 )(
     input                   clk,
@@ -124,7 +124,7 @@ module pulse_reg #(
                 if (clr_stb) gone <= 1'b1;
 
                 // The no-digit timeout, held once it fires.  register.md 6 calls
-                // `gone` "CLR, OR A PARTIAL-DIAL TIMEOUT", and marker.md 4 says the
+                // `gone` "CLR, OR A PARTIAL-DIAL TIMEOUT", and marker.md 8 says the
                 // timer "runs from the last digit as well as from seizure" -- so it
                 // runs whenever the register is attached and no digit is part way
                 // in, NOT only while the store is empty.  Gating it on ndig == 0

@@ -43,8 +43,7 @@ module tb_debug;
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
     // ---- the faults, one at a time ---------------------------------------------
-    reg f_stall = 1'b0;      // freeze SCAN (and FILL with it: same stage)
-    reg f_fill  = 1'b0;      // invert FILL against SCAN[0]
+    reg f_stall = 1'b0;      // freeze SCAN
     reg f_slotq = 1'b0;      // flip SLOTQ's low bit
     reg f_ha_p00 = 1'b0, f_hb_p00 = 1'b0;      // pull the wire in port 00's turn
     reg f_ha_stuck = 1'b0, f_hb_stuck = 1'b0;  // hold the wire down
@@ -61,36 +60,34 @@ module tb_debug;
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),
         .sdata(s_sdata), .sclk(bus_sclk), .wr(s_wr), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
-        .hclk(), .line_hb(), .cap_stb(cap_stb), .tx_clk(),
+        .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),
         .scan(scan), .pass_stb(pass_stb),
         .fill(fill), .ring_cad_n(), .tick_1k(tick_1k), .port_busy(port_busy));
 
     // what the debugger sees, after the faults
-    reg [`SCANW-1:0] scan_held; reg fill_held;
-    always @(posedge clk) if (!f_stall) begin scan_held <= scan; fill_held <= fill; end
+    reg [`SCANW-1:0] scan_held;
+    always @(posedge clk) if (!f_stall) scan_held <= scan;
 
     wire [`SCANW-1:0] dbg_scan  = f_stall ? scan_held : scan;
-    wire              dbg_fill  = f_stall ? fill_held : (fill ^ f_fill);
     wire [2:0]        dbg_slotq = slotq ^ {2'b00, f_slotq};
     wire              dbg_ha_n  = ha_n & ~(f_ha_p00 && (scan == {`SCANW{1'b0}})) & ~f_ha_stuck;
     wire              dbg_hb_n  = hb_n & ~(f_hb_p00 && (scan == {`SCANW{1'b0}})) & ~f_hb_stuck;
 
-    wire [11:0] led;
+    wire [10:0] led;
     debugger #(.REG_WAIT_PASSES(16), .WR_GUARD(8)) u_dbg (
         .clk(clk), .rst_n(rst_n), .clr_n(clr_n),
         .slot(slot), .slotq(dbg_slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
-        .scan(dbg_scan), .ha_n(dbg_ha_n), .hb_n(dbg_hb_n), .fill(dbg_fill),
-        .pass_stb(pass_stb),
+        .scan(dbg_scan), .ha_n(dbg_ha_n), .hb_n(dbg_hb_n),
         .sdata(s_sdata), .sclk(bus_sclk), .wr(dbg_wr),
         .led(led));
 
-    localparam [11:0] L_SCAN_STALL = 12'd1 << 0,  L_FILL_SCAN0 = 12'd1 << 1,
-                      L_SLOTQ_LATE = 12'd1 << 2,  L_HA_P00     = 12'd1 << 3,
-                      L_HB_P00     = 12'd1 << 4,  L_HA_STUCK   = 12'd1 << 5,
-                      L_HB_STUCK   = 12'd1 << 6,  L_SCLK_COUNT = 12'd1 << 7,
-                      L_WR_EDGE    = 12'd1 << 8,  L_SELF_POINT = 12'd1 << 9,
-                      L_WR_P00     = 12'd1 << 10, L_REG_WAIT   = 12'd1 << 11;
+    localparam [10:0] L_SCAN_STALL = 11'd1 << 0,
+                      L_SLOTQ_LATE = 11'd1 << 1,  L_HA_P00     = 11'd1 << 2,
+                      L_HB_P00     = 11'd1 << 3,  L_HA_STUCK   = 11'd1 << 4,
+                      L_HB_STUCK   = 11'd1 << 5,  L_SCLK_COUNT = 11'd1 << 6,
+                      L_WR_EDGE    = 11'd1 << 7,  L_SELF_POINT = 11'd1 << 8,
+                      L_WR_P00     = 11'd1 << 9,  L_REG_WAIT   = 11'd1 << 10;
 
     task passes(input integer n);
         begin repeat (n) @(posedge pass_stb); @(posedge clk); @(posedge clk); end
@@ -104,7 +101,7 @@ module tb_debug;
         end
     endtask
 
-    task lamps(input [11:0] mask, input [8*64-1:0] what);
+    task lamps(input [10:0] mask, input [8*64-1:0] what);
         begin
             ck(led === mask, what);
             if (led !== mask) $display("           led = %b, wanted %b", led, mask);
@@ -121,29 +118,23 @@ module tb_debug;
     endtask
 
     initial begin
-        $display("\n  tb_debug -- twelve lamps, twelve faults, and a quiet exchange");
+        $display("\n  tb_debug -- eleven lamps, eleven faults, and a quiet exchange");
         repeat (20) @(posedge clk);
         rst_n = 1'b1;
         repeat (8) @(posedge clk);
 
         // ---- 0.  nothing lights on a working exchange -------------------------
         passes(4);
-        lamps(12'd0, "four quiet passes light nothing");
+        lamps(11'd0, "four quiet passes light nothing");
         send(6'o22, 6'o23, 1'b1);
         passes(2);
-        lamps(12'd0, "a clean write lights nothing");
+        lamps(11'd0, "a clean write lights nothing");
         ck(port_busy[6'o22] === 1'b1, "and the clean write landed");
 
         // ---- 1.  CLOCK CARD -----------------------------------------------------
         f_stall = 1'b1; repeat (3) @(posedge frame_stb); @(posedge clk);
         f_stall = 1'b0; @(posedge clk); @(posedge clk);
         lamps(L_SCAN_STALL, "SCAN_STALL: the scanner froze for three frames");
-        clear();
-
-        @(posedge frame_stb); @(posedge clk);
-        f_fill = 1'b1; @(posedge frame_stb); @(posedge clk);
-        f_fill = 1'b0; @(posedge clk); @(posedge clk);
-        lamps(L_FILL_SCAN0, "FILL_SCAN0: FILL inverted against SCAN[0]");
         clear();
 
         @(posedge frame_stb); @(posedge clk);
@@ -187,7 +178,7 @@ module tb_debug;
         clear();
         send(6'o25, 6'o12, 1'b1);
         passes(1);
-        lamps(12'd0, "the next clean word lights nothing");
+        lamps(11'd0, "the next clean word lights nothing");
         ck(port_busy[6'o25] === 1'b1, "and it LANDED: the '164s have no stored phase");
 
         // mainboard.md 2.3.2: a WR right on an SCLK edge, into the debugger only
@@ -220,7 +211,7 @@ module tb_debug;
         a_tx[6'o20] = 1'b0;
         clear();
         passes(3);
-        lamps(12'd0, "and on-hook again, nothing");
+        lamps(11'd0, "and on-hook again, nothing");
 
         $display("\n  %0d checks, %0d errors.  %s\n", chk, errs,
                  (errs == 0) ? "PASS" : "FAIL");

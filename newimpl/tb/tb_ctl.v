@@ -53,7 +53,7 @@ module tb_ctl;
         .mute_blk(8'd0), .rbt_in(1'b0),
         .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
-        .hclk(), .line_hb(), .cap_stb(cap_stb), .tx_clk(),
+        .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),
         .scan(scan), .pass_stb(pass_stb),
         .fill(fill), .ring_cad_n(), .tick_1k(),

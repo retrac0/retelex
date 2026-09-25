@@ -14,6 +14,9 @@ first listed are seven — twelve, with the `SCAN[2:0]`, `ADVANCE` and `START`
 that §2.3 adds beside them. That is the only part of §2 that is not
 `fabric.md` §2 as it stands.
 
+> **2026-09-25: one bus on one 2×25 header (§3.4).** The two cables below are
+> the plan it replaces; five lines, and `LINE_HB`, have left the bus (§3.5).
+
 > **Status: proposed; the timing measured by the same method as `fabric.md`
 > §4.** `exch.py mainboard` adds the clock's own flight down the cable to that
 > section's 400 000 draws. The line's capacitance, edge rate and drive current
@@ -342,6 +345,12 @@ digits it hands the marker stay on their own short ribbon between the two
 
 ## 3. The two cables
 
+> **Superseded, 2026-09-25: one bus, on one 2×25 header (§3.4).** Joel's
+> decision: the exchange's bus is one set of signals, not a fabric cable and a
+> control cable, and how it is cabled is a build-time choice. §3.1–§3.3 are the
+> two-cable plan it replaces, kept because other documents cite them. §3.5 is
+> what left the bus on the way.
+
 | | conductors | signals | carries |
 |---|---|---|---|
 | **A — fabric cable A** | 64-way IDC | 31 + 1 spare | everything in §2.1 and §2.2 |
@@ -445,6 +454,147 @@ eight decoder lines and the four that replaced them, and `SCAN[2:0]` is the two
 pins over. Rows a and c are sixty-four, so there is room for thirteen more. A block whose shared board (`fabric.md` §5.1) carries the cable headers and
 the block shunt itself *is* the mainboard: there is no separate block
 connector. The block ribbon still leaves that board toward the taps.
+
+### 3.4 One bus, one 2×25 header
+
+**The bus is 31 signals**, grouped by what they do rather than by which cable
+carries them:
+
+| group | signals | n | driven by | read by |
+|---|---|---|---|---|
+| cell timing | `HCLK`, `SLOT[2:0]`, `SLOTQ[2:0]` | 7 | clock card | every block; `HCLK` and `SLOTQ` also every probe |
+| scan | `SCAN[5:0]` | 6 | clock card | every port and every probe. `SCAN0` is also `FILL`, `SCAN5` is also `TICK` (§3.5) |
+| speech highways | `HC[7:0]` | 8 | block *h* drives `HC[h]`, by its own jumper | every block |
+| references | `RBT`, `/RING_CAD` | 2 | the ringback card; the clock card | every block |
+| supervision planes, open drain | `/HA` (M), `/HB` (BUSY), `/HW` (card word) | 3 | every port; `/HW` the pointed card only | marker, registers, unit, debugger, displays; ports read `/HA` for E |
+| control | `SDATA`, `SCLK`, `WR`, `/RESET`, `/UREQ` | 5 | the masters; `/RESET` also power-on | every block; `/UREQ` the marker; counters, displays and debugger listen |
+
+**One connector, 2.54 mm, 2 × 25, the same on every card position.** 31 signals,
+2 spares, 13 grounds and 4 × +5 V. Pin 1 is row 1; odd pins are row 1, even
+pins row 2, and a ribbon's conductor *n* is pin *n*.
+
+| pins | odd | even | | pins | odd | even |
+|---|---|---|---|---|---|---|
+| 1–2 | +5 V | +5 V | | 27–28 | `SCAN0` | `SCAN1` |
+| 3–4 | **`HCLK`** | GND | | 29–30 | `SCAN2` | `SCAN3` |
+| 5–6 | **`SLOT0`** | GND | | 31–32 | `SCAN4` | `SCAN5` |
+| 7–8 | **`SLOT1`** | GND | | 33–34 | `HC0` | `HC1` |
+| 9–10 | **`SLOT2`** | GND | | 35–36 | `HC2` | `HC3` |
+| 11–12 | **`SLOTQ0`** | GND | | 37–38 | `HC4` | `HC5` |
+| 13–14 | **`SLOTQ1`** | GND | | 39–40 | `HC6` | `HC7` |
+| 15–16 | **`SLOTQ2`** | GND | | 41–42 | GND | `RBT` |
+| 17–18 | **`SCLK`** | GND | | 43–44 | `/RING_CAD` | `/HA` |
+| 19–20 | **`WR`** | GND | | 45–46 | `/HB` | `/HW` |
+| 21–22 | `SDATA` | `/UREQ` | | 47–48 | spare | spare |
+| 23–24 | `/RESET` | GND | | 49–50 | +5 V | +5 V |
+| 25–26 | GND | GND | | | | |
+
+The order is not arbitrary:
+
+- **Pins 1–24 are the fast half.** The nine lines in bold are the only ones
+  whose edges matter, and each has a ground beside it on the ribbon and across
+  from it in its column. With `LINE_HB` gone the fastest of them is 512 kHz.
+- **Pins 27–50 are the slow half**, and the ground pair at 25–26 is the fence
+  between the halves.
+- **`/RESET` is quiet.** It is the one line whose glitch drops every call (§7),
+  and it sits between `/UREQ`, a slow level, and a ground, two columns from the
+  nearest clock.
+- **The planes are shielded from the highways.** A ground, `RBT` and
+  `/RING_CAD` stand between `HC7` and `/HA`. The planes are sampled at mid-cell,
+  so what couples in from a highway edge has settled by then anyway.
+- **The supply survives assembly mistakes.** +5 V is in whole columns at both
+  ends, and the centre column is ground on both rows. A connector plugged round
+  the wrong way (pin *p* to 51 − *p*), or with its rows swapped, still connects
+  +5 V to +5 V and ground to ground. A signal may meet a ground; the supply
+  cannot short.
+- **The spares have owners in waiting:** a second request line, for a console
+  ranked above the unit, and the input by which a trunk slaves the clock card
+  to its far end (`network.md` §8). The secondary word's 16-frame strobe needs
+  no pin: it is `SCAN[3:0]` decoded on the card, like §3.5's five.
+
+**Why 50 and not 48.** The bus fits a 2 × 24: drop the centre ground column
+and nothing else moves. But 48-way is not a stock IDC size and 50-way is (it is
+the old SCSI ribbon), so the two extra pins buy the ribbon fill with parts off
+the shelf, and a ground fence, for 2.5 mm. A 2 × 20 would hold the 31 only with
+no spares and one ground for every two clock lines.
+
+**One footprint, three fills.** Joel's constraint is that direct mating, a
+bridge and a ribbon are build-time choices on the same holes and the same
+pinning. That holds if **each card position's two bus edges are mirror images**,
+row 1 on the outside at both:
+
+| fill | on the right edge | on the left edge | between |
+|---|---|---|---|
+| direct mating | right-angle male | right-angle female | nothing: the edges plug together |
+| bridge | vertical male | vertical male | a 2–3 cm PCB carrying two 2 × 25 sockets, pin *n* to pin *n* |
+| ribbon | vertical male, or a shrouded header, which keys it | — | one daisy-chained 50-way ribbon along all positions, every connector crimped the same way |
+
+- **Why mirrored.** Two right-angle connectors mating edge to edge meet outer
+  row to outer row. Laid out as identical copies, they would swap every
+  signal with its column partner.
+- **A straight-through bridge needs no key.** Turned round, it still connects
+  each pin to the same pin, whether the footprints are copies or mirrors. It
+  routes on two layers, one row each, because each row threads the other's pins.
+- **A card position turned round does need one**, because its pins then run
+  backwards. Set the header a few millimetres off the centre of its edge, so a
+  position turned round cannot line up with its neighbours.
+- **The ribbon fill uses one header a position**, and the ribbon carries the
+  bus between them. That removes the second header and half the IDC
+  terminations, which were the reliability worry that led to the bridge.
+
+**Contacts.** Gold on both halves, not tin, which frets with vibration and
+thermal cycling; about 0.76 µm on the mating face is the long-life grade.
+A 2 × 25 is about 64 mm long. Where positions are joined by bridges or by
+direct mating, fix them to one flat plate: a long right-angle mate between two
+separate boards needs them coplanar to about the socket's float.
+
+**Power.** Logic +5 V and ground travel on the bus, fed at both ends of the
+chain rather than through every joint in series. **Ringing and −48 V do not.**
+90 V rms on −48 V peaks near 175 V to ground, which needs more creepage and
+clearance than a 2.54 mm header has between pads, and a card position pulled
+out would leave its neighbour's pins live. They go on a separate twisted-pair
+harness, with shrouded connectors, to the blocks that hold analogue line cards
+only. It runs in a star from a small distribution point with a fuse or PTC for
+each block. The pair carries the ringing current's return, so 20 Hz never flows
+in the logic ground.
+
+**What is not on the bus.** Inside a block:
+- the socket commons (`TX_CLK`, `LOOP_HB`, `TX_OCT`, `FILL`, `RX_OCT`, `MUTE`);
+- each slot's own pins;
+- the strobe lines, the per-port `WR` lines, and `SRC`/`BSY`/`CLM` off the
+  '164s;
+- `BLOCK[2:0]`, `MUTE_BLK`, `rb`.
+
+Between common-control cards, short ribbons on their top edges, so the marker
+and the unit sit side by side:
+- marker ↔ unit, 15 lines;
+- the register ribbon the unit taps, 30 lines;
+- the probe tap, if anyone fits it.
+
+**Not measured.** Nothing is drawn. §5's timing was worked for a 64-way ribbon
+with the clock card mid-cable; the conclusions — the clock travels with the data,
+a series resistor at each clock driver, the clock card in the middle of the
+chain — carry over, but the numbers were not redone for a 50-way or for tiles.
+Contact current is not budgeted.
+
+### 3.5 What left the bus
+
+| | now | since |
+|---|---|---|
+| `LINE_HB` | nothing on the bus reads it; the '175 that makes `SLOTQ` keeps its 1.024 MHz tap inside the clock card. An MF8 adapter makes its own | 2026-09-25 |
+| `TX_CLK` | `/SLOT2`, a '04 section on each block | 2026-09-25 |
+| `TX_OCT` (`CLK_8K`) | `SCAN[2:0]` = 7, decoded on each block. A ripple up-count cannot glitch that decode | 2026-09-25 |
+| `RX_OCT` | `TX_OCT` a frame late, half a '74 on each block. **Not** a decode of `SCAN[2:0]` = 0: the clock card's '4040 ripples, and passes through 000 on its way from 1 to 2 and from 3 to 4 | 2026-09-25 |
+| `FILL` | `SCAN0`, a wire. The trap of `FILL` inverted "locally" against `SCAN0` has nothing left to invert | 2026-09-25 |
+| `TICK` | `SCAN5`, a wire. Its fall is the pass boundary and the 1 ms time base, as it always was | 2026-09-25 |
+| `HA[0..7]`, `PB[1:0]`, `ADVANCE`, `START`, cable B's `SCAN[2:0]` | the fold: `/HA`, `/HB`, `/HW` and a free-running `SCAN[5:0]` (`newimpl/README.md` §1) | 2026-09-24 |
+| the eight `/BLK` decoder lines a block, and the shunt field | a block decodes `/BLK` itself and learns its number from its own header jumper | 2026-09-25 |
+| `/CON` | no console is built; its request line is a spare above | — |
+
+The five of 2026-09-25 are one package on each block (`newimpl/rtl/frame_decode.v`
+models it). A common-control card that wants the 1 ms edge takes it off `SCAN`
+and the frame edge, `SLOT2`'s fall.
+
 
 ---
 

@@ -101,7 +101,7 @@ module top_net #(
 );
     wire [2:0] slot, slotq, tick;
     wire [7:0] hc;
-    wire hclk, line_hb, cap_stb, oct_stb, pass_stb;
+    wire hclk, cap_stb, oct_stb, pass_stb;
     // the marker's tap, which nothing on this build watches
     wire [`PW-1:0] nc_pport, nc_called;
     wire           nc_pm, nc_pb, nc_pf;
@@ -124,7 +124,7 @@ module top_net #(
         .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
-        .hclk(hclk), .line_hb(line_hb), .cap_stb(cap_stb), .tx_clk(tx_clk),
+        .hclk(hclk), .cap_stb(cap_stb), .tx_clk(tx_clk),
         .frame_stb(frame_stb), .clk_8k(clk_8k), .rx_oct(rx_oct),
         .oct_stb(oct_stb),
         .scan(scan), .pass_stb(pass_stb),
@@ -147,7 +147,7 @@ module top_net #(
     mini_marker #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
-        .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
+        .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .b_oe(m_oe),
         .hw_n(hw_n), .ureq_n(ureq_n),
         .net_n(net_n), .flood_go(flood_go),
@@ -165,7 +165,7 @@ module top_net #(
                .T_ARM(T_ARM)) u_net (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
-        .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
+        .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(u_sdata), .sclk(u_sclk), .wr(u_wr), .b_oe(u_oe), .hw_n(hw_n),
         .ureq_n(ureq_n),
         .net_n(net_n), .flood_go(flood_go), .restart(u_restart), .local_go(u_local),
@@ -179,6 +179,6 @@ module top_net #(
 
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
-    wire _unused = &{1'b0, hc, tick, hclk, line_hb, oct_stb, pass_stb, slot[2],
+    wire _unused = &{1'b0, hc, tick, hclk, oct_stb, pass_stb, slot[2],
                      slot[0], nc_pport, nc_called, nc_pm, nc_pb, nc_pf, 1'b0};
 endmodule

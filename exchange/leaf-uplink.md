@@ -8,7 +8,8 @@ other way: digit `1` hunts an uplink and hears the **central's** dial tone.
 
 No wink, no delay-dial dual-mode, no flood seats on this plant.
 
-> **Status: proposed.** Leaf → central is measured in RTL (`make mini-leaf`).
+> **Status: proposed.** Leaf → central was measured in the retired tree's RTL
+> (`make mini-leaf` in `old/verilog/`); newimpl has no LEAF (`mini-marker.md` §9).
 > Central → leaf (`1 e b g s` then extension) is the same offers-tone contract
 > in the other direction; a full-marker central bench is not yet wired for it.
 
@@ -46,7 +47,7 @@ channels; 70 and 74 free as on any trunk block). Leaf trunks sit at **10–17**.
 | This link | class **tone trunk** on 70–77 | ordinary trunks 10–17; seize → caller → dial tone |
 | Flood ties elsewhere | class **trunk**, as today | none on this exchange |
 | Local lines | `h s` | `2–7` + `s` (and `0` / `8` / `9` as cannot-complete unless fitted) |
-| `0` / `8` / `9` on the leaf | as the central is built | cannot-complete unless fitted. On a **nanomarker** leaf (`nano-marker.md`) all three are one key: `0` hunts the operator and a misdialled 8 or 9 lands there too, and no prefix 8 or outside-line 9 can ever be told apart from it. Reaching the central over the uplink is unaffected — those pulses are the central's register |
+| `0` / `8` / `9` on the leaf | as the central is built | cannot-complete unless fitted. The **one-board form** proposed for a leaf (`mini-marker.md` §10; retired tree only) made all three one key: `0` hunted the operator and a misdialled 8 or 9 landed there too, and no prefix 8 or outside-line 9 could ever be told apart from it. Reaching the central over the uplink is unaffected — those pulses are the central's register |
 
 **LEAF** and solo highway-`1` are mutually exclusive with **HAS_NET** on the
 leaf. The leaf is not a network code: nothing dials `1 <leaf e b> …` to reach
@@ -110,7 +111,7 @@ trunk family's second member, family `01` member 1.
 
 On **central 22**, group 70–77 is jumpered class *tone trunk*. On the **leaf**,
 trunks 10–17 may say the same, or a mini without a word treats fitted trunks on
-that block as tone-access (`TONE0` in the RTL site). Flood ties on the central
+that block as tone-access (`TONE0` in the retired tree's RTL site). Flood ties on the central
 stay class *trunk*. The network unit and monitors **ignore** offers-tone ports when
 seizing or forwarding a flood. One seat, one seize meaning.
 
@@ -199,6 +200,9 @@ the central pays for the network.
 ---
 
 ## 8. RTL / bench
+
+All of this is the retired tree's (`old/verilog/`). newimpl has none of it
+(`mini-marker.md` §9).
 
 | | |
 |---|---|

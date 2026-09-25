@@ -42,49 +42,56 @@ module exch #(
     // ---- the ringback tone card --------------------------------------------
     input                    rbt_in,
 
-    // ---- cable B, in: a marker or a console has the bus ---------------------
+    // ---- the bus, in: a marker or a console has the control lines -----------
     input                    sdata,
     input                    sclk,
     input                    wr,
     output                   hw_n,         // MAXIMAL: /HW, the pointed card's word
 
-    // ---- cable A, out: for the marker, the registers and any observer ------
+    // ---- the bus, out: for the marker, the registers and any observer -------
     output     [7:0]         hc,
     output                   ha_n,         // the M plane
     output                   hb_n,         // the BUSY plane, same address, same instant
     output     [2:0]         tick,         // the master tick's phase in a cell; HCLK
-                                           // and LINE_HB are taps of it
+                                           // is a tap of it
     output     [2:0]         slot,
     output     [2:0]         slotq,
     output                   hclk,
-    output                   line_hb,
     output                   cap_stb,
-    output                   tx_clk,
-    output                   frame_stb,
-    output                   clk_8k,
-    output                   rx_oct,
-    output                   oct_stb,
+    output                   frame_stb,    // SLOT2's fall: the frame edge
     output     [`SCANW-1:0]  scan,
-    output                   pass_stb,
-    output                   fill,
     output                   ring_cad_n,
-    output                   tick_1k,
+
+    // ---- NOT the bus: what each block makes from SLOT2 and SCAN ------------
+    // (frame_decode.v).  Brought out for the sockets and the benches, which
+    // sit outside the blocks in this model; on a board every block has its own
+    output                   tx_clk,       // socket a1
+    output                   clk_8k,       // socket a3, TX_OCT
+    output                   rx_oct,       // socket a8
+    output                   oct_stb,
+    output                   fill,         // socket a4: SCAN0
+    output                   tick_1k,      // SCAN5's fall, as a strobe
+    output                   pass_stb,     // the same edge, by its other name
 
     // ---- for a monitor ------------------------------------------------------
     output     [63:0]        port_busy
 );
     clock_card #(.RING_ON_MS(RING_ON_MS), .RING_OFF_MS(RING_OFF_MS)) u_clk (
         .clk(clk), .rst_n(rst_n),
-        .tick(tick), .hclk(hclk), .line_hb(line_hb),
+        .tick(tick), .hclk(hclk),
         .slot(slot), .slotq(slotq), .cap_stb(cap_stb),
-        .tx_clk(tx_clk), .frame_stb(frame_stb), .clk_8k(clk_8k),
-        .rx_oct(rx_oct), .oct_stb(oct_stb),
-        .scan(scan), .pass_stb(pass_stb),
-        .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
+        .frame_stb(frame_stb), .scan(scan), .ring_cad_n(ring_cad_n));
 
-    // RBT is pulled to FILL at the clock card when no ringback card is fitted,
-    // so a caller hears silence while the far phone rings (mvp.md 2) -- the
-    // same mechanism as an unfitted block, not a special case.
+    // ---- each block's decode, modelled once: the eight are identical ------
+    frame_decode u_dec (
+        .slot2(slot[2]), .frame_stb(frame_stb), .scan(scan),
+        .tx_clk(tx_clk), .tx_oct(clk_8k), .rx_oct(rx_oct), .oct_stb(oct_stb),
+        .fill(fill), .tick_1k(tick_1k));
+    assign pass_stb = tick_1k;
+
+    // RBT is pulled to SCAN0 -- which is FILL -- when no ringback card is
+    // fitted, so a caller hears silence while the far phone rings (mvp.md 2):
+    // the same mechanism as an unfitted block, not a special case.
     wire rbt = RBT_IS_FILL ? fill : rbt_in;
 
     wire [7:0]  hc_from_block, ha_pd_from_block, hb_pd_from_block;

@@ -51,7 +51,7 @@ module tb_fabric;
         .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
-        .hclk(), .line_hb(), .cap_stb(), .tx_clk(tx_clk),
+        .hclk(), .cap_stb(), .tx_clk(tx_clk),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),
         .scan(scan), .pass_stb(pass_stb),
         .fill(fill), .ring_cad_n(), .tick_1k(),
@@ -69,7 +69,7 @@ module tb_fabric;
         .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .hw_n(bare_hw_n),
         .hc(bare_hc), .ha_n(bare_ha_n), .hb_n(bare_hb_n),
         .tick(), .slot(), .slotq(),
-        .hclk(), .line_hb(), .cap_stb(), .tx_clk(),
+        .hclk(), .cap_stb(), .tx_clk(),
         .frame_stb(), .clk_8k(), .rx_oct(), .oct_stb(),
         .scan(), .pass_stb(),
         .fill(bare_fill), .ring_cad_n(), .tick_1k(), .port_busy());

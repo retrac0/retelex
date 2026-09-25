@@ -95,16 +95,15 @@ module net_unit #(
     input                   clk,
     input                   rst_n,
 
-    // ---- cable A -----------------------------------------------------------
+    // ---- the bus: timing, scan and the planes ------------------------------
     input      [2:0]        slotq,
     input                   cap_stb,
     input                   frame_stb,
     input      [`SCANW-1:0] scan,
     input                   ha_n,
     input                   hb_n,
-    input                   tick_1k,
 
-    // ---- cable B, as the higher-ranked master --------------------------------
+    // ---- the bus: the control lines, as the higher-ranked master -------------
     output                  sdata,
     output                  sclk,
     output                  wr,
@@ -142,6 +141,10 @@ module net_unit #(
     output reg [7:0]        n_glare,       // glare seen by the origin, inside the guard
     output reg [7:0]        n_nofwd        // seizures held but not forwarded
 );
+    // TICK is SCAN5's fall, and the bus carries no line of its own for it: the
+    // 1 ms time base is the pass boundary, one gate on SCAN and the frame edge
+    wire tick_1k = frame_stb && (scan == {`SCANW{1'b0}});
+
     localparam [`PW-1:0] P00        = 6'o00;
     localparam [`PW-1:0] EV_GLARE   = 6'o04;   // counters.md: the event codes
     localparam [`PW-1:0] EV_NOTRUNK = 6'o10;

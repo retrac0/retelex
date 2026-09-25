@@ -4,7 +4,8 @@ The common control of one exchange: how a port says what it is, how a number is
 read, how the marker finds what was asked for, and how a call ends with nobody
 in charge of it. The fabric the marker writes to is `protocol.md`; the
 cards it hunts for are `features.md`. A simpler marker — two digits, no
-card word, one register inside — is `mini-marker.md`. Both are markers:
+class hunt, one register inside, reading a card's word only when a network
+unit is fitted — is `mini-marker.md`. Both are markers:
 they speak the same ribbons, and a network unit plugs into either
 (`common-control.md`). The flood is not in this document.
 

@@ -2,8 +2,9 @@
 // rule it cannot break while working.  MINIMAL+MAXIMAL.
 //
 // It has NO AUTHORITY.  It drives nothing but LEDs.  It sits on the
-// common-control tap like a lamp field (hookbusy.md), reads cable A and
-// cable B, keeps its own copy of the scanner and of the last control word,
+// common-control tap like a lamp field (hookbusy.md), reads the bus's timing,
+// scan, planes and control lines, keeps its own copy of the scanner and of the
+// last control word,
 // and runs in lock-step with the exchange as an observer.  Every check is a
 // handful of gates into one flip-flop, and the flip-flop is STICKY: a fault
 // that lasted one master tick a week ago is still lit when someone looks.
@@ -12,51 +13,55 @@
 // THE LAMPS ARE GROUPED BY SUSPECT.  A lamp does not say what went wrong; it
 // says which board to pull.  Nothing here needs to know how many ports are
 // fitted, which block is shunted where, or what the marker is doing -- the
-// only facts it leans on are ones every build shares: port 00 is never
-// fitted, a control word is sixteen bits, the scanner steps on every frame
-// edge, and a phone that lifts is taken within a few passes.
+// facts it leans on are ones every build shares: port 00 is never fitted, a
+// control word is sixteen bits, and the scanner steps on every frame edge.
+// Two lamps lean on more: SCLK_COUNT on SCLK gated per word, and REG_WAIT on
+// how many passes a lifted phone may wait, which is the one strap that
+// depends on the build (debugger.md 6).
 //
 //   CLOCK CARD
 //     0  SCAN_STALL   SCAN did not step at a frame edge, or stepped off one.
 //                     The scanner stopped.  This is the fault class the fold
 //                     exists to make impossible; if it lights, the divider
 //                     has grown an enable again
-//     1  FILL_SCAN0   FILL and SCAN[0] disagree.  One divider stage, two
-//                     pins -- and the trap newimpl/README.md 2 names
-//     2  SLOTQ_LATE   SLOTQ != SLOT at a capture strobe: the '175 did not
+//     1  SLOTQ_LATE   SLOTQ != SLOT at a capture strobe: the '175 did not
 //                     take, and every strobe decoder is off by a cell
 //   THE PLANE -- the mainboard, a pull-up, or one port's drain
-//     3  HA_P00       /HA pulled down in port 00's turn.  00 is never fitted
+//     2  HA_P00       /HA pulled down in port 00's turn.  00 is never fitted
 //                     (fabric.md 3.3), so nothing may ever drive its slot
-//     4  HB_P00       the same on /HB
-//     5  HA_STUCK     /HA low at every capture of a whole pass: a drain stuck
+//     3  HB_P00       the same on /HB
+//     4  HA_STUCK     /HA low at every capture of a whole pass: a drain stuck
 //                     on, or a short.  ONE conductor, ONE failure domain --
 //                     newimpl/README.md 6 asked for this lamp by name.  Lights
 //                     with HA_P00, necessarily
-//     6  HB_STUCK     the same on /HB
-//   CABLE B -- the serialiser, the cable, or the marker's sequencing
-//     7  SCLK_COUNT   WR arrived with a shift count that is not a multiple of
+//     5  HB_STUCK     the same on /HB
+//   THE CONTROL LINES -- the serialiser, the wiring, or the marker's sequencing
+//     6  SCLK_COUNT   WR arrived with a shift count that is not a multiple of
 //                     sixteen since the last WR: one extra or one missing
 //                     SCLK edge.  This is mainboard.md 7's hazard -- one of
 //                     the two signals that can lose a call -- caught in the
 //                     act.  A pointing word (shift, no WR) is 32 and passes
-//     8  WR_EDGE      WR rose within a quarter bit-time of an SCLK edge, or
+//     7  WR_EDGE      WR rose within a quarter bit-time of an SCLK edge, or
 //                     an edge followed within that window: mainboard.md
 //                     2.3.2's one rule
 //   THE MARKER
-//     9  SELF_POINT   a write whose SRC is its DST: a port told to listen to
+//     8  SELF_POINT   a write whose SRC is its DST: a port told to listen to
 //                     itself.  No sequence in the marker produces this
-//    10  WR_P00       a write to port 00
-//    11  REG_WAIT     some port off-hook and not BUSY at the end of K passes
+//     9  WR_P00       a write to port 00
+//    10  REG_WAIT     some port off-hook and not BUSY at the end of K passes
 //                     running: it lifted and nobody took it.  With a pool of
 //                     registers this is a marker fault.  With ONE register
-//                     it is the register-queue lamp, and lights whenever a
-//                     second caller lifts during a call -- which is worth a
-//                     lamp too
+//                     it is the register-queue lamp: it lights when a caller
+//                     lifts while another holds the register -- dialling, or
+//                     through a flood -- which is worth a lamp too
+//
+// THERE WAS A FILL_SCAN0 LAMP.  FILL and SCAN0 were one divider stage on two
+// pins; since 2026-09-25 FILL has no pin -- it is SCAN0 wherever it is wanted
+// (frame_decode.v) -- so there is nothing left to disagree.
 //
 // NOT HERE, AND WHY.  A write with G clear is the event word and is legal.
-// /HW is not watched: whether it should be low depends on which card is
-// pointed at and what its word is, and this card does not know either.  A
+// /HW is not watched: this card knows which port is pointed at (its word
+// mirror holds DST) but not what that card's word should be.  A
 // write to an UNFITTED port other than 00 needs the fitted map, which is
 // sixty-four straps this card does not have.  A seizure of an already-busy
 // port -- the glare the mini-marker's untested branch would produce -- needs
@@ -81,7 +86,7 @@ module debugger #(
     input                   rst_n,
     input                   clr_n,       // the button
 
-    // ---- cable A -----------------------------------------------------------
+    // ---- the bus: timing, scan and the planes ------------------------------
     input      [2:0]        slot,
     input      [2:0]        slotq,
     input                   cap_stb,
@@ -89,15 +94,13 @@ module debugger #(
     input      [`SCANW-1:0] scan,
     input                   ha_n,
     input                   hb_n,
-    input                   fill,
-    input                   pass_stb,
 
-    // ---- cable B -----------------------------------------------------------
+    // ---- the bus: the control lines ----------------------------------------
     input                   sdata,
     input                   sclk,
     input                   wr,
 
-    output reg [11:0]       led
+    output reg [10:0]       led
 );
     // The capture instant, as every port and every probe computes it.
     wire a_stb = cap_stb && (slotq == `CELL_A);
@@ -121,6 +124,14 @@ module debugger #(
     // one /RESET and have no such tick; this is the RTL strobe's artefact.
     reg [`SCANW-1:0] mscan;
     reg              armed;
+
+    // ---- the pass boundary, off this card's own mirror ----------------------
+    // TICK is SCAN5's fall and has no pin of its own.  Taken off the mirror
+    // rather than off SCAN, so a stalled SCAN lights SCAN_STALL and does not
+    // also stop the pass bookkeeping the other lamps judge by.  In step, this
+    // is the same tick as the exchange's: during the frame_stb tick SCAN has
+    // just gone to 00 and the mirror still reads 77.
+    wire pass_stb = frame_stb && armed && (mscan == {`SCANW{1'b1}});
 
     // ---- the control word mirror: two '164, exactly as a block has --------
     reg [`CWW-1:0] cw;
@@ -149,20 +160,19 @@ module debugger #(
     // A WR on the very tick of an SCLK edge is the worst case of the timing
     // rule and lights WR_EDGE, not SCLK_COUNT: the count judges that edge as
     // having arrived, so a sixteenth edge coincident with WR is still sixteen.
-    wire [11:0] hit;
+    wire [10:0] hit;
     assign hit[0]  = armed && !frame_stb && (scan != mscan);
-    assign hit[1]  = fill != scan[0];
-    assign hit[2]  = cap_stb && (slotq != slot);
-    assign hit[3]  = a_stb && (scan == {`SCANW{1'b0}}) && !ha_n;
-    assign hit[4]  = a_stb && (scan == {`SCANW{1'b0}}) && !hb_n;
-    assign hit[5]  = pass_stb && pass_valid && !ha_seen_hi;
-    assign hit[6]  = pass_stb && pass_valid && !hb_seen_hi;
-    assign hit[7]  = wr_rise && ((nshift + {3'b000, sclk_rise}) != 4'd0);
-    assign hit[8]  = (wr_rise && (sclk_edge || (since_edge < WR_GUARD[7:0])))
+    assign hit[1]  = cap_stb && (slotq != slot);
+    assign hit[2]  = a_stb && (scan == {`SCANW{1'b0}}) && !ha_n;
+    assign hit[3]  = a_stb && (scan == {`SCANW{1'b0}}) && !hb_n;
+    assign hit[4]  = pass_stb && pass_valid && !ha_seen_hi;
+    assign hit[5]  = pass_stb && pass_valid && !hb_seen_hi;
+    assign hit[6]  = wr_rise && ((nshift + {3'b000, sclk_rise}) != 4'd0);
+    assign hit[7]  = (wr_rise && (sclk_edge || (since_edge < WR_GUARD[7:0])))
                    || (sclk_edge && (watch != 8'd0));
-    assign hit[9]  = wr_rise && w_g && (w_src == w_dst);
-    assign hit[10] = wr_rise && w_g && (w_dst == {`PW{1'b0}});
-    assign hit[11] = pass_stb && unserved
+    assign hit[8]  = wr_rise && w_g && (w_src == w_dst);
+    assign hit[9]  = wr_rise && w_g && (w_dst == {`PW{1'b0}});
+    assign hit[10] = pass_stb && unserved
                    && (wait_passes == REG_WAIT_PASSES[15:0] - 16'd1);
 
     always @(posedge clk or negedge rst_n) begin
@@ -228,10 +238,10 @@ module debugger #(
         end
     end
 
-    // ---- the lamps: twelve sticky flip-flops, a '273 and a half ------------
+    // ---- the lamps: eleven sticky flip-flops, a '273 and a '175 ------------
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)      led <= 12'd0;
-        else if (!clr_n) led <= 12'd0;
+        if (!rst_n)      led <= 11'd0;
+        else if (!clr_n) led <= 11'd0;
         else             led <= led | hit;
     end
 endmodule

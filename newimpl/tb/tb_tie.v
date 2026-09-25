@@ -69,7 +69,7 @@ module tb_tie;
         .c_rx(a_crx), .a_rx(a_arx), .mute_blk(8'd0), .rbt_in(1'b0),
         .sdata(a_oe && a_sd), .sclk(a_oe && a_sc), .wr(a_oe && a_wr), .hw_n(a_hw_n),
         .hc(), .ha_n(), .hb_n(), .tick(), .slot(a_slot), .slotq(a_slotq),
-        .hclk(), .line_hb(), .cap_stb(a_cap), .tx_clk(a_txclk),
+        .hclk(), .cap_stb(a_cap), .tx_clk(a_txclk),
         .frame_stb(a_fs), .clk_8k(a_oct), .rx_oct(a_rxoct), .oct_stb(),
         .scan(a_scan), .pass_stb(), .fill(a_fill), .ring_cad_n(), .tick_1k(a_t1k),
         .port_busy(a_busy));
@@ -80,7 +80,7 @@ module tb_tie;
         .c_rx(b_crx), .a_rx(b_arx), .mute_blk(8'd0), .rbt_in(1'b0),
         .sdata(b_oe && b_sd), .sclk(b_oe && b_sc), .wr(b_oe && b_wr), .hw_n(b_hw_n),
         .hc(), .ha_n(), .hb_n(), .tick(), .slot(b_slot), .slotq(b_slotq),
-        .hclk(), .line_hb(), .cap_stb(b_cap), .tx_clk(b_txclk),
+        .hclk(), .cap_stb(b_cap), .tx_clk(b_txclk),
         .frame_stb(b_fs), .clk_8k(b_oct), .rx_oct(b_rxoct), .oct_stb(),
         .scan(b_scan), .pass_stb(), .fill(b_fill), .ring_cad_n(), .tick_1k(b_t1k),
         .port_busy(b_busy));

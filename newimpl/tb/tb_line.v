@@ -27,17 +27,19 @@ module tb_line;
     // ---- the socket's clocks: a clock card, and LOOP_HB made from /SLOT[1]
     //      as the block makes it (common-cards.md 1.1) ---------------------
     wire [2:0] tick, slot, slotq;
-    wire hclk, line_hb, cap_stb, tx_clk, frame_stb, clk_8k, rx_oct, oct_stb;
+    wire hclk, cap_stb, tx_clk, frame_stb, clk_8k, rx_oct, oct_stb;
     wire [`SCANW-1:0] scan;
     wire pass_stb, fill, ring_cad_n, tick_1k;
     clock_card u_clk (
         .clk(clk), .rst_n(rst_n),
-        .tick(tick), .hclk(hclk), .line_hb(line_hb),
+        .tick(tick), .hclk(hclk),
         .slot(slot), .slotq(slotq), .cap_stb(cap_stb),
-        .tx_clk(tx_clk), .frame_stb(frame_stb), .clk_8k(clk_8k),
-        .rx_oct(rx_oct), .oct_stb(oct_stb),
-        .scan(scan), .pass_stb(pass_stb),
-        .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k));
+        .frame_stb(frame_stb), .scan(scan), .ring_cad_n(ring_cad_n));
+    frame_decode u_dec (
+        .slot2(slot[2]), .frame_stb(frame_stb), .scan(scan),
+        .tx_clk(tx_clk), .tx_oct(clk_8k), .rx_oct(rx_oct), .oct_stb(oct_stb),
+        .fill(fill), .tick_1k(tick_1k));
+    assign pass_stb = tick_1k;
     wire loop_hb = ~slot[1];
 
     // ---- the bus side of the socket, by hand ------------------------------
