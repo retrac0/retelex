@@ -168,7 +168,7 @@ in order to pass it on.
            our own e b → release the trunks, carry on locally.  An e or a b of 8 or 9 →
            reserved: release the trunks, cannot-complete.  Else, when a trunk has claimed, release the
            others; when the last digit is in, point the caller at the one that claimed and free
-           the register.  No claim 2 s after the last digit → cannot-complete.
+           the register.  No claim 2 s after b → cannot-complete.
            b not in 5 s after the key → release the trunks, cannot-complete: a caller who stops,
            or a key that was never dialled at all (§4)
  seizure   at every exchange it reaches: M rises on a trunk → the marker hunts a free trunk in
@@ -392,7 +392,7 @@ twice.
 | Pulses as they arrive | a CVSD line card's hook detector shortens a break by 6.1 ms (`register.md` §1); the trunk's A path by 0.5 ms a hop (`channel-cards.md` §5); a copper tie not at all. A 60 ms break is 50 ms after seven hops, against an 8 ms window |
 | Against the release rule | the longest dial break, 103 ms, against the shortest release, 204 ms: `exch.py calls` 15b |
 | Post-dial delay | **133 ms after the last pulse**, whatever the hop count |
-| A key and nothing after it | **the origin releases its trunks 5 s after the key** if `b` has not arrived. The register keeps its own 10 s for the caller (`marker.md` §6). Without the rule an accidental key, or a caller who stops to think, would hold a channel on every link for the register's whole 10 s. A slow dial reaching the code 77 needs 3.8 s, so 5 s leaves margin |
+| A key and nothing after it | **the origin releases its trunks 5 s after the key** if `b` has not arrived. The register keeps its own 10 s for the caller (`marker.md` §6). Without the rule an accidental key, or a caller who stops to think, would hold a channel on every link for the register's whole 10 s. A slow dial reaching the code 00 needs 3.8 s, so 5 s leaves margin |
 | An accidental key | one break of 8 ms or more, then 128 ms of unbroken make, on a line with a register attached. Nothing digital makes one: a CVSD line's hook detector gave **0 false events** against noise to sd 0.8 and impulses to 1000/s (`subscriber-line.md` §5), and A across MF8 gave **0 spurious transitions in 60 s to a line error rate of 1e−1** (`channel-cards.md` §5). What is left is the subscriber's own instrument — a hook flash, a worn dial contact — as in any exchange. Contact bounce is caught by the origin's guard, which abandons on a break within 128 ms of the seizure. **It would take about 13 an hour across the network to add 0.01 E to a link** |
 | Also | a data card places a network call by pulsing `DTR` |
 

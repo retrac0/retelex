@@ -65,11 +65,19 @@ module pulse_reg #(
 
     assign hook = p_m;
 
+    // THE PROBE HOLDS THE LAST PORT'S HOOK UNTIL THE NEW PORT COMES ROUND.
+    // Re-pointed at attach, it publishes the caller's first sample up to a
+    // pass later, and until then p_m is whatever port it watched before --
+    // often a 0, which is a break.  At HIT = 8 ms a sample under 1 ms old can
+    // never count; a HIT strapped down to 1 ms counts it, and the first digit
+    // gains a pulse.  So the collector is armed at the first sample that is
+    // the caller's own: half a '74 and a '688 output already on this card.
+    reg seen;
     wire [3:0] cnt;
     wire       dig_stb, clr_stb;
     pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_rx (
         .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
-        .arm(busy), .m(p_m),
+        .arm(busy && seen), .m(p_m),
         .cnt(cnt), .dig_stb(dig_stb), .clear(clr_stb),
         .counting(counting), .brk_stb(brk));
 
@@ -78,8 +86,11 @@ module pulse_reg #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             busy <= 1'b0; port <= {`PW{1'b0}}; ndig <= 3'd0; digits <= 16'd0;
-            gone <= 1'b0; nodig <= 1'b0; nd_t <= 16'd0;
+            gone <= 1'b0; nodig <= 1'b0; nd_t <= 16'd0; seen <= 1'b0;
         end else begin
+            if (attach || release_it)                      seen <= 1'b0;
+            else if (busy && p_fresh && (p_port == port))  seen <= 1'b1;
+
             if (attach) begin
                 busy   <= 1'b1;
                 port   <= attach_port;
@@ -130,7 +141,7 @@ module pulse_reg #(
         end
     end
 
-    // the probe's own BUSY and port_q are not this module's business; it
-    // watches one port and only wants its hook.
-    wire _unused = &{1'b0, p_busy, p_fresh, p_port, 1'b0};
+    // the probe's own BUSY is not this module's business; it watches one
+    // port and wants its hook, and to know when the hook is that port's.
+    wire _unused = &{1'b0, p_busy, 1'b0};
 endmodule

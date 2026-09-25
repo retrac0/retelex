@@ -2103,7 +2103,7 @@ NET_SCAN = 8.0            # the marker's scanner comes round to a port this ofte
 NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (network.md 3.2)
 NET_REPOINT = NET_SCAN / 2 + T_MARK     # a hub re-points its incoming trunk when the claim comes back
 FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (network.md 4)
-NO_CLAIM = 2000.0         # no claim this long after the last digit -> cannot-complete
+NO_CLAIM = 2000.0         # no claim this long after b -> cannot-complete
 HOLD_MEAN = 48000.0       # 0.08 E a line at 3 calls an hour, a line being one of two in each call
 STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of network.md 4
 

@@ -107,8 +107,10 @@ rotted by 28 within a week of being written. When quoting code, quote the
 identifier and the line's text, which survive.
 
 **`// MINIMAL` / `// MAXIMAL` / `// MINIMAL+MAXIMAL`** mark which build a
-region or a module belongs to. What is MAXIMAL in the minimal build is brought
-out and left unused, and the unused sink says which build wants it:
+region or a module belongs to, and **`// NETWORK`** what only `top_net` stuffs
+-- the network unit, its trunk cards, and the mini marker's network half. What
+a build does not use is brought out and left unused, and the unused sink says
+which build wants it:
 
 ```
     // Carried for a channel card on the block ribbon, not used by the exchange
@@ -135,6 +137,11 @@ Prefixes say whose signal it is where it crosses a connector: `p_` off a
 probe, `r_` off a register, `s_` off the serialiser, `w_` a field of the
 mirrored control word. In a bench, `f_` is a fault being injected and `dbg_`
 is the debugger's view of a signal after the fault.
+
+**A module holds no copy of a fact a card states about itself.** A trunk
+card's class, glare and direction are in its word, and a board that needs them
+reads them off `/HW` when it needs them; nothing is strapped to agree with a
+card that could be pulled and replaced by another.
 
 **Everything on the marker's side of a register is a LEVEL, held until read.**
 `rtl.md` §1: an event on a wire is a race. A one-tick pulse crosses a
@@ -204,10 +211,12 @@ Each still exists in the hierarchy as `pos[p].u_blk`. A bank of gates that is
 one package is written once, never eight times (§2). Where eight instances
 differ in anything but an index, they are written out.
 
-Lint is `verilator -Wall`, every module on its own, nothing waived except one
-deliberate blocking assignment in `mini_marker`, fenced by `lint_off` /
-`lint_on` with the reason beside it. `make lint` fails if any module does not
-lint.
+Lint is `verilator -Wall`, every module on its own, and **nothing is waived**.
+The one waiver there was -- a deliberate blocking assignment in `mini_marker`'s
+queue -- went with the queue into `ctl_queue`, where arriving entries are
+placed by an `always_comb` and a sequencer hands over a slot mask. A loop
+variable belongs to one process: two `always` blocks that share an `integer`
+are two drivers of it. `make lint` fails if any module does not lint.
 
 **Ordering tricks are stated.** When a later nonblocking assignment is meant
 to win over an earlier one in the same block, the comment says so:

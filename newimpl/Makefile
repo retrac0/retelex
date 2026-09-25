@@ -11,9 +11,11 @@ SHELL := /bin/bash
 # comment that says so.
 
 RTL := rtl/clock_card.v rtl/port.v rtl/block.v rtl/mainboard.v rtl/exch.v \
-       rtl/ctl_write.v rtl/probe.v rtl/pulse_rx.v rtl/pulse_reg.v \
+       rtl/ctl_write.v rtl/word_rx.v rtl/ctl_queue.v \
+       rtl/probe.v rtl/pulse_rx.v rtl/pulse_reg.v \
        rtl/mini_marker.v rtl/top_min.v rtl/debugger.v \
-       rtl/dm_rx.v rtl/cvsd_line_card.v
+       rtl/dm_rx.v rtl/cvsd_line_card.v rtl/baseband_card.v \
+       rtl/net_unit.v rtl/top_net.v
 
 BUILD := build
 
@@ -26,14 +28,18 @@ TB_dial   := tb/tb_dial.v
 TB_mini   := tb/tb_mini.v
 TB_debug  := tb/tb_debug.v
 TB_line   := tb/subscriber.v tb/tb_line.v
+TB_word   := tb/tb_word.v
+TB_tie    := tb/tb_tie.v
+TB_net    := tb/site_net.v tb/tb_net.v
+TB_chain  := tb/site_net.v tb/tb_chain.v
 
-SIMS   := clock fabric ctl ha probe dial mini debug line
+SIMS   := clock fabric ctl ha probe dial mini debug line word tie net chain
 IVSIMS := $(addprefix iv-,$(SIMS))
 
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
-.PHONY: all lint clean $(SIMS) $(IVSIMS) iv
+.PHONY: all lint clean faults $(SIMS) $(IVSIMS) iv
 
 all: $(SIMS)
 
@@ -65,9 +71,9 @@ $(IVSIMS): iv-%: | $(BUILD)
 # pulse_rx or mini_marker passed silently.  Collect the failures instead.
 lint:
 	@fail=0; \
-	for m in clock_card port block mainboard exch ctl_write probe \
+	for m in clock_card port block mainboard exch ctl_write word_rx ctl_queue probe \
 	         pulse_rx pulse_reg mini_marker top_min debugger \
-	         dm_rx cvsd_line_card; do \
+	         dm_rx cvsd_line_card baseband_card net_unit top_net; do \
 	    if verilator --lint-only -Wall -Irtl --top-module $$m $(RTL); then \
 	        echo "  $$m  clean"; \
 	    else \
@@ -75,6 +81,11 @@ lint:
 	    fi; \
 	done; \
 	exit $$fail
+
+# Every check that guards a rule is shown able to fail: each fault in
+# faults.py is put back into a copy of the tree, and must turn its bench red.
+faults: | $(BUILD)
+	@python3 faults.py
 
 clean:
 	@rm -rf $(BUILD)

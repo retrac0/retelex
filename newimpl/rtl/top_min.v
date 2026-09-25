@@ -66,11 +66,21 @@ module top_min #(
     output     [15:0] reg_digits,
     output     [`PW-1:0] caller,
     output     [`PW-1:0] called,
-    output     [1:0]  mk_state
+    output     [2:0]  mk_state
 );
     wire [2:0] slot, slotq, tick;
     wire hclk, line_hb, cap_stb, tx_clk, clk_8k, rx_oct, oct_stb;
-    wire m_sdata, m_sclk, m_wr;
+    wire m_sdata, m_sclk, m_wr, m_oe;
+    // the network half's lines, with nothing on the other end of the ribbon
+    wire nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk, nc_ovf;
+    wire [`PW-1:0] nc_rport;
+
+    // ONE MASTER.  The marker's '244s are the only drivers on cable B, so the
+    // bus is what they drive while enabled and the blocks' pull-downs when
+    // not -- mainboard.md 6: SCLK and WR low, which shifts and writes nothing.
+    wire b_sdata = m_oe && m_sdata;
+    wire b_sclk  = m_oe && m_sclk;
+    wire b_wr    = m_oe && m_wr;
 
     exch #(.PORT_FITTED(PORT_FITTED), .BLOCK_NUM(BLOCK_NUM),
            .BLOCK_FITTED(BLOCK_FITTED), .T_ARM(T_ARM), .T_REL(T_REL),
@@ -79,7 +89,7 @@ module top_min #(
         .c_tx(c_tx), .a_tx(a_tx), .ans_n(ans_n), .word_n(word_n),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(mute_blk), .rbt_in(rbt_in),
-        .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .hw_n(hw_n),
+        .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
         .hclk(hclk), .line_hb(line_hb), .cap_stb(cap_stb), .tx_clk(tx_clk),
@@ -93,18 +103,30 @@ module top_min #(
     // BUSY off /HB and drives cable B; it has no other connection to the
     // fabric.  Swap it for the class marker and nothing here changes
     // (common-control.md 1).
+    //
+    // NO NETWORK UNIT IS FITTED, and the lines it would drive are what an
+    // empty ribbon reads: /NET and /UREQ at their pull-ups, every strobe low,
+    // no claim.  With /NET high the marker reads no card word and key 1 is
+    // highway 1 -- the path it took before it had a network half at all.
     mini_marker #(.NODIG(NODIG)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
-        .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr),
+        .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .b_oe(m_oe),
+        .hw_n(hw_n), .ureq_n(1'b1),
+        .net_n(1'b1), .flood_go(nc_flood),
+        .u_restart(1'b0), .u_local(1'b0), .u_done(1'b0), .u_nogo(1'b0),
+        .u_att(1'b0), .u_att_port({`PW{1'b0}}), .att_ack(nc_ack),
         .probe_port(probe_port), .probe_m(probe_m), .probe_busy(probe_busy),
         .probe_fresh(probe_fresh),
         .reg_busy(reg_busy), .reg_ndig(reg_ndig), .reg_digits(reg_digits),
-        .caller_o(caller), .called_o(called), .state(mk_state));
+        .reg_port(nc_rport), .reg_gone(nc_gone), .reg_nodig(nc_nodig),
+        .reg_brk(nc_brk),
+        .caller_o(caller), .called_o(called), .state(mk_state), .q_ovf(nc_ovf));
 
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
     wire _unused = &{1'b0, tick, hclk, line_hb, tx_clk, clk_8k, rx_oct,
-                     oct_stb, slot, 1'b0};
+                     oct_stb, slot, nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk,
+                     nc_ovf, nc_rport, 1'b0};
 endmodule

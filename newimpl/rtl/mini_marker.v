@@ -2,8 +2,8 @@
 //
 // A marker that makes local calls on one exchange: two phones dial `h s`, one
 // rings, they talk, either hangs up, and nobody is in charge of the call.  It
-// reads M AND BUSY ONLY.  It never looks at a card's option word, it never
-// hunts a class, and one pulse collector lives inside it.
+// reads M AND BUSY ONLY.  It never hunts a class, and one pulse collector
+// lives inside it.
 //
 // THE HANDOFF.  The scanner is not this card's.  It is six stages of the
 // clock card's divider and it free-runs at 64 kHz, a port every 15.63 us, a
@@ -24,6 +24,36 @@
 //     twice.  THE SECOND CONDUCTOR HALVED THIS MARGIN: it was 133 us against
 //     2 ms and is now 133 us against 1 ms, still seven words to a pass, but
 //     the rule is now the one that would bite first if the word grew.
+//
+// ---- NETWORK: what a network unit adds (common-control.md 2.2, 4) ---------
+//
+// Fitted in top_net only.  In top_min every line below is tied to "no unit",
+// and THE MARKER THEN TAKES EXACTLY THE PATH IT TOOK BEFORE THE NETWORK HALF
+// EXISTED: /NET open, no word read, no yield, key 1 is highway 1.
+//
+//   /NET        the unit card grounds it.  Pulled up here, so an absent unit
+//               reads absent -- the /ANS pattern, one fact from the board that
+//               owns it, and NO PARAMETER (STYLE.md 4).  The old tree's
+//               HAS_NET selected behaviour in an `if`
+//   key 1       with /NET low: consumed at once, the register restarted, dial
+//               tone dropped, flood_go.  The unit owns the call from there, and
+//               the marker waits in YIELD for local, done or nogo
+//   the word    with /NET low this marker READS A PORT'S CARD WORD before it
+//               takes the port's M as a call, and before it connects a
+//               dialled port.  A flood trunk's M is never a call request --
+//               "leave this as M . /BUSY and a flood seizes a register at
+//               every hop" -- and a trunk is never dialled.  THE CARD SAYS
+//               WHAT IT IS; no jumper here or on the unit says it for the card
+//   claim       the unit, having written a trunk's CLAIM, holds `att` until
+//               this marker has either given the trunk the register as a
+//               caller -- CLAIM kept on every later write to it -- or, with the
+//               register busy, pointed it at cannot-complete with CLAIM set
+//   cable B     the unit is a second master, ranked above this one.  /UREQ
+//               low and this marker lets go between transactions
+//
+// The register and the unit share the ribbon of common-control.md 2.1: the
+// unit taps digits, N, brk, gone, nodig and the caller, and its restart is
+// ORed here with the key's.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -50,10 +80,24 @@ module mini_marker #(
     input                   hb_n,          // BUSY, the same bit-time
     input                   tick_1k,
 
-    // ---- cable B, as its master --------------------------------------------
+    // ---- cable B, as a master ----------------------------------------------
     output                  sdata,
     output                  sclk,
     output                  wr,
+    output                  b_oe,          // this card's '244s are driving it
+    input                   hw_n,          // NETWORK: /HW, for the word read
+    input                   ureq_n,        // NETWORK: the unit wants the bus.  Pulled up
+
+    // ---- NETWORK: the unit's ribbon ------------------------------------------
+    input                   net_n,         // /NET: the unit card is fitted.  Pulled up
+    output reg              flood_go,      // one tick: key 1 consumed, the unit owns it
+    input                   u_restart,     // one tick: own e b -- begin the store again
+    input                   u_local,       // one tick: the call is local from here
+    input                   u_done,        // one tick: caller <-> trunk written; free the register
+    input                   u_nogo,        // one tick: cannot-complete this origin call
+    input                   u_att,         // level: a claimed trunk wants the register
+    input      [`PW-1:0]    u_att_port,
+    output reg              att_ack,       // one tick: attached, or refused
 
     // ---- the probe, on the tap so a card can watch without the marker
     //      knowing what it is looking for (common-control.md 2.2) -----------
@@ -63,30 +107,40 @@ module mini_marker #(
     // the same one read again, and would count one seizure sixty-four times.
     // It is common-control.md 2.2's `visit` under the name the fold gave it.
     //
-    // The tap still carries the marker's re-point: in S_PROBE p_addr is
-    // `called`, so a watcher sees the port freeze.  That is a wart, and the
-    // fix is not to widen this -- it is for each listener to fit its own
-    // probe, which is now one '688 and half a '74, as pulse_reg already does.
+    // The tap still carries the marker's re-point: in S_PROBE and S_TAKE
+    // p_addr is `called`, so a watcher sees the port freeze.  That is a wart,
+    // and the fix is not to widen this -- it is for each listener to fit its
+    // own probe, which the network unit does.
     output     [`PW-1:0]    probe_port,
     output                  probe_m,
     output                  probe_busy,
     output                  probe_fresh,
 
-    // ---- the register's levels, and this card's state, for a bench --------
+    // ---- the register's ribbon (common-control.md 2.1) ---------------------
     output                  reg_busy,
     output     [2:0]        reg_ndig,
     output     [15:0]       reg_digits,
+    output     [`PW-1:0]    reg_port,      // NETWORK: the caller the register holds
+    output                  reg_gone,      // NETWORK: CLR
+    output                  reg_nodig,     // NETWORK: the no-digit timeout
+    output                  reg_brk,       // NETWORK: one tick, a break counted
+
+    // ---- this card's state, for a bench -----------------------------------
     output     [`PW-1:0]    caller_o,
     output     [`PW-1:0]    called_o,
-    output reg [1:0]        state
+    output reg [2:0]        state,
+    output                  q_ovf          // the queue refused a write.  Must never light
 );
-    localparam [1:0] S_IDLE = 2'd0, S_COLLECT = 2'd1,
-                     S_PROBE = 2'd2, S_DRAIN = 2'd3;
+    localparam [2:0] S_IDLE  = 3'd0, S_COLLECT = 3'd1, S_PROBE = 3'd2,
+                     S_DRAIN = 3'd3, S_READ    = 3'd4, S_TAKE  = 3'd5,
+                     S_YIELD = 3'd6;
+
+    wire net = !net_n;
 
     // ---- the probe.  Two '157s pick its address: the scan, or the port we
     //      are about to act on.
     reg  [`PW-1:0] called;
-    wire           hunt = (state != S_PROBE);
+    wire           hunt = (state != S_PROBE) && (state != S_TAKE);
     wire [`PW-1:0] p_addr = hunt ? scan : called;
 
     wire           p_m, p_busy, p_fresh;
@@ -123,6 +177,10 @@ module mini_marker #(
     assign reg_busy   = r_busy;
     assign reg_ndig   = r_ndig;
     assign reg_digits = r_digits;
+    assign reg_port   = r_caller;
+    assign reg_gone   = r_gone;
+    assign reg_nodig  = r_nodig;
+    assign reg_brk    = r_brk;
 
     // ---- protocol.md 5's digit rule, taken literally ------------------------
     // "A digit's value is the low three bits of the register's pulse count,
@@ -133,124 +191,310 @@ module mini_marker #(
     wire [2:0] d0 = r_digits[3] ? 3'd0 : r_digits[2:0];
     wire [2:0] d1 = r_digits[7] ? 3'd0 : r_digits[6:4];
 
-    // ---- the serialiser and a four-deep queue ------------------------------
-    reg            ser_req;
-    reg [`PW-1:0]  ser_dst, ser_src;
-    reg            ser_bsy;
-    wire           ser_busy;
-    ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(ser_req), .strobe(1'b1), .g(1'b1),
-        .dst(ser_dst), .src(ser_src), .bsy(ser_bsy), .clm(1'b0),
-        .busy(ser_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
+    // "8 and 9 are caught as service digits before they are ever an
+    // address" (protocol.md 5) -- on the SECOND key too.  Folded, a
+    // misdialled 2 8 rang 20: a wrong number, and from another exchange a
+    // wrong number the caller cannot see.  Ten pulses is 0 and is an address;
+    // 8, 9 and 11-15 are not.  A '85 and two gates on the count's top bits.
+    wire [3:0] c1  = r_digits[7:4];
+    wire       svc1 = (c1 == 4'd8) || (c1 == 4'd9) || (c1 > 4'd10);
 
-    reg [12:0] wq [0:3];         // {dst, src, bsy}
-    reg [1:0]  wh, wt;
-    wire       wq_empty = (wh == wt);
-    wire       bus_idle = wq_empty && !ser_busy && !ser_req;
+    // ---- cable B: this card's queue, serialiser and word reader ------------
+    // Eight deep: a caller's dial tone and dial-tone-off, a connect's two, and
+    // a claim refused, all waiting behind a unit that holds the bus for a
+    // whole hunt.  The sequencer looks at `room` before it pushes, so the
+    // overflow flag is a check, not a behaviour.
+    reg  [1:0]     push_v;           // slot 0 alone, or both: a connect
+    reg  [29:0]    push_d;
+    wire [4:0]     room;
+    wire           q_empty;
+    reg            rd_req;
+    reg  [`PW-1:0] rd_port;
+    wire           rd_done;
+    wire [7:0]     rd_word;
+    wire           q_pending, q_rd_busy, q_sent;
+
+    ctl_queue #(.DEPTH(8), .NP(2)) u_q (
+        .clk(clk), .rst_n(rst_n),
+        .slotq(slotq), .cap_stb(cap_stb), .scan(scan),
+        .sdata(sdata), .sclk(sclk), .wr(wr), .oe(b_oe), .hw_n(hw_n),
+        .go(ureq_n), .pending(q_pending), .empty(q_empty),
+        .push_v(push_v), .push_d(push_d), .room(room), .ovf(q_ovf),
+        .rd_req(rd_req), .rd_port(rd_port), .rd_busy(q_rd_busy), .rd_done(rd_done),
+        .rd_word(rd_word), .sent(q_sent));
+
+    wire bus_idle = q_empty;
+
+    // A flood trunk says so in its primary octet: class form, family 01,
+    // member 0 -- 11 01 0 in wire order (extensions.md 2.2).  Its glare and
+    // direction are the unit's business; to this marker it is only "not a
+    // caller, not a number".  A tone trunk is member 1 and IS a caller at a
+    // leaf's central (leaf-uplink.md), so it does not match.
+    wire rd_trunk = (rd_word[4:0] == 5'b01011);
+
+    function [14:0] ent(input [`PW-1:0] d, input [`PW-1:0] s, input b, input c);
+        ent = {1'b1, c, b, s, d};
+    endfunction
 
     reg [`PW-1:0] caller;
     reg [2:0]     hwy;
     reg           have_h;
+    reg           ctx_clm;       // the caller is a claimed trunk: CLAIM on its writes
+    reg           keyed;         // this call has used its key: a 1 now is no key
+    reg           y_nogo;        // the unit's nogo, kept until there is room to act on it
+    reg           rd_caller;     // the word being read is a caller candidate's
+    reg [1:0]     hold;          // ticks for the unit's restart to land
 
     assign caller_o = caller;
     assign called_o = called;
 
-    // The tail moves with a BLOCKING assignment, on purpose: the two writes
-    // of a connect are queued in the SAME cycle, which is what makes a
-    // connection one action rather than two that something could interleave.
-    // The head is nonblocking, as everything else here is.
-    /* verilator lint_off BLKSEQ */
-    task push(input [`PW-1:0] d, input [`PW-1:0] s, input b);
-        begin
-            wq[wt] = {d, s, b};
-            wt     = wt + 2'd1;
-        end
-    endtask
+    // A claim may be taken where the register is free and the sequencer is
+    // not in the middle of a bus transaction of its own.
+    wire att_take   = u_att && !att_ack && !r_busy &&
+                      ((state == S_IDLE) || (state == S_TAKE) || (state == S_DRAIN));
+    // ... and must be refused where the register is someone's -- but never on
+    // the tick a read completes: rd_done is one tick, and a refusal taking
+    // that tick would leave S_READ waiting for a strobe that has gone.
+    wire att_refuse = u_att && !att_ack && r_busy && !rd_done;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= S_IDLE; called <= {`PW{1'b0}}; caller <= {`PW{1'b0}};
-            hwy <= 3'd0; have_h <= 1'b0;
+            hwy <= 3'd0; have_h <= 1'b0; ctx_clm <= 1'b0; rd_caller <= 1'b0;
+            keyed <= 1'b0; y_nogo <= 1'b0;
+            hold <= 2'd0;
             r_attach <= 1'b0; r_release <= 1'b0; r_restart <= 1'b0;
             r_port <= {`PW{1'b0}};
-            ser_req <= 1'b0; ser_dst <= {`PW{1'b0}}; ser_src <= {`PW{1'b0}};
-            ser_bsy <= 1'b0;
-            wh <= 2'd0; wt = 2'd0;
+            push_v <= 2'd0; push_d <= 30'd0;
+            rd_req <= 1'b0; rd_port <= {`PW{1'b0}};
+            flood_go <= 1'b0; att_ack <= 1'b0;
         end else begin
             r_attach  <= 1'b0;
             r_release <= 1'b0;
-            r_restart <= 1'b0;
-            ser_req   <= 1'b0;
+            // the unit's own-code restart is ORed with the key's, here
+            r_restart <= u_restart;
+            push_v    <= 2'd0;
+            rd_req    <= 1'b0;
+            flood_go  <= 1'b0;
+            att_ack   <= 1'b0;
 
-            // ---- drain, before anything pushes -----------------------------
-            if (!ser_busy && !ser_req && !wq_empty) begin
-                ser_dst <= wq[wh][12:7];
-                ser_src <= wq[wh][6:1];
-                ser_bsy <= wq[wh][0];
-                ser_req <= 1'b1;
-                wh      <= wh + 2'd1;
-            end
-
-            case (state)
+            if (att_take) begin
+                // ---- NETWORK: a claimed trunk is given the register ----------
+                // It becomes a caller like any line, with no dial tone -- the
+                // far caller is already dialling h s -- and CLAIM on every
+                // write to it from here to its release.  It takes priority
+                // over a local caller: that one comes round again in 1 ms.
+                caller   <= u_att_port;
+                r_port   <= u_att_port;
+                r_attach <= 1'b1;
+                ctx_clm  <= 1'b1;
+                keyed    <= 1'b0;
+                have_h   <= 1'b0;
+                hold     <= 2'd0;
+                att_ack  <= 1'b1;
+                state    <= S_COLLECT;
+            end else if (att_refuse && (room >= 5'd1) &&
+                         !(u_local || u_done || u_nogo)) begin
+                // "Claimed, cannot complete" -- the caller hears it at once
+                // through the path already up.  The unit's CLAIM word has gone
+                // out before `att` rose, so this lands after it.
+                push_v <= 2'b01;
+                push_d <= {15'd0, ent(u_att_port, NOGO, 1'b1, 1'b1)};
+                att_ack <= 1'b1;
+            end else case (state)
             // ---- IDLE: take a port off the scan when one is offered --------
             S_IDLE: begin
-                have_h <= 1'b0;
-                // A call request is M and not BUSY.  That is the whole rule.
+                have_h  <= 1'b0;
+                ctx_clm <= 1'b0;
+                keyed   <= 1'b0;
+                y_nogo  <= 1'b0;
+                // A call request is M and not BUSY.  That is the whole rule --
+                // on an exchange with no unit.
                 if (p_fresh && p_m && !p_busy && !r_busy && bus_idle) begin
-                    caller   <= p_port;      // port_q, NOT scan
-                    r_port   <= p_port;
-                    r_attach <= 1'b1;
-                    push(p_port, DIALTONE, 1'b1);
-                    state    <= S_COLLECT;
+                    if (net) begin
+                        // NETWORK: ask the card first.  A flood trunk's M is
+                        // the unit's, never a caller's.
+                        called    <= p_port;      // port_q, NOT scan
+                        rd_port   <= p_port;
+                        rd_req    <= 1'b1;
+                        rd_caller <= 1'b1;
+                        state     <= S_READ;
+                    end else begin
+                        caller   <= p_port;      // port_q, NOT scan
+                        r_port   <= p_port;
+                        r_attach <= 1'b1;
+                        push_v   <= 2'b01;
+                        push_d   <= {15'd0, ent(p_port, DIALTONE, 1'b1, 1'b0)};
+                        state    <= S_COLLECT;
+                    end
                 end
             end
 
+            // ---- NETWORK: READ a port's word, for a caller or a called -----
+            S_READ: if (rd_done) begin
+                if (rd_caller) begin
+                    // a trunk is left to the unit, and so is a port that says
+                    // NONE -- a card held off by its power-up RC, out of
+                    // service, or a trunk whose link is down.  A line's word
+                    // is all ones.  Anything else is taken if it is still
+                    // asking when it comes round.
+                    state <= (rd_trunk || (rd_word == 8'd0)) ? S_IDLE : S_TAKE;
+                end else if (rd_trunk) begin
+                    // a trunk is never dialled: marker.md 2
+                    if (room >= 5'd1) begin
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
+                        r_release <= 1'b1;
+                        state     <= S_DRAIN;
+                    end
+                    // no room: rd_done is gone, so read again
+                    else begin rd_req <= 1'b1; rd_port <= called; end
+                end else state <= S_PROBE;
+            end
+
+            // ---- NETWORK: the caller candidate, once more --------------------
+            // Its word said "not a trunk".  The read took a quarter of a pass,
+            // so look again before taking it: it may have hung up, or been
+            // taken, in between.
+            S_TAKE: if (p_fresh && (p_port == called)) begin
+                if (p_m && !p_busy && !r_busy && bus_idle) begin
+                    caller   <= called;
+                    r_port   <= called;
+                    r_attach <= 1'b1;
+                    push_v   <= 2'b01;
+                    push_d   <= {15'd0, ent(called, DIALTONE, 1'b1, 1'b0)};
+                    state    <= S_COLLECT;
+                end else state <= S_IDLE;
+            end
+
             // ---- COLLECT: two digits, octal as dialled ---------------------
-            S_COLLECT: begin
-                if (r_gone) begin
-                    // hang-up mid-dial is abandon: no latch left pointing at 03
-                    push(caller, SILENCE, 1'b0);
+            S_COLLECT: if (hold != 2'd0) hold <= hold - 2'd1;
+            else if (r_gone) begin
+                // hang-up mid-dial is abandon: no latch left pointing at 03
+                if (room >= 5'd1) begin
+                    push_v    <= 2'b01;
+                    push_d    <= {15'd0, ent(caller, SILENCE, 1'b0, 1'b0)};
                     r_release <= 1'b1;
                     state     <= S_DRAIN;
-                end else if (r_nodig) begin
-                    push(caller, NOGO, 1'b1);
+                end
+            end else if (r_nodig) begin
+                if (room >= 5'd1) begin
+                    push_v    <= 2'b01;
+                    push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
                     r_release <= 1'b1;
                     state     <= S_DRAIN;
-                end else if (!have_h && (r_ndig >= 3'd1)) begin
-                    if (d0 == 3'd0) begin
+                end
+            end else if (!have_h && (r_ndig >= 3'd1)) begin
+                if (room >= 5'd1) begin
+                    push_v <= 2'b01;
+                    if ((d0 == 3'd1) && net && !r_digits[3]) begin
+                        // ---- NETWORK: key 1 is the flood ------------------
+                        // Consumed at once, the store restarted so e b h s
+                        // land in slots 0-3, dial tone off -- and the unit
+                        // owns the call.  A claimed trunk dialling 1 would
+                        // send a new flood back up the link it came in on;
+                        // and after the call's own code has turned it local,
+                        // h = 1 is a trunk's highway, not a second key.  Both
+                        // refused.
+                        if (ctx_clm || keyed) begin
+                            push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
+                            r_release <= 1'b1;
+                            state     <= S_DRAIN;
+                        end else begin
+                            push_d    <= {15'd0, ent(caller, SILENCE, 1'b1, 1'b0)};
+                            r_restart <= 1'b1;
+                            flood_go  <= 1'b1;
+                            keyed     <= 1'b1;
+                            state     <= S_YIELD;
+                        end
+                    end else if (d0 == 3'd0) begin
                         // 0, 8 and 9 all fold to 0 by the digit rule, and all
                         // three are cannot-complete on the first key.
-                        push(caller, NOGO, 1'b1);
+                        push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
                         r_release <= 1'b1;
                         state     <= S_DRAIN;
                     end else begin
                         hwy    <= d0;
                         have_h <= 1'b1;
-                        push(caller, SILENCE, 1'b1);   // dial tone off
+                        push_d <= {15'd0, ent(caller, SILENCE, 1'b1, ctx_clm)};  // dial tone off
                     end
-                end else if (have_h && (r_ndig >= 3'd2)) begin
+                end
+            end else if (have_h && (r_ndig >= 3'd2)) begin
+                if (svc1) begin
+                    if (room >= 5'd1) begin
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
+                        r_release <= 1'b1;
+                        state     <= S_DRAIN;
+                    end
+                end else begin
                     called <= {hwy, d1};
-                    state  <= S_PROBE;
+                    if (net) begin
+                        rd_port   <= {hwy, d1};
+                        rd_req    <= 1'b1;
+                        rd_caller <= 1'b0;
+                        state     <= S_READ;
+                    end else state <= S_PROBE;
                 end
             end
 
             // ---- PROBE: visit the called port ------------------------------
             S_PROBE: begin
                 if (r_gone) begin
-                    push(caller, SILENCE, 1'b0);
-                    r_release <= 1'b1;
-                    state     <= S_DRAIN;
-                end else if (p_fresh && (p_port == called)) begin
+                    if (room >= 5'd1) begin
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, SILENCE, 1'b0, 1'b0)};
+                        r_release <= 1'b1;
+                        state     <= S_DRAIN;
+                    end
+                end else if (p_fresh && (p_port == called) && (room >= 5'd2)) begin
                     if ((called == caller) || p_m || p_busy) begin
-                        push(caller, NOGO, 1'b1);
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
                         r_release <= 1'b1;
                         state     <= S_DRAIN;
                     end else begin
                         // A connection is two writes, and the marker is
                         // finished with the call.  Ringing, ringback, answer
-                        // and release are the ports' own.
-                        push(caller, called, 1'b1);
-                        push(called, caller, 1'b1);
+                        // and release are the ports' own.  They go in one
+                        // tick, in this order, and nothing of this card's can
+                        // come between them; a unit's word may, and touches
+                        // neither port.
+                        push_v    <= 2'b11;
+                        push_d    <= {ent(called, caller, 1'b1, 1'b0),
+                                      ent(caller, called, 1'b1, ctx_clm)};
+                        r_release <= 1'b1;
+                        state     <= S_DRAIN;
+                    end
+                end
+            end
+
+            // ---- NETWORK: YIELD -- the unit has the call -----------------------
+            S_YIELD: begin
+                if (r_gone) begin
+                    if (room >= 5'd1) begin
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, SILENCE, 1'b0, 1'b0)};
+                        r_release <= 1'b1;
+                        state     <= S_DRAIN;
+                    end
+                end else if (u_local) begin
+                    // own e b: the unit restarted the store; h s follow as a
+                    // local number.  Two ticks for the restart to land before
+                    // the digit count is believed again.
+                    have_h <= 1'b0;
+                    hold   <= 2'd3;
+                    state  <= S_COLLECT;
+                end else if (u_done) begin
+                    // the unit wrote caller <-> trunk
+                    r_release <= 1'b1;
+                    state     <= S_DRAIN;
+                end else if (u_nogo || y_nogo || r_nodig) begin
+                    // u_nogo is one tick; kept in y_nogo until there is room
+                    y_nogo <= 1'b1;
+                    if (room >= 5'd1) begin
+                        push_v    <= 2'b01;
+                        push_d    <= {15'd0, ent(caller, NOGO, 1'b1, 1'b0)};
                         r_release <= 1'b1;
                         state     <= S_DRAIN;
                     end
@@ -266,7 +510,8 @@ module mini_marker #(
         end
     end
 
-    /* verilator lint_on BLKSEQ */
-
-    wire _unused = &{1'b0, r_brk, r_counting, r_hook, r_caller, 1'b0};
+    // the word's glare and direction are the unit's; the queue's own status
+    // lines are for a card that shares the bus more than this one does
+    wire _unused = &{1'b0, r_counting, r_hook, rd_word[7:5], q_pending,
+                     q_rd_busy, q_sent, 1'b0};
 endmodule

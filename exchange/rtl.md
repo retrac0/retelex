@@ -175,8 +175,10 @@ scanner and nothing else.
 
 "A digit's value is the low three bits of the register's pulse count, forced to
 000 when bit 3 is set: three AND gates." Implemented as anything looser — say,
-"ten pulses means zero" — a dialled 9 in an address position reads as 1 instead
-of 0. The document is right and exact; it is worth implementing exactly.
+"ten pulses means zero" — a dialled 9 in an address position reads as 1. The
+three AND gates are the address; they are not the test. "8 and 9 are caught as
+service digits before they are ever an address", in either digit, and so are
+11–15: a 9 that reached the AND gates would fold onto 0 and name a real port.
 
 ---
 
@@ -194,8 +196,10 @@ of 0. The document is right and exact; it is worth implementing exactly.
 - **The sizing tables are still arguments.** `NREG` and `NMON` are parameters
   now, so `monitor.md` §4's Erlang table can be *measured* against offered
   traffic. It has not been.
-- **Still unbuilt**: fan-out and the resolvers of `network.md` §3.2, rings
-  and the jumper (a jumper a direction, not an option bit; both halves of its rule are in, but
-  nothing closes a loop), the conference bridge, data cards, outside lines,
+- **Built, and red**: fan-out and the resolvers of `network.md` §3.2, rings
+  and the jumper (a jumper a direction, not an option bit) are in `net_unit`,
+  with `make hub` and `make ring`. Both were red when last measured, on
+  2026-09-23 (2 errors each, on fan-out and no-forward checks).
+- **Still unbuilt**: the conference bridge, data cards, outside lines,
   nailed-up connections, and every option bit of `extensions.md` §2.2 beyond
   a trunk's direction, glare and jumper.

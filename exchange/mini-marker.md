@@ -77,15 +77,16 @@ a new call request.
 
 ## 3. Reading a number
 
-Two digits, octal as dialled. Ten pulses are 0, the same `oct()` as the
-marker. Digit `1` is a **highway**, not a prefix: no `restart`, no flood, no
+Two digits, octal as dialled. Ten pulses are 0; 8, 9 and 11–15 are caught
+before they are ever an address, in either digit (`protocol.md` §5). Digit `1` is a **highway**, not a prefix: no `restart`, no flood, no
 `e b` — unless the **LEAF** jumper is set (`leaf-uplink.md`, §9): then `1`
 hunts an uplink trunk and does not take a slot digit.
 
 ```
  first key   1–7   highway h; drop dial tone (caller listens to 00); wait for s
-             0     cannot-complete     8, 9, 11–16  cannot-complete
- second      called = h s; probe that port
+             0     cannot-complete     8, 9, 11–15  cannot-complete
+ second      0–7   called = h s; probe that port
+             8, 9, 11–15  cannot-complete, never folded onto 0 (protocol.md §5)
  called      self, or M, or BUSY → cannot-complete
              else → two writes, register released, mini-marker done
 ```
@@ -99,7 +100,7 @@ Tones are addresses, not hunts:
 | cannot-complete | caller ← 03, `BUSY` |
 | connect | caller ← called, called ← caller, both `BUSY` |
 
-There is no busy-tone port. Busy, self, and a bad first key all get 03. With
+There is no busy-tone port. Busy, self, and a bad key all get 03. With
 no source card at 03 the caller hears silence and hangs up.
 
 Ringing, answer, and release are the ports' (`marker.md` §5). The mini-marker
@@ -136,6 +137,7 @@ request.
 | 20 dials | mini-marker |
 |---|---|
 | 0, 8, 9 | cannot-complete on the first digit |
+| 2 8, 2 9 | cannot-complete on the second digit |
 | 1 then hang up | 1 was a highway: dial tone went off; no flood |
 | 2 0 | itself, busy → cannot-complete |
 | 2 1 while 21 is already in a call | 21 busy → cannot-complete |
@@ -199,7 +201,7 @@ In RTL they are behind `HAS_NET` (the jumper) and a `TRUNK_MASK`:
 | `restart` | wired, so `e b h s` land in four slots |
 | trunk ports | a jumpered mask: `M · /BUSY` there is not a caller. The unit holds and forwards |
 | probe out | scanned port, M, `BUSY` (no word: the unit hunts by the same mask) |
-| claim attach | the unit asks; attach the register to that trunk; later writes keep `CLAIM` |
+| claim attach | the unit asks; attach the register to that trunk; later writes keep `CLAIM`. None free: trunk ← 03, `BUSY` and `CLAIM` |
 | YIELD | the unit signals `local` / `done` / `nogo`; this marker does not wait for a claim itself |
 | write drain | the unit's latch-write burst into this marker's serialiser |
 

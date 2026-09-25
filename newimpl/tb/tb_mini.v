@@ -33,7 +33,7 @@ module tb_mini;
     wire pr_fresh;
     wire [`SCANW-1:0] scan;
     wire [`PW-1:0] mk_caller, mk_called, pr_port;
-    wire [1:0] mk_state;
+    wire [2:0] mk_state;
     wire r_busy; wire [2:0] r_ndig; wire [15:0] r_digits;
 
     // The cadence is cut to 64 ms on / 128 ms off.  Same counter and the same
@@ -204,6 +204,33 @@ module tb_mini;
         ms(20);
         sample(A, 8);
         ck(s0 && !s1, "dialling its own number gives cannot-complete");
+        a_tx[A] = 1'b0; ms(400);
+
+        // 8 or 9 as the SECOND digit.  protocol.md 5: "8 and 9 are caught as
+        // service digits before they are ever an address" -- on the second
+        // key as on the first.  21 dials 2 8: folded, that is 20, which is
+        // free and would ring.  (From 20 the fold would be its own number and
+        // refused for the wrong reason, so this check could not fail.)
+        a_tx[B] = 1'b1; ms(10);
+        dial(B, 2); dial(B, 8);
+        ms(20);
+        sample(B, 8);
+        ck(s0 && !s1, "21 dialling 2 8 hears cannot-complete: 8 is no address");
+        ck(port_busy[A] === 1'b0, "and 20 was never rung: the 8 did not fold to 0");
+        a_tx[B] = 1'b0; ms(400);
+
+        // Key 1 with NO NETWORK UNIT FITTED is highway 1 (protocol.md 5,
+        // common-control.md 3): the marker's network half is here, tied to
+        // "no unit", and must take the old path.  20 dials 1 1 and is pointed
+        // at 11, an empty slot -- and the marker is back in IDLE, not waiting
+        // in YIELD for a unit that is not there.
+        a_tx[A] = 1'b1; ms(10);
+        dial(A, 1); dial(A, 1);
+        ms(20);
+        ck(port_busy[A] === 1'b1 && mk_state === 3'd0,
+           "with no unit fitted, 1 1 is a number: 20 pointed at 11");
+        sample(A, 8);
+        ck(s0 && s1, "and 20 hears 11's empty highway, FILL -- not cannot-complete");
         a_tx[A] = 1'b0; ms(400);
 
         // an empty slot -- 25 has no port circuit.  mini-marker.md 5: this

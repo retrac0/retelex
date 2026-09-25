@@ -77,11 +77,12 @@ count at 0.
  wrap                      ●   ●   ●   ●      (inhibits the count enable)
 ```
 
-So **8, 9 and 0 all read 0**. That is not a loss: `oct()` in the mini-marker
-and the full marker already folded every digit ≥ 8 onto 0, because a port
-number is six bits — two octal digits — and 8 and 9 were never reachable
-numbers. The wrap FF is what keeps a dialled `0` distinguishable from *no
-digit at all*: the strobe still fires, and the register stores a digit worth 0.
+So **8, 9 and 0 all read 0**. That is the nano's own limit, and it loses no
+number: a port number is six bits — two octal digits — and 8 and 9 were never
+reachable numbers. The mini-marker and the full marker do not fold them: 8, 9
+and 11–15 as the second digit are cannot-complete there (`protocol.md` §5).
+The nano reads 2 8 as 2 0 (§5). The wrap FF is what keeps a dialled `0`
+distinguishable from *no digit at all*: the strobe still fires, and the register stores a digit worth 0.
 
 The store is **six bits in one 74HC174**, wired as a three-bit-wide two-stage
 shift:

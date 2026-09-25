@@ -7,6 +7,68 @@ the file and line for each claim.
 
 ---
 
+## 0. Decided 2026-09-25, and built
+
+Joel answered the blockers this survey raised, in three rounds, and the port
+was built on the answers: `top_net.v`, `net_unit.v`, `ctl_queue.v`,
+`word_rx.v`, `baseband_card.v`, and the mini marker's network half, with
+`tb_word`, `tb_tie`, `tb_net` and `tb_chain`. What follows in §1–§10 is the
+survey as written; where it was wrong or has been overtaken, this section says
+so and it wins.
+
+| question | decided |
+|---|---|
+| which marker, which top | **the mini marker, in a third top `top_net`** — §4(a), but as a new top rather than inside `top_min`, which keeps its behaviour and its benches |
+| cable B | **the unit is a second master** with its own serialiser and `/UREQ` on a 16-way spare, ranked above the marker; no grant (§3.1) |
+| the monitors | **on the unit card**, each cell a probe on `/HA` and `/HB` — not on the trunk block (§6 is superseded) |
+| trunk class, direction, glare | **the trunk card says so, in its word**, read off `/HW` by whoever needs it — **not** `TRUNK_MASK`/`TRUNK_DIR` (§3.3's "strap path, primary" is reversed) |
+| who reads the word | **each reads for itself**: the marker before a caller or a connect, the unit for hunts and seizures |
+| the register | **stays inside the mini marker**, its ribbon brought out (§5's "beside is right" is not taken) |
+| scope | one and two directions; hub and ring later |
+| trunk carrier | **the baseband tie card first**; the MF8 block adapter (§8) later |
+| 8 or 9 as the second digit | **cannot-complete** (§7 row 3) |
+| the 2 s claim wait | **from `b`** |
+| documents | the small fixes now; `exchange/folded-a.md` is its own task (§10 step 1) |
+
+**Where §1–§10 were wrong**, found by checking each claim against the code:
+
+- §2: `pulse_reg`'s `gone` is CLR only; the no-digit timeout is `nodig`. The
+  unit releases on either, and on the register going free. `brk` is a one-tick
+  strobe, not a level.
+- §3.2: port 63's `fresh` does **not** coincide with `pass_stb`; it is one tick
+  later. The sweep closes on a count of ports, not on either.
+- §3.3: `/HW` fails **safe**, not open: a card pulls its pin low for a one, so
+  an absent card reads all zeros, *none*. And a card can give a 64 kHz reader
+  its primary octet only; the secondary needs a load strobe the socket lacks.
+- §3.3, §2: the strap path carried no glare bit; `p_g` came only from the word.
+- §4: `/HUNT_INH` is a class-marker line, unused on a mini marker; it is not a
+  defect for this build. `local`, `done`, `nogo` were taken in `M_YIELD`, not
+  `S_COLLECT`.
+- §4(a), §10 step 7: `HAS_NET` as a parameter in an `if` is what STYLE.md §4
+  forbids. The unit grounds `/NET` instead.
+- §7: "release the others when a trunk has claimed" was also missing from the
+  RTL (it dropped them at the last digit). Built now.
+- §9: `tb_net` and `tb_chain` were class-marker benches; the old mini-plus-unit
+  benches were `tb_mini_net` and `tb_mini_load`. The 40-of-48 figure was
+  `ring-open`'s, not the hub's.
+- §3.1: the old console held the bus for a whole tenure, not a word; and
+  `wq_ovf` was a model diagnostic, not a consequence of two units sharing one
+  queue.
+
+**What the survey did not foresee:** reading the card's word costs a quarter
+of a pass a read, so the unit's hunt is a 17 ms sweep on a stride of 17, and
+that is most of a transit's hop (`newimpl/README.md` §6). And the register's
+probe holds the last port's hook until the new one comes round, which a HIT
+scaled to 1 ms counted as a pulse; `pulse_reg` now arms on its caller's first
+sample. A review of the built RTL found five more (`README.md` §4): the
+origin reading a sweep result a forward had cleared, two waiting lines
+starving the sweep, a hold left BUSY on a seizure that died before its port
+armed, a phantom flood when the called party hangs up first, and a second key
+after the call's own code. All are fixed and each has its fault in
+`faults.py`.
+
+---
+
 ## 1. What is being ported
 
 `net_unit.v` (418 lines) is the pulse flood off the marker — `network.md` §3,

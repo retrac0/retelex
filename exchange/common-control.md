@@ -102,8 +102,8 @@ serialiser.
 | `restart` | own `e b`: begin the store so `h s` land as a local number |
 | `local` | the origin call is local from here; the marker goes back to collecting |
 | `done` | the pair is written; free the register |
-| `nogo` | cannot-complete this origin call (no trunk, 8/9 in the code, guard, no claim) |
-| `attach` + port | a monitor claimed: give a register this trunk as a line, keep `CLAIM` on later writes |
+| `nogo` | cannot-complete this origin call (no trunk, 8/9 in the code, guard, no claim, `b` not in 5 s after the key) |
+| `attach` + port | a monitor claimed: give a register this trunk as a line, keep `CLAIM` on later writes. None free: the marker points the trunk at cannot-complete, `BUSY` and `CLAIM` set |
 | latch writes | seize / forward / CLAIM / drop; `CLAIM` is bit 0 of the word (`mainboard.md` §2.3) |
 
 **Key `1` is not a highway and not a hunt the marker completes.** With a
@@ -130,8 +130,9 @@ Monitors sit on the trunk block and never touch the fabric.
 | from the unit | the ack, which frees the cell; the unit writes `CLAIM` and asks the marker for a register |
 
 The marker does not see a monitor. A claim that finds no register is still
-claimed: the unit points the trunk at cannot-complete, `CLAIM` set, and the
-caller hears it through the path already up (`monitor.md` §2).
+claimed: after the unit's `CLAIM` word the marker points the trunk at
+cannot-complete, `BUSY` and `CLAIM` set, and the caller hears it through the
+path already up (`monitor.md` §2).
 
 ### 2.4 `/HUNT_INH` and the probe on cable B
 
@@ -187,8 +188,8 @@ The same marker — including the mini-marker — plus:
 Origin: key `1` → `flood_go` → the unit seizes one free trunk every direction,
 each listening to the **caller**, so the rest of the dial goes down A live.
 Own `e b` → drop trunks, `restart`, `local`. Else wait for a claim, keep that
-trunk, pair caller ↔ trunk, `done`. Guard, 8/9 in the code, no trunk, no claim:
-`nogo`.
+trunk, pair caller ↔ trunk, `done`. Guard, 8/9 in the code, no trunk, no claim,
+`b` not in 5 s after the key: `nogo`.
 
 Incoming: M on a free trunk → the unit holds it, forwards into every *other*
 direction (one direction: hold only). Monitor match → `CLAIM`, attach a

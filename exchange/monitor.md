@@ -49,7 +49,8 @@ its trunk ports' M lines directly — it never touches the fabric.
            either is 8 or 9                           → reserved (network.md §2: e and b are 0–7,
                                                         and a 0 is ten pulses): let go
            either is anything else                    → let go, at once
- done      nothing more is read until the trunk releases (M low for 256 ms)
+ done      the cell is freed when the network unit acknowledges the claim.  The slot is not
+           attended again during the call: the claim write sets BUSY and CLAIM on the trunk
 ```
 
 **It reads two digits and no more.** On a claim the **network unit** re-points
@@ -58,9 +59,10 @@ onward patch, **and asks the marker for a free register on the trunk's port
 number** — the trunk is now a line like any other, so the register reads `h s`,
 or 0, or 9, from its hook as it would from a phone's (`common-control.md`
 §2.3). The caller's next digit is at least 370 ms away (their pause
-less the 128 ms already spent), against a hunt of 8 ms. No register free: the
-unit points the trunk at the cannot-complete tone — *claimed, cannot complete*
-— and the caller hears it at once.
+less the 128 ms already spent), against a hunt of 8 ms. No register free: after
+the unit's `CLAIM` word the marker points the trunk at the cannot-complete tone,
+`BUSY` and `CLAIM` set — *claimed, cannot complete* — and the caller hears it at
+once.
 
 An incoming call therefore costs the register pool one register for two digits,
 and only at the exchange that owns it. Every other exchange spends a monitor for
@@ -209,7 +211,7 @@ protocol that is a function of the hop count:
 |---|---|
 | `HIT` 8 ms, `ID` 128 ms, `CLR` 256 ms | a register's and a monitor's own windows, local to one exchange, set by the dial's envelope (`register.md` §2) |
 | the origin's 2 s wait for a claim | the claim crosses forward and back at about 1.5 ms a hop: **600 hops** of room on a pair, 22 behind a 40 ms carrier |
-| the 5 s rule (`network.md` §4) | sized on a slow dial reaching the code `77` in 3.8 s; distance is not in it |
+| the 5 s rule (`network.md` §4) | sized on a slow dial reaching the code `00` in 3.8 s; distance is not in it |
 | the release detectors, the trunk's 0.6 s settle, the register's 10 s | all local to one exchange |
 | the A path | shortens a break 0.5 ms a hop against a 45 ms margin: **91 hops** |
 
