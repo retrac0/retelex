@@ -46,7 +46,11 @@ module exch #(
     input                    sdata,
     input                    sclk,
     input                    wr,
-    output                   hw_n,         // MAXIMAL: /HW, the pointed card's word
+    // MAXIMAL: /WS, the select.  Its drains are the READERS', beside the
+    // exchange, so it arrives here resolved, as cable B does: a reader pulls
+    // it in a port's bit-time, and that port's card answers on /HW
+    input                    ws_n,
+    output                   hw_n,         // MAXIMAL: /HW, the selected card's word
 
     // ---- the bus, out: for the marker, the registers and any observer -------
     output     [7:0]         hc,
@@ -127,7 +131,7 @@ module exch #(
                 .c_rx(c_rx[p*8 +: 8]), .a_rx(a_rx[p*8 +: 8]),
                 .mute_blk(mute_blk[p]),
                 .sdata(sdata), .sclk(sclk), .wr(wr),
-                .hw_pd(hw_pd_from_block[p]),
+                .ws_n(ws_n), .hw_pd(hw_pd_from_block[p]),
                 .port_busy(port_busy[p*8 +: 8]));
         end
     endgenerate

@@ -10,7 +10,7 @@
 // THE CARD SAYS WHAT IT IS.  Its word -- class trunk, glare, direction -- is
 // one '165 loaded from jumpers ON THIS CARD, and nothing else in the exchange
 // holds a copy: not the marker, not the network unit.  Whoever needs to know
-// points at the port and reads it off /HW (word_rx.v).  A trunk's direction is
+// selects the port on /WS and reads it off /HW (word_rx.v).  A trunk's direction is
 // the direction of the link it is wired to, and the card is what is wired to
 // it; a strap anywhere else could disagree with the cable.
 //

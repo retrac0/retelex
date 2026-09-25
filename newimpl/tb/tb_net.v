@@ -34,6 +34,12 @@
 //                arm -- so B must write its own hold away, or 11 stays BUSY
 //  15  key twice A20 dials 1 2 2 1: its own code turned the call local, and
 //                a 1 now is highway 1 -- trunks -- not a second key: refused
+//  16  two calls A20's call up through A11; A22 dials 1 2 3 2 0 meanwhile:
+//                the sweep reads every port, the busy A11 too, and passes it
+//                by -- it was not free at its select -- so the key takes A12
+//  17  both B20 calls B21 while a seizure reaches B12, five times, a pass
+//      masters   apart: once, B's marker is mid-word when B's unit wants the
+//                bus, and the unit must wait the word out -- no clash
 //
 // Scenario 2 ends with the CALLED party hanging up first: B's trunk port then
 // releases under A20's still-standing M, and must not be taken for a new
@@ -43,13 +49,14 @@
 // Timers scaled by 8 through the straps, so a run is seconds: the register's
 // windows HIT 1, ID 16, CLR 32 ms; the port's detectors 2 and 32 ms; the
 // guard 16, the 5 s rule 625, the claim wait 250 ms; a dial at 50 pps 60/40.
-// THE WORD READS AND THE SWEEP ARE NOT SCALED -- they are cable timing, 17 ms
+// THE WORD READS AND THE SWEEP ARE NOT SCALED -- they are cable timing, 9 ms
 // a sweep -- so at this scale the guard covers less than one hop, and the
 // pause between digits (100 ms) is what keeps the flood ahead of the dial.
 // Scenario 7 tests the guard's mechanism, not its reach.
 //
 // Does not cover: glare (EV_GLARE is not provoked), a transit (tb_chain), two
-// calls at once on one exchange, a relayed pulse at real speed, or MF8.
+// floods at once on one exchange (16's second begins after the first is up),
+// a relayed pulse at real speed, or MF8.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -115,7 +122,7 @@ module tb_net;
         .un_ovf(uno_b), .n_glare(gl_b), .n_nofwd(nf_b));
 
     // ---- the cables: A11-B11, A12-B12, and A25 looped to itself ---------------
-    reg cut = 1'b0, cut25 = 1'b0, blip = 1'b0;
+    reg cut = 1'b0, cut25 = 1'b0, blip = 1'b0, blip12 = 1'b0;
     always @* begin
         ac_in = 64'd0; aa_in = 64'd0; ak_in = 64'd0;
         bc_in = 64'd0; ba_in = 64'd0; bk_in = 64'd0;
@@ -123,7 +130,7 @@ module tb_net;
         ac_in[T12] = !cut && bc_out[T12]; aa_in[T12] = !cut && ba_out[T12]; ak_in[T12] = !cut && bk_out[T12];
         bc_in[T11] = !cut && ac_out[T11]; ba_in[T11] = blip || (!cut && aa_out[T11]);
         bk_in[T11] = !cut && ak_out[T11];
-        bc_in[T12] = !cut && ac_out[T12]; ba_in[T12] = !cut && aa_out[T12]; bk_in[T12] = !cut && ak_out[T12];
+        bc_in[T12] = !cut && ac_out[T12]; ba_in[T12] = blip12 || (!cut && aa_out[T12]); bk_in[T12] = !cut && ak_out[T12];
         ac_in[T25] = !cut25 && ac_out[T25]; aa_in[T25] = !cut25 && aa_out[T25];
         ak_in[T25] = !cut25 && ak_out[T25];
     end
@@ -148,6 +155,7 @@ module tb_net;
 
     // ---- two '244s on one wire, at either exchange -------------------------------
     integer clash = 0;
+    integer k17, bad17;
     always @(posedge clk_a) if (cl_a) clash = clash + 1;
     always @(posedge clk_b) if (cl_b) clash = clash + 1;
 
@@ -438,6 +446,63 @@ module tb_net;
         hear_a(P20); ck(s0 && !s1, "and is refused: cannot-complete");
         hook_a[P20] = 1'b0;
         idle_all("15: idle again");
+
+        // ================= 16.  a second flood while the first holds A11 =====
+        // A's one register is free again once a call is up, so a second caller
+        // may flood while the first still holds A11.  The sweep reads every
+        // port, A11 included, and keeps a trunk only if M and BUSY were clear
+        // at its select: A11 is BUSY there, so the second key must take A12.
+        $display("  16. A20 up on B21 through A11; then A22 dials 1 2 3 2 0");
+        hook_a[P20] = 1'b1; ms(10);
+        dial_a(P20, 1); dial_a(P20, 2); dial_a(P20, 3); dial_a(P20, 2); dial_a(P20, 1);
+        ms(20); hook_b[P21] = 1'b1; ms(20);
+        ck(busy_a[T11] === 1'b1 && reg_a === 1'b0,
+           "the first call is up through A11, and A's register is free again");
+        hook_a[P22] = 1'b1; ms(10);
+        dial_a(P22, 1);
+        ck(busy_a[T12] === 1'b1 && dirs_a == 4'b0100,
+           "the second key seized A12: the busy A11 was read and passed by");
+        dial_a(P22, 2); dial_a(P22, 3);
+        ck(cla_a === 1'b1, "and B claimed the second call, on its 12");
+        dial_a(P22, 2); dial_a(P22, 0); ms(20);
+        rings_b(P20); ck(hi > 50 && lo > 50, "B20 rings: two calls up through A at once");
+        hook_b[P20] = 1'b1; ms(20);
+        tx_a[P22] = 1'b1; ms(4); ck(rx_b[P20] === 1'b1, "B20 hears A22");
+        tx_a[P22] = 1'b0; ms(4); ck(rx_b[P20] === 1'b0, "and follows it");
+        tx_a[P20] = 1'b1; ms(4); ck(rx_b[P21] === 1'b1, "while B21 still hears A20");
+        tx_a[P20] = 1'b0; ms(4); ck(rx_b[P21] === 1'b0, "and follows it");
+        hook_a[P20] = 1'b0; hook_a[P22] = 1'b0; hook_b[P20] = 1'b0; hook_b[P21] = 1'b0;
+        idle_all("16: both calls released, both exchanges idle");
+
+        // ================= 17.  both masters want cable B at once ============
+        // There is no grant: the unit waits out the marker's longest word
+        // before it drives (WAIT).  Before /WS the key's own words made the two
+        // meet in every flood; now a read asks for no bus, and only a
+        // coincidence does, so make one.  B20 calls B21: B's marker connects
+        // them at frame 18 of a pass, the moment 21's sample is out.  A seizure
+        // on B12 is held by B's unit at frame 18 too, its read ending eight
+        // frames after 12's turn.  Started a pass later each time, one attempt
+        // of the five puts both in one pass, the unit's word wanted while the
+        // marker's first is on the wire -- and there it must wait.
+        $display("  17. B20 calls B21 while a seizure reaches B12, five times");
+        bad17 = 0;
+        for (k17 = 0; k17 < 5; k17 = k17 + 1) begin
+            hook_b[P20] = 1'b1; ms(10);
+            dial_b(P20, 2);
+            @(posedge t1k_b); hook_b[P20] = 1'b0;             // 1: one break,
+            repeat (12) @(posedge t1k_b); hook_b[P20] = 1'b1; // ended on a tick
+            repeat (14 + k17) @(posedge t1k_b);               // round the digit's end
+            blip12 = 1'b1; repeat (10) @(posedge t1k_b);
+            if (busy_b[T12] !== 1'b1) bad17 = bad17 + 1;      // B held the seizure
+            blip12 = 1'b0;
+            ms(30);
+            if (busy_b[P21] !== 1'b1) bad17 = bad17 + 1;      // and connected 20 to 21
+            hook_b[P20] = 1'b0;
+            ms(150);
+        end
+        ck(bad17 == 0, "each time B held the seizure on B12 and connected B20 to B21");
+        ck(clash == 0, "a connect and a hold in one frame: the unit waited out the word");
+        idle_all("17: idle again");
 
         // ================= throughout ===========================================
         ck(clash == 0, "cable B never had two masters driving at once");

@@ -10,7 +10,8 @@
 //
 // top_max instantiates THE SAME `exch`, unchanged, and adds the class marker,
 // a register pool, a network unit and monitors beside it.  What is MAXIMAL
-// here is one wire -- hw_n, the card word bus -- brought out and left unused.
+// here is two wires -- /HW, the card word bus, and /WS, the select that names
+// the card on it -- brought out, and nothing on this build pulls /WS.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -56,6 +57,9 @@ module top_min #(
     // what an absent card must read -- see mainboard.v.  Brought out so that
     // fitting the class marker is fitting a card, not a rewire.
     output            hw_n,
+    // MAXIMAL: /WS, the select.  The marker's reader is its only drain here,
+    // and with /NET high it never reads, so /WS sits at its pull-up too.
+    output            ws_n,
 
     output     [`PW-1:0] probe_port,
     output            probe_m,
@@ -82,6 +86,10 @@ module top_min #(
     wire b_sclk  = m_oe && m_sclk;
     wire b_wr    = m_oe && m_wr;
 
+    // /WS: a pull-up at the clock card and one open drain, the marker's reader
+    wire m_ws_pd;
+    assign ws_n = ~m_ws_pd;
+
     exch #(.PORT_FITTED(PORT_FITTED), .BLOCK_NUM(BLOCK_NUM),
            .BLOCK_FITTED(BLOCK_FITTED), .T_ARM(T_ARM), .T_REL(T_REL),
            .RING_ON_MS(RING_ON_MS), .RING_OFF_MS(RING_OFF_MS)) u_exch (
@@ -89,7 +97,7 @@ module top_min #(
         .c_tx(c_tx), .a_tx(a_tx), .ans_n(ans_n), .word_n(word_n),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(mute_blk), .rbt_in(rbt_in),
-        .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .hw_n(hw_n),
+        .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .ws_n(ws_n), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
         .hclk(hclk), .cap_stb(cap_stb), .tx_clk(tx_clk),
@@ -113,7 +121,7 @@ module top_min #(
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .b_oe(m_oe),
-        .hw_n(hw_n), .ureq_n(1'b1),
+        .hw_n(hw_n), .ws_n(ws_n), .ws_pd(m_ws_pd), .ureq_n(1'b1),
         .net_n(1'b1), .flood_go(nc_flood),
         .u_restart(1'b0), .u_local(1'b0), .u_done(1'b0), .u_nogo(1'b0),
         .u_att(1'b0), .u_att_port({`PW{1'b0}}), .att_ack(nc_ack),

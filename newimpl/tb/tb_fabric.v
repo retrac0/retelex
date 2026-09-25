@@ -34,12 +34,12 @@ module tb_fabric;
     wire [`SCANW-1:0] scan;
     wire s_sdata, s_sclk, s_wr, s_busy;
 
-    reg        req = 1'b0, strobe = 1'b1, g = 1'b1;
+    reg        req = 1'b0, g = 1'b1;
     reg [`PW-1:0] dst = 6'd0, src = 6'd0;
     reg        bsy = 1'b1, clm = 1'b0;
 
     ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(req), .strobe(strobe), .g(g),
+        .clk(clk), .rst_n(rst_n), .req(req), .g(g),
         .dst(dst), .src(src), .bsy(bsy), .clm(clm),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
@@ -48,7 +48,7 @@ module tb_fabric;
         .c_tx(c_tx), .a_tx(64'd0), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .hw_n(hw_n),
+        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .ws_n(1'b1), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
         .hclk(), .cap_stb(), .tx_clk(tx_clk),
@@ -66,7 +66,7 @@ module tb_fabric;
         .c_tx(64'd0), .a_tx(64'd0), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(bare_c_rx), .a_rx(),
         .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .hw_n(bare_hw_n),
+        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .ws_n(1'b1), .hw_n(bare_hw_n),
         .hc(bare_hc), .ha_n(bare_ha_n), .hb_n(bare_hb_n),
         .tick(), .slot(), .slotq(),
         .hclk(), .cap_stb(), .tx_clk(),
@@ -105,7 +105,7 @@ module tb_fabric;
     task wr_latch(input [`PW-1:0] d, input [`PW-1:0] s, input b, input c);
         begin
             @(posedge clk);
-            dst = d; src = s; bsy = b; clm = c; g = 1'b1; strobe = 1'b1;
+            dst = d; src = s; bsy = b; clm = c; g = 1'b1;
             req = 1'b1; @(posedge clk); req = 1'b0;
             @(posedge clk);
             while (s_busy) @(posedge clk);
@@ -173,7 +173,7 @@ module tb_fabric;
         @(posedge clk);
         ck(bare_ha_n === 1'b1, "no port circuits: /HA idles high for a whole pass");
         ck(bare_hb_n === 1'b1, "and so does /HB");
-        ck(bare_hw_n === 1'b1, "and /HW, which no card is pointed at");
+        ck(bare_hw_n === 1'b1, "and /HW, which no select has named");
 
         $display("\n  %0d checks, %0d errors.  %s\n", chk, errs,
                  (errs == 0) ? "PASS" : "FAIL");

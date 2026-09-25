@@ -43,11 +43,12 @@
 // chain to make the scanner; it is the chain.
 //
 // The card option word is NOT here.  It is a third conductor, /HW, which all
-// 64 cards share and the MARKER addresses: it sends a pointing word naming a
-// port, and that card alone drives its sixteen bits onto /HW at 64 kHz, one
-// a frame, 250 us.  Nothing continuous depends on it, so the scanner never
-// waits for it -- which is the whole reason the word is not on the scan.
-//   mainboard.md 2.2, extensions.md 2.2
+// 64 cards share and a READER addresses: it pulls a fourth, /WS, in the
+// bit-time of the port it wants, and that card alone drives its word onto
+// /HW at 64 kHz, one bit a frame, until the next select.  The scan only NAMES
+// the card; nothing continuous depends on /HW, so the scanner never waits for
+// it -- which is the whole reason the word is not on the scan.
+//   mainboard.md 2.2, 3.4, extensions.md 2.2
 
 // ---- where things happen inside a cell ----------------------------------
 // The master clock is the 4.096 MHz crystal and a cell is eight of its ticks.

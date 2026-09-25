@@ -1,5 +1,5 @@
-// ctl_queue -- a master's side of cable B: its queue, its serialiser, its
-// word reader, and when it may start.  One on every card that drives cable B.
+// ctl_queue -- a master's side of cable B: its queue, its serialiser, and
+// when it may start.  One on every card that drives cable B.
 //
 // Two cards drive cable B once a network unit is fitted -- the marker and the
 // unit -- and each fits this.  The bus has NO GRANT.  A master starts a
@@ -8,15 +8,17 @@
 // runt clock into a '273.  Who may go is the card's business, not this one's:
 //
 //   the marker   go = /UREQ high.  It yields between transactions to the
-//                unit's request line, a spare conductor on the 16-way
+//                unit's request line
 //   the unit     go = it has held /UREQ low for longer than the marker's
 //                longest transaction, and keeps holding it until it is done
 //
-// A TRANSACTION is one written word (17 bit-times, 133 us), or one READ: a
-// pointing word with WR suppressed, then the eight frames word_rx needs --
-// about 1030 master ticks, 250 us.  The bus is held across the whole read,
-// because the blocks' '164s have no output latch: another master's word
-// shifted in during the read would move /BLK and another card would answer.
+// A TRANSACTION IS ONE WRITTEN WORD: 17 bit-times, 133 us.  It used to be a
+// read as well -- a pointing word with WR suppressed, then eight frames of
+// /HW, 250 us with the bus held throughout, because another master's word
+// shifted in during the read would have moved the pointer and another card
+// would have answered.  Reads are not on cable B any more.  A reader names its
+// port on /WS in the port's own bit-time (word_rx.v), and a write passing
+// during a read changes nothing on /HW.  So this board only writes.
 //
 // THE QUEUE IS A MODEL PART.  In 74HC the sequencer holds until its word is
 // away and there is no queue (counters.md 9); here a sequencer may decide
@@ -49,17 +51,11 @@ module ctl_queue #(
     input                    clk,
     input                    rst_n,
 
-    // ---- cable A, for the reader -----------------------------------------
-    input      [2:0]         slotq,
-    input                    cap_stb,
-    input      [`SCANW-1:0]  scan,
-
     // ---- cable B -----------------------------------------------------------
     output                   sdata,
     output                   sclk,
     output                   wr,
     output                   oe,       // the '244 enable: this master holds the bus
-    input                    hw_n,
 
     // ---- the card's bus access ---------------------------------------------
     input                    go,       // this master may START a transaction now
@@ -71,13 +67,6 @@ module ctl_queue #(
     input      [NP*15-1:0]   push_d,   // slot k in bits 15k+14:15k; lower slots go first
     output     [4:0]         room,     // free entries, less what is arriving
     output reg               ovf,      // sticky: a write was refused for want of room
-
-    // ---- reads -------------------------------------------------------------
-    input                    rd_req,   // one tick: read rd_port's primary octet
-    input      [`PW-1:0]     rd_port,
-    output                   rd_busy,  // a read is waiting or in flight
-    output reg               rd_done,  // one tick: rd_word is valid
-    output reg [7:0]         rd_word,
 
     // ---- for a bench -------------------------------------------------------
     output reg               sent      // one tick: a written word's WR has gone out
@@ -140,32 +129,21 @@ module ctl_queue #(
     assign room = (DP - cnt >= n_in) ? DP - cnt - n_in : 5'd0;
 
     // ---- the serialiser --------------------------------------------------------
-    reg            s_req, s_strobe, s_g, s_bsy, s_clm;
+    reg            s_req, s_g, s_bsy, s_clm;
     reg [`PW-1:0]  s_dst, s_src;
     wire           s_busy;
     ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(s_req), .strobe(s_strobe), .g(s_g),
+        .clk(clk), .rst_n(rst_n), .req(s_req), .g(s_g),
         .dst(s_dst), .src(s_src), .bsy(s_bsy), .clm(s_clm),
         .busy(s_busy), .sdata(sdata), .sclk(sclk), .wr(wr));
 
-    // ---- the reader ------------------------------------------------------------
-    reg        r_arm;
-    wire       r_busy, r_done;
-    wire [7:0] r_word;
-    word_rx u_rx (
-        .clk(clk), .rst_n(rst_n), .slotq(slotq), .cap_stb(cap_stb), .scan(scan),
-        .hw_n(hw_n), .arm(r_arm), .busy(r_busy), .done(r_done), .word(r_word));
-
-    // ---- the transaction -------------------------------------------------------
-    localparam [1:0] T_IDLE = 2'd0, T_WRITE = 2'd1, T_POINT = 2'd2, T_READ = 2'd3;
-    reg [1:0]      t;
-    reg            rd_want;
-    reg [`PW-1:0]  rd_at;
+    // ---- the transaction: one word -----------------------------------------
+    localparam T_IDLE = 1'b0, T_WRITE = 1'b1;
+    reg            t;
     reg            s_busy_d;
 
     assign oe      = (t != T_IDLE);
-    assign rd_busy = rd_want || (t == T_POINT) || (t == T_READ);
-    assign pending = (cnt != 5'd0) || (push_v != {NP{1'b0}}) || rd_busy;
+    assign pending = (cnt != 5'd0) || (push_v != {NP{1'b0}});
     assign empty   = !pending && (t == T_IDLE);
 
     wire [14:0] head = q[wh];
@@ -175,49 +153,27 @@ module ctl_queue #(
         if (!rst_n) begin
             wh <= {AW{1'b0}}; cnt <= 5'd0; ovf <= 1'b0;
             for (i = 0; i < DEPTH; i = i + 1) q[i] <= 15'd0;
-            s_req <= 1'b0; s_strobe <= 1'b1; s_g <= 1'b1; s_bsy <= 1'b0; s_clm <= 1'b0;
+            s_req <= 1'b0; s_g <= 1'b1; s_bsy <= 1'b0; s_clm <= 1'b0;
             s_dst <= {`PW{1'b0}}; s_src <= {`PW{1'b0}};
-            r_arm <= 1'b0; t <= T_IDLE; rd_want <= 1'b0; rd_at <= {`PW{1'b0}};
-            rd_done <= 1'b0; rd_word <= 8'd0; s_busy_d <= 1'b0; sent <= 1'b0;
+            t <= T_IDLE; s_busy_d <= 1'b0; sent <= 1'b0;
         end else begin
-            s_req   <= 1'b0;
-            r_arm   <= 1'b0;
-            rd_done <= 1'b0;
-            sent    <= 1'b0;
+            s_req    <= 1'b0;
+            sent     <= 1'b0;
             s_busy_d <= s_busy;
 
             if (refuse) ovf <= 1'b1;
             for (i = 0; i < NP; i = i + 1)
                 if (take[i]) q[slot_of[i]] <= push_d[i*15 +: 15];
 
-            if (rd_req) begin rd_want <= 1'b1; rd_at <= rd_port; end
-
             case (t)
-            // WRITES BEFORE READS.  A hold, a seize or a CLAIM is late the
-            // moment a pass goes by; a read is only information.
-            T_IDLE: if (go && !s_busy) begin
-                if (cnt != 5'd0) begin
-                    s_g <= head[14]; s_clm <= head[13]; s_bsy <= head[12];
-                    s_src <= head[11:6]; s_dst <= head[5:0]; s_strobe <= 1'b1;
-                    s_req <= 1'b1;
-                    wh <= wh + 1'b1;
-                    t  <= T_WRITE;
-                end else if (rd_want) begin
-                    // the pointing word: DST names the port, WR suppressed
-                    s_g <= 1'b1; s_clm <= 1'b0; s_bsy <= 1'b0;
-                    s_src <= {`PW{1'b0}}; s_dst <= rd_at; s_strobe <= 1'b0;
-                    s_req <= 1'b1;
-                    rd_want <= 1'b0;
-                    t  <= T_POINT;
-                end
-            end
+            T_IDLE: if (go && !s_busy && (cnt != 5'd0)) begin
+                        s_g <= head[14]; s_clm <= head[13]; s_bsy <= head[12];
+                        s_src <= head[11:6]; s_dst <= head[5:0];
+                        s_req <= 1'b1;
+                        wh <= wh + 1'b1;
+                        t  <= T_WRITE;
+                    end
             T_WRITE: if (s_busy_d && !s_busy) begin sent <= 1'b1; t <= T_IDLE; end
-            // The pointing word is in every block's '164s once the
-            // serialiser goes idle; only then may the reader start.
-            T_POINT: if (s_busy_d && !s_busy) begin r_arm <= 1'b1; t <= T_READ; end
-            T_READ:  if (r_done) begin
-                         rd_word <= r_word; rd_done <= 1'b1; t <= T_IDLE;
-                     end
             default: t <= T_IDLE;
             endcase
 
@@ -225,6 +181,4 @@ module ctl_queue #(
             cnt <= cnt + n_take - (((t == T_IDLE) && go && !s_busy && (cnt != 5'd0)) ? 5'd1 : 5'd0);
         end
     end
-
-    wire _unused = &{1'b0, r_busy, 1'b0};
 endmodule

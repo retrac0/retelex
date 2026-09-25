@@ -2,9 +2,13 @@
 //
 // The marker's whole output is ONE SIXTEEN-BIT WORD ON ONE WIRE, broadcast to
 // every block at once.  Every block shifts it into its own two '164s; the one
-// whose shunt column matches DST[5:3] answers WR.  Nothing reads a block's
-// shift register until WR, which is why there is no output latch and no '595,
-// and why a word may be shifted with WR suppressed purely to steer /BLK.
+// whose number matches DST[5:3] answers WR.  Nothing reads a block's shift
+// register until WR, which is why there is no output latch and no '595.
+//
+// EVERY WORD ENDS IN WR.  A word shifted with WR suppressed used to steer
+// /HW -- the pointing word, which cost a read sixteen SCLKs.  A reader names
+// a port on /WS in its own bit-time now (word_rx.v), and nothing here steers
+// anything but a write.
 //
 //   bit 15  G      guard, always 1.  ANDed into WR at every block, so a word
 //                  without it cannot write -- but it still shifts and still
@@ -32,7 +36,6 @@ module ctl_write #(
     input                  rst_n,
 
     input                  req,      // one tick: send this word
-    input                  strobe,   // 1 = pulse WR at the end; 0 = shift only
     input                  g,        // the guard bit.  0 makes it an event word
     input      [`PW-1:0]   dst,
     input      [`PW-1:0]   src,
@@ -58,7 +61,6 @@ module ctl_write #(
     reg [`CWW-1:0]     w;
     reg [4:0]          n;        // bits left
     reg [7:0]          d;        // position inside the bit-time
-    reg                do_wr;
 
     // A '165 presents its top stage on QH the moment it is loaded, so SDATA
     // is the register itself and not a copy of it.
@@ -67,7 +69,7 @@ module ctl_write #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             st <= IDLE; w <= {`CWW{1'b0}}; n <= 5'd0; d <= 8'd0;
-            do_wr <= 1'b0; busy <= 1'b0; sclk <= 1'b0; wr <= 1'b0;
+            busy <= 1'b0; sclk <= 1'b0; wr <= 1'b0;
         end else begin
             case (st)
             IDLE: begin
@@ -77,7 +79,6 @@ module ctl_write #(
                     w     <= {g, 1'b0, dst, src, bsy, clm};
                     n     <= 5'd16;
                     d     <= 8'd0;
-                    do_wr <= strobe;
                     busy  <= 1'b1;
                     st    <= SHIFT;
                 end else busy <= 1'b0;
@@ -90,7 +91,7 @@ module ctl_write #(
                     d     <= 8'd0;
                     w     <= {w[`CWW-2:0], 1'b0};
                     n     <= n - 1'b1;
-                    if (n == 5'd1) st <= do_wr ? STROBE : IDLE;
+                    if (n == 5'd1) st <= STROBE;
                 end else d <= d + 1'b1;
             end
 

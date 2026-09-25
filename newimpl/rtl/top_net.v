@@ -17,13 +17,22 @@
 //   trunk cards             in channel sockets, like any card: each says in its
 //                           own word that it is a trunk and which way it faces
 //   /NET                    one conductor, grounded by the unit
-//   /UREQ                   one spare on the 16-way: the unit's claim on cable B
+//   /UREQ                   the unit's claim on cable B
+//   /WS                     the select, one of the bus's two spares (mainboard.md
+//                           3.4): every reader's, the marker's and the unit's
 //
 // CABLE B HAS TWO MASTERS HERE AND NO GRANT.  Each drives SDATA, SCLK and WR
 // through its own '244, enabled only while it holds the bus; with neither
 // enabled the blocks' pull-downs read all three low, which shifts and writes
 // nothing (mainboard.md 6).  Two enabled at once is two '244s on one wire,
-// and reads as x -- and `b_clash` says so, for every bench to count.
+// and reads as x -- and `b_clash` says so, for every bench to count.  Only
+// writes cross it: neither card reads a word over cable B.
+//
+// /WS HAS TWO READERS AND NEEDS NO RANK.  Each pulls it in the bit-time of
+// the port it wants, so two selects in one bit-time name the same port and
+// both readers take its word; each waits out the other's eight frames before
+// it selects again (word_rx.v).  Two open drains and a pull-up: a wired-OR,
+// like /HA, with nothing that can clash.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -76,6 +85,7 @@ module top_net #(
     output            ha_n,
     output            hb_n,
     output            hw_n,
+    output            ws_n,
     output     [`SCANW-1:0] scan,
     output            frame_stb,
     output            tick_1k,
@@ -114,6 +124,11 @@ module top_net #(
     assign b_sclk  = b_clash ? 1'bx : (m_oe ? m_sclk  : (u_oe ? u_sclk  : 1'b0));
     assign b_wr    = b_clash ? 1'bx : (m_oe ? m_wr    : (u_oe ? u_wr    : 1'b0));
 
+    // ---- /WS, resolved as the board resolves it: a 4.7 k pull-up at the clock
+    // card and the two readers' open drains ----------------------------------
+    wire m_ws_pd, u_ws_pd;
+    assign ws_n = ~(m_ws_pd | u_ws_pd);
+
     exch #(.PORT_FITTED(PORT_FITTED), .BLOCK_NUM(BLOCK_NUM),
            .BLOCK_FITTED(BLOCK_FITTED), .T_ARM(T_ARM), .T_REL(T_REL),
            .RING_ON_MS(RING_ON_MS), .RING_OFF_MS(RING_OFF_MS)) u_exch (
@@ -121,7 +136,7 @@ module top_net #(
         .c_tx(c_tx), .a_tx(a_tx), .ans_n(ans_n), .word_n(word_n),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(mute_blk), .rbt_in(rbt_in),
-        .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .hw_n(hw_n),
+        .sdata(b_sdata), .sclk(b_sclk), .wr(b_wr), .ws_n(ws_n), .hw_n(hw_n),
         .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .tick(tick),
         .slot(slot), .slotq(slotq),
         .hclk(hclk), .cap_stb(cap_stb), .tx_clk(tx_clk),
@@ -149,7 +164,7 @@ module top_net #(
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(m_sdata), .sclk(m_sclk), .wr(m_wr), .b_oe(m_oe),
-        .hw_n(hw_n), .ureq_n(ureq_n),
+        .hw_n(hw_n), .ws_n(ws_n), .ws_pd(m_ws_pd), .ureq_n(ureq_n),
         .net_n(net_n), .flood_go(flood_go),
         .u_restart(u_restart), .u_local(u_local), .u_done(u_done), .u_nogo(u_nogo),
         .u_att(u_att), .u_att_port(u_att_port), .att_ack(att_ack),
@@ -167,7 +182,7 @@ module top_net #(
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
         .sdata(u_sdata), .sclk(u_sclk), .wr(u_wr), .b_oe(u_oe), .hw_n(hw_n),
-        .ureq_n(ureq_n),
+        .ws_n(ws_n), .ws_pd(u_ws_pd), .ureq_n(ureq_n),
         .net_n(net_n), .flood_go(flood_go), .restart(u_restart), .local_go(u_local),
         .done(u_done), .nogo(u_nogo), .att(u_att), .att_port(u_att_port),
         .att_ack(att_ack),

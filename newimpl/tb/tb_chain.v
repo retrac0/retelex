@@ -22,7 +22,7 @@
 //                   waits for the sweep; the origin must still seize from it
 //
 // Timers scaled by 8, as tb_net; the sweeps are not, and two of them lie on
-// the flood's way from A to C -- about 40 ms, inside the 100 ms between digits.
+// the flood's way from A to C -- two 9 ms sweeps, well inside the 100 ms between digits.
 //
 // Does not cover: a hub (three or four directions and a fan-out of two or
 // more legs), a ring and its jumper, glare, or two calls through B at once.

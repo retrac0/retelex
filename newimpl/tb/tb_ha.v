@@ -3,8 +3,8 @@
 // TWO open-collector conductors at 64 kbps, /HA and /HB, both addressed by
 // SCAN.  In bit-time p, port p pulls /HA for its M and /HB for its BUSY, so a
 // pass is 64 bit-times = 1 ms and every port refreshes at 1 kHz.  There is
-// nothing else on either wire; the card option word is /HW, which the marker
-// points at a port and which no test here touches.
+// nothing else on either wire; the card option word is /HW, which a reader
+// selects on /WS and which no test here touches.
 //
 // THE MAP IS THE POINT.  One bit-time carries both facts about one port, so
 // there is no phase bit, and no way for a reader to pair a port's M with its
@@ -49,7 +49,7 @@ module tb_ha;
     reg bsy = 1'b1, clm = 1'b0;
 
     ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(req), .strobe(1'b1), .g(1'b1),
+        .clk(clk), .rst_n(rst_n), .req(req), .g(1'b1),
         .dst(dst), .src(src), .bsy(bsy), .clm(clm),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
@@ -58,7 +58,7 @@ module tb_ha;
         .c_tx(64'd0), .a_tx(a_tx), .ans_n(ans_n), .word_n({64{1'b1}}),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .hw_n(hw_n),
+        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .ws_n(1'b1), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
         .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),
@@ -72,7 +72,7 @@ module tb_ha;
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx({64{1'b1}}), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .hw_n(),
+        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .ws_n(1'b1), .hw_n(),
         .hc(), .ha_n(bare_ha_n), .hb_n(bare_hb_n), .tick(), .slot(), .slotq(),
         .hclk(), .cap_stb(), .tx_clk(),
         .frame_stb(), .clk_8k(), .rx_oct(), .oct_stb(),
@@ -94,7 +94,7 @@ module tb_ha;
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(perm_a_tx), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .hw_n(),
+        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .ws_n(1'b1), .hw_n(),
         .hc(), .ha_n(perm_ha_n), .hb_n(), .tick(), .slot(), .slotq(),
         .hclk(), .cap_stb(), .tx_clk(),
         .frame_stb(), .clk_8k(), .rx_oct(), .oct_stb(),

@@ -457,7 +457,7 @@ connector. The block ribbon still leaves that board toward the taps.
 
 ### 3.4 One bus, one 2×25 header
 
-**The bus is 31 signals**, grouped by what they do rather than by which cable
+**The bus is 32 signals**, grouped by what they do rather than by which cable
 carries them:
 
 | group | signals | n | driven by | read by |
@@ -466,11 +466,12 @@ carries them:
 | scan | `SCAN[5:0]` | 6 | clock card | every port and every probe. `SCAN0` is also `FILL`, `SCAN5` is also `TICK` (§3.5) |
 | speech highways | `HC[7:0]` | 8 | block *h* drives `HC[h]`, by its own jumper | every block |
 | references | `RBT`, `/RING_CAD` | 2 | the ringback card; the clock card | every block |
-| supervision planes, open drain | `/HA` (M), `/HB` (BUSY), `/HW` (card word) | 3 | every port; `/HW` the pointed card only | marker, registers, unit, debugger, displays; ports read `/HA` for E |
+| supervision planes, open drain | `/HA` (M), `/HB` (BUSY), `/HW` (card word) | 3 | every port; `/HW` the selected card only | marker, registers, unit, debugger, displays; ports read `/HA` for E |
+| the word select, open drain | `/WS` | 1 | a reader, in the bit-time of the port it names | every block, and every other reader |
 | control | `SDATA`, `SCLK`, `WR`, `/RESET`, `/UREQ` | 5 | the masters; `/RESET` also power-on | every block; `/UREQ` the marker; counters, displays and debugger listen |
 
-**One connector, 2.54 mm, 2 × 25, the same on every card position.** 31 signals,
-2 spares, 13 grounds and 4 × +5 V. Pin 1 is row 1; odd pins are row 1, even
+**One connector, 2.54 mm, 2 × 25, the same on every card position.** 32 signals,
+1 spare, 13 grounds and 4 × +5 V. Pin 1 is row 1; odd pins are row 1, even
 pins row 2, and a ribbon's conductor *n* is pin *n*.
 
 | pins | odd | even | | pins | odd | even |
@@ -485,7 +486,7 @@ pins row 2, and a ribbon's conductor *n* is pin *n*.
 | 15–16 | **`SLOTQ2`** | GND | | 41–42 | GND | `RBT` |
 | 17–18 | **`SCLK`** | GND | | 43–44 | `/RING_CAD` | `/HA` |
 | 19–20 | **`WR`** | GND | | 45–46 | `/HB` | `/HW` |
-| 21–22 | `SDATA` | `/UREQ` | | 47–48 | spare | spare |
+| 21–22 | `SDATA` | `/UREQ` | | 47–48 | `/WS` | spare |
 | 23–24 | `/RESET` | GND | | 49–50 | +5 V | +5 V |
 | 25–26 | GND | GND | | | | |
 
@@ -507,16 +508,22 @@ The order is not arbitrary:
   the wrong way (pin *p* to 51 − *p*), or with its rows swapped, still connects
   +5 V to +5 V and ground to ground. A signal may meet a ground; the supply
   cannot short.
-- **The spares have owners in waiting:** a second request line, for a console
-  ranked above the unit, and the input by which a trunk slaves the clock card
-  to its far end (`network.md` §8). The secondary word's 16-frame strobe needs
-  no pin: it is `SCAN[3:0]` decoded on the card, like §3.5's five.
+- **`/WS` took the first spare** (Joel, 2026-09-25), beside `/HB` and `/HW` in
+  the slow half. A reader pulls it in the bit-time of the port whose card
+  word it wants; every block samples it with the planes, and the block that
+  owns the port puts that card on `/HW` until the next select
+  (`newimpl/README.md` §1). It replaced the pointing word, so a read no longer
+  uses `SDATA`, `SCLK` or `WR` at all.
+- **The spare left has two owners in waiting:** a second request line, for a
+  console ranked above the unit, and the input by which a trunk slaves the
+  clock card to its far end (`network.md` §8). The secondary word's 16-frame
+  strobe needs no pin: it is `SCAN[3:0]` decoded on the card, like §3.5's five.
 
 **Why 50 and not 48.** The bus fits a 2 × 24: drop the centre ground column
 and nothing else moves. But 48-way is not a stock IDC size and 50-way is (it is
 the old SCSI ribbon), so the two extra pins buy the ribbon fill with parts off
-the shelf, and a ground fence, for 2.5 mm. A 2 × 20 would hold the 31 only with
-no spares and one ground for every two clock lines.
+the shelf, and a ground fence, for 2.5 mm. A 2 × 20 would hold the 32 only with
+no spare and one ground for every two clock lines.
 
 **One footprint, three fills.** Joel's constraint is that direct mating, a
 bridge and a ribbon are build-time choices on the same holes and the same

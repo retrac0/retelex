@@ -106,9 +106,10 @@ is a place it would, and does not:
   every frame. It goes out after the exchange's next `/RESET`. Fit the card
   with the exchange held in reset. A mirror that loads itself from `SCAN`
   would remove the need, and is not built.
-- **A pointing word shifts sixteen with no `WR`**, so the next write arrives at
-  thirty-two: a multiple of sixteen, and it passes. A word read (§6) is
-  therefore legal to this card.
+- **Every word ends in `WR`.** A word read is a select on `/WS` in the port's
+  own bit-time and eight frames of `/HW`, and moves no `SCLK` at all
+  (`newimpl/README.md` §1). The pointing word it replaced shifted sixteen with
+  no `WR`, which is why the count is taken modulo sixteen rather than exactly.
 - **An event word** (G = 0) pulses `WR` and writes nothing. `SELF_POINT` and
   `WR_P00` are gated on G, so the unit's event words light neither. They have
   G = 0 and the event code as `SRC`, and `DST` is 00 for `EV_NOTRUNK` and the
@@ -162,21 +163,23 @@ marker on `/UREQ`, each letting go only between transactions. What that means
 here, argued and not run:
 
 - **The cable-B lamps still hold.** Each master sends whole words, and a word
-  read is a pointing word (sixteen shifts, no `WR`) and eight frames of `/HW`
-  with the bus quiet. `SCLK_COUNT` and `WR_EDGE` judge the bus, not a master,
+  read does not use cable B at all: it is a select on `/WS` and eight frames of
+  `/HW`. `SCLK_COUNT` and `WR_EDGE` judge the bus, not a master,
   and a clean handover between two masters looks like two clean words.
 - **A collision would show.** Two masters' words on the bus at once — the fault
   `top_net`'s `b_clash` counts, and which no bench has produced — would almost
   certainly reach a `WR` with a shift count that is not a multiple of sixteen,
   and light `SCLK_COUNT`.
-- **`REG_WAIT` is too short for a network build, and on one it is advisory.**
-  A caller who lifts while the unit is hunting waits out the hunt before the
-  marker can read their word. The hunt is a 17 ms sweep and a 1 ms confirming
-  pass, with `/UREQ` held throughout (`net_unit.v`). So the caller waits at
-  least 18 passes, and about 20 once the unit's own writes, the marker's read
-  and the caller's turn are added. The lamp allows 16. **Strap it to 32 on a
-  network build**, or it lights on a working exchange. Even 32 does not cover
-  a burst of incoming seizures. A trunk port shows M with `BUSY` clear until
+- **`REG_WAIT` on a network build is advisory.** A caller who lifts while the
+  unit is hunting waits out the sweep before the marker can read their word:
+  the sweep's reads are back to back on `/HW`, a select every nine frames, so
+  no other reader finds a free turn until it ends. Since `/WS` the sweep is
+  9 ms, and the 1 ms confirming pass after it leaves `/HW` free
+  (`net_unit.v`), so the caller waits about 9 passes, and about 12 once the
+  marker's read and the caller's turn are added: inside the lamp's 16. It was
+  18 to 20 with the pointing word, and the advice then was to strap 32; 32 is
+  still the safer strap where the unit may sweep twice in a row. Neither
+  covers a burst of incoming seizures. A trunk port shows M with `BUSY` clear until
   the unit holds it, and the unit classifies about one seizure each 18 ms
   (`newimpl/README.md` §6), so the third of three waits about 36 passes. The
   card cannot tell a trunk's port from a line's. By arithmetic; no bench fits

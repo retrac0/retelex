@@ -9,9 +9,10 @@
 // WHAT THIS BLOCK NO LONGER HAS, against fabric.md 3.1:
 //   the A commutator            -- HA[0..7] are gone; each port drives /HA itself
 //   the BUSY commutator         -- BUSY is /HB, a second scanned conductor
-//   the word commutator         -- the word is /HW, driven by the card the
-//                                  marker pointed at; there is no '151 and no
-//                                  /BLK gate left in the word path
+//   the word commutator         -- the word is /HW, driven by the card a
+//                                  reader's SELECT named; the '151 left on the
+//                                  word pins is addressed by a latch, not by
+//                                  /BLK or the scan
 //   the HA_OUT driver and its shunt column -- and now the whole shunt field
 //   the SCAN[2:0] receivers     -- SCAN[5:0] comes off cable A, six conductors
 //   con_n and the pb_sel mux    -- the console reads /HA like everyone else
@@ -79,6 +80,7 @@ module block #(
     input                   sdata,
     input                   sclk,
     input                   wr,
+    input                   ws_n,        // MAXIMAL: /WS as received, a reader's select
     output                  hw_pd,       // MAXIMAL: this block's drain onto /HW
 
     // ---- for a monitor on this block ---------------------------------------
@@ -236,21 +238,39 @@ module block #(
     assign hb_pd = JUMPERED && (|hb_pd_k);
 
     // ---- MAXIMAL: the card word on /HW -------------------------------------
-    // NOT a commutator and NOT /BLK-gated.  All 64 cards share one conductor;
-    // the marker points at a port by leaving a word in the shift registers
-    // whose DST names it, and that one card drives /HW, a bit a frame at
-    // 64 kHz, for sixteen frames -- 250 us for a whole word.
+    // NOT a commutator.  All 64 cards share one conductor, and the card that
+    // drives it is the one the last SELECT named.  A reader pulls /WS in a
+    // port's own bit-time (word_rx.v); every block samples it with the planes,
+    // at the capture instant.  THE SCAN IS THE POINTER: the block whose number
+    // is SCAN[5:3] latches SCAN[2:0] and answers, and every other block lets
+    // go.  The latch holds until the next select, whoever makes it; the reader
+    // takes the eight frames that follow.
     //
-    // The select is the WHOLE six-bit DST, so this block answers only when
-    // DST[5:3] is its own number AND DST[2:0] picks one of its slots.  blk_n
-    // is the first half, off the '688 above, which is why the mux here is
-    // addressed by the slot alone.
+    // It used to be DST in these '164s, left there by a pointing word with WR
+    // suppressed -- sixteen SCLKs a read, and cable B held across the read so
+    // that no other word could move the pointer.  Now a write can pass during
+    // a read and change nothing here.  The '164s and /BLK are the writes'.
     //
     // Nothing continuous depends on /HW.  The scanner never waits for it, no
     // hunt is gated on it, and a word in flight cannot disturb a supervision
-    // sample -- which is the whole reason the word is not on the scan.
-    // A minimal block leaves the footprint unstuffed.
-    assign hw_pd = !blk_n && word_com[cw[10:8]];
+    // sample -- which is the whole reason the word is not on the scan.  The
+    // scan only NAMES the card; its whole word follows.  A minimal block
+    // leaves the footprint unstuffed.
+    wire a_stb = cap_stb && (slotq == `CELL_A);
+
+    // 74HC688 -- SCAN[5:3] against the jumper, and a 74HC175: the slot and
+    // whether it is ours.  GS gates it: a block with no number answers none.
+    reg       sel_v;
+    reg [2:0] sel_slot;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) begin sel_v <= 1'b0; sel_slot <= 3'd0; end
+        else if (a_stb && !ws_n) begin
+            sel_v    <= JUMPERED && (scan[5:3] == BLOCK);
+            sel_slot <= scan[2:0];
+        end
+
+    // 74HC151 on the word pins, addressed by the latch, enabled by it
+    assign hw_pd = sel_v && word_com[sel_slot];
 
     // frame_stb reaches the ports' sockets, not the port circuits: the
     // detectors run off TICK and the captures off SLOTQ.  It is carried so a

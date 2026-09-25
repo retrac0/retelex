@@ -38,7 +38,7 @@ module tb_debug;
     reg              bsy = 1'b0;
     wire             s_busy, s_sdata, s_sclk, s_wr;
     ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(req), .strobe(1'b1), .g(1'b1),
+        .clk(clk), .rst_n(rst_n), .req(req), .g(1'b1),
         .dst(dst), .src(src), .bsy(bsy), .clm(1'b0),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
@@ -58,7 +58,7 @@ module tb_debug;
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(a_tx), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(s_sdata), .sclk(bus_sclk), .wr(s_wr), .hw_n(hw_n),
+        .sdata(s_sdata), .sclk(bus_sclk), .wr(s_wr), .ws_n(1'b1), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
         .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),

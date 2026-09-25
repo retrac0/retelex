@@ -45,7 +45,7 @@ module tb_dial;
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(a_tx), .ans_n({64{1'b1}}), .word_n(64'd0),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .hw_n(hw_n),
+        .sdata(1'b0), .sclk(1'b0), .wr(1'b0), .ws_n(1'b1), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(), .slotq(slotq),
         .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),

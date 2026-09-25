@@ -43,8 +43,8 @@ module tb_tie;
     // clocks are two things, not eight identical ones.
     reg  [63:0] a_ctx = 64'd0, a_atx = 64'd0, b_ctx = 64'd0, b_atx = 64'd0;
     wire [63:0] a_crx, a_arx, a_busy, b_crx, b_arx, b_busy;
-    wire a_hw_n, a_fs, a_cap, a_txclk, a_oct, a_rxoct, a_fill, a_t1k;
-    wire b_hw_n, b_fs, b_cap, b_txclk, b_oct, b_rxoct, b_fill, b_t1k;
+    wire a_hw_n, a_ws_n, a_fs, a_cap, a_txclk, a_oct, a_rxoct, a_fill, a_t1k;
+    wire b_hw_n, b_ws_n, b_fs, b_cap, b_txclk, b_oct, b_rxoct, b_fill, b_t1k;
     wire [2:0] a_slot, a_slotq, b_slot, b_slotq;
     wire [`SCANW-1:0] a_scan, b_scan;
     wire a_sd, a_sc, a_wr, a_oe, b_sd, b_sc, b_wr, b_oe;
@@ -67,7 +67,7 @@ module tb_tie;
         .clk(clk_a), .rst_n(rst_n),
         .c_tx(a_c_in), .a_tx(a_a_in), .ans_n(a_ans), .word_n(a_word),
         .c_rx(a_crx), .a_rx(a_arx), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(a_oe && a_sd), .sclk(a_oe && a_sc), .wr(a_oe && a_wr), .hw_n(a_hw_n),
+        .sdata(a_oe && a_sd), .sclk(a_oe && a_sc), .wr(a_oe && a_wr), .ws_n(a_ws_n), .hw_n(a_hw_n),
         .hc(), .ha_n(), .hb_n(), .tick(), .slot(a_slot), .slotq(a_slotq),
         .hclk(), .cap_stb(a_cap), .tx_clk(a_txclk),
         .frame_stb(a_fs), .clk_8k(a_oct), .rx_oct(a_rxoct), .oct_stb(),
@@ -78,7 +78,7 @@ module tb_tie;
         .clk(clk_b), .rst_n(rst_n),
         .c_tx(b_c_in), .a_tx(b_a_in), .ans_n(b_ans), .word_n(b_word),
         .c_rx(b_crx), .a_rx(b_arx), .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(b_oe && b_sd), .sclk(b_oe && b_sc), .wr(b_oe && b_wr), .hw_n(b_hw_n),
+        .sdata(b_oe && b_sd), .sclk(b_oe && b_sc), .wr(b_oe && b_wr), .ws_n(b_ws_n), .hw_n(b_hw_n),
         .hc(), .ha_n(), .hb_n(), .tick(), .slot(b_slot), .slotq(b_slotq),
         .hclk(), .cap_stb(b_cap), .tx_clk(b_txclk),
         .frame_stb(b_fs), .clk_8k(b_oct), .rx_oct(b_rxoct), .oct_stb(),
@@ -106,7 +106,7 @@ module tb_tie;
         .c_in(cut ? 1'b1 : a_c_out), .a_in(cut ? 1'b1 : a_a_out),
         .clk_in(cut ? 1'b1 : a_clk_out), .link_up(b_up));
 
-    // ---- a master on each cable B, driven by hand ----------------------------
+    // ---- a master on each cable B, and a word reader on each /WS, by hand -----
     reg  [1:0]  a_pn = 2'b00, b_pn = 2'b00;
     reg  [29:0] a_pd = 30'd0, b_pd = 30'd0;
     reg         a_rq = 1'b0, b_rq = 1'b0;
@@ -115,21 +115,34 @@ module tb_tie;
     wire [7:0]  a_rw, b_rw;
     wire [4:0]  a_room, b_room;
     wire        a_pend, b_pend, a_rbusy, b_rbusy, a_sent, b_sent;
+    wire        a_ws_pd, b_ws_pd;
 
     ctl_queue #(.DEPTH(4), .NP(2)) u_ma (
-        .clk(clk_a), .rst_n(rst_n), .slotq(a_slotq), .cap_stb(a_cap), .scan(a_scan),
-        .sdata(a_sd), .sclk(a_sc), .wr(a_wr), .oe(a_oe), .hw_n(a_hw_n),
+        .clk(clk_a), .rst_n(rst_n),
+        .sdata(a_sd), .sclk(a_sc), .wr(a_wr), .oe(a_oe),
         .go(1'b1), .pending(a_pend), .empty(a_emp),
         .push_v(a_pn), .push_d(a_pd), .room(a_room), .ovf(a_ovf),
-        .rd_req(a_rq), .rd_port(a_rp), .rd_busy(a_rbusy), .rd_done(a_rd),
-        .rd_word(a_rw), .sent(a_sent));
+        .sent(a_sent));
     ctl_queue #(.DEPTH(4), .NP(2)) u_mb (
-        .clk(clk_b), .rst_n(rst_n), .slotq(b_slotq), .cap_stb(b_cap), .scan(b_scan),
-        .sdata(b_sd), .sclk(b_sc), .wr(b_wr), .oe(b_oe), .hw_n(b_hw_n),
+        .clk(clk_b), .rst_n(rst_n),
+        .sdata(b_sd), .sclk(b_sc), .wr(b_wr), .oe(b_oe),
         .go(1'b1), .pending(b_pend), .empty(b_emp),
         .push_v(b_pn), .push_d(b_pd), .room(b_room), .ovf(b_ovf),
-        .rd_req(b_rq), .rd_port(b_rp), .rd_busy(b_rbusy), .rd_done(b_rd),
-        .rd_word(b_rw), .sent(b_sent));
+        .sent(b_sent));
+
+    // each exchange's /WS: its pull-up, and the one reader's open drain
+    assign a_ws_n = ~a_ws_pd;
+    assign b_ws_n = ~b_ws_pd;
+    word_rx u_ra (
+        .clk(clk_a), .rst_n(rst_n),
+        .slotq(a_slotq), .cap_stb(a_cap), .frame_stb(a_fs), .scan(a_scan),
+        .hw_n(a_hw_n), .ws_n(a_ws_n), .ws_pd(a_ws_pd),
+        .rd_req(a_rq), .rd_port(a_rp), .busy(a_rbusy), .done(a_rd), .word(a_rw));
+    word_rx u_rb (
+        .clk(clk_b), .rst_n(rst_n),
+        .slotq(b_slotq), .cap_stb(b_cap), .frame_stb(b_fs), .scan(b_scan),
+        .hw_n(b_hw_n), .ws_n(b_ws_n), .ws_pd(b_ws_pd),
+        .rd_req(b_rq), .rd_port(b_rp), .busy(b_rbusy), .done(b_rd), .word(b_rw));
 
     function [14:0] ent(input [`PW-1:0] d, input [`PW-1:0] s);
         ent = {1'b1, 1'b0, 1'b1, s, d};          // G, no CLAIM, BSY
@@ -200,6 +213,7 @@ module tb_tie;
     endtask
 
     task ms(input integer n); begin repeat (n) @(posedge a_t1k); end endtask
+
 
     initial begin
         $display("\n  tb_tie -- two exchanges, a baseband tie trunk, patched by hand");

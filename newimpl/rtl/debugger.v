@@ -40,7 +40,8 @@
 //                     sixteen since the last WR: one extra or one missing
 //                     SCLK edge.  This is mainboard.md 7's hazard -- one of
 //                     the two signals that can lose a call -- caught in the
-//                     act.  A pointing word (shift, no WR) is 32 and passes
+//                     act.  Every word ends in WR since /WS took the reads
+//                     off the bus, so a clean count is exactly sixteen
 //     7  WR_EDGE      WR rose within a quarter bit-time of an SCLK edge, or
 //                     an edge followed within that window: mainboard.md
 //                     2.3.2's one rule
@@ -140,8 +141,9 @@ module debugger #(
     wire [`PW-1:0]  w_src = cw[7:2];
 
     // ---- SCLK edges since the last WR: a '163 -------------------------------
-    // Modulo sixteen on purpose: a pointing word shifts thirty-two and is
-    // legal; one glitch shifts seventeen and is not.
+    // Modulo sixteen: one glitch shifts seventeen.  It was modulo on purpose
+    // while a pointing word -- sixteen shifts with no WR -- made a legal
+    // thirty-two; since /WS there is none, and exactly sixteen is the rule.
     reg [3:0] nshift;
 
     // ---- ticks since the last SCLK edge, saturating; and the window after WR

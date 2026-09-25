@@ -36,12 +36,12 @@ module tb_ctl;
     wire [`SCANW-1:0] scan;
     wire s_sdata, s_sclk, s_wr, s_busy;
 
-    reg req = 1'b0, strobe = 1'b1, g = 1'b1;
+    reg req = 1'b0, g = 1'b1;
     reg [`PW-1:0] dst = 6'd0, src = 6'd0;
     reg bsy = 1'b0, clm = 1'b0;
 
     ctl_write u_ser (
-        .clk(clk), .rst_n(rst_n), .req(req), .strobe(strobe), .g(g),
+        .clk(clk), .rst_n(rst_n), .req(req), .g(g),
         .dst(dst), .src(src), .bsy(bsy), .clm(clm),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
@@ -51,7 +51,7 @@ module tb_ctl;
         .c_tx(c_tx), .a_tx(64'd0), .ans_n(ans), .word_n({64{1'b1}}),
         .c_rx(c_rx), .a_rx(a_rx),
         .mute_blk(8'd0), .rbt_in(1'b0),
-        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .hw_n(hw_n),
+        .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr), .ws_n(1'b1), .hw_n(hw_n),
         .hc(), .ha_n(ha_n), .hb_n(hb_n), .tick(), .slot(slot), .slotq(slotq),
         .hclk(), .cap_stb(cap_stb), .tx_clk(),
         .frame_stb(frame_stb), .clk_8k(), .rx_oct(), .oct_stb(),
@@ -72,10 +72,10 @@ module tb_ctl;
     end
 
     task send(input [`PW-1:0] d, input [`PW-1:0] s, input b, input c,
-              input gd, input st);
+              input gd);
         begin
             @(posedge clk);
-            dst = d; src = s; bsy = b; clm = c; g = gd; strobe = st;
+            dst = d; src = s; bsy = b; clm = c; g = gd;
             req = 1'b1; @(posedge clk); req = 1'b0; @(posedge clk);
             while (s_busy) @(posedge clk);
         end
@@ -117,8 +117,8 @@ module tb_ctl;
         // ---- 1.  the hotline: fabric.md 7 step 3 ---------------------------
         // Point 20 at 21 and 21 at 20 by hand.  A pattern sent in slot 21
         // comes out of slot 20 one frame later.
-        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1, 1'b1);
-        send(6'o21, 6'o20, 1'b1, 1'b0, 1'b1, 1'b1);
+        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1);
+        send(6'o21, 6'o20, 1'b1, 1'b0, 1'b1);
         @(posedge frame_stb); c_tx[6'o21] = 1'b1; c_tx[6'o20] = 1'b0;
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(c_rx[6'o20] === 1'b1, "20 hears 21: a hotline, set up by hand");
@@ -135,46 +135,38 @@ module tb_ctl;
         // A word with G clear cannot write.  It still shifts and still pulses
         // WR -- that is the event word a listener counts.
         nwr = 0; count_wr = 1'b1;
-        send(6'o20, 6'o03, 1'b0, 1'b0, 1'b0, 1'b1);     // G = 0
+        send(6'o20, 6'o03, 1'b0, 1'b0, 1'b0);     // G = 0
         count_wr = 1'b0;
         ck(nwr == 1, "an event word still pulses WR");
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(port_busy[6'o20] === 1'b1, "but it wrote nothing: 20 is still busy");
         ck(c_rx[6'o20] === c_tx[6'o21], "and still listening to 21, not to 03");
 
-        // ---- 4.  the probe steer: shift with WR suppressed -------------------
-        nwr = 0; count_wr = 1'b1;
-        send(6'o50, 6'o00, 1'b0, 1'b0, 1'b1, 1'b0);     // strobe = 0
-        count_wr = 1'b0;
-        ck(nwr == 0, "a pointing word never pulses WR");
-        @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
-        ck(port_busy[6'o20] === 1'b1, "and wrote nothing either");
-
-        // ---- 5.  a word for another block is not ours ------------------------
-        send(6'o50, 6'o07, 1'b1, 1'b0, 1'b1, 1'b1);     // block 5, not shunted
+        // ---- 4.  a word for another block is not ours ------------------------
+        send(6'o50, 6'o07, 1'b1, 1'b0, 1'b1);     // block 5, not shunted
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(port_busy[6'o20] === 1'b1, "a word naming block 5 leaves block 2 alone");
 
-        // ---- 6.  CLAIM is the card's A_RX: a claimed trunk's backward A --------
-        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1, 1'b1);
+        // ---- 5.  CLAIM is the card's A_RX: a claimed trunk's backward A --------
+        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1);
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(a_rx[6'o20] === 1'b0, "20 listens to an on-hook 21: no E, and no CLAIM");
-        send(6'o20, 6'o21, 1'b1, 1'b1, 1'b1, 1'b1);         // CLM = 1
+        send(6'o20, 6'o21, 1'b1, 1'b1, 1'b1);         // CLM = 1
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(a_rx[6'o20] === 1'b1, "CLM = 1 lands: A_RX = E + CLAIM, backward A up");
-        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1, 1'b1);         // CLM = 0
+        send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1);         // CLM = 0
         @(posedge frame_stb); @(posedge frame_stb); @(posedge clk);
         ck(a_rx[6'o20] === 1'b0, "and a write without it takes it away");
 
-        // ---- 7.  the rate ----------------------------------------------------
-        ck(words >= 8 && bad_period == 0, "every SCLK period is 32 ticks: 128 kHz");
+        // ---- 6.  the rate ----------------------------------------------------
+        ck(words >= 7 && bad_period == 0, "every SCLK period is 32 ticks: 128 kHz");
         ck(bad_rises == 0, "every word is sixteen SCLK edges");
-        send(6'o21, 6'o20, 1'b1, 1'b0, 1'b1, 1'b1);
+        send(6'o21, 6'o20, 1'b1, 1'b0, 1'b1);
         // 17 bit-times of 32 ticks, and one tick more for busy to fall
         ck(last_len == 545, "a written word is 17 bit-times: busy 544 + 1 ticks");
         $display("     a written word took %0d master ticks", last_len);
 
-        // ---- 8.  /RESET ------------------------------------------------------
+        // ---- 7.  /RESET ------------------------------------------------------
         // fabric.md 3.3: a port that releases clears its '273 to zeros --
         // highway 0, slot 0 -- and port 00 is never fitted, so it reads FILL.
         // FILL is the 1010 idle pattern, so what a cleared port hears is a bit

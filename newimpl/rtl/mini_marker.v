@@ -40,7 +40,9 @@
 //               the marker waits in YIELD for local, done or nogo
 //   the word    with /NET low this marker READS A PORT'S CARD WORD before it
 //               takes the port's M as a call, and before it connects a
-//               dialled port.  A flood trunk's M is never a call request --
+//               dialled port: a select on /WS in the port's own bit-time,
+//               and eight frames of /HW.  Not on cable B.  A flood trunk's M
+//               is never a call request --
 //               "leave this as M . /BUSY and a flood seizes a register at
 //               every hop" -- and a trunk is never dialled.  THE CARD SAYS
 //               WHAT IT IS; no jumper here or on the unit says it for the card
@@ -85,6 +87,8 @@ module mini_marker #(
     output                  wr,
     output                  b_oe,          // this card's '244s are driving it
     input                   hw_n,          // NETWORK: /HW, for the word read
+    input                   ws_n,          // NETWORK: /WS as received: anybody's select
+    output                  ws_pd,         // NETWORK: this card's select, onto /WS
     input                   ureq_n,        // NETWORK: the unit wants the bus.  Pulled up
 
     // ---- NETWORK: the unit's ribbon ------------------------------------------
@@ -202,31 +206,39 @@ module mini_marker #(
     wire [3:0] c1  = r_digits[7:4];
     wire       svc1 = (c1 == 4'd8) || (c1 == 4'd9) || (c1 > 4'd10);
 
-    // ---- cable B: this card's queue, serialiser and word reader ------------
+    // ---- cable B: this card's queue and serialiser -------------------------
     // Eight deep: a caller's dial tone and dial-tone-off, a connect's two, and
-    // a claim refused, all waiting behind a unit that holds the bus for a
-    // whole hunt.  The sequencer looks at `room` before it pushes, so the
-    // overflow flag is a check, not a behaviour.
+    // a claim refused, all waiting behind a unit with writes of its own.  The
+    // sequencer looks at `room` before it pushes, so the overflow flag is a
+    // check, not a behaviour.
     reg  [1:0]     push_v;           // slot 0 alone, or both: a connect
     reg  [29:0]    push_d;
     wire [4:0]     room;
-    wire           q_empty;
-    reg            rd_req;
-    reg  [`PW-1:0] rd_port;
-    wire           rd_done;
-    wire [7:0]     rd_word;
-    wire           q_pending, q_rd_busy, q_sent;
+    wire           q_empty, q_pending, q_sent;
 
     ctl_queue #(.DEPTH(8), .NP(2)) u_q (
         .clk(clk), .rst_n(rst_n),
-        .slotq(slotq), .cap_stb(cap_stb), .scan(scan),
-        .sdata(sdata), .sclk(sclk), .wr(wr), .oe(b_oe), .hw_n(hw_n),
+        .sdata(sdata), .sclk(sclk), .wr(wr), .oe(b_oe),
         .go(ureq_n), .pending(q_pending), .empty(q_empty),
         .push_v(push_v), .push_d(push_d), .room(room), .ovf(q_ovf),
-        .rd_req(rd_req), .rd_port(rd_port), .rd_busy(q_rd_busy), .rd_done(rd_done),
-        .rd_word(rd_word), .sent(q_sent));
+        .sent(q_sent));
 
     wire bus_idle = q_empty;
+
+    // ---- NETWORK: this card's word reader, on /WS and /HW ------------------
+    // Not on cable B.  It names the port on /WS in the port's own bit-time and
+    // takes the eight frames of /HW that follow (word_rx.v), so a read waits
+    // up to a pass for its turn -- one reason TAKE looks at the caller again.
+    reg            rd_req;
+    reg  [`PW-1:0] rd_port;
+    wire           rd_done, rd_busy;
+    wire [7:0]     rd_word;
+    word_rx u_rd (
+        .clk(clk), .rst_n(rst_n),
+        .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb), .scan(scan),
+        .hw_n(hw_n), .ws_n(ws_n), .ws_pd(ws_pd),
+        .rd_req(rd_req), .rd_port(rd_port), .busy(rd_busy), .done(rd_done),
+        .word(rd_word));
 
     // A flood trunk says so in its primary octet: class form, family 01,
     // member 0 -- 11 01 0 in wire order (extensions.md 2.2).  Its glare and
@@ -356,9 +368,9 @@ module mini_marker #(
             end
 
             // ---- NETWORK: the caller candidate, once more --------------------
-            // Its word said "not a trunk".  The read took a quarter of a pass,
-            // so look again before taking it: it may have hung up, or been
-            // taken, in between.
+            // Its word said "not a trunk".  The read waited for the port's
+            // next turn and took eight frames after it, so look again before
+            // taking it: it may have hung up, or been taken, in between.
             S_TAKE: if (p_fresh && (p_port == called)) begin
                 if (p_m && !p_busy && !r_busy && bus_idle) begin
                     caller   <= called;
@@ -516,5 +528,5 @@ module mini_marker #(
     // the word's glare and direction are the unit's; the queue's own status
     // lines are for a card that shares the bus more than this one does
     wire _unused = &{1'b0, r_counting, r_hook, rd_word[7:5], q_pending,
-                     q_rd_busy, q_sent, 1'b0};
+                     rd_busy, q_sent, 1'b0};
 endmodule

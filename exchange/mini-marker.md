@@ -190,8 +190,9 @@ request.
 
 With a unit fitted, the same call costs this marker two word reads: 20's
 before it is taken, and 21's before it is connected. The unit reads 20's word
-as well, and first, because it outranks the marker. So cable B carries three
-reads of about 250 µs each.
+as well. So `/HW` carries three reads of nine frames each, and cable B none:
+each reader names its port on `/WS` in the port's own bit-time, and if the
+unit and the marker both want 20 at its turn, one select serves them both.
 
 ---
 
@@ -239,7 +240,7 @@ The rows a unit adds are in §8.
 | the probe | `probe.v` | a comparator on `SCAN`, and flip-flops that hold M and `BUSY`. It offers every port once a pass, or holds one port |
 | the register | `pulse_reg.v`, `pulse_rx.v` | §3. Its ribbon is brought out (`common-control.md` §2.1) |
 | cable B | `ctl_queue.v`, `ctl_write.v` | eight words deep, one serialiser. **The queue is a model part**: on a board the sequencer holds until its word is away (`newimpl/README.md` §6) |
-| the word reader | `word_rx.v`, in `ctl_queue` | a pointing word, then eight frames of `/HW`. Used only with `/NET` low |
+| the word reader | `word_rx.v`, beside `ctl_queue` | a select on `/WS` in the port's own bit-time, then eight frames of `/HW`: no cable B. Used only with `/NET` low |
 
 It is fitted in `top_min.v`, with the network half tied to "no unit", and in
 `top_net.v`, beside `net_unit.v`. The network half is tagged `// NETWORK`.
@@ -304,7 +305,7 @@ only while `/NET` is low:
 | key `1` | consumed at once: the store is restarted so `e b h s` land in slots 0–3, dial tone goes off, `flood_go`. The unit owns the call; the marker waits in YIELD |
 | YIELD | the unit says `local` (the call's own code: the store is restarted again and `h s` follow as a local number), `done` (it wrote caller ↔ trunk; the register is freed) or `nogo` (→ 03). A hang-up is abandon, as ever |
 | a second `1` | after the call's own code, or from a claimed trunk: cannot-complete. After the own code, `h = 1` would be the trunks' highway, and ports 10–17 are never dialled on a networked exchange (`protocol.md` §5). A claimed trunk's flood would go back up the link it came in on |
-| the word | read before a port's M is taken as a call, and before a dialled port is connected: a pointing word, then eight frames of `/HW`, about 250 µs of cable B. **The card says what it is.** Nothing on this card or the unit's says it for the card |
+| the word | read before a port's M is taken as a call, and before a dialled port is connected: a select on `/WS` in the port's own bit-time, then eight frames of `/HW` — up to a pass to wait for the turn, and no cable B at all. **The card says what it is.** Nothing on this card or the unit's says it for the card |
 | a flood trunk (class *trunk*: family 01, member 0, `11 01 0` in wire order; `extensions.md` §2.2) | never a caller: its M is the unit's. Never dialled: cannot-complete |
 | NONE, all zeros | a card held off by its power-up RC, out of service, or a trunk whose link is down. Never a caller. Dialled, it is an empty slot, and is connected as §2 says |
 | a tone trunk (the same family, member 1) | a caller like a line: a leaf's uplink arriving at its central (§9) |

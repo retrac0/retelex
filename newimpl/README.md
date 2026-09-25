@@ -9,11 +9,13 @@ carries M, `/HB` carries `BUSY`, and `/HW` carries the card option word.**
 Everything else follows from that.
 
 > **`PB` is gone.** With `BUSY` on its own scanned wire and the option word on
-> a marker-addressed one, nothing in the exchange is block-steered any more,
-> and `/BLK` survives only to select which card answers on `/HW`.
+> a wire a reader selects in the port's own bit-time, nothing in the exchange
+> is block-steered any more, and `/BLK` survives only to gate a block's
+> writes.
 
-> **Status: measured in simulation — 13 benches, 306 checks under Verilator,
-> and 25 faults each shown to turn its bench red (`make faults`).** Icarus is
+> **Status: measured in simulation — 13 benches, 327 checks under Verilator,
+> and 29 faults, each shown to turn its bench red but the two held twice by
+> design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
 > stopped in `net` after an hour, and `chain` never ran. No gate delays, so
@@ -47,14 +49,36 @@ worst case, an 18 ms break at 20 pps, was nine samples against a four-sample
 ### The card option word: `/HW`
 
 `/HW` is a third wired-OR conductor and the same part, but it is **not**
-scanned. The marker points at a port by leaving a word in the blocks' shift
-registers whose `DST` names it, and that one card drives `/HW` at 64 kHz, a bit
-a frame — **250 µs for a whole sixteen-bit word.** Nothing continuous depends
-on it, so the scanner never waits for it and a word in flight cannot disturb a
-supervision sample. That is the whole reason the word is not on the scan.
+scanned. **A reader names the port on a fourth, `/WS`, the select**, one of
+the bus's two spares (`mainboard.md` §3.4). It pulls `/WS` in that port's own
+bit-time; every block samples `/WS` with `/HA` and `/HB`, the one whose number
+is `SCAN[5:3]` latches `SCAN[2:0]`, and that one card drives `/HW`, a bit a
+frame, until the next select. The reader takes the eight frames that follow:
+**a read is nine frames, 140 µs, and touches no other wire.** Nothing
+continuous depends on it, so the scanner never waits for it and a word in
+flight cannot disturb a supervision sample. That is the whole reason the word
+is not on the scan: the scan only *names* the card, and its whole word
+follows.
+
+> **`/WS` replaced the pointing word** (Joel, 2026-09-25). A reader used to
+> name its port with a control word whose `DST` was the port, `WR` suppressed:
+> sixteen `SCLK`s at 128 kHz, 125 µs, as long as the octet it pointed at, with
+> cable B held across the whole read because another master's word shifted in
+> during it would have moved the pointer. Now cable B carries **writes only**;
+> a write passing during a read changes nothing on `/HW` (`tb_word`); the
+> unit's `WAIT` need only outlast a write; and the unit's hunt is a 9 ms sweep
+> where it was 17. The price is that a read starts only at its port's turn, up
+> to a pass to wait.
+>
+> **Nobody owns `/WS`, and nothing can collide on it.** A select names
+> whichever port's turn it is, so two readers pulling it in one bit-time name
+> the same port and both take its word. The one rule is not to select during
+> somebody's eight frames, and every reader can see those on `/WS`
+> (`word_rx.v`). And since any card can see which port was named, **every read
+> is public**: a card could take another's reads as its own. None does yet.
 
 > **`/HW` fails SAFE, read the way the pin is defined.** A card pulls its word
-> pin low for a one (`extensions.md` §2.2), so a pointed port that is empty, on
+> pin low for a one (`extensions.md` §2.2), so a selected port that is empty, on
 > an unfitted block, held off by its power-up RC or a trunk whose link is down
 > leaves `/HW` high for every frame and reads **all zeros** — the word table's
 > *none / OOS*. Only a reader that took the wire's level as the bit would read
@@ -66,8 +90,10 @@ supervision sample. That is the whole reason the word is not on the scan.
 > reloads on `TX_OCT`, every eight frames, and the socket has no strobe that
 > marks sixteen; the trunk card (`baseband.md` §3.5) shifts on `TX_CLK`, so
 > frame 7 carries bit 0 and frame *f* bit *f*+1, and any eight consecutive
-> frames hold the octet. Class, glare and direction are all in it. The
-> secondary byte at 64 kHz is §6's open item.
+> frames hold the octet. A select comes at its port's turn, so the frame a
+> read starts on is fixed by the port's slot, and `word_rx`'s '259 is wired
+> rotated so that every slot reads in place. Class, glare and direction are
+> all in the octet. The secondary byte at 64 kHz is §6's open item.
 
 `HC[0..7]` at 512 kbps are untouched — eight slots a frame, 64 kbps a port,
 `SLOT[2:0]` on every commutator. Voice is unaffected; only supervision slows.
@@ -95,7 +121,7 @@ cannot supply. The second conductor removed a divider stage as well as a wire.)
 
 | | `verilog/` | here |
 |---|---|---|
-| highway conductors | 16 | **10** — 8 × `HC`, `/HA`, `/HB` (+ `/HW`, MAXIMAL) |
+| highway conductors | 16 | **10** — 8 × `HC`, `/HA`, `/HB` (+ `/HW` and `/WS`, MAXIMAL) |
 | usable seats | 63 | **63** |
 | a block's commutators | 4 × '151 | **0** |
 | the marker's probe | 2 × '151, '74, 2 × '164 | a comparator and two flip-flops |
@@ -174,16 +200,19 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
    pulse_reg       register.md 4's collector, with a probe of its own on its caller
      pulse_rx      three windows off one timer: HIT 8, ID 128, CLR 256 ms
    ctl_queue       a master's side of cable B: its queue (a model part), its
-                   serialiser, its word reader, and when it may start
+                   serialiser, and when it may start.  Writes only
      ctl_write     the cable B serialiser: one 16-bit word on one wire at 128 kHz
-     word_rx       /HW into the primary octet: a '259 wired rotated by one
+   word_rx         NETWORK: the card word reader.  A select on /WS in the port's
+                   own bit-time, then /HW into the primary octet: a '259 wired
+                   rotated by one
 
  net_unit          NETWORK: the pulse flood.  Its own probe and cable-B master;
                    a classifier that reads a seizing port's word, a bit a port
                    (eight '164) saying which it has dealt with, and a watch on
                    each hold through the ports' arming time; the monitors, each
                    its own probe and pulse_rx; the origin bank for the one
-                   register; the forwarder and resolvers; one 17 ms sweep
+                   register; the forwarder and resolvers; one 9 ms sweep;
+                   its own word_rx
 
  debugger          MINIMAL+MAXIMAL: a listener on the tap with no authority.
                    Twelve sticky lamps grouped by which board to pull; its own
@@ -209,8 +238,8 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
 
 `top_net` and `top_max` instantiate the same `exch`, unchanged, so "the network
 and maximal builds are the same fabric" is true by construction rather than by
-care. What is MAXIMAL in the minimal build is **one wire** — `/HW` — brought
-out, and read in `top_net` only.
+care. What is MAXIMAL in the minimal build is **two wires** — `/HW` and its
+select, `/WS` — brought out, and used in `top_net` only.
 
 **A third top, deliberately.** The rewrite's plan had two, with the unit only
 in `top_max`. Joel chose, 2026-09-25, to bring the unit up beside the mini
@@ -222,9 +251,11 @@ it had a network half, and `tb_mini` checks it.
 
 **The four interfaces above `exch` that the network needed are in.** Cable B
 has two masters, each a `ctl_queue`, the unit ranked above the marker on a
-request line; `g`, `strobe` and `clm` are live and the queue is fifteen bits;
-`/HW` has a reader of its own with its own validity; and the unit fits its own
-probe instead of widening the marker's tap.
+request line; `g` and `clm` are live and the queue is fifteen bits; each card
+that reads a word has a `word_rx` of its own, which names its port on `/WS`
+and needs no cable B at all; and the unit fits its own probe instead of
+widening the marker's tap. (`strobe` was live too, for the pointing word; it
+went with it.)
 
 ### Style
 
@@ -275,32 +306,34 @@ function changed.
 |---|---|
 | `clock` | the taps it brings out, and the block decode (`frame_decode`) made from them, their rate and phase; `SLOTQ` a quarter cell late; **`FILL == SCAN[0]`**; **`pass_stb` and `TICK` are the same edge**; a pass is 4096 master ticks; and that **`SCAN` steps on every frame edge with no exception** |
 | `fabric` | every source slot to every listening slot — **4 096 ordered pairs, bit-exact, one frame**; fan-out; and that an exchange with no port circuits pulls none of the three wires down |
-| `ctl` | the hotline set up by hand; the guard bit; an event word that pulses `WR` and writes nothing; a pointing word that never pulses `WR`; **`CLM` reaches the card as `A_RX`**; **the serialiser's rate measured** — every `SCLK` period 32 ticks, sixteen edges a word, 17 bit-times a written word; `/RESET` |
+| `ctl` | the hotline set up by hand; the guard bit; an event word that pulses `WR` and writes nothing; **`CLM` reaches the card as `A_RX`**; **the serialiser's rate measured** — every `SCLK` period 32 ticks, sixteen edges a word, 17 bit-times a written word; `/RESET` |
 | `ha` | the bit-time map **on both wires at once** — `/HA` is port *p*'s M and `/HB` is port *p*'s `BUSY` in bit-time *p*; the capture 36 master ticks (8.79 µs) into the frame; all 64 ports in order; a bare exchange never pulls either down; **E follows M within one pass**; and the 16 ms detector arming, sampled either side of the window |
 | `probe` | 64 ports a pass following the scan, one a pass when held, and **the per-port clear** |
 | `dial` | a rotary dial through the 1 kHz sampler, at the corners of `register.md` §3.1's **nominal** envelope, down to an ideal 28 ms break at 20 pps |
 | `mini` | `mvp.md` §3's call, 20 to 21: seize within a pass, dial tone, `2 1`, the ringback substitution, ringing in cadence, answer, two-way voice, self-release; then `mini-marker.md` §5's wrong numbers, **`2 8` refused on the second key**, and **key 1 as highway 1 with no unit fitted** |
 | `debug` | the debugger card: a quiet exchange and a clean write light **nothing**; eleven faults injected one at a time, each lighting its own lamp, and the two `STUCK` faults their `P00` lamp with it; and **`mainboard.md` §7's SCLK hazard** — one extra edge lights the lamp *and* loses the write, and the next clean word lands |
 | `line` | the CVSD line card with a phone on its two pairs: `1100` reads on-hook and speech off-hook, through the 4 ms RC; **a 60 ms dial break arrives 54 ms long** — the 6 ms `subscriber-line.md` §5 measures, reproduced; `A_RX` rings an on-hook phone and only an on-hook phone; a cut pair reads on-hook, not off; `MUTE` puts `1010` on an off-hook line; bits cross both ways in order |
-| `word` | a card's word off `/HW`: a trunk reads its class, glare and direction; a plain line all ones; an empty socket, an unfitted block, a card in its power-up RC and a cut link **all zeros**; the same octet at all eight phases; a read writes nothing and holds cable B 998 ticks; and two faults on the wire go red in the same run — `/HW` a frame late, and read at its wire level |
+| `word` | a card's word off `/HW`, named by a select on `/WS`: a trunk reads its class, glare and direction; **eight trunks, one a slot, each read their own word** — every octet phase, since a port's slot fixes where its read starts; a plain line all ones; an empty socket, an unfitted block, a card in its power-up RC and a cut link **all zeros**; one select a read, in the port's own bit-time, and the word **512 ticks after it**; **no read moves `SCLK` or makes a `WR`**; two readers selecting one port in one bit-time both take its word; a reader whose port comes round inside another's eight frames takes it a pass later; **a write passing on cable B during a read changes nothing on `/HW`**; and two faults on the wire go red in the same run — `/HW` a frame late, and read at its wire level |
 | `tie` | two exchanges on two crystals and a baseband tie trunk, patched by hand: each end reads its own card's word; 32 bits cross each way in order; the hook crosses as M; `/ANS` is low; a cut cable drops both link detectors, reads NONE at both ends and drops A |
-| `net` | two exchanges on one link, **calls that are dialled**, in fifteen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; and no clash on either cable B, ever |
+| `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; and no clash on either cable B, ever |
 | `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 25 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 29 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
-the bench meant to catch each: the unit released on `gone` alone, a sweep on
-an even stride, the 5 s rule gone, the claim wait from the last digit, the
-second digit folded, the register armed on a stale sample, no guard, no wait
-before the unit drives, a word not gated by its link, key 1 a flood with no
-unit, the old serialiser rate, `CLM` tied off, no unhold, the origin reading
-the shared sweep, no per-port memory, a second key allowed, a one-key number
-waiting for four, and more. **Every one turns its bench red** on the final
-tree — except two whose rule is held twice, which stay green by design and
-each have a second fault removing both holds, which is red: the refusal
-landing after `CLAIM` (the unit's handshake, and its rank on cable B), and a
-trunk's M never taken as a call (the marker's own read, and the unit's hold
-within a pass).
+the bench meant to catch each: the unit released on `gone` alone, a sweep on an
+even stride, the 5 s rule gone, the claim wait from the last digit, the second
+digit folded, the register armed on a stale sample, no guard, no wait before
+the unit drives, a word not gated by its link, key 1 a flood with no unit, the
+old serialiser rate, `CLM` tied off, no unhold, the origin reading the shared
+sweep, no per-port memory, a second key allowed, a one-key number waiting for
+four, `/HW` steered by `DST` again, every block answering a select, a reader
+selecting inside another read's eight frames, the sweep taking a trunk that was
+busy at its select, and more. **Every one turns its bench red** on the final
+tree — except two whose rule is held twice, which stay green by design and each
+have a second fault removing both holds, which is red: the refusal landing
+after `CLAIM` (the unit's handshake, and its rank on cable B), and a trunk's M
+never taken as a call (the marker's own read, and the unit's hold within a
+pass).
 
 A review of the network RTL by four independent readers, each finding checked
 by a skeptic trying to refute it, found five real defects before this tree
@@ -329,8 +362,9 @@ scenario, and each has its fault in `faults.py`.
   its mechanism is tested, not its reach. No relayed pulse is measured at real
   speed.
 - **No glare** is provoked, so `EV_GLARE` and the glare count are unexercised.
-  No hub (a fan-out of two or more legs), no ring and its jumper, no two calls
-  through one exchange at once, and no MF8.
+  No hub (a fan-out of two or more legs), no ring and its jumper, no two
+  floods at once on one exchange (`net` 16 has two calls up at once, but its
+  second flood starts after the first is connected), and no MF8.
 - The network benches' phones are the socket's pins driven by hand, as
   `mini`'s are, not `cvsd_line_card`.
 
@@ -346,7 +380,7 @@ The code comments name the section; the documents have not been brought up yet.
 | `fabric.md` §1.1, §2, §3.1, §3.2 | `HA[0..7]` are gone; the block has **no** commutator but the C one; the port's A select is a comparator; `PB[1:0]` and both its '151s go |
 | `mainboard.md` §2.2 | **the polarity.** "`HA` is pulled to ground: on-hook" becomes `/HA`, `/HB` and `/HW` pulled **up** — an open-collector wire cannot be pulled to its active state. §2.2's table also still lists eight `HA` wires |
 | `mainboard.md` §2.1 | the `CLK_8K` row's "the scanner steps on it; a visit is 125 µs" — the scanner steps on the 64 kHz frame edge and a turn is 15.63 µs. The group count "15, of which the clock card drives 14" grows by `SCAN[5:0]` |
-| `mainboard.md` §2.3.3, §2.3.4 | `SCAN[2:0]`, `ADVANCE` and `START` come off cable B; `SCAN[5:0]` goes on cable A, from the clock card. §2.3.3's conclusion — that a word-steered probe would saturate the bus — no longer applies to M or `BUSY`, but **does** now apply to `/HW`, which is word-steered by design |
+| `mainboard.md` §2.3.3, §2.3.4 | `SCAN[2:0]`, `ADVANCE` and `START` come off cable B; `SCAN[5:0]` goes on cable A, from the clock card. §2.3.3's conclusion — that a word-steered probe would saturate the bus — no longer applies to M or `BUSY`, and since `/WS` not to `/HW` either: nothing is word-steered |
 | `mainboard.md` §3.2 | cable B reverts to a 16-way. `common/terms.md` §, which still says 16-way, becomes the **correct** document and §3.2 the stale one |
 | `mainboard.md` §1, §2.3, §4 | **there is no shunt field.** The jumper is on the block header, a '148 reads it as the block's number, and the block makes `/BLK` itself with one '688 on `DST[5:3]`. §2.3's "the decoder moved to the block's end and nothing learned its own name" is superseded: the block knows its name. `blk_dec` and the `/BLK` return — 8 conductors a block connector, 64 on the mainboard — are gone, and the mainboard is the ribbon §1 always said it was |
 | `port-card.md` | the port card carries a 2 × 3 **slot jumper**, and takes the highway half of its number off the block ribbon. It must be set to the socket the card sits in, which is still where its `C_TX` enters the commutator |
@@ -363,11 +397,12 @@ The code comments name the section; the documents have not been brought up yet.
 | `register.md` §2 | `counting` is cleared one gate later than the '163's STB, because `pulse_reg` samples `cnt` in the strobe cycle |
 | `port-card.md` | the trailing `bbb bss sss` is a nine-bit address from the withdrawn `beafaf1` branch; and `:13`'s "64 A status bits multiplexed at 64 kHz" is the A half only, with no `BUSY`, no `SCAN` pin and a 1 ms pass |
 | the rewrite's plan, D6 | **three tops, not two.** `top_net` fits the network unit beside the mini marker; `top_max` is still to come. Joel's decision, 2026-09-25 |
-| `mainboard.md` §2.3; `common-control.md` §2.2 | **cable B has a second master.** The unit has its own serialiser and a request line, `/UREQ`, on one of the 16-way's two spares; the marker yields between transactions; there is no grant, and the unit waits 1152 ticks — longer than the marker's longest transaction, a word read — before it drives. `common-control.md` §2.2's drain of the unit's writes through the marker's serialiser is gone |
+| `mainboard.md` §2.3; `common-control.md` §2.2 | **cable B has a second master.** The unit has its own serialiser and a request line, `/UREQ`; the marker yields between transactions; there is no grant, and the unit waits 640 ticks — longer than the marker's longest transaction, a written word now that reads are off the bus — before it drives. `common-control.md` §2.2's drain of the unit's writes through the marker's serialiser is gone |
 | `common-control.md` §1, §2.3, §4; `monitor.md` §1, §3.3, §4, §6; `fabric.md` §5.2 | **the monitors are on the network unit**, not on the trunk block: each cell is a probe on `/HA` and `/HB` and a `pulse_rx`, one pool an exchange, attached when the unit reads a seizing port's word. BUSY is read in M's own bit-time, so the third term is live, not "at the last visit". No block wiring, no `chan_mask`, no `BLOCK` strap; `e` and `b` are the unit's own jumpers. `monitor.md` §4's per-block sizing must be re-derived for one pool |
 | `common-control.md` §2.2, §2.4, §5; `network.md` §3.2 | **no trunk jumpers anywhere.** A trunk card says it is a trunk, which way it faces and its glare in its own word, and the marker and the unit each read it off `/HW` when they need it (Joel, 2026-09-25). `TRUNK_MASK`, `TRUNK_DIR` and `HAS_NET` are gone; "a one-direction bring-up hunts by a jumpered port mask" no longer holds |
 | `common-control.md` §2.2 | **`/NET`**: the unit grounds it and the marker reads it, in place of "a jumper, or the card present". Unit-to-marker controls are one-tick `_stb` lines; `att` is a level held until the marker attaches or refuses, raised only once the `CLAIM` word has gone out |
-| `network.md` §3, §3.2; `topology.md` | **a hunt is a 17 ms sweep.** Reading words costs a quarter of a pass each, so the unit visits every port once on a stride of 17 and keeps, a direction, the lowest free trunk — or the highest where the word sets glare — then confirms each is still free before writing it. At a transit that is most of a hop: the 128 ms guard covers about six hops where the documents' 12 ms a hop gave ten |
+| `mainboard.md` §2.3, §3.4; `extensions.md` §2.2; `common-control.md` §2.2 | **`/WS`, the word select** (Joel, 2026-09-25), on the bus's first spare, pin 47. A reader names a port by pulling `/WS` in that port's bit-time; every block latches the selected slot at the capture instant and gates that card onto `/HW` until the next select (`block.v`). The pointing word — a control word with `WR` suppressed — is gone, with `ctl_write`'s shift-only mode and `ctl_queue`'s read transaction: cable B carries writes only, and a reader needs no bus master at all |
+| `network.md` §3, §3.2; `topology.md` | **a hunt is a 9 ms sweep.** A read is a select in the port's own bit-time and eight frames, so the unit visits every port once on a stride of 9, reads every one, and keeps, a direction, the lowest trunk that was free at its select — or the highest where the word sets glare — then confirms each is still free before writing it. At a transit that is most of a hop, about 12 ms: the 128 ms guard covers about ten hops, the documents' figure. (With the pointing word it was a 17 ms sweep and six hops) |
 | `extensions.md` §2.2, `baseband.md` §3.5 | **the word's timing.** §2.2 shifts a card's '165 at 128 kHz on `LOOP_HB`; `/HW` is read at 64 kHz. The trunk card shifts on `TX_CLK` and loads in the first half of frame 7 (`TX_OCT · TX_CLK`, a quarter '08), so the load is released a half-frame before the edge that shifts; `baseband.md` §3.5's load on `TX_OCT` alone released it at that very edge |
 | `register.md` §4 | `pulse_reg` arms its collector at the first sample its probe takes **of the caller**. The probe holds the last port's hook for up to a pass after it is re-pointed, and a HIT strapped as low as 1 ms counted that stale zero as a pulse |
 | `baseband.md` §3.1 | the A path's RC is modelled as two flip-flops on the frame edge, a frame or two where the card has tens of microseconds |
@@ -403,12 +438,17 @@ capture (`port.v`'s `e_cap <= ~ha_n`).
   the card to read the word at 128 kHz as `extensions.md` §2.2 has it, or a
   second octet by another means. (The fails-open worry this item used to be was
   a misreading of the bit's polarity: §1.)
-- **The hunt costs the guard.** A sweep is 17 ms whatever the exchange holds,
-  and a transit's hop is mostly one sweep. `network.md` §4 and `monitor.md`
-  §3.5 budget a hop at 7 ms, 12 at a slow marker; at 17 the 128 ms tap covers
-  about six hops and the 256 ms tap about thirteen. `topology.md`'s limits on
-  long chains move with it and have not been re-run. It is the price of the
-  card saying what it is, which Joel accepted.
+- **The hunt costs the guard.** A sweep is 9 ms whatever the exchange holds,
+  and a transit's hop is mostly one sweep, about 12 ms by arithmetic.
+  `network.md` §4 and `monitor.md` §3.5 budget a hop at 7 ms, 12 at a slow
+  marker; at 12 the 128 ms tap covers about ten hops, the 256 ms about twenty
+  and the 512 ms about forty. Half that where a transit's own caller is
+  sweeping as the seizure arrives, because the forward waits for that sweep,
+  and the guard must cover the slow case: running past it is a wrong number,
+  not a failed call (`monitor.md` §3). With the pointing word the sweep was
+  17 ms and the 128 ms tap covered six. `topology.md`'s limits on long chains
+  move with it and have not been re-run. It is the price of the card saying
+  what it is, which Joel accepted.
 - **One forwarder, one origin bank.** A seizure that arrives while the
   forwarder is sweeping is held and watched but not passed on (`n_nofwd` counts
   it). The unit has one origin bank because the mini marker has one register;
@@ -428,12 +468,22 @@ capture (`port.v`'s `e_cap <= ~ha_n`).
   because a port whose M detector never rose has no edge to release on. It
   takes no other seizure meanwhile; one that rises then is read at a later pass
   (its bit a port is still clear), so a burst of seizures is classified about
-  one each 18 ms.
-- **Cable B's second master, on paper.** `/UREQ` is one of the 16-way's two
-  spares, but no pin table for newimpl's 16-way has been written, and the
-  unit's `WAIT` of 1152 ticks is derived from the marker's longest transaction
-  by hand, not measured against it. `b_clash` is counted in every network bench
-  and has never lit.
+  one each 18 ms. A seizure seen while the reader is busy — every frame of a
+  sweep, which selects every nine — is kept and read ahead of the sweep's next
+  step; left to wait, it waited out the whole sweep, and `faults.py` F19's
+  crossing race stopped being reachable.
+- **Cable B's second master, on paper.** `/UREQ` has its pin (`mainboard.md`
+  §3.4), but the unit's `WAIT` of 640 ticks is derived from the marker's
+  longest transaction — a written word, 545 ticks, and two to hand the '244
+  back — by hand, not measured against it. `b_clash` is counted in every
+  network bench and has never lit.
+- **`/WS` spent a spare.** `mainboard.md` §3.4 had two, each with an owner in
+  waiting — a second request line for a console ranked above the unit, and
+  the input by which a trunk slaves the clock card to its far end — and those
+  two now share the one left. `/WS` is also one more open drain sampled at the
+  capture instant, on the same unanalysed 4.7 kΩ pull-up as `/HA`, `/HB` and
+  `/HW`. And no lamp watches it: a select made inside another read's eight
+  frames is what a faulty reader would do, and the debugger would not see it.
 - **`SCLK` is not a tap here.** `ctl_write` counts its own bit-time off the
   4.096 MHz master, so the one rate in the design that is not a divider tap is
   hidden inside a module whose header calls itself two '165s. On a board that

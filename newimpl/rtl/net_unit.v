@@ -8,8 +8,9 @@
 //
 //   its own probe on SCAN -- it never borrows the marker's, which freezes on
 //     a called port exactly when the marker is busiest
-//   its own cable-B master -- queue, serialiser, word reader -- ranked above
-//     the marker, with /UREQ to say so
+//   its own cable-B master -- queue and serialiser -- ranked above the
+//     marker, with /UREQ to say so; and its own word reader, which names a
+//     port on /WS in that port's bit-time and so needs no bus at all
 //   a CLASSIFIER: a port showing M with BUSY clear is read off /HW.  A flood
 //     trunk is an incoming seizure: hold it, give it a monitor, forward it.
 //     Anything else is the marker's
@@ -30,21 +31,29 @@
 // the ring jumper, one a direction (network.md 3.3).
 //
 // ---- THE COST OF READING, AND WHY THE HUNT SWEEPS ----------------------------
-// A read is a pointing word and eight frames: about 1000 master ticks, a
-// quarter of a pass.  A port's M and BUSY are known only in its own bit-time,
-// so a hunt that took ports in number order would wait most of a pass between
-// reads -- a millisecond a port.  So THE SWEEP VISITS PORTS ON A STRIDE OF 17:
-// a read finishes about sixteen frames after its port's turn, and the port 17
-// on is the next one round.  17 is odd, so 64 steps visit every port once.
-// A sweep is 64 x 17 frames, 17 ms, whatever the exchange holds; a port that
-// is not free costs its step and no read.  The sweep does not find ports in
-// order, so it keeps the lowest (or, with glare, the highest) candidate a
-// direction, and a final pass checks each candidate is still free before it
-// is written (groups.md 2.2: take the port at the visit that finds it free).
+// A read is a select on /WS in the port's own bit-time and the eight frames
+// of /HW after it (word_rx.v): nine frames, and no cable B.  It can only
+// START at its port's turn, so a hunt that took ports in number order would
+// wait most of a pass between reads -- a millisecond a port.  So THE SWEEP
+// VISITS PORTS ON A STRIDE OF 9: a read ends eight frames after its select,
+// and the port nine on is the next one round.  9 is odd, so 64 steps visit
+// every port once.  A sweep is 64 x 9 frames, 9 ms, whatever the exchange
+// holds.
 //
-// That 17 ms is part of every transit's hop, and the guard is what a hop is
-// measured against: at 128 ms the guard covers about six such hops where it
-// covered ten at the documents' 12 ms.  Joel accepted the cost, 2026-09-25.
+// EVERY PORT IS READ, free or not.  A port's M and BUSY are sampled in the
+// same bit-time as its select, so the sweep cannot know a port is free until
+// it has named it; it keeps that bit-time's M and BUSY with the word that
+// follows, and a port that was not free is no candidate.  The sweep does not
+// find ports in order, so it keeps the lowest (or, with glare, the highest)
+// candidate a direction, and a final pass checks each candidate is still free
+// before it is written (groups.md 2.2: take the port at the visit that finds
+// it free).
+//
+// The sweep is most of every transit's hop, and the guard is what a hop is
+// measured against.  With a pointing word on cable B a read was sixteen
+// frames, a sweep 17 ms, and the 128 ms tap covered about six hops; at 9 ms
+// it covers about ten, the documents' figure.  Joel accepted the 17 ms on
+// 2026-09-25, and took the pointing word off the bus the same day.
 //
 // ---- WHAT THE MARKER SEES ------------------------------------------------------
 //   /NET        grounded here: a unit is fitted
@@ -89,8 +98,10 @@ module net_unit #(
     // has no edge to be cleared by, so this card clears it
     parameter [8:0]   T_ARM   = 9'd16,
     // master ticks /UREQ is held before this card drives: longer than the
-    // marker's longest transaction, a read, about 1030
-    parameter [11:0]  WAIT    = 12'd1152
+    // marker's longest transaction.  Since reads left cable B that is one
+    // written word -- 17 bit-times, 545 ticks, and two more to hand the '244
+    // back.  It was a read, about 1030 ticks, when this was 1152
+    parameter [11:0]  WAIT    = 12'd640
 )(
     input                   clk,
     input                   rst_n,
@@ -108,8 +119,10 @@ module net_unit #(
     output                  sclk,
     output                  wr,
     output                  b_oe,
-    input                   hw_n,
-    output                  ureq_n,        // the unit's request: a 16-way spare
+    input                   hw_n,          // /HW, for the word reads
+    input                   ws_n,          // /WS as received: anybody's select
+    output                  ws_pd,         // this card's select, onto /WS
+    output                  ureq_n,        // the unit's request line
 
     // ---- the marker's ribbon ----------------------------------------------------
     output                  net_n,         // grounded: this card is fitted
@@ -148,7 +161,7 @@ module net_unit #(
     localparam [`PW-1:0] P00        = 6'o00;
     localparam [`PW-1:0] EV_GLARE   = 6'o04;   // counters.md: the event codes
     localparam [`PW-1:0] EV_NOTRUNK = 6'o10;
-    localparam [`PW-1:0] STRIDE     = 6'd17;
+    localparam [`PW-1:0] STRIDE     = 6'd9;
 
     wire [15:0] t_guard = T_GUARD0 << GUARD;
 
@@ -187,28 +200,24 @@ module net_unit #(
     reg  [4:0]     push_v;
     reg  [74:0]    push_d;
     wire [4:0]     room;
-    wire           q_empty, q_pending, q_rd_busy, q_sent;
-    reg            rd_req;
-    reg  [`PW-1:0] rd_port;
-    wire           rd_done;
-    wire [7:0]     rd_word;
+    wire           q_empty, q_pending, q_sent;
     reg            granted;
 
     ctl_queue #(.DEPTH(16), .NP(5), .EV_ROOM(6)) u_q (
-        .clk(clk), .rst_n(rst_n), .slotq(slotq), .cap_stb(cap_stb), .scan(scan),
-        .sdata(sdata), .sclk(sclk), .wr(wr), .oe(b_oe), .hw_n(hw_n),
+        .clk(clk), .rst_n(rst_n),
+        .sdata(sdata), .sclk(sclk), .wr(wr), .oe(b_oe),
         .go(granted), .pending(q_pending), .empty(q_empty),
         .push_v(push_v), .push_d(push_d), .room(room), .ovf(q_ovf),
-        .rd_req(rd_req), .rd_port(rd_port), .rd_busy(q_rd_busy),
-        .rd_done(rd_done), .rd_word(rd_word), .sent(q_sent));
+        .sent(q_sent));
 
     // ---- the request line.  No grant: hold /UREQ low longer than the marker's
-    // longest transaction and the bus is this card's until it lets go.  A
-    // sweep keeps it for its whole 17 ms -- letting go between reads would
-    // hand the marker a transaction and lose the stride.
+    // longest transaction and the bus is this card's until it lets go.  It is
+    // held only while this card has words to write.  A sweep needs no bus at
+    // all: its reads are selects on /WS, and a marker's write passing between
+    // them moves nothing on /HW.
     localparam [2:0] H_IDLE = 3'd0, H_SWEEP = 3'd1, H_CONFIRM = 3'd2;
     reg  [2:0]  hst;
-    wire        want_bus = !q_empty || (hst != H_IDLE);
+    wire        want_bus = !q_empty;
     reg  [11:0] wcnt;
     assign ureq_n  = !want_bus;
     assign hunting = (hst != H_IDLE);
@@ -222,23 +231,38 @@ module net_unit #(
         end
     end
 
+    // ======================================================================
+    // THE WORD READER -- a select on /WS, and eight frames of /HW
+    // ======================================================================
     // One read at a time; the classifier's before the sweep's.
-    wire rd_free = !q_rd_busy && !rd_req;
+    reg            rd_req;
+    reg  [`PW-1:0] rd_port;
+    wire           rd_done, rd_busy;
+    wire [7:0]     rd_word;
+    word_rx u_rd (
+        .clk(clk), .rst_n(rst_n),
+        .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb), .scan(scan),
+        .hw_n(hw_n), .ws_n(ws_n), .ws_pd(ws_pd),
+        .rd_req(rd_req), .rd_port(rd_port), .busy(rd_busy), .done(rd_done),
+        .word(rd_word));
+
+    wire rd_free = !rd_busy && !rd_req;
     reg  rd_own;                                 // 0 the classifier, 1 the sweep
 
     // ======================================================================
     // THE CLASSIFIER
     // ======================================================================
     localparam [2:0] C_IDLE = 3'd0, C_READ = 3'd1, C_ACT = 3'd2, C_HOLD = 3'd3,
-                     C_UNHOLD = 3'd4;
+                     C_UNHOLD = 3'd4, C_WAIT = 3'd5;
     reg [2:0]      cst;
     reg [`PW-1:0]  cls_port;
     reg [1:0]      cls_dir;
     reg [8:0]      cls_ms;          // ms since the hold was written
 
     // DEALT WITH, AND M HAS STOOD SINCE: a bit a port.  Set when this card
-    // reads the port's word, or sees the port BUSY with M up; cleared when it
-    // sees M down.  A port is read only with its bit clear, so:
+    // takes the port for a read -- at once, or kept until the reader is free
+    // -- or sees the port BUSY with M up; cleared when it sees M down.  A port
+    // is taken only with its bit clear, so:
     //   a line left waiting for the register is read ONCE, not once a pass --
     //     two of them alternating every pass could hold the read path at the
     //     sweep's turn for as long as they waited, with /UREQ low throughout;
@@ -254,8 +278,17 @@ module net_unit #(
 
     // M and BUSY clear: an incoming seizure or a caller, and only the card
     // knows which.  Port 00 is never fitted.
-    wire cls_issue = (cst == C_IDLE) && sp_fresh && sp_m && !sp_busy &&
-                     (sp_port != P00) && !st[sp_port] && rd_free;
+    wire cls_seen  = (cst == C_IDLE) && sp_fresh && sp_m && !sp_busy &&
+                     (sp_port != P00) && !st[sp_port];
+
+    // THE CLASSIFIER'S BEFORE THE SWEEP'S.  A sweep keeps the reader busy from
+    // one select to the next, a select every nine frames, so a seizure seen
+    // while it runs would find the reader busy at every sample and wait out
+    // the whole sweep.  So it is KEPT (C_WAIT: its port in cls_port) and read
+    // the moment the reader is free, ahead of the sweep's next step -- which
+    // then waits a pass for its port to come round again.
+    wire           cls_issue = rd_free && (cls_seen || (cst == C_WAIT));
+    wire [`PW-1:0] cls_rport = (cst == C_WAIT) ? cls_port : sp_port;
 
     // ======================================================================
     // THE MONITORS
@@ -386,10 +419,12 @@ module net_unit #(
     reg [`PW-1:0]   h_idx;
     reg [6:0]       h_n;
     reg             h_reading;
+    reg             h_m, h_b;                  // h_idx's M and BUSY at its select
     reg             h_done;
-    wire            h_issue = (hst == H_SWEEP) && !h_reading && sp_fresh &&
-                              (sp_port == h_idx) && (h_idx != P00) &&
-                              !sp_m && !sp_busy && rd_free && !cls_issue;
+    // Asked for the moment the last read is in, while h_idx's turn is still to
+    // come; the reader selects at that turn.  That is the whole of the stride.
+    wire            h_issue = (hst == H_SWEEP) && !h_reading && (h_idx != P00) &&
+                              rd_free && !cls_issue;
 
     // ======================================================================
     // THE CLAIM HANDLER
@@ -470,6 +505,7 @@ module net_unit #(
             ev_glare <= 1'b0; ev_notrunk <= 1'b0;
             hst <= H_IDLE; h_owner <= 1'b0; h_mask <= 4'd0; h_ok <= 4'd0; h_g <= 4'd0;
             h_cand <= {4*`PW{1'b0}}; h_idx <= P00; h_n <= 7'd0; h_reading <= 1'b0;
+            h_m <= 1'b0; h_b <= 1'b0;
             h_done <= 1'b0; n_glare <= 8'd0; n_nofwd <= 8'd0;
         end else begin
             push_v   <= 5'd0;
@@ -485,8 +521,11 @@ module net_unit #(
             // the reads: issue, and route the answer
             // ==================================================================
             if (cls_issue) begin
-                rd_req <= 1'b1; rd_port <= sp_port; rd_own <= 1'b0;
-                cls_port <= sp_port; cst <= C_READ;
+                rd_req <= 1'b1; rd_port <= cls_rport; rd_own <= 1'b0;
+                cls_port <= cls_rport; cst <= C_READ;
+            end else if (cls_seen) begin
+                // the reader is the sweep's just now: keep the seizure
+                cls_port <= sp_port; cst <= C_WAIT;
             end else if (h_issue) begin
                 rd_req <= 1'b1; rd_port <= h_idx; rd_own <= 1'b1;
                 h_reading <= 1'b1;
@@ -501,7 +540,7 @@ module net_unit #(
                 if (!sp_m)        st[sp_port] <= 1'b0;
                 else if (sp_busy) st[sp_port] <= 1'b1;
             end
-            if (cls_issue) st[sp_port] <= 1'b1;
+            if (cls_seen) st[sp_port] <= 1'b1;
 
             if (cst == C_READ && rd_done && !rd_own) begin
                 if (is_trunk(rd_word[4:0])) begin cls_dir <= rd_word[7:6]; cst <= C_ACT; end
@@ -684,9 +723,13 @@ module net_unit #(
             case (hst)
             H_SWEEP: begin
                 if (h_reading) begin
+                    // The port's M and BUSY come off this card's probe at the
+                    // end of the select's bit-time -- the last sample of that
+                    // port before its word is in -- and are kept with it.
+                    if (sp_fresh && (sp_port == h_idx)) begin h_m <= sp_m; h_b <= sp_busy; end
                     if (rd_done && rd_own) begin
-                        // the card says what it is
-                        if (is_trunk(rd_word[4:0]) && h_mask[rdir]) begin
+                        // the card says what it is; free at its select, or no candidate
+                        if (!h_m && !h_b && is_trunk(rd_word[4:0]) && h_mask[rdir]) begin
                             if (!h_ok[rdir] ||
                                 ( rd_word[5] && (h_idx > sidx)) ||
                                 (!rd_word[5] && (h_idx < sidx))) begin
@@ -699,9 +742,8 @@ module net_unit #(
                         h_idx <= h_idx + STRIDE; h_n <= h_n + 7'd1;
                         if (h_n == 7'd63) begin hst <= H_CONFIRM; h_n <= 7'd0; end
                     end
-                end else if (sp_fresh && (sp_port == h_idx) && !h_issue &&
-                             ((h_idx == P00) || sp_m || sp_busy)) begin
-                    // not free, or 00: this step costs no read
+                end else if (sp_fresh && (sp_port == P00) && (h_idx == P00)) begin
+                    // 00 is never fitted: its step, at its turn, costs no read
                     h_idx <= h_idx + STRIDE; h_n <= h_n + 7'd1;
                     if (h_n == 7'd63) begin hst <= H_CONFIRM; h_n <= 7'd0; end
                 end

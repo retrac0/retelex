@@ -57,7 +57,10 @@ so and it wins.
 
 **What the survey did not foresee:** reading the card's word costs a quarter
 of a pass a read, so the unit's hunt is a 17 ms sweep on a stride of 17, and
-that is most of a transit's hop (`newimpl/README.md` §6). And the register's
+that is most of a transit's hop (`newimpl/README.md` §6). Later the same day
+the pointing word came off cable B: a reader names its port on `/WS`, the
+select, in the port's own bit-time, a read is nine frames, and the sweep is
+9 ms on a stride of 9 (`README.md` §1). And the register's
 probe holds the last port's hook until the new one comes round, which a HIT
 scaled to 1 ms counted as a pulse; `pulse_reg` now arms on its caller's first
 sample. A review of the built RTL found five more (`README.md` §4): the

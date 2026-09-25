@@ -18,8 +18,11 @@
 //
 // THREE WIRED-ORs, one mechanism.  /HA carries M and /HB carries BUSY, both
 // addressed by SCAN, so a reader takes both facts about one port out of one
-// bit-time.  /HW carries the card option word of whichever port the marker
-// last pointed at.  All three idle HIGH on a 4.7 k pull-up at the clock card,
+// bit-time.  /HW carries the card option word of whichever port a reader last
+// SELECTED, by pulling /WS in that port's bit-time.  /WS is a fourth open
+// drain on the same bus, but its drains are the readers' -- cards beside the
+// exchange -- so it arrives at exch already resolved and is not ORed here.
+// All three idle HIGH on a 4.7 k pull-up at the clock card,
 // all three are sampled at the same instant in cell 4, and all three read
 // "nobody is pulling" the same way -- which is what makes an absent block, an
 // unfitted port and a missing jumper one fault signature instead of four.
@@ -36,7 +39,7 @@ module mainboard #(
     input      [7:0]  hc_from_block,        // each position's HC_OUT
     input      [7:0]  ha_pd_from_block,     // each position's M drains, already ORed
     input      [7:0]  hb_pd_from_block,     // and its BUSY drains
-    input      [7:0]  hw_pd_from_block,     // MAXIMAL: the pointed card's word
+    input      [7:0]  hw_pd_from_block,     // MAXIMAL: the selected card's word
 
     output     [7:0]  hc,                   // the eight conductors as they end up
     output            ha_n,                 // /HA: a 4.7 k pull-up and 64 open drains
@@ -89,12 +92,12 @@ module mainboard #(
 
     // ---- MAXIMAL: /HW, the card word bus -----------------------------------
     // The third wired-OR, and the same part as the other two: one 4.7 k
-    // pull-up here and an open drain at every card.  It is NOT scanned -- the
-    // marker points at a port with a word whose DST names it, and that one
-    // card drives /HW for the next sixteen frames.
+    // pull-up here and an open drain at every card.  It is NOT scanned -- a
+    // reader selects a port in its own bit-time, and that one card drives /HW
+    // until the next select (block.v).
     //
     // It idles HIGH like /HA and /HB, and a card pulls it low for a 1
-    // (extensions.md 2.2).  So a pointed port that is empty, pulled, or on an
+    // (extensions.md 2.2).  So a selected port that is empty, pulled, or on an
     // unfitted block reads ALL ZEROS -- "none / OOS" -- and an absent card
     // fails SAFE (word_rx.v).  THE TRAP IS FOR A READER THAT TAKES THE WIRE'S
     // LEVEL AS THE BIT: it reads the same absence as all ones, which the word
