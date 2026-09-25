@@ -13,8 +13,8 @@ Everything else follows from that.
 > is block-steered any more, and `/BLK` survives only to gate a block's
 > writes.
 
-> **Status: measured in simulation — 13 benches, 327 checks under Verilator,
-> and 29 faults, each shown to turn its bench red but the two held twice by
+> **Status: measured in simulation — 15 benches, 394 checks under Verilator,
+> and 33 faults, each shown to turn its bench red but the two held twice by
 > design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
@@ -228,6 +228,10 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
  baseband_card     NETWORK: the baseband tie trunk (baseband.md 3), in any
                    channel socket.  ITS WORD SAYS IT IS A TRUNK AND WHICH WAY IT
                    FACES; its fifth conductor's link-down detector gates the word
+ local_trunk       NETWORK: the local eight-channel highway trunk (local-trunk.md),
+                   a block adapter on one block's header: C, A, HCLK and TX_CLK
+                   each way, the receiver timed by the far HCLK.  PLESIOCHRONOUS:
+                   the eight bits cross at the local frame edge, and slip there
 
  top_min           MINIMAL: exch + mini_marker
  top_net           NETWORK: THE SAME exch, the same mini marker, and a network
@@ -315,10 +319,12 @@ function changed.
 | `line` | the CVSD line card with a phone on its two pairs: `1100` reads on-hook and speech off-hook, through the 4 ms RC; **a 60 ms dial break arrives 54 ms long** — the 6 ms `subscriber-line.md` §5 measures, reproduced; `A_RX` rings an on-hook phone and only an on-hook phone; a cut pair reads on-hook, not off; `MUTE` puts `1010` on an off-hook line; bits cross both ways in order |
 | `word` | a card's word off `/HW`, named by a select on `/WS`: a trunk reads its class, glare and direction; **eight trunks, one a slot, each read their own word** — every octet phase, since a port's slot fixes where its read starts; a plain line all ones; an empty socket, an unfitted block, a card in its power-up RC and a cut link **all zeros**; one select a read, in the port's own bit-time, and the word **512 ticks after it**; **no read moves `SCLK` or makes a `WR`**; two readers selecting one port in one bit-time both take its word; a reader whose port comes round inside another's eight frames takes it a pass later; **a write passing on cable B during a read changes nothing on `/HW`**; and two faults on the wire go red in the same run — `/HW` a frame late, and read at its wire level |
 | `tie` | two exchanges on two crystals and a baseband tie trunk, patched by hand: each end reads its own card's word; 32 bits cross each way in order; the hook crosses as M; `/ANS` is low; a cut cable drops both link detectors, reads NONE at both ends and drops A |
+| `ltu` | two exchanges on two crystals and a local eight-channel trunk, patched by hand: all sixteen channels read their unit's word; **a cut with no call busies all sixteen ports through `MUTE_BLK`**, reads NONE and sends `FILL`; eight hotlines carry eight patterns each way, in order, **no channel ever carrying another's**; A crosses channel by channel end to end, and a 40 ms make keeps its length to 0.05 ms; a cut in a call drops every A; and **1000 ppm apart every channel slips and still carries only its own bits**; beside them a bare pair of units, their headers driven with a random bit a frame on C and on A: **A slips in all sixteen directions, each slip one bit doubled or dropped, A and C together, and no A bit on another channel** |
+| `lnet` | two exchanges whose only link is a local eight-channel trunk, **calls dialled across it**, B's crystal 100 ppm fast: the key seizes the lowest channel, B claims, B21 rings, voice both ways; **two calls on two channels at once**, the busy channel passed by; from B the glare end **hunts from the top**, B17, and the call lands on A17; the cable pulled busies all sixteen channels and a key finds no trunk |
 | `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; and no clash on either cable B, ever |
 | `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 29 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 33 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
 the bench meant to catch each: the unit released on `gone` alone, a sweep on an
 even stride, the 5 s rule gone, the claim wait from the last digit, the second
@@ -367,6 +373,9 @@ scenario, and each has its fault in `faults.py`.
   second flood starts after the first is connected), and no MF8.
 - The network benches' phones are the socket's pins driven by hand, as
   `mini`'s are, not `cvsd_line_card`.
+- The local trunk: `ltu` patches by hand and `lnet` dials, but **no transit
+  crosses one**, no call uses all eight channels, glare is not provoked on it,
+  and neither sees the 512 kbps eye on a real cable.
 
 ---
 

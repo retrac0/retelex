@@ -6,9 +6,24 @@ stream. No line code, no F and S, no crystal of its own. It is the copper peer
 of an MF8 trunk group for runs inside a room or between adjacent racks — eight
 payload seats where fused MF8 gives six.
 
-> **Status: proposed.** Nothing measured on a bench. It is a **block adapter**
-> on the **block header** (`fabric.md` §5.2); the clocking rule is stated here;
-> package counts are a sketch. No RTL and no `exch.py` model yet.
+> **Status: RTL and a bench (2026-09-25); no board, no `exch.py` model.** It is a
+> **block adapter** on the **block header** (`fabric.md` §5.2).
+> `newimpl/rtl/local_trunk.v` is the unit and `newimpl/tb/tb_ltu.v` its bench:
+> two exchanges on two crystals, sixteen channels patched by hand. Measured
+> there: the word on every channel, `MUTE_BLK` busying the group on a cut, eight
+> patterns each way in order with no channel carrying another's, A per channel
+> end to end, and slips at 1000 ppm that keep every channel on its own port. A
+> bare pair of units beside them, driven with a random bit a frame on `C` and on
+> A, shows A slipping in all sixteen directions: one bit each time, A and `C`
+> together, and no A bit on another channel.
+>
+> `newimpl/tb/tb_lnet.v` dials across it, B's crystal 100 ppm fast: a flood
+> seizes the lowest channel and B claims; two calls ride two channels at once;
+> from the glare end the key hunts from the top, so the two ends start at
+> opposite channels; a pulled cable busies the group and a key finds no trunk.
+> Not measured: a transit through it, all eight channels busy, glare provoked,
+> the eye on a real cable.
+> Package counts are a sketch.
 
 ---
 
@@ -72,13 +87,18 @@ this document is the eight-channel copper rear on that contract.
 | | |
 |---|---|
 | **appearances** | eight: `C_TX` / `A_TX` out, `C_RX` / `A_RX` in, word, `/ANS` |
-| **commons** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out** |
+| **commons** | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out**; **`HCLK` in, on the commons' spare** |
 | **rear** | the highway-shaped link (§5), not on the header, not on H |
 
 **Word.** One 74HC165 to all eight: class trunk, direction N/E/S/W and glare `g`, all three in the primary octet
 (`extensions.md` §2.2). Gated by link-up (§6). Power-up RC as usual.
 
 **`/ANS`.** Tied low on the board. Trunks do not ring.
+
+**`HCLK` on the spare.** A 512 kbps mux needs the cell clock, and `fabric.md`
+§5.2's commons carry only the 64 kHz `TX_CLK`. `mainboard.md` §5 already has the
+MF8 unit taking `HCLK` through the block. `SLOT` is not needed: the unit counts
+cells itself (§4).
 
 **`MUTE_BLK`.** Asserted while link down. The block ORs it into `BUSY` when the
 header is stuffed for this unit. Monitors still read this block's M — the unit's
@@ -95,9 +115,27 @@ Each exchange keeps its own crystal. Nothing on this link slaves a clock card.
 
 | path | timed by | what |
 |---|---|---|
-| **Transmit** | **local** `SLOT`, `HCLK`, `TX_CLK` | mux of `C_RX` / `A_RX`; drive `C_hw`, `A_hw`, and copy local `HCLK` and `TX_CLK` onto the wire |
-| **Receive demux** | **far** `HCLK` and far `TX_CLK` | the far exchange is master of this direction. Slot counter on the unit resets from far `TX_CLK`, steps on far `HCLK`. Sample `C_hw` / `A_hw` into eight holds |
-| **Present to the block** | **local** `TX_CLK` | two `'174`s (or equivalent) cross the eight C bits into T; A through RC + Schmitt as MF8 (§14). Then ordinary `C_TX` / `A_TX` into the commutator |
+| **Transmit** | **local** `HCLK`, `TX_CLK` | a cell counter rebuilds `SLOT`; two '151s mux `C_RX` / `A_RX`; a '74 drives `C_hw`, `A_hw` at `HCLK`'s rise; local `HCLK` and `TX_CLK` go onto the wire |
+| **Receive demux** | **far** `HCLK` and far `TX_CLK` | the far exchange is master of this direction. The same cell counter on the far clocks; two '259s take `C_hw` / `A_hw` at the far `HCLK`'s fall |
+| **Present to the block** | **local** `TX_CLK` | two '273s cross the sixteen bits into T at the local frame edge. Then ordinary `C_TX` / `A_TX` into the commutator |
+
+**Every edge on the wire is clocked half a cell from the edge that samples
+it.** A port's `C_RX` and `A_RX` change at the mid-cell capture, `HCLK`'s fall;
+the unit samples them at `HCLK`'s rise and changes the wire there; the far end
+samples at the far `HCLK`'s fall. No transmit latch is needed: the ports hold
+each bit for a frame already.
+
+**Cell 0 is found at mid-cell, not at `TX_CLK`'s rise.** `TX_CLK` rises on the
+same clock-card edge as `HCLK`, so a counter cleared by that rise and stepped by
+`HCLK` races itself. Sampled at `HCLK`'s fall, `TX_CLK` is high in cells 0–3 and
+low in 4–7, so its first high sample is cell 0. A quarter '74 remembers the
+last sample. Fault F31 removes the realignment and every channel's bits land on
+another's port.
+
+**A has no RC here.** It arrives as a clocked bit in its own cell, sampled
+mid-cell and crossed at the frame edge like `C`: there is no raw wire to
+filter. Measured in `tb_ltu`: each edge of A crosses in under 0.1 ms, and a
+40 ms make keeps its length to 0.05 ms.
 
 **Why carry `HCLK`, not only `TX_CLK`.** The highway eye is one cell (~1.95 µs).
 Sampling a free-running 512 kbps stream with a local cell clock is the wrong
@@ -108,7 +146,10 @@ keeps the eight seats aligned (`SLOT` itself is not on the wire).
 **Slip.** The two crystals wander. The crossing into local T is the same class
 of slip `mf8-backplane.md` §7 measured on an MF8 trunk — audible as nothing on
 voice, and out for bit-exact synchronous data across the link
-(`network.md` §8). Octet phase inside each exchange is untouched.
+(`network.md` §8). Octet phase inside each exchange is untouched. Measured in
+`tb_ltu` with the crystals 1000 ppm apart for 150 ms: every channel slipped, the
+worst direction kept 96.8 % of its 32-bit windows whole, and **no bit ever
+landed on another channel**.
 
 **What is not done.** The local clock card is not slaved to the link. The block's
 commutator and every other port stay on the local `HCLK` / `SLOT`. Only this
@@ -185,15 +226,17 @@ Not drawn.
 
 | function | part | |
 |---|---|---|
-| TX mux `C`, `A` | 2 × 74HC151 on local `SLOT` | 2 |
+| TX cell counter | '163, and a quarter '74 remembering `TX_CLK` | 1¼ |
+| TX mux `C`, `A` | 2 × 74HC151 on the counter | 2 |
+| TX output | half a '74 at `HCLK`'s rise | ½ |
 | TX drivers | ¼–½ '244, or 26LS31 | 1 |
 | RX receivers | Schmitt / 26LS32 | 1 |
-| RX slot counter | ½ '393 or '163, reset by far `TX_CLK`, clock far `HCLK` | 1 |
-| RX demux holds | 2 × '174 (C); A levels or a second '174 | 2–3 |
-| Local crossing | 2 × '174 on local `TX_CLK` | 2 |
-| A path | RC + Schmitt, eight ways (or shared after demux) | ≈ 1–2 |
-| Card word, `/ANS`, `MUTE_BLK`, link-down | ≈ 2¼ + ½ | ≈ 3 — one `'165`, not two |
-| | **≈ 13–17** | beside the eight port circuits the block already has |
+| RX cell counter | '163 and a quarter '74, on the far clocks | 1¼ |
+| RX demux holds | 2 × '259 | 2 |
+| Local crossing | 2 × '273 on local `TX_CLK` | 2 |
+| Gating: `FILL` on `C`, A off, while link down | '157 × 2, '08 × 2 | 4 |
+| Card word, `/ANS`, `MUTE_BLK`, link-down | one '165, eight 2N7002s, ½ '123 | ≈ 2 |
+| | **≈ 17** | beside the eight port circuits the block already has |
 
 No 4.096 MHz, no classifier, no magnetics in the baseline.
 
@@ -225,7 +268,8 @@ on the header.
 - Whether A should be a level held for the cell (as drawn) or a slower
   conductor of its own — level-in-cell matches the highway and costs no extra
   pair.
-- RTL and an `exch.py` battery.
+- An `exch.py` battery. The RTL exists (`newimpl/rtl/local_trunk.v`), with a
+  hand-patched bench (`tb_ltu`) and a dialled one (`tb_lnet`).
 - Slaving a whole exchange to the link: **declined** (§4).
 
 ---

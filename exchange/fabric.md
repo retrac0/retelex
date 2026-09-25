@@ -399,7 +399,7 @@ carry a busy force.
 | | shell | what |
 |---|---|---|
 | **appearances** | DIN 41612 type B, 64-way | eight slots of `C_TX`, `A_TX`, `C_RX`, `A_RX`, word, `/ANS`, plus `+5 V` and `GND`. Column *s* in each group of eight is slot *s*. Direction is the *card's* view: `out` is the adapter driving the block. Column assignment is this contract's; the measured-and-not-taken adapter's per-pin behaviour is `mf8-unit.md` §5.3 |
-| **commons** | 2 × 5, odd signal even ground, keyed | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out**; one spare. Commons the appearances shell does not carry |
+| **commons** | 2 × 5, odd signal even ground, keyed | `TX_CLK`, `TX_OCT`, `FILL` in; **`MUTE_BLK` out**; `HCLK` in on the spare, for an adapter that muxes at the cell rate (`local-trunk.md` §3). Commons the appearances shell does not carry |
 
 **`MUTE_BLK`.** Asserted by the adapter when the group must not be hunted —
 link down, unlocked, no carrier, or whatever failure domain that adapter owns.

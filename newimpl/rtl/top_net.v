@@ -80,6 +80,9 @@ module top_net #(
     output            clk_8k,       // TX_OCT
     output            rx_oct,
     output            fill,
+    // NETWORK: a block adapter that muxes at the cell rate takes HCLK on its
+    // header commons' spare (local-trunk.md 3, fabric.md 5.2)
+    output            hclk,
 
     // ---- what a bench, a lamp field or a debugger watches ------------------
     output            ha_n,
@@ -111,7 +114,7 @@ module top_net #(
 );
     wire [2:0] slot, slotq, tick;
     wire [7:0] hc;
-    wire hclk, cap_stb, oct_stb, pass_stb;
+    wire cap_stb, oct_stb, pass_stb;
     // the marker's tap, which nothing on this build watches
     wire [`PW-1:0] nc_pport, nc_called;
     wire           nc_pm, nc_pb, nc_pf;
@@ -194,6 +197,6 @@ module top_net #(
 
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
-    wire _unused = &{1'b0, hc, tick, hclk, oct_stb, pass_stb, slot[2],
+    wire _unused = &{1'b0, hc, tick, oct_stb, pass_stb, slot[2],
                      slot[0], nc_pport, nc_called, nc_pm, nc_pb, nc_pf, 1'b0};
 endmodule

@@ -10,6 +10,10 @@
 //   TRUNKS   sockets with a baseband tie card (baseband.md), each with its own
 //            word from TWORD -- class trunk, glare, direction -- and its rear
 //            connector brought out, for the bench to cable to another site
+//   LTU      blocks stuffed as a local eight-channel trunk (local-trunk.md): the
+//            unit on the block header, its word from LTWORD, its MUTE_BLK on the
+//            block and its link brought out.  All eight sockets of such a block
+//            are its; nothing else may be put in them
 //
 // The block jumpers fitted are the blocks with anything in them.  Nothing in
 // here reaches inside a board.
@@ -37,7 +41,9 @@ module site_net #(
     parameter [15:0]  T_GUARD0 = 16'd128,
     parameter [15:0]  T_KEY    = 16'd5000,
     parameter [15:0]  T_CLAIM  = 16'd2000,
-    parameter [15:0]  HOLDOFF  = 16'd64
+    parameter [15:0]  HOLDOFF  = 16'd64,
+    parameter [7:0]   LTU      = 8'd0,                        // blocks stuffed as a local trunk
+    parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}          // each such block's word
 )(
     input         clk,
     input         rst_n,
@@ -56,6 +62,17 @@ module site_net #(
     input  [63:0] a_in,
     input  [63:0] clk_in,
     output [63:0] link_up,
+
+    // ---- each local trunk unit's link, one bit a block --------------------------
+    output [7:0]  lt_c_out,
+    output [7:0]  lt_a_out,
+    output [7:0]  lt_h_out,
+    output [7:0]  lt_k_out,
+    input  [7:0]  lt_c_in,
+    input  [7:0]  lt_a_in,
+    input  [7:0]  lt_h_in,
+    input  [7:0]  lt_k_in,
+    output [7:0]  lt_up,
 
     // ---- what the bench watches ----------------------------------------------
     output        frame_stb,
@@ -77,13 +94,17 @@ module site_net #(
 );
     localparam [`PW-1:0] DT = 6'o01, NG = 6'o03;
     localparam [63:0] TONES = (64'd1 << DT) | (64'd1 << NG);
-    localparam [63:0] PF    = PHONES | TRUNKS | TONES;
+    localparam [63:0] LTP   = {{8{LTU[7]}}, {8{LTU[6]}}, {8{LTU[5]}}, {8{LTU[4]}},
+                               {8{LTU[3]}}, {8{LTU[2]}}, {8{LTU[1]}}, {8{LTU[0]}}};
+    localparam [63:0] PF    = PHONES | TRUNKS | TONES | LTP;
     localparam [7:0]  BF    = {|PF[63:56], |PF[55:48], |PF[47:40], |PF[39:32],
                                |PF[31:24], |PF[23:16], |PF[15:8],  |PF[7:0]};
 
     wire [63:0] c_rx, a_rx;
     wire [63:0] t_c_tx, t_a_tx, t_word_n, t_ans_n, t_rai_n;
-    wire        tx_clk, loop_hb, clk_8k, rx_oct, fill;
+    wire        tx_clk, loop_hb, clk_8k, rx_oct, fill, hclk;
+    wire [63:0] l_c_tx, l_a_tx, l_word_n, l_ans_n;
+    wire [7:0]  l_mute;
     wire        ha_n, hb_n, hw_n;
     wire [`SCANW-1:0] scan;
 
@@ -103,6 +124,10 @@ module site_net #(
                 s_c[p] = t_c_tx[p]; s_a[p] = t_a_tx[p];
                 s_word[p] = t_word_n[p]; s_ans[p] = t_ans_n[p];
             end
+            if (LTP[p]) begin
+                s_c[p] = l_c_tx[p]; s_a[p] = l_a_tx[p];
+                s_word[p] = l_word_n[p]; s_ans[p] = l_ans_n[p];
+            end
         end
         s_c[DT] = 1'b1; s_ans[DT] = 1'b0;
         s_c[NG] = 1'b0; s_ans[NG] = 1'b0;
@@ -117,9 +142,9 @@ module site_net #(
               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(s_c), .a_tx(s_a), .ans_n(s_ans), .word_n(s_word),
-        .c_rx(c_rx), .a_rx(a_rx), .mute_blk(8'd0), .rbt_in(1'b0),
+        .c_rx(c_rx), .a_rx(a_rx), .mute_blk(l_mute), .rbt_in(1'b0),
         .tx_clk(tx_clk), .loop_hb(loop_hb), .clk_8k(clk_8k), .rx_oct(rx_oct),
-        .fill(fill),
+        .fill(fill), .hclk(hclk),
         .ha_n(ha_n), .hb_n(hb_n), .hw_n(hw_n), .scan(scan),
         .frame_stb(frame_stb), .tick_1k(tick_1k), .ring_cad_n(ring_cad_n),
         .port_busy(port_busy),
@@ -151,6 +176,32 @@ module site_net #(
             assign t_word_n[q] = 1'b1; assign t_ans_n[q] = 1'b1; assign t_rai_n[q] = 1'b1;
             assign c_out[q] = 1'b0; assign a_out[q] = 1'b0; assign clk_out[q] = 1'b0;
             assign link_up[q] = 1'b0;
+        end
+    end endgenerate
+
+    // ---- a local trunk unit on every block stuffed as one ---------------------
+    genvar h;
+    generate for (h = 0; h < 8; h = h + 1) begin : blk
+        if (LTU[h]) begin : ltu
+            local_trunk #(.WORD(LTWORD[h*8 +: 8]), .HOLDOFF(HOLDOFF)) u_ltu (
+                .clk(clk), .rst_n(rst_n),
+                .c_tx(l_c_tx[h*8 +: 8]), .a_tx(l_a_tx[h*8 +: 8]),
+                .word_n(l_word_n[h*8 +: 8]), .ans_n(l_ans_n[h*8 +: 8]),
+                .c_rx(c_rx[h*8 +: 8]), .a_rx(a_rx[h*8 +: 8]),
+                .tx_clk(tx_clk), .tx_oct(clk_8k), .fill(fill), .hclk(hclk),
+                .mute_blk(l_mute[h]),
+                .c_out(lt_c_out[h]), .a_out(lt_a_out[h]),
+                .hclk_out(lt_h_out[h]), .clk_out(lt_k_out[h]),
+                .c_in(lt_c_in[h]), .a_in(lt_a_in[h]),
+                .hclk_in(lt_h_in[h]), .clk_in(lt_k_in[h]),
+                .link_up(lt_up[h]));
+        end else begin : none
+            assign l_c_tx[h*8 +: 8] = 8'd0; assign l_a_tx[h*8 +: 8] = 8'd0;
+            assign l_word_n[h*8 +: 8] = 8'hFF; assign l_ans_n[h*8 +: 8] = 8'hFF;
+            assign l_mute[h] = 1'b0;
+            assign lt_c_out[h] = 1'b0; assign lt_a_out[h] = 1'b0;
+            assign lt_h_out[h] = 1'b0; assign lt_k_out[h] = 1'b0;
+            assign lt_up[h] = 1'b0;
         end
     end endgenerate
 endmodule
