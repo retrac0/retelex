@@ -1,0 +1,855 @@
+
+❯ Analyze the two Verilog implementations against the spec for inconsistencies.
+   Consider overall logical structure.  Find refactoring options for common
+  components and subcircuits.  Note missing gaps or repetitive sections in the
+  documentation.
+
+● I'll start by scoping the actual files before orchestrating anything.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Two trees: verilog/ (full) and newimpl/ (folded-A rewrite). Let me scope the
+  specs and sizes before orchestrating.
+
+● Bash(echo "===MD FILES===" && find . -name "*.md" -not -path "./.git/*" -not
+      -path "*/build/*" | sort | xargs wc -l | sort -n && echo "" && echo
+      "===RTL SIZES newimp…)
+  ⎿  (No output)
+
+  Read 1 file (ctrl+o to expand)
+
+● Good — I have the shape. Two trees (verilog/ 5.3k lines RTL, newimpl/ 3.0k),
+  24k lines of spec, and newimpl/README.md §5 already claims a specific list of
+  doc/code disagreements. Let me check test state and the older tree's own spec
+  index, then orchestrate.
+
+● Bash(head -60 verilog/README.md && echo "..." && echo "===EXCHANGE README==="
+      && head -40 exchange/README.md && echo "===COMMON CARDS DIFF
+      (uncommitted)===" && git d…)
+  ⎿  (No output)
+
+● The scope is clear. Launching a multi-phase workflow: map both trees, fan out
+  12 audit dimensions, adversarially verify every finding against the actual
+  files, then synthesize.
+
+● Workflow(Audit verilog/ and newimpl/ against the spec corpus: inconsistencies,
+          structure, refactoring, doc gaps)
+  ⎿  /workflows to view dynamic workflow runs
+
+● Workflow is running. While it works, let me ground myself on the sharpest
+  question — the eight modules that exist under the same name in both trees — so
+  I can judge the agents' output rather than relay it.
+
+● Bash(for f in pulse_rx ctl_write pulse_reg; do echo "################ $f
+      ################"; diff -u verilog/rtl/$f.v newimpl/rtl/$f.v | head -70;
+      done)
+  ⎿  (No output)
+
+● Already a concrete lead: the two trees cite different spec sections for the
+  same module (register.md §4 vs §2 for pulse_rx), and newimpl's own README and
+  RTL disagree on the shortest break. Let me pin that one down.
+
+● Bash(echo "=== register.md section headings ===" && grep -n "^#"
+      exchange/register.md && echo "" && echo "=== 3.1 envelope ===" && sed -n
+      '/## 3/,/## 4/p' exchange/r…)
+  ⎿  (No output)
+
+● register.md §3.1 confirms 18 ms is the shortest break at 20 pps — so newimpl's
+  RTL comment is right and its README's "28 ms" is suspect. Let me check what
+  the bench actually drives, and note a botched entry I spotted in
+  verilog/README.md.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Now I can resolve it: tb_dial.v:118 drives an ideal 20 pps/56% dial = 28 ms
+  break, but register.md §3.1's measured worst case is an 18 ms break. The bench
+  claims to sit "at the corners of §3.1's envelope" and doesn't. Let me check
+  on the workflow.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d 2>/dev/null && ls && echo
+      "=== journal…)
+  ⎿  (No output)
+
+● Map phase still running (three large reads). Let me independently verify the
+  single most important correctness claim while I wait — the /HA polarity, which
+  the project memory calls "the easiest silent bug in the design".
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Polarity checks out cleanly and consistently: each port drives an active-high
+  ha_pd, the mainboard does ha_n = ~(|ha_pd_from_block) (mainboard.v:90
+  (newimpl/rtl/mainboard.v#L90)) so the wire idles high, and readers invert on
+  capture (port.v:161 (newimpl/rtl/port.v#L161)). The open-collector fold is
+  implemented correctly — the risk memory flagged didn't land.
+
+  Independent findings so far, before the workflow reports:
+
+  - verilog/README.md:50-55 (verilog/README.md#L50-L55) — a botched edit. The
+    pulse_reg entry has two overlapping descriptions concatenated, the second
+    orphaned mid-sentence ("caller's hook off the M highway…"), citing
+    register.md 6.1 and register.md 4 for what reads as one entry.
+  - tb_dial.v:118 (newimpl/tb/tb_dial.v#L118) — drives an ideal 20 pps/56% dial
+    = 28 ms break, but register.md §3.1's measured worst case is an 18 ms break
+    counted. The bench claims to sit "at the corners of §3.1's envelope" and
+    sits at the corners of the nominal one instead. Its comment also says "four
+    samples at 500 Hz" — 28 ms is 14 samples; four samples is the HIT window.
+  - pulse_rx section citations diverge across trees: verilog/rtl/pulse_rx.v:1
+    (verilog/rtl/pulse_rx.v#L1) says "register.md §4's windows",
+    newimpl/rtl/pulse_rx.v:1 (newimpl/rtl/pulse_rx.v#L1) says "register.md 2".
+    The windows are §2; §4 is "The circuit".
+
+  The workflow is in its Map phase over both trees and the doc corpus. I'll
+  report the full audit when it lands.
+
+❯ /list-agents
+  ⎿  This session: telco-62 [a85866] (the name other sessions use to message it)
+
+     Other Claude sessions (2):
+       [idle]  ·  telco-89  ·  /home/joel/telco  ·  started 10h ago
+       [idle]  ·  telco-be  ·  /home/joel/telco  ·  started 10h ago
+
+● Dynamic workflow "Audit verilog/ and newimpl/ against the spec corpus:
+inconsistencies, structure, refactoring, doc gaps" completed · 1h 51m 38s
+  ⎿  You've hit your session limit · resets 5:40pm (America/Toronto)
+     /upgrade to increase your usage limit.
+
+❯ Continue.
+  ⎿  You've hit your session limit · resets 5:40pm (America/Toronto)
+     /upgrade to increase your usage limit.
+
+❯ I hit my usage limit while you were working, but it has reset now. Please
+  continue from where you left off.
+
+● Workflow completed its Find phase but the usage limit killed ~60 verify agents
+  and all 5 synthesis agents. 94 findings survived, but there's a flaw in my
+  script's error handling I need to fix first: a finding whose both verifiers
+  failed got refs.length === 0 and was labeled CONFIRMED rather than unverified.
+  Let me check the journal.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && wc -l journal.jsonl &&
+      echo "=== eve…)
+  ⎿  (No output)
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && python3 -c "
+      import json…)  ⎿  (No output)
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && python3 -c "
+      import json, collection…)
+  ⎿  (No output)
+
+● 100 findings total. 139 verifiers succeeded, 61 died on the limit — and 30
+  findings had both lenses fail, so they were silently labeled CONFIRMED without
+  any verification. Let me fix that logic bug and resume, which replays the
+  cached work and re-runs only what died.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/workflows/scripts && python3 - <<'PY'
+      import io,sys…)
+  ⎿  (No output)
+
+● Patched. Resuming — the 154 completed agents replay from cache, only the 61
+  dead verifiers and 5 synthesis agents re-run.
+
+● Workflow(telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  /workflows to view dynamic workflow runs
+
+● While it runs, let me pull the raw findings out of the journal so I can form
+  my own view rather than just relaying.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && python3 - <<'PY' >
+      /tmp/claude-1000/…)
+  ⎿  (No output)
+
+● Bash(sed -n '1,120p' /tmp/claude-1000/-home-joel-telco/9b75f49e-8686-4b7a-9043
+      -9045f452dda5/scratchpad/findings.txt)
+  ⎿  (No output)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Verified independently — Makefile:212 (verilog/Makefile#L212) passes -GSTRAP=0
+  while tb_ring.v:32 (verilog/tb/tb_ring.v#L32) declares JUMPER. make ring-open
+  has been silently running the jumpered ring. The workflow is producing real
+  results. Let me read the rest.
+
+● Bash(sed -n '7,95p' /tmp/claude-1000/-home-joel-telco/9b75f49e-8686-4b7a-9043-
+      9045f452dda5/scratchpad/findings.txt | cut -c1-400)
+  ⎿  (No output)
+
+● These are high quality. The most consequential is flagged independently by two
+  dimensions — a register lockout in newimpl. Let me verify that one myself.
+
+● Bash(echo "=== newimpl pulse_reg nodig timer ===" && sed -n '100,125p'
+      newimpl/rtl/pulse_reg.v && echo "" && echo "=== verilog pulse_reg nodig
+      timer ===" && sed -n '…)
+  ⎿  (No output)
+
+● Confirmed — this is a real bug. newimpl/rtl/pulse_reg.v:111
+  (newimpl/rtl/pulse_reg.v#L111) gates the timer on ndig == 3'd0, so it stops
+  permanently once the first digit lands; verilog/rtl/pulse_reg.v:109-114
+  (verilog/rtl/pulse_reg.v#L109-L114) resets on p_stb and runs whenever
+  !p_counting. Both register.md:288 ("or a partial-dial timeout") and
+  marker.md:306 ("runs from the last digit as well as from seizure") specify the
+  old behavior. Let me check resume progress.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && python3 -c "
+      import json,collections…)
+  ⎿  (No output)
+
+● Resume is re-running the dead verifiers. Let me read the remaining findings by
+  title while it works.
+
+● Bash(cd /tmp/claude-1000/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda5
+      /scratchpad && grep -n "^\[" findings.txt | sed -n '14,60p' | cut -c1-200)
+  ⎿  (No output)
+
+● The SCLK rate issue was found independently by four separate dimensions —
+  strong convergence. Let me verify it directly.
+
+● Bash(sed -n '30,40p;48,60p;70,85p' verilog/rtl/ctl_write.v && echo "===
+      newimpl equivalent ===" && sed -n '50,60p' newimpl/rtl/ctl_write.v && echo
+      "=== clocks.md on…)
+  ⎿  (No output)
+
+● Confirmed directly: verilog/rtl/ctl_write.v:52 (verilog/rtl/ctl_write.v#L52)
+  is localparam [2:0] DLAST = DIV[2:0] - 3'd1 with reg [2:0] d — DIV=32
+  truncates to 3'b000, so DLAST=7 and a bit-time is 8 master clocks. The control
+  bus runs at 512 kHz, 4× the 128 kHz clocks.md:53 specifies, and the DIV
+  parameter is inert for any multiple of 8. newimpl computes T_LAST = DIV - 1
+  correctly.
+
+  Three HIGH findings independently verified so far. The resume is working
+  through the remaining verifiers and the synthesis writers — I'll report in
+  full when it lands.
+
+● Dynamic workflow "Audit verilog/ and newimpl/ against the spec corpus:
+inconsistencies, structure, refactoring, doc gaps" completed · 1h 29m 15s
+  ⎿  You've hit your session limit · resets 10:50pm (America/Toronto)
+     /upgrade to increase your usage limit.
+
+❯ Discontinue work on verilog/; the old implementation will be retired and work
+  shifts to newimpl/.  Continue and report accordingly.
+
+● Understood — verilog/ is being retired, so I'll drop its refactoring and doc
+  findings and keep it only where it's evidence about what newimpl must not
+  lose. The verification pass finished (86 survived, 14 refuted); 3 section
+  writers died on the limit again. I have everything in the journal — let me
+  extract it and write the report against the new framing.
+
+● Bash(cd /home/joel/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9
+      045f452dda5/subagents/workflows/wf_e99ebf5c-52d && python3 - <<'PY' >
+      /tmp/claude-1000/…)
+  ⎿  (No output)
+
+● Bash(cd /tmp/claude-1000/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda5
+      /scratchpad && wc -l verified.txt && sed -n '1,8p' verified.txt)
+  ⎿  Error: Exit code 1
+
+● Bash(ls -la /tmp/claude-1000/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452
+      dda5/scratchpad/ 2>&1; echo "shell: $0"; ps -p $$ -o comm=)  ⎿  Error: Exit code 1
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(pwd)
+  ⎿  (No output)
+
+● Bash(echo hello)
+  ⎿  Error: Exit code 1
+
+● Bash appears to have broken. Let me retry.
+
+● Bash(/bin/echo ok)
+  ⎿  Error: Exit code 1
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ Keep your current fleet docs on verilog/ as we will be adapting the network
+  unit to the new implementation.  Proceed.
+
+● Understood — verilog/ findings stay, since net_unit is being ported to
+  newimpl. Bash is wedged; let me work through the Read tool instead.
+
+  Read 1 file (ctrl+o to expand)
+
+● Bash(echo test)
+  ⎿  Error: Exit code 1
+
+● Bash is still wedged, but Edit/Write work. The user's clarification means the
+  original synthesis framing is still valid — I'll patch it for the retirement
+  context and resume to finish the 4 dead writers.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 25 lines
+      416  
+      417  // -----------------------------------------------------------
+           ----- Synthesize
+      418  phase('Synthesize')
+      419 +                                                              
+      420 +// DIRECTION CHANGE from the author, after the findings were g
+          +athered. This                                                 
+      421 +// reframes what the report is FOR. It does not invalidate any
+          + finding.                                                     
+      422 +const RETIRE = `                                              
+      423 +DIRECTION FROM THE AUTHOR (decided after these findings were g
+          +athered - it changes                                          
+      424 +what is worth recommending, not what is true):                
+      425 +                                                              
+      426 +  * verilog/ IS BEING RETIRED. Work shifts to newimpl/. Do NOT
+          + recommend refactors,                                         
+      427 +    cleanups, lint fixes or bench work whose only beneficiary 
+          +is verilog/ - that                                            
+      428 +    effort is now wasted. Rank any such item last and say plai
+          +nly it is moot on                                             
+      429 +    retirement, or drop it.                                   
+      430 +  * verilog/ FINDINGS ARE STILL KEPT AND STILL MATTER, for two
+          + reasons, and you                                             
+      431 +    must treat them through this lens:                        
+      432 +      (1) net_unit IS BEING ADAPTED TO newimpl. verilog/rtl/ne
+          +t_unit.v and the                                              
+      433 +          marker/register/monitor behaviour around it are the 
+          +SOURCE being ported.                                          
+      434 +          A verilog/ finding that describes a bug, a missing t
+          +imer, or a bad                                                
+      435 +          interface in code that is about to be carried into n
+          +ewimpl is a                                                   
+      436 +          HIGH-VALUE finding: it is a defect that is about to 
+          +be copied. Say so.                                            
+      437 +      (2) A behaviour verilog/ implements correctly and newimp
+          +l lacks or got wrong                                          
+      438 +          is a REGRESSION CHECKLIST for the port. Frame it tha
+          +t way.                                                        
+      439 +  * So the organising question for every item is now: DOES THI
+          +S AFFECT newimpl,                                             
+      440 +    EITHER TODAY OR WHEN net_unit AND top_max ARRIVE? Lead wit
+          +h the ones that do.                                           
+      441 +  * The reader is the author, mid-port. He does not need to be
+          + sold on the fold.                                            
+      442 +`                                                             
+      443 +                                                              
+      444  const SECTIONS = [
+      445    { key: 'inconsistencies', title: 'Inconsistencies between th
+           e implementations and the spec',
+      446      body: pick(['inconsistency', 'coverage']),
+
+● Now the four section prompts, reframed around the port:
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 15 lines, removed 6 lines
+      444  const SECTIONS = [
+      445    { key: 'inconsistencies', title: 'Inconsistencies between th
+           e implementations and the spec',
+      446      body: pick(['inconsistency', 'coverage']),
+      447 -    ask: `Write the INCONSISTENCIES section. Order by severity
+          - then by blast radius. Separate                               
+      448 -(a) newimpl vs spec, (b) verilog/ vs spec, (c) the two trees a
+          -gainst each other. For each                                   
+      449 -item give the path:line, one sentence of what disagrees, and w
+          -hether the CODE or the                                        
+      450 -DOCUMENT should move. Call out explicitly any departure that n
+          -ewimpl/README.md section 5                                    
+      451 -should list but does not, and any entry in that list that is w
+          -rong. Mark CONFIRMED vs                                       
+      452 -PLAUSIBLE. Do not pad; drop weak items rather than ranking the
+          -m last.` },                                                   
+      447 +    ask: `${RETIRE}                                           
+      448 +Write the INCONSISTENCIES section, organised for a reader mid-
+          +port. Use these groups,                                       
+      449 +in this order, and put each item in exactly one:              
+      450 +  A. LIVE BUGS IN newimpl - wrong today, in code that exists n
+          +ow.                                                           
+      451 +  B. DEFECTS ABOUT TO BE PORTED - verilog/ bugs in net_unit.v 
+          +/ marker.v / the                                              
+      452 +     register and monitor behaviour that net_unit depends on. 
+          +These get copied into                                         
+      453 +     newimpl unless caught. This group is the most valuable in
+          + the report; for each,                                        
+      454 +     say what the correct behaviour is so it can be written ri
+          +ght the first time.                                           
+      455 +  C. newimpl DEPARTS FROM THE SPEC - code and document disagre
+          +e; say which should move.                                     
+      456 +  D. REGRESSION CHECKLIST - behaviour verilog/ has and newimpl
+          + lacks or inverted                                            
+      457 +     (polarity, word format, timers, pin-vs-parameter). What t
+          +op_max must not lose.                                         
+      458 +For each item: path:line, one sentence of what disagrees, CODE
+          + or DOC moves, and the                                        
+      459 +verdict tag (CONFIRMED / PLAUSIBLE) carried through from the f
+          +inding. Call out any                                          
+      460 +departure newimpl/README.md section 5 should list but does not
+          +, and any entry in it                                         
+      461 +that is wrong. Drop weak items rather than ranking them last. 
+          +No preamble.` },                                              
+      462  
+      463    { key: 'structure', title: 'Overall logical structure',
+      464      body: pick(['structure']),
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 13 lines, removed 5 lines
+      462  
+      463    { key: 'structure', title: 'Overall logical structure',
+      464      body: pick(['structure']),
+      465 -    ask: `Write the LOGICAL STRUCTURE section. Judge each tree
+          -'s decomposition against its own                              
+      466 -stated principle ("the hierarchy is the layout"). State plainl
+          -y whether newimpl's section 7                                 
+      467 -claim - that top_max, marker, net_unit, monitor and console ne
+          -ed no change to anything                                      
+      468 -above - is credible, naming the specific interfaces at risk. G
+          -ive a verdict on maintaining                                  
+      469 -two trees and a concrete migration or retirement path. Be opin
+          -ionated and brief.` },                                        
+      465 +    ask: `${RETIRE}                                           
+      466 +Write the LOGICAL STRUCTURE section, as guidance for the port 
+          +that is about to happen.                                      
+      467 +Judge newimpl's decomposition against its own stated principle
+          + ("the hierarchy is the                                       
+      468 +layout"). The central question: newimpl/README.md section 7 cl
+          +aims top_max, marker,                                         
+      469 +net_unit, monitor and console need NO CHANGE to anything above
+          +. Give a straight verdict                                     
+      470 +on that claim and name every specific interface that must in f
+          +act change - the findings                                     
+      471 +identify at least the card-word steer, the probe tap's missing
+          + 'fresh', cable-B                                             
+      472 +mastering/arbitration, and ctl_write's tied-off guard and stro
+          +be. For each, say what the                                    
+      473 +interface should become, so net_unit can be written against th
+          +e right shape rather than                                     
+      474 +ported and then fixed. Cover cable-B multi-master arbitration 
+          +explicitly: verilog/ solved                                   
+      475 +it with a 124-conductor reach into marker.v's queue, newimpl h
+          +as no arbitration at all,                                     
+      476 +and this is the single biggest thing the port must get right. 
+          +Be opinionated and brief.                                     
+      477 +Do not spend words on whether to keep two trees - that is deci
+          +ded; verilog/ is retiring.` },                                
+      478  
+      479    { key: 'refactoring', title: 'Refactoring: common components
+            and subcircuits',
+      480      body: pick(['refactor']),
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 16 lines, removed 5 lines
+      478  
+      479    { key: 'refactoring', title: 'Refactoring: common components
+            and subcircuits',
+      480      body: pick(['refactor']),
+      481 -    ask: `Write the REFACTORING section. Rank by payoff. For e
+          -ach: how many copies exist and                                
+      482 -where, the shared form proposed, which tree(s) it applies to, 
+          -and the risk. RESPECT                                         
+      483 -newimpl's stated constraints (no chip library, no gratuitous g
+          -enerate, straps-not-features)                                 
+      484 -and say so where a tempting refactor is ruled out by them - th
+          -at is useful information, not                                 
+      485 -a gap. Separate RTL refactors from testbench-harness refactors
+          -.` },                                                         
+      481 +    ask: `${RETIRE}                                           
+      482 +Write the REFACTORING section, RE-RANKED for the retirement. A
+          + refactor whose only                                          
+      483 +beneficiary is verilog/ is now worth nothing - say so in one l
+          +ine and move on; do not                                       
+      484 +write it up in detail however elegant it is. What counts now: 
+      485 +  1. Refactors INSIDE newimpl (duplication in its rtl/ and tb/
+          + that will get worse as                                       
+      486 +     top_max lands).                                          
+      487 +  2. Shared forms net_unit SHOULD BE PORTED INTO rather than c
+          +arried across verbatim -                                      
+      488 +     especially anything where verilog/ duplicated a subcircui
+          +t three ways (the                                             
+      489 +     scanner/probe-steer/serialiser write engine across marker
+          +.v, mini_core.v and                                           
+      490 +     nano_core.v; the A-plane sampler; the register/nano_reg c
+          +opy). newimpl's folded                                        
+      491 +     plane makes a probe one '688 and two flip-flops, so sever
+          +al of these collapse -                                        
+      492 +     say which, concretely, and what the port should write ins
+          +tead.                                                         
+      493 +For each: how many copies exist and where, the shared form, an
+          +d the risk. RESPECT                                           
+      494 +newimpl's stated constraints (no chip library, no gratuitous g
+          +enerate, straps-not-                                          
+      495 +features) and say where a tempting refactor is ruled out by th
+          +em - that is useful                                           
+      496 +information, not a gap. Separate RTL refactors from testbench-
+          +harness refactors.` },                                        
+      497  
+      498    { key: 'docs', title: 'Documentation: gaps and repetition',
+      499      body: pick(['doc-gap', 'doc-repetition']),
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 17 lines, removed 4 lines
+      497  
+      498    { key: 'docs', title: 'Documentation: gaps and repetition',
+      499      body: pick(['doc-gap', 'doc-repetition']),
+      500 -    ask: `Write the DOCUMENTATION section. Two parts: GAPS (mi
+          -ssing, stub, orphaned, dangling                               
+      501 -cross-reference, undocumented behaviour) and REPETITION/DRIFT 
+          -(a table of restated constants                                
+      502 -with every location and the disagreements, then prose duplicat
+          -ion). For each drifting                                       
+      503 -constant name the file that should be CANONICAL. Give a short 
+          -ordered worklist at the end.` },                              
+      500 +    ask: `${RETIRE}                                           
+      501 +Write the DOCUMENTATION section. Three parts:                 
+      502 +  1. THE BIG HOLE. The fold - /HA, SCAN[6:0], the bit-time map
+          +, the 2 ms pass, the                                          
+      503 +     polarity, the 4.7k pull-up - is newimpl's entire premise 
+          +and has NO home in                                            
+      504 +     exchange/ or common/; it lives only in an implementation 
+          +README. Say concretely                                        
+      505 +     what document should exist, what it must contain, and whi
+          +ch sections of                                                
+      506 +     fabric.md / mainboard.md / clocks.md must cite it. This i
+          +s now the most urgent                                         
+      507 +     documentation item, because verilog/ is retiring and the 
+          +spec corpus currently                                         
+      508 +     describes only the tree being deleted.                   
+      509 +  2. GAPS - missing, stub, orphaned, dangling cross-reference,
+          + undocumented behaviour.                                      
+      510 +     Note which of these die with verilog/ and which outlive i
+          +t.                                                            
+      511 +  3. REPETITION / DRIFT - a table of restated constants with e
+          +very location and the                                         
+      512 +     disagreements, then prose duplication. For each drifting 
+          +constant name the file                                        
+      513 +     that should be CANONICAL. Where a constant is stated agai
+          +nst the eight-highway                                         
+      514 +     plane that is going away, say whether the fix is to resta
+          +te it or delete it.                                           
+      515 +End with a short ordered worklist. Weight it toward documents 
+          +that must be right                                            
+      516 +BEFORE net_unit is ported, not after.` },                     
+      517  ]
+      518  
+      519  const written = await parallel([
+
+● Now the critic, and the return value so I get per-finding verdicts:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~/.claude/projects/-home-joel-telco/9b75f49e-8686-4b7a-9043-9045f452dda
+        5/workflows/scripts/telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  Added 14 lines, removed 1 line
+      554  exch.py referenced by newimpl/README.md section 6 - does exch.
+           py exist in this tree at all?
+      555  git log and recently retired specs still referenced; .gitignor
+           e coverage of build
+      556  artefacts (newimpl/build/ is full of .vvp and Verilated C++ - 
+           is it ignored?); and any
+      557 -document or module nobody read. Report concrete, file-grounded
+          - gaps only.`,                                                 
+      557 +document or module nobody read. Report concrete, file-grounded
+          + gaps only.                                                   
+      558 +                                                              
+      559 +${RETIRE}                                                     
+      560 +Given that direction, ALSO check specifically: does anything i
+          +n the corpus or the build                                     
+      561 +still assume verilog/ is the living model in a way that will b
+          +reak when it goes, and is                                     
+      562 +there anything in verilog/ that newimpl has NO equivalent for 
+          +and that nobody has noticed                                   
+      563 +is about to be lost (a bench, a card model, a measured result,
+          + a document's only                                            
+      564 +implementation)? That loss list is the most useful thing you c
+          +an return.`,                                                  
+      565      { label: 'critic:completeness', phase: 'Synthesize', effor
+           t: 'high' }),
+      566  ])
+      567  
+     ...
+      575    sections: SECTIONS.map((s, i) => ({ key: s.key, markdown: wr
+           itten[i] })),
+      576    critic: written[SECTIONS.length],
+      577    refutedTitles: refuted.map(f => `[${f.dimension}] ${f.title}
+           `),
+      578 +  // full verdict ledger, so the report can tag each item hone
+          +stly                                                          
+      579 +  ledger: survived.map(f => ({                                
+      580 +    v: f.verdict, s: f.severity, d: f.dimension, k: f.kind,   
+      581 +    t: f.title, w: (f.where || []).slice(0, 3).join(' ; '),   
+      582 +    c: f.corrected || '',                                     
+      583 +  })),                                                        
+      584  }
+
+● Patched. Resuming — all 200+ find/verify agents replay from cache; only the 5
+  synthesis agents run, now reframed around the port.
+
+● Workflow(telco-dual-impl-audit-wf_e99ebf5c-52d.js)
+  ⎿  /workflows to view dynamic workflow runs
+
+● While that runs, let me read the remaining findings so my report isn't limited
+  to what the writers surface.
+
+  Read 1 file (ctrl+o to expand)
+
+● Bash(echo recovered)
+  ⎿  Error: Exit code 1
+
+● Bash remains broken; Read is sufficient. Let me finish reading the findings
+  while synthesis runs.
+  Read 1 file (ctrl+o to expand)
+
+● I have the full picture now. One finding even derives a concrete retirement
+  order that matches your direction. Waiting on the reframed synthesis to land.
+
+● Dynamic workflow "Audit verilog/ and newimpl/ against the spec corpus:
+inconsistencies, structure, refactoring, doc gaps" completed · 16m 12s
+
+● All 220 agents completed. Let me read the full synthesis.
+
+  Read 1 file (ctrl+o to expand)
+
+● Excellent quality. Let me read the remaining sections.
+
+  Read 1 file (ctrl+o to expand)
+
+● I have the complete audit. Let me record the direction change in memory first.
+
+  Wrote 2 memories (ctrl+o to expand)
+
+● Written for: you, mid-port — verilog/ retiring, net_unit moving to newimpl/.
+
+  Method. 12 audit dimensions over both trees and the 24k-line corpus; every
+  finding checked by two independent adversarial verifiers (one re-reading the
+  cited files, one hunting for a resolution elsewhere). 100 findings, 86
+  survived, 14 refuted. I hand-verified the top items myself. Below, CONFIRMED =
+  both verifiers upheld.
+
+  ---
+
+  1. Live bugs in newimpl today
+
+  The exchange can be wedged by one digit. pulse_reg.v:111
+  (newimpl/rtl/pulse_reg.v#L111) gates the no-digit timer on ndig == 3'd0. The
+  instant the first digit lands the counter stops and nodig can never fire.
+  mini_marker's S_COLLECT exits only on r_gone/r_nodig/enough digits, and
+  top_min has one register — so a caller who dials one digit and stays off-hook
+  locks the exchange out of service until he hangs up. register.md:288 defines
+  gone as "CLR, or a partial-dial timeout"; marker.md:306 says the timer "runs
+  from the last digit as well as from seizure". An agent reproduced it: +5 s
+  silent: state=1 r_busy=1 ndig=1, second lift ignored.
+
+  Why it reached for ndig==0 — pulse_rx.v:45 (newimpl/rtl/pulse_rx.v#L45) assign
+  counting = (cnt != 4'd0), and cnt is never cleared at the strobe, so counting
+  latches high for the whole call. register.md:205 clears the '163
+  synchronously on STB; verilog/ does it. The old tree's !p_counting rule was
+  therefore unusable here. Fix is not clearing cnt at dig_stb — pulse_reg.v:102
+  (newimpl/rtl/pulse_reg.v#L102) samples cnt in the strobe cycle, so that stores
+  0 for every digit. One line: assign counting = (cnt != 4'd0) && !done;.
+
+  A port's /HA address is its board position, not its shunt column. port.v:93
+  (newimpl/rtl/port.v#L93) compares scan against {BLOCK, POS} where BLOCK is the
+  instance index; C and the write bus both go through SHUNT (mainboard.v:96
+  (newimpl/rtl/mainboard.v#L96)), and mainboard.v:90
+  (newimpl/rtl/mainboard.v#L90)'s wired-OR is ungated where hc and blk_n are
+  gated by SHUNT_FITTED. Latent only because every bench passes the identity
+  permutation. mainboard.md:470 ("all three columns run the same way about") is
+  now false.
+
+  Two gates that cannot fail. make lint (Makefile:56-62
+  (newimpl/Makefile#L56-L62)) runs verilator ... && echo clean in a for; a
+  failure on the left of && is exempt from set -e and the loop returns the last
+  iteration — only top_min, eleventh of eleven, can fail it. And inside the
+  advertised "103 checks": tb_ha.v:205 (newimpl/tb/tb_ha.v#L205) is a
+  disjunction whose second term is constant-true; tb_fabric.v:161
+  (newimpl/tb/tb_fabric.v#L161) asserts bare_c_rx === 64'd0 on an exchange with
+  PORT_FITTED(64'd0) where c_rx = FITTED && c_cap — unfalsifiable, and a
+  byte-identical duplicate of a check 30 lines earlier; tb_dial.v:131
+  (newimpl/tb/tb_dial.v#L131)'s "no-digit timeout" banner heads two checks that
+  test release, with r_nodig connected and never read. That last one is the
+  bench that would have caught the lockout.
+
+  NODIG is 12000 ms in five places; every document and sim/exch.py:313 say 10 s.
+  Cosmetic now, load-bearing once the 5 s network rule below is sized against
+  it.
+
+  ---
+
+  2. Defects about to be copied with net_unit
+
+  These are in the code being ported. Worth the most attention.
+
+  - network.md §4's 5 s no-b rule is in no RTL. net_unit.v:354-371
+    (verilog/rtl/net_unit.v#L354-L371) is driven by digit counts alone; its only
+    timers are the 128 ms guard and the 2 s claim wait. Trunks go only at
+    reg_gone, i.e. the register's 10 s (actually 12 s) timeout — precisely the
+    outcome the rule exists to prevent. sim/exch.py:2105 has FLOOD_TIMEOUT =
+    5000.0. It can't reuse tmr[r]; needs its own counter. common-control.md:105
+    lists four nogo causes and needs a fifth.
+  - The answers-to hunt writes at end-of-pass — the one thing groups.md:138-144
+    says not to do. marker.v:602 only latches; the pair is pushed from M_HUNTW
+    with no recheck. conn is neither set nor tested by the hunt, so a register
+    probing port p at the visit the hunt latches p connects, and the deferred
+    write overwrites its latch.
+  - monitor.v has no card-word input though monitor.md:229/:397 specify one and
+    bill a '164 for it; it uses chan_mask, a strap in no document, tied to a
+    literal at all six instantiations. This gets worse in newimpl: block.v:284
+    (newimpl/rtl/block.v#L284) steers the word from cw[10:8], so a class read
+    costs a point-word.
+  - option-word-rev2.md §2's FF-fails-open bug is live and orphaned. A card
+    whose second '165 is unfitted or still in its power-up RC reads FF =
+    unconditional, so a night-service-only member becomes eligible for every
+    hunt. Still true at marker.v:185/:207. That document is in no index and
+    cited by nothing — it was never retired, only orphaned.
+  - mf8_decoder's carrier timeout is 3 cells where seven places specify 2,
+    including both sibling Python models.
+  - Second-digit service test (PLAUSIBLE): marker.v:685 applies oct() to dg1
+    with no isvc check, so 3 then 9 rings port 30. net_unit, monitor and exch.py
+    all test it. The documents contradict each other here, not just the code —
+    settle it before rewriting marker.v, it's cheap now and expensive later.
+
+  ---
+
+  3. Structure — README.md §7 is true of the fabric, false of the tap
+
+  exch/mainboard/block/port/clock_card genuinely need nothing. But §3's
+  hierarchy also lists probe, ctl_write, pulse_reg, mini_marker, top_min, and
+  four of the five must change:
+
+  Cable B has no arbitration. top_min.v:80 (newimpl/rtl/top_min.v#L80) hardwires
+  one master. verilog/ handled the console with request-and-no-grant (extends
+  to exactly one requester) and dodged net_unit entirely: 124 conductors of
+  registered burst that marker.v:483-490 drains into its own queue.
+  common-control.md:88-92 calls that a placeholder — "until that third master is
+  drawn" — and :223 files it under Not measured. The full net_unit port list is
+  245 conductors. Porting it is porting the violation. Draw the master
+  interface now and make it the thing instantiated three times; give the request
+  line a fixed rank (the 16-way has exactly the 2 spares you need). Three
+  independent queues also delete marker.v's whole wq_ovf/EV_WQOVF machinery,
+  which exists only because two units share one.
+
+  fresh is not exported. probe.v:39 (newimpl/rtl/probe.v#L39) generates it;
+  mini_marker uses it internally and drops it at the boundary. net_unit gates
+  every action on visit && p_valid in five places; against three held 2 ms
+  levels those fire for 2 ms instead of one clock. Also mini_marker.v:75-76
+  parks the shared probe on called during S_PROBE, so a watcher loses the sweep
+  exactly when the marker is busiest — fix by decomposition, not a mux: probe is
+  one '688 and half a '74, give the tap its own.
+
+  The card word needs separate validity. The fold took /BLK out of the A path
+  and left it in the word path. M/BUSY come off free-running SCAN; the word
+  comes off pb_word, garbage while any word is in flight. One visit for both is
+  the bug probe_dirty/pv was.
+
+  ctl_write's strobe, g and clm are tied off at the only instantiation, and wq
+  is 13 bits where verilog/'s is 15 ({G, CLM, BSY, SRC, DST}). That kills
+  pointing words, event words, and CLAIM — and common-control.md:213 requires
+  sticky CLAIM of the mini-marker itself once a unit is fitted, so this isn't
+  deferrable to top_max.
+
+  ---
+
+  4. Refactoring
+
+  Inside newimpl: block.v:99-107 (newimpl/rtl/block.v#L99-L107) repeats verbatim
+  eight times — one '138 and two '157 banks written as eight regions with three
+  comments copied eight times each, against the README's own "one region a
+  package", while the same file writes the same kind of part as one line at :88.
+  ~48 lines, and exch.vh:24's promise that all five `PW-widening sites carry
+  the marker is broken (it appears only on blk_dec). Keep the eight port
+  instantiations; hoist the three banks — but write c_mux as eight one-liners or
+  bitwise, **not** rb ? {8{rbt}} : c_tx, whose scalar condition puts ringback
+  on all eight slots the moment any one port rings.
+
+  newimpl/tb: the exch port map is re-typed 6×, ck/oops 7× at three widths, the
+  ctl_write stimulus 4× in three spellings. Two files (tb/plant.v, tb/check.vh)
+  close it; the Makefile already makes it one token per line.
+
+  Explicitly ruled out by your own constraints — worth recording so nobody
+  re-proposes them: the cable-A tap bundle stays re-typed (no interfaces in
+  Verilog-2001, and a bundling module isn't a board); no generate over the eight
+  port instances; no sharing of tech/hc or mux8; no ha_probe extraction —
+  probe.v already is it, and better.
+
+  All the verilog/-only refactors are moot on retirement and I've dropped them:
+  the /ANS parameter→pin change (newimpl already has it right at port.v:126
+  (newimpl/rtl/port.v#L126)), reg_front.v, the card-word shifter module,
+  tb/plant.v for the seven site wrappers.
+
+  ---
+
+  5. Documentation — the hole is now urgent
+
+  The fold has no specification. /HA, SCAN[6:0], the bit-time map, the 2 ms
+  pass, the polarity, the 4.7 kΩ pull-up exist only in newimpl/README.md.
+  Nothing in exchange/, common/, mf8/ or mf2/ describes any of it. With verilog/
+  retiring, the spec corpus is about to describe only the tree being deleted —
+  and net_unit has no document to be ported against. Write exchange/folded-a.md;
+  the audit produced a concrete table of what it must own and which eleven
+  sections must cite it.
+
+  Also: mainboard.md:467 tells a builder to stuff a three-column shunt field
+  where there are now two — the one gap here that costs copper. mini-marker.md
+  §1/§2/§4 still put BUSY on PB and the pass at 8 ms, in the document
+  mini_marker.v:1 names as governing. monitor.md:52 gives the wrong cell
+  lifetime and contradicts its own §3.4/§4/§6 — fix before porting monitor.v,
+  not after. rtl.md:197 lists four things as "Still unbuilt" that are built in
+  net_unit.v with benches.
+
+  README.md §5 is read as a complete inventory and isn't — missing rows for
+  mainboard.md §4/§6/§2.1, protocol.md §3, mvp.md §2. (Don't add fabric.md §3.3:
+  port.v:161's re-inversion keeps it true.)
+
+  ---
+
+  6. What the completeness critic caught that the sweep missed
+
+  - a.out at the repo root is a stale 778-line copy of marker.v — the module
+    about to be ported — masked by a .gitignore comment calling it "iverilog's
+    default -o name".
+  - exch.v:72 exports a 64-conductor port_busy bus on the cable-A banner,
+    against the README's headline "16 → 9 conductors" and mainboard.md's "31 + 1
+    spare". It's the only output there with no MINIMAL/MAXIMAL marker.
+  - exch.py mainboard, which README §6 nominates to settle the 4.7 kΩ pull-up,
+    has no open-drain in it — it models a totem-pole ribbon, concludes "nothing
+    here is near a limit", and its cure (slow the edges) is the open-collector
+    failure mode. There is no spice rig for it either. §6's "should be re-run"
+    is really "does not exist yet".
+  - terms.md's cable-B entry is right and mainboard.md's is stale — the reverse
+    of what the sweep found, because the fold reverts cable B to a 16-way.
+  - hookbusy.md + pcb/hookbusy/ — the only KiCad boards in the tree — are built
+    on HA[0..7] and PB0, and /HA idling high means an unmodified HOOK card
+    lights every lamp.
+  - The loss list: 21 of verilog/'s 36 RTL files aren't in §7's "Next",
+    including the only implementations of nano-marker.md, channel-cards.md,
+    tone-card.md, mf8-spec.md, su-1.md and pulse-gen.md; 31 benches against 7;
+    and the whole tech/hc BOM flow, which every package count in the corpus
+    depends on. The fold's own saving — 48 packages of HA commutation for 64
+    open drains — has never been costed and after retirement cannot be, by tool.
+
+  ---
+
+  Worklist
+
+  1. pulse_rx.counting + the partial-dial timer — the lockout (§1).
+  2. Draw the third cable-B master before writing net_unit.v (§3).
+  3. Export probe_fresh; split word validity from M/BUSY validity.
+  4. Widen wq/ctl_write to {G, CLM, BSY, SRC, DST}.
+  5. Write exchange/folded-a.md; fix monitor.md:52 and rtl.md:197 before those
+     modules port.
+  6. Make make lint able to fail; fix the three dead checks.
+  7. Decide the second-digit service test and the PB0 commutation — both are
+     one-line document decisions that get expensive after the port.
+
+  Two caveats on confidence: the severity scores collapsed under verification
+  (29 HIGH → 2), largely because verifiers correctly noted most items are latent
+  rather than currently failing — I've ranked by blast radius at the port
+  instead. And the verilog/ timing baselines are measured against a control bus
+  running 4× too fast (ctl_write.v:52 (verilog/rtl/ctl_write.v#L52) truncates
+  DIV to 3 bits, so SCLK is 512 kHz not 128 kHz) — which means README.md:53's "9
+  ms measured, 72 visits" comparison the fold is sold against is not a sound
+  baseline. The fold still wins; the margin is unknown.
+
+  Want me to write this up as a page you can keep open while porting?

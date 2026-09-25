@@ -9,16 +9,16 @@
 // top_min and top_max both instantiate THIS, unchanged, so that "the maximal
 // build is the same fabric" is true by construction rather than by care.
 //
-// A block position with no shunts drives nothing and its conductor is pulled
-// to FILL -- which is exactly what an unfitted block is, so BLOCK_FITTED is
-// spelled as SHUNT_FITTED and PORT_FITTED and needs no separate switch.
+// A block is FITTED when its header jumper is: no jumper, no number, and the
+// block drives no highway, answers no word and its ports take no turn.  So
+// BLOCK_FITTED is one fact a position, and PORT_FITTED is one a socket.
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module exch #(
     parameter [63:0] PORT_FITTED  = 64'h0000_0000_0003_0000,  // mvp.md 1: ports 20 and 21
-    parameter [23:0] SHUNT        = 24'o76543210,
-    parameter [7:0]  SHUNT_FITTED = 8'b0000_0100,             // mvp.md 1: block 2 alone
+    parameter [23:0] BLOCK_NUM    = 24'o76543210,             // each header's jumper, octal, position 0 rightmost
+    parameter [7:0]  BLOCK_FITTED = 8'b0000_0100,             // mvp.md 1: block 2 alone
     parameter        RBT_IS_FILL  = 1'b1,   // no ringback card: a caller hears silence
     parameter [8:0]  T_ARM        = 9'd16,
     parameter [8:0]  T_REL        = 9'd256,
@@ -89,29 +89,25 @@ module exch #(
 
     wire [7:0]  hc_from_block, ha_pd_from_block, hb_pd_from_block;
     wire [7:0]  hw_pd_from_block;
-    wire [63:0] blk_dec;
-    wire [7:0]  blk_n;
 
     // ---- the eight block positions -----------------------------------------
     // A generate: eight identical boards in eight identical connectors.  Each
     // is still a thing in the hierarchy, as pos[p].u_blk.
     //
-    // A BLOCK'S NUMBER IS WHAT ITS SHUNT SAYS, NOT WHERE IT SITS.  BLOCK is
-    // the highway this position is jumpered onto, carried down the ribbon to
-    // its eight port circuits, so a port's turn on /HA and /HB is the same
-    // number as its highway.  With the identity shunt position p is block p
-    // and nothing changes; with any other shunt the two differ, and the old
-    // `.BLOCK(3'dp)` put a port's supervision under one number and its voice
-    // under another.  (mainboard.md 4, port-card.md)
+    // A BLOCK'S NUMBER IS ITS OWN HEADER JUMPER.  BLOCK_NUM[p] is what the
+    // jumper in position p is set to: the highway its HC_OUT is routed onto,
+    // and -- through the '148 behind the same jumper -- the h its '688 matches
+    // DST[5:3] against and the h its port circuits take their turn under.
+    // One strap, three uses; the mainboard holds none of it.  BLOCK_FITTED[p]
+    // is the '148's GS: no jumper, no number, and the block is silent.
     //
-    // A position with no shunt still gets a number here -- whatever the
-    // SHUNT field says for it -- and its port circuits, if any are stuffed,
-    // will take that turn on the planes.  That is the "shunts left out" fault
-    // of mainboard.md 6, and it reads here as the collision it is.
+    // With the identity setting position p is block p, and nothing about
+    // position ever mattered except which socket a card's C_TX enters.
     genvar p;
     generate
         for (p = 0; p < 8; p = p + 1) begin : pos
-            block #(.BLOCK(SHUNT[p*3 +: 3]), .PORT_FITTED(PORT_FITTED[p*8 +: 8]),
+            block #(.BLOCK(BLOCK_NUM[p*3 +: 3]), .JUMPERED(BLOCK_FITTED[p]),
+                    .PORT_FITTED(PORT_FITTED[p*8 +: 8]),
                     .T_ARM(T_ARM), .T_REL(T_REL)) u_blk (
                 .clk(clk), .rst_n(rst_n),
                 .slot(slot), .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
@@ -123,18 +119,17 @@ module exch #(
                 .ans_n(ans_n[p*8 +: 8]), .word_n(word_n[p*8 +: 8]),
                 .c_rx(c_rx[p*8 +: 8]), .a_rx(a_rx[p*8 +: 8]),
                 .mute_blk(mute_blk[p]),
-                .sdata(sdata), .sclk(sclk), .wr(wr), .blk_n(blk_n[p]),
-                .blk_dec(blk_dec[p*8 +: 8]), .hw_pd(hw_pd_from_block[p]),
+                .sdata(sdata), .sclk(sclk), .wr(wr),
+                .hw_pd(hw_pd_from_block[p]),
                 .port_busy(port_busy[p*8 +: 8]));
         end
     endgenerate
 
-    mainboard #(.SHUNT(SHUNT), .SHUNT_FITTED(SHUNT_FITTED)) u_mb (
+    mainboard #(.BLOCK_NUM(BLOCK_NUM), .BLOCK_FITTED(BLOCK_FITTED)) u_mb (
         .fill(fill),
         .hc_from_block(hc_from_block),
         .ha_pd_from_block(ha_pd_from_block),
         .hb_pd_from_block(hb_pd_from_block),
-        .blk_dec(blk_dec),
         .hw_pd_from_block(hw_pd_from_block),
-        .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .blk_n(blk_n), .hw_n(hw_n));
+        .hc(hc), .ha_n(ha_n), .hb_n(hb_n), .hw_n(hw_n));
 endmodule

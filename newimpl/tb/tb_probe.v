@@ -38,7 +38,7 @@ module tb_probe;
         .dst(dst), .src(src), .bsy(bsy), .clm(1'b0),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
-    exch #(.PORT_FITTED({64{1'b1}}), .SHUNT_FITTED(8'hFF)) u_x (
+    exch #(.PORT_FITTED({64{1'b1}}), .BLOCK_FITTED(8'hFF)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(a_tx), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),

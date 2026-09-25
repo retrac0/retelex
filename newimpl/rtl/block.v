@@ -12,23 +12,34 @@
 //   the word commutator         -- the word is /HW, driven by the card the
 //                                  marker pointed at; there is no '151 and no
 //                                  /BLK gate left in the word path
-//   the HA_OUT driver and its shunt column -- the shunt field is two columns now
+//   the HA_OUT driver and its shunt column -- and now the whole shunt field
 //   the SCAN[2:0] receivers     -- SCAN[5:0] comes off cable A, six conductors
 //   con_n and the pb_sel mux    -- the console reads /HA like everyone else
 //   PB[1:0] entirely            -- nothing block-steered is read any more
 // All four '151s go.  The block gains nothing on the fabric side: it passes
 // SCAN, /HA and /HB through to its eight ports and ORs their drains.
 //
-// THE BLOCK STILL HAS NO ADDRESS AND NO COMPARATOR.  BLOCK is carried only so
-// that it can be strapped through to the port circuits, which do need to know
-// their own number to take their turn on the supervision planes
-// (port-card.md's BLOCK[0..2]).  Which highway this block drives is still the
-// shunt's business and not this parameter's.
+// THE BLOCK KNOWS ITS OWN NUMBER.  One 2 x 8 jumper on the block header does
+// three things: it routes HC_OUT onto highway HC[h]; a 74HC148 behind it
+// reads the same jumper as a three-bit number, h, which goes down the ribbon
+// to the eight port circuits as BLOCK[2:0], so that a port's turn on /HA and
+// /HB is {h, its slot}; and the '148's GS output says a jumper is FITTED at
+// all.  A block with no jumper drives no highway, answers no word, and its
+// ports take no turn -- GS gates every one of those.  One strap, read once,
+// used three ways, and nothing on the mainboard selects anything any more.
+//
+// /BLK IS MADE HERE, with one 74HC688 on DST[5:3] against h.  The old form
+// decoded DST[5:3] into eight lines, sent all eight to the mainboard, and let
+// a second jumper column there pick one back: eight conductors a connector
+// and sixty-four on the mainboard, for one bit of information, so that the
+// block need not know its name.  It knows it now.
+//   (mainboard.md 2.3, 4 -- superseded; port-card.md)
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module block #(
-    parameter [2:0]  BLOCK       = 3'd0,    // strapped through to the eight port circuits
+    parameter [2:0]  BLOCK       = 3'd0,    // the header jumper, read by the '148: h
+    parameter        JUMPERED    = 1'b1,    // the '148's GS: a jumper is fitted at all
     parameter [7:0]  PORT_FITTED = 8'hFF,   // which of the eight port circuits are populated
     parameter [8:0]  T_ARM       = 9'd16,
     parameter [8:0]  T_REL       = 9'd256
@@ -68,8 +79,6 @@ module block #(
     input                   sdata,
     input                   sclk,
     input                   wr,
-    input                   blk_n,       // /BLK, back from this position's shunt column
-    output     [7:0]        blk_dec,     // this block's own '138 on DST[5:3], out to the shunt
     output                  hw_pd,       // MAXIMAL: this block's drain onto /HW
 
     // ---- for a monitor on this block ---------------------------------------
@@ -88,9 +97,9 @@ module block #(
             if (sclk && !sclk_d) cw <= {cw[`CWW-2:0], sdata};
         end
 
-    // ---- 74HC138: DST[5:3] into eight lines, out to the shunt field --------
-    // WIDENS WITH `PW: a four-bit block field wants a '154.
-    assign blk_dec = 8'd1 << cw[13:11];
+    // ---- 74HC688: is this word for us?  DST[5:3] against the jumper --------
+    // WIDENS WITH `PW: a four-bit block field is still one '688.
+    wire blk_n = !(JUMPERED && (cw[13:11] == BLOCK));
 
     wire [7:0] rb, ha_pd_k, hb_pd_k;
     wire [7:0] c_mux, word_com;
@@ -221,11 +230,10 @@ module block #(
     // ---- the open drains, wired together -----------------------------------
     // In 74HC these 2N7002 sources sit on two conductors with one 4.7 k pull-up
     // each at the clock card; there is nothing here to OR.  The mainboard does
-    // the wired-OR and the inversion into /HA and /HB.  Both are ungated by the
-    // shunt on purpose: a port's turn is its NUMBER, and its number does not
-    // move when the block is shunted onto a different highway.
-    assign ha_pd = |ha_pd_k;
-    assign hb_pd = |hb_pd_k;
+    // the wired-OR and the inversion into /HA and /HB.  GS gates both: a
+    // block with no jumper has no number, so its ports have no turn to take.
+    assign ha_pd = JUMPERED && (|ha_pd_k);
+    assign hb_pd = JUMPERED && (|hb_pd_k);
 
     // ---- MAXIMAL: the card word on /HW -------------------------------------
     // NOT a commutator and NOT /BLK-gated.  All 64 cards share one conductor;
@@ -234,9 +242,9 @@ module block #(
     // 64 kHz, for sixteen frames -- 250 us for a whole word.
     //
     // The select is the WHOLE six-bit DST, so this block answers only when
-    // DST[5:3] is its own shunt column AND DST[2:0] picks one of its slots.
-    // blk_n already carries the first half, back from the shunt field, which
-    // is why the comparison here is only the slot.
+    // DST[5:3] is its own number AND DST[2:0] picks one of its slots.  blk_n
+    // is the first half, off the '688 above, which is why the mux here is
+    // addressed by the slot alone.
     //
     // Nothing continuous depends on /HW.  The scanner never waits for it, no
     // hunt is gated on it, and a word in flight cannot disturb a supervision

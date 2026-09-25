@@ -43,7 +43,7 @@ module tb_fabric;
         .dst(dst), .src(src), .bsy(bsy), .clm(clm),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
-    exch #(.PORT_FITTED({64{1'b1}}), .SHUNT_FITTED(8'hFF)) u_x (
+    exch #(.PORT_FITTED({64{1'b1}}), .BLOCK_FITTED(8'hFF)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(c_tx), .a_tx(64'd0), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(c_rx), .a_rx(a_rx),
@@ -61,7 +61,7 @@ module tb_fabric;
     // fabric.md 7 step 2, and mvp.md 2's "everything absent reads as idle".
     wire [7:0] bare_hc;  wire bare_ha_n, bare_hb_n, bare_hw_n, bare_fill;
     wire [63:0] bare_c_rx;
-    exch #(.PORT_FITTED(64'd0), .SHUNT_FITTED(8'b0000_0100)) u_bare (
+    exch #(.PORT_FITTED(64'd0), .BLOCK_FITTED(8'b0000_0100)) u_bare (
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(64'd0), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(bare_c_rx), .a_rx(),

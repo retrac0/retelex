@@ -41,7 +41,7 @@ module tb_dial;
     wire [`SCANW-1:0] scan;
 
     exch #(.PORT_FITTED(64'h0000_0000_0003_0000),
-           .SHUNT_FITTED(8'b0000_0100)) u_x (
+           .BLOCK_FITTED(8'b0000_0100)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(64'd0), .a_tx(a_tx), .ans_n({64{1'b1}}), .word_n(64'd0),
         .c_rx(), .a_rx(), .mute_blk(8'd0), .rbt_in(1'b0),

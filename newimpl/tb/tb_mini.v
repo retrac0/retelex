@@ -40,7 +40,7 @@ module tb_mini;
     // 1:2 shape as the real 2.048 s / 4.096 s; watching six seconds of the
     // real one proves nothing the ratio does not.
     top_min #(.PORT_FITTED(64'h0000_0000_0003_000A),   // 01, 03, 20, 21
-              .SHUNT_FITTED(8'b0000_0101),             // blocks 0 and 2
+              .BLOCK_FITTED(8'b0000_0101),             // blocks 0 and 2
               .RING_ON_MS(13'd64), .RING_OFF_MS(13'd128),
               .NODIG(16'd1000)) u_top (
         .clk(clk), .rst_n(rst_n),

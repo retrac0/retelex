@@ -161,11 +161,13 @@ exception is `` `PW ``, and every site that would widen with it says so:
 ```
 
 Two things follow. A parameter never selects behaviour in an `if`; it selects
-what is instantiated or what a constant is. And a value the board reads off a
-strap comes from **one** strap: a block's number is what its mainboard shunt
-says (`.BLOCK(SHUNT[p*3 +: 3])`), carried down the ribbon — it is not also a
-strap on the port. When two straps could disagree, one of them is a bug
-waiting for the non-default value.
+what is instantiated or what a constant is. And each fact the board reads off
+a strap comes from **one** strap, on the board that owns the fact: a block's
+number is its own header jumper (`BLOCK_NUM[p]`, read once by a '148 and used
+three ways — highway, `/BLK`, the ports' turn); a port card's slot is its own
+2 × 3 jumper (`POS`). The mainboard holds no strap at all. When two straps
+could disagree, one of them is a bug waiting for the non-default value — and
+where a strap must agree with a socket, the comment says so.
 
 A bench overrides a parameter to make a slow thing fast — a 1 s no-digit
 timer, a 24 ms ring cadence — and says why in the instantiation: *"so the

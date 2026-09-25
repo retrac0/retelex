@@ -1,16 +1,20 @@
-// mainboard -- the passive board at each ribbon tap: the cables' headers, the
-// block's connector, and the BLOCK SHUNT.  No logic, and no part that does
-// anything but connect.  mainboard.md 1.
+// mainboard -- the passive board at each ribbon tap: the cables' headers and
+// the block's connector.  No logic, no jumper, and no part that does anything
+// but connect.  mainboard.md 1.
 //
 // A ribbon is a bus of identical conductors and every connector crimped along
-// it sees the same signals.  Almost all of this bus wants exactly that.  TWO
-// things do not: block h drives highway HC[h], and answers to /BLK line h.
-// That is the whole of a block's identity, and it is two shunts in two
-// labelled columns rather than six packages of decoding at every block.
+// it sees the same signals -- and NOW EVERY CONDUCTOR ON IT IS THAT.  The two
+// that were not, which highway a block drives and which /BLK line it answers
+// to, were a shunt field here: two jumper columns a position.  Both moved to
+// the block's own header, where one jumper routes HC_OUT and a '148 reads the
+// same jumper as the block's number.  What this module still does is what a
+// ribbon does: eight blocks' HC_OUT land on eight highways, and the eight
+// positions' open drains land on three wired-OR conductors.
 //
-// THE SHUNT FIELD IS TWO COLUMNS NOW, NOT THREE.  HA[0..7] are gone, so there
-// is no HA_OUT to shunt: the supervision planes are conductors that every port
-// in the exchange pulls down in its own turn, and no block owns them.
+// THE PARAMETERS HERE ARE NOT ON THIS BOARD.  BLOCK_NUM and BLOCK_FITTED are
+// the eight block headers' jumpers, passed down from exch so that this model
+// of the ribbon knows which highway each connector's HC_OUT pin lands on.
+// The board itself knows nothing.
 //
 // THREE WIRED-ORs, one mechanism.  /HA carries M and /HB carries BUSY, both
 // addressed by SCAN, so a reader takes both facts about one port out of one
@@ -18,53 +22,45 @@
 // last pointed at.  All three idle HIGH on a 4.7 k pull-up at the clock card,
 // all three are sampled at the same instant in cell 4, and all three read
 // "nobody is pulling" the same way -- which is what makes an absent block, an
-// unfitted port and a missing shunt one fault signature instead of four.
+// unfitted port and a missing jumper one fault signature instead of four.
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module mainboard #(
-    // Three bits a position, octal: which HC conductor and which /BLK line
-    // this position's shunts pick.  76543210 is the natural wiring.
-    parameter [23:0] SHUNT        = 24'o76543210,
-    parameter [7:0]  SHUNT_FITTED = 8'b1111_1111
+    // Three bits a position, octal: the highway each block header's jumper
+    // routes its HC_OUT onto.  76543210 is the natural setting.
+    parameter [23:0] BLOCK_NUM    = 24'o76543210,
+    parameter [7:0]  BLOCK_FITTED = 8'hFF
 )(
     input             fill,                 // what an undriven HC conductor is pulled to
     input      [7:0]  hc_from_block,        // each position's HC_OUT
     input      [7:0]  ha_pd_from_block,     // each position's M drains, already ORed
     input      [7:0]  hb_pd_from_block,     // and its BUSY drains
-    input      [63:0] blk_dec,              // eight lines out of each position's '138
     input      [7:0]  hw_pd_from_block,     // MAXIMAL: the pointed card's word
 
     output     [7:0]  hc,                   // the eight conductors as they end up
     output            ha_n,                 // /HA: a 4.7 k pull-up and 64 open drains
     output            hb_n,                 // /HB: the same again, for BUSY
-    output     [7:0]  blk_n,                // /BLK back to each position
     output            hw_n                  // MAXIMAL: /HW, the card word bus
 );
     // ---- the eight HC conductors -------------------------------------------
-    // One driver a wire.  A conductor with no driver -- an unfitted block, or
-    // a missing shunt -- is pulled to FILL through 4.7 k at the clock card, so
-    // it reads as CVSD silence rather than as noise.  Two positions shunted
-    // onto one column is two '244s on one wire, and it reads here as what it
-    // is.
+    // One driver a wire.  A conductor with no driver -- no block in any
+    // position jumpered onto it -- is pulled to FILL through 4.7 k at the
+    // clock card, so it reads as CVSD silence rather than as noise.  Two
+    // blocks jumpered onto one highway is two '244s on one wire, and it reads
+    // here as what it is.
     //
-    // drv[c] is which positions have a shunt in column c.  Every bit of it is
-    // a constant expression of the parameters, so the whole shunt field
-    // resolves at elaboration and none of this is logic on the board -- it is
-    // a 2 x 8 header with a jumper in it.
-    // A generate, because this is ONE header repeated eight times, and the
-    // eight hand-unrolled lines it replaces were four hundred characters each
-    // and could not be diffed.  Nothing in it is a signal: `c` and `p` are
-    // genvars, C is a localparam, and every term is a constant expression of
-    // SHUNT and SHUNT_FITTED -- so it is still a jumper, not a mux.
+    // A generate, because this is one connector repeated eight times.  Nothing
+    // in it is a signal: `c` and `p` are genvars, C is a localparam, and every
+    // term is a constant expression of the jumpers -- so it is copper, not a
+    // mux.  drv[p] is "position p's block routes its HC_OUT onto this wire".
     genvar c, p;
     generate
         for (c = 0; c < 8; c = c + 1) begin : col
             localparam [2:0] C = c;
-            // drv[p]: position p has its jumper in this column
             wire [7:0] drv;
             for (p = 0; p < 8; p = p + 1) begin : pos
-                assign drv[p] = SHUNT_FITTED[p] && (SHUNT[p*3 +: 3] == C);
+                assign drv[p] = BLOCK_FITTED[p] && (BLOCK_NUM[p*3 +: 3] == C);
             end
             assign hc[c] = (drv == 8'd0)                 ? fill
                          : ((drv & (drv - 8'd1)) != 0) ? 1'bx
@@ -90,18 +86,6 @@ module mainboard #(
     assign ha_n = ~(|ha_pd_from_block);
     assign hb_n = ~(|hb_pd_from_block);
 
-    // ---- /BLK: each position's own '138, through its shunt column ----------
-    // The decoder moved from the marker's end of the wire to the block's, and
-    // nothing learned its own name on the way.  A position with no shunts
-    // answers to nothing.
-    assign blk_n[0] = SHUNT_FITTED[0] ? ~blk_dec[0*8 + SHUNT[0*3 +: 3]] : 1'b1;
-    assign blk_n[1] = SHUNT_FITTED[1] ? ~blk_dec[1*8 + SHUNT[1*3 +: 3]] : 1'b1;
-    assign blk_n[2] = SHUNT_FITTED[2] ? ~blk_dec[2*8 + SHUNT[2*3 +: 3]] : 1'b1;
-    assign blk_n[3] = SHUNT_FITTED[3] ? ~blk_dec[3*8 + SHUNT[3*3 +: 3]] : 1'b1;
-    assign blk_n[4] = SHUNT_FITTED[4] ? ~blk_dec[4*8 + SHUNT[4*3 +: 3]] : 1'b1;
-    assign blk_n[5] = SHUNT_FITTED[5] ? ~blk_dec[5*8 + SHUNT[5*3 +: 3]] : 1'b1;
-    assign blk_n[6] = SHUNT_FITTED[6] ? ~blk_dec[6*8 + SHUNT[6*3 +: 3]] : 1'b1;
-    assign blk_n[7] = SHUNT_FITTED[7] ? ~blk_dec[7*8 + SHUNT[7*3 +: 3]] : 1'b1;
 
     // ---- MAXIMAL: /HW, the card word bus -----------------------------------
     // The third wired-OR, and the same part as the other two: one 4.7 k

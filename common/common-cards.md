@@ -1,12 +1,14 @@
 # The common card set — four cards that plug into an MF8 shelf or an exchange block
 
-**Decided: the POTS subscriber/CO converter, the CVSD subscriber line card, the
-data card and the E&M subscriber card are one design each, and a card moves
-between an MF8 shelf and an exchange block with nothing changed on the circuit.**
-Same channel-socket **pinout**, same rails, same clocks, and — when the connector is
-settled — the same connector family. **Outline:** MF8 is the **100 × 100 mm
-spacer-stack** (`mf8-psu.md`, `mf8-trunk.md`); the exchange block's card outline
-may differ so long as the pinout matches.
+The POTS subscriber/CO converter, the CVSD subscriber line card, the
+data card and the E&M subscriber card are one design each, and a card can move
+between an MF8 shelf and an exchange block with nothing changed on the circuit.
+
+Same channel-socket pinout, same rails, same clocks, and - when the connector is
+settled - the same connector family. 
+
+Outline: MF8 is an **100 × 100 mm spacer-stack** (`mf8-psu.md`, `mf8-trunk.md`); 
+the exchange block's card outline may differ so long as the pinout matches.
 
 This was already half true and never stated as a requirement. `mf8-backplane.md`
 §8 and `baseband.md` §2.2 gave the same 2 × 16 pin for pin;

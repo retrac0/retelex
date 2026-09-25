@@ -24,8 +24,8 @@ module port #(
     // Straps and stuffing.  Not options -- there is no feature here that a
     // parameter turns on.
     parameter        FITTED = 1'b1,   // a port circuit is populated at this slot
-    parameter [2:0]  BLOCK  = 3'd0,   // strapped at the block; port-card.md's BLOCK[0..2]
-    parameter [2:0]  POS    = 3'd0,   // which ribbon slot this is
+    parameter [2:0]  BLOCK  = 3'd0,    // off the block ribbon: the block header's jumper, through its '148
+    parameter [2:0]  POS    = 3'd0,    // the 2 x 3 jumper on this card: its slot
     // The two detectors, in milliseconds.  THESE ARE RC NETWORKS -- a diode
     // and two resistors into a 74HC14, up in 16 ms and down in 256 (fabric.md
     // 3.5).  The fold does not touch them and does not make them cheaper.
@@ -87,14 +87,15 @@ module port #(
     // WIDENS WITH `PW: at nine bits this is a '688 and half an '85.
     wire eq_src = (scan == addr);
 
-    // A 74HC30 -- is it OUR turn?  Layout, not logic: six true-or-complement
-    // picks of the SCAN bits into an eight-input NAND.  THE HIGHWAY HALF IS
-    // NOT STRAPPED HERE: BLOCK[2:0] comes down the block ribbon from the
-    // mainboard's shunt, so a port's number on the planes is the highway its
-    // block is jumpered onto -- the same number as its voice.  Only the slot,
-    // POS, is the port's own, and that is wiring, not a strap: it is which
-    // socket the circuit sits in.  No comparator package, and no ID pins on
-    // the channel socket.  (mainboard.md 4, port-card.md)
+    // A 74HC688 -- is it OUR turn?  SCAN against {BLOCK, POS}, and THE TWO
+    // HALVES ARE TWO JUMPERS.  BLOCK[2:0] comes down the block ribbon from the
+    // block header's jumper through its '148, so a port's number on the planes
+    // is the highway its block routes onto -- the same number as its voice.
+    // POS[2:0] is a 2 x 3 jumper on THIS card: its slot.  The card knows its
+    // own number and the socket tells it nothing, so the jumper must be set to
+    // the socket the card sits in, because that socket is still where its
+    // C_TX enters the commutator and where the block's write line lands.  No
+    // ID pins on the channel socket.  (port-card.md; mainboard.md 4 superseded)
     wire eq_own = (scan == {BLOCK, POS});
 
     // The A capture instant is strobe line 4's falling edge -- the middle of

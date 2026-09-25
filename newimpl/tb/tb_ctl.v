@@ -41,7 +41,7 @@ module tb_ctl;
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
     // Block 2 alone, ports 20 and 21 -- mvp.md 1's exchange exactly.
-    exch #(.PORT_FITTED(64'h0000_0000_0003_0000), .SHUNT_FITTED(8'b0000_0100)) u_x (
+    exch #(.PORT_FITTED(64'h0000_0000_0003_0000), .BLOCK_FITTED(8'b0000_0100)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(c_tx), .a_tx(64'd0), .ans_n({64{1'b1}}), .word_n({64{1'b1}}),
         .c_rx(c_rx), .a_rx(),

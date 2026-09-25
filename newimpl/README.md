@@ -142,12 +142,13 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
 ```
  exch              ONE exchange: the clock card, the mainboard, eight blocks
    clock_card      the crystal, the divider, SLOT, SLOTQ, SCAN, FILL, cadence, TICK
-   mainboard       the shunt field; the wired-ORs into /HA, /HB and /HW;
-                     /BLK back to each block
-   block  x8       the C commutator, the ringback '157s, the write decoder,
-                     the control word's two '164, the block-select '138
-     port x8       '273, a '151, a '688, a '74 pair, TWO open drains, and
-                     the supervision
+   mainboard       a ribbon: eight HC_OUT onto eight highways, the wired-ORs
+                     into /HA, /HB and /HW.  No jumper, no shunt field, no /BLK
+   block  x8       ITS OWN NUMBER -- one header jumper, a '148 to read it, a
+                     '688 that makes /BLK from it; the C commutator, the
+                     ringback '157s, the write decoder, the word's two '164
+     port x8       '273, a '151, a '688, a '74 pair, TWO open drains, a 2 x 3
+                     slot jumper, and the supervision
 
  mini_marker       MINIMAL: the handoff, the sequencer, one register, one serialiser
    probe           the scanner-addressed listener -- ONE '688 and half a '74
@@ -266,7 +267,8 @@ The code comments name the section; the documents have not been brought up yet.
 | `mainboard.md` §2.1 | the `CLK_8K` row's "the scanner steps on it; a visit is 125 µs" — the scanner steps on the 64 kHz frame edge and a turn is 15.63 µs. The group count "15, of which the clock card drives 14" grows by `SCAN[5:0]` |
 | `mainboard.md` §2.3.3, §2.3.4 | `SCAN[2:0]`, `ADVANCE` and `START` come off cable B; `SCAN[5:0]` goes on cable A, from the clock card. §2.3.3's conclusion — that a word-steered probe would saturate the bus — no longer applies to M or `BUSY`, but **does** now apply to `/HW`, which is word-steered by design |
 | `mainboard.md` §3.2 | cable B reverts to a 16-way. `common/terms.md` §, which still says 16-way, becomes the **correct** document and §3.2 the stale one |
-| `mainboard.md` §4 | the shunt field is **two** columns, not three. There is no `HA_OUT` to shunt |
+| `mainboard.md` §1, §2.3, §4 | **there is no shunt field.** The jumper is on the block header, a '148 reads it as the block's number, and the block makes `/BLK` itself with one '688 on `DST[5:3]`. §2.3's "the decoder moved to the block's end and nothing learned its own name" is superseded: the block knows its name. `blk_dec` and the `/BLK` return — 8 conductors a block connector, 64 on the mainboard — are gone, and the mainboard is the ribbon §1 always said it was |
+| `port-card.md` | the port card carries a 2 × 3 **slot jumper**, and takes the highway half of its number off the block ribbon. It must be set to the socket the card sits in, which is still where its `C_TX` enters the commutator |
 | `mainboard.md` §6 | the absent-part table's two "`HA` to ground" rows. Absence now reads idle because nothing pulls down, not because something pulls low |
 | `mainboard.md` §9 | both open items are answered: what re-drives the scanned port's M, and crosstalk on sixteen switching highways — there are ten conductors now, which is a better cure than `fabric.md` §6's |
 | `fabric.md` §6 | the economy form is **superseded**. It bought eight wires by spending edge margin; this buys six and spends none |

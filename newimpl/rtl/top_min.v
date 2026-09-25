@@ -16,8 +16,8 @@
 
 module top_min #(
     parameter [63:0] PORT_FITTED  = 64'h0000_0000_0003_0000,  // ports 20 and 21
-    parameter [23:0] SHUNT        = 24'o76543210,
-    parameter [7:0]  SHUNT_FITTED = 8'b0000_0100,             // block 2 alone
+    parameter [23:0] BLOCK_NUM        = 24'o76543210,
+    parameter [7:0]  BLOCK_FITTED = 8'b0000_0100,             // block 2 alone
     parameter [8:0]  T_ARM        = 9'd16,
     parameter [8:0]  T_REL        = 9'd256,
     parameter [12:0] RING_ON_MS   = 13'd2048,
@@ -72,8 +72,8 @@ module top_min #(
     wire hclk, line_hb, cap_stb, tx_clk, clk_8k, rx_oct, oct_stb;
     wire m_sdata, m_sclk, m_wr;
 
-    exch #(.PORT_FITTED(PORT_FITTED), .SHUNT(SHUNT),
-           .SHUNT_FITTED(SHUNT_FITTED), .T_ARM(T_ARM), .T_REL(T_REL),
+    exch #(.PORT_FITTED(PORT_FITTED), .BLOCK_NUM(BLOCK_NUM),
+           .BLOCK_FITTED(BLOCK_FITTED), .T_ARM(T_ARM), .T_REL(T_REL),
            .RING_ON_MS(RING_ON_MS), .RING_OFF_MS(RING_OFF_MS)) u_exch (
         .clk(clk), .rst_n(rst_n),
         .c_tx(c_tx), .a_tx(a_tx), .ans_n(ans_n), .word_n(word_n),
