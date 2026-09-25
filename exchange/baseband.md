@@ -42,11 +42,11 @@ The short answers, before the detail:
 ## 1. What it is
 
 ```
- exchange 22, port 43                                       exchange 23, port 05
-   port's C_RX ─────▶ C out ═══════════════════════════▶ C in ─────▶ port's C_TX
-   port's A_RX ─────▶ A out ═══════════════════════════▶ A in ─────▶ port's A_TX
-   port's C_TX ◀───── C in ◀═══════════════════════════ C out ◀───── port's C_RX
-   port's A_TX ◀───── A in ◀═══════════════════════════ A out ◀───── port's A_RX
+   exchange 22, port 43                                       exchange 23, port 05
+   port's C_RX  ─────▶ C out ═══════════════════════════▶ C in ─────▶ port's C_TX
+   port's A_RX  ─────▶ A out ═══════════════════════════▶ A in ─────▶ port's A_TX
+   port's C_TX ◀───── C in ◀═══════════════════════════ C out ◀─────  port's C_RX
+   port's A_TX ◀───── A in ◀═══════════════════════════ A out ◀─────  port's A_RX
 ```
 
 That is the whole of it, and it is `network.md` §1's tie trunk drawn with

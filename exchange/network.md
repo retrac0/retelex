@@ -22,13 +22,13 @@ none of it.
 ## 1. Tie trunks
 
 A port's latch points only at one of the 64 ports of its own exchange, so a call
-to another exchange crosses a **tie trunk: a pair of ports, one in each exchange,
-back to back**, with no channel card behind either.
+to another exchange has to go through a tie trunk.  A tie trunk is a pair of ports, 
+one in each exchange that are linked together.
 
 ```
  exchange 22                                                exchange 23
  line 47 ── listens to ─▶ T                            T′ ◀─ listens to ── line 25
- T ─────── listens to ─▶ line 47                       T′ ── listens to ─▶ line 25
+ T ──────── listens to ─▶ line 47                      T′   ── listens to ─▶ line 25
 
             T's C_RX, A_RX ──────────────────────────▶ T′'s C_TX, A_TX
             T's C_TX, A_TX ◀────────────────────────── T′'s C_RX, A_RX

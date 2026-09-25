@@ -36,12 +36,15 @@ TB_ltu    := tb/tb_ltu.v
 TB_lnet   := tb/site_net.v tb/tb_lnet.v
 TB_net    := tb/site_net.v tb/tb_net.v
 TB_chain  := tb/site_net.v tb/tb_chain.v
+TB_lfull  := tb/site_net.v tb/tb_lfull.v
+TB_lchain := tb/site_net.v tb/tb_lchain.v
 
-SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet
+SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet lfull lchain
 IVSIMS := $(addprefix iv-,$(SIMS))    # by hand only: not in the sequence
 
 IVFLAG := -g2012 -I rtl
-VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
+VLTHREADS ?= 4
+VLFLAG := --binary --timing -j 4 --threads $(VLTHREADS) -Irtl -Wno-fatal
 
 .PHONY: all lint clean faults $(SIMS) $(IVSIMS)
 

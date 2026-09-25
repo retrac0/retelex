@@ -1,0 +1,79 @@
+* local-trunk.md 5: one direction of the local highway trunk's wire, in-rack
+* baseline -- 74HC with 33 ohm at the driver, single-ended on twisted pair,
+* common ground, the far end a 74HC14 input.  Swept over length.
+*
+* The receiver is timed by the far HCLK (local_trunk.v): C_hw, A_hw and
+* TX_CLK all change at the sender's HCLK RISE and are sampled at the far
+* HCLK's FALL, half a cell later.  So what can go wrong is not the eye of C
+* -- it has a whole half cell -- but HCLK itself: an edge that rings back
+* through the Schmitt's band clocks the receive counter twice.
+*
+* What is modelled: the driver's output resistance and edge, the series
+* resistor, the pair as a lossless 100 ohm line at 5.2 ns/m with its loop
+* resistance (24 AWG, 0.17 ohm/m) lumped at the near end, the far input's
+* capacitance and its clamp diodes, and 5 % more length on the C and TX_CLK
+* pairs than on HCLK's (pair skew).  At 512 kHz the loss is that resistance
+* and nothing else; LTRA was tried and ran for ten minutes on 0.5 m.
+* What is not: crosstalk between the four pairs, ground offset between
+* racks, skin effect and dielectric loss on the edges (both would only slow
+* them and damp the ringing), and the RS-422 population.  check.py scores it.
+*
+* Two driver corners: ROUT 25 ohm (a strong '244 at 5 V) and 50 ohm (weak).
+
+.param rout=25
+.param cell=1953.125n
+
+VCC vcc 0 DC 5
+
+* ---- the three senders, all timed from the sender's HCLK rise at t = 0 -------
+* HCLK 512 kHz; C toggling every cell, the densest pattern; TX_CLK high in
+* cells 0-3 of each eight.
+VH hs 0 PULSE(0 5 0 6n 6n {cell/2-6n} {cell})
+VC cs 0 PULSE(0 5 0 6n 6n {cell-6n} {2*cell})
+VK ks 0 PULSE(0 5 0 6n 6n {4*cell-6n} {8*cell})
+
+RHo hs hd {rout}
+RCo cs cd {rout}
+RKo ks kd {rout}
+RHs hd hn 33
+RCs cd cn 33
+RKs kd kn 33
+
+* ---- the pairs ---------------------------------------------------------------
+.param len=10
+RHl hn hl {0.17*len}
+RCl cn cl {0.17*len*1.05}
+RKl kn kl {0.17*len*1.05}
+TH hl 0 hf 0 z0=100 td={5.2n*len}
+TC cl 0 cf 0 z0=100 td={5.2n*len*1.05}
+TK kl 0 kf 0 z0=100 td={5.2n*len*1.05}
+
+* ---- the far inputs: 74HC14, 5 pF and its two clamps -------------------------
+.model dcl d(is=1e-14 n=1 rs=10 cjo=1p)
+CH hf 0 5p
+CC cf 0 5p
+CK kf 0 5p
+DHp hf vcc dcl
+DHn 0 hf dcl
+DCp cf vcc dcl
+DCn 0 cf dcl
+DKp kf vcc dcl
+DKn 0 kf dcl
+
+.control
+set wr_singlescale
+set wr_vecnames
+foreach r 25 50
+  alterparam rout = $r
+  foreach l 0.5 2 5 10 30 100
+    alterparam len = $l
+    reset
+    save v(hn) v(hf) v(cf) v(kf) @dhp[id]
+    tran 0.5n 20u 0 1n
+    wrdata out/cable_r{$r}_l{$l} v(hn) v(hf) v(cf) v(kf) @dhp[id]
+    destroy all
+  end
+end
+quit
+.endc
+.end
