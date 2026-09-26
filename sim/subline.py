@@ -26,6 +26,7 @@ Usage:  python3 sim/subline.py            everything, ~7 min       (subline.log 
         python3 sim/subline.py dial       §5: dial pulses as the line card sees them
         python3 sim/subline.py register   register.md: dialled digits into the register
         python3 sim/subline.py dtmf       §5: DTMF through the codec
+        python3 sim/subline.py xfmr       mf8-spec §9.3: the line transformer's inductance
 """
 import sys, time, numpy as np
 from multiprocessing import Pool
@@ -64,11 +65,28 @@ def _slice(x, h, state):
     return out, int(out[-1])
 
 
-def line(bits, n=None, sd=0.0, imp=0.0, seed=1, off=None):
+def _xf(L, lk, R):
+    """One line transformer, its state carried across blocks: high-pass L/R, low-pass Lleak/2R."""
+    fs = [signal.butter(1, R / (2 * np.pi * L), btype='high', fs=FS)]
+    fc = 2 * R / (2 * np.pi * lk)
+    if fc < 0.45 * FS:
+        fs.append(signal.butter(1, fc, btype='low', fs=FS))
+    zs = [np.zeros(1) for _ in fs]
+
+    def run(x):
+        for i, (b, a) in enumerate(fs):
+            x, zs[i] = signal.lfilter(b, a, x, zi=zs[i])
+        return x
+    return run
+
+
+def line(bits, n=None, sd=0.0, imp=0.0, seed=1, off=None, xf=None):
     """Comparator output, one sample per 1/FS, for a 64 kbps bit stream.
 
     bits=None is a dead pair: the transmitter off, noise only, for n bits.
-    off=(a, b) switches the transmitter off from bit a to bit b: a cut pair."""
+    off=(a, b) switches the transmitter off from bit a to bit b: a cut pair.
+    xf=(L, Lleak, R) puts a line transformer at each end of the pair: its
+    magnetizing L as a high-pass L/R, its leakage as a low-pass Lleak/2R."""
     nbits = n if bits is None else len(bits)
     ns = nbits * OS
     rng = np.random.default_rng(seed)
@@ -77,6 +95,7 @@ def line(bits, n=None, sd=0.0, imp=0.0, seed=1, off=None):
     z1 = np.zeros(max(len(a1), len(b1)) - 1)
     z2 = np.zeros(max(len(a2), len(b2)) - 1)
     half = None if bits is None else phy_dm(bits)
+    xs = [_xf(*xf), _xf(*xf)] if xf else None       # driver end, receiver end
     out = np.empty(ns, np.uint8)
     state, peak = 0, None
     for c0 in range(0, ns, CHUNK):
@@ -85,8 +104,10 @@ def line(bits, n=None, sd=0.0, imp=0.0, seed=1, off=None):
             x = np.zeros(c1 - c0)
         else:
             x = np.repeat(half[c0 // (OS // 2):c1 // (OS // 2)], OS // 2)
+            if xs:
+                x = xs[0](x)
             x, z1 = signal.lfilter(b1, a1, x, zi=z1)
-            peak = peak or np.abs(x).max()
+            peak = peak or (1.0 if xs else np.abs(x).max())   # through a transformer: the undrooped +-1
             x /= peak
             if off:
                 s0, s1 = max(off[0] * OS, c0), min(off[1] * OS, c1)
@@ -96,6 +117,8 @@ def line(bits, n=None, sd=0.0, imp=0.0, seed=1, off=None):
             x = x + rng.normal(0, sd, len(x))
         if imp:
             x = x + phy.plant_noise(len(x), FS, rate_hz=imp, amp=(0.5, 3.0), seed=seed + 7 + c0)
+        if xs:
+            x = xs[1](x)
         x, z2 = signal.lfilter(b2, a2, x, zi=z2)
         out[c0:c1], state = _slice(x, 0.05, state)
     return out
@@ -615,7 +638,69 @@ def dtmf():
               f'{worst["dom"]:19.1f}', flush=True)
 
 
-TARGETS = {'density': density, 'hook': hook, 'dial': dial_target, 'register': register_target, 'dtmf': dtmf}
+def _bits(w):
+    """The §9.4 classifier's decoded bits."""
+    edges = np.flatnonzero(w[1:] != w[:-1]) + 1
+    out, le, mid = [], 0, False
+    for e in edges.tolist():
+        g = e - le
+        if g < DEAD * OS:
+            continue
+        le = e
+        if g > THR * OS:
+            out.append(1); mid = False
+        elif mid:
+            out.append(0); mid = False
+        else:
+            mid = True
+    return np.array(out, np.uint8)
+
+
+def _errors(sent, got, W=256):
+    """Bit errors in windows of W, each realigned within +-6 of the running offset: a slip costs its window."""
+    off, e_tot, n_tot = 0, 0, 0
+    for s0 in range(64, len(got) - W, W):
+        best = min(((int(np.sum(sent[s0 + off + d:s0 + off + d + W] != got[s0:s0 + W])), abs(d), d)
+                    for d in range(-6, 7) if 0 <= s0 + off + d and s0 + off + d + W <= len(sent)), default=None)
+        if best:
+            off += best[2]; e_tot += best[0]; n_tot += W
+    return e_tot, n_tot
+
+
+def xfmr():
+    """mf8-spec §9.3: the line transformer's magnetizing and leakage inductance, one at each end."""
+    print('LINE TRANSFORMER -- one at each end of the pair; BER through the §9.4 classifier over 1 s of random')
+    print('  bits plus 1 s of CVSD speech, and the exchange hook detector (1100, speech, idle) under the same noise.')
+    print('  R is what the magnetizing L sees: ~50 ohms with both ends terminated, 100 the pessimistic case.\n')
+    NB = RATE
+    rnd = np.random.default_rng(3).integers(0, 2, NB).astype(np.uint8)
+    sp = cvsd.encode(talker(1, 1.0), P)[:NB]
+    idle = (np.arange(NB) & 1).astype(np.uint8)
+    conds = [('clean', {}), ('sd 0.4', dict(sd=0.4)), ('sd 0.5', dict(sd=0.5)), ('sd 0.6', dict(sd=0.6))]
+    parts = [('none', None, None), ('78615/9C 10 mH, 44.5 uH', 10e-3, 44.5e-6), ('DA103C 4 mH, 0.91 uH', 4e-3, 0.91e-6),
+             ('T1/E1 1.2 mH', 1.2e-3, 1e-6), ('2 mH', 2e-3, 1e-6)]
+    skip = int(0.02 * RATE)
+    print(f'    {"transformer":24s} {"R":>4s} {"L/R cells":>9s}  ' + ''.join(f'{c:>10s}' for c, _ in conds) + '   hook')
+    for name, L, lk in parts:
+        for R in ((0,) if L is None else (50, 100)):
+            xf = None if L is None else (L, lk, R)
+            row, bad = [], []
+            for c, kw in conds:
+                e = n = 0
+                for b in (rnd, sp):
+                    de, dn = _errors(b, _bits(line(b, xf=xf, **kw)))
+                    e += de; n += dn
+                row.append(f'{e / n:10.1e}')
+                for cname, b, want in (('1100', P1100(NB), True), ('speech', sp, False), ('idle', idle, False)):
+                    d = comparator(rc(receiver(line(b, xf=xf, **kw), xor2=True)), HI, LO)
+                    if (d[skip:] != want).any():
+                        bad.append(f'{cname}/{c}')
+            cells = L / R * RATE if L else 0
+            print(f'    {name:24s} {R:4d} {cells:9.2f}  ' + ''.join(row) + '   ' + (', '.join(bad) or 'clean'), flush=True)
+
+
+TARGETS = {'density': density, 'hook': hook, 'dial': dial_target, 'register': register_target, 'dtmf': dtmf,
+           'xfmr': xfmr}
 
 if __name__ == '__main__':
     for k in (sys.argv[1:] or list(TARGETS)):
