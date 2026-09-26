@@ -99,6 +99,7 @@ module tb_dial;
     endtask
 
     integer want;
+    reg     chatter = 1'b0;
     task one(input integer pulses, input integer pps, input integer brk);
         begin
             want = pulses;
@@ -188,6 +189,30 @@ module tb_dial;
         ms(200);
         ck(nd_nodig === 1'b1, "PARTIAL DIAL: it fires 800 ms after the LAST digit");
         ck(nd_ndig === 3'd1, "and the one digit is still in the store");
+
+        // (c) a line that pulses and never ends a digit -- 40 ms break, 40 ms
+        // make, for ever.  Every break is past HIT and every make short of ID,
+        // so a digit is part way in from the first break on and none is ever
+        // strobed.  The timer used to pause while `counting`, and this line held
+        // the exchange's only register until it hung up (F36).
+        @(posedge clk); nd_release = 1'b1; @(posedge clk); nd_release = 1'b0;
+        a_tx[P] = 1'b0; ms(20);
+        a_tx[P] = 1'b1; ms(20);
+        @(posedge clk); nd_attach = 1'b1; @(posedge clk); nd_attach = 1'b0;
+        chatter = 1'b1;
+        fork
+            while (chatter) begin a_tx[P] = 1'b0; ms(40); a_tx[P] = 1'b1; ms(40); end
+            begin
+                ms(700);
+                ck(nd_counting === 1'b1 && nd_ndig === 3'd0,
+                   "a pulsing line is part way into a digit, and none is in");
+                ck(nd_nodig === 1'b0, "no-digit has not fired at 700 ms");
+                ms(200);
+                ck(nd_nodig === 1'b1, "PULSING: it fires 800 ms after seizure all the same");
+                chatter = 1'b0;
+            end
+        join
+        a_tx[P] = 1'b0;
 
         $display("\n  %0d checks, %0d errors.  %s\n", chk, errs,
                  (errs == 0) ? "PASS" : "FAIL");

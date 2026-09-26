@@ -13,8 +13,8 @@ Everything else follows from that.
 > is block-steered any more, and `/BLK` survives only to gate a block's
 > writes.
 
-> **Status: measured in simulation — 17 benches, 482 checks under Verilator,
-> and 34 faults, each shown to turn its bench red but the two held twice by
+> **Status: measured in simulation — 17 benches, 492 checks under Verilator,
+> and 38 faults, each shown to turn its bench red but the two held twice by
 > design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
@@ -313,8 +313,8 @@ function changed.
 | `ctl` | the hotline set up by hand; the guard bit; an event word that pulses `WR` and writes nothing; **`CLM` reaches the card as `A_RX`**; **the serialiser's rate measured** — every `SCLK` period 32 ticks, sixteen edges a word, 17 bit-times a written word; `/RESET` |
 | `ha` | the bit-time map **on both wires at once** — `/HA` is port *p*'s M and `/HB` is port *p*'s `BUSY` in bit-time *p*; the capture 36 master ticks (8.79 µs) into the frame; all 64 ports in order; a bare exchange never pulls either down; **E follows M within one pass**; and the 16 ms detector arming, sampled either side of the window |
 | `probe` | 64 ports a pass following the scan, one a pass when held, and **the per-port clear** |
-| `dial` | a rotary dial through the 1 kHz sampler, at the corners of `register.md` §3.1's **nominal** envelope, down to an ideal 28 ms break at 20 pps |
-| `mini` | `mvp.md` §3's call, 20 to 21: seize within a pass, dial tone, `2 1`, the ringback substitution, ringing in cadence, answer, two-way voice, self-release; then `mini-marker.md` §5's wrong numbers, **`2 8` refused on the second key**, and **key 1 as highway 1 with no unit fitted** |
+| `dial` | a rotary dial through the 1 kHz sampler, at the corners of `register.md` §3.1's **nominal** envelope, down to an ideal 28 ms break at 20 pps; and the no-digit timeout from seizure, from the last digit, and **on a line that pulses and never ends a digit** — which held the exchange's only register until it hung up while the timer paused for a digit in progress |
+| `mini` | `mvp.md` §3's call, 20 to 21: seize within a pass, dial tone, `2 1`, the ringback substitution, ringing in cadence, answer, two-way voice, self-release; then `mini-marker.md` §5's wrong numbers, **`2 8` refused on the second key**, and **key 1 as highway 1 with no unit fitted**; and **a caller who hangs up at the connect** — as the digit lands, and 10 ms after the write, inside the called port's `T_ARM` — the called port written free by the marker's watch, one still up at 60 ms left to the ports, and a line chattering from the write on freed at the no-digit timeout |
 | `debug` | the debugger card: a quiet exchange and a clean write light **nothing**; eleven faults injected one at a time, each lighting its own lamp, and the two `STUCK` faults their `P00` lamp with it; and **`mainboard.md` §7's SCLK hazard** — one extra edge lights the lamp *and* loses the write, and the next clean word lands |
 | `line` | the CVSD line card with a phone on its two pairs: `1100` reads on-hook and speech off-hook, through the 4 ms RC; **a 60 ms dial break arrives 54 ms long** — the 6 ms `subscriber-line.md` §5 measures, reproduced; `A_RX` rings an on-hook phone and only an on-hook phone; a cut pair reads on-hook, not off; `MUTE` puts `1010` on an off-hook line; bits cross both ways in order |
 | `word` | a card's word off `/HW`, named by a select on `/WS`: a trunk reads its class, glare and direction; **eight trunks, one a slot, each read their own word** — every octet phase, since a port's slot fixes where its read starts; a plain line all ones; an empty socket, an unfitted block, a card in its power-up RC and a cut link **all zeros**; one select a read, in the port's own bit-time, and the word **512 ticks after it**; **no read moves `SCLK` or makes a `WR`**; two readers selecting one port in one bit-time both take its word; a reader whose port comes round inside another's eight frames takes it a pass later; **a write passing on cable B during a read changes nothing on `/HW`**; and two faults on the wire go red in the same run — `/HW` a frame late, and read at its wire level |
@@ -326,7 +326,7 @@ function changed.
 | `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
 | `lchain` | `chain`'s three exchanges with every link a local trunk, B 100 ppm fast and C 100 ppm slow: A to C **through B, across both of B's units**, B's monitor letting go at `b` and its resolver at the claim; **two transits through B at once**, each on its own channels; three local calls at B beside them, the transits untouched; C to A from the glare end, B forwarding from the top of its own glare group; and a call from the middle, flooded both ways, the west channel let go at the claim |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 34 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 38 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
 the bench meant to catch each: the unit released on `gone` alone, a sweep on an
 even stride, the 5 s rule gone, the claim wait from the last digit, the second
@@ -337,7 +337,8 @@ sweep, no per-port memory, a second key allowed, a one-key number waiting for
 four, `/HW` steered by `DST` again, every block answering a select, a reader
 selecting inside another read's eight frames, the sweep taking a trunk that was
 busy at its select, the classifier holding a channel its own origin had just
-seized, and more. **Every one turns its bench red** on the final
+seized, the no-digit timer paused by a digit in progress, the marker
+letting go of a connect before the called port could, and more. **Every one turns its bench red** on the final
 tree — except two whose rule is held twice, which stay green by design and each
 have a second fault removing both holds, which is red: the refusal landing
 after `CLAIM` (the unit's handshake, and its rank on cable B), and a trunk's M
@@ -368,6 +369,8 @@ seized for itself (F35).
 - `mini` does **not** cover `mini-marker.md` §5's "called party already in a
   call" row — the only row that reaches the `p_m || p_busy` branch rather than
   `called == caller`. That branch has never run.
+- A claim arriving while the mini marker watches a connect **waits** rather
+  than being refused (`att_refuse`). No bench provokes that coincidence.
 - There are **no gate delays**, so `fabric.md` §3.2's hazard and §4's
   nanoseconds are outside what any of this can see.
 - `net` and `chain` run the register, the port detectors and the protocol's
@@ -428,6 +431,7 @@ The code comments name the section; the documents have not been brought up yet.
 | `baseband.md` §3.5 | the power-up RC holds off the card's **M** as well as its word. A card that passed a seizure on while its word still read NONE would be read as nobody's, and the marker now takes a NONE word as no caller |
 | `network.md` §3 | "when the last digit is in" is `h s`, **or a one-key number** — 0 or 9 after the code (§3's "h s, or 0, or 9"): the origin connects at three digits when the third is one |
 | `common-control.md` §2.2 | after the unit turns a call local (own code), **a 1 is refused**, not taken as a second key; the old marker re-flooded |
+| `mini-marker.md` §3, §4, §7 | "two writes, register released": **the register is held after a connect**, in `S_WATCH`, until the caller has been off-hook `SETTLE` — twice the ports' `T_ARM` — counted from the write, so that the called port's E detector has risen and it can release itself. A caller gone sooner (measured: 0 to 14 ms after the write) left the called port BUSY with no edge ever to release it; the marker now writes it free, and a line chattering there is freed at the no-digit timeout. The time base is two taps of the register's own timers, no new counter. A claim waits a watch out rather than being refused |
 
 **Not** a departure, though it looks like one: `fabric.md` §3.3's "port 00 reads
 `FILL` and A = 0" survives the polarity flip, because the port re-inverts on

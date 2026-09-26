@@ -162,7 +162,10 @@ module top_net #(
     wire [15:0]    r_digits;
     wire [`PW-1:0] r_port;
 
-    mini_marker #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG)) u_mk (
+    // SETTLE, twice the ports' T_ARM: after a connect the marker holds the
+    // register until the called port's E detector has surely risen (S_WATCH).
+    mini_marker #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG),
+                  .SETTLE(T_ARM + T_ARM)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n),

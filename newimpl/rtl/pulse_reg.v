@@ -18,10 +18,14 @@ module pulse_reg #(
     parameter [8:0]  HIT   = 9'd8,
     parameter [8:0]  ID    = 9'd128,
     parameter [8:0]  CLR   = 9'd256,
-    // ms attached with no digit going in -- from seizure OR from the last digit
-    // (register.md 6; marker.md 5.1 and 8).  10 s is what every document and
-    // exch.py's T_NODIGIT say; the RTL carried 12000 with nothing naming it.
-    parameter [15:0] NODIG = 16'd10000
+    // ms attached with no digit completed -- from seizure OR from the last
+    // digit, whatever the line does in between (register.md 6; marker.md 5.1
+    // and 8).  10 s is what every document and exch.py's T_NODIGIT say; the
+    // RTL carried 12000 with nothing naming it.
+    parameter [15:0] NODIG = 16'd10000,
+    // ms for `settled`: longer than a port's T_ARM, so that a port counting
+    // the same samples has seen them.  A counter stage, not a new counter
+    parameter [8:0]  SETTLE = 9'd32
 )(
     input                   clk,
     input                   rst_n,
@@ -50,7 +54,9 @@ module pulse_reg #(
     output reg              nodig,         // the no-digit timeout
     output                  brk,           // a break just counted; the origin guard reads it
     output                  counting,      // a digit is part-collected
-    output                  hook           // the caller's M, as the probe has it
+    output                  hook,          // the caller's M, as the probe has it
+    output                  settled        // off-hook SETTLE ms, and SETTLE ms since
+                                           // the last restart: see below
 );
     // ---- the probe: two '151 and a flip-flop in the old tree, one '688 and
     // half a '74 now.  It watches one port, once every 1 ms, taking that
@@ -74,14 +80,23 @@ module pulse_reg #(
     // the caller's own: half a '74 and a '688 output already on this card.
     reg seen;
     wire [3:0] cnt;
-    wire       dig_stb, clr_stb;
-    pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_rx (
+    wire       dig_stb, clr_stb, steady;
+    pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR), .SETTLE(SETTLE)) u_rx (
         .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
         .arm(busy && seen), .m(p_m),
         .cnt(cnt), .dig_stb(dig_stb), .clear(clr_stb),
-        .counting(counting), .brk_stb(brk));
+        .counting(counting), .brk_stb(brk), .steady(steady));
 
     reg [15:0] nd_t;      // the no-digit timer, in milliseconds
+
+    // SETTLED: two taps of the two timers this card already has, and a gate.
+    // The collector's says the caller has been off-hook SETTLE ms with no
+    // break; the no-digit timer's says SETTLE ms have passed since it was last
+    // restarted.  The marker restarts it as a connect's words go out, so the
+    // pair means "off-hook for SETTLE ms, counted from the connect": neither
+    // alone does -- at a connect the collector's timer already reads past ID,
+    // from the make that ended the last digit.  mini_marker S_WATCH.
+    assign settled = busy && steady && (nd_t >= {7'd0, SETTLE});
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -126,14 +141,24 @@ module pulse_reg #(
                 // The no-digit timeout, held once it fires.  register.md 6 calls
                 // `gone` "CLR, OR A PARTIAL-DIAL TIMEOUT", and marker.md 8 says the
                 // timer "runs from the last digit as well as from seizure" -- so it
-                // runs whenever the register is attached and no digit is part way
-                // in, NOT only while the store is empty.  Gating it on ndig == 0
-                // froze it at the first digit and a caller who dialled one digit
-                // and stopped held the exchange's only register until he hung up.
+                // runs whenever the register is attached, NOT only while the store
+                // is empty.  Gating it on ndig == 0 froze it at the first digit and
+                // a caller who dialled one digit and stopped held the exchange's
+                // only register until he hung up.
+                //
+                // NOR ONLY BETWEEN DIGITS.  It used to pause while a digit was part
+                // way in (`counting`), and a line that pulses without ever making
+                // for ID -- a bad dial, a loose jack, a hand on the hook switch --
+                // is part way into a digit for ever: cnt sits at 15, no break is
+                // CLR long, and the register was held until the line hung up.  The
+                // longest real digit is a 0 at 7 pps, about 1.5 s, so a timer that
+                // runs straight through digits and restarts only at a completed
+                // one costs nothing a caller would notice.  tb_dial (c); F36.
+                //
                 // The two branches above already clear nd_t; say so here rather
                 // than lean on dig_stb and tick_1k never coinciding, since both
                 // assign nd_t in this one block and the later write would win.
-                if (tick_1k && !counting && !nodig && !restart && !dig_stb) begin
+                if (tick_1k && !nodig && !restart && !dig_stb) begin
                     if (nd_t == NODIG - 16'd1) nodig <= 1'b1;
                     else                       nd_t  <= nd_t + 16'd1;
                 end

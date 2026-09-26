@@ -15,7 +15,7 @@
 // needed `pv`, a probe-dirty flag and an interlock, and where a 64-port pass
 // measured 72 visits.
 //
-// TWO RULES THAT ARE NOT OPTIONAL:
+// THREE RULES THAT ARE NOT OPTIONAL:
 //   act on probe.port_q, NEVER on live SCAN -- by the time the sequencer has
 //     decided, the scan has moved on.  rtl.md 1, in a new place;
 //   do not return to IDLE with writes still queued -- the caller's BSY is
@@ -24,6 +24,10 @@
 //     twice.  THE SECOND CONDUCTOR HALVED THIS MARGIN: it was 133 us against
 //     2 ms and is now 133 us against 1 ms, still seven words to a pass, but
 //     the rule is now the one that would bite first if the word grew.
+//   do not let go of a connected call until the called port could let go of
+//     it -- a port releases only on the FALL of a detector, and a caller who
+//     hangs up inside the called port's T_ARM leaves it BUSY, ringing nobody,
+//     with no edge ever to come.  WATCH, below.
 //
 // ---- NETWORK: what a network unit adds (common-control.md 2.2, 4) ---------
 //
@@ -68,7 +72,8 @@ module mini_marker #(
     parameter [8:0]     HIT      = 9'd8,
     parameter [8:0]     ID       = 9'd128,
     parameter [8:0]     CLR      = 9'd256,
-    parameter [15:0]    NODIG    = 16'd10000   // register.md 6; see pulse_reg
+    parameter [15:0]    NODIG    = 16'd10000,  // register.md 6; see pulse_reg
+    parameter [8:0]     SETTLE   = 9'd32       // WATCH: past the ports' T_ARM
 )(
     input                   clk,
     input                   rst_n,
@@ -136,7 +141,7 @@ module mini_marker #(
 );
     localparam [2:0] S_IDLE  = 3'd0, S_COLLECT = 3'd1, S_PROBE = 3'd2,
                      S_DRAIN = 3'd3, S_READ    = 3'd4, S_TAKE  = 3'd5,
-                     S_YIELD = 3'd6;
+                     S_YIELD = 3'd6, S_WATCH   = 3'd7;
 
     wire net = !net_n;
 
@@ -166,12 +171,12 @@ module mini_marker #(
     // ---- one register, on this card (mini-marker.md 1) ---------------------
     reg              r_attach, r_release, r_restart;
     reg  [`PW-1:0]   r_port;
-    wire             r_busy, r_gone, r_nodig, r_brk, r_counting, r_hook;
+    wire             r_busy, r_gone, r_nodig, r_brk, r_counting, r_hook, r_settled;
     wire [2:0]       r_ndig;
     wire [15:0]      r_digits;
     wire [`PW-1:0]   r_caller;
 
-    pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG)) u_reg (
+    pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG), .SETTLE(SETTLE)) u_reg (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
@@ -179,7 +184,7 @@ module mini_marker #(
         .release_it(r_release), .restart(r_restart),
         .busy(r_busy), .port(r_caller), .ndig(r_ndig), .digits(r_digits),
         .gone(r_gone), .nodig(r_nodig), .brk(r_brk), .counting(r_counting),
-        .hook(r_hook));
+        .hook(r_hook), .settled(r_settled));
 
     assign reg_busy   = r_busy;
     assign reg_ndig   = r_ndig;
@@ -269,8 +274,12 @@ module mini_marker #(
                       ((state == S_IDLE) || (state == S_TAKE) || (state == S_DRAIN));
     // ... and must be refused where the register is someone's -- but never on
     // the tick a read completes: rd_done is one tick, and a refusal taking
-    // that tick would leave S_READ waiting for a strobe that has gone.
-    wire att_refuse = u_att && !att_ack && r_busy && !rd_done;
+    // that tick would leave S_READ waiting for a strobe that has gone.  Nor
+    // in WATCH: the register is held there for SETTLE after a connect, or CLR
+    // if the caller left, and a claim waits that out -- `att` is a level the
+    // unit holds until it is answered, and the far caller's next digit is a
+    // dial's return away (register.md 2: over 640 ms).
+    wire att_refuse = u_att && !att_ack && r_busy && !rd_done && (state != S_WATCH);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -469,17 +478,16 @@ module mini_marker #(
                         r_release <= 1'b1;
                         state     <= S_DRAIN;
                     end else begin
-                        // A connection is two writes, and the marker is
-                        // finished with the call.  Ringing, ringback, answer
-                        // and release are the ports' own.  They go in one
-                        // tick, in this order, and nothing of this card's can
-                        // come between them; a unit's word may, and touches
-                        // neither port.
+                        // A connection is two writes.  Ringing, ringback,
+                        // answer and release are the ports' own -- once the
+                        // called port's E detector has risen, which WATCH
+                        // waits for.  They go in one tick, in this order, and
+                        // nothing of this card's can come between them; a
+                        // unit's word may, and touches neither port.
                         push_v    <= 2'b11;
                         push_d    <= {ent(called, caller, 1'b1, 1'b0),
                                       ent(caller, called, 1'b1, ctx_clm)};
-                        r_release <= 1'b1;
-                        state     <= S_DRAIN;
+                        state     <= S_WATCH;
                     end
                 end
             end
@@ -514,6 +522,34 @@ module mini_marker #(
                         state     <= S_DRAIN;
                     end
                 end
+            end
+
+            // ---- WATCH: the caller, until the called port can let go --------
+            // The called port listens to the caller and releases on the FALL
+            // of its E detector, which rises only once the caller's M has
+            // stood T_ARM after the write.  A caller who hangs up inside that
+            // -- measured: 0 to 14 ms after the write leaves it BUSY, 18 ms
+            // does not -- leaves no edge to fall, and the port BUSY for good:
+            // unreachable, then ringing as a phantom when the caller next
+            // lifts, and listening in on that call.  So the register stays on
+            // the caller.  Its no-digit timer is held at zero until the words
+            // are out; `settled` is the caller off-hook SETTLE ms from there,
+            // and the called port can release itself.  If the caller goes first
+            // (gone), write the called port free; if the line chatters for
+            // the whole no-digit time, free it and point the caller at 03.
+            // net_unit's C_HOLD is the same watch, on a trunk it holds.
+            S_WATCH: if (!bus_idle) r_restart <= 1'b1;
+            else if (r_gone || r_nodig) begin
+                if (room >= 5'd2) begin
+                    push_v    <= r_gone ? 2'b01 : 2'b11;
+                    push_d    <= {ent(caller, NOGO, 1'b1, ctx_clm),
+                                  ent(called, SILENCE, 1'b0, 1'b0)};
+                    r_release <= 1'b1;
+                    state     <= S_DRAIN;
+                end
+            end else if (r_settled) begin
+                r_release <= 1'b1;
+                state     <= S_IDLE;
             end
 
             // ---- DRAIN: the caller's BSY must be on the wire before we

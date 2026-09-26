@@ -116,7 +116,9 @@ module top_min #(
     // empty ribbon reads: /NET and /UREQ at their pull-ups, every strobe low,
     // no claim.  With /NET high the marker reads no card word and key 1 is
     // highway 1 -- the path it took before it had a network half at all.
-    mini_marker #(.NODIG(NODIG)) u_mk (
+    // SETTLE, twice the ports' T_ARM: after a connect the marker holds the
+    // register until the called port's E detector has surely risen (S_WATCH).
+    mini_marker #(.NODIG(NODIG), .SETTLE(T_ARM + T_ARM)) u_mk (
         .clk(clk), .rst_n(rst_n),
         .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
         .scan(scan), .ha_n(ha_n), .hb_n(hb_n),

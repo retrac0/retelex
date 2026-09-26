@@ -305,7 +305,7 @@ module net_unit #(
 
     genvar g;
     generate for (g = 0; g < NMON; g = g + 1) begin : mon
-        wire mp_busy_u, cnt_u, brk_u;
+        wire mp_busy_u, cnt_u, brk_u, stdy_u;
         // one '688 and half a '74: this cell's own probe, tied to its trunk
         probe u_mp (
             .clk(clk), .rst_n(rst_n), .slotq(slotq), .cap_stb(cap_stb),
@@ -317,8 +317,8 @@ module net_unit #(
             .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
             .arm(m_armed[g]), .m(mp_m[g]),
             .cnt(d_cnt[g*4 +: 4]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
-            .counting(cnt_u), .brk_stb(brk_u));
-        wire _unused_cell = &{1'b0, mp_busy_u, cnt_u, brk_u, 1'b0};
+            .counting(cnt_u), .brk_stb(brk_u), .steady(stdy_u));
+        wire _unused_cell = &{1'b0, mp_busy_u, cnt_u, brk_u, stdy_u, 1'b0};
     end endgenerate
 
     assign mon_held = m_held;

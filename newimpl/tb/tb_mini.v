@@ -3,7 +3,8 @@
 // Two phones on block 2.  20 lifts, is given the register within one 1 ms
 // pass, dials 2 1, 21 rings, 21 answers, and either may hang up first -- the
 // ports release themselves and nobody is in charge of the call.  Then the
-// wrong numbers.
+// wrong numbers.  Then a caller who hangs up at the connect, before the called
+// port could release itself, and one whose line chatters there (S_WATCH).
 //
 // Fitted: line cards at 20 and 21, and source cards at 01 (dial tone) and 03
 // (cannot-complete) so that WHICH tone a caller was pointed at is observable.
@@ -39,10 +40,11 @@ module tb_mini;
     // The cadence is cut to 64 ms on / 128 ms off.  Same counter and the same
     // 1:2 shape as the real 2.048 s / 4.096 s; watching six seconds of the
     // real one proves nothing the ratio does not.
-    top_min #(.PORT_FITTED(64'h0000_0000_0003_000A),   // 01, 03, 20, 21
+    top_min #(.PORT_FITTED(64'h0000_0000_001F_000A),   // 01, 03, 20-24
               .BLOCK_FITTED(8'b0000_0101),             // blocks 0 and 2
               .RING_ON_MS(13'd64), .RING_OFF_MS(13'd128),
-              .NODIG(16'd1000)) u_top (
+              .NODIG(16'd3000)) u_top (   // 3 s: the timer runs through a digit,
+                                           // and a real-speed 0 is 1.1 s of it
         .clk(clk), .rst_n(rst_n),
         .c_tx(c_tx), .a_tx(a_tx), .ans_n(ans_n), .word_n(64'd0),
         .c_rx(c_rx), .a_rx(a_rx),
@@ -89,6 +91,28 @@ module tb_mini;
 
     integer ring_hi, ring_lo;
     reg watch_ring = 1'b0;
+    reg chatter    = 1'b0;
+
+    // 20 dials 2 s and is left at a chosen instant: d = 0 the tick the second
+    // digit is counted, before any write; else d ms after 2s's latch is
+    // written.  Each case calls its own port, so that one left BUSY by a
+    // fault cannot be cleared by the next case's call and hide it.
+    integer ci;
+    task to_connect(input integer s, input integer d);
+        begin
+            a_tx[A] = 1'b1; ms(10);
+            dial(A, 2);
+            for (ci = 0; ci < s; ci = ci + 1) begin       // the second digit
+                a_tx[A] = 1'b0; ms(60); a_tx[A] = 1'b1;
+                if (ci < s - 1) ms(40);
+            end
+            if (d == 0) while (r_ndig < 3'd2) @(posedge clk);
+            else begin
+                while (!port_busy[A + s]) @(posedge clk);
+                ms(d);
+            end
+        end
+    endtask
     always @(posedge tick_1k) if (watch_ring) begin
         if (a_rx[B]) ring_hi = ring_hi + 1; else ring_lo = ring_lo + 1;
     end
@@ -250,12 +274,50 @@ module tb_mini;
         ck(port_busy[A] === 1'b0, "hang up mid-dial and the port is free");
         ck(r_busy === 1'b0, "and the register let go");
 
-        // off-hook and nothing dialled: the no-digit timeout (cut to 1 s)
-        a_tx[A] = 1'b1; ms(1200);
+        // off-hook and nothing dialled: the no-digit timeout (cut to 3 s)
+        a_tx[A] = 1'b1; ms(3200);
         sample(A, 8);
         ck(s0 && !s1, "no digits: cannot-complete after the timeout");
         a_tx[A] = 1'b0; ms(400);
         ck(port_busy[A] === 1'b0, "and the port frees itself");
+
+        // ================= 3.  the caller hangs up at the connect ========
+        // 21 releases on the FALL of its E detector, which rises only once
+        // 20's M has stood T_ARM after the connect's write.  Before WATCH a
+        // hang-up 0 to 14 ms after the write left 21 BUSY for good --
+        // unreachable, and ringing as a phantom the next time 20 lifted.
+        // Before the write lands, inside T_ARM after it, and after the watch.
+        to_connect(1, 0);
+        a_tx[A] = 1'b0; ms(400);
+        ck(!port_busy[B] && !port_busy[A] && !r_busy && mk_state === 3'd0,
+           "20 gone as the digit lands: the marker writes 21 free");
+        to_connect(2, 10);
+        a_tx[A] = 1'b0; ms(400);
+        ck(!port_busy[A + 2] && !port_busy[A] && !r_busy && mk_state === 3'd0,
+           "20 gone 10 ms after the write, inside T_ARM: 22 written free");
+        to_connect(3, 60);
+        ck(!r_busy && mk_state === 3'd0, "20 still up at 60 ms: the watch let go at SETTLE");
+        a_tx[A] = 1'b0; ms(400);
+        ck(!port_busy[A + 3] && !port_busy[A], "and 20 gone then: the two ports release themselves");
+
+        // A line that chatters from the write on -- makes too short for SETTLE,
+        // breaks too short for CLR -- must not hold the register in WATCH: the
+        // no-digit timer, which runs through anything, frees 21 and points 20
+        // at 03.
+        to_connect(4, 0);
+        chatter = 1'b1;
+        fork
+            while (chatter) begin a_tx[A] = 1'b0; ms(4); a_tx[A] = 1'b1; ms(4); end
+            begin
+                ms(3300);
+                ck(!r_busy && !port_busy[A + 4], "a line chattering at the connect: 24 freed at the timeout");
+                sample(A, 8);
+                ck(s0 && !s1, "and 20 pointed at cannot-complete");
+                chatter = 1'b0;
+            end
+        join
+        a_tx[A] = 1'b0; ms(400);
+        ck(port_busy == 64'd0 && !r_busy, "every port and the register free at the end");
 
         $display("\n  %0d checks, %0d errors.  %s\n", chk, errs,
                  (errs == 0) ? "PASS" : "FAIL");

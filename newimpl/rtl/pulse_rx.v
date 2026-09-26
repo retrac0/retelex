@@ -28,7 +28,8 @@
 module pulse_rx #(
     parameter [8:0] HIT = 9'd8,
     parameter [8:0] ID  = 9'd128,
-    parameter [8:0] CLR = 9'd256
+    parameter [8:0] CLR = 9'd256,
+    parameter [8:0] SETTLE = 9'd32    // a make that has stood: past any port's T_ARM
 )(
     input            clk,
     input            rst_n,
@@ -40,7 +41,8 @@ module pulse_rx #(
     output reg       dig_stb,    // one tick: the make ended a digit; cnt is it
     output reg       clear,      // one tick: 256 ms of break -- the caller went away
     output           counting,   // a digit is part-collected
-    output reg       brk_stb     // one tick: a break was just counted
+    output reg       brk_stb,    // one tick: a break was just counted
+    output           steady      // a make has stood SETTLE, no break since
 );
     reg [8:0] t;      // milliseconds in the state m has been in
     reg       m_d;
@@ -52,6 +54,13 @@ module pulse_rx #(
     // dig_stb here -- pulse_reg samples it in the strobe cycle and would store 0
     // for every digit -- so `done` supplies the same falling edge one gate later.
     assign counting = (cnt != 4'd0) && !done;
+
+    // STEADY: the same timer, another stage.  A make that has stood SETTLE --
+    // the '4040's Q6 at 32 ms, and the make half of the '74 that remembers m.
+    // It is not a decision of this card's; the marker's watch after a connect
+    // reads it (mini_marker S_WATCH), to know that the called port's E detector,
+    // counting the same samples of the same wire, has risen.
+    assign steady = arm && m_d && (t >= SETTLE);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
