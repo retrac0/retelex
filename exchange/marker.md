@@ -82,7 +82,7 @@ goes with it.
              8 * # cannot-complete
  called      unequipped, a trunk, reserved → cannot-complete     a source → listen to it (one write)
              itself → cannot-complete      not free (BUSY or busy `b`) → hunt the ports that answer to it
-             still nothing → cannot-complete                     else → connect
+             still nothing → busy tone, 02                       else → connect
  caller      class restricted: `z` → only 0; else the floor → no 9 / no flood
              call nail: connect as if dialled `h s`, no register
              busy `b` does not block a call request
@@ -117,8 +117,9 @@ the wanted class that is free. **Fixed order is the feature**:
 | tones | pull the dial-tone card and the next source port serves. With no tone card at all a caller hears silence where the tones would be, and the call still completes |
 | nothing at 04, and nobody answering to it | 0 → cannot-complete |
 
-**A tied nail comes first.** Type `00` is a tied nail (not all zeros). A tied nail with `BUSY` clear is two
-writes — this port and the dest — before anything else is considered. A port
+**A tied nail comes first.** Type `00` is a tied nail (not all zeros). A tied nail with `BUSY` clear is one
+write — this port listens to the dest, which is not written — before anything else is considered.
+A nail is one way: a private line is a nail on each card, each naming the other. A port
 that sends a tied nail is never free and never a call request (`extensions.md` §3.1).
 
 **Seizure is handled by class too.** M rising on a free, idle port is a call
@@ -184,7 +185,7 @@ Every one of these ends with every latch idle and every `BUSY` clear
 |---|---|
 | a local call, caller hangs up first | the called party, still off-hook, is released 30 ms later and **gets dial tone** — it is an idle off-hook port, which is a call request |
 | called party hangs up first | the same, mirrored |
-| busy; dialling oneself | cannot-complete |
+| busy; dialling oneself | cannot-complete. **Busy now gets busy tone** (02, `extensions.md` §2.4; Joel, 2026-09-25): the model predates that |
 | an empty slot; 1; 8; 2 then 9 | cannot-complete |
 | abandoned while ringing | the called phone stops ringing at once (E fell) and is free 300 ms later |
 | abandoned while dialling | **the register lets go by itself**: the hook it is watching stays down 256 ms |

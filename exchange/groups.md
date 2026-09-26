@@ -97,7 +97,7 @@ The word of `extensions.md` §2.2 already has a 6-bit *answers to* form:
 
 ```
  frame of the octet    0  1    2  3  4    5  6  7
- tied nail             0  0    h  h  h    s  s  s     one-sided two-write                (extensions.md §3.1)
+ tied nail             0  0    h  h  h    s  s  s     one write: this port listens to h s (extensions.md §3.1)
  answers to            0  1    h  h  h    s  s  s     a plain line that answers to h s
  call nail             1  0    h  h  h    s  s  s     on lift, connect as if dialled h s
  class                 1  1    c  c  c    p  p  p     class, and three options          (extensions.md §2.2)
@@ -118,7 +118,7 @@ The word of `extensions.md` §2.2 already has a 6-bit *answers to* form:
  called = h s     from the dial · from a key · 04, for a call nail to 04 and for a CO line ringing in
    probe h s      as now.  Free, and a port this caller may be given → connect, two writes.  A source → one write
    otherwise      hunt, in fixed order from 00: the first free port that answers to h s → connect
-   none           cannot-complete
+   none           busy tone if h s was a line that was not free; otherwise cannot-complete
 
  first key   0    called = 04
              8    called = a pilot, jumpered in the matrix.  No jumper → cannot-complete, as now
@@ -127,7 +127,10 @@ The word of `extensions.md` §2.2 already has a 6-bit *answers to* form:
 
 - **"Otherwise" is every reason the probe fails**: busy, ringing, an empty slot,
   a card out of service, a trunk, the caller's own number. Each gave
-  cannot-complete at once (`marker.md` §2), and now gives it one hunt later.
+  cannot-complete at once (`marker.md` §2), and now gives its answer one hunt
+  later: **busy tone where the probe failed on a line that was busy** —
+  `BUSY`, off-hook or busy-out — and cannot-complete for the rest (Joel,
+  2026-09-25; `extensions.md` §2.4).
 - **The port that owns the number needs no word for this.** It is found by its
   address, as every port is. 04 is the operator's phone on a plain line card.
 - **A port that answers to a number keeps its own.** Dialled by its address it
@@ -174,7 +177,7 @@ The word of `extensions.md` §2.2 already has a 6-bit *answers to* form:
 |---|---|
 | **0** | 04 rings. In a call, off-hook or switched out: the first free port that answers to 04, in slot order — a second position, then the announcement, which answers by itself |
 | **a group** | the number's own port first, then its members in slot order. Priority is where a card is plugged in |
-| nobody free answers to it | cannot-complete, one hunt later |
+| nobody free answers to it | one hunt later: busy tone if the number's own port was busy, cannot-complete if it was empty |
 
 ### 2.5 The marker's part, and the time
 

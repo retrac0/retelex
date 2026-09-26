@@ -480,7 +480,7 @@ nail to 77** are free as primary destinations.
   has no out-of-service decode of its own.
 - **A tied-nail port sends no class.** It is never hunted, dialled or a call
   request (§3.1), so the marker never needs one. Whether it rings is `/ANS`.
-  The dest of a one-sided tied nail keeps whatever word it already had.
+  The dest of a tied nail is not written and keeps whatever word it already had.
 - **Out of service** is no word at all: a switch in the FET gate, or the
   ground link opened on a plain card. The port reads unequipped. A call to it
   gets cannot-complete and its lifting is ignored. On a trunk card, a switch a
@@ -557,8 +557,8 @@ to* the number people dial, not a run of adjacent ports.
 
 **Warm is not an option.** A courtesy / lift / help phone is a **call nail**
 (§2.2): on lift, connect as if dialled `h s`, with no register. Call nail to 04
-is the operator, and holds nothing while idle. Against a tied nail (§3.1): a
-tied nail rings one fixed phone and holds two latches for good.
+is the operator, and holds nothing while idle. Against a private line (§3.1):
+a private line rings one fixed phone, both ways, and holds two latches for good.
 
 #### Restricted (family `11`, member 1)
 
@@ -610,23 +610,27 @@ are already a hotline (`channel-cards.md` §1), where either lifting rings the o
 and both lifted is a call. What the exchange lacks is a way to keep the pair
 after release, because the release clears both latches. A nailed-up
 connection is `mvp.md` §6's bring-up step 3 made permanent, and brought up
-by the scanner from jumpers on the two cards.
+by the scanner from jumpers on the two cards: **each card nails its own port to
+the other's** (Joel, 2026-09-26).
 
 ### 3.1 The tied-nail word
 
-One card holds the dest port in jumpers and sends it as its word (§2.2) in place
-of its class. Type `00`, dest in frames 2–7; all zeros is excepted (an empty
-slot, so **tied nail to 00 is the missing code** — and 00 is never a line).
+A card holds the port it listens to — the dest — in jumpers and sends it as its
+word (§2.2) in place of its class. Type `00`, dest in frames 2–7; all zeros is
+excepted (an empty slot, so **tied nail to 00 is the missing code** — and 00 is
+never a line). **A tied nail is one way.** It sets its own port's latch and
+nothing else, because a card speaks only for its own port; a connection both
+ways is a nail on each card.
 
 | | |
 |---|---|
 | **The card** | the word's parts (§2.2), with the dest in the jumpers. A plain line card to be nailed has them fitted, and its ground link opened |
 | **The marker** | type `00` and not all zeros. An empty slot reads all zeros and a plain line all ones, and neither is a tied nail |
-| **The rule** | checked at each port before any other: **a tied nail and `BUSY` clear → write this port to the dest and the dest to this port, both with `BUSY` set.** One visit, two writes. A port that sends a tied nail is never free, never hunted, never connected by a dialled number, and its lifting is never a call request or a seizure |
-| **The dest** | keeps whatever word it already had — a class, an answers-to, a call nail. While the tied nail holds it is `BUSY`. Do **not** nail a source: the second write would `BUSY` the radio, and a source is never written (`features.md` §6). A radio or a clock is class *source*; listeners dial it |
-| **Release** | nothing stops it. When the pair's call ends, the release detectors clear both latches as on any call (`marker.md` §5), and within one scan, 8 ms, the scanner writes both back. The dest is free in that gap. The port circuit is unchanged |
+| **The rule** | checked at each port before any other: **a tied nail and `BUSY` clear → write this port to the dest, with `BUSY` set.** One visit, one write. The dest is not written, so the nail is made whatever the dest is doing. A port that sends a tied nail is never free, never hunted, never connected by a dialled number, and its lifting is never a call request or a seizure |
+| **The dest** | is not touched: it keeps its word, its latch and whatever it is doing, and a line can still call, be called and be hunted. The nail's port hears it, and is rung by its lifting if its `/ANS` is open (§2.3), because the dest's M is the nail port's E. **A source may be nailed**: nothing writes the radio (`features.md` §6), so a port that listens to it for good — a paging amplifier with music, a recorder — is one card's jumpers |
+| **Release** | nothing stops it. When a call over it ends, the release detectors clear the nail port's latch as on any call (`marker.md` §5) — its own M falling, or its dest's — and within one scan, 8 ms, the scanner writes it back. The port circuit is unchanged |
 | **After `/RESET`, or a card plugged in** | the first scan writes every nail, within 8 ms. The nailing cards are the only record, and nothing else is needed |
-| **One end is enough** | for two phones, or a phone onto a line. A trunk on a hop-by-hop path still sends a nail of its own (§3.3), so it is never a trunk to the flood or the monitor |
+| **Both ways is two nails** | a private line, a ringdown hotline or a data circuit is **a mutual nail: each card names the other**, so each port listens to the other. One nail alone is a one-way path: its port hears the dest, and the dest hears nothing of it. Neither end of a mutual pair is ever a caller, so a phone left off-hook when the other hangs up is always nailed again, and rings the other (§3.2). A channel nailed hop by hop is nailed from both ends the same way (§3.3), so it is never a trunk to the flood or the monitor |
 | **The console** | can still point two latches at each other by hand, as bring-up step 3 does — one key, two crossed words in one tenure (`console.md` §1, §6). **It rings nothing**: with both phones on hook the pair is held by nothing, so an operator rings each end from a source first and pairs them once both have answered. It is a call, and it clears when it is released; nothing remembers it, which is the whole difference from a nail |
 | **Counters** | a nail's writes are not calls (§4) |
 
@@ -636,9 +640,9 @@ the number of nails, and changing a local pair is one card's jumpers.
 
 ### 3.2 Ringdown
 
-A nailed pair of phones is a ringdown hotline. Nothing in it is new: it is the
-hotline rule of `channel-cards.md` §1 under the exchange's supervision
-(`fabric.md` §3.5):
+A mutually nailed pair of phones — each card naming the other — is a ringdown
+hotline. Nothing in it is new: it is the hotline rule of `channel-cards.md` §1
+under the exchange's supervision (`fabric.md` §3.5):
 
 ```
  A lifts          A's M reaches B's port as E.  B is on-hook, so B's port rings it in the cadence and sends RBT
@@ -651,7 +655,13 @@ hotline rule of `channel-cards.md` §1 under the exchange's supervision
                   either phone off-hook rings the other
 ```
 
-**A data circuit** is two data cards nailed together, with `/ANS` on both so
+A **one-way ringdown** — A's lift rings B, and B's lift is an ordinary call — is
+a call nail on A's card (§2.2), not a tied nail. A **private line that never
+rings** is a mutual nail between two cards with `/ANS` low and no ringer; a
+phone's card cannot be one, because a phone with `/ANS` low rings continuously
+(§2.3).
+
+**A data circuit** is two data cards, each nailed to the other, with `/ANS` on both so
 that `DSR` follows `DTR` without the cadence. It is bit-exact inside one
 exchange and over copper ties. Across MF8 it is async oversampled data only
 (`network.md` §8), except to a loop-timed subscriber terminal
@@ -664,14 +674,14 @@ else (`protocol.md` §3). A channel held end to end across exchanges is
 nailed at every exchange on the way, each exchange nailing its own pair:
 
 ```
- exchange 22      phone A ↔ trunk channel toward 23            A's card names the channel, or the channel names A
- exchange 23      channel from 22 ↔ channel toward 24          one of the two channels names the other
- exchange 24      channel from 23 ↔ phone B                    B's card names the channel, or the channel names B
+ exchange 22      phone A ↔ trunk channel toward 23            A's card names the channel, and the channel names A
+ exchange 23      channel from 22 ↔ channel toward 24          each channel names the other
+ exchange 24      channel from 23 ↔ phone B                    B's card names the channel, and the channel names B
 ```
 
-A trunk that is a dest and keeps its class is still a trunk to the monitor and
-the flood in the 8 ms after release. **Nail the trunk end too** — each names the
-other, two one-sided nails — so neither looks like a trunk.
+Every pair on the path is a mutual nail (§3.1), so a trunk channel sends a nail
+word of its own and is never a trunk to the monitor or the flood, not even in
+the 8 ms after a release.
 
 - **Ringdown works both ways, as in §3.2.** Forward A is A's hook and backward A
   is B's. No claim is involved, so each end sees the other answer. Trunk ports
@@ -715,18 +725,18 @@ whose pulses the flood carries live: no change to the exchange, and no sender.
 A phone that dials a stored number when it is lifted does the same with no card
 at all. The number may also be `h s` of the card's own exchange: a hotline that
 holds nothing while idle. A **call nail** (§2.2) does that dest with no dialler:
-on lift, connect as if dialled `h s`. A **tied nail** rings faster and holds two
-latches.
+on lift, connect as if dialled `h s`. A **private line** (§3.1) rings faster and
+holds two latches.
 
 A tester who wants to **drive a register and the flood without a handset** is
 the same live A with the number keyed rather than jumpered: `pulse-gen.md`.
 
 ### 3.5 Which to use
 
-| | tied nail (§3.1) | nailed hop by hop (§3.3) | a card that dials (§3.4) |
+| | private line: a mutual nail (§3.1) | nailed hop by hop (§3.3) | a card that dials (§3.4) |
 |---|---|---|---|
 | reaches | its own exchange | another exchange, by a fixed path | anywhere in the network |
-| named by | the dest port, on one card | a dest at each exchange; a trunk dest sends a nail too | the number, on one card |
+| named by | each end's port, on the other's card | a mutual nail at each exchange | the number, on one card |
 | the far end rings | at the lift | at the lift | 4–6 s after dial tone |
 | the far end lifting rings the near end | yes | yes | only with a dialling card there too |
 | answer seen | yes | yes | at claim |
@@ -781,8 +791,8 @@ hundred call-seconds, comes from.
 | the card word and `/ANS` | nothing on a plain line card; ≈ 1 + FET on any other, ≈ 2 + FET only where a secondary is fitted; two ~680 Ω pull-ups a port; ≈ 3 at the marker | the cards, the block, the marker |
 | lines that answer at once | `/ANS` tied low on the card | the card |
 | restricted lines, hunt groups, call nail, busy-out | class *restricted* with `z b 0` (local floor if ¬z); line `P b D`; call nail a 6-bit form; shared frame 6 for `b`; secondary tagged per §2.2 (dual membership, condition flags `LUK`) | the cards, the marker |
-| nailed-up connections | one card's word, two writes | the nailing card |
-| nailed hop by hop | a nail on each trunk that must not look like a trunk | trunk cards |
+| nailed-up connections | a one-way nail, one word and one write a card; both ways is a nail on each card | the nailed cards |
+| nailed hop by hop | a mutual nail at every exchange on the path | the cards and trunk cards |
 | hotlines to another exchange | ≈ 8 on each hotline card | the card |
 | traffic counters | ≈ 10 | a counter card beside the marker |
 
@@ -808,8 +818,9 @@ network.
   shared frame 6; the data bit `D` on frame 7; secondary tag/payload per §2.2
   including dual membership (answers-to + tag `01`) and the condition flags
   `L U K`. `make word`, `make priority`, `make groups`.
-- **The nail rule**: one-sided two-write, its place ahead of the call-request
-  rule, and the 8 ms after a release in which the dest is idle. `make word`.
+- **The nail rule**: one way, one write, its place ahead of the call-request
+  rule, and the 8 ms after a release in which a mutual pair is half made.
+  `make word`.
 - **A nail now needs the scanner after every release.** With the marker stopped,
   a nailed pair works until its first release and not after. If a nail must
   survive that, the release can be held off as well: a '259 a block, latching

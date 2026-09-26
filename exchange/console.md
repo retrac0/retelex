@@ -438,8 +438,8 @@ release time later and got dial tone, and nothing was left held.
 - **Nobody is in charge afterwards.** The pair is an ordinary call from the
   instant it is made: either party hanging up releases both, and the console has
   nothing left to do. It is not remembered anywhere. A connection that must
-  survive a release is a **tied nail** (`extensions.md` §3.1), which is one card's
-  jumpers and not a console word.
+  survive a release is a **tied nail** on each card (`extensions.md` §3.1): the
+  cards' jumpers, not a console word.
 - **A party who never answers rings for ever.** Nothing times a ringing port
   (`groups.md` §2.6). The operator releases it.
 - **Either party may be a trunk channel, a sink or anything else with a latch.**
