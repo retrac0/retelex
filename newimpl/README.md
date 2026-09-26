@@ -13,8 +13,8 @@ Everything else follows from that.
 > is block-steered any more, and `/BLK` survives only to gate a block's
 > writes.
 
-> **Status: measured in simulation — 17 benches, 492 checks under Verilator,
-> and 38 faults, each shown to turn its bench red but the two held twice by
+> **Status: measured in simulation — 18 benches, 584 checks under Verilator,
+> and 52 faults, each shown to turn its bench red but the two held twice by
 > design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
@@ -214,6 +214,25 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
                    register; the forwarder and resolvers; one 9 ms sweep;
                    its own word_rx
 
+ marker            MAXIMAL: the class marker.  The mini marker's sequencer, and
+                   every decision it makes taken on the port's word as well as
+                   its M and BUSY: callers by class, a dialled number connected,
+                   listened to or hunted for, busy tone for a busy line.  A
+                   WALK — a read every 4 ms, 63 ports in about 250 ms — is the
+                   only way in: it takes callers, call nails and CO lines at
+                   their read and finds tied nails to make, and it closes PWAIT
+                   at 77 (extensions.md 2.4.1).  Nothing is read out of turn,
+                   so there is no per-port memory.  The dialled port and a hunt
+                   are read on demand.  The mini marker's network half and its
+                   WATCH, unchanged
+   probe           on SCAN, never re-pointed
+   word_rx         its own; the sequencer's reads and the walk's share it
+     word_dec      what the primary octet says: the constants, the class, the
+                   options, the three port forms.  Gates and a '138
+   ctl_queue       as the mini marker's
+ pulse_reg         MAXIMAL: the register as a pool card BESIDE the marker, on
+                   common-control.md 2.1's ribbon.  One is fitted
+
  debugger          MINIMAL+MAXIMAL: a listener on the tap with no authority.
                    Twelve sticky lamps grouped by which board to pull; its own
                    copy of the scanner and of the last control word
@@ -236,8 +255,9 @@ clock. That is a departure from `clocks.md` §1's placement and is listed in §5
  top_min           MINIMAL: exch + mini_marker
  top_net           NETWORK: THE SAME exch, the same mini marker, and a network
                    unit beside it -- a pulse-flood exchange with the small marker
- top_max           MAXIMAL: THE SAME exch, with the class marker, a register pool,
-                   a network unit and monitors beside it            (not written yet)
+ top_max           MAXIMAL: THE SAME exch, the class marker and one register card
+                   beside it, and the network unit as stuffing: UNIT_FITTED
+                   leaves it out, and /NET and /UREQ read their pull-ups
 ```
 
 `top_net` and `top_max` instantiate the same `exch`, unchanged, so "the network
@@ -325,8 +345,9 @@ function changed.
 | `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; and no clash on either cable B, ever |
 | `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
 | `lchain` | `chain`'s three exchanges with every link a local trunk, B 100 ppm fast and C 100 ppm slow: A to C **through B, across both of B's units**, B's monitor letting go at `b` and its resolver at the claim; **two transits through B at once**, each on its own channels; three local calls at B beside them, the transits untouched; C to A from the glare end, B forwarding from the top of its own glare group; and a call from the middle, flooded both ways, the west channel let go at the claim |
+| `max` | the class marker on one exchange, no unit: every port's card says what it is, and the marker reads it before it acts. A private line — a tied nail on each card, naming the other — made by the walk at power-up, and a **one-way nail** from a paging amplifier onto the radio, which is never written; the private line used, and **one end left off-hook is no caller: both ends are nailed again and it rings the other**, then made again when both are down; dial tone within a round of the walk; **21 busy, and 22's call goes to 26, which answers to 21**; both busy, **busy tone**; busy-out is busy tone, and still gets dial tone; self, an empty slot, a card out of service, 8 and 2 8 are cannot-complete; a source is listened to, never written or rung; 0 rings the operator, then the second position, then busy tone; 9 takes two outside lines in order and refuses a third; restricted z lets only 0 through and the floor refuses 9; a data line neither calls nor is called, and off-hook is read once a round by the walk and by nothing else; a call nail rings 20 with no dial tone, and hears busy tone when 20 is busy; a CO line ringing in is routed as 0; **PWAIT** set by a round that finds the P line 36 waiting, the register given to 36 and not to 35 beside it, and to 35 once PWAIT has cleared; and a caller gone at the connect leaves the called port free |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 38 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 52 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
 the bench meant to catch each: the unit released on `gone` alone, a sweep on an
 even stride, the 5 s rule gone, the claim wait from the last digit, the second
@@ -338,7 +359,12 @@ four, `/HW` steered by `DST` again, every block answering a select, a reader
 selecting inside another read's eight frames, the sweep taking a trunk that was
 busy at its select, the classifier holding a channel its own origin had just
 seized, the no-digit timer paused by a digit in progress, the marker
-letting go of a connect before the called port could, and more. **Every one turns its bench red** on the final
+letting go of a connect before the called port could, and fourteen of the
+class marker's — busy tone turned back into cannot-complete, no answers-to
+hunt, a hunt taking a busy port, the walk taking a caller that was busy at its
+select, the restricted floor and z ignored, a data line taken for voice, no
+PWAIT, PWAIT never clearing, no watch, a nail that writes its dest too, the type
+bits read the old way, a source not listened to, no walk — and more. **Every one turns its bench red** on the final
 tree — except two whose rule is held twice, which stay green by design and each
 have a second fault removing both holds, which is red: the refusal landing
 after `CLAIM` (the unit's handshake, and its rank on cable B), and a trunk's M
@@ -389,6 +415,11 @@ seized for itself (F35).
 - The local trunk: `ltu` patches by hand, `lnet` and `lfull` dial across it
   and `lchain` transits two, but nothing sees the 512 kbps eye on a real
   cable, and no cut falls during a dialled call.
+- The class marker runs in `max` with **no network unit**: a claim or a flood
+  through it, and the walk's reads beside the unit's on `/WS`, are in no
+  bench. One register and the primary octet: no covers, dual numbers or L/U/K
+  conditions, no pool, no console. One private line and one one-way nail,
+  and PWAIT against one P line and one plain line.
 
 ---
 
@@ -432,6 +463,16 @@ The code comments name the section; the documents have not been brought up yet.
 | `network.md` §3 | "when the last digit is in" is `h s`, **or a one-key number** — 0 or 9 after the code (§3's "h s, or 0, or 9"): the origin connects at three digits when the third is one |
 | `common-control.md` §2.2 | after the unit turns a call local (own code), **a 1 is refused**, not taken as a second key; the old marker re-flooded |
 | `mini-marker.md` §3, §4, §7 | "two writes, register released": **the register is held after a connect**, in `S_WATCH`, until the caller has been off-hook `SETTLE` — twice the ports' `T_ARM` — counted from the write, so that the called port's E detector has risen and it can release itself. A caller gone sooner (measured: 0 to 14 ms after the write) left the called port BUSY with no edge ever to release it; the marker now writes it free, and a line chattering there is freed at the no-digit timeout. The time base is two taps of the register's own timers, no new counter. A claim waits a watch out rather than being refused |
+| `marker.md` §3, §4; `groups.md` §2.5 | **the class marker has no scanner, and its WALK is the only way in**: one port every 4 ms, in order from 01, whatever the last one said, and every caller, call nail and CO line taken at its read — so dial tone can take a round, about 250 ms, where the scanner took 8 ms. Besides it, the dialled port is read before it is connected, and every port from 01 while a hunt runs — a read a pass, about 63 ms a round, where §2.5 has two scans, about 17 ms. A read of whoever lifts, the mini marker's way, re-reads a non-caller every other pass and shadows the eight ports behind it; a walk never reads out of turn, so it needs no per-port memory (Joel, 2026-09-25). A read every pass would hold off the unit's reads up to eight passes (`word_rx`'s eight frames); one every two or more holds one back at most a pass. `/HUNT_INH` is gone: the unit hunts its own trunks |
+| `extensions.md` §3.1 | **a tied nail is made by the walk**, up to a round (about 250 ms) after its port releases where the scanner took 8 ms. A nail is one write and never touches its dest (the section as rewritten, Joel, 2026-09-26), so the two ends of a private line are made separately, up to a round apart, and for that time the pair is half made: the end made first hears the other and is rung by it, and the other hears nothing |
+| `extensions.md` §2.4.1 | **PWAIT as written, closed at 77 by the walk**: two flip-flops, no per-port memory. A caller passed over under PWAIT costs nothing, because the walk comes back to it a round later. When the register frees under PWAIT it waits, up to a round, for the walk to reach the P line |
+| `marker.md` §2, §3; `features.md` §5 | a **call nail** and a **CO line ringing in** take the register — no digits, no dial tone — as the watch after their connect, where the documents give them none. Without it a caller gone inside the called port's `T_ARM` leaves it BUSY, the mini marker's `S_WATCH` case |
+| `marker.md` §2; `groups.md` §2.2, §2.4 | **a busy line gets busy tone**, 02 (Joel, 2026-09-25; the three sections are edited to say so): a voice line BUSY, off-hook or busy-out, when nobody free answers to its number. Everything else that fails is cannot-complete. The old `marker.v`'s busy-tone task was never called |
+
+**Not** a departure either: `word_dec` reads the type bits as `extensions.md`
+§2.2 prints them, in wire order, so answers-to's "01" is `WORD[1:0] = 2'b10`
+as the trunk family's "01" is `WORD[3:2] = 2'b10`. The old `marker.v` read
+them the other way round.
 
 **Not** a departure, though it looks like one: `fabric.md` §3.3's "port 00 reads
 `FILL` and A = 0" survives the polarity flip, because the port re-inverts on
@@ -543,9 +584,12 @@ it never had and the other trunks dropped at the claim. What is left:
    it retired; they are the next benches, and the first place a fan-out of two
    or more legs is exercised.
 2. **The MF8 block adapter**, once the block header's commons are settled (§6).
-3. **The maximal build**: `marker.v` (the class marker, and the card word's
-   secondary, §6), a register pool with a bank a register on the unit,
-   `console.v`, and `top_max.v`. The fabric needs no change for any of it.
+3. **The rest of the maximal build.** The class marker is in — `marker.v`,
+   `top_max`, `tb_max` — with one register card and the word's primary
+   octet. Left: the network benches run on `top_max` (a claim and a flood
+   through the class marker have run nowhere); a register pool with a bank a
+   register on the unit; the card word's secondary (§6); `console.v`. The
+   fabric needs no change for any of it.
 4. **`exchange/folded-a.md`**, the fold's own specification. This README and
    `PORT.md` stand in for it.
 5. **A router, sketched and not built.** A tandem with no subscribers is `exch`,

@@ -17,7 +17,8 @@ RTL := rtl/clock_card.v rtl/frame_decode.v rtl/port.v rtl/block.v rtl/mainboard.
        rtl/probe.v rtl/pulse_rx.v rtl/pulse_reg.v \
        rtl/mini_marker.v rtl/top_min.v rtl/debugger.v \
        rtl/dm_rx.v rtl/cvsd_line_card.v rtl/baseband_card.v rtl/local_trunk.v \
-       rtl/net_unit.v rtl/top_net.v
+       rtl/net_unit.v rtl/top_net.v \
+       rtl/word_dec.v rtl/marker.v rtl/top_max.v
 
 BUILD := build
 
@@ -38,13 +39,13 @@ TB_net    := tb/site_net.v tb/tb_net.v
 TB_chain  := tb/site_net.v tb/tb_chain.v
 TB_lfull  := tb/site_net.v tb/tb_lfull.v
 TB_lchain := tb/site_net.v tb/tb_lchain.v
+TB_max    := tb/site_max.v tb/tb_max.v
 
-SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet lfull lchain
+SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet lfull lchain max
 IVSIMS := $(addprefix iv-,$(SIMS))    # by hand only: not in the sequence
 
 IVFLAG := -g2012 -I rtl
-VLTHREADS ?= 4
-VLFLAG := --binary --timing -j 4 --threads $(VLTHREADS) -Irtl -Wno-fatal
+VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
 .PHONY: all lint clean faults $(SIMS) $(IVSIMS)
 
@@ -79,7 +80,8 @@ lint:
 	@fail=0; \
 	for m in clock_card frame_decode port block mainboard exch ctl_write word_rx ctl_queue probe \
 	         pulse_rx pulse_reg mini_marker top_min debugger \
-	         dm_rx cvsd_line_card baseband_card local_trunk net_unit top_net; do \
+	         dm_rx cvsd_line_card baseband_card local_trunk net_unit top_net \
+	         word_dec marker top_max; do \
 	    if verilator --lint-only -Wall -Irtl --top-module $$m $(RTL); then \
 	        echo "  $$m  clean"; \
 	    else \
