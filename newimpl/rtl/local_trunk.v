@@ -1,14 +1,16 @@
-// local_trunk -- the local eight-channel highway trunk.  local-trunk.md.  NETWORK.
+// local_trunk -- the local eight-channel highway trunk.  trunks.md §3.  NETWORK.
 //
-// A block adapter (fabric.md 5.2): it mates one block's header in place of the
-// block ribbon, and the eight port circuits behind that header become eight
-// trunk channels to one neighbouring exchange.  The wire is highway-shaped --
+// A block adapter (fabric.md §6.2): it serves one block's eight seats through
+// their card-side pins in place of subscriber cards, and the eight port
+// circuits behind them become eight trunk channels to one neighbouring
+// exchange.  How the eight appearances reach the port cards is open
+// (block-stack.md §9).  The RTL wires eight socket-shaped appearances.  The wire is highway-shaped --
 // eight cells a frame at 512 kbps, C and A on conductors of their own -- with
 // the sender's HCLK and TX_CLK beside them, so the receiver is timed by the
 // far end and needs no clock recovery.  No line code, no F and S, no crystal.
 // About seventeen packages beside the eight port circuits the block already has.
 //
-// PLESIOCHRONOUS, ON PURPOSE (local-trunk.md 4, network.md 8).  Each exchange
+// PLESIOCHRONOUS, ON PURPOSE (trunks.md §3, network.md §8).  Each exchange
 // keeps its own crystal and nothing slaves a clock card.  The receive demux
 // is timed by the far HCLK; the eight bits cross into the local frame at the
 // local TX_CLK, and that crossing is where a slip happens -- one bit dropped
@@ -22,15 +24,16 @@
 // so its first high sample is cell 0.  Resetting a counter on TX_CLK's RISE
 // would race HCLK's rise, which is the same clock-card edge.
 //
-// NO TRANSMIT LATCH.  local-trunk.md 8's sketch muxes C_RX / A_RX with two
+// NO TRANSMIT LATCH.  trunks.md §3's sketch muxes C_RX / A_RX with two
 // '151s; that is enough, because the ports already hold each bit for a whole
 // frame and change it half a cell from where this card looks.  The transmit
 // side is the two '151s, a counter and a '74.
 //
-// NO RC ON A.  local-trunk.md 4 puts A through RC + Schmitt "as MF8".  Here A
-// arrives as a clocked bit in its own cell, sampled mid-cell and crossed at
-// the frame edge like C: there is no raw wire to filter, and the port's own
-// detectors and the registers' windows already do the timing.
+// NO RC ON A (trunks.md §3).  A arrives as a clocked bit in its own cell,
+// sampled mid-cell and crossed at the frame edge like C: there is no raw wire
+// to filter, and the port's own detectors and the registers' windows already
+// do the timing.  An RC and Schmitt "as MF8" was the old sketch's
+// (exchange/decisions.md).
 //
 // THE CARD SAYS WHAT IT IS, EIGHT TIMES.  One '165 from jumpers -- class
 // trunk, glare, direction -- fanned to all eight word pins, since the eight
@@ -38,16 +41,17 @@
 // the group reads NONE and leaves the hunt, MUTE_BLK busies every port, every
 // A_TX falls so calls in progress release, and every C_TX is FILL.
 //
-// THE HEADER COMMONS' SPARE IS HCLK.  fabric.md 5.2 gives the commons TX_CLK,
-// TX_OCT and FILL in, MUTE_BLK out and one spare; a 512 kbps mux needs the
-// cell clock, and mainboard.md 5's MF8 unit already takes HCLK through the
-// block.  SLOT is not needed: the counter below is SLOT, rebuilt.
+// THE ADAPTER COMMONS CARRY HCLK.  J6 gives TX_CLK, TX_OCT, FILL and HCLK in
+// and MUTE_BLK out (block-stack.md §6, trunks.md §3); a 512 kbps mux needs
+// the cell clock.  SLOT is not on J6 and not needed: the counter below is
+// SLOT, rebuilt.
 //
 //   header appearances (x8)  C_TX, A_TX, word, /ANS out; C_RX, A_RX in
-//   header commons           TX_CLK, TX_OCT, FILL, HCLK (the spare) in; MUTE_BLK out
+//   adapter commons, J6      TX_CLK, TX_OCT, FILL, HCLK in; MUTE_BLK out
 //   rear, each way           C_hw, A_hw, HCLK, TX_CLK
 //
-//   local-trunk.md 1-6, 8; fabric.md 5.2; extensions.md 2.2; network.md 1.1, 8
+//   trunks.md §1, §3; fabric.md §6.2; block-stack.md §6; card-word.md §2, §3;
+//   network.md §2, §8
 `timescale 1ns/1ps
 
 module local_trunk #(
@@ -75,7 +79,7 @@ module local_trunk #(
     input        tx_clk,
     input        tx_oct,
     input        fill,
-    input        hclk,        // the commons' spare
+    input        hclk,        // J6 pin 9 (block-stack.md §6)
     output       mute_blk,
 
     // ---- the rear: the link, each way ---------------------------------------

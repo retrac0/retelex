@@ -1,6 +1,6 @@
 """
 Framing battery for a 10-bit eight-channel frame with a 16-state superframe:
-exchange/mf8-unit.md §4.1 (reopened) — the lean with binary SF, not SF = FLEN.
+exchange/analysis/eight-channel-mf8.md §4.1 (reopened) — the lean with binary SF, not SF = FLEN.
 
 Frame, 10 bits at 64 kHz, 640 kbps / 1.280 MBaud:
 

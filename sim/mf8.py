@@ -3,7 +3,7 @@ Reference model and validation battery for the 8-bit / six-channel MF8 frame.
 
 This is the live trunk frame of mf8/mf8-spec.md.  Eight- and ten-bit frames
 were measured (mf8_16.py, mf8_10.py, mf8_10_16.py, mf8_baud.py;
-exchange/mf8-unit.md) and are not taken.  It is mf8/mfspec.md's frame with
+exchange/analysis/eight-channel-mf8.md) and are not taken.  It is mf8/mfspec.md's frame with
 the header replaced, because the original header was measured broken in
 three independent ways (mf8-spec.md 1):
 

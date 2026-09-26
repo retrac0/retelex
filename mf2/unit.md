@@ -90,7 +90,7 @@ line.
 An MF8 shelf leaves a12–a14 **unconnected**, so a card that shifts a word drives
 into an open circuit and a card that ties a pin low pulls a floating net. An MF2
 unit pulls all three to `+5 V` through **680 Ω** — the port pull-up value of
-`fabric.md` §3.5 — and brings them to a three-pin test header on MF2-D.
+`common-cards.md` §1.2 — and brings them to a three-pin test header on MF2-D.
 
 Nothing about a card changes: it still only ever pulls low or leaves open
 (`common-cards.md` §1.2). What changes is that the levels are defined, so a
@@ -105,10 +105,11 @@ a card (`C_TX`, `A_TX`, `C_RX`, `A_RX`, card word, `/ANS`), the clocks and rails
 common, nothing addressed and nothing contending. Stack header **C** collects
 that star on MF2-D.
 
-**mk1 breaks it out as a two-slot ribbon**, in the `block ribbon` idiom of
-`fabric.md` §5.1, rather than solving the stack-native geometry that
-`mf8-backplane.md` §8 and `mf8-trunk.md` §5 both defer for six layers. MF2 has
-two layers and no need to settle a six-layer mechanical standard on its own.
+**mk1 breaks it out as a two-slot ribbon**, in the idiom of the exchange's
+port-card-to-subscriber-card ribbon (`block-stack.md` §5), rather than solving
+the stack-native geometry that `mf8-backplane.md` §8 and `mf8-trunk.md` §5 both
+defer for six layers. MF2 has two layers and no need to settle a six-layer
+mechanical standard on its own.
 
 **Seat keying is not cosmetic.** `spec.md` §5 forbids two data cards, and
 `sim/mf2.log` measures why: two data cards hold a wrong alignment in **520**
@@ -142,10 +143,9 @@ One 4.096 MHz crystal, the chain of `clocks.md` §1, unchanged:
 | 128 | 32 kHz | **`FILL`** = `/SFC[0]` | socket a4 |
 | 512 | 8 kHz | **`TX_OCT`** = decode `SFC` = 7 | socket a3 |
 
-**Neither line clock is new.** 256 kHz is the tap `clocks.md` §7 records as "the
-one tap in §1 with no customer… If something later needs 256 kHz it is already
-there, on no pin" — MF2 is that customer. 512 kHz is the exchange's `HCLK` tap.
-Both stay off the socket.
+**Neither line clock is new.** 256 kHz is the ÷16 tap, `SLOT0`, that
+`clocks.md` §1 lists with no customer — MF2 is that customer. 512 kHz is the
+exchange's `HCLK` tap. Both stay off the socket.
 
 **`LOOP_HB` = `/FB[0]`, and the derivation is `clocks.md` §4's exactly.** The
 frame is four bit positions:
@@ -259,7 +259,7 @@ outputs to the panel, exactly as they are on a trunk card.
 At a two-unit span **nothing cadences A**, and that is a real gap rather than a
 detail. `mf8-psu.md` §3.2 and `mf8-backplane.md` §8 both say "cadence is the far
 A bit", and on every other link the far end is an exchange port whose `E` is
-chopped by `/RING_CAD` (`fabric.md` §3.5). Here there is no exchange, so a lifted
+chopped by `/RING_CAD` (`fabric.md` §5.2). Here there is no exchange, so a lifted
 handset would ring the far phone **continuously**.
 
 Per channel, behind a jumper on MF2-D:
@@ -269,7 +269,7 @@ A_TX_line[n]  =  A_TX_card[n] · ( A_RX[n] + RING_CAD )
 ```
 
 `RING_CAD` is 2 s on / 4 s off from a '4040 off `TX_CLK` with a nibble of
-jumpers — the `tone-plan.md` §5.2 idiom, which `clocks.md` §3 blesses as a
+jumpers — the `tones.md` §5.2 idiom, which `clocks.md` §3 blesses as a
 divider and not a clock. The `A_RX` term releases the chopping the moment the far
 end answers, so an established call does not chatter the far ring relay.
 ≈ 1½ packages a channel, and **no channel card changes** — which is what "the
@@ -311,7 +311,7 @@ this one at twice the rate.
 
 | item | specification | from |
 |---|---|---|
-| Encoder | **74HC112** JK, `J = K = EN`, `EN = NAND(/H, TX_BIT)`, clocked by `LINE_HB` | `mf8-spec.md` §9.2 as corrected by `circuit-review.md` §1 |
+| Encoder | **74HC112** JK, `J = K = EN`, `EN = NAND(/H, TX_BIT)`, clocked by `LINE_HB` | `mf8-spec.md` §9.2 as corrected by `channel-cards.md` §2.4 |
 | Driver | 75176 differential transceiver, driver half | §9.3 |
 | Series matching | two ~50 Ω into the 100–135 Ω pair, ~25 mA from a 5 V swing | §9.3 |
 | Slew limiting | ~150 ns edges, R and shunt C on the rate plug. At 512 kBaud that is 7.7 % of a 1 953 ns half-cell — comfortable, where MF8 spends 15.4 % | §9.3 |
@@ -355,8 +355,8 @@ capacitance stops being negligible". At 512 kBaud it is **±195 ns**.
 Three of §9.4's rules apply unchanged and are easy to get wrong: the receiver's
 rate must match the **far** end's transmitter, so the plug is set per direction;
 "sample, then retrigger" is three same-edge reads and must use both edges of the
-dead-time pulse (`circuit-review.md` §3); and the state self-heals, so there is
-no lock to lose on the classifier itself.
+dead-time pulse (`falstad/README.md`'s two-phase timing, not yet in §9.4); and
+the state self-heals, so there is no lock to lose on the classifier itself.
 
 ### 5.3 Preamp and equaliser
 
@@ -368,7 +368,7 @@ leaves ~0.86 V at a 50 mV comparator — 5.8 % hysteresis, inside §9.3's
 
 ### 5.4 The rear, and the simplex feed
 
-**Four conductors**, a pair each way, as `common-cards.md` §7.3 gives the trunk
+**Four conductors**, a pair each way, as `common-cards.md` §6.3 gives the trunk
 card. The rear leaves MF2-A only; the stack carries no line conductor.
 
 The **simplex feed** — the DC that powers line-fed repeaters (`repeater.md`) — is
@@ -442,7 +442,7 @@ an existing rail rather than a new one.
 
 - **Every board.** Nothing laid out, nothing on a bench, no connector chosen.
   The connector family (DIN 41612-B vs 0.1 inch) is open for the whole project
-  (`common-cards.md` §7.1), not MF2's to close.
+  (`common-cards.md` §6.1), not MF2's to close.
 - **The whole physical layer**, inherited from `mf8-spec.md` §15 and never
   measured there: driver, transformer, filter, comparator, classifier
   tolerances, squelch levels, signalling RC. `spice/dm/` is where that starts,
@@ -453,7 +453,8 @@ an existing rail rather than a new one.
   ≥ 33 mH is 330 µH and a **106 kHz** pole, which closes a 512 kBaud eye
   outright. Target leakage ≤ 50 µH.
 - **The encoder's hold margin** (§5.1) and **"sample, then retrigger"**
-  (§5.2) — both are `circuit-review.md` corrections that have never been on a
+  (§5.2) — both are corrections from the retired `circuit-review.md`
+  (`channel-cards.md` §2.4; `falstad/README.md`) that have never been on a
   part.
 - **The S map's states 2 and 6.** Reserved, not assigned; `mf2/sim.md`'s `rai`
   run freezes or kills the complement pair (§3.4).

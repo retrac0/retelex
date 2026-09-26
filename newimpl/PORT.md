@@ -74,8 +74,8 @@ after the call's own code. All are fixed and each has its fault in
 
 ## 1. What is being ported
 
-`net_unit.v` (418 lines) is the pulse flood off the marker — `network.md` §3,
-`common-control.md` §2.2–2.3: origin seize, transit forward, hub resolvers,
+`net_unit.v` (418 lines) is the pulse flood off the marker — `network.md` §1,
+§3, §4: origin seize, transit forward, hub resolvers,
 own-code, the origin guard, and the `CLAIM` writes. The marker consumes key
 `1`, restarts the register and raises `flood_go`; the unit owns the call from
 there. Around it in the old tree, and part of the same port:
@@ -118,10 +118,10 @@ features*:
 |---|---|
 | `NREG`, `NRES` | how many registers, how many resolvers are fitted — stuffing. Keep |
 | `OWN_E`, `OWN_B` | the exchange's own code — a strap. Keep |
-| `STRAP_N[3:0]` | the ring jumper, one a direction (`network.md` §3.3) — a strap. Keep |
+| `STRAP_N[3:0]` | the ring jumper, one a direction (`network.md` §7) — a strap. Keep |
 | `T_GUARD`, `T_CLAIM` | RC constants — stuffing. Keep, and add **`T_KEY = 5000`** (§7) |
 | `TRUNK_MASK`, `TRUNK_DIR` | the jumpered mask a marker with no word uses — straps. Keep; they become the *primary* class source (§3.3) |
-| `NOGO` | **dead.** Its only occurrence is its declaration (`:16`); the refusal is written by the marker (`marker.v:772`). Delete, and say so in `common-control.md` §2.3 |
+| `NOGO` | **dead.** Its only occurrence is its declaration (`:16`); the refusal is written by the marker (`marker.v:772`). Delete, and say so where the `nogo` causes are listed (`network.md` §4.1) |
 
 ---
 
@@ -131,7 +131,7 @@ These are `README.md` §7's four, made concrete for the unit.
 
 ### 3.1 Cable B needs an arbiter, and the unit is its third master
 
-`common-control.md` §2.2 says it in so many words: the unit *"is another
+The retired `common-control.md` §2.2 said it in so many words: the unit *"is another
 master of cable B for the writes it owns (seize, forward, CLAIM, drop), the
 way the console is. Until that third master is drawn, the RTL marker drains a
 burst of writes the unit queued"*. The burst is `net_unit.v:57-62` — `nw`,
@@ -189,7 +189,7 @@ Two paths exist, and the unit already has both:
 - **The strap path, primary.** `TRUNK_MASK` / `TRUNK_DIR` (`net_unit.v:20-22`)
   — *"Mini-marker has no word: these ports are trunks, 2 bits of direction
   each"* — and `is_trunk` / `p_dir` already fall back to them (`:92-94`).
-  `common-control.md` §2.4: *"A one-direction bring-up hunts by a jumpered
+  The retired `common-control.md` §2.4: *"A one-direction bring-up hunts by a jumpered
   port mask, not by the word."* This is the MINIMAL+network build, and it
   needs no `/HW` at all.
 - **The word path, MAXIMAL.** The marker owns the point-read on `/HW` — it
@@ -214,7 +214,7 @@ lamp to add to the debugger once the word path exists.
 three; the only instantiation ties them off (`mini_marker.v:127-128`). The
 unit needs all three: `CLM` on every claim write (`net_unit.v:310 :394`), `G`
 clear for the two event words, and `strobe` clear for the pointing word §3.3
-needs. `common-control.md` §2.2: *"`CLAIM` sticks until release … The marker
+needs. The retired `common-control.md` §2.2: *"`CLAIM` sticks until release … The marker
 keeps the bit on every later write to that port"* — so `mini_marker` cannot
 stay as it is even in the minimal+network build.
 
@@ -222,7 +222,7 @@ stay as it is even in the minimal+network build.
 
 ## 4. The marker side
 
-`common-control.md` §2.2 is the contract. `mini_marker.v` meets none of the
+`network.md` §3.6 is the contract. `mini_marker.v` meets none of the
 network half of it, and `mini_core.v` (the old minimal marker with the hooks)
 is the source for what it must grow:
 
@@ -233,7 +233,7 @@ is the source for what it must grow:
 | take `restart` / `local` / `done` / `nogo` from the unit in `S_COLLECT` | `marker.v:688-697` | no inputs |
 | take `att_req` + port: give a register the trunk as a line, `CLAIM` on | `marker.v:757-772` | no path |
 | keep `CLAIM` on every later write to a claimed port | `marker.v` | `clm` tied to 0 |
-| accept `/HUNT_INH` with nothing driving it | specified `common-control.md` §2.4, **implemented nowhere** | absent — a defect about to be copied |
+| accept `/HUNT_INH` with nothing driving it | specified in `common-control.md` §2.4 (retired since: `exchange/decisions.md`), **implemented nowhere** | absent — a defect about to be copied |
 
 Two ways to get there. (a) Grow `mini_marker` by exactly this list, with a
 `HAS_NET` jumper and `TRUNK_MASK` — the minimal+network build `mini_net_site`
@@ -250,22 +250,22 @@ stop widening the tap.
 ## 5. The register: a pool the unit can tap
 
 The unit taps `digits`, `N`, `brk`, `gone` and pulses `restart`
-(`common-control.md` §2.1). Those are `pulse_reg`'s ports already, but the
+(`register.md` §3). Those are `pulse_reg`'s ports already, but the
 register is instantiated inside `mini_marker` and none of them cross its
 boundary. Two options: bring the ribbon out through `mini_marker` (adds
 4 + `NREG` × 20 conductors to its port list), or instantiate the register(s)
 **beside** the marker at the site — which is what the maximal build does
 (`pulse_reg.v:11-13`: *"in the maximal build the same module is a pool member
-on its own card"*) and what `common-control.md` §2.1 draws. Beside is right.
+on its own card"*) and what `register.md` §3 draws. Beside is right.
 
 While it is open: the ribbon is missing `attach_src` / `src`, the held-party
-field `register.md` §6.1 defers and `marker.v:49 :53` consumes for operator
+field the retired `register.md` §6.1 deferred and `marker.v:49 :53` consumes for operator
 transfer. Add them tied off now; retrofitting them into a pool later touches
 every member.
 
 The old timer bug is already fixed here (`pulse_reg.v:111`), and the unit's
 `reg_gone` release at `net_unit.v:318` will now fire at 10 s from the *last
-digit*, which is what `marker.md` §6 meant.
+digit*, which is what `register.md` §1 has.
 
 ---
 
@@ -285,12 +285,15 @@ plumbing exists. Three things do not port:
   "last visit" the rule means — the monitor's 8 kHz octet or the plane's 1 ms
   pass — has to be re-derived, not re-typed.
 - **`monitor.md` §2's `done` row is wrong** (`:52`: freed when the trunk
-  releases) against §3.4, §4, §6 and the code (`monitor.v:135-141`: freed by
-  the ack). Fix the document *before* porting from a reading of it.
+  releases) against its §3.4, §4, §6 and the code (`monitor.v:135-141`: freed
+  by the ack). Fix the document *before* porting from a reading of it.
+  (`monitor.md` is retired since; `network.md` §3.4 frees the cell at the
+  unit's `CLAIM` write.)
 - **It has no card-word input** though `monitor.md` §4 and §6 specify and
   bill one; `chan_mask` is a strap in no document. Under §3.3 the strap is
   the primary path anyway — write it into `monitor.md` and stop billing the
-  '164.
+  '164. (Overtaken: the monitors are on the unit, attached when it reads a
+  seizing port's word, `network.md` §3.4.)
 
 ---
 
@@ -298,11 +301,11 @@ plumbing exists. Three things do not port:
 
 | defect | where | what to write instead |
 |---|---|---|
-| **`network.md` §4's 5 s no-`b` rule is in no RTL.** `N_NET` (`net_unit.v:354-371`) waits on digit counts alone; the trunks go only at `reg_gone` (`:318`), i.e. the register's own timeout — the outcome the rule exists to prevent. `sim/exch.py:2105` has `FLOOD_TIMEOUT = 5000.0` | `net_unit.v` | a third parameter `T_KEY = 5000`, armed on entry to `N_NET`; at expiry with `!f2[r]`: `drop_trunk(r); nogo[r] <= 1; nst[r] <= N_IDLE`. It **cannot reuse `tmr[r]`**: `:348` zeroes it on entry but the guard owns it and stops it when `guarding` clears. `common-control.md:105` lists four `nogo` causes and needs a fifth |
+| **`network.md` §4.1's 5 s no-`b` rule is in no RTL.** `N_NET` (`net_unit.v:354-371`) waits on digit counts alone; the trunks go only at `reg_gone` (`:318`), i.e. the register's own timeout — the outcome the rule exists to prevent. `sim/exch.py:2105` has `FLOOD_TIMEOUT = 5000.0` | `net_unit.v` | a third parameter `T_KEY = 5000`, armed on entry to `N_NET`; at expiry with `!f2[r]`: `drop_trunk(r); nogo[r] <= 1; nst[r] <= N_IDLE`. It **cannot reuse `tmr[r]`**: `:348` zeroes it on entry but the guard owns it and stops it when `guarding` clears. The retired `common-control.md:105` lists four `nogo` causes and needs a fifth; `network.md` §4.1 has it |
 | `NOGO` is dead | `net_unit.v:16` | delete; the marker writes the refusal |
-| the second dialled digit gets no service-digit test in `marker.v` (`:685`) — `net_unit.v:359-361` and `monitor.v:165` *do* test it | the marker, not the unit | settled 2026-09-25: 8, 9 and 11–15 on the second key are cannot-complete in every build (`mini-marker.md` §3; `faults.py` F09). The fold it was weighed against was `nano-marker.md` §3, retired into `mini-marker.md` §10 (text at commit `63bafbb`) |
+| the second dialled digit gets no service-digit test in `marker.v` (`:685`) — `net_unit.v:359-361` and `monitor.v:165` *do* test it | the marker, not the unit | settled 2026-09-25: 8, 9 and 11–15 on the second key are cannot-complete in every build (`numbering.md` §3; `faults.py` F09). The fold it was weighed against was `nano-marker.md` §3, retired into `decisions.md` (text at commit `63bafbb`) |
 | `mf8_decoder`'s carrier timeout is 3 cells where seven places say 2 | `old/verilog/rtl/mf8_decoder.v:26` | already fixed: `dm_rx.v` is 2 cells. The trunk card instantiates `dm_rx #(.CELL(8))` |
-| `mf8_trunk_card` has no `/ANS` output, so it cannot tie the six low as `extensions.md` §2.1 requires; the old tree carried the fact in a hand-maintained `PORT_RINGS` literal — the deaf-hub bug `old/verilog/README.md:372` records | `mf8_trunk_card.v` | `/ANS` is a pin here (`port.v:137`). The card drives `ans_n = 0` on its six channel sockets |
+| `mf8_trunk_card` has no `/ANS` output, so it cannot tie the six low as `card-word.md` §1 requires; the old tree carried the fact in a hand-maintained `PORT_RINGS` literal — the deaf-hub bug `old/verilog/README.md:372` records | `mf8_trunk_card.v` | `/ANS` is a pin here (`port.v:137`). The card drives `ans_n = 0` on its six channel sockets |
 | `MUTE_BLK` is generated and left open at all three instantiations | `mf8_trunk_card.v:91`, `net_site.v:209` | `port.v:59` already takes `mute_blk`; wire it, and the word path with it (a muted trunk must read unequipped, not be offered by `TRUNK_MASK`) |
 | the `FF`-secondary reads unconditional | `marker.v:185 :207` | §3.3's `/HW` rule: silence is unequipped, and pair the read with `/HB` |
 
@@ -336,7 +339,7 @@ block), the marker, the register pool beside it, the unit, and the monitors.
 
 Then in this order, because each is the plant for the next:
 
-1. `tb_net` — two sites on one link, the origin flood (`network.md` §3.1).
+1. `tb_net` — two sites on one link, the origin flood (`network.md` §4.1).
 2. `tb_chain` — three, the transit forward.
 3. `tb_pool`, `tb_priority`, `tb_word` — the register pool and the word path.
 4. `tb_hub`, `tb_ring` — **both red at HEAD**; the 5 s timer (§7) is the
@@ -357,7 +360,8 @@ re-measure.
 1. **Documents that must be right before porting from them**: `monitor.md`
    §2's `done` row; `rtl.md` §3's "still unbuilt" list (the unit, the
    resolvers and the ring *are* built); `common-control.md` §2.3's `nogo`
-   causes; and `exchange/folded-a.md`, without which the unit is ported
+   causes (all three retired since, `exchange/decisions.md`); and
+   `exchange/folded-a.md`, without which the unit is ported
    against a specification of the tree being deleted.
 2. **`ctl_queue.v`** and the cable-B arbiter above `exch`; `mini_marker`'s
    queue to 15 bits; `g`/`strobe`/`clm` live.

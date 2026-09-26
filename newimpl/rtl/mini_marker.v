@@ -1,4 +1,4 @@
-// mini_marker -- the small marker.  mini-marker.md.
+// mini_marker -- the small marker.  marker.md §3.
 //
 // A marker that makes local calls on one exchange: two phones dial `h s`, one
 // rings, they talk, either hangs up, and nobody is in charge of the call.  It
@@ -17,7 +17,8 @@
 //
 // THREE RULES THAT ARE NOT OPTIONAL:
 //   act on probe.port_q, NEVER on live SCAN -- by the time the sequencer has
-//     decided, the scan has moved on.  rtl.md 1, in a new place;
+//     decided, the scan has moved on.  marker.md §1's first rule, in a new
+//     place;
 //   do not return to IDLE with writes still queued -- the caller's BSY is
 //     what stops it being seized a second time, a word takes 133 us and a
 //     port comes round every 1 ms, so idling early seizes the same caller
@@ -29,7 +30,7 @@
 //     hangs up inside the called port's T_ARM leaves it BUSY, ringing nobody,
 //     with no edge ever to come.  WATCH, below.
 //
-// ---- NETWORK: what a network unit adds (common-control.md 2.2, 4) ---------
+// ---- NETWORK: what a network unit adds (network.md §3.6; marker.md §3) ----
 //
 // Fitted in top_net only.  In top_min every line below is tied to "no unit",
 // and THE MARKER THEN TAKES EXACTLY THE PATH IT TOOK BEFORE THE NETWORK HALF
@@ -57,7 +58,7 @@
 //   cable B     the unit is a second master, ranked above this one.  /UREQ
 //               low and this marker lets go between transactions
 //
-// The register and the unit share the ribbon of common-control.md 2.1: the
+// The register and the unit share the ribbon of register.md §3: the
 // unit taps digits, N, brk, gone, nodig and the caller, and its restart is
 // ORed here with the key's.
 `timescale 1ns/1ps
@@ -65,14 +66,14 @@
 
 module mini_marker #(
     // Tones are ADDRESSES here, not hunts.  With no source card fitted the
-    // caller hears silence, which is mvp.md 2's documented behaviour.
+    // caller hears silence, which is exchange/README.md §2's documented behaviour.
     parameter [`PW-1:0] DIALTONE = 6'o01,
     parameter [`PW-1:0] SILENCE  = 6'o00,
     parameter [`PW-1:0] NOGO     = 6'o03,
     parameter [8:0]     HIT      = 9'd8,
     parameter [8:0]     ID       = 9'd128,
     parameter [8:0]     CLR      = 9'd256,
-    parameter [15:0]    NODIG    = 16'd10000,  // register.md 6; see pulse_reg
+    parameter [15:0]    NODIG    = 16'd10000,  // register.md §1; see pulse_reg
     parameter [8:0]     SETTLE   = 9'd32       // WATCH: past the ports' T_ARM
 )(
     input                   clk,
@@ -108,12 +109,13 @@ module mini_marker #(
     output reg              att_ack,       // one tick: attached, or refused
 
     // ---- the probe, on the tap so a card can watch without the marker
-    //      knowing what it is looking for (common-control.md 2.2) -----------
+    //      knowing what it is looking for (marker.md §3) ----------------
     //
     // `probe_fresh` IS NOT OPTIONAL ON THE TAP.  m and busy are levels held
     // for a whole pass, so a listener without it cannot tell a new sample from
     // the same one read again, and would count one seizure sixty-four times.
-    // It is common-control.md 2.2's `visit` under the name the fold gave it.
+    // It is the old tap's `visit` under the name the fold gave it (marker.md
+    // §3, "the probe tap").
     //
     // The tap still carries the marker's re-point: in S_PROBE and S_TAKE
     // p_addr is `called`, so a watcher sees the port freeze.  That is a wart,
@@ -124,7 +126,7 @@ module mini_marker #(
     output                  probe_busy,
     output                  probe_fresh,
 
-    // ---- the register's ribbon (common-control.md 2.1) ---------------------
+    // ---- the register's ribbon (register.md §3) ----------------------------
     output                  reg_busy,
     output     [2:0]        reg_ndig,
     output     [15:0]       reg_digits,
@@ -168,7 +170,7 @@ module mini_marker #(
     assign probe_busy  = p_busy;
     assign probe_fresh = p_fresh;
 
-    // ---- one register, on this card (mini-marker.md 1) ---------------------
+    // ---- one register, on this card (marker.md §3) -------------------------
     reg              r_attach, r_release, r_restart;
     reg  [`PW-1:0]   r_port;
     wire             r_busy, r_gone, r_nodig, r_brk, r_counting, r_hook, r_settled;
@@ -194,17 +196,18 @@ module mini_marker #(
     assign reg_nodig  = r_nodig;
     assign reg_brk    = r_brk;
 
-    // ---- protocol.md 5's digit rule, taken literally ------------------------
-    // "A digit's value is the low three bits of the register's pulse count,
-    // forced to 000 when bit 3 is set: three AND gates."  Ten pulses is 0, and
+    // ---- numbering.md §1's digit rule, taken literally ----------------------
+    // "An address digit is the count's low three bits, forced to 000 when
+    // bit 3 is set" -- three AND gates.  Ten pulses is 0, and
     // so are eight and nine -- which is exactly why 0, 8 and 9 are one test
     // on the first key.  Implemented as anything looser, a dialled 9 in an
     // address position reads as 1.
     wire [2:0] d0 = r_digits[3] ? 3'd0 : r_digits[2:0];
     wire [2:0] d1 = r_digits[7] ? 3'd0 : r_digits[6:4];
 
-    // "8 and 9 are caught as service digits before they are ever an
-    // address" (protocol.md 5) -- on the SECOND key too.  Folded, a
+    // "8, 9 and 11-15 are service digits, tested on the count before
+    // anything is an address, in every position" (numbering.md §1) -- on the
+    // SECOND key too.  Folded, a
     // misdialled 2 8 rang 20: a wrong number, and from another exchange a
     // wrong number the caller cannot see.  Ten pulses is 0 and is an address;
     // 8, 9 and 11-15 are not.  A '85 and two gates on the count's top bits.
@@ -246,7 +249,7 @@ module mini_marker #(
         .word(rd_word));
 
     // A flood trunk says so in its primary octet: class form, family 01,
-    // member 0 -- 11 01 0 in wire order (extensions.md 2.2).  Its glare and
+    // member 0 -- 11 01 0 in wire order (card-word.md §2).  Its glare and
     // direction are the unit's business; to this marker it is only "not a
     // caller, not a number".  A tone trunk is member 1 and IS a caller at a
     // leaf's central (leaf-uplink.md), so it does not match.
@@ -278,7 +281,7 @@ module mini_marker #(
     // in WATCH: the register is held there for SETTLE after a connect, or CLR
     // if the caller left, and a claim waits that out -- `att` is a level the
     // unit holds until it is answered, and the far caller's next digit is a
-    // dial's return away (register.md 2: over 640 ms).
+    // dial's return away (register.md §1: over 640 ms).
     wire att_refuse = u_att && !att_ack && r_busy && !rd_done && (state != S_WATCH);
 
     always @(posedge clk or negedge rst_n) begin
@@ -364,7 +367,7 @@ module mini_marker #(
                     // asking when it comes round.
                     state <= (rd_trunk || (rd_word == 8'd0)) ? S_IDLE : S_TAKE;
                 end else if (rd_trunk) begin
-                    // a trunk is never dialled: marker.md 2
+                    // a trunk is never dialled: marker.md §3, numbering.md §4
                     if (room >= 5'd1) begin
                         push_v    <= 2'b01;
                         push_d    <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};

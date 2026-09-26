@@ -1,4 +1,4 @@
-// pulse_rx -- three decisions from one timer.  register.md 2.
+// pulse_rx -- three decisions from one timer.  register.md §1.
 //
 // A pulse register makes three decisions and they all come off a 1 kHz tick:
 //
@@ -15,7 +15,7 @@
 // WHAT THE FOLD COSTS HERE.  M arrives through the probe at 1 kHz instead of
 // continuously, so every edge this measures is quantised to 1 ms.  The
 // tightest ratio in the design is HIT: the shortest break ever counted in
-// register.md 3.1 was 18 ms at 20 pps, which is eighteen samples against an
+// dialling.md §3.1 was 18 ms at 20 pps, which is eighteen samples against an
 // eight-sample window.  Everything else has tens of milliseconds in hand.
 //
 // The second conductor bought this.  With A and BUSY interleaved on one wire a
@@ -49,7 +49,7 @@ module pulse_rx #(
     reg       hit;    // this break has already been counted
     reg       done;   // the last thing that happened was a completed digit
 
-    // register.md 2: the '163 is cleared by STB, so "count != 0" means A DIGIT IS
+    // register.md §2: the '163 is cleared by STB, so "count != 0" means A DIGIT IS
     // PART-COLLECTED and goes false between digits.  `cnt` cannot be cleared at
     // dig_stb here -- pulse_reg samples it in the strobe cycle and would store 0
     // for every digit -- so `done` supplies the same falling edge one gate later.
@@ -70,9 +70,10 @@ module pulse_rx #(
             dig_stb <= 1'b0; clear <= 1'b0; brk_stb <= 1'b0;
 
             if (!arm) begin
-                // A STORE MUST BE EMPTY WHEN IDLE.  rtl.md: a cycle after the
-                // register was handed to a new caller the marker read the
-                // store and found the PREVIOUS caller's number still in it.
+                // A STORE MUST BE EMPTY WHEN IDLE (register.md §1): a cycle
+                // after the register was handed to a new caller the marker
+                // read the store and found the PREVIOUS caller's number
+                // still in it.
                 cnt <= 4'd0; t <= 9'd0; hit <= 1'b0; done <= 1'b0; m_d <= m;
             end else if (tick_1k) begin
                 if (m != m_d) begin

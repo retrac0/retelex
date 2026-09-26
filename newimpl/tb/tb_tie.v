@@ -1,10 +1,10 @@
 // tb_tie -- two exchanges and a baseband tie trunk, patched by hand.
-// baseband.md 1, 3; network.md 1.
+// trunks.md §2; network.md §1.
 //
 // Exchange A and exchange B each have a baseband card at 11 and phones at 20
 // and 21, and run on two crystals.  Nothing here dials: each exchange's
 // latches are written by hand over its own cable B -- A's 20 to its 11, B's 11
-// to its 21 -- which is fabric.md 7's hotline, stretched across a link.
+// to its 21 -- which is fabric.md §6.3's hotline, stretched across a link.
 //
 // What it proves: each end reads its own card's word (class, glare,
 // direction); bits cross both ways, in order, a bit a frame; A's 20 lifting is

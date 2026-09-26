@@ -1,5 +1,5 @@
 // subscriber -- a behavioural CVSD phone on the two-pair line, for a bench.
-// subscriber-line.md 4's phone end, and su-1.md's mk1 set in outline.
+// subscriber-line.md §4's phone end, and su-1.md's mk1 set in outline.
 //
 //   TX            = ON-HOOK or dial break ? 1100 : the codec
 //   codec input   = dial off normal ? silence (1010) : the microphone
@@ -11,11 +11,13 @@
 // reaching into it.  The codec is a repeating sixteen-bit pattern standing in
 // for CVSD, so a bench can check the bits arrive in order; its X density --
 // the hook detector's one-bit function, Q xor Q[n-2] -- is 0.125, inside the
-// 0.00 to 0.53 subscriber-line.md 2 measured for speech.
+// 0.00 to 0.53 subscriber-line.md §2 measured for speech.
 //
-// The phone has its own crystal.  Here it is a free-running cell counter on
-// the bench's clock; the receiver at the far end tolerates +-13 % of a cell,
-// so it need not be the same crystal, but in this bench it is.
+// The phone is loop-timed: its upstream runs at the downstream's bit rate
+// (subscriber-line.md §1), by a circuit not yet drawn (§7).  Here that is
+// stood in for by a free-running cell counter on the bench's clock, which
+// is the same crystal as the exchange's; the receiver at the far end
+// tolerates +-13 % of a cell.
 `timescale 1ns/1ps
 
 module subscriber #(
@@ -75,7 +77,7 @@ module subscriber #(
         .clk(clk), .rst_n(rst_n), .line(line_dn),
         .q(q), .q_stb(q_stb), .carrier(carrier), .viol(viol));
 
-    // ---- the ring detector: subscriber-line.md 3, the phone's reading -------
+    // ---- the ring detector: subscriber-line.md §3, the phone's reading ------
     // The same RC and comparator as the exchange's hook detector, on /Q: all
     // zeros drive it to 1 and ring; 1010, speech and a dead pair -- whose
     // latch idles at 1 and whose no-carrier forces 1 -- never pass 0.6.

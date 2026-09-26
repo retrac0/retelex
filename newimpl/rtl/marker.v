@@ -1,5 +1,5 @@
-// marker -- the class marker.  marker.md; groups.md 2; extensions.md 2.2-2.4,
-// 3.1; common-control.md 2.1, 2.2.  MAXIMAL.
+// marker -- the class marker.  marker.md §4; card-word.md §2, §4-§6;
+// register.md §3; network.md §3.6.  MAXIMAL.
 //
 // The mini marker's sequencer, and what a port's card says about it.  Every
 // decision the mini marker makes on M and BUSY alone, this one makes on M,
@@ -7,7 +7,7 @@
 // number reaches, where a failed number is hunted, which lines go first when
 // the register is short.  It holds nothing about the exchange -- no route
 // table, no translation, no record of where anything is.  Move a card and its
-// role moves with it (marker.md 1).
+// role moves with it (marker.md §1).
 //
 // IT READS A WORD ONLY WHEN IT NEEDS ONE.  A read is a select on /WS in the
 // port's own bit-time and eight frames of /HW (word_rx.v), and every reader
@@ -24,7 +24,7 @@
 // THE WALK IS THE ONLY WAY IN.  It reads the next port in order whatever the
 // last one said, and takes every decision about a port at that read, as the
 // scanning marker took them at its visit:
-//   a tied nail whose port has released (extensions.md 3.1) -- one write,
+//   a tied nail whose port has released (card-word.md §6.1) -- one write,
 //     the port listening to its dest.  A NAIL IS ONE WAY (Joel, 2026-09-26):
 //     the dest is not written, so it is made whatever the dest is doing, and
 //     a source may be nailed.  A private line is a nail on each card, each
@@ -36,11 +36,11 @@
 // out of turn, so NOTHING NEEDS REMEMBERING: a data line off-hook, a trunk
 // before the unit holds it, a card in its power-up RC is read once a round
 // like every other port.  A read of whoever lifts, the mini marker's way,
-// re-reads such a port every other pass and shadows the eight behind it,
+// re-reads such a port every other pass and shadows the seven behind it,
 // which a 64-bit "dealt with" memory had to prevent (Joel, 2026-09-25).  A
 // round is 63 x WALK passes: the longest a caller waits for dial tone.
 //
-// PRIORITY, as extensions.md 2.4.1 writes it.  PWAIT: a round that finds a P
+// PRIORITY, as marker.md §4.3 writes it.  PWAIT: a round that finds a P
 // line wanting the register and not getting it sets it at 77; a round that
 // finds none clears it.  While it is set the walk passes over any caller but
 // a P line, the register free or not.  Passing a caller over costs nothing:
@@ -56,7 +56,7 @@
 //     nail and a CO line ringing in take the register for exactly that, and
 //     for nothing else.
 //
-// A BUSY LINE GETS BUSY TONE (Joel, 2026-09-25; extensions.md 2.4): a dialled
+// A BUSY LINE GETS BUSY TONE (Joel, 2026-09-25; numbering.md §4): a dialled
 // voice line that is BUSY, off-hook or busy-out, when nobody free answers to
 // its number, is pointed at 02.  Everything else that fails is cannot-complete,
 // 03 -- an empty or out-of-service slot, a trunk, a data line, the caller's
@@ -71,26 +71,26 @@
 //               waits out
 //   cable B     the unit ranks above this card: /UREQ low and it lets go
 //               between transactions
-// Restricted callers never open a flood (extensions.md 2.4's floor).
+// Restricted callers never open a flood (card-word.md §4's floor).
 //
 // ---- WHAT IT DOES NOT DO -----------------------------------------------------
 // One register (a pool wants a bank a register on the unit, README 6).  The
 // word's primary octet only: no covers, no dual numbers, no L/U/K conditions.
 // No console, no event words for a counter card, no operator transfer.
 //
-//   marker.md 1-6; groups.md 2.2, 2.4; extensions.md 2.2, 2.4, 2.4.1, 3.1;
-//   features.md 2, 5; common-control.md 2.1, 2.2; mini-marker.md
+//   marker.md §1-§6; card-word.md §2, §4-§6; numbering.md §2-§4;
+//   features.md §1, §4, §5; register.md §3; network.md §3.6
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module marker #(
-    // Tones are ADDRESSES (protocol.md 5, features.md 2).  With no source card
+    // Tones are ADDRESSES (numbering.md §2, features.md §1).  With no source card
     // at one of them, the caller hears silence there.
     parameter [`PW-1:0] SILENCE  = 6'o00,
     parameter [`PW-1:0] DIALTONE = 6'o01,
     parameter [`PW-1:0] BUSYTONE = 6'o02,
     parameter [`PW-1:0] NOGO     = 6'o03,
-    // 0 calls 04, then whoever answers to it (groups.md 2)
+    // 0 calls 04, then whoever answers to it (numbering.md §3, marker.md §4.5)
     parameter [`PW-1:0] PILOT_0  = 6'o04,
     // the walk's pace: passes between its reads.  A tap of the pass counter;
     // 4 is a round of the 63 ports in about a quarter second, the longest a
@@ -119,7 +119,7 @@ module marker #(
     output                  ws_pd,         // this card's select, onto /WS
     input                   ureq_n,        // NETWORK: the unit wants the bus.  Pulled up
 
-    // ---- the register's ribbon (common-control.md 2.1) ---------------------
+    // ---- the register's ribbon (register.md §3) ----------------------------
     output reg              reg_attach,    // one tick: seize it for reg_port
     output reg [`PW-1:0]    reg_port,
     output reg              reg_release,
@@ -223,7 +223,7 @@ module marker #(
         ent = {1'b1, c, b, s, d};
     endfunction
 
-    // ---- protocol.md 5's digits, as the raw counts --------------------------
+    // ---- numbering.md §1's digits, as the raw counts ------------------------
     // The mini marker folds 8, 9 and 10 to 0 and refuses all three.  Here the
     // count decides: ten pulses is the operator, nine an outside line, eight
     // and 11-15 are service digits.  In an address position ten is 0.
@@ -256,7 +256,7 @@ module marker #(
     reg           w_on;          // its read is out
     reg           nail_v;        // a tied nail found unmade, for the sequencer
     reg [`PW-1:0] nail_p, nail_d;
-    reg           pwait, pwait_seen;     // extensions.md 2.4.1: two flip-flops
+    reg           pwait, pwait_seen;     // marker.md §4.3: two flip-flops
     assign pwait_o = pwait;
 
     // The walk reads when the sequencer is not reading: never in CALLED, HUNT
@@ -322,7 +322,7 @@ module marker #(
                 w_on <= 1'b0;
                 if (w_nail) begin nail_v <= 1'b1; nail_p <= rd_port; nail_d <= d_hs; end
                 if (w_pline && !w_take) pwait_seen <= 1'b1;
-                // PWAIT (extensions.md 2.4.1), closed at 77: set if the round
+                // PWAIT (marker.md §4.3), closed at 77: set if the round
                 // found a P line wanting the register and not getting it,
                 // cleared by a round that found none
                 if (wq == P77) begin
@@ -372,8 +372,8 @@ module marker #(
                         state     <= S_COLLECT;
                     end else begin
                         // A CALL NAIL, or a CO LINE RINGING IN: as if `h s`, or
-                        // 0, had been dialled, and no digits (marker.md 3,
-                        // features.md 5).  The register is taken as the WATCH
+                        // 0, had been dialled, and no digits (marker.md §4.6,
+                        // features.md §4).  The register is taken as the WATCH
                         // after the connect and for nothing else; the caller is
                         // held BUSY meanwhile.
                         push_d    <= {15'd0, ent(rd_port, SILENCE, 1'b1, 1'b0)};
@@ -408,7 +408,7 @@ module marker #(
                     if ((lim_z && (c0 != 4'd10)) || (c0 == 4'd8) || (c0 > 4'd10) ||
                         (lim_local && (c0 == 4'd9))) begin
                         // z lets only 0 through; the floor refuses 9; 8 and
-                        // 11-15 are service digits (extensions.md 2.4, protocol.md 5)
+                        // 11-15 are service digits (card-word.md §4, numbering.md §1)
                         push_d      <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
                         reg_release <= 1'b1;
                         state       <= S_DRAIN;
@@ -460,7 +460,7 @@ module marker #(
             // ---- CALLED: the number's own port ---------------------------------
             // Its word and its M and BUSY at the select.  A source is listened
             // to; a free voice line is connected; anything else is hunted for
-            // among the ports that answer to the number (groups.md 2.2).
+            // among the ports that answer to the number (marker.md §4.5).
             S_CALLED: if (!rd_on) begin
                 if (r_gone) begin
                     if (room >= 5'd1) begin
@@ -477,7 +477,7 @@ module marker #(
                     // it is abandon, whatever the word said; `rd_on` falls
                     // above, and the branch before this one writes the caller
                 end else if ((called != caller) && d_src) begin
-                    // a source is listened to, never written (features.md 6)
+                    // a source is listened to, never written (features.md §5)
                     push_v      <= 2'b01;
                     push_d      <= {15'd0, ent(caller, called, 1'b1, ctx_clm)};
                     reg_release <= 1'b1;
@@ -505,7 +505,7 @@ module marker #(
             // ---- HUNT: every port from 01, in slot order ---------------------------
             // The first that is free at its select and answers to the number --
             // or, for 9, is an outside line -- is taken at the read that finds
-            // it (groups.md 2.2).  A read a pass: about 63 ms for a round.
+            // it (marker.md §4.5).  A read a pass: about 63 ms for a round.
             S_HUNT: if (!rd_on) begin
                 if (r_gone) begin
                     if (room >= 5'd1) begin
@@ -583,8 +583,8 @@ module marker #(
             end
 
             // ---- NAIL: a tied nail the walk found unmade ------------------------
-            // One write: the nail's port listens to its dest, BUSY (extensions.md
-            // 3.1).  The dest is not written, so there is nothing to wait for.
+            // One write: the nail's port listens to its dest, BUSY (card-word.md
+            // §6.1).  The dest is not written, so there is nothing to wait for.
             S_NAIL: if (room >= 5'd1) begin
                 push_v <= 2'b01;
                 push_d <= {15'd0, ent(nail_p, nail_d, 1'b1, 1'b0)};   // the nail's one write

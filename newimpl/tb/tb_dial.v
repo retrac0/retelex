@@ -5,8 +5,8 @@
 // which is 64 kHz and effectively continuous.  Here it reads it off /HA once
 // a pass, which is 1 kHz, and every edge it measures is quantised to 1 ms.
 //
-// register.md 2's windows are HIT >= 8 ms, ID >= 128 ms, CLR >= 256 ms, and
-// register.md 3.1's measured envelope is 7 to 20 pps at 56 to 72 % break.
+// register.md §1's windows are HIT >= 8 ms, ID >= 128 ms, CLR >= 256 ms, and
+// dialling.md §3.1's measured envelope is 7 to 20 pps at 56 to 72 % break.
 // The corners of that envelope are what this dials:
 //
 //   7 pps 56 %   make  62.9 ms   the LONGEST make inside a digit, against ID
@@ -15,7 +15,7 @@
 //  20 pps 56 %   break  28.0 ms  the shortest break an IDEAL dial sends
 //
 // NOTE WHAT THIS BENCH DOES NOT DO.  28.0 ms is the corner of the NOMINAL
-// envelope; register.md 3.1 MEASURED breaks as short as 18 ms at 20 pps, once
+// envelope; dialling.md §3.1 MEASURED breaks as short as 18 ms at 20 pps, once
 // the line card's 6.1 ms and the dial's jitter are in.  18 ms is eighteen
 // samples against an eight-sample HIT window, so it holds -- but nothing here
 // drives it, and the bench should not be read as proving the measured corner.
@@ -133,7 +133,7 @@ module tb_dial;
         one(5,  10, 60);
         one(10, 10, 60);          // ten pulses: the marker's digit rule makes it 0
 
-        // the corners of register.md 3.1's envelope
+        // the corners of dialling.md §3.1's envelope
         one(5,  7,  56);          // longest make inside a digit, 62.9 ms vs ID 128
         one(5,  7,  72);          // longest break, 102.9 ms vs CLR 256
         one(5,  12, 56);          // 46.7 ms break
@@ -158,9 +158,10 @@ module tb_dial;
         ck(r_digits == 16'd0 && r_ndig == 3'd0, "and the store is empty again");
 
         // ---- the no-digit timeout, from seizure AND from the last digit -----
-        // register.md 6 calls `gone` "CLR, or a partial-dial timeout" and
-        // marker.md 4 says the timer runs from the last digit as well as from
-        // seizure.  Run on u_nd, whose NODIG is 800 ms, so the bench does not
+        // The timeout is `nodig`, beside `gone` (register.md §3), and the
+        // timer counts whenever the register is attached, so it runs from the
+        // last digit as well as from seizure (register.md §1).  Run on u_nd,
+        // whose NODIG is 800 ms, so the bench does not
         // sit through the real ten seconds twice.
         // Case (b) is the one that used to hang: gating the timer on ndig == 0
         // froze it the instant a digit landed, so a caller who dialled one
@@ -183,7 +184,7 @@ module tb_dial;
         ms(200);                              // past ID: the digit is in
         ck(nd_ndig === 3'd1, "one digit collected");
         ck(nd_nodig === 1'b0, "and the timer has not fired yet");
-        ck(nd_counting === 1'b0, "`counting' falls between digits (register.md 2)");
+        ck(nd_counting === 1'b0, "`counting' falls between digits (register.md §2)");
         ms(500);
         ck(nd_nodig === 1'b0, "still not fired 700 ms after the digit");
         ms(200);

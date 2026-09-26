@@ -23,12 +23,12 @@ again: all seven come back with their schematics intact.
 
 | module | contents | from |
 |---|---|---|
-| `CVSD-ENC` | LM311 with a pull-up, three-flip-flop run register, coincidence gates ('86, '32), syllabic RC, op-amp and PNP `Iabc` source, LM13700, integrator and follower. Pins `Y` and `SYL` are test points | `mf8-spec.md` §12.1, `circuit-review.md` §2.4 and §4 |
+| `CVSD-ENC` | LM311 with a pull-up, three-flip-flop run register, coincidence gates ('86, '32), syllabic RC, op-amp and PNP `Iabc` source, LM13700, integrator and follower. Pins `Y` and `SYL` are test points | `mf8-spec.md` §12.1, `cvsd-codec.md` §3.1, §3.2 |
 | `CVSD-DEC` | the same engine with no comparator: `BIT` and `CLK` come from outside | the same |
 | `TX-CLK` | 128 kHz half-bit clock `LOOP_HB`; half a 74HC112 divides it by two for the bit clock `H` | §9.1 |
-| `DM-ENC` | `EN = H + /bit`, then a 74HC112 half with J = K = EN, clocked by `LOOP_HB`'s falling edge. `/bit` is the encoder flip-flop's own `/Q`, so the gate is one quarter of a '32 | §9.2, `circuit-review.md` §1 |
+| `DM-ENC` | `EN = H + /bit`, then a 74HC112 half with J = K = EN, clocked by `LOOP_HB`'s falling edge. `/bit` is the encoder flip-flop's own `/Q`, so the gate is one quarter of a '32 | §9.2, `channel-cards.md` §2.4 |
 | `LINE` | the pair as the slicer sees it: the transmit bit as ±`LEVEL` volts, plus `NOISE`, plus a 40 kHz ring (τ 60 µs) started by each edge on `IMP`; then the two-RC input filter at 128 kHz. `SUM` is the line before the filter | §9.5; the ring is `phy.plant_noise`'s |
-| `DM-RX` | slicer with ±50 mV hysteresis, transition detector ('86 and an RC), dead time ('221), interval classifier ('123), `LONG` and `MID`, recovered clock `RXC`, carrier detect `CD`. `RXD` and `DT` are test points | §9.4, §9.6, on `circuit-review.md` §3's two-phase timing |
+| `DM-RX` | slicer with ±50 mV hysteresis, transition detector ('86 and an RC), dead time ('221), interval classifier ('123), `LONG` and `MID`, recovered clock `RXC`, carrier detect `CD`. `RXD` and `DT` are test points | §9.4, §9.6, on the two-phase timing below |
 | `RECON` | 3rd-order 3.4 kHz reconstruction low-pass | §12.1 |
 
 | codec part | value | sets |
@@ -105,9 +105,21 @@ trunk's receive clock is divided from the same strobes.
 That is `mf8-spec.md` §13's case for a mandatory squelch. The prototype has
 none: `CD` is brought out and drives nothing.
 
-**Two changes to `circuit-review.md` §3 came out of building it:**
+**The receiver's two-phase timing.** `mf8-spec.md` §9.4 samples the
+classifier at each accepted transition and gates the strobe with `LONG + MID`,
+which both move about 20 ns into a transition pulse about 100 ns wide: a false
+strobe on the first half of a 0, a runt on the second. This receiver uses both
+edges of the dead-time pulse `DT` instead. `LONG ← '123 /Q` and
+`MID ← '123 Q · /MID` are sampled on its leading edge; the '123 is retriggered
+on its trailing edge, and a `W` pulse off the '221's other half writes the bit.
+Every classifier read gets 0.2 cell of hold, and the classifier now times from
+the end of the dead time, so its network is 0.75 − 0.2 = **0.55 cell**. This
+was `circuit-review.md` §3, now retired (`exchange/decisions.md`); §9.4 does
+not have it yet (`exchange/README.md` §5).
 
-- *`MID` needs no gate.* §3 has `MID ← '123 Q · /MID` through a quarter of a
+**Two changes to it came out of building it:**
+
+- *`MID` needs no gate.* It has `MID ← '123 Q · /MID` through a quarter of a
   '08. A JK does that itself with J = the classifier's Q and K = 1, and `LONG` is
   the same part wired as a D. So one 74HC109 (J = /K = expired; J = not expired,
   /K = ground) replaces the '74 and the AND. The gate is also a hazard. The
@@ -118,8 +130,8 @@ none: `CD` is brought out and drives nothing.
   window.
 - *An edge-triggered decoder needs no `W`.* `RXC = NOR(DT, MID)` rises when the
   dead time ends, iff that transition completed a bit, and falls at the next
-  accepted transition. §3's `W` pulse (the other half of the '221) is for the
-  trunk card's '259, a transparent latch. §3's own caveat was visible here until
+  accepted transition. Its `W` pulse (the other half of the '221) is for the
+  trunk card's '259, a transparent latch. Its own caveat was visible here until
   `W` went: a transition four steps after a long gap rewrote `LONG` in the step
   the pulse read it.
 

@@ -1,18 +1,18 @@
-// port -- one of the 64 ports: the crosspoint (fabric.md 3.2) and the
-// supervision (3.5).  About eight and a half packages, populated only with
-// its card -- an unfitted slot leaves the commutator input pulled to FILL and
-// none of this stuffed (fabric.md 5.1).
+// port -- one of the 64 ports: the crosspoint (fabric.md §2.2) and the
+// supervision (§5.2).  With the ringback '157 that block.v models, one port
+// card of thirteen DIP (block-stack.md §2.2); a seat with no port card leaves
+// its lane on FILL, pulls no plane and reads no word (fabric.md §5.1).
 //
 // The crosspoint is a '273 holding [ highway | slot ], a '151 to pick the
 // highway, a second to pick the moment, a '74 pair to keep the answers, and
-// -- new -- a '688 that says when the folded A wire is carrying the port this
-// one is listening to.  The supervision is two RC-and-'14 detectors and a
-// handful of gates, and it is the whole of "nobody is in charge of a call":
+// a '688 that says when /HA is carrying the port this one is listening to.
+// The supervision is two RC-and-'14 detectors and a handful of gates, and it
+// is the whole of "nobody is in charge of a call":
 // the port rings itself, sends its own ringback, and clears its own latch.
 //
-// WHAT CHANGED FROM fabric.md 3.2.  The A highway select -- a second '151 on
-// HA[0..7] -- is gone, because HA[0..7] are gone.  A and BUSY are on one
-// open-collector conductor at 64 kbps, addressed by SCAN: port p drives
+// NO A HIGHWAY SELECT.  The old tree's second '151, on HA[0..7], went with
+// HA[0..7] (exchange/decisions.md).  A and BUSY are on two open-collector
+// planes at 64 kbps, addressed by SCAN (fabric.md §3): port p drives
 // bit-time p on /HA with its M and bit-time p on /HB with its BUSY, and a pass
 // is 64 bit-times = 1 ms.  In its place this port has two comparisons: one against the port
 // it is LISTENING to, which captures E, and one against its OWN number, which
@@ -24,11 +24,11 @@ module port #(
     // Straps and stuffing.  Not options -- there is no feature here that a
     // parameter turns on.
     parameter        FITTED = 1'b1,   // a port circuit is populated at this slot
-    parameter [2:0]  BLOCK  = 3'd0,    // off the block ribbon: the block header's jumper, through its '148
+    parameter [2:0]  BLOCK  = 3'd0,    // up the stack as H0-H2: the block header's NUMBER jumper
     parameter [2:0]  POS    = 3'd0,    // the 2 x 3 jumper on this card: its slot
     // The two detectors, in milliseconds.  THESE ARE RC NETWORKS -- a diode
     // and two resistors into a 74HC14, up in 16 ms and down in 256 (fabric.md
-    // 3.5).  The fold does not touch them and does not make them cheaper.
+    // §5.2).  The fold does not touch them and does not make them cheaper.
     // The model counts TICK because that is the time base the RC
     // approximates and RTL has no analogue.
     parameter [8:0]  T_ARM  = 9'd16,
@@ -50,7 +50,7 @@ module port #(
     output                  ha_pd,       // this port's open drain onto /HA (M)
     output                  hb_pd,       // and onto /HB (BUSY), the same turn
 
-    // ---- the channel socket (common-cards.md 1) ---------------------------
+    // ---- the channel socket (common-cards.md §1) --------------------------
     input                   a_tx,        // a6.  M: the card's hook
     input                   ans_n,       // a13.  /ANS, pulled up: open = this port rings
     output                  c_rx,        // a9
@@ -58,7 +58,7 @@ module port #(
 
     // ---- the block ---------------------------------------------------------
     input                   mute_blk,    // an adapter busies its whole group
-    output                  rb,          // being rung: the block's '157 sends RBT
+    output                  rb,          // being rung: the port card's '157 sends RBT
     output                  busy,        // the full BUSY term
 
     // ---- the write, already decoded by the block ---------------------------
@@ -72,7 +72,7 @@ module port #(
     reg [`PW-1:0] addr;          // [5:3] highway, [2:0] slot -- the number as dialled
     reg           bsy, clm;
 
-    // ---- the C path: unchanged from fabric.md 3.2 -------------------------
+    // ---- the C path: unchanged from fabric.md §2.2 ------------------------
     // 74HC151 -- highway select: the eight HC on the data inputs, the latch's
     // highway bits on the selects.
     wire c_sel = hc[addr[`PW-1:`PW-3]];
@@ -88,20 +88,21 @@ module port #(
     wire eq_src = (scan == addr);
 
     // A 74HC688 -- is it OUR turn?  SCAN against {BLOCK, POS}, and THE TWO
-    // HALVES ARE TWO JUMPERS.  BLOCK[2:0] comes down the block ribbon from the
-    // block header's jumper through its '148, so a port's number on the planes
-    // is the highway its block routes onto -- the same number as its voice.
+    // HALVES ARE TWO JUMPERS.  BLOCK[2:0] comes up the stack, H0-H2, from the
+    // block header's NUMBER jumper, so a port's number on the planes is its
+    // block's h -- the same number as its voice, as long as HC ROUTE routes
+    // the block onto highway h (block-stack.md §4).
     // POS[2:0] is a 2 x 3 jumper on THIS card: its slot.  The card knows its
     // own number and the socket tells it nothing, so the jumper must be set to
     // the socket the card sits in, because that socket is still where its
     // C_TX enters the commutator and where the block's write line lands.  No
-    // ID pins on the channel socket.  (port-card.md; mainboard.md 4 superseded)
+    // ID pins on the channel socket.  (block-stack.md §2.2, §4; fabric.md §6.1)
     wire eq_own = (scan == {BLOCK, POS});
 
     // The A capture instant is strobe line 4's falling edge -- the middle of
     // cell 4, 8.79 us into the 15.63 us bit-time.  The block's '138 already
     // makes that line for a port listening to slot 4, and it is already
-    // SLOTQ-addressed and so already free of fabric.md 3.2's hazard.
+    // SLOTQ-addressed and so already free of fabric.md §2.2's hazard.
     wire a_stb = cap_stb && (slotq == `CELL_A);
     wire w_a   = a_stb && eq_src;
 
@@ -114,7 +115,8 @@ module port #(
     // by a few nanoseconds at the frame edge during handover, which on a
     // wired-OR is harmless -- and is a second argument for open collector
     // over tri-state.  *_pd is "this port is pulling the line down", i.e. a
-    // one; the mainboard inverts each wired-OR into /HA and /HB.
+    // one; the block ORs its eight onto one drain a plane (block.v), and the
+    // bus's wired-OR of the blocks is /HA and /HB (mainboard.v).
     //
     // ONE TURN, BOTH FACTS.  A port owns slot p on both planes at once, so a
     // reader gets M and BUSY of the same port in the same bit-time and never
@@ -123,10 +125,10 @@ module port #(
     assign ha_pd = FITTED && eq_own && m;
     assign hb_pd = FITTED && eq_own && busy;
 
-    // ---- fabric.md 3.5, in gates ------------------------------------------
+    // ---- fabric.md §5.2, in gates -----------------------------------------
     // The '273 is EDGE-clocked by the write decoder's line.  The block holds
-    // that line for the middle half of a bit-time -- 3.9 us, mainboard.md
-    // 2.3.2's window -- and the latch must take the word ONCE, on its rising
+    // that line for the middle half of a bit-time -- 3.9 us, bus.md §4's
+    // window -- and the latch must take the word ONCE, on its rising
     // edge, not on every master tick the line happens to be high for.
     reg wr_d;
     wire wr_edge = wr && !wr_d;
@@ -138,7 +140,7 @@ module port #(
     // /ANS is a PIN, not a parameter.  It is the card's (a13, open drain,
     // ~680 ohm pull-up at the port), and the port's gates never see the
     // class: a phone's card leaves it open, everything that answers at once
-    // ties it low.  fabric.md 3.5.
+    // ties it low.  fabric.md §5.2.
     wire rings = ans_n;
 
     wire on = FITTED && rings && !m && !fm;   // an on-hook port that rings -- and not
@@ -146,10 +148,10 @@ module port #(
     assign rb   = on && e;                    // RB = ON . E
     assign busy = FITTED && (bsy || fe || (fm && !m) || mute_blk);
 
-    // rtl.md: A out = E + CLAIM is the A the port hands its CARD, never what
-    // it puts on the wire.  Put CLAIM on the wire and the claim jams the very
-    // register it summoned, because that register reads the far caller's dial
-    // pulses out of this port's own bit-time.
+    // fabric.md §5.2: A out = E + CLAIM is the A the port hands its CARD,
+    // never what it puts on the wire.  Put CLAIM on the wire and the claim
+    // jams the very register it summoned, because that register reads the far
+    // caller's dial pulses out of this port's own bit-time.
     assign a_rx = FITTED && ((e || clm) && !(on && ring_cad_n));
     assign c_rx = FITTED && c_cap;
 

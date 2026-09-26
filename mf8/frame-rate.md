@@ -32,7 +32,7 @@ F + S + N channels must be a power of two, so **N = 2, 6, 14**.
 
 The exchange uses the **8-bit / six-channel** row at 64 kbps on a 512 kbps
 line (`mf8-spec.md` §2). Eight- and ten-bit frames were measured and not
-taken (`mf8-unit.md`). Octet alignment is the 8-state superframe counter.
+taken (`eight-channel-mf8.md`). Octet alignment is the 8-state superframe counter.
 
 Reach is the √f law scaled to a 256 kbps reference — the ratios
 are sound, the kilometres are not measured.

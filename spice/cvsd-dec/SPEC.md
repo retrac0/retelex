@@ -1,7 +1,7 @@
 # CVSD decoder — type A (breadboard)
 
 Mirror of the encoder engine in `spice/cvsd-enc/` / `mf8-spec.md` §12.1 /
-`circuit-review.md` §2.4 and §4. **No comparator:** `BIT` and `CLK` come from
+`cvsd-codec.md` §3.1, §3.2. **No comparator:** `BIT` and `CLK` come from
 the line card or fabric; the rest of the analog law is identical.
 
 > **Status:** proposed circuit; ngspice macromodel in this directory. Law and
@@ -60,11 +60,11 @@ Differences from the encoder (`enc_a`):
 TL072 dual cover encoder+decoder on a shared FXS-class card.
 
 Rails: +5 V logic, ±12 V analog. Same `I_min` / syllabic tolerances as the
-encoder (`circuit-review.md` §2.3).
+encoder (`mf8-spec.md` §12.1).
 
 ## 4. Reconstruction filter
 
-3rd-order ~3.4 kHz low-pass (falstad `RECON` / `channel-cards.md` §3.3):
+3rd-order ~3.4 kHz low-pass (falstad `RECON` / `cvsd-codec.md` §3):
 
 - 1st order: 10 kΩ + 4.7 nF, buffered  
 - Sallen–Key: 2× 10 kΩ, 9.1 nF / 2.4 nF  

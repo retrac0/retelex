@@ -1,5 +1,5 @@
 // tb_ltu -- two exchanges and a local eight-channel highway trunk, patched by
-// hand.  local-trunk.md; network.md 1, 8.
+// hand.  trunks.md §3; network.md §1, §8.
 //
 // Exchange A and exchange B each have the unit on block 1 (ports 10-17) and
 // eight phones on block 2 (20-27), and run on two crystals.  Nothing here

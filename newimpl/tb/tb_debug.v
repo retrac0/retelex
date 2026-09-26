@@ -6,7 +6,7 @@
 // light nothing at all -- that is the check that matters most, because a
 // lamp that lights on a working exchange is worse than no lamp.
 //
-// It is also the SCLK-hazard bench this tree did not have.  mainboard.md 7
+// It is also the SCLK-hazard bench this tree did not have.  bus.md §6.2
 // says one extra SCLK edge loses the write and the next clean word heals it,
 // and verilog/ measured that with `make sclk`.  Here the glitch goes to the
 // exchange AND the debugger: the lamp lights, the write misses its port, and
@@ -165,7 +165,7 @@ module tb_debug;
         clear();
 
         // ---- 3.  CABLE B ------------------------------------------------------------
-        // mainboard.md 7: one extra SCLK edge, mid-word, into the exchange too
+        // bus.md §6.2: one extra SCLK edge, mid-word, into the exchange too
         @(posedge clk); dst = 6'o25; src = 6'o12; bsy = 1'b1;
         req = 1'b1; @(posedge clk); req = 1'b0;
         repeat (5) @(posedge bus_sclk);
@@ -181,7 +181,7 @@ module tb_debug;
         lamps(11'd0, "the next clean word lights nothing");
         ck(port_busy[6'o25] === 1'b1, "and it LANDED: the '164s have no stored phase");
 
-        // mainboard.md 2.3.2: a WR right on an SCLK edge, into the debugger only
+        // bus.md §4: a WR right on an SCLK edge, into the debugger only
         @(posedge clk); dst = 6'o22; src = 6'o23; bsy = 1'b1;
         req = 1'b1; @(posedge clk); req = 1'b0;
         // three ticks after the sixteenth rise: inside the eight-tick guard,

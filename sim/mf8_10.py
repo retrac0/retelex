@@ -1,5 +1,5 @@
 """
-Framing battery for the 10-bit eight-channel header of exchange/mf8-unit.md §4.1.
+Framing battery for the 10-bit eight-channel header of exchange/analysis/eight-channel-mf8.md §4.1.
 
 Frame, 10 bits at a 64 kHz frame rate:
 

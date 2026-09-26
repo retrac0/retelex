@@ -1,20 +1,22 @@
-// mainboard -- the passive board at each ribbon tap: the cables' headers and
-// the block's connector.  No logic, no jumper, and no part that does anything
-// but connect.  mainboard.md 1.
+// mainboard -- the bus between the eight block positions: one 2 x 25 header
+// at every position, a ribbon, bridges or direct mating (bus.md §2), and the
+// clock card's pull-ups.  No logic, no jumper, and no part that does anything
+// but connect.  The name is the old tree's, which had a passive board here.
 //
-// A ribbon is a bus of identical conductors and every connector crimped along
-// it sees the same signals -- and NOW EVERY CONDUCTOR ON IT IS THAT.  The two
-// that were not, which highway a block drives and which /BLK line it answers
-// to, were a shunt field here: two jumper columns a position.  Both moved to
-// the block's own header, where one jumper routes HC_OUT and a '148 reads the
-// same jumper as the block's number.  What this module still does is what a
-// ribbon does: eight blocks' HC_OUT land on eight highways, and the eight
-// positions' open drains land on three wired-OR conductors.
+// A bus is identical conductors and every position along it sees the same
+// signals -- and NOW EVERY CONDUCTOR ON IT IS THAT.  The two that were not,
+// which highway a block drives and which /BLK line it answers to, were a
+// shunt field on the old mainboard: two jumper columns a position
+// (exchange/decisions.md).  Both moved to the block's own header, where HC
+// ROUTE routes HC_OUT and NUMBER gives the block's number (block-stack.md
+// §4).  What this module still does is what the bus does: eight blocks'
+// HC_OUT land on eight highways, and each position's one drain a plane lands
+// on three wired-OR conductors.
 //
-// THE PARAMETERS HERE ARE NOT ON THIS BOARD.  BLOCK_NUM and BLOCK_FITTED are
+// THE PARAMETERS HERE ARE NOT ON THE BUS.  BLOCK_NUM and BLOCK_FITTED are
 // the eight block headers' jumpers, passed down from exch so that this model
-// of the ribbon knows which highway each connector's HC_OUT pin lands on.
-// The board itself knows nothing.
+// of the bus knows which highway each position's HC_OUT pin lands on.  The
+// bus itself knows nothing.
 //
 // THREE WIRED-ORs, one mechanism.  /HA carries M and /HB carries BUSY, both
 // addressed by SCAN, so a reader takes both facts about one port out of one
@@ -30,8 +32,8 @@
 `include "exch.vh"
 
 module mainboard #(
-    // Three bits a position, octal: the highway each block header's jumper
-    // routes its HC_OUT onto.  76543210 is the natural setting.
+    // Three bits a position, octal: the highway each block header's HC ROUTE
+    // jumper routes its HC_OUT onto.  76543210 is the natural setting.
     parameter [23:0] BLOCK_NUM    = 24'o76543210,
     parameter [7:0]  BLOCK_FITTED = 8'hFF
 )(
@@ -42,7 +44,7 @@ module mainboard #(
     input      [7:0]  hw_pd_from_block,     // MAXIMAL: the selected card's word
 
     output     [7:0]  hc,                   // the eight conductors as they end up
-    output            ha_n,                 // /HA: a 4.7 k pull-up and 64 open drains
+    output            ha_n,                 // /HA: a 4.7 k pull-up and one open drain a block
     output            hb_n,                 // /HB: the same again, for BUSY
     output            hw_n                  // MAXIMAL: /HW, the card word bus
 );
@@ -72,11 +74,13 @@ module mainboard #(
     endgenerate
 
     // ---- /HA and /HB: TWO CONDUCTORS, OPEN COLLECTOR, IDLE HIGH ------------
-    // A 4.7 k pull-up here on each, sixty-four 2N7002 open drains out there on
-    // each, and no driver that ever pulls either up.  THE POLARITY IS AN
-    // INVERSION OF mainboard.md 2.2, which has HA "pulled to ground: on-hook"
-    // -- an open-collector wire cannot be, and one inverted receiver anywhere
-    // leaves the whole exchange reading permanently off-hook.
+    // A 4.7 k pull-up at the clock card on each, one open drain a block on
+    // each -- the block ORs its eight ports' drains (block-stack.md §2.3) --
+    // and no driver that ever pulls either up.  IDLE HIGH, AND A PULLED PLANE
+    // IS A ONE (bus.md §1, fabric.md §3.2).  The old tree had HA "pulled to
+    // ground: on-hook" (exchange/decisions.md) -- an open-collector wire cannot
+    // be pulled to its active state, and one inverted receiver anywhere would
+    // leave the whole exchange reading permanently off-hook.
     //
     // Port p owns bit-time p on BOTH wires, so M and BUSY of one port arrive
     // together and a reader needs no phase bit and no held half-sample.  A pass
@@ -84,7 +88,7 @@ module mainboard #(
     //
     // What it buys: absent reads as idle with no part at all.  An unstuffed
     // slot, an unstuffed block, a pulled card and a cut cable all read M 0 and
-    // BUSY 0, which is the whole of mvp.md 2's table out of one mechanism
+    // BUSY 0, which is the whole of bus.md §6.1's table out of one mechanism
     // instead of four separate pulls.
     assign ha_n = ~(|ha_pd_from_block);
     assign hb_n = ~(|hb_pd_from_block);
@@ -92,12 +96,13 @@ module mainboard #(
 
     // ---- MAXIMAL: /HW, the card word bus -----------------------------------
     // The third wired-OR, and the same part as the other two: one 4.7 k
-    // pull-up here and an open drain at every card.  It is NOT scanned -- a
+    // pull-up and one open drain a block, driven for the card a reader
+    // selected (fabric.md §4).  It is NOT scanned -- a
     // reader selects a port in its own bit-time, and that one card drives /HW
     // until the next select (block.v).
     //
     // It idles HIGH like /HA and /HB, and a card pulls it low for a 1
-    // (extensions.md 2.2).  So a selected port that is empty, pulled, or on an
+    // (card-word.md §2).  So a selected port that is empty, pulled, or on an
     // unfitted block reads ALL ZEROS -- "none / OOS" -- and an absent card
     // fails SAFE (word_rx.v).  THE TRAP IS FOR A READER THAT TAKES THE WIRE'S
     // LEVEL AS THE BIT: it reads the same absence as all ones, which the word

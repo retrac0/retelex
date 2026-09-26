@@ -10,7 +10,7 @@
 // have to put A back on the 512 kHz cell grid, which is to undo the fold.
 // THE FOLD AND THE SIX-BIT ADDRESS ARE ONE DECISION.
 //
-//   fabric.md 1.1, big-exchange.md, protocol.md 5
+//   fabric.md §2.1, why-bits.md, numbering.md §1
 
 `ifndef EXCH_VH
 `define EXCH_VH
@@ -48,7 +48,7 @@
 // /HW at 64 kHz, one bit a frame, until the next select.  The scan only NAMES
 // the card; nothing continuous depends on /HW, so the scanner never waits for
 // it -- which is the whole reason the word is not on the scan.
-//   mainboard.md 2.2, 3.4, extensions.md 2.2
+//   bus.md §1, §2.1, card-word.md §2
 
 // ---- where things happen inside a cell ----------------------------------
 // The master clock is the 4.096 MHz crystal and a cell is eight of its ticks.
@@ -60,7 +60,7 @@
 // 4, and EVERY A, BUSY and word capture in the exchange.  Its falling edge is
 // the middle of cell 4 -- 8.79 us into the 15.63 us bit-time, with 6.84 us of
 // hold after it.  The line is already SLOTQ-addressed and so already free of
-// fabric.md 3.2's hazard.  /HA, /HB and /HW are all sampled here, so one
+// fabric.md §2.2's hazard.  /HA, /HB and /HW are all sampled here, so one
 // settling budget covers all three and the pull-ups may be identical.
 `define CELL_A 3'd4
 

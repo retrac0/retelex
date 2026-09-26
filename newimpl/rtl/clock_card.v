@@ -3,7 +3,7 @@
 // On the board this is one 4.096 MHz crystal oscillator, a 74HC4040 ripple
 // divider, a 74HC163 for SLOT, a 74HC175 on the 1.024 MHz tap for SLOTQ, a
 // counter for the ring cadence, and a 74HC244 of drivers onto the bus.
-// About ten packages (fabric.md 5).
+// About ten packages (common/clocks.md §1).
 //
 // THE SCANNER IS NOT A PART.  SCAN[5:0] is the six divider stages that sit
 // between TX_CLK (/64) and TICK (/4096), brought out on six pins.  It has no
@@ -28,7 +28,7 @@
 // real clock wire this gives both the waveform -- for a card that wants an
 // edge -- and a one-tick strobe, which is what the synchronous RTL uses.
 //
-//   common/clocks.md 1, mainboard.md 2.1, fabric.md 2
+//   common/clocks.md §1; bus.md §1, §3; fabric.md §3.1
 `timescale 1ns/1ps
 `include "exch.vh"
 

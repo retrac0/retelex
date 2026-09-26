@@ -23,13 +23,15 @@
 // BITS 7-0 ARE THE PORT'S '273 VERBATIM.  That is why sixteen was the number
 // to aim at, and it is why `PW = 6 and a 16-bit word are one decision.
 //
-//   mainboard.md 2.3, 2.3.1, 2.3.2
+//   bus.md §4
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module ctl_write #(
     // Master clocks a bit-time.  4.096 MHz / 32 = 128 kHz, which is SCLK
-    // (clocks.md 1) and the same rate as the card option word's shift clock.
+    // (bus.md §4) and the rate of SLOT1 (clocks.md §1).  Counted here off the
+    // master clock, which no bus line carries; whether a board takes SLOT1 or
+    // counts its own is open (bus.md §7).
     parameter integer DIV = 32
 )(
     input                  clk,
@@ -52,7 +54,7 @@ module ctl_write #(
     // Where inside a bit-time SCLK moves.  High for the middle half, so the
     // rising edge a block shifts on is a quarter of a bit-time after SDATA
     // settled and three quarters before it moves again: 1.95 us either side
-    // at 128 kHz, against 18 ns of cable skew (mainboard.md 5.2).
+    // at 128 kHz, against 18 ns of cable skew (bus.md §2.4).
     localparam integer T_RISE = DIV / 4;
     localparam integer T_FALL = (3 * DIV) / 4;
     localparam integer T_LAST = DIV - 1;
@@ -97,10 +99,11 @@ module ctl_write #(
 
             STROBE: begin
                 // SCLK is idle through this bit-time, so WR meets
-                // mainboard.md 2.3.2's rule by construction: it lands nowhere
-                // near an edge.  On the jumper that free-runs SCLK off
-                // HCLK/4 the marker must place it in the middle of a half
-                // period instead, which is where this puts it anyway.
+                // bus.md §4's rule by construction: it lands nowhere
+                // near an edge.  Were SCLK taken free-running off SLOT1
+                // (bus.md §7, undecided), a master would have to place WR in
+                // the middle of a half period instead, which is where this
+                // puts it anyway.
                 if (d == T_RISE[7:0]) wr <= 1'b1;
                 if (d == T_FALL[7:0]) wr <= 1'b0;
                 if (d == T_LAST[7:0]) begin d <= 8'd0; st <= IDLE; end

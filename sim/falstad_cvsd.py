@@ -3,15 +3,16 @@ CircuitJS (Falstad) prototypes of the subscriber line's voice path, built from
 subcircuit modules:
 
     CVSD-ENC   the 64 kbps CVSD encoder, mf8-spec.md §12.1, with the Iabc drive of
-               circuit-review.md §2.4 and the logic connections of its §4
+               cvsd-codec.md §3.1 and the logic connections of its §3.2
     CVSD-DEC   the decoder: the same engine, taking its bit and its clock from outside
     TX-CLK     the half-bit clock HB (128 kHz) and the bit clock H, §9.1
     DM-ENC     the differential Manchester encoder, §9.2: a 74HC112 and one OR gate
     LINE       the pair as the receiver sees it: level, noise and impulses summed,
                then the §9.5 input filter
-    DM-RX      the receiver of §9.4 on the two-phase timing of circuit-review.md §3:
-               slicer, transition detector, dead time, interval classifier, LONG and
-               MID (a 74HC109, no gate), the recovered bit clock, §9.6's carrier detect
+    DM-RX      the receiver of §9.4 on falstad/README.md's two-phase timing, which
+               §9.4 does not have yet: slicer, transition detector, dead time,
+               interval classifier, LONG and MID (a 74HC109, no gate), the
+               recovered bit clock, §9.6's carrier detect
     RECON      the 3.4 kHz reconstruction filter
 
 and three circuits made of them:
@@ -638,7 +639,8 @@ def rx_steps(steps):
 
 
 def mod_dmrx(steps=STEPS):
-    """§9.4 on circuit-review.md §3's timing: sample on DT's leading edge, act on its trailing."""
+    """§9.4 on falstad/README.md's two-phase timing: sample on DT's leading edge, act on its
+    trailing."""
     s = Sch(steps)
     ts = CELL / steps
     n_dt, n_c, n_cd = rx_steps(steps)
@@ -682,7 +684,8 @@ def mod_dmrx(steps=STEPS):
     # the recovered bit clock: RXC rises when DT ends, iff that transition completed a bit --
     # which is exactly when MID is clear -- and falls at the next accepted transition.  An
     # edge-triggered decoder takes it as it is.  A trunk card's '259 is a transparent latch
-    # and wants a short pulse instead: circuit-review.md 3's W, the other half of the '221
+    # and wants a short pulse instead: the two-phase timing's W (falstad/README.md), the
+    # other half of the '221
     ng = s.gate('Nor', (1200, 312), (1296, 312), ['DT', 'MID'], 'RXC')
     s.label(ng[0], (1152, 296), 'DT')
     s.wire((1104, 328), ng[1], net='MID')
@@ -775,7 +778,7 @@ def clocks(s, x, y):
 def build_link(a):
     s = Sch(a.steps)
     s.text((48, 48), 'CVSD over differential Manchester, 64 kbps, 128 kBaud', 24)
-    s.text((48, 80), 'mf8-spec.md 9 and 12.1, subscriber-line.md 1; values from mf8.params(64000) '
+    s.text((48, 80), 'mf8-spec.md 9 and 12.1, subscriber-line.md §1; values from mf8.params(64000) '
                      'by falstad_cvsd.py.  Each block is a subcircuit', 12)
     src = audio_source(s, 48, 288, a.level_db)
     enc = s.inst(mod_cvsd(True, a.steps), 320, 288, {'AUDIO': 'AUDIO', 'CLK': 'TX_CLK', 'BIT': 'C_TX',
@@ -816,7 +819,7 @@ def build_link(a):
 def build_dmlink(a):
     s = Sch(a.steps)
     s.text((48, 48), 'Differential Manchester link, 64 kbps, 128 kBaud, on a PRBS', 24)
-    s.text((48, 80), 'mf8-spec.md 9.2 and 9.4 with circuit-review.md 3; by falstad_cvsd.py.  '
+    s.text((48, 80), 'mf8-spec.md 9.2 and 9.4 on the two-phase timing of falstad/README.md; by falstad_cvsd.py.  '
                      'Each block is a subcircuit', 12)
     data = [sum(b << i for i, b in enumerate(PRBS7[k:k + 32])) for k in range(0, 127, 32)]
     data = [d - (1 << 32) if d >= 1 << 31 else d for d in data]          # Java ints
@@ -844,7 +847,7 @@ def build_dmlink(a):
 def build_engine(a):
     s = Sch(a.steps)
     s.text((48, 48), 'CVSD engine, 64 kbps, looped back', 24)
-    s.text((48, 80), 'mf8-spec.md 12.1 with circuit-review.md 2.4; values from mf8.params(64000) '
+    s.text((48, 80), 'mf8-spec.md 12.1 with cvsd-codec.md §3.1; values from mf8.params(64000) '
                      'by falstad_cvsd.py.  Each block is a subcircuit', 12)
     src = audio_source(s, 48, 288, a.level_db)
     enc = s.inst(mod_cvsd(True, a.steps, probes=a.probes), 320, 288,

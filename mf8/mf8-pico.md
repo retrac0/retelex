@@ -3,7 +3,7 @@
 A Raspberry Pi Pico on a small 74-series adapter board that can sit on either
 side of every interface in the shelf. In one role it is the host gateway that
 puts MF8 channels on an Asterisk exchange. In the others it is what
-`circuit-review.md`'s breadboard needs and the shelf never had: a trunk card
+the codec's breadboard needs and the shelf never had: a trunk card
 for a channel card with no trunk, six channel cards for a trunk card with no
 cards, and a known-good far end for a line — all driven from the same reference
 model as `mf8.py`, so the model becomes an instrument.
@@ -194,14 +194,16 @@ density held; scratch script, not a repository tool.
 
 ## 6. What it checks on the breadboard
 
-`circuit-review.md`'s open items, as measurements this adapter makes:
+The four findings of the retired `circuit-review.md` (`exchange/decisions.md`),
+now in `channel-cards.md` §2.4, `cvsd-codec.md` §3 and `falstad/README.md`, as
+measurements this adapter makes, with the breadboard's other open items:
 
 | finding | role | measurement |
 |---|---|---|
-| §1 — the encoder flip-flop | L | decode the breadboard encoder's line with `dm_rx`, and histogram its intervals at 16 ns resolution: a '109 wired as a D flip-flop sends `EN` delayed, which is not differential Manchester at all and shows as intervals off the half-cell and full-cell peaks |
-| §2 — `Iabc`, and `I_min` to ±5 % | T | feed the encoder audio at nominal and at −20 dB, capture `C_TX`, decode with the model: a level-dependent gain is `I_min`. Then the converse — play model-encoded bits into the decoder. This is `tolerance.py` with one real card in the pair, and it is how two independently built cards get compared before there are two |
-| §3 — sample, then retrigger | L + M | the hardware classifier and `dm_rx` decode the same comparator output; any bit they disagree on, on a clean line, is a timing fault in the hardware. The interval histogram reads the 0.2-cell and 0.55-cell timers directly against the ±13 % budget |
-| §4 — the sign of the OTA drive | T | an encoder in positive feedback sits on a rail and sends a constant; a decoder that merely inverts passes a listening test and fails a correlation against the model |
+| the encoder flip-flop (`channel-cards.md` §2.4) | L | decode the breadboard encoder's line with `dm_rx`, and histogram its intervals at 16 ns resolution: a '109 wired as a D flip-flop sends `EN` delayed, which is not differential Manchester at all and shows as intervals off the half-cell and full-cell peaks |
+| `Iabc`, and `I_min` to ±5 % (`cvsd-codec.md` §3.1) | T | feed the encoder audio at nominal and at −20 dB, capture `C_TX`, decode with the model: a level-dependent gain is `I_min`. Then the converse — play model-encoded bits into the decoder. This is `tolerance.py` with one real card in the pair, and it is how two independently built cards get compared before there are two |
+| sample, then retrigger (`falstad/README.md`'s two-phase timing) | L + M | the hardware classifier and `dm_rx` decode the same comparator output; any bit they disagree on, on a clean line, is a timing fault in the hardware. The interval histogram reads the 0.2-cell and 0.55-cell timers directly against the ±13 % budget |
+| the sign of the OTA drive (`cvsd-codec.md` §3.2) | T | an encoder in positive feedback sits on a rail and sends a constant; a decoder that merely inverts passes a listening test and fails a correlation against the model |
 | `mf8-backplane.md` §9 — the bus margins | M | capture `C_TX[6]` and `C_RX[6]` every frame at the fastest rate and compare with what was sent |
 | the synchronizer crossings | T | run the R domain a programmed ±100 ppm from T and count slips at the line card's crossings: one per 156 ms and nothing else |
 | `mf8.py`'s battery | C + L | every byte in every seat, every hook state, against a real framer; `LOCK` is the verdict |

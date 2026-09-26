@@ -1,16 +1,16 @@
-// pulse_reg -- one register: register.md 4's pulse collector.
+// pulse_reg -- one register: register.md §2's pulse collector.
 //
 // It reads its caller's hook ITSELF, through its own probe on /HA -- the
 // marker does not hand it digits and does not hand it a hook.  The store is
 // four digits deep so that a key and an own code can be consumed by
-// restarting it and `e b h s` still land in slots 0 to 3 (rtl.md).
+// restarting it and `e b h s` still land in slots 0 to 3 (register.md §1).
 //
 // Everything on the marker's side of this module is a LEVEL held until the
-// other side has seen it.  rtl.md 1: an event on a wire is a race.
+// other side has seen it.  register.md §3: an event on a wire is a race.
 //
 // One of these lives inside the mini-marker; in the maximal build the same
-// module is a pool member on its own card, reached over common-control.md
-// 2.1's ribbon, which is these same wires.
+// module is a pool member on its own card, reached over register.md §3's
+// ribbon, which is these same wires.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -19,8 +19,8 @@ module pulse_reg #(
     parameter [8:0]  ID    = 9'd128,
     parameter [8:0]  CLR   = 9'd256,
     // ms attached with no digit completed -- from seizure OR from the last
-    // digit, whatever the line does in between (register.md 6; marker.md 5.1
-    // and 8).  10 s is what every document and exch.py's T_NODIGIT say; the
+    // digit, whatever the line does in between (register.md §1).  10 s is
+    // what every document and exch.py's T_NODIGIT say; the
     // RTL carried 12000 with nothing naming it.
     parameter [15:0] NODIG = 16'd10000,
     // ms for `settled`: longer than a port's T_ARM, so that a port counting
@@ -138,11 +138,11 @@ module pulse_reg #(
 
                 if (clr_stb) gone <= 1'b1;
 
-                // The no-digit timeout, held once it fires.  register.md 6 calls
-                // `gone` "CLR, OR A PARTIAL-DIAL TIMEOUT", and marker.md 8 says the
-                // timer "runs from the last digit as well as from seizure" -- so it
-                // runs whenever the register is attached, NOT only while the store
-                // is empty.  Gating it on ndig == 0 froze it at the first digit and
+                // The no-digit timeout, held once it fires: `nodig`, beside
+                // `gone` on the ribbon (register.md §3).  The timer "counts the
+                // tick whenever the register is attached" (register.md §1) -- so
+                // it runs from the last digit as well as from seizure, NOT only
+                // while the store is empty.  Gating it on ndig == 0 froze it at the first digit and
                 // a caller who dialled one digit and stopped held the exchange's
                 // only register until he hung up.
                 //

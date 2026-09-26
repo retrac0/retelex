@@ -1,5 +1,5 @@
 // tb_line -- the CVSD subscriber line card on a socket, with a phone on its
-// two pairs.  channel-cards.md 2 and subscriber-line.md 2 to 5, measured.
+// two pairs.  channel-cards.md §2 and subscriber-line.md §2 to §5, measured.
 //
 // The socket's bus side is driven by hand: a clock card for the clocks, C_RX
 // and A_RX from the bench, MUTE from the bench.  The line side is a
@@ -7,7 +7,7 @@
 //
 // What it measures, in the documents' own numbers: 1100 reads on-hook and
 // speech reads off-hook; the 4 ms RC's asymmetry -- a 60 ms dial break
-// arrives about 6 ms short (subscriber-line.md 5); A_RX rings an on-hook
+// arrives about 6 ms short (subscriber-line.md §5); A_RX rings an on-hook
 // phone and only an on-hook phone; a cut pair reads ON-HOOK, not off; MUTE
 // puts 1010 on an off-hook line; and bits cross both ways in order.
 `timescale 1ns/1ps
@@ -25,7 +25,7 @@ module tb_line;
     always #122.070 clk = ~clk;
 
     // ---- the socket's clocks: a clock card, and LOOP_HB made from /SLOT[1]
-    //      as the block makes it (common-cards.md 1.1) ---------------------
+    //      as the block makes it (common-cards.md §1.1) ---------------------
     wire [2:0] tick, slot, slotq;
     wire hclk, cap_stb, tx_clk, frame_stb, clk_8k, rx_oct, oct_stb;
     wire [`SCANW-1:0] scan;
@@ -173,7 +173,7 @@ module tb_line;
         ck(found(cap_dn, DOWN), "and it still hears C_RX");
         a_rx = 1'b0; drive_down = 1'b0;
 
-        // ---- 5.  a dial: subscriber-line.md 5's breaks, 6 ms short ------------
+        // ---- 5.  a dial: subscriber-line.md §5's breaks, 6 ms short -----------
         ms(5); brk_arm = 1'b1;
         dial_digit(3);
         ms(30); brk_arm = 1'b0;

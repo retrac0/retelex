@@ -1,5 +1,5 @@
 // tb_word -- reading a card's word off /HW, named by a select on /WS.
-// extensions.md 2.2, baseband.md 3.5, mainboard.md 3.4.
+// fabric.md §4; card-word.md §2, §3; bus.md §2.1.
 //
 // A reader pulls /WS in a port's own bit-time; the block that owns the port
 // latches the slot and puts that card on /HW, and the reader takes the eight

@@ -1,212 +1,135 @@
 # Clocks — one crystal, one chain, shelf or block
 
-Every clock in an MF8 shelf and every clock in an exchange is a tap of one
-4.096 MHz crystal divided by two. There are **nine taps, three domains and two
-crystals in a system** — the near shelf's and the far one's — and everything
-else that looks like a clock is one of those nine under another name.
+Every clock in an MF8 shelf and in an exchange is a tap of one 4.096 MHz
+crystal divided by two. This document lists the taps, where each is made and
+which socket pin carries it, and the rule that follows: **no channel card
+makes a clock.**
 
-This document lists them, says which pin each reaches a card on, and sets the
-rule that follows from the list: **no channel card makes a clock.** It also
-closes `baseband.md` §2.3's first open item — where a CVSD subscriber
-line card in an exchange gets its 128 kHz — which is the question that made the
-list worth writing.
-
-> **Status: proposed. Nothing here is newly measured.** The chain is
-> `mf8-spec.md` §9.1's and [clock_card.v](../verilog/rtl/clock_card.v)'s, read
-> against each other; the rates are arithmetic off the 4.096 MHz both of them
-> start from. §4's derivation is one inverter that has never been built, and its
-> phase wants a scope at bring-up.
+> **Built:** `newimpl/rtl/clock_card.v`, `frame_decode.v`; bench `tb_clock`. The block's decode is drawn on `pcb/hdrbus`, `pcb/hdrlogic`.
+> **Proposed:** the clock card as parts; nothing is on a bench.
+> **Measured in:** `tb_clock`; every rate is arithmetic off 4.096 MHz.
 
 ---
 
 ## 1. The chain
 
-4.096 MHz into a ripple divider. `mf8-spec.md` §9.1 picks the crystal — "the
-lowest that reaches the 2.048 MHz half-bit clock of the fastest family rate" —
-and `clock_card.v` starts from the same value for the exchange, independently.
-They are the same chain:
+The exchange's clock card is a 4.096 MHz oscillator, a '4040, a '163 for
+`SLOT`, a '175 for `SLOTQ`, the ring-cadence counter and drivers: about ten
+packages. An MF8 shelf's chain is its trunk card's (`mf8-spec.md` §9.1), with
+the same divisions.
 
-| ÷ | rate | in MF8 | in the exchange | on the channel socket | who wants it |
-|---|---|---|---|---|---|
-| 1 | 4.096 MHz | the crystal | the crystal | — | the divider, and nothing else |
-| 2 | 2.048 MHz | — | — | — | unused on the live 512 kbps trunk; kept in the divider for family rates (`mf8-spec.md` §9.1) |
-| 4 | 1.024 MHz | — | **`LINE_HB`**, and the tap the '175 clocks `SLOTQ` from | — | the block's strobe decoder |
-| 8 | 512 kHz | — | **`HCLK`** the cell clock, and **`SLOT[2:0]`** | — | every commutator; every capture strobe |
-| 16 | 256 kHz | — | `SLOT[0]` | — | **nobody** |
-| 32 | **128 kHz** | **`LOOP_HB`** — the next '4040 tap | **`/SLOT[1]`** — §4; **`SCLK`** on a jumper; **word shift** on a2 | **a2** | the CVSD encoder; the option word's **2×`'165`**; control bus |
-| 64 | 64 kHz | **`TX_CLK`** | **`TX_CLK`** = `/SLOT[2]` | **a1**, and **a7** as `RX_CLK` | every card, every port, everything |
-| 128 | 32 kHz | **`FILL`** | **`FILL`** | **a4** | every unfitted `C_TX`; any card that must send silence |
-| 512 | 8 kHz | **`TX_OCT`** | **`CLK_8K`** (= `TX_OCT` on a3) | **a3**, and **a8** as `RX_OCT` | data and PCM cards; the word's **'165**; the exchange's scanner and monitors |
-| 4096 | 1 kHz | — | **`TICK`** | — | the marker and the registers |
+| ÷ | rate | in the exchange | made | socket |
+|---|---|---|---|---|
+| 4 | 1.024 MHz | clocks the '175 | clock card only, not on the bus | — |
+| 8 | 512 kHz | `HCLK`, `SLOT[2:0]`; `SLOTQ[2:0]` a quarter cell late | clock card, bus | — |
+| 32 | 128 kHz | `SLOT1`; **`LOOP_HB` = `/SLOT1`** | `LOOP_HB` on each block | a2 |
+| 64 | 64 kHz | `SLOT2`; **`TX_CLK` = `/SLOT2`**: a bit-time | `TX_CLK` on each block | a1, a7 |
+| 128 | 32 kHz | **`SCAN0` = `FILL`** | bus | a4 |
+| 512 | 8 kHz | **`TX_OCT`** = (`SCAN[2:0]` = 7); `RX_OCT` a frame later | on each block | a3, a8 |
+| 4096 | 1 kHz | **`SCAN5` = `TICK`**: the pass and the 1 ms time base | bus | — |
 
-**The exchange's cell is MF8's line bit.** A block commutates eight ports
-into one frame at 512 kHz; the trunk card's mux is that same address with F
-and S inserted (`fabric.md` §1.1). `SLOT[2:0]` addresses the commutator and
-the trunk frame. A card still sees the same payload taps in an MF8 shelf or an exchange block
-(`TX_CLK`, `TX_OCT` / `CLK_8K`, `FILL`). `LINE_HB` is the same 1.024 MHz tap
-on the fabric and on the MF8 line.
+`SCAN1`–`SCAN4` are the stages between. `/RING_CAD`, 2.048 s low and 4.096 s
+high, is a counter off the 1 kHz, on the bus. ÷2 and ÷16 (`SLOT0`) have no
+customer.
 
-Two rates on the list are not on the socket and not on any card:
+**On the bus: `HCLK`, `SLOT`, `SLOTQ`, `SCAN`**, 512 kHz and slower
+(`bus.md` §1). Each block makes its sockets' clocks in about one package
+(`newimpl/rtl/frame_decode.v`; `block-stack.md` §2.1): `TX_CLK` and `LOOP_HB`
+through '14 sections; `TX_OCT` in a '11, a decode a ripple up-count cannot
+glitch; `FILL` as a wire; and `RX_OCT` in two '74 halves, `TX_OCT` taken at the
+start of cell 5 and then moved onto the frame edge. **`RX_OCT` is never a
+decode of `SCAN[2:0]` = 0**, which the '4040 passes through between 3 and 4,
+nor one step at the frame edge, which races the ripple (`block-stack.md`
+§8.1).
 
-| | | |
-|---|---|---|
-| `SCLK` | **128 kHz** | the control bus's shift clock (`mainboard.md` §2.3.2). Marker and console both shift at this rate; a jumper may free-run it from `HCLK` ÷ 4. **Same rate as the option word's shift clock** (`extensions.md` §2.2) |
-| `/RING_CAD` | 2 s / 4 s | the ring cadence, low true. A counter off the frame, not a tap |
-
-`RBT` is 64 kb/s of bits, not a clock: the ringback tone as a CVSD stream
-(`mainboard.md` §2.1).
+**The scan is the chain**: 64 ports of 64 master ticks is 4096, so `SCAN` is
+the six stages between `TX_CLK` and `TICK` (`fabric.md` §3.1). **The frame
+edge is `SLOT2`'s fall**, `TX_CLK`'s rise.
 
 ---
 
-## 2. Three domains, and only one of them is the crystal's
+## 2. Three domains
 
-`mf8-backplane.md` §2 has the domains; this is the same statement with the
-exchange folded in.
-
-| domain | where its rate comes from | what lives in it | in the exchange |
+| domain | from | what lives in it | in the exchange |
 |---|---|---|---|
-| **T** — transmit | §1's chain, the local crystal | everything a card sends: `C_TX`, `A_TX`, the word, the downstream to a phone | **the only domain below a trunk card** |
-| **R** — receive | recovered from the MF8 line, so the *far* shelf's crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`** and `RX_OCT` is `CLK_8K` (`TX_OCT`) one frame late (`fabric.md` §3.4). R exists in an exchange only on a trunk card, which crosses into T with two '174s |
-| **S** — the subscriber's own | the phone's clock, loop-timed or free-running (`subscriber-line.md` §7) | the 128 kBaud upstream pair | the same. It never reaches a backplane: the line card's receiver recovers it and re-times into T with two '74 stages (`channel-cards.md` §2.3) |
+| **T**, transmit | the local crystal | everything a card sends | the only domain below a trunk card |
+| **R**, receive | an MF8 line: the far crystal | `C_RX`, `A_RX`, `RX_CLK`, `RX_OCT` | **`RX_CLK` is `TX_CLK`**, `RX_OCT` is `TX_OCT` a frame late; R exists only on a trunk card |
+| **S**, the subscriber's | the phone, loop-timed to the downstream by a circuit not yet drawn (`subscriber-line.md` §1, §7) | the upstream pair | T's rate at an unknown phase: re-timed into T on the line card (`channel-cards.md` §2.3) |
 
-So a channel card may see three rates and generates none of them. **In an
-exchange it sees two**, because T and R are one clock there, and a card that is
-correct in MF8 is therefore correct in an exchange by construction — the
-crossings it carries simply become crossings between a clock and itself.
-
-The two crystals in a system are ±20 ppm each, up to 40 between neighbours: one
-slip every 390 ms at 40 ppm and 780 at 20, measured at 34.6 dB below the clean
-decode (`mf8-backplane.md` §7). That is the whole cost of there being two, and it
-is the only place in the design where a rate is not a tap of §1.
+A card correct in MF8, where T and R differ, is correct in an exchange by
+construction. **Every exchange and shelf has its own crystal**, ±20 ppm, and
+none is slaved to another, so what crosses between them slips (`network.md`
+§8, §9).
 
 ---
 
 ## 3. The rule: no card makes a clock
 
-**Every clock a card uses comes off the socket.** No oscillator, no divider, no
-PLL on any channel card, in an MF8 shelf or an exchange block.
+**Every clock a channel card uses comes off the socket**: no oscillator,
+divider or PLL on a channel card, in a shelf or a block. The reason is phase:
+a divider on a card starts on a random phase at power-up, while every tap in
+§1 comes off one counter and differs from another only by gate delays.
+Allowed because they are not clocks: a line-card receiver's one-shots, which
+measure domain S (`mf8-spec.md` §9.4); a tone card's audio oscillator; and a
+timer that divides a socket clock to time a cadence or a window, whose output
+clocks no bit — the analog tone card's cadence counter, a '4040 off socket
+`TX_CLK` (`common/tones.md`), the pulse generator's timebase
+(`../exchange/proposed/pulse-gen.md`) and a conference leg's detector window
+(`../exchange/proposed/conference.md`).
 
-An MF8 **shelf** trunk card owns the crystal that makes its line clocks;
-an exchange trunk card takes `HCLK` / `LINE_HB` / `SLOT` from the clock card
-instead (`network.md` §1). Neither is a channel card.
-
-The reason is phase, not rate. A 128 kHz divider on a line card would start on a
-random phase at power-up, and the downstream encoder's mid-bit transition would
-land anywhere in the cell; a 32 kHz `FILL` made on a card would disagree with the
-backplane's, and pulling that card would click. Every tap in §1 comes off one
-counter, so **any two of them differ by one gate delay and never by a phase**.
-
-Two things on a card are timing but not clocks, and are allowed:
-
-- **the line-card receiver's one-shots** — the '221 and '123 of `mf8-spec.md`
-  §9.4, on the rate plug: 11.7 µs classifier, 3.1 µs dead time, 31.3 µs carrier
-  timeout. They measure the *subscriber's* clock, which is domain S and not ours
-  to generate.
-- **a tone card's audio oscillator** (`features.md` §2), which is a tone and
-  not a clock.
-
-A third is a divider, not a generator: the **analog tone card's cadence counter**
-(`tone-plan.md` §5.2) is a `'4040` off socket `TX_CLK` (a1). Q13 is 256 ms; a
-nibble and sixteen jumpers make the 4.096 s on/off mask. That is a tap of the
-shelf chain, not a crystal or free-running oscillator on the card.
+A trunk card is not a channel card: an MF8 shelf's owns its shelf's crystal,
+and the exchange's local trunk takes `HCLK` on the adapter commons' spare
+(`trunks.md` §3). Common-control cards take the frame edge off `SLOT2` and the
+1 ms edge off `SCAN5`.
 
 ---
 
-## 4. Where 128 kHz comes from in an exchange
-
-**Resolved: `/SLOT[1]`, one inverter a block, nothing added to cable A.**
-
-`baseband.md` §2.3 raised this once and left it: "`LOOP_HB`, 128 kHz, is
-not on cable A and the CVSD subscriber line card cannot encode without it." It is
-the only place in the exchange documents where a CVSD subscriber line card in an
-exchange block is considered at all.
-
-`SLOT[2:0]` is already on cable A at every block, counting the eight cells of a
-frame at 512 kHz:
+## 4. `LOOP_HB` in an exchange
 
 ```
  cell            0    1    2    3    4    5    6    7
- SLOT[0]         0    1    0    1    0    1    0    1      256 kHz
  SLOT[1]         0    0    1    1    0    0    1    1      128 kHz
  /SLOT[1]        1    1    0    0    1    1    0    0      rises at the frame edge and at mid-frame
- SLOT[2]         0    0    0    0    1    1    1    1
- /SLOT[2]  =  TX_CLK                                       rises at the frame edge
+ /SLOT[2]        1    1    1    1    0    0    0    0      TX_CLK: rises at the frame edge
 ```
 
-So **`LOOP_HB` = `/SLOT[1]`**: 128 kHz, rising coincident with `TX_CLK`'s rising
-edge and again at mid-frame, which is exactly what a differential-Manchester
-encoder wants — a transition at the bit boundary and the option of one in the
-middle (`mf8-spec.md` §9.2). It is ⅙ of a '04 on each block, and cable A does not
-change.
-
-In MF8 the same waveform is the next tap of the trunk card's '4040
-(`mf8-backplane.md` §3), which is the same division of the same crystal frequency
-with the same phase relationship to `TX_CLK`. **The card cannot tell whether an
-MF8 shelf or an exchange block made it**, which is the whole point.
-
-**The contract on pin a2, shelf or block:**
-
-| | |
-|---|---|
-| rate | 128 kHz, square |
-| phase | `LOOP_HB` ÷ 2 **is** `TX_CLK`, in phase: both rise at the frame edge |
-| source | a tap of the same counter that makes `TX_CLK`. Never a separate divider, and never on the card |
-| skew | one gate. In the exchange the inverter is at the block, 25 cm from the socket (`mf8-backplane.md` §8) |
-
-The one thing not settled is the polarity and the fine phase against a real
-encoder: `baseband.md` §2.3 calls for a scope at bring-up and this does
-not change that.
+**`LOOP_HB` = `/SLOT1`**: 128 kHz, rising with `TX_CLK` and again at
+mid-frame, and falling twice a bit, each fall a quarter bit from a `TX_CLK`
+edge: a boundary and a mid-cell edge, as a differential-Manchester encoder needs
+(`mf8-spec.md` §9.2; the line card's '112 takes the fall, `channel-cards.md`
+§2.4).
+In MF8 it is the trunk card's next '4040 tap; a card cannot tell which made
+it. **The contract on a2**, shelf or block: 128 kHz square; `LOOP_HB` ÷ 2 is
+`TX_CLK`, both rising at the frame edge; a tap of the counter that makes
+`TX_CLK`, never a divider of its own; skew of a gate or two (in a block: made
+on header A, out through the port card's '244 and 33 Ω, `block-stack.md` §5).
+Its name says its medium: the MF8 line's half-bit clock is **`LINE_HB`**,
+1.024 MHz, on a shelf's trunk card and not on the exchange bus.
 
 ---
 
 ## 5. What a channel card may rely on
 
-The six clock pins of the channel socket, and what is guaranteed about each in
-an MF8 shelf **and** an exchange block:
-
-| pin | signal | rate | guaranteed | differs shelf vs block? |
+| pin | signal | rate | guaranteed | shelf vs block |
 |---|---|---|---|---|
-| a1 | `TX_CLK` | 64 kHz | rising edge = the start of bit 0; every T-domain output on every card changes on it and only on it | no |
-| a2 | `LOOP_HB` | 128 kHz | §4's contract | source only; same waveform |
-| a3 | `TX_OCT` / `CLK_8K` | 8 kHz | one frame wide, at superframe state 7. Exchange name **`CLK_8K`**: not an 8-bit word mark — a visit is sixteen bits at 128 kHz | no |
-| a4 | `FILL` | 32 kHz | `TX_CLK` ÷ 2, free-running, **common across every slot** — an unfitted slot and a card must idle on the same phase | no |
-| a7 | `RX_CLK` | 64 kHz | the frame reference for everything the card is given | **yes**: recovered in MF8, **is `TX_CLK`** in an exchange |
-| a8 | `RX_OCT` | 8 kHz | recovered state 7 | **yes**: `CLK_8K` one frame late in an exchange |
+| a1 | `TX_CLK` | 64 kHz | its rise starts a bit; every T output changes on it and only on it | same |
+| a2 | `LOOP_HB` | 128 kHz | §4 | same waveform |
+| a3 | `TX_OCT` | 8 kHz | high one frame in eight, frame 7; loads a card's word (`card-word.md` §3) | same |
+| a4 | `FILL` | 32 kHz | `TX_CLK` ÷ 2, free-running, one phase for every slot | same |
+| a7 | `RX_CLK` | 64 kHz | the reference for what the card is given | **recovered in MF8; `TX_CLK` in a block** |
+| a8 | `RX_OCT` | 8 kHz | recovered frame 7 | **`TX_OCT` a frame late in a block** |
 
-**The last two rows are the only clock difference between an MF8 shelf and an
-exchange block, and none
-of the common cards cares**, because each already crosses R to T with its own
-flip-flops whatever the two rates are. A data card presents `TXC` and `RXC` to its
-DTE as two clocks (`channel-cards.md` §4.2); in an exchange they are one clock, which
-is not a degradation but the synchronous case, and is why bit-exact 64 kb/s data
-passes inside an exchange and over copper ties (`network.md` §8).
+Every card crosses R into T on its own flip-flops, so it never notices. Data
+is bit-exact inside one exchange and slips between exchanges (`network.md` §8).
 
 ---
 
-## 6. Two half-bit clocks, named for the medium
+## 6. Open
 
-There are two half-bit clocks in the design and they are the same idea at two
-scales — a differential-Manchester encoder's clock at twice its medium's bit
-rate. Both are T-domain; the names say which medium:
-
-| | medium | bit rate | half-bit clock |
-|---|---|---|---|
-| the MF8 line | one pair between shelves | 512 kb/s | 1.024 MHz — **`LINE_HB`** |
-| the subscriber loop | two pairs to a phone | 64 kb/s | 128 kHz — **`LOOP_HB`** (socket a2) |
-
-(`terms.md`. Was `HB` / `TX_HB`.)
-
----
-
-## 7. Not measured, and what to scope
-
-- **`/SLOT[1]` against a real encoder** (§4): the derivation is arithmetic off
-  the cell count. `baseband.md` §2.3 asked for a scope and still does.
-- **`LOOP_HB`'s skew across a block's card side.** `mainboard.md` §5.2 gives
-  under 0.1 ns/m conductor to conductor within one ribbon, and the backplane is
-  25 cm; nothing has been measured at a socket.
-- **The metastability window** where a card's T and an MF8 R edge coincide.
-  `mf8-backplane.md` §9 has it as analysis only, and a failure is one bad CVSD
-  bit.
-- **Whether 256 kHz is wanted by anything.** `SLOT[0]` is the one tap in §1 with
-  no customer. If something later needs 256 kHz it is already there, on no pin.
+- **The MF8 adapter's 1.024 MHz** is not on the adapter commons and cannot be
+  divided out of `HCLK`: `trunks.md` §5, which lists the options.
+- **`LOOP_HB` against `TX_CLK` at the line card's encoder**: `channel-cards.md`
+  §6. A fix may land on the card or on §4's contract.
+- **`SCLK` is not a tap** in the RTL (`bus.md` §7).
+- **`LOOP_HB`'s skew across a block**, and the metastability window where a
+  trunk card's R edge meets T: arithmetic only; a failure is one CVSD bit.

@@ -16,7 +16,7 @@ with the slot rules of §5.
 
 Parent documents: `mf8/mf8-spec.md` (framer, cards, failure behaviour),
 `mf8/line-codes.md` (AMI vs differential Manchester), `mf8/frame-rate.md`
-(family rates), `exchange/mf8-unit.md` (split trunk vs fuse).
+(family rates), `exchange/analysis/eight-channel-mf8.md` (split trunk vs fuse).
 
 AMI encoder/decoder: [`ami.md`](ami.md) — **ngspice 74HC+line PHY** in
 [`../spice/mf2-ami/`](../spice/mf2-ami/) (`make -C spice/mf2-ami all`).
@@ -45,7 +45,7 @@ frame; clockless AMI.
 
 **Decided against nesting:** an MF2 span terminates to C/A and is re-inserted
 into safe MF8 seats. Bit-for-bit embedding fights line rate, F/S words, and
-superframe phase (`exchange/mf8-unit.md`).
+superframe phase (`exchange/analysis/eight-channel-mf8.md`).
 
 ---
 
@@ -282,13 +282,13 @@ instead of six** (analysis; count when schematics exist).
 Two ordinary channel sockets do **not** share per-slot C/A or a line PHY
 (`common/common-cards.md`, `mf8/mf8-backplane.md`). MF2 needs one of:
 
-1. **Block adapter** on the **block header** (`exchange/fabric.md` §5.2)
+1. **Block adapter** on the **block header** (`exchange/fabric.md` §6.2)
    owning the framer, AMI PHY, and mute — non-breakout mate of the star; or
 2. Master + ribbon between a paired card set, or
 3. Double-width card.
 
 **Decided intent: (1)** — split architecture in the sense of
-`exchange/mf8-unit.md` §2.A (unit owns line crystal and frame; fabric stays
+`exchange/analysis/eight-channel-mf8.md` §2.A (unit owns line crystal and frame; fabric stays
 8 × 8). Fusion of MF2 onto highway F/S seats is impossible at 256 kbps vs
 512 kbps HCLK.
 
@@ -301,7 +301,7 @@ Clocks: bit clock 256 kHz may be divided from `HCLK` locally if not pinned
 
 **Terminate and re-insert.** Extract two C/A pairs; place them in MF8 payload
 seats that are **not** three apart (e.g. (1,2) or (2,3), never (2,5)).
-Independent clocks ⇒ retiming / slip policy as in `mf8-unit.md` §5.5.
+Independent clocks ⇒ retiming / slip policy as in `eight-channel-mf8.md` §5.5.
 
 Mis-jumper MF2 ↔ MF8 (same plug row, wrong alphabet) must mute deterministically
 — **unmeasured** (`mf8-spec.md` §15).

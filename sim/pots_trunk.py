@@ -1,5 +1,5 @@
 """
-Dual-tone voice-band trunk over a dry two-wire pair (exchange/pots-trunk.md).
+Dual-tone voice-band trunk over a dry two-wire pair (exchange/proposed/pots-trunk.md).
 
 Models the hop as speech + idle dual tones through a hybrid, Gaussian noise on
 the pair, notches on the receive leg, and a dual-tone AND detector with the
@@ -304,7 +304,7 @@ def sec_talkoff(log):
 def sec_pulses(log):
     log('PULSES -- dial breaks as tone restore, through noise\n')
     log('  Digit 5: five 60 ms breaks / 40 ms makes after a 200 ms seize.')
-    log('  A break ≥ 8 ms must survive (network.md §1.1).\n')
+    log('  A break ≥ 8 ms must survive (network.md §2).\n')
     # Build A_tx at WEST: 1 during seize/make, 0 during break → tones on during break
     def dial_a(fs, digit=5, break_ms=60.0, make_ms=40.0, pre_ms=200.0, post_ms=100.0):
         parts = [np.ones(int(fs * pre_ms / 1000), np.uint8)]
@@ -463,7 +463,7 @@ def main():
         print(msg, flush=True)
         out.write(msg + '\n')
 
-    log('pots_trunk.py -- exchange/pots-trunk.md')
+    log('pots_trunk.py -- exchange/proposed/pots-trunk.md')
     log(f'  pairs W={PAIR_W} E={PAIR_E}; tone {TONE_DBFS:.0f} dB re NOMINAL; '
         f'hybrid −{HYBRID_LOSS_DB:.0f} dB; detector {T_IDLE_MS:.0f}/{T_SEIZE_MS:.0f} ms\n')
     for k in keys:

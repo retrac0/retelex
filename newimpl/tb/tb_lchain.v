@@ -1,6 +1,6 @@
 // tb_lchain -- three exchanges on two local eight-channel trunks, and calls
-// that TRANSIT the middle one across both units.  local-trunk.md; network.md
-// 3, 3.1, 3.2; common-control.md 4.
+// that TRANSIT the middle one across both units.  trunks.md §3; network.md
+// §1, §3.5, §4.
 //
 //     A 2 2  blk 1 ======== blk 1  B 2 3  blk 3 ======== blk 1  C 2 4
 //            faces E        faces W, g    faces E        faces W, g

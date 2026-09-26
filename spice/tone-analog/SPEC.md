@@ -1,6 +1,6 @@
 # Analog tone front-end — up to the CVSD encoder
 
-`common/tone-plan.md` §5's analog card, simulated alone: carrier, warbler,
+`common/tones.md` §5's analog card, simulated alone: carrier, warbler,
 pure/mod path, cadence mute of the encoder **input**, and a level trim. Stops
 at `AUDIO` — the §12.1 encoder is `spice/cvsd-enc/`, not this deck.
 
@@ -41,7 +41,7 @@ Three populations of the same front-end, selected by which test deck you run:
                                                                    level trim ──► AUDIO
 ```
 
-Cadence counter / 16 jumpers (`tone-plan.md` §5.2) are **not** in this deck —
+Cadence counter / 16 jumpers (`tones.md` §5.2) are **not** in this deck —
 `CAD` is a pulse source so a short run can show mute. Mute is softened on both
 sides: ~4 ms RC on `CAD` (envelope), then ~0.15 ms RC after the multiply (edge
 de-click without lowpassing the carrier).

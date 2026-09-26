@@ -1,5 +1,5 @@
-// tb_max -- the class marker on one exchange, no network unit.  marker.md 1-5;
-// groups.md 2; extensions.md 2.2-2.4, 3.1; features.md 5.
+// tb_max -- the class marker on one exchange, no network unit.  marker.md
+// §1-§6; card-word.md §2, §4-§6; numbering.md §3, §4; features.md §4, §5.
 //
 // Every port says what it is in its card's word, and the marker reads it
 // before it acts:
@@ -8,7 +8,7 @@
 //   23 busy-out                       24 restricted, 0 only      25 restricted
 //   26 answers to 21                  27 a data line
 //   30 a source: a radio, /ANS low    31 call nail to 20
-//   32 33 a private line: a tied nail on each, naming the other (extensions.md 3.1)
+//   32 33 a private line: a tied nail on each, naming the other (card-word.md §6.2)
 //   34 a paging amplifier, /ANS low, nailed one way to the radio at 30
 //   36 a P line                       17 empty                    37 out of service
 // and tone sources at 01 (dial), 02 (busy) and 03 (cannot-complete).  Timers
@@ -37,9 +37,9 @@
 //  12  the call nail: 31 lifting rings 20, no dial tone; 20 busy, busy tone
 //  13  a CO line ringing in is routed as 0
 //  14  the private line used; one end left off-hook is no caller, and the walk
-//      nails both ports again so that it rings the other (extensions.md 3.2);
+//      nails both ports again so that it rings the other (card-word.md §6.2);
 //      both down, made again
-//  15  PWAIT (extensions.md 2.4.1): a round finds 36, a P line, waiting; the
+//  15  PWAIT (marker.md §4.3): a round finds 36, a P line, waiting; the
 //      register goes to 36 and not to 35 beside it, and to 35 once no P line
 //      waits
 //  16  a caller hanging up at the connect leaves the called port free
@@ -66,7 +66,7 @@ module tb_max;
                          P30 = 6'o30, P31 = 6'o31, P32 = 6'o32, P33 = 6'o33, P34 = 6'o34,
                          P35 = 6'o35, P36 = 6'o36, P37 = 6'o37, P17 = 6'o17;
 
-    // the card words, wire order read as WORD[7:0] (extensions.md 2.2)
+    // the card words, wire order read as WORD[7:0] (card-word.md §2)
     localparam [7:0] W_PLAIN = 8'hFF,
                      W_BOUT  = 8'h4F,                    // line, b
                      W_PRI   = 8'h2F,                    // line, P
@@ -394,7 +394,7 @@ module tb_max;
         ck(!busy[P33], "33 hung up: both latches let go");
         t = 0; while (!(busy[P32] && busy[P33]) && t < 2 * ROUND) begin ms(1); t = t + 1; end
         ck(busy[P32] && busy[P33] && !rbusy, "the walk nailed both ends again, and 32 got no dial tone");
-        rung(P33); ck(r0 && r1, "so 32, still off-hook, rings 33 again (extensions.md 3.2)");
+        rung(P33); ck(r0 && r1, "so 32, still off-hook, rings 33 again (card-word.md §6.2)");
         hook[P32] = 1'b0;
         t = 0; while (busy[P32] && t < 20000) begin @(posedge fs); t = t + 1; end
         t = 0; while (!(busy[P32] && busy[P33]) && t < 2 * ROUND) begin ms(1); t = t + 1; end

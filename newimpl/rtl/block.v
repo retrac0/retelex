@@ -1,12 +1,14 @@
-// block -- eight ports and what they share.  fabric.md 3.1.
+// block -- eight ports and what they share.  fabric.md §6.1.
 //
 // A block owns one highway.  Its commutator is a '151 with the eight ports'
 // C_TX on its inputs and SLOT on its selects: a rotary switch turning at
 // 64 kHz, which is, part for part, an MF8 trunk transmitter's frame mux.
-// Which highway it drives and which /BLK line is its own come from the
-// mainboard's shunt field -- layout, not logic.
+// Which highway it drives and which number it answers to come from two
+// jumpers on its own header, HC ROUTE and NUMBER (block-stack.md §4) --
+// layout, not logic.
 //
-// WHAT THIS BLOCK NO LONGER HAS, against fabric.md 3.1:
+// WHAT THIS BLOCK DOES NOT HAVE, that the old tree's block did (the retired
+// commutators and the shunt field are exchange/decisions.md's):
 //   the A commutator            -- HA[0..7] are gone; each port drives /HA itself
 //   the BUSY commutator         -- BUSY is /HB, a second scanned conductor
 //   the word commutator         -- the word is /HW, driven by the card a
@@ -14,33 +16,35 @@
 //                                  word pins is addressed by a latch, not by
 //                                  /BLK or the scan
 //   the HA_OUT driver and its shunt column -- and now the whole shunt field
-//   the SCAN[2:0] receivers     -- SCAN[5:0] comes off cable A, six conductors
+//   the SCAN[2:0] receivers     -- SCAN[5:0] comes off the bus, six conductors
 //   con_n and the pb_sel mux    -- the console reads /HA like everyone else
 //   PB[1:0] entirely            -- nothing block-steered is read any more
 // All four '151s go.  The block gains nothing on the fabric side: it passes
 // SCAN, /HA and /HB through to its eight ports and ORs their drains.
 //
-// THE BLOCK KNOWS ITS OWN NUMBER.  One 2 x 8 jumper on the block header does
-// three things: it routes HC_OUT onto highway HC[h]; a 74HC148 behind it
-// reads the same jumper as a three-bit number, h, which goes down the ribbon
-// to the eight port circuits as BLOCK[2:0], so that a port's turn on /HA and
-// /HB is {h, its slot}; and the '148's GS output says a jumper is FITTED at
-// all.  A block with no jumper drives no highway, answers no word, and its
-// ports take no turn -- GS gates every one of those.  One strap, read once,
-// used three ways, and nothing on the mainboard selects anything any more.
+// THE BLOCK KNOWS ITS OWN NUMBER.  Two jumpers on the block header
+// (block-stack.md §2.3, §4; fabric.md §6.1): HC ROUTE, a 2 x 8, routes
+// HC_OUT onto highway HC[h]; NUMBER, a 2 x 4, gives h directly -- a shunt
+// reads 0 -- and h goes up the stack to the eight port cards as BLOCK[2:0],
+// so that a port's turn on /HA and /HB is {h, its slot}.  NUMBER's fourth
+// position, FIT, says the block is fitted at all: a block without it drives
+// no highway, answers no /BLK and no select, and its ports take no turn on
+// the planes, while they still listen.  The two jumpers must agree, and
+// nothing checks them.  Nothing on the bus selects anything.
 //
-// /BLK IS MADE HERE, with one 74HC688 on DST[5:3] against h.  The old form
-// decoded DST[5:3] into eight lines, sent all eight to the mainboard, and let
-// a second jumper column there pick one back: eight conductors a connector
-// and sixty-four on the mainboard, for one bit of information, so that the
-// block need not know its name.  It knows it now.
-//   (mainboard.md 2.3, 4 -- superseded; port-card.md)
+// /BLK IS MADE HERE, with one 74HC688: FIT . (DST[5:3] = h) . G (bus.md §4).
+// The old form decoded DST[5:3] into eight lines, sent all eight to the
+// mainboard, and let a second jumper column there pick one back: eight
+// conductors a connector and sixty-four on the mainboard, for one bit of
+// information, so that the block need not know its name (exchange/decisions.md).
+// It knows it now.
+//   bus.md §4; fabric.md §6.1; block-stack.md §2.1, §2.3, §4
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module block #(
-    parameter [2:0]  BLOCK       = 3'd0,    // the header jumper, read by the '148: h
-    parameter        JUMPERED    = 1'b1,    // the '148's GS: a jumper is fitted at all
+    parameter [2:0]  BLOCK       = 3'd0,    // the header's NUMBER jumper: h
+    parameter        JUMPERED    = 1'b1,    // NUMBER's FIT position: the block is fitted at all
     parameter [7:0]  PORT_FITTED = 8'hFF,   // which of the eight port circuits are populated
     parameter [8:0]  T_ARM       = 9'd16,
     parameter [8:0]  T_REL       = 9'd256
@@ -59,7 +63,7 @@ module block #(
     input                   rbt,
     input                   ring_cad_n,
     input      [7:0]        hc,          // all eight highways come back in
-    output                  hc_out,      // this block drives one of them, through its shunt
+    output                  hc_out,      // this block drives one of them, through HC ROUTE
     input                   ha_n,        // /HA as received, through a '14 Schmitt:
                                          // the rise is resistive, not driven
     output                  ha_pd,       // the OR of this block's eight M drains
@@ -89,7 +93,7 @@ module block #(
     // ---- 2 x 74HC164: sixteen bits, shifted by SCLK, no output latch -------
     // Nothing reads these until WR, so the garbage that ripples through
     // between writes is the same garbage the parallel bus carried between
-    // writes.  mainboard.md 2.3.2.
+    // writes.  bus.md §4.
     reg [`CWW-1:0] cw;
     reg            sclk_d;
     always @(posedge clk or negedge rst_n)
@@ -113,13 +117,15 @@ module block #(
     wire wr_en = !blk_n && wr && cw[`CWW-1];
 
     // ---- 74HC138 write decoder: /BLK . WR . G enables, DST[2:0] picks ------
-    // One package, the same part as blk_dec above on a different field of the
-    // same word.  WIDENS WITH `PW: a four-bit slot field wants a '154.
+    // One package, on the word's DST[2:0].  WIDENS WITH `PW: a four-bit slot
+    // field wants a '154.
     assign wr_dec = wr_en ? (8'd1 << cw[10:8]) : 8'd0;
 
-    // ---- 74HC157 x4: ringback substitution ahead of the commutator ---------
-    // and the pull to FILL on an unfitted slot, exactly as an empty MF8 slot
-    // is pulled.  Written out because the condition is per-slot: a scalar
+    // ---- ringback substitution ahead of the commutator ---------------------
+    // On the board it is one 74HC157 on each port card, and the pull to FILL
+    // on a seat with no port card is 4.7 k on the lane, exactly as an empty
+    // MF8 slot is pulled (block-stack.md §2.2, §2.3).  Modelled here, at the
+    // commutator's inputs.  Written out because the condition is per-slot: a scalar
     // ternary here would put RBT on all eight the moment any one port rings.
     assign c_mux[0] = PORT_FITTED[0] ? (rb[0] ? rbt : c_tx[0]) : fill;
     assign c_mux[1] = PORT_FITTED[1] ? (rb[1] ? rbt : c_tx[1]) : fill;
@@ -229,11 +235,13 @@ module block #(
     // Buffered by a '244, that is this block's highway.
     assign hc_out = c_mux[slot];
 
-    // ---- the open drains, wired together -----------------------------------
-    // In 74HC these 2N7002 sources sit on two conductors with one 4.7 k pull-up
-    // each at the clock card; there is nothing here to OR.  The mainboard does
-    // the wired-OR and the inversion into /HA and /HB.  GS gates both: a
-    // block with no jumper has no number, so its ports have no turn to take.
+    // ---- the plane OR: the block's one drain a plane ------------------------
+    // The eight ports' drains pull a block-local /HA_L and /HB_L, 1 k up on the
+    // header, and a '02 gated by FIT puts each onto the block's one drain on
+    // the bus plane (block-stack.md §2.1, §2.3): the bus sees eight drains,
+    // not 64.  The clock card's 4.7 k pull-up and the wired-OR of the eight
+    // blocks into /HA and /HB are mainboard.v's.  FIT gates both: a block
+    // with no number has no turn to take.
     assign ha_pd = JUMPERED && (|ha_pd_k);
     assign hb_pd = JUMPERED && (|hb_pd_k);
 
@@ -259,7 +267,7 @@ module block #(
     wire a_stb = cap_stb && (slotq == `CELL_A);
 
     // 74HC688 -- SCAN[5:3] against the jumper, and a 74HC175: the slot and
-    // whether it is ours.  GS gates it: a block with no number answers none.
+    // whether it is ours.  FIT gates it: a block with no number answers none.
     reg       sel_v;
     reg [2:0] sel_slot;
     always @(posedge clk or negedge rst_n)
@@ -274,6 +282,6 @@ module block #(
 
     // frame_stb reaches the ports' sockets, not the port circuits: the
     // detectors run off TICK and the captures off SLOTQ.  It is carried so a
-    // channel card on this block's ribbon has its frame reference.
+    // channel card on this block's port cards has its frame reference.
     wire _unused = &{1'b0, frame_stb, 1'b0};
 endmodule

@@ -6,19 +6,21 @@
 // The hierarchy is the layout.  Each module is a thing you could point at in
 // a rack, and the module boundaries are the connectors.
 //
-// top_min and top_max both instantiate THIS, unchanged, so that "the maximal
-// build is the same fabric" is true by construction rather than by care.
+// top_min, top_net and top_max all instantiate THIS, unchanged, so that "the
+// maximal build is the same fabric" is true by construction rather than by
+// care (exchange/README.md §2).
 //
-// A block is FITTED when its header jumper is: no jumper, no number, and the
-// block drives no highway, answers no word and its ports take no turn.  So
-// BLOCK_FITTED is one fact a position, and PORT_FITTED is one a socket.
+// A block is FITTED when its NUMBER jumper's FIT position is shunted
+// (block-stack.md §4): without it the block drives no highway, answers no
+// /BLK and no select, and its ports take no turn.  So BLOCK_FITTED is one
+// fact a position, and PORT_FITTED is one a socket.
 `timescale 1ns/1ps
 `include "exch.vh"
 
 module exch #(
-    parameter [63:0] PORT_FITTED  = 64'h0000_0000_0003_0000,  // mvp.md 1: ports 20 and 21
-    parameter [23:0] BLOCK_NUM    = 24'o76543210,             // each header's jumper, octal, position 0 rightmost
-    parameter [7:0]  BLOCK_FITTED = 8'b0000_0100,             // mvp.md 1: block 2 alone
+    parameter [63:0] PORT_FITTED  = 64'h0000_0000_0003_0000,  // exchange/README.md §2: ports 20 and 21
+    parameter [23:0] BLOCK_NUM    = 24'o76543210,             // each header's jumpers, octal, position 0 rightmost
+    parameter [7:0]  BLOCK_FITTED = 8'b0000_0100,             // exchange/README.md §2: block 2 alone
     parameter        RBT_IS_FILL  = 1'b1,   // no ringback card: a caller hears silence
     parameter [8:0]  T_ARM        = 9'd16,
     parameter [8:0]  T_REL        = 9'd256,
@@ -42,7 +44,7 @@ module exch #(
     // ---- the ringback tone card --------------------------------------------
     input                    rbt_in,
 
-    // ---- the bus, in: a marker or a console has the control lines -----------
+    // ---- the bus, in: whichever master holds the control lines --------------
     input                    sdata,
     input                    sclk,
     input                    wr,
@@ -94,8 +96,8 @@ module exch #(
     assign pass_stb = tick_1k;
 
     // RBT is pulled to SCAN0 -- which is FILL -- when no ringback card is
-    // fitted, so a caller hears silence while the far phone rings (mvp.md 2):
-    // the same mechanism as an unfitted block, not a special case.
+    // fitted, so a caller hears silence while the far phone rings (bus.md
+    // §6.1): the same mechanism as an unfitted block, not a special case.
     wire rbt = RBT_IS_FILL ? fill : rbt_in;
 
     wire [7:0]  hc_from_block, ha_pd_from_block, hb_pd_from_block;
@@ -105,12 +107,13 @@ module exch #(
     // A generate: eight identical boards in eight identical connectors.  Each
     // is still a thing in the hierarchy, as pos[p].u_blk.
     //
-    // A BLOCK'S NUMBER IS ITS OWN HEADER JUMPER.  BLOCK_NUM[p] is what the
-    // jumper in position p is set to: the highway its HC_OUT is routed onto,
-    // and -- through the '148 behind the same jumper -- the h its '688 matches
-    // DST[5:3] against and the h its port circuits take their turn under.
-    // One strap, three uses; the mainboard holds none of it.  BLOCK_FITTED[p]
-    // is the '148's GS: no jumper, no number, and the block is silent.
+    // A BLOCK'S NUMBER IS ITS OWN HEADER'S JUMPERS (block-stack.md §2.3, §4).
+    // BLOCK_NUM[p] is what position p's two are set to: HC ROUTE, the highway
+    // its HC_OUT is routed onto, and NUMBER, the h its '688 matches DST[5:3]
+    // against and its port cards take their turn under.  The model holds one
+    // value for both; on a board they must agree and nothing checks them.
+    // The bus holds none of it.  BLOCK_FITTED[p] is NUMBER's FIT: without it
+    // the block is silent.
     //
     // With the identity setting position p is block p, and nothing about
     // position ever mattered except which socket a card's C_TX enters.

@@ -1,7 +1,7 @@
-// tb_ctl -- the exchange control bus.  mainboard.md 2.3, fabric.md 7 step 3.
+// tb_ctl -- the exchange control bus.  bus.md §4, fabric.md §6.3 step 3.
 //
 // One sixteen-bit word on one wire, broadcast to every block; the block whose
-// shunt column matches DST[5:3] answers WR.  The guard bit is what makes a
+// NUMBER jumper matches DST[5:3] answers WR.  The guard bit is what makes a
 // word a write, and a word without it is an event word that still pulses WR
 // and still writes nothing.  CLAIM, bit 0, reaches the card as A_RX: a claimed
 // trunk's backward A.  And the serialiser's rate is MEASURED, because the old
@@ -45,7 +45,7 @@ module tb_ctl;
         .dst(dst), .src(src), .bsy(bsy), .clm(clm),
         .busy(s_busy), .sdata(s_sdata), .sclk(s_sclk), .wr(s_wr));
 
-    // Block 2 alone, ports 20 and 21 -- mvp.md 1's exchange exactly.
+    // Block 2 alone, ports 20 and 21 -- exchange/README.md §2's exchange exactly.
     exch #(.PORT_FITTED(64'h0000_0000_0003_0000), .BLOCK_FITTED(8'b0000_0100)) u_x (
         .clk(clk), .rst_n(rst_n),
         .c_tx(c_tx), .a_tx(64'd0), .ans_n(ans), .word_n({64{1'b1}}),
@@ -59,7 +59,7 @@ module tb_ctl;
         .fill(fill), .ring_cad_n(), .tick_1k(),
         .port_busy(port_busy));
 
-    // ---- mainboard.md 2.3.2's one rule -------------------------------------
+    // ---- bus.md §4's one rule ----------------------------------------------
     // WR must not land within a set-up window of an SCLK edge.  Here SCLK is
     // idle through the strobe bit-time, so the check is simply that it never
     // moves while WR is asserted, nor within eight master ticks either side.
@@ -89,7 +89,7 @@ module tb_ctl;
     end
 
     // ---- the serialiser's rate: every SCLK period, every word's length ------
-    // mainboard.md 2.3: 128 kHz, 32 master ticks a bit, sixteen bits and a
+    // bus.md §4: 128 kHz, 32 master ticks a bit, sixteen bits and a
     // strobe bit-time -- 544 ticks, 133 us, a written word.
     integer since_rise = -1, bad_period = 0, n_rise = 0, busy_len = 0;
     integer last_len = 0, bad_rises = 0, words = 0;
@@ -114,7 +114,7 @@ module tb_ctl;
         repeat (20) @(posedge clk);
         rst_n = 1'b1; repeat (8) @(posedge clk);
 
-        // ---- 1.  the hotline: fabric.md 7 step 3 ---------------------------
+        // ---- 1.  the hotline: fabric.md §6.3 step 3 ------------------------
         // Point 20 at 21 and 21 at 20 by hand.  A pattern sent in slot 21
         // comes out of slot 20 one frame later.
         send(6'o20, 6'o21, 1'b1, 1'b0, 1'b1);
@@ -167,7 +167,7 @@ module tb_ctl;
         $display("     a written word took %0d master ticks", last_len);
 
         // ---- 7.  /RESET ------------------------------------------------------
-        // fabric.md 3.3: a port that releases clears its '273 to zeros --
+        // fabric.md §2.4: a port that releases clears its '273 to zeros --
         // highway 0, slot 0 -- and port 00 is never fitted, so it reads FILL.
         // FILL is the 1010 idle pattern, so what a cleared port hears is a bit
         // that changes every frame, not a level.

@@ -1,6 +1,6 @@
 * CVSD encoder A — breadboard baseline
 * LM311 + TL072 (Iabc + follower) + LM13700 + 74HC74/86/32
-* mf8-spec.md §12.1, circuit-review.md §2.4 / §4, falstad CVSD-ENC
+* mf8-spec.md §12.1, cvsd-codec.md §3.1, §3.2, falstad CVSD-ENC
 *
 * Pins: AUDIO CLK BIT NBIT Y SYL VDD VCC VEE
 

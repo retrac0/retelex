@@ -1,10 +1,10 @@
 // debugger -- a listener card that lights a lamp when the exchange breaks a
 // rule it cannot break while working.  MINIMAL+MAXIMAL.
 //
-// It has NO AUTHORITY.  It drives nothing but LEDs.  It sits on the
-// common-control tap like a lamp field (hookbusy.md), reads the bus's timing,
-// scan, planes and control lines, keeps its own copy of the scanner and of the
-// last control word,
+// It has NO AUTHORITY.  It drives nothing but LEDs.  It sits anywhere on the
+// bus (debugger.md §1), like a lamp field (proposed/lamps.md), reads the
+// bus's timing, scan, planes and control lines, keeps its own copy of the
+// scanner and of the last control word,
 // and runs in lock-step with the exchange as an observer.  Every check is a
 // handful of gates into one flip-flop, and the flip-flop is STICKY: a fault
 // that lasted one master tick a week ago is still lit when someone looks.
@@ -12,12 +12,12 @@
 //
 // THE LAMPS ARE GROUPED BY SUSPECT.  A lamp does not say what went wrong; it
 // says which board to pull.  Nothing here needs to know how many ports are
-// fitted, which block is shunted where, or what the marker is doing -- the
+// fitted, which block is jumpered where, or what the marker is doing -- the
 // facts it leans on are ones every build shares: port 00 is never fitted, a
 // control word is sixteen bits, and the scanner steps on every frame edge.
 // Two lamps lean on more: SCLK_COUNT on SCLK gated per word, and REG_WAIT on
 // how many passes a lifted phone may wait, which is the one strap that
-// depends on the build (debugger.md 6).
+// depends on the build (debugger.md §6, §7).
 //
 //   CLOCK CARD
 //     0  SCAN_STALL   SCAN did not step at a frame edge, or stepped off one.
@@ -26,9 +26,9 @@
 //                     has grown an enable again
 //     1  SLOTQ_LATE   SLOTQ != SLOT at a capture strobe: the '175 did not
 //                     take, and every strobe decoder is off by a cell
-//   THE PLANE -- the mainboard, a pull-up, or one port's drain
+//   THE PLANE -- the bus, a pull-up, or one block's drain
 //     2  HA_P00       /HA pulled down in port 00's turn.  00 is never fitted
-//                     (fabric.md 3.3), so nothing may ever drive its slot
+//                     (fabric.md §2.4), so nothing may ever drive its slot
 //     3  HB_P00       the same on /HB
 //     4  HA_STUCK     /HA low at every capture of a whole pass: a drain stuck
 //                     on, or a short.  ONE conductor, ONE failure domain --
@@ -38,13 +38,13 @@
 //   THE CONTROL LINES -- the serialiser, the wiring, or the marker's sequencing
 //     6  SCLK_COUNT   WR arrived with a shift count that is not a multiple of
 //                     sixteen since the last WR: one extra or one missing
-//                     SCLK edge.  This is mainboard.md 7's hazard -- one of
-//                     the two signals that can lose a call -- caught in the
-//                     act.  Every word ends in WR since /WS took the reads
+//                     SCLK edge.  This is bus.md §6.2's hazard -- one
+//                     extra shift and the next write lands on the wrong
+//                     port -- caught in the act.  Every word ends in WR since /WS took the reads
 //                     off the bus, so a clean count is exactly sixteen
 //     7  WR_EDGE      WR rose within a quarter bit-time of an SCLK edge, or
-//                     an edge followed within that window: mainboard.md
-//                     2.3.2's one rule
+//                     an edge followed within that window: bus.md §4's
+//                     one rule
 //   THE MARKER
 //     8  SELF_POINT   a write whose SRC is its DST: a port told to listen to
 //                     itself.  No sequence in the marker produces this
@@ -61,8 +61,9 @@
 // (frame_decode.v) -- so there is nothing left to disagree.
 //
 // NOT HERE, AND WHY.  A write with G clear is the event word and is legal.
-// /HW is not watched: this card knows which port is pointed at (its word
-// mirror holds DST) but not what that card's word should be.  A
+// /HW is not watched: a card drives it only after a /WS select in its port's
+// bit-time (fabric.md §4), and this card does not know what any card's word
+// should be (debugger.md §5).  A
 // write to an UNFITTED port other than 00 needs the fitted map, which is
 // sixty-four straps this card does not have.  A seizure of an already-busy
 // port -- the glare the mini-marker's untested branch would produce -- needs
@@ -70,7 +71,7 @@
 // register (eight '164) and a compare at the right turn; it is the most
 // valuable lamp not on this card and the first one to add.
 //
-//   common-control.md 2.2, hookbusy.md 3, mainboard.md 2.3.2, mainboard.md 7
+//   debugger.md; bus.md §4, §6.2; fabric.md §3.2, §4; proposed/lamps.md
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -79,8 +80,8 @@ module debugger #(
     // takes a port within about a pass and a word; sixteen is generous.
     parameter integer REG_WAIT_PASSES = 16,
     // master ticks either side of an SCLK edge that WR must keep clear of.
-    // A bit-time is 32 at 128 kHz, so eight is the quarter mainboard.md
-    // 2.3.2 asks for.
+    // A bit-time is 32 at 128 kHz, so eight is a quarter: debugger.md §2's
+    // strap, against bus.md §4's rule.
     parameter integer WR_GUARD        = 8
 )(
     input                   clk,

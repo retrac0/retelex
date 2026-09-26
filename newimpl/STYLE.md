@@ -25,7 +25,7 @@ Port lists are grouped by the connector the signals arrive on, under a rule:
 ```
     // ---- cable A -----------------------------------------------------------
     // ---- cable B -----------------------------------------------------------
-    // ---- the channel socket (common-cards.md 1) ---------------------------
+    // ---- the channel socket (common-cards.md §1) ---------------------------
 ```
 
 The order of the six cable-A signals (`slotq, cap_stb, frame_stb, scan, ha_n,
@@ -99,7 +99,7 @@ CAN STOP IT.` More than one a region and none of them is the one.
 **Every module header ends with its sources**, by document and section:
 
 ```
-//   mainboard.md 2.3, 2.3.1, 2.3.2
+//   bus.md §4
 ```
 
 Cite by section, never by line number: the line numbers in `marker.md`
@@ -144,7 +144,7 @@ reads them off `/HW` when it needs them; nothing is strapped to agree with a
 card that could be pulled and replaced by another.
 
 **Everything on the marker's side of a register is a LEVEL, held until read.**
-`rtl.md` §1: an event on a wire is a race. A one-tick pulse crosses a
+`exchange/README.md` §1: an event on a wire is a race. A one-tick pulse crosses a
 connector only as a `_stb`, and the receiver samples it, never edge-detects
 it. `probe.fresh` is the one exception that proves it — it is *the* strobe
 that says "the levels beside me have just been renewed."
@@ -170,11 +170,13 @@ exception is `` `PW ``, and every site that would widen with it says so:
 Two things follow. A parameter never selects behaviour in an `if`; it selects
 what is instantiated or what a constant is. And each fact the board reads off
 a strap comes from **one** strap, on the board that owns the fact: a block's
-number is its own header jumper (`BLOCK_NUM[p]`, read once by a '148 and used
-three ways — highway, `/BLK`, the ports' turn); a port card's slot is its own
-2 × 3 jumper (`POS`). The mainboard holds no strap at all. When two straps
-could disagree, one of them is a bug waiting for the non-default value — and
-where a strap must agree with a socket, the comment says so.
+number is its own header's NUMBER jumper (`BLOCK_NUM[p]`, used for `/BLK`, the
+ports' turn and the select); a port card's slot is its own 2 × 3 jumper
+(`POS`). The bus holds no strap at all. The one exception is the header's HC
+ROUTE jumper, which must agree with NUMBER and cannot be read as it, because
+its pins are live highway nets (`exchange/block-stack.md` §2.3, §4). When two
+straps could disagree, one of them is a bug waiting for the non-default value —
+and where a strap must agree with a socket, the comment says so.
 
 A bench overrides a parameter to make a slow thing fast — a 1 s no-digit
 timer, a 24 ms ring cadence — and says why in the instantiation: *"so the
@@ -303,12 +305,14 @@ hand with `make iv-<bench>`.
 
 ## 8. Documents, and departing from them
 
-The code may depart from a document section, deliberately, and only with a
-row in README §5 — *Where the documents now disagree* — naming the section
-and what changed. The code comment names the section it departs from:
+The code may depart from a document section, deliberately, and only where
+that document says so, in its text or its Open section (`exchange/README.md`
+§5 lists the ones that need a decision). The code comment names the section
+it departs from:
 
-> THE POLARITY IS AN INVERSION OF mainboard.md 2.2, which has HA "pulled to
-> ground: on-hook" — an open-collector wire cannot be.
+> The model acts on LOOP_HB's rise and reads H after that edge, which is the
+> same function; the board's '112 takes the fall (channel-cards.md §2.4), and
+> whether the drawn edge closes the race with H is channel-cards.md §6's.
 
 A document's **Status block** says what is measured, what is argued, and what
 is unbuilt, and does not round up. A number is given with its derivation —

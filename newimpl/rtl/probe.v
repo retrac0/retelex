@@ -19,12 +19,14 @@
 // clear, which was harmless only because a visit was eight frames and the last
 // sample won.  With ONE sample a port, an uncleared accumulator hands the
 // reader the PREVIOUS port's hook: a phone nobody lifted is given dial tone
-// and a phone that did lift is never seen.  (fabric-rev2.md 6.1, retired.)
+// and a phone that did lift is never seen.  (fabric-rev2.md 6.1 found it; that
+// document was retired at d24fc40, before exchange/decisions.md's log.)
 // `got` is that clear: a turn publishes only if this probe actually sampled
-// it, so a probe re-pointed mid-turn publishes nothing rather than a mixture.
+// it, so a probe re-pointed mid-turn publishes nothing rather than a mixture
+// (fabric.md §3.4).
 //
 // m and busy are LEVELS, held until that port comes round again 1 ms later.
-// rtl.md 1: an event on a wire is a race; a level valid when read is not.
+// fabric.md §3.4: an event on a wire is a race; a level valid when read is not.
 `timescale 1ns/1ps
 `include "exch.vh"
 

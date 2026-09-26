@@ -2,7 +2,7 @@
 """Score spice/tone-analog out/{pure,soft,hard,cadence}.
 
 Reports carrier Hz, RMS vs NOMINAL_RMS, and in-band FFT line count — the
-soft-vs-hard trade from tone-plan.md §5 / sim/tones.py warble.
+soft-vs-hard trade from tones.md §5 / sim/tones.py warble.
 """
 import sys
 from pathlib import Path
@@ -66,7 +66,7 @@ def inband_lines(t, x):
 
 
 def main():
-    print('Analog tone front-end — ngspice (tone-plan.md §5)\n')
+    print('Analog tone front-end — ngspice (tones.md §5)\n')
     print(f'{"deck":<10} {"carrier Hz":>11} {"fft f0":>8} {"rms":>7} '
           f'{"vs nom":>7} {"lines":>6}  peaks')
 
@@ -105,7 +105,7 @@ def main():
 NOMINAL_RMS = {mf8.NOMINAL_RMS}
 Band {BAND[0]:.0f}–{BAND[1]:.0f} Hz; a "line" is a local FFT peak within
 {LINE_DB:.0f} dB of the in-band max (sim/tones.py in_band_lines). Soft should
-stay near a few lines; hard sprays many (tone-plan.md §5). Cadence mutes AUDIO,
+stay near a few lines; hard sprays many (tones.md §5). Cadence mutes AUDIO,
 not a bit stream.
 ''')
     return 0

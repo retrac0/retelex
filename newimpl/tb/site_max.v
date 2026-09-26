@@ -9,7 +9,7 @@
 //            outside line, a source, anything that must answer at once
 //   01-03    the tone sources: dial tone sends ones, busy tone four ones and
 //            four zeros, cannot-complete zeros.  Each ties /ANS low and has no
-//            word part: tones are addresses (features.md 2)
+//            word part: tones are addresses (features.md §1)
 //   TRUNKS   baseband tie cards, each with its word from TWORD and its rear
 //            connector brought out, as site_net's
 //

@@ -1,7 +1,7 @@
 // word_dec -- what a card's primary octet says about its port.  MAXIMAL.
 //
 // The octet as word_rx hands it over: bit n is bit-time n, the pin low for a
-// one (extensions.md 2.2).  Two type bits, then either a class -- a family of
+// one (card-word.md §2).  Two type bits, then either a class -- a family of
 // two bits and a member of one, and three options -- or a 6-bit port.  This is
 // the whole of the class marker's "diode matrix" on the word side: every test
 // it makes of a port is one of these outputs, and none of them is a memory.
@@ -27,7 +27,7 @@
 // few gates for the must-be-zero bits and the options.  Combinational: the
 // marker latches what it needs beside the word.
 //
-//   extensions.md 2.2, 2.4; marker.md 1; groups.md 2.1
+//   card-word.md §2, §4-§6; marker.md §4
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -71,7 +71,7 @@ module word_dec (
     wire c_rest = form && (cls == 3'd7);
 
     // MUST-BE-ZERO IS ENFORCED, NOT IGNORED: a one where a zero belongs is out
-    // of service (extensions.md 2.2).  Source, outside line and tone trunk
+    // of service (card-word.md §2).  Source, outside line and tone trunk
     // take no options; restricted's frame 7 is what keeps a class word off the
     // plain-line constant; the reserved code and the unequipped one are never
     // sent by a card that works.
@@ -90,8 +90,9 @@ module word_dec (
 
     // THE TYPE IS PRINTED IN WIRE ORDER, AS EVERY FIELD IS: answers-to's "01"
     // is bit-time 0 low and bit-time 1 high, so w[1:0] reads 2'b10 -- the way
-    // a trunk's family "01" is w[3:2] = 2'b10 and WORD[4:2] = 2 (extensions.md
-    // 2.2, "the encoding, whole").  The old marker.v compared the other way.
+    // a trunk's family "01" is w[3:2] = 2'b10 and WORD[4:2] = 2 (card-word.md
+    // §2, "the type bits are wire order too").  The old marker.v compared the
+    // other way.
     assign tnail = !k_none && (typ == 2'b00);
     assign ans   = (typ == 2'b10);
     assign cnail = (typ == 2'b01);
@@ -106,8 +107,8 @@ module word_dec (
 
     // A voice line: what a dialled number may be connected to and what may
     // lift for a register.  An answers-to or a call-nail port is a line that
-    // says one thing more.  A data line is in neither list (extensions.md
-    // 2.4: "D is enforced by omission").
+    // says one thing more.  A data line is in neither list (card-word.md
+    // §4: "D is enforced by omission").
     assign voice  = (line && !data) || rest || ans || cnail;
     // A tone trunk is a caller at a leaf's central (leaf-uplink.md), not a
     // line: it is never dialled.

@@ -1,4 +1,4 @@
-// tb_mini -- the minimum that makes calls.  mvp.md 3, mini-marker.md 4 and 5.
+// tb_mini -- the minimum that makes calls.  marker.md §2, §3, §5; numbering.md §3, §4.
 //
 // Two phones on block 2.  20 lifts, is given the register within one 1 ms
 // pass, dials 2 1, 21 rings, 21 answers, and either may hang up first -- the
@@ -73,7 +73,7 @@ module tb_mini;
 
     // What is this port hearing?  A steady level is a source card; FILL's
     // 1010 alternates every frame, and so does the ringback bus when no
-    // ringback card is fitted (mainboard.md 2.1: RBT is pulled to FILL).
+    // ringback card is fitted (bus.md §1: RBT is pulled to FILL).
     integer j; reg s0, s1;
     task sample(input integer p, input integer n);
         begin
@@ -158,10 +158,10 @@ module tb_mini;
         ck(port_busy[A] === 1'b1 && port_busy[B] === 1'b1, "both ports are busy");
 
         // ---- while 21 is rung, 20 hears RBT and NOT 21's card -------------
-        // fabric.md 3.1 and 3.5: RB = ON . E puts the ringback bus into 21's
-        // highway cell through the block's '157.  With no ringback card
+        // fabric.md §5.2, §2.1: RB = ON . E puts the ringback bus into 21's
+        // highway cell through its port card's '157.  With no ringback card
         // fitted RBT is pulled to FILL, so what the caller gets is silence --
-        // mvp.md 2's documented behaviour, and it alternates.
+        // bus.md §6.1's documented behaviour, and it alternates.
         c_tx[B] = 1'b1;
         sample(A, 8);
         ck(s0 && s1, "20 hears ringback, not 21's card: the '157 substituted");
@@ -191,7 +191,7 @@ module tb_mini;
         c_tx[A] = 1'b0; ms(2); ck(c_rx[B] === 1'b0, "and it is a separate square");
 
         // ---- either may hang up first.  21 goes first. ---------------------
-        // A port's BUSY OUTLIVES ITS LATCH, deliberately: marker.md 5.2's
+        // A port's BUSY OUTLIVES ITS LATCH, deliberately: fabric.md §5.2's
         // stale-release guard holds it busy while either detector is still
         // timing out, so a port that has just dropped a call cannot be handed
         // a new one in the same breath.  The latch clears at 256 ms; BUSY
@@ -213,7 +213,7 @@ module tb_mini;
            "every latch idle and every BUSY clear at the end");
 
         // ================= 2.  wrong numbers ============================
-        // mini-marker.md 5.  0, 8 and 9 all fold to 0 by the digit rule.
+        // numbering.md §3, §4.  0, 8 and 9 all fold to 0 by the digit rule.
         a_tx[A] = 1'b1; ms(10);
         dial(A, 10);                                       // dialled 0
         ms(20);
@@ -230,9 +230,9 @@ module tb_mini;
         ck(s0 && !s1, "dialling its own number gives cannot-complete");
         a_tx[A] = 1'b0; ms(400);
 
-        // 8 or 9 as the SECOND digit.  protocol.md 5: "8 and 9 are caught as
-        // service digits before they are ever an address" -- on the second
-        // key as on the first.  21 dials 2 8: folded, that is 20, which is
+        // 8 or 9 as the SECOND digit.  numbering.md §1: "8, 9 and 11-15 are
+        // service digits, tested on the count before anything is an address,
+        // in every position" -- on the second key as on the first.  21 dials 2 8: folded, that is 20, which is
         // free and would ring.  (From 20 the fold would be its own number and
         // refused for the wrong reason, so this check could not fail.)
         a_tx[B] = 1'b1; ms(10);
@@ -243,8 +243,8 @@ module tb_mini;
         ck(port_busy[A] === 1'b0, "and 20 was never rung: the 8 did not fold to 0");
         a_tx[B] = 1'b0; ms(400);
 
-        // Key 1 with NO NETWORK UNIT FITTED is highway 1 (protocol.md 5,
-        // common-control.md 3): the marker's network half is here, tied to
+        // Key 1 with NO NETWORK UNIT FITTED is highway 1 (numbering.md §3,
+        // exchange/README.md §2): the marker's network half is here, tied to
         // "no unit", and must take the old path.  20 dials 1 1 and is pointed
         // at 11, an empty slot -- and the marker is back in IDLE, not waiting
         // in YIELD for a unit that is not there.
@@ -257,7 +257,7 @@ module tb_mini;
         ck(s0 && s1, "and 20 hears 11's empty highway, FILL -- not cannot-complete");
         a_tx[A] = 1'b0; ms(400);
 
-        // an empty slot -- 25 has no port circuit.  mini-marker.md 5: this
+        // an empty slot -- 25 has no port circuit.  numbering.md §4: this
         // marker treats it as free and points the caller at it, which is why
         // the class marker reads the card's word.
         a_tx[A] = 1'b1; ms(10);

@@ -28,22 +28,23 @@ behave (phones, tones, registers, announcements, conference legs, a CO line).
 
 A network call is dialled `1 e b h s`: the key opens a pulse flood, the caller's
 own `e` and `b` go down every trunk live, and the exchange they name claims
-(network.md 3).  Local calls are `h s` and never touch a trunk.  `net` and `topo`
+(network.md §1).  Local calls are `h s` and never touch a trunk.  `net` and `topo`
 run that call by call; `flood` is the timing arithmetic; `monitor` is the two
 rules that keep a wrong exchange from ever claiming.
 
 Usage:  python3 sim/exch.py            everything, ~20 min    (exch.log is the run)
-        python3 sim/exch.py tandem     protocol.md  §2
-        python3 sim/exch.py fabric     protocol.md  §4
-        python3 sim/exch.py calls      marker.md    §§3-6, features.md, mvp.md
-        python3 sim/exch.py announce   features.md  §3
-        python3 sim/exch.py aline      network.md   §9
-        python3 sim/exch.py flood      network.md   §§3.1, 4
-        python3 sim/exch.py net        network.md   §5.1
+        python3 sim/exch.py tandem     why-bits.md §1
+        python3 sim/exch.py fabric     fabric.md §2, trunks.md §2, §4
+        python3 sim/exch.py calls      marker.md §6, fabric.md §5.2, register.md §4, features.md,
+                                       exchange/README.md §2
+        python3 sim/exch.py announce   features.md §2
+        python3 sim/exch.py aline      network.md §9
+        python3 sim/exch.py flood      network.md §4.3, §6, §9
+        python3 sim/exch.py net        topology.md §11.1
         python3 sim/exch.py topo       topology.md
-        python3 sim/exch.py monitor    monitor.md   §5
-        python3 sim/exch.py timing     fabric.md    §4, big-exchange.md §2
-        python3 sim/exch.py mainboard  mainboard.md §5
+        python3 sim/exch.py monitor    monitor-rules.md §5
+        python3 sim/exch.py timing     fabric.md §7, why-bits.md §3.2
+        python3 sim/exch.py mainboard  bus.md §2.4
         python3 sim/exch.py confer     conference.md
         python3 sim/exch.py ss0        ss0.md
 """
@@ -309,20 +310,20 @@ UNEQ, LINE, OPER, EXT, TRUNK, DIAL, BUSY, NOGO = range(8)
 CLASS = ['unequipped', 'line', 'operator', 'external', 'trunk', 'dial tone', 'busy', 'cannot-complete']
 T_FALL, T_RISE, TOL = 256, 16, 0.20          # release detector: fall, arm, RC tolerance
 T_DTMF = 40                                   # MT8870 guard: tone present this long before StD
-T_HIT, T_ID = 8, 128                          # register.md 2: a break is a pulse; a make ends the digit
+T_HIT, T_ID = 8, 128                          # register.md §1: a break is a pulse; a make ends the digit
 T_NODIGIT = 10000                             # register held with nothing dialled
 RING_ON, RING_OFF = 2000, 4000
-# Settled port map (protocol.md 5): 01 dial, 02 busy, 03 cannot-complete; registers take no port.
+# Settled port map (numbering.md §2): 01 dial, 02 busy, 03 cannot-complete; registers take no port.
 
 
 class Card:
     cls = UNEQ
     name = ''
-    # Card-identity options (extensions.md §2.4).  Restricted is a flag here: the
+    # Card-identity options (card-word.md §4).  Restricted is a flag here: the
     # calls model keeps the older class numbers (no fabric.md renumber), so dialling
     # limits live on the card rather than as class 111.
     priority = False
-    overflow = False          # ignored: groups.md §2 replaced the o-run
+    overflow = False          # ignored: card-word.md §5 replaced the o-run
     busy_out = False
     rings = True
     restricted = False
@@ -330,8 +331,8 @@ class Card:
     warm = False
     local_only = False
     nail = None
-    answers_to = None         # port number this plain line covers (groups.md §2)
-    answers_to2 = None        # second local answers-to (extensions.md §2.2.1 dual)
+    answers_to = None         # port number this plain line covers (card-word.md §5)
+    answers_to2 = None        # second local answers-to (card-word.md §7 dual)
     hunt_L = False            # field B: local callers only
     hunt_U = False            # field B: unequipped-owner only
     hunt_K = False            # field B: busy-owner only
@@ -348,10 +349,10 @@ class Tone(Card):
 def _card_opts(card, priority=False, overflow=False, busy_out=False, rings=True,
                restricted=False, z_only=False, warm=False, local_only=False, nail=None,
                answers_to=None, answers_to2=None, hunt_L=False, hunt_U=False, hunt_K=False):
-    """Apply extensions.md §2.4 options plus groups.md §2 answers_to.  Bare
+    """Apply card-word.md §4 options plus card-word.md §5 answers_to.  Bare
     restricted floors to local-only when z and L are clear and warm is clear.
     overflow is accepted but ignored (the o-run is retired).
-    answers_to2 / hunt_L|U|K are extensions.md §2.2.1."""
+    answers_to2 / hunt_L|U|K are card-word.md §7."""
     card.priority = priority
     card.overflow = overflow
     card.busy_out = busy_out
@@ -440,7 +441,8 @@ class Leg(Announce):
 class COLine(Card):
     """An FXO card on a CO line.  ring: [(ms on, ms off)] bursts from the CO.
     hold=True is the exchange build: A_TX = ringing, stretched across the cadence
-    gap, OR loop closed.  hold=False is channel-cards.md 3.5 as it stands: ringing only."""
+    gap, OR loop closed: the SEIZE jumper of common-cards.md §5.  hold=False is the OFFICE
+    position, the line-extender build: ringing only."""
     def __init__(self, ring=(), hold=True):
         super().__init__(); self.cls = EXT; self.ring = list(ring); self.hold = hold
         self.loop = 0; self.last_ring = -10 ** 9; self.answered = False
@@ -458,7 +460,7 @@ class COLine(Card):
 
 class Register:
     """A register in the common pool: no port.  It reads the caller's hook and
-    DTMF key as the marker's probe does (marker.md 4)."""
+    DTMF key through a probe of its own (register.md §1)."""
     def __init__(self):
         self.caller = None; self.heard = 0; self.done = False
         self.brk = self.make = self.count = 0
@@ -516,7 +518,7 @@ class Exchange:
         return self.settle and ((self.filt[p][0] and not self.card[p].M) or (self.filt[p][1] and not self.E[p]))
     def free(self, p):
         """Free for terminating / hunt: not busy, on-hook, not settling; busy-out and
-        a nail both count as not free (extensions.md §2.4, §3.1)."""
+        a nail both count as not free (card-word.md §4, §6.1)."""
         c = self.card[p]
         if c.nail is not None or c.busy_out:
             return False
@@ -589,8 +591,8 @@ class Exchange:
         """True if this card's word answers to q0 (primary and/or dual alias)."""
         return card.answers_to == q0 or card.answers_to2 == q0
     def _probe_or_answers(self, a, q0):
-        """groups.md §2.2: probe dialled q0; else first free port that answers to q0.
-        Field B L/U/K (extensions.md §2.2.1) qualify members."""
+        """marker.md §4.5: probe dialled q0; else first free port that answers to q0.
+        Field B L/U/K (card-word.md §7) qualify members."""
         if self._try_terminate(a, q0):
             return
         own_cls = self.cls(q0)
@@ -617,13 +619,13 @@ class Exchange:
         caller = self.card[a]
         if len(digits) == 1:
             self.write(a, 0, 1)                       # dial tone off at the first digit
-            # Restricted dialling limits (extensions.md §2.4): z wins; else L or floor.
+            # Restricted dialling limits (card-word.md §4): z wins; else L or floor.
             if caller.restricted:
                 if caller.z_only and k != '0':
                     self.nogo(a, 'restricted 0-only'); self.release_reg(r); return
                 if caller.local_only and k in '19':
                     self.nogo(a, 'restricted local-only'); self.release_reg(r); return
-            if k == '0':                              # groups.md §2.2: called = 04, then answers-to
+            if k == '0':                              # marker.md §4.5: called = 04, then answers-to
                 self._probe_or_answers(a, 0o04)
             elif k == '9':
                 q = self.hunt(EXT)
@@ -681,7 +683,7 @@ class Exchange:
             p = self.scan; self.scan = (self.scan + 1) % NP
             nail = self.card[p].nail
             if nail is not None and not self.busy[p]:
-                # Nail before call-request (extensions.md §3.1): write latch to partner.
+                # Nail before call-request (card-word.md §6.1): write latch to partner.
                 self.write(p, nail, 1)
                 continue
             if (self.card[p].M and not self.busy[p] and not self.latch[p] and not self.inflight(p)
@@ -748,7 +750,7 @@ def pulses(t, digits, pps=10.0, brk=0.60, pause=700):
 
 def calls():
     print('CALLS -- one exchange, one 1 kHz tick at a time.  Ports are dialled in octal, 00-77.')
-    print('  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04 operator pilot (groups.md §2);')
+    print('  00 idle (never fitted), 01 dial, 02 busy, 03 cannot-complete; 04 operator pilot (numbering.md §2);')
     print('  registers are a pool (no ports); subscribers 20-77 (standalone may use 10-17).')
     print(f'  Release: M or E low for {T_FALL} ms (each port\'s two detectors +-{TOL:.0%}), after {T_RISE} ms high.  '
           f'Scanner: 8 ports a tick.\n')
@@ -789,7 +791,7 @@ def calls():
                   0o21: P_([(100, 'off')] + keys(900, '20') + [(3000, 'on')]),
                   0o23: P_([(5087, 'off'), (7000, 'on')])}), 8500, [0o20, 0o21, 0o23])
 
-    # 0 → pilot 04; further positions answer_to 04 (groups.md §2)
+    # 0 → pilot 04; further positions answer_to 04 (card-word.md §5)
     ops = lambda first: {0o04: P_(first, answer=1500),
                          0o31: P_([(9000, 'on')], answer=1500, answers_to=0o04),
                          0o32: Announce(play=2500, name='night announcement', answers_to=0o04)}
@@ -817,7 +819,7 @@ def calls():
     scene('11a. A CO line rings in: routed as 0 (probe 04).  The exchange FXO build holds A_TX across the cadence gap and while the loop is closed.',
           layout({0o10: COLine(ring, hold=True), 0o04: P_([(14000, 'on')], answer=8000)}),
           16000, [0o10, 0o04])
-    scene('11b. The same with channel-cards.md 3.5 as it stands (A_TX = ringing only): the call is torn down in every gap, and on answer.',
+    scene('11b. The same with the FXO jumper at OFFICE, common-cards.md §5 (A_TX = ringing only): the call is torn down in every gap, and on answer.',
           layout({0o10: COLine(ring, hold=False), 0o04: P_([(14000, 'on')], answer=8000)}),
           16000, [0o10, 0o04])
 
@@ -842,7 +844,7 @@ def calls():
           layout({0o24: P_([(100, 'off')] + ev + [(end + 4000, 'on')]), 0o20: P_([(end + 4200, 'on')], answer=1500)}),
           end + 5500, [0o24, 0o20])
     ev, end = pulses(900, '27', 7, 0.72)
-    scene(f'15b. The slowest dial register.md allows, 7 pps at 72 % (103 ms breaks), with every release detector at its shortest, {int(T_FALL * (1 - TOL))} ms.',
+    scene(f'15b. The slowest dial register.md §1 allows, 7 pps at 72 % (103 ms breaks), with every release detector at its shortest, {int(T_FALL * (1 - TOL))} ms.',
           layout({0o24: P_([(100, 'off')] + ev + [(end + 3000, 'on')]), 0o27: P_([(end + 3200, 'on')], answer=1000)}),
           end + 4500, [0o24, 0o27], tfall=int(T_FALL * (1 - TOL)))
     print(f'  Every scenario ended idle: {ok}\n')
@@ -910,14 +912,14 @@ def calls():
                       f'{(w[d].mean() if d.any() else 0):21.2f} {100 * (w > 1).mean():13.2f} {100 * (w > 3).mean():13.2f}')
     print()
 
-    # ---- the minimum exchange of mvp.md, as a whole
+    # ---- the minimum exchange of exchange/README.md §2, as a whole
     ev1, _ = pulses(900, '21')
     ev2, _ = pulses(8800, '20')
     tries = []
     for t0, number in ((18000, '0'), (21500, '9'), (25000, '1'), (28000, '8'), (31500, '25'), (36000, '20')):
         ev, end = pulses(t0 + 800, number)
         tries += [(t0, 'off')] + ev + [(end + 600, 'on')]
-    scene('19. The minimum exchange (mvp.md): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
+    scene('19. The minimum exchange (exchange/README.md §2): rotary phones at 20 and 21, one register, no tone cards, nothing else.\n'
           '      20 calls 21 and 21 hangs up first; 21 calls 20 and 21 hangs up first again, so 20 is left off-hook;\n'
           '      then 20 dials the first keys that find nothing here -- 0 (no operator), 9 (no outside line)\n'
           '      and 8 (spare) -- then 1 as a highway and hangs up, then 25 (an empty slot) and 20 (itself).',
@@ -925,7 +927,7 @@ def calls():
                   0o21: P_([(6000, 'on'), (8000, 'off')] + ev2 + [(15000, 'on')], answer=1500)}, tones=False),
           40500, [0o20, 0o21], regs=1)
 
-    # ---- card-identity options (extensions.md §2.4) and answers-to (groups.md §2)
+    # ---- card-identity options (card-word.md §4) and answers-to (card-word.md §5)
     scene('20. Answers-to hunt group: 21 and 22 answer to 20.\n'
           '      23 dials 20 while 20 and 21 are busy → connects to 22.',
           layout({0o20: P_([(100, 'off')] + keys(900, '24') + [(12000, 'on')]),
@@ -1028,7 +1030,7 @@ FS_A = 8000                                   # A is one sample a superframe
 def a_path(level, hops, ber, rng):
     """A through `hops` MF8 trunks.  Each hop: the S bit carries one sample a superframe, a line
     error flips it, the receiver's '259 holds it, then mf8-spec 14's RC (2 ms) and a 74HC14
-    (0.55 / 0.35 of the swing, as channel-cards.md 5 took them)."""
+    (0.55 / 0.35 of the swing, as channel-cards.md §5 took them)."""
     k = 1 - np.exp(-1 / (FS_A * 0.002))
     for _ in range(hops):
         x = level ^ (rng.random(level.size) < ber)
@@ -1117,7 +1119,7 @@ def aline():
 
 G_ORIGIN = 128            # the origin abandons a call whose next break comes this soon after its seizure, ms
 T_SCAN = 8                # a pooled monitor is given a seizure within one scan of its rise, ms
-                          # (eight slots on the 8 kHz octet mark: monitor.md 3)
+                          # (eight slots on the 8 kHz octet mark: monitor-rules.md §1)
 
 
 def count_digits(y, i0, n=1, steady=False):
@@ -1171,7 +1173,7 @@ def digit_end(y, i0, which=0):
 def delayed(level, ms):
     """A carrier that is not a pair.  `ms` of one-way delay, constant, ahead of the A path: what
     distance, a mux, a vocoder or a jitter buffer put between the two ends of a trunk.  A copper
-    pair and an MF8 link are under a millisecond of it (`channel-cards.md` 5); a leased circuit, a
+    pair and an MF8 link are under a millisecond of it (`channel-cards.md` §5); a leased circuit, a
     radio or anything with a buffer is tens.  Constant delay does not distort a break -- it
     moves the whole of the caller's hook, pulses and all, later at the far end."""
     n = int(round(ms * 8))
@@ -1186,7 +1188,7 @@ def monitor():
     print('MONITOR -- which rules keep a live flood from ever claiming a wrong number.')
     print(f'  A chain: an origin and {H} exchanges whose codes are 11..1{H} (shared e, distinct b).  A dial at')
     print('  10 pps +-10 %, 60/40; the key (1), then e and b (1-7, or ten pulses for a code that is not')
-    print('  there), and one more.  A monitor compares BOTH digits (network.md 3, monitor.md 2).')
+    print('  there), and one more.  A monitor compares BOTH digits (network.md §3.4).')
     print("  The origin seizes 130 ms after the key's last pulse; each exchange patches the seizure onward")
     print('  3-10 ms after its M rises; A crosses every hop through the trunk\'s A path (aline 1).  A claim')
     print(f'  cuts the onward patch.  {N} calls a row.  FALSE = an exchange other than the one dialled claimed.\n')
@@ -1261,15 +1263,16 @@ def monitor():
     print('\n  "No claim" is the safe failure: the origin times out and returns cannot-complete.  In the rows where a')
     print('  monitor must have seen the rise, one monitor in five was busy at the seizure; with the origin guard, a caller')
     print('  whose next digit began within 258 ms of the last is abandoned too.  140 ms is the shortest pause ANY pulse')
-    print('  register can read (register.md 3.2): below it two digits run together, flood or no flood.')
+    print('  register can read (dialling.md §3.2): below it two digits run together, flood or no flood.')
     print('  A second compared digit does not add a new way of attaching late -- the monitor is attached by then --')
     print('  but it does reject a partial count that landed on the wrong e before b is ever read.')
 
     # ---- a carrier that is not a pair -----------------------------------
-    print('\n  A CARRIER THAT IS NOT A PAIR.  network.md 1.1 allows a carrier "about 2 ms of A path')
-    print('  a hop".  A copper pair and an MF8 link are inside it; a leased circuit, a radio, a mux or a')
-    print('  jitter buffer are tens of milliseconds.  The question rule 2 has to answer is whether that')
-    print(f"  eats the origin's guard.  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.")
+    print('\n  A CARRIER THAT IS NOT A PAIR.  This was set against "about 2 ms of A path a hop" (network.md')
+    print('  §2 now allows any constant delay: monitor-rules.md §5.1).  A copper pair and an MF8 link are')
+    print('  inside it; a leased circuit, a radio, a mux or a jitter buffer are tens of milliseconds.')
+    print('  The question rule 2 has to answer is whether that eats the origin\'s guard.')
+    print(f"  Both rules on, a pause of 140-900 ms, 128 ms guard, {NS} calls a row.")
     print(f'\n  {"carrier a hop":>14s} {"the flood is up at":>19s} | {"right %":>9s} {"no claim %":>11s} {"FALSE":>6s}')
     for carrier in (0, 5, 10, 20, 40, 80, 160):
         r = [trial(140, 900, True, True, 0.0, carrier) for _ in range(NS)]
@@ -1305,12 +1308,12 @@ def monitor():
               f'{oc.count("false"):6d} {100 * sum(v[1] for v in c) / NS:7.0f} %', flush=True)
     print('\n  The guard must be at least the spread or it is not a guarantee, and no more than the')
     print(f"  caller's own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take.  A phone to")
-    print(f'  ES 201 187 gives at least 720 ms (register.md 2), so the guard may go to {720 - T_ID - T_MARK:.0f} ms -- the')
+    print(f'  ES 201 187 gives at least 720 ms (register.md §1), so the guard may go to {720 - T_ID - T_MARK:.0f} ms -- the')
     print(f'  512 ms tap, four taps up from 128 on the counter it already has.  At {H} hops that is')
     print(f"  {512 / H - 6.5:.0f} ms a hop of wander against the present tap's {128 / H - 6.5:.0f}.  It is free in parts and it costs")
     print('  the callers who dial faster than the tap allows: every one of those gets cannot-complete.')
 
-    print('\n  How many monitors a trunk block needs (monitor.md 4): held ~1.5 s if e is not ours, ~2.7 s if it is.')
+    print('\n  How many monitors a trunk block needs (monitor-rules.md §6): held ~1.5 s if e is not ours, ~2.7 s if it is.')
     print(f'  {"calls an hour reaching the block":>34s} {"erlang @ 2.7 s":>14s} | ' + ' '.join(f'{f"{k} busy %":>9s}' for k in (1, 2, 3, 4)))
     for calls in (150, 576, 1500, 3000):
         a = calls * 2.7 / 3600
@@ -1735,7 +1738,7 @@ def mainboard():
         print(f'       clock card {label:16s} worst loss {loss:5.1f} ns   (block {a} driving, block {b} listening)')
     print('     Hold is never worse than with no cable at all: the same term that shortens set-up lengthens hold.')
 
-    # the worst placement, folded into fabric.md 4's own margins
+    # the worst placement, folded into fabric.md §7's own margins
     loss, _, _ = skew(-RIB_X)
     clkX, clkY = d('244'), d('244')
     via_card = clkX + d('card clk-C_TX') + d('157 I-Y') + d('151 I-Y') + d('244') + d('wire') + d('244') + d('151 I-Y')
@@ -1770,9 +1773,10 @@ def mainboard():
 # ------------------------------------------------------------------ flood
 
 HOP = 7.0                 # a seizure crossing one exchange: A path 2 ms, scan of the trunk ports, marker
-A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: channel-cards.md 5, and `aline` 1
-A_PATH = 2.0              # what network.md 1.1 allows a CARRIER a hop, one way, and what
-                          # HOP's 7 ms has in it.  A copper pair or an MF8 link is under it; a
+A_FALL, A_RISE = 2.0, 1.5 # the trunk's A path, per hop: channel-cards.md §5, and `aline` 1
+A_PATH = 2.0              # what this model allows a CARRIER a hop, one way, and what
+                          # HOP's 7 ms has in it (network.md §2 now allows any constant
+                          # delay: monitor-rules.md §5.1).  A copper pair or an MF8 link is under it; a
                           # leased circuit, a radio or anything with a buffer is not
 T_MARK = 2.0              # a marker action
 
@@ -1792,7 +1796,7 @@ def caller(digits, pause=800.0, t0=1000.0):
 
 
 def flood_call(number, own, chain, pause=800.0):
-    """Live pulse flood of network.md 3.  `number` is the full dialled string: `hs` local, or
+    """Live pulse flood of network.md §1.  `number` is the full dialled string: `hs` local, or
     `1ebhs` for a network call.  `own` is the origin's code; `chain` is exchange codes from the
     origin onward.  Trunks listen to the caller; monitors read e and b.  Returns events and the
     figures of merit."""
@@ -1882,16 +1886,16 @@ def flood_call(number, own, chain, pause=800.0):
 
 
 def flood():
-    # network.md 3.1: line 44 of 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25
+    # network.md §4.3: line 44 of 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25
     chain = ['22', '23', '24', '25']
-    print('FLOOD -- the timing of a network call under the pulse flood (network.md 3, 4).')
+    print('FLOOD -- the timing of a network call under the pulse flood (network.md §1, §4).')
     print('  Arithmetic from measured constants, not a simulation of the gates:')
-    print(f'    register windows HIT {T_HIT} / ID {T_ID} ms (register.md 2); A path per hop: a fall')
+    print(f'    register windows HIT {T_HIT} / ID {T_ID} ms (register.md §1); A path per hop: a fall')
     print(f'    {A_FALL} ms, a rise {A_RISE} ms (aline 1); a seizure crosses an exchange in {HOP:.0f} ms; marker action {T_MARK:.0f} ms;')
-    print(f'    origin guard {G_ORIGIN:.0f} ms (monitor.md 3); release {T_FALL} ms.  No sender: trunks listen to the caller.')
+    print(f'    origin guard {G_ORIGIN:.0f} ms (monitor-rules.md §1); release {T_FALL} ms.  No sender: trunks listen to the caller.')
     print('    The caller starts dialling 1 s after dial tone; 800 ms between digits.\n')
 
-    print('  1. Line 44 of exchange 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25 (network.md 3.1).')
+    print('  1. Line 44 of exchange 22 dials 1 2 4 5 5 on 22 = 23 = 24 = 25 (network.md §4.3).')
     ev, m = flood_call('12455', '22', chain)
     for t, e in sorted(ev, key=lambda x: x[0]):
         print(f'     {t:8.0f}  {e}')
@@ -1937,7 +1941,7 @@ def flood():
         print(f'     {leave:8.0%} {link_e:13.3f} {mon_e:16.3f} {waste_ms / 1000:22.2f}')
 
     print('\n  6. What must hold: the flood is up before the caller\'s next digit.  The origin makes sure:')
-    print(f'     it abandons a call whose next break comes within {G_ORIGIN:.0f} ms of its seizure (monitor.md 3).')
+    print(f'     it abandons a call whose next break comes within {G_ORIGIN:.0f} ms of its seizure (monitor-rules.md §1).')
     ready = T_ID + T_MARK + G_ORIGIN
     print(f'     Ready {ready:.0f} ms after his last pulse = digit recognised {T_ID} + seizure {T_MARK:.0f} + guard {G_ORIGIN}, whatever the hop count.')
     print(f'     {"hops":>5s} {"the flood itself takes, ms":>27s} {"at a slow marker, 12 ms a hop":>30s} {"inside the guard":>17s}')
@@ -1946,7 +1950,7 @@ def flood():
     print(f'     Margin for a dial: {500 - ready:.0f} ms at 500 ms between digits, {800 - ready:.0f} ms at 800.  A caller who beats it is')
     print('     abandoned to cannot-complete: a failed call, never a wrong number.')
     print(f'     Post-dial delay: {T_ID + T_MARK + A_RISE * 2:.0f} ms after the last pulse, whatever the hop count')
-    print('     (133 ms here to the third exchange); a register-sender would have cost 0.49 s (network.md 9).\n')
+    print('     (133 ms here to the third exchange); a register-sender would have cost 0.49 s (network.md §9).\n')
 
     def live(number, domains, pause, label):
         """Live digits.  domains[i] = (who acts on this digit, hops the NEXT flood must cross) or (None, 0)."""
@@ -1973,7 +1977,7 @@ def flood():
         live('12455', [('origin 22: seize the flood', 3), (None, 0), ('exchange 24: claim', 0), (None, 0), (None, 0)],
              pz, '1 2 4 5 5')
 
-    print('  8. Out of the network: 1 8 / 1 9 are reserved (network.md 6).  One way considered, not adopted:')
+    print('  8. Out of the network: 1 8 / 1 9 are reserved (numbering.md §5).  One way considered, not adopted:')
     print('     each digit claimed by one level in turn, with the same guard.  8 and 9 can never be e or b,')
     print('     so a monitor knows such a call by the first digit it hears and lets go.')
     other = [('origin 22: seize', 3), ("gateway: claim, onto next flood", 7),
@@ -2100,12 +2104,12 @@ def ss0():
 # ------------------------------------------------------------------ net
 
 NET_SCAN = 8.0            # the marker's scanner comes round to a port this often, ms
-NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (network.md 3.2)
+NET_HUB = 4.0             # a hub's extra writes when it fans a seizure out (network.md §3.5)
 NET_REPOINT = NET_SCAN / 2 + T_MARK     # a hub re-points its incoming trunk when the claim comes back
-FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (network.md 4)
+FLOOD_TIMEOUT = 5000.0    # the origin releases its trunks if b is not in by then (network.md §4.1)
 NO_CLAIM = 2000.0         # no claim this long after b -> cannot-complete
 HOLD_MEAN = 48000.0       # 0.08 E a line at 3 calls an hour, a line being one of two in each call
-STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of network.md 4
+STOPS = 0.01              # callers who dial the key and then stop: the 5 s rule of network.md §4.1
 
 
 def pulses_of(d):
@@ -2114,7 +2118,7 @@ def pulses_of(d):
 
 def code_hold(code):
     """seconds a flood is held for a call to this code: from the key until e and b are in
-    (network.md 4).  2.0 s for code 11, 0.1 s a pulse of e or b, 2.7 s mean over all 64."""
+    (network.md §4.3).  2.0 s for code 11, 0.1 s a pulse of e or b, 2.7 s mean over all 64."""
     return 2.0 + 0.1 * (pulses_of(int(code[0])) - 1) + 0.1 * (pulses_of(int(code[1])) - 1)
 
 
@@ -2136,11 +2140,11 @@ class Tempo:
         self.name, self.pulse, self.brk, self.idw = name, pulse, brk, idw
         self.gap, self.dt_pause, self.answer, self.busy = gap, dt_pause, answer, busy
         self.no_claim, self.timeout, self.fall, self.hold = no_claim, timeout, fall, hold
-        self.guard = guard                 # the origin's guard (monitor.md 3, rule 2)
+        self.guard = guard                 # the origin's guard (monitor-rules.md §1, rule 2)
 
 
-# The exchange as built: 10 pps 60/40, register.md 2's 8/128/256 ms windows, 0.5-0.9 s between
-# digits, network.md 4's 5 s rule, a 256 ms release detector, a 48 s call.
+# The exchange as built: 10 pps 60/40, register.md §1's 8/128/256 ms windows, 0.5-0.9 s between
+# digits, network.md §4.1's 5 s rule, a 256 ms release detector, a 48 s call.
 LIFE = Tempo('life', pulse=100.0, brk=60.0, idw=T_ID, gap=(500.0, 900.0),
              dt_pause=(300.0, 1000.0), answer=(0.0, 0.0), busy=3000.0,
              no_claim=NO_CLAIM, timeout=FLOOD_TIMEOUT, fall=T_FALL, hold=HOLD_MEAN,
@@ -2191,7 +2195,7 @@ class Net:
     Every exchange has registers, a trunk block a direction with monitors on it, and, where it
     faces more than two directions, fan-out resolvers.  Every link has channels.  A call is
     dialled digit by digit at 10 pps; the key opens the flood, e and b go down it live, and the
-    exchange whose code they are claims (network.md 3)."""
+    exchange whose code they are claims (network.md §1)."""
 
     def __init__(self, links, lines, regs=3, mons=3, resolvers=3, leave=0.3, seed=1, strapped=(),
                  tempo=None, idle=None, holds='exp', dt_wait=None, burst=None, ports=None,
@@ -2200,7 +2204,7 @@ class Net:
         self.t, self.q, self.seq, self.t0 = 0.0, [], 0, 0.0
         self.lines, self.leave = lines, leave
         # The clock the dial is on, and whether a caller is a LINE or a Poisson stream.
-        # idle = None is the arrival process of network.md 5.1: calls come from nowhere at
+        # idle = None is the arrival process of topology.md §11.1: calls come from nowhere at
         # a fixed rate whatever the exchange is doing.  idle = a number makes every line a
         # source, which is what the RTL bench has -- a line is a state machine there and there
         # is no other kind of caller -- so the offered load falls as the exchange fills.
@@ -2209,16 +2213,17 @@ class Net:
         self.holds, self.dt_wait, self.burst = holds, dt_wait, burst
         self.ports = ports                     # the (h, s) a line may be, or None for any
         # What the CARRIER costs a hop, one way, and the origin's guard against it.
-        # network.md 1.1 allows a carrier about 2 ms of A path a hop, which is what
-        # NET_HOP's 7 ms has in it; a leased circuit, a radio or anything with a buffer
-        # has tens.  `guard` is monitor.md 3's rule 2, which is what that budget is
+        # This model allows a carrier about 2 ms of A path a hop, which is what
+        # NET_HOP's 7 ms has in it (network.md §2 now allows any constant delay:
+        # monitor-rules.md §5.1); a leased circuit, a radio or anything with a buffer
+        # has tens.  `guard` is monitor-rules.md §1's rule 2, which is what that budget is
         # for: a break inside it and the origin abandons rather than risk a wrong number.
         self.link_ms = link_ms
         self.guard = self.tp.guard if guard is None else guard
         self.is_hot = False
         self.onhook = dict(lines)
         self.cancel = {x: 0 for x in lines}
-        self.strapped = {frozenset(l) for l in strapped}          # links whose words carry n (network.md 3.3)
+        self.strapped = {frozenset(l) for l in strapped}          # links strapped against the flood (network.md §7)
         self.codes = list(lines)
         self.dirs = {x: [] for x in lines}                       # exchange -> the exchanges it faces
         self.chan = {}
@@ -2410,7 +2415,7 @@ class Net:
         call = dict(origin=x, dst=dst, lifted=lifted, t_e=t_e, t_b=t_b, t_last=t_last,
                     held=seized, seized_at=self.t, claimed=False, stopped=stopped,
                     t_break=t_break if t_break is not None else self.t + 1e9)
-        # monitor.md 3, rule 2: the origin sees both its own seizure and the caller's
+        # monitor-rules.md §1, rule 2: the origin sees both its own seizure and the caller's
         # next break, and abandons if the break is inside the guard -- because it cannot
         # know how far the flood has got, and a monitor patched in mid-digit counts short.
         if call['t_break'] < self.t + self.guard:
@@ -2451,7 +2456,7 @@ class Net:
     def reaches(self, call, frm, x, path):
         """a seizure arrives at x from frm, having come by path: a monitor listens, and a transit
         forwards it on -- never into a strapped link, and never onward from one.
-        Claim needs both code digits: e then b (`monitor.md` 2)."""
+        Claim needs both code digits: e then b (`network.md` §3.4)."""
         mon = self.mon[(x, frm)]
         watched = mon.take(self.t)
         if not watched and x == call['dst'] and not call['stopped']:
@@ -2556,11 +2561,11 @@ class Net:
             self.at(self.t + self.tp.fall, self.free, self.chan[l])
 
 
-NET_HOP = 7.0             # a seizure crossing one exchange (network.md 4)
+NET_HOP = 7.0             # a seizure crossing one exchange: the model's hop, not the unit's (network.md §6)
 
 
 def net_topology():
-    """two hubs of four directions, three leaves each (network.md 5).  Codes share e by side."""
+    """two hubs of four directions, three leaves each (topology.md §11.1).  Codes share e by side."""
     hubs = ('11', '12')                      # backbone codes, by convention
     leaves = {'21': '11', '22': '11', '23': '11', '31': '12', '32': '12', '33': '12'}
     links = {(v, h): 6 for v, h in leaves.items()}
@@ -2659,7 +2664,7 @@ def net():
         print(f'  {label:27s} {f(sim.res["11"]):>17s} {sim.reg["11"].erlang(t):10.2f} E'
               f' {sim.reg["21"].erlang(t):13.2f} E {f(sim.mon[("21", "11")]):>17s}')
 
-    print(f'\n  5. The 5 s rule (network.md 4).  {100 * STOPS:.0f} % of network callers dial the key and stop.')
+    print(f'\n  5. The 5 s rule (network.md §4.1).  {100 * STOPS:.0f} % of network callers dial the key and stop.')
     print(f'  {"":27s} {"they were":>10s} {"trunks held, s":>15s} {"without the rule":>18s}')
     for label, sim in rows:
         if sim.stopped_held:
@@ -2667,7 +2672,7 @@ def net():
             print(f'  {label:27s} {sim.stat["timed_out"]:10d} {sh.mean():15.2f} {10 + T_FALL / 1000:18.2f}')
 
     p = predict(links, lines, (), 0.3)
-    print(f'\n  6. Against the arithmetic of network.md 5, with these codes\' own floods ({p["flood"]:.2f} E a link):')
+    print(f'\n  6. Against the arithmetic of topology.md §11, with these codes\' own floods ({p["flood"]:.2f} E a link):')
     print(f'     at 30 % leaving a leaf link is predicted {p["worst_e"]:.2f} E and {100 * p["worst_b"]:.2f} % blocking.  **Bursts leave')
     print('     the erlangs alone and fall on the registers**: the same calls, arriving together, wait for dial tone.')
 
@@ -2676,14 +2681,14 @@ def net():
 
 FLOOD_S = sum(code_hold(f'{e}{b}') for e in range(8) for b in range(8)) / 64     # over all 64 codes
 ORIG_E = 3 * HOLD_MEAN / 3600e3           # erlangs a line originates: 3 calls an hour of 48 s
-SLOW_HOP, SLOW_HUB = 12.0, 4.0            # a slow marker's hop, and a hub's extra (monitor.md 3)
+SLOW_HOP, SLOW_HUB = 12.0, 4.0            # a slow marker's hop, and a hub's extra (monitor-rules.md §4)
 SS0_HOLD = 0.4                            # SS0: a seizure held till the claim, a few hops out and back, and released
 
 
 def lines_for(groups):
     """lines left at an exchange with this many trunk groups: the first sits in
     block 1, which holds no lines; each one more takes eight line slots
-    (protocol.md 5, mf8-unit.md 7). Block 0 is never an MF8 group."""
+    (numbering.md §2, eight-channel-mf8.md §7). Block 0 is never an MF8 group."""
     return max(0, 48 - 8 * max(0, groups - 1))
 
 
@@ -2693,7 +2698,7 @@ ORDINARY = [f'{e}{b}' for e in (2, 3, 4, 5, 6, 7) for b in (1, 2, 3, 4, 5, 6, 7,
 
 def shape(links, straps=()):
     """a network from its links {(u, v): channels}: lines by the groups each exchange fits, and codes by
-    the convention of network.md 2 -- an exchange of three or four directions takes a backbone
+    the convention of numbering.md §5 -- an exchange of three or four directions takes a backbone
     code, 00-17, the rest 20-77, and either kind spills into the other's when its own run out"""
     names = sorted({x for l in links for x in l}, key=lambda n: (len(n), n))
     assert len(names) <= 64, 'more than 64 exchanges'
@@ -2713,7 +2718,7 @@ def shape(links, straps=()):
 
 
 def predict(links, lines, straps=(), leave=0.3, hold=None):
-    """Erlang arithmetic for a tree, or a tree with strapped links across it (network.md 3.3, 5).
+    """Erlang arithmetic for a tree, or a tree with strapped links across it (network.md §7, topology.md §11).
     hold: seconds a call that leaves holds a channel on every link it is offered to.  None is the
     pulse flood, each code its own; a number is SS0, where the seizure lasts only till the claim"""
     strapped = {frozenset(l) for l in straps}
@@ -2838,9 +2843,9 @@ def ring_links(n, ch):
 def topo():
     print('TOPO -- what shapes of network the protocol carries, and how large.  A line makes 3 calls an hour of')
     print(f'  48 s; every call that leaves floods every link for 2.0 to 3.8 s by the code it calls, {FLOOD_S:.2f} s over all 64')
-    print('  (network.md 4); each shape is worked with its own codes, the backbone\'s from 00-17.  An exchange')
+    print('  (network.md §4.3); each shape is worked with its own codes, the backbone\'s from 00-17.  An exchange')
     print('  faces four directions at most and fits eight trunk groups at most; it keeps 48 lines with two')
-    print('  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as network.md 5')
+    print('  groups and gives up six for each one more.  Arithmetic is Erlang B on a tree, as topology.md §11')
     print('  and `net` agree it may be; "pair" is the worst end-to-end loss between two exchanges, "lost" the mean.')
 
     head = (f'  {"":34s} {"exch":>4s} {"lines":>6s} {"flood":>6s} {"worst link":>24s} {"pair":>7s} {"lost":>7s} '
@@ -2912,7 +2917,7 @@ def topo():
             else:
                 print(f'  {label}: none')
 
-    print('\n  5. Rings.  A link strapped with n carries calls between its own two ends only (network.md 3.3).')
+    print('\n  5. Rings.  A link strapped with n carries calls between its own two ends only (network.md §7).')
     print(head)
     for n in (4, 6, 8):
         row(f'chain of {n}, 6 channels', chain_links(n, 6))
@@ -3202,7 +3207,7 @@ def traffic():
                   f'{100 * w.refused / max(w.taken + w.refused, 1):6.2f} % {re_:8.2f} {rw:8.1f} % '
                   f'{dt.mean():8.1f} {np.percentile(dt, 95):7.1f} {dt.max():7.0f}')
     print('     "waited" is the share of callers the scanner had to come back to, which is dial tone')
-    print(f'     late and not a call lost (marker.md 6).  {mrows[2][1].stat["herds"]} herds were let loose.')
+    print(f'     late and not a call lost (register.md §4).  {mrows[2][1].stat["herds"]} herds were let loose.')
     print('')
     print('     A BURST DOES NOT OFFER THE SAME CALLS, and that is not the model being wrong.  The')
     print('     cold rate is set so the mean over the cycle is the smooth one, which is exact for')
@@ -3288,7 +3293,7 @@ def backbone(core_k, core_ch, levels, mid=None):
 def mesh_core(k, core_ch, levels, mid=None):
     """The same, with the k tandems FULLY CONNECTED instead of chained.  The flood must see a
     tree, so only the k-1 links of the chain may carry it and every other core link is strapped
-    (network.md 3.3).  Returns the links and the straps."""
+    (network.md §7).  Returns the links and the straps."""
     out = backbone(k, core_ch, levels, mid)
     straps = []
     for a in range(k):
@@ -3339,7 +3344,7 @@ def big_family():
 
 def big():
     print('BIG -- how near sixty-four exchanges the pulse flood will go, and what shape gets there.')
-    print('  The rules are topology.md 1: four directions an exchange, eight trunk groups, the flood')
+    print('  The rules are topology.md §1: four directions an exchange, eight trunk groups, the flood')
     print('  sees a tree, sixty-four codes, and the whole flood inside the origin\'s 128 ms guard at a')
     print(f'  slow marker ({SLOW_HOP:.0f} ms a hop and {SLOW_HUB:.0f} more at a hub).  Erlang B on a tree throughout,')
     print(f'  3 calls an hour of {HOLD_MEAN / 1000:.0f} s a line, and every call that leaves floods every link for')
@@ -3401,7 +3406,7 @@ def big():
     print('\n  4. FULLY CONNECTED tandems.  Of the k(k-1)/2 links between k tandems only the k-1 of a')
     print('     chain may carry the flood, because the flood must see a tree; every other one is')
     print('     STRAPPED, and a strapped link carries calls between its own two ends only')
-    print('     (network.md 3.3).  A tandem has twelve lines.  So this is what they are worth:')
+    print('     (network.md §7).  A tandem has twelve lines.  So this is what they are worth:')
     print('     Read the pairs: each is the SAME eight trunk groups at each tandem, spent on a chain')
     print('     of wide links or on a mesh of narrow ones.')
     print(head)
@@ -3484,11 +3489,11 @@ def big():
 
     # ---- 7. the guard's tap ----------------------------------------------
     print(f"\n  7. What the GUARD'S TAP buys.  The flood has to cross the network inside the origin's")
-    print(f"     guard (monitor.md 3, rule 2), which is one tap on a counter -- {G_ORIGIN:.0f} ms today, and")
+    print(f"     guard (monitor-rules.md §1, rule 2), which is one tap on a counter -- {G_ORIGIN:.0f} ms today, and")
     print(f"     {SLOW_HOP:.0f} ms a hop at a slow marker with {SLOW_HUB:.0f} more at a hub.  It may go as far as the caller's")
     print(f"     own pause less the {T_ID + T_MARK:.0f} ms the digit and the seizure take: a phone to ES 201 187 gives")
-    print(f"     720 ms (register.md 2), so {720 - T_ID - T_MARK:.0f} ms, and 512 is the last tap under it.  A carrier's own")
-    print("     delay is NOT in this budget (monitor.md 5.1); wander is.")
+    print(f"     720 ms (register.md §1), so {720 - T_ID - T_MARK:.0f} ms, and 512 is the last tap under it.  A carrier's own")
+    print("     delay is NOT in this budget (monitor-rules.md §5.1); wander is.")
     print(f'\n  {"tap":>7s} {"a chain of 12 ch":>28s} | {"the largest network at 30 % leaving":>44s}')
     print(f'  {"":>7s} {"hops":>6s} {"exchanges":>10s} {"what stops it":>11s} | {"exch":>5s} {"lines":>6s} '
           f'{"a/ex":>5s} {"worst link":>17s} {"hops":>5s} {"spread":>7s}')

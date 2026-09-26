@@ -1,10 +1,11 @@
 """
-The subscriber line of common/subscriber-line.md, and the register of exchange/register.md.
+The subscriber line of common/subscriber-line.md, and the register of exchange/register.md,
+as exchange/analysis/dialling.md measures it.
 
 One phone on two pairs, 64 kbps CVSD each way in differential Manchester at
 128 kBaud.  Hook and ring are held bit patterns; a dial pulse is the on-hook
 pattern keyed by the dial contact.  This promotes the scratch measurements
-behind subscriber-line.md §§2-5 into a tool, and adds the register that reads
+behind subscriber-line.md §2–§5 into a tool, and adds the register that reads
 the dial.
 
 Chain, upstream:
@@ -24,7 +25,7 @@ Usage:  python3 sim/subline.py            everything, ~7 min       (subline.log 
         python3 sim/subline.py density    §2: how near CVSD traffic comes to either pattern
         python3 sim/subline.py hook       §3: the hook and ring detectors, and a dead pair
         python3 sim/subline.py dial       §5: dial pulses as the line card sees them
-        python3 sim/subline.py register   register.md: dialled digits into the register
+        python3 sim/subline.py register   dialling.md: dialled digits into the register
         python3 sim/subline.py dtmf       §5: DTMF through the codec
         python3 sim/subline.py xfmr       mf8-spec §9.3: the line transformer's inductance
 """

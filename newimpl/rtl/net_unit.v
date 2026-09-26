@@ -1,10 +1,10 @@
-// net_unit -- the network unit: the pulse flood.  network.md 3, 4;
-// common-control.md 2.2-2.4, 4; monitor.md.  NETWORK.
+// net_unit -- the network unit: the pulse flood.  network.md §1, §3, §4;
+// analysis/monitor-rules.md.  NETWORK.
 //
 // ONE CARD, AND EVERYTHING THE NETWORK NEEDS IS ON IT.  The fabric, the ports,
 // the register, the marker and the release rule are the standalone
 // exchange's, unchanged; this card is what a pulse-flood exchange adds
-// (network.md 3.1).  It fits:
+// (network.md §3).  It fits:
 //
 //   its own probe on SCAN -- it never borrows the marker's, which freezes on
 //     a called port exactly when the marker is busiest
@@ -14,11 +14,11 @@
 //   a CLASSIFIER: a port showing M with BUSY clear is read off /HW.  A flood
 //     trunk is an incoming seizure: hold it, give it a monitor, forward it.
 //     Anything else is the marker's
-//   the MONITORS (monitor.md), as a pool on this card, each cell its own
+//   the MONITORS (network.md §3.4), as a pool on this card, each cell its own
 //     probe and its own pulse counter.  They claim; nothing else here does
 //   the ORIGIN bank for the one register: seize a trunk every way, watch the
 //     caller's digits go down them live, keep the one that claims
-//   the FORWARDER and the RESOLVERS (network.md 3.2): a seizure is passed
+//   the FORWARDER and the RESOLVERS (network.md §3.5): a seizure is passed
 //     into every other direction, and held until one of them claims
 //   a HUNT: one sweep of all 64 ports that finds, for each direction asked
 //     for, the free trunk facing that way -- the lowest-numbered, or the
@@ -26,9 +26,9 @@
 //
 // THE CARD SAYS WHAT IT IS.  This unit holds no jumper that says "port p is a
 // trunk" or "p faces east".  Those are the trunk card's own, in its word
-// (baseband_card.v; extensions.md 2.2), and read off /HW when needed.  What is
+// (baseband_card.v; card-word.md §2), and read off /HW when needed.  What is
 // strapped here is what is this exchange's: its code e b, the guard's tap, and
-// the ring jumper, one a direction (network.md 3.3).
+// the ring jumper, one a direction (network.md §7).
 //
 // ---- THE COST OF READING, AND WHY THE HUNT SWEEPS ----------------------------
 // A read is a select on /WS in the port's own bit-time and the eight frames
@@ -46,14 +46,17 @@
 // follows, and a port that was not free is no candidate.  The sweep does not
 // find ports in order, so it keeps the lowest (or, with glare, the highest)
 // candidate a direction, and a final pass checks each candidate is still free
-// before it is written (groups.md 2.2: take the port at the visit that finds
+// before it is written (marker.md §4.5: take the port at the visit that finds
 // it free).
 //
 // The sweep is most of every transit's hop, and the guard is what a hop is
 // measured against.  With a pointing word on cable B a read was sixteen
 // frames, a sweep 17 ms, and the 128 ms tap covered about six hops; at 9 ms
-// it covers about ten, the documents' figure.  Joel accepted the 17 ms on
-// 2026-09-25, and took the pointing word off the bus the same day.
+// it covers about ten TYPICAL hops, of about 12 ms -- and four or five slow
+// ones, 22-30 ms, where the forward waits for a sweep already running or the
+// classifier is still watching an earlier hold (network.md §6).  Joel
+// accepted the 17 ms on 2026-09-25, and took the pointing word off the bus
+// the same day.
 //
 // ---- WHAT THE MARKER SEES ------------------------------------------------------
 //   /NET        grounded here: a unit is fitted
@@ -72,8 +75,8 @@
 // wants one bank a register.  One forwarder: a seizure arriving while it is
 // hunting is held and watched but not passed on.  No card-word secondary.
 //
-//   network.md 1.1, 3, 3.1-3.3, 4; monitor.md 2-4; common-control.md 2;
-//   extensions.md 2.2; groups.md 2.2; baseband.md 3
+//   network.md §1-§7; analysis/monitor-rules.md; register.md §3;
+//   card-word.md §2; marker.md §4.5; trunks.md §1, §2
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -82,17 +85,20 @@ module net_unit #(
     parameter [2:0]   OWN_E   = 3'd2,      // the code's two digits, octal jumpers
     parameter [2:0]   OWN_B   = 3'd2,
     parameter [3:0]   STRAP_N = 4'b0000,   // the ring jumper, one a direction N S E W
-    parameter [1:0]   GUARD   = 2'd0,      // the guard's tap: 128, 256 or 512 ms
+    // the guard's tap, a two-bit strap: 128 ms doubled by each step of the
+    // code, 128, 256, 512 or 1024 ms.  Code 3's 1024 is past the ceiling and
+    // abandons conforming dials (network.md §6, §10)
+    parameter [1:0]   GUARD   = 2'd0,
     // ---- stuffing ----------------------------------------------------------------
-    parameter integer NMON    = 2,         // monitor cells (monitor.md 4)
+    parameter integer NMON    = 2,         // monitor cells (network.md §3.4, §10)
     parameter integer NRES    = 2,         // resolvers: forwards held at once
     // ---- the counter taps, in ms.  A bench scales them; the board has taps ----
-    parameter [8:0]   HIT     = 9'd8,      // the monitors' windows (register.md 2)
+    parameter [8:0]   HIT     = 9'd8,      // the monitors' windows (register.md §1)
     parameter [8:0]   ID      = 9'd128,
     parameter [8:0]   CLR     = 9'd256,
     parameter [15:0]  T_GUARD0 = 16'd128,  // the guard's first tap
-    parameter [15:0]  T_KEY   = 16'd5000,  // b not in: network.md 4
-    parameter [15:0]  T_CLAIM = 16'd2000,  // no claim after b: network.md 3
+    parameter [15:0]  T_KEY   = 16'd5000,  // b not in: network.md §4.1
+    parameter [15:0]  T_CLAIM = 16'd2000,  // no claim after b: network.md §4.1
     // the ports' fM detector: M must stand this long before a port can ever
     // release itself (port.v).  A hold written on a seizure that dies sooner
     // has no edge to be cleared by, so this card clears it
@@ -135,7 +141,7 @@ module net_unit #(
     output reg [`PW-1:0]    att_port,
     input                   att_ack,
 
-    // ---- the register's ribbon, tapped (common-control.md 2.1) ---------------
+    // ---- the register's ribbon, tapped (register.md §3) ----------------------
     input                   r_busy,
     input      [`PW-1:0]    r_port,        // the caller
     input      [2:0]        r_ndig,
@@ -159,7 +165,7 @@ module net_unit #(
     wire tick_1k = frame_stb && (scan == {`SCANW{1'b0}});
 
     localparam [`PW-1:0] P00        = 6'o00;
-    localparam [`PW-1:0] EV_GLARE   = 6'o04;   // counters.md: the event codes
+    localparam [`PW-1:0] EV_GLARE   = 6'o04;   // proposed/counters.md §5: the event codes
     localparam [`PW-1:0] EV_NOTRUNK = 6'o10;
     localparam [`PW-1:0] STRIDE     = 6'd9;
 
@@ -170,7 +176,7 @@ module net_unit #(
     // A flood trunk says so in its primary octet: 11 01 0, then g, then dd.
     function is_trunk(input [4:0] w); is_trunk = (w == 5'b01011); endfunction
 
-    // protocol.md 5 / network.md 2: e and b are 0-7, ten pulses is 0, and
+    // numbering.md §1 / numbering.md §5: e and b are 0-7, ten pulses is 0, and
     // 8, 9 and 11-15 are reserved.
     function [2:0] oct(input [3:0] c);  oct  = c[3] ? 3'd0 : c[2:0]; endfunction
     function       isvc(input [3:0] c); isvc = (c == 4'd8) || (c == 4'd9) || (c > 4'd10); endfunction
@@ -271,7 +277,8 @@ module net_unit #(
     //     fresh seizure -- read as one, it was held and flooded onward;
     //   a rise the classifier was too busy to take is still clear, and is
     //     read at a later pass.
-    // It is monitor.md 4's "low at the last visit", kept for every port.  On
+    // It is analysis/monitor-rules.md §2's "BUSY at the last visit", kept for
+    // every port: network.md §3.3's bit a port.  On
     // the board a 64-stage delay line clocked at the frame edge -- eight '164
     // -- read at its head and written at its tail in each port's own turn.
     reg [63:0]     st;
@@ -312,7 +319,7 @@ module net_unit #(
             .frame_stb(frame_stb), .scan(scan), .ha_n(ha_n), .hb_n(hb_n),
             .port(m_port[g*`PW +: `PW]), .m(mp_m[g]), .busy(mp_busy_u),
             .port_q(mp_port[g*`PW +: `PW]), .fresh(mp_fresh[g]));
-        // register.md 2's three windows, on that M
+        // register.md §1's three windows, on that M
         pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR)) u_mrx (
             .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
             .arm(m_armed[g]), .m(mp_m[g]),
@@ -406,7 +413,8 @@ module net_unit #(
     wire [3:0] dg1 = r_digits[7:4];
     wire [3:0] dg2 = r_digits[11:8];
     // the number is in: h s, or a one-key number after the code -- 0, or 9
-    // (network.md 3: "h s, or 0, or 9") -- which the far end answers at once
+    // (network.md §4.1: "h s, or a third digit of 8 pulses or more") -- which
+    // the far end answers at once
     wire       o_last = (r_ndig >= 3'd4) || ((r_ndig == 3'd3) && (oct(dg2) == 3'd0));
     wire       guarding = !f2 && (tmr < t_guard);
     wire       o_net   = (nst == N_NET) || (nst == N_WAITCL);
@@ -417,8 +425,8 @@ module net_unit #(
     // Its own seizure makes the port BUSY only once the word is out and the
     // port's turn comes round, a pass or two, and a far end seizing the same
     // channel inside that window shows M with BUSY clear.  That is glare: the
-    // far M is the origin's claim, or the resolver's (network.md 1, "residual
-    // glare joins two callers"), and the classifier must not ALSO hold the
+    // far M is the origin's claim, or the resolver's (network.md §5: "the two
+    // callers are joined"), and the classifier must not ALSO hold the
     // port as an incoming seizure -- listening to 00 over this card's own
     // write -- and give it a monitor.  The origin and the resolvers already
     // compare the probe's port with every trunk and leg they hold (the claim
@@ -596,16 +604,16 @@ module net_unit #(
                 // ---- an incoming seizure ----------------------------------
                 // HOLD IT: listening to 00, BUSY, so the marker never takes
                 // its M and nothing hunts it.  Then a monitor, if one is free
-                // -- "none free: the seizure goes unwatched here, for good"
-                // (monitor.md 4) -- and a forward, unless the link it came in
-                // on is jumpered: never forwarded ONWARD from a strapped link
-                // (network.md 3.3).
+                // -- with none free the seizure is still held and forwarded,
+                // but this exchange cannot own the call (network.md §3.4) --
+                // and a forward, unless the link it came in on is jumpered:
+                // never forwarded ONWARD from a strapped link (network.md §7).
                 //
                 // THE MONITOR SEES THE RISE.  It is attached at the read that
                 // found the trunk, a millisecond or two after the rise, and
                 // the first break cannot come sooner than the guard allows:
                 // the origin abandons any that does.  That is rule 1 on this
-                // card (monitor.md 3): nothing has gone by.
+                // card (network.md §3.4): nothing has gone by.
                 push_v <= 5'b00001;
                 push_d <= {60'd0, ent(cls_port, P00, 1'b1, 1'b0)};
                 cst    <= C_HOLD; cls_ms <= 9'd0;
@@ -728,7 +736,7 @@ module net_unit #(
                     push_d[j2*15 +: 15] <= ent(f_cand[j2*`PW +: `PW], f_in, 1'b1, 1'b0);
                 end
                 // one leg: patch it both ways now and forget the way back
-                // (network.md 3: "one found: patch it, two latches")
+                // (network.md §3.5: with one leg, "both ways at once")
                 if (popc(f_ok) == 3'd1)
                     for (j2 = 0; j2 < 4; j2 = j2 + 1) if (f_ok[j2]) begin
                         push_v[4] <= 1'b1;
@@ -796,7 +804,7 @@ module net_unit #(
                 for (j2 = 0; j2 < 4; j2 = j2 + 1)
                     if (d_held[j2] && (sp_port == d_trunk[j2*`PW +: `PW])) begin
                         claimed <= 1'b1; trunk <= sp_port;
-                        // release the others AT THE CLAIM (network.md 3)
+                        // release the others AT THE CLAIM (network.md §1)
                         dmo <= d_held & ~(4'd1 << j2);
                         // inside the guard it was the far end seizing the same
                         // channel: glare, taken as the claim, and counted
@@ -874,7 +882,7 @@ module net_unit #(
                             f2 <= 1'b1; tmr <= 16'd0; nst <= N_WAITCL;
                         end
                     end else if (!f2 && (tmr >= T_KEY)) begin
-                        // network.md 4: b not in 5 s after the key
+                        // network.md §4.1: b not counted 5 s after the seizure
                         o_after <= O_NOGO; nst <= N_DROP;
                     end
                 end else begin

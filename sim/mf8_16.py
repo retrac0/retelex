@@ -1,5 +1,5 @@
 """
-Framing battery for a 16-bit eight-channel frame: exchange/mf8-unit.md §4.2.
+Framing battery for a 16-bit eight-channel frame: exchange/analysis/eight-channel-mf8.md §4.2.
 
 Family geometry, 16 bits at a 64 kHz frame rate, 1024 kbps / 2.048 MBaud:
 

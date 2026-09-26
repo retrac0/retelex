@@ -27,7 +27,7 @@ interface, and where the three clocks in the system meet.
 
 | module | one per | what it does | specified in |
 |---|---|---|---|
-| **Subscriber line** (SL) | phone | the two pairs: transformers, 48 V phantom feed, a 128 kBaud differential-Manchester driver, the §9.4 receiver at the 64 kbps plug, and the hook and ring detectors | `subscriber-line.md` §§1–3 |
+| **Subscriber line** (SL) | phone | the two pairs: transformers, 48 V phantom feed, a 128 kBaud differential-Manchester driver, the §9.4 receiver at the 64 kbps plug, and the hook and ring detectors | `subscriber-line.md` §1–§3 |
 | **Channel** (CH) | slot | the slot logic: relays bits between the subscriber line and the slot, retimes across clock domains, applies MUTE, and holds the exchange-side rule of `subscriber-line.md` §4 | this document §4, §5 |
 | **Trunk card** (TC) | exchange | the transmitter of `mf8-spec.md` §10 and the receiver of §11 on one card, slot 0. It owns the crystal | `mf8-spec.md` §§9–11 |
 | **Backplane** | exchange | passive: dedicated per-slot lines, shared clocks, power | this document §2, §3, §8 |
@@ -107,8 +107,8 @@ and the trunk card; the clocks and `MUTE` are multi-drop with six loads.
 | `RAI` | — | — | — | — | one pin reserved for `mf8-spec.md` §3.5's seventh S bit; not connected |
 | `+5 V`, `GND` | PSU | all | | | logic |
 | `±12 V` | PSU | E&M cards, comparators | | | analog |
-| `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `channel-cards.md` §3.4 |
-| `RING`, `RING RET` | shelf ring generator on the Noisy PSU (`mf8-psu.md`) | FXS layers only, by a jumper per layer | | 20 Hz, ~80 Vrms | the ringing bus of `channel-cards.md` §3.4; cadence is far-end A; never reaches a line, data or E&M card |
+| `−48 V`, `−48 RET` | PSU | line cards, FXS cards, fused per slot | | | the phantom feed of `subscriber-line.md` §1; the battery feed of `channel-cards.md` §3.2 |
+| `RING`, `RING RET` | shelf ring generator on the Noisy PSU (`mf8-psu.md`) | FXS layers only, by a jumper per layer | | 20 Hz, ~80 Vrms | the ringing bus of `channel-cards.md` §3.2; cadence is far-end A; never reaches a line, data or E&M card |
 
 Two things are deliberately absent. **No slot-ID pins:** slot *n*'s `C_TX`,
 `A_TX`, `C_RX` and `A_RX` are wired to input and output *n* of the trunk card's
@@ -175,7 +175,7 @@ The signalling mux and the frame mux use the same input numbering because the
 guard sits at states 0 and 4 (`mf8-spec.md` §3.2): the S superframe mirrors the
 frame, so slot *n*'s A bit is at superframe state `CBIT[n]` as its C bit is at
 frame bit `CBIT[n]`. On an *exchange* the trunk unit is a **block adapter** on
-the **block header** (`mf8-unit.md` §1) instead of this stack header.
+the **block header** (`trunks.md` §4) instead of this stack header.
 
 ### I4, I5 — the trunk pair
 
@@ -308,7 +308,7 @@ gateway slot are deferred.**
 |---|---|
 | Cards | **100 × 100 mm** (stack). Was: Eurocard 100 × 160 |
 | Positions | six channel layers + Trunk-D + Trunk-A + Quiet PSU + Noisy PSU (gateway deferred) |
-| Channel interconnect | roles below on stack header C; shell still open (`common-cards.md` §7.1) |
+| Channel interconnect | roles below on stack header C; shell still open (`common-cards.md` §6.1) |
 | Bus length | stack ≪ 25 cm; electrically short; no termination |
 | Clock drivers | one 74HC244 on **Trunk-D** for `TX_CLK`, `LOOP_HB`, `TX_OCT`, `RX_CLK`, `RX_OCT`, `MUTE`, 33 Ω series |
 | Ground | logic `GND`; `−48 RET` and `RING RET` separate, star at the PSU (`mf8-psu.md` §7) |
@@ -336,7 +336,7 @@ gateway slot are deferred.**
 | 15 | key | key |
 | 16 | `GND` | `GND` |
 
-The exchange uses a12 and a13 (`exchange/extensions.md` §2.1): a12 carries the
+The exchange uses a12 and a13 (`exchange/card-word.md` §1): a12 carries the
 **card word**, its class and options one bit a frame, and a13 is `/ANS`, whether
 the port rings. a14 stays spare. A card only ever pulls the two to ground, and
 this shelf leaves them unconnected, so a card built for the exchange works here

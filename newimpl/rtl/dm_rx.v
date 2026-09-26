@@ -21,13 +21,13 @@
 // fourth of a cell and a 100 ppm offset is four orders of magnitude below
 // it.  Same function, different timebase.
 //
-// Two more things come out than a trunk needs, because subscriber-line.md 3
+// Two more things come out than a trunk needs, because subscriber-line.md §3
 // builds the hook detector on them: LONG and MID at the accepted edge, and
 // the violation -- a half-cell with no partner, or a boundary that never
 // came.  Valid differential Manchester never does either; a dead pair with
 // noise on it does both constantly.
 //
-//   mf8-spec.md 9.4, 9.6, 9.7; subscriber-line.md 3
+//   mf8-spec.md 9.4, 9.6, 9.7; subscriber-line.md §3
 `timescale 1ns/1ps
 
 module dm_rx #(

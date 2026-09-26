@@ -51,10 +51,14 @@ General purpose architecture.  Chains, stars and rings are possible.
 ```
 common/     the cards, and everything that belongs to neither shelf nor block
 mf8/        the MF8 carrier: frame, line, backplane
-exchange/   the exchange
-verilog/    the exchange in Verilog: rtl/, tb/, Makefile
+exchange/   the exchange: the design as built, proposed/, analysis/
+newimpl/    the exchange in Verilog, the reference the documents describe
+pcb/        KiCad boards: the block header, the port card, the bus, SU-1, the lamp panel
 sim/        every model, and the committed run beside each
 falstad/    the voice path as Falstad circuits
+spice/      analog circuits in ngspice
+mf2/        MF2, the two-channel member of the MF8 family
+old/        retired trees (old/verilog)
 ```
 
 A card plugs into an MF8 shelf or an exchange block unchanged, so its
@@ -67,18 +71,17 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 
 | | |
 |---|---|
-| [common/terms.md](common/terms.md) | one name per object: channel socket, stack header C, block ribbon, cables A/B, `LINE_HB` / `LOOP_HB`, card word / `/ANS`, and what not to call them |
-| [common/channel-cards.md](common/channel-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; each card's pins; signalling through the A bit, measured |
-| [common/common-cards.md](common/common-cards.md) | the common card set: four cards that plug into an MF8 shelf or an exchange block unchanged — one socket with a column per card, what a card says about itself, the FXO's one jumper, and the connectors |
-| [common/clocks.md](common/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, nine taps, three domains, and where a card's 128 kHz comes from |
-| [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, DTMF in band |
-| [common/su-1.md](common/su-1.md) | SU-1 mk1 subscriber unit: native CVSD set, 4P4C handset, Autovon pad → dial pulses, three boards (SU-D / SU-A / SU-K) |
-| [common/sdu-1.md](common/sdu-1.md) | SDU-1 mk1: 32 kb/s insert-1 on raw biphase (switched); RAW64 strap for nailed 64 kb/s |
-| [common/stu-1.md](common/stu-1.md) | STU-1 mk1 test set: the lineman's butt set — two §9.4 front ends, one a direction, a two-column lamp field that names the fault, a violation counter on real copper, the phantom in volts |
-| [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits — in the exchange, at the subscriber, or at a shared site — and the adapter that puts it at the subscriber, its parts, its ringing and its power budget |
-| [common/tone-plan.md](common/tone-plan.md) | the tone plan: four tones in two timbres — the Australian warble for *progressing*, the old Bell buzz for *stop* — why a warble is one oscillator and not three, eight ROM planes as two switchable standards, and the analog card beside it |
-| [common/tone-card.md](common/tone-card.md) | the tone card: one generator holding a whole shelf on fast busy — a plain 2 × 16 channel card, the backplane jumper field that lets one slot feed the others, and the only card in the set that drives and never listens |
-| [common/circuit-review.md](common/circuit-review.md) | four circuit findings ahead of the breadboard: the encoder flip-flop, the `Iabc` drive, sample-then-retrigger, the logic-to-engine connections |
+| [common/terms.md](common/terms.md) | one name per object, and what not to call it |
+| [common/clocks.md](common/clocks.md) | every clock in MF8 and in the exchange: one 4.096 MHz crystal, its taps, three domains; no card makes a clock |
+| [common/common-cards.md](common/common-cards.md) | the channel socket: pins by card, on an MF8 shelf and on a block's J4; rails; the FXO's one jumper; connectors |
+| [common/channel-cards.md](common/channel-cards.md) | the channel cards: the CVSD subscriber line card, the analog FXS/FXO card, the data card; signalling through the A bit, measured |
+| [common/subscriber-line.md](common/subscriber-line.md) | the subscriber line: raw CVSD four-wire, hook and ring as held bit patterns, dialling as the line card sees it; the phone is loop-timed |
+| [common/tones.md](common/tones.md) | the tone plan and the tone cards: the warble for *progressing*, the buzz for *stop*, the ROM planes, the analog card, the MF8 tone bus |
+| [common/cvsd-codec.md](common/cvsd-codec.md) | the CVSD codec circuit and its riser |
+| [common/su-1.md](common/su-1.md) | SU-1 subscriber set: native CVSD, 4P4C handset, Autovon pad → dial pulses, three boards (SU-D / SU-A / SU-K) |
+| [common/sdu-1.md](common/sdu-1.md) | SDU-1 data set: 32 kb/s insert-1 on the raw line (switched); RAW64 for nailed 64 kb/s |
+| [common/stu-1.md](common/stu-1.md) | STU-1 test set: the lineman's butt set — a lamp field that names the fault, a violation counter on real copper, the phantom in volts |
+| [common/subscriber-adapter.md](common/subscriber-adapter.md) | a stock dial telephone on that line: where the 2-wire conversion sits, the adapter, its ringing and its power budget |
 
 **mf8/** — the carrier
 
@@ -93,13 +96,12 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | [mf8/frame-rate.md](mf8/frame-rate.md) | what the frame rate should be: reach against quality, capacity and DS0 |
 | [mf8/mfspec.md](mf8/mfspec.md) | the predecessor this design replaced the F word of |
 
-**exchange/**, **verilog/**, **falstad/**
+**exchange/**, **newimpl/**, **falstad/**
 
 | | |
 |---|---|
-| [exchange/](exchange/README.md) | **the exchange**: 64 line expandable exchange using the pulse flood protocol. Documents in [exchange/](exchange/) |
-| [exchange/register.md](exchange/register.md) | the register: dial pulses read into a digit store in 74HC, one register for every line, pulse correction and the dialling technique, measured end to end |
-| [verilog/](verilog/README.md) | the exchange as a register-transfer model: `rtl/`, `tb/` and the benches the Makefile runs |
+| [exchange/](exchange/README.md) | **the exchange**: 64 ports, the pulse flood; the design as built, what is proposed, the analysis behind it, the glossary and the open questions |
+| [newimpl/](newimpl/README.md) | the exchange in Verilog: `rtl/`, `tb/`, the benches and the fault list; the reference the documents describe |
 | [falstad/](falstad/README.md) | the voice path as Falstad circuits built from subcircuit modules: CVSD encoder, differential Manchester, a line with noise and impulses, the receiver and its recovered clock, the decoder; what to try, and how each matches the model |
 
 ## Tools
@@ -119,7 +121,7 @@ exists. Run the models from the repo root — `python3 sim/mf8.py`.
 | `audio.py` `cvsd.py` `phy.py` `fast.py` | shared: audio I/O and scoring, the CVSD codec, the physical layer, C-accelerated inner loops |
 | `talkers.py` | builds the seven independent test talkers from LibriSpeech |
 | `tones.py` | call-progress tones as looped CVSD: the shortest seamless loop, what ROM depth buys, eight tone plans compared, five ways to make a warble, and the cadence as a binary divide. Renders the plan to `sim/out/` |
-| `exch.py` | the exchange: the fabric cell by cell, calls a millisecond at a time, the flood across a network, traffic. `exchange/README.md` lists its twenty runs |
+| `exch.py` | the exchange: the fabric cell by cell, calls a millisecond at a time, the flood across a network, traffic. `exchange/README.md` §4 lists its runs |
 
 ```
 python3 sim/mf8.py            frame layer (8-bit / 6 ch)  (mf8.log)

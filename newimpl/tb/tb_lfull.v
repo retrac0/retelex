@@ -1,5 +1,5 @@
 // tb_lfull -- two exchanges, sixteen lines each, a local eight-channel trunk
-// between them, and the trunk FILLED.  local-trunk.md; network.md 1, 3, 4.
+// between them, and the trunk FILLED.  trunks.md §3; network.md §1, §4.1, §5.
 //
 // Exchange A is code 2 2 and exchange B is code 2 3, each top_net with phones
 // on blocks 2 and 3 (20-27, 30-37) and tone sources at 01 and 03.  Their only
@@ -24,7 +24,7 @@
 //                takes the other's M as its claim, EV_GLARE goes out on both
 //                cables B naming the channel, and the two callers -- who
 //                dialled other people -- are joined to each other and nobody
-//                rings (network.md 1: "residual glare joins two callers").
+//                rings (network.md §5: "the two callers are joined").
 //                Neither end may also take the channel it seized as an
 //                incoming call.
 //

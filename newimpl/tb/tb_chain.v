@@ -1,5 +1,5 @@
-// tb_chain -- three exchanges in a chain, and a transit.  network.md 3, 3.1,
-// 3.2; common-control.md 4.
+// tb_chain -- three exchanges in a chain, and a transit.  network.md §1,
+// §3.5, §4.
 //
 //     A 2 2  ==11,12==  11,12  B 2 3  13,15  ==11,12==  C 2 4
 //            faces E          faces W  faces E           faces W
@@ -16,7 +16,7 @@
 //   2  the far way  C20 dials 1 2 2 2 1: the same, the other way round
 //   3  the middle   B20 dials 1 2 2 2 1: B floods BOTH ways; A claims, and B
 //                   lets the trunk toward C go AT THE CLAIM, not at the last
-//                   digit (network.md 3)
+//                   digit (network.md §1)
 //   4  crossing     A20 and B20 key 1 eight milliseconds apart, so A's seizure
 //                   reaches B in the middle of B's own sweep.  B's forward
 //                   waits for the sweep; the origin must still seize from it

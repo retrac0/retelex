@@ -1,4 +1,5 @@
-// top_max -- THE MAXIMAL EXCHANGE: the class marker.  marker.md; common-control.md 1, 4.
+// top_max -- THE MAXIMAL EXCHANGE: the class marker.  marker.md §4;
+// exchange/README.md §2; network.md §3.
 //
 // The exchange of top_net with the mini marker's card pulled and the class
 // marker's plugged in.  The fabric does not change, and neither does the
@@ -7,7 +8,7 @@
 //
 // THE REGISTER IS BESIDE THE MARKER, NOT INSIDE IT.  In the maximal build a
 // register is a pool member on its own card (pulse_reg.v, the header), and
-// common-control.md 2.1's ribbon is the wires below: the marker hands it a
+// register.md §3's ribbon is the wires below: the marker hands it a
 // caller and takes back levels, and the unit taps the same levels for the
 // flood.  One card is fitted.  A second wants a bank a register on the unit
 // (README 6), and is not here.
@@ -15,7 +16,7 @@
 // THE UNIT IS STUFFING.  UNIT_FITTED leaves its card out: /NET and /UREQ then
 // read their pull-ups, every strobe of its ribbon is low, and the class
 // marker takes key 1 as highway 1 -- the standalone exchange of
-// common-control.md 3.  Nothing on the marker changes with it.
+// exchange/README.md §2.  Nothing on the marker changes with it.
 //
 // The regions only a fitted unit stuffs are tagged NETWORK.
 `timescale 1ns/1ps
@@ -29,7 +30,7 @@ module top_max #(
     parameter [8:0]  T_REL        = 9'd256,
     parameter [12:0] RING_ON_MS   = 13'd2048,
     parameter [12:0] RING_OFF_MS  = 13'd4096,
-    // the register's and the monitors' windows (register.md 2)
+    // the register's and the monitors' windows (register.md §1)
     parameter [8:0]  HIT          = 9'd8,
     parameter [8:0]  ID           = 9'd128,
     parameter [8:0]  CLR          = 9'd256,
@@ -63,7 +64,7 @@ module top_max #(
     input      [7:0]  mute_blk,
     input             rbt_in,
 
-    // ---- the clocks a card on a socket takes (common-cards.md 1.1) --------
+    // ---- the clocks a card on a socket takes (common-cards.md §1.1) -------
     output            tx_clk,
     output            loop_hb,
     output            clk_8k,       // TX_OCT
@@ -90,7 +91,7 @@ module top_max #(
     output     [`PW-1:0] caller,
     output     [`PW-1:0] called,
     output     [3:0]  mk_state,
-    output            mk_pwait,     // extensions.md 2.4.1: a P line is waiting
+    output            mk_pwait,     // marker.md §4.3: a P line is waiting
     output            mk_ovf,
     output     [3:0]  dirs_held,
     output     [NRES-1:0] res_busy,
@@ -137,7 +138,7 @@ module top_max #(
     // LOOP_HB is made at the block, /SLOT[1] through one inverter
     assign loop_hb = ~slot[1];
 
-    // ---- the register's ribbon (common-control.md 2.1) -----------------------
+    // ---- the register's ribbon (register.md §3) ------------------------------
     wire           r_attach, r_release, r_restart;
     wire [`PW-1:0] r_attach_port, r_port;
     wire           r_gone, r_nodig, r_brk, r_counting, r_hook, r_settled;

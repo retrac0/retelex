@@ -201,7 +201,7 @@ module tb_ha;
         // ---- E across the wire: how stale can a hook be? -------------------
         // Port 30 listens to port 31.  30's /ANS is tied low so it does not
         // ring and its A_RX is E as it stands -- otherwise the cadence would
-        // chop what we are trying to measure (fabric.md 3.5).
+        // chop what we are trying to measure (fabric.md §5.2).
         armed = 1'b0;
         ans_n[6'o30] = 1'b0;
         wr_latch(6'o30, 6'o31, 1'b0);

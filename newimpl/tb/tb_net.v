@@ -1,5 +1,5 @@
 // tb_net -- two exchanges on one link, and calls that are DIALLED.
-// network.md 3, 3.1, 4; common-control.md 2, 4; monitor.md 2, 3.
+// network.md §1, §3, §4; register.md §3; analysis/monitor-rules.md §1.
 //
 // Exchange A is code 2 2 and exchange B is code 2 3.  Each is top_net: the
 // mini marker with its one register, a network unit, phones at 20 and 21,
@@ -137,7 +137,8 @@ module tb_net;
 
     // ---- a listener on A's cable B: the event words -----------------------------
     // Sixteen bits shifted on SCLK, the word taken at WR: what a counter card
-    // on the ribbon does (counters.md 9).  G = 0 is an event; SRC is its code.
+    // on the bus does (proposed/counters.md §5).  G = 0 is an event; SRC is
+    // its code.
     reg [15:0] sh_a = 16'd0; reg sc_a_d = 1'b0, wr_a_d = 1'b0;
     integer ev_notrunk = 0, ev_other = 0;
     always @(posedge clk_a) begin

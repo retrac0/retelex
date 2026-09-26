@@ -3,9 +3,13 @@
 // FIVE LINES LEFT THE BUS (Joel, 2026-09-25).  Each was another bus signal
 // under another name, or one gate away from one:
 //
-//   TX_CLK = /SLOT2              a '04 section.  Socket a1
+//   TX_CLK = /SLOT2              a '14 section.  Socket a1
 //   TX_OCT = SCAN[2:0] == 7      a third of a '11: one frame in eight.  Socket a3
-//   RX_OCT = TX_OCT a frame late half a '74 on TX_CLK.  Socket a8.  NOT a
+//   RX_OCT = TX_OCT a frame late two '74 halves: TX_OCT taken at /STB4's
+//                                rise, the start of cell 5, then moved onto
+//                                the frame edge.  Socket a8.  NOT one step at
+//                                the frame edge, which races the ripple
+//                                (block-stack.md §2.1 U9, §8.1), and NOT a
 //                                decode of SCAN == 0 on the board: the clock
 //                                card's '4040 ripples, and on its way from 1
 //                                to 2 and from 3 to 4 it passes through 000
@@ -28,7 +32,8 @@
 // The strobes are the RTL's (STYLE.md 6): frame_stb is SLOT2's fall, which is
 // TX_CLK's rise, and tick_1k is SCAN5's fall.
 //
-//   clocks.md 1, fabric.md 3.4, common-cards.md 1.1
+//   clocks.md §1; bus.md §3; block-stack.md §2.1; fabric.md §2.3;
+//   common-cards.md §1.1
 `timescale 1ns/1ps
 `include "exch.vh"
 

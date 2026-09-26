@@ -1,216 +1,252 @@
-# exch — an exchange at MF8's level of technology
+# The exchange
 
-A telephone exchange in 74HC and a few tuned analog circuits, that grows eight
-ports at a time, takes every MF8 channel card unchanged, and is tied by MF8 both
-to other exchanges and to subscriber terminals. No processor, no memory part in
-the exchange logic. **An exchange is one 8 × 8 fabric — eight highways by eight
-slots, 64 ports**: standalone, fifty-six dialable lines (10–77) with block 0
-holding tones at 01–03 and a four-line bank at 04–07 (operator and kin);
-networked, forty-eight lines (20–77) and the first MF8 trunk group on block 1
-(11–13, 15–17 — six channels; 10 and 14 free), with further groups in blocks 2+
-at the cost of those lines.
-A network
-is such exchanges in a chain, a ring, a star or a tree (an exchange faces up to
-four directions): a handful on a chain, a score around a tandem hub. A line is dialled `h s` from its own
-exchange and `1 e b h s` from anywhere when networked (standalone, 1 is a
-highway digit): the key, the exchange's code (00–77,
-sixty-four of them, with 00–17 kept for the backbone by convention) and the
-line. 8 and 9 stay special in the code.
+A telephone exchange in 74HC and a few analog circuits: 64 ports on one
+8 × 8 fabric, every MF8 channel card taken unchanged, tied to other exchanges
+by the *pulse flood*. No processor and no memory part in the exchange logic.
+
+> **Status.** The fabric, both markers, the register, the network unit, the
+> baseband tie and the local eight-channel trunk are built in RTL
+> (`newimpl/`) and measured in simulation. The block header and port card are
+> drawn in KiCad (`pcb/`). Nothing has been on a bench. Test status and what
+> the benches do not cover: `newimpl/README.md`.
+
+---
+
+## 1. What it is
 
 ```
- card ── C, A each way ── port ──▶ 8-slot highway, 512 kbps, one per block ──▶ every block
-                          port ◀── [ latch: highway | slot ] ◀── marker: hunt a class, write two latches
+ card ── C, A each way ── port ──▶ HC[h]: 8 slots at 512 kbps, one per block ──▶ every port
+                          port ◀── latch: highway | slot ◀── marker writes it on the control bus
+                          port ──▶ /HA (M), /HB (BUSY): one bit-time a port, 1 ms a pass
 ```
 
-- **The internal protocol is the MF8 slot interface**: a 64 kbps bit stream and one
-  signalling level each way. Bits are switched, never decoded: one codec pair end
-  to end, over any number of exchanges.
-- **The connection memory is a latch at each port**, so the fabric grows linearly
-  and adding a block touches nothing installed.
-- **Dialled digits are the address**: octal as dialled, ports 00–77.
-- **Features are lines.** Operator, outside line, tones, announcements, a radio
-  anyone may dial, a conference bridge are cards with a class mark; the marker's one special skill is
-  hunting a class in fixed order. Nothing anywhere says where anything is.
-- **Nobody is in charge of a call.** The marker writes two latches and leaves;
-  ringing, ringback, answer and release are done by the ports.
+- **The switch carries bits, never voice band.** A port is a 64 kbps stream
+  and one signalling level each way — the MF8 channel slot. One codec pair
+  end to end, over any number of exchanges (`analysis/why-bits.md`).
+- **The connection memory is a latch at each port**: it names the highway and
+  slot the port listens to. A cleared latch listens to 00, idle.
+- **Dialled digits are the address.** Octal as dialled, ports 00–77
+  (`numbering.md`).
+- **The card says what it is.** A port's card tells the exchange everything
+  about it in one serial word (`card-word.md`); nothing on common control
+  says where anything is. Features are cards, not parameters.
+- **Nobody is in charge of a call.** The marker writes the latches and
+  leaves. Ringing, ringback, answer and release are done by the ports, and a
+  port releases on a fall (`fabric.md` §5).
 
-## Documents
+Rules the RTL taught, which every part of the design follows:
+
+- **An event on a wire is a race; a level valid when read is not.** A claim, a
+  digit, a seizure, a register falling free: each is a level held until the
+  other side has seen it.
+- **Act on the latched port, never on live `SCAN`.**
+- **Do not let go of a connected call until the called port could let go of
+  it** (`marker.md` §5).
+- **A store must be empty whenever it is idle.**
+- **Nothing read out of turn, so nothing to remember** (the class marker's
+  walk, `marker.md` §4).
+- **Arbitration appears only where there are two of something.**
+
+## 2. The three builds
+
+Each build is an RTL top around the same `exch` — the clock card, the bus,
+the blocks, the port cards. Common control is the one family of cards that is
+swapped rather than added to; everything else a build gains is a card whose
+word says what it is.
+
+| | `top_min` | `top_net` | `top_max` |
+|---|---|---|---|
+| common control | the mini marker, its one register on the card | the mini marker and a network unit | the class marker and a register card; the unit fitted or not |
+| a caller | M and not `BUSY` | the same, and not a trunk, not none | read by the walk, by its word |
+| dial tone within | a pass, 1 ms | a word read and a pass | a round of the walk, about 250 ms |
+| key 1 | highway 1 | the flood | the flood with a unit, else highway 1 |
+| 0, 9 | cannot-complete | cannot-complete | the operator and answers-to; outside lines |
+| a busy line | cannot-complete (Open, `numbering.md` §6) | cannot-complete | busy tone |
+| the card word | not read | trunk or none only | the primary octet |
+| answers-to, nails, sources, restricted, busy-out, `PWAIT`, CO lines, data lines | no | no | yes |
+| benches | `tb_mini` | `tb_net`, `tb_chain`, `tb_lnet`, `tb_lfull`, `tb_lchain` | `tb_max`, no unit fitted |
+
+- **`top_min`, the minimal exchange**: the clock card, one block in position 2
+  (0 and 1 are keys, so 20–77 are the first numbers anyone can dial), a port
+  card and a line card for each phone, and the mini marker. Two phones dial
+  `2 0` and `2 1`. Tone cards at 01 and 03 are optional: without them the
+  caller hears silence and the call still completes. Everything absent reads
+  idle (`bus.md` §6).
+- **`top_net`, a pulse-flood exchange with the small marker**: `top_min` plus a
+  network unit, which grounds `/NET`, and trunk cards in any sockets.
+  `1 e b h s` reaches any line; local numbers do not change. A flood never
+  needs a smarter marker (`network.md` §3).
+- **`top_max`, the class marker**: pull the mini marker, fit the class marker
+  and a register card. Every feature is then a card whose word says it: tones
+  at 01–03, an operator at 04 and more positions answering to 04, an FXO card
+  whose word says outside line, a card with a nail in its jumpers
+  (`features.md`). The unit plugs in beside it unchanged; the class marker on a
+  network has not been benched.
+
+More lines are port cards and line cards, then blocks 3–7. More registers need
+a pool, which is not built (`register.md` §4).
+
+**Bring-up order.** The fabric first, block by block, with no marker at all
+(`fabric.md` §6.3): the clock card, a header, then latches written by hand
+from a jig — 20 and 21 pointed at each other are a hotline that rings and
+releases itself. Then the builds in order: the mini marker (`top_min`, dial 20
+and 21); a network unit and trunk cards (`top_net`, dial across a link); the
+class marker and a register card (`top_max`: 0, 9, answers-to, nails).
+
+## 3. Glossary
+
+One name per object. Signals are in `bus.md` §1; word fields in
+`card-word.md` §2.
+
+| term | meaning |
+|---|---|
+| cell | 1.953 µs, one of eight in a 64 kHz frame; one slot of a highway |
+| bit-time | one 64 kHz frame, 15.63 µs, in which port *p* = `SCAN` owns `/HA` and `/HB` |
+| pass | 64 bit-times, 1 ms, the `TICK` period: every port once on the planes |
+| capture instant | mid-cell 4, 8.79 µs into a bit-time, where every open-drain line is sampled |
+| highway, `HC[h]` | block *h*'s eight ports' C, one a cell, 512 kbps |
+| plane | `/HA` (M) or `/HB` (`BUSY`): one open-drain wire, port *p* in bit-time *p* |
+| select, `/WS`; word wire, `/HW` | a reader names a port on `/WS` in its bit-time; that card's word follows on `/HW` for eight frames |
+| seat | one of a block's eight port positions |
+| lane | a per-seat net up a block's stack (`C_TXk`, `WORDk`, `/WRk`) |
+| FIT | the header jumper that says a block is fitted |
+| port card | a seat's latch, listener, supervision gates and plane drains |
+| block adapter | a trunk card serving a whole block's seats |
+| probe | a scanner-addressed listener: latches one port's M and `BUSY` from the planes |
+| M, E | the port's own hook (`A_TX` from its card) and what it hears on A from the port it listens to |
+| `BUSY` | a port that is not free: written into a call (`BSY`), or held by its own detectors or its block's `MUTE_BLK` (`fabric.md` §5) |
+| control word | 16 bits on the control bus: `DST`, `SRC`, `BSY`, `CLM`, `G` |
+| event word | a control word with `G` = 0: counted, never written |
+| card word | the serial word on a card's word pin saying what its port is; the **primary octet** is all the exchange reads; the **secondary byte** is not readable yet |
+| wire order | bit-time 0 first, each field LSB first: how every word table is printed |
+| plain line | a card whose word pin is grounded: all ones, a line with no options |
+| none | all zeros: no card, a card held off, a trunk whose link is down |
+| `/ANS` | the a13 pin: open, the port rings; low, it answers at once |
+| marker | the card that takes callers, gives them the register, connects, lets listen or hunts: the **mini marker** or the **class marker** |
+| walk | the class marker's read of one port every 4 passes, 01 to 77: the only way a caller is taken; a **round** is one walk, about 250 ms |
+| hunt | the class marker's read of every port from 01 for the first free one that answers to a number, or for 9 an outside line |
+| watch | the marker keeping the register on the caller after a connect until the called port can release itself (`SETTLE` = 2 × `T_ARM`, 32 ms) |
+| register | the pulse collector: counts a caller's breaks into a digit store; **HIT, ID, CLR** its windows (8, 128, 256 ms); **no-digit timer** 10 s |
+| key | a first digit that is not a highway: 0, 1, 8, 9 |
+| cannot-complete, busy tone | ports 03 and 02 |
+| answers-to | a line that also takes calls to another number that could not be completed there |
+| tied nail, mutual nail, call nail | a port that listens to its dest for good (one write, one way); two tied nails naming each other (a private line); a port that on lift connects as if its dest were dialled |
+| source | a port listened to, never written or rung |
+| flood | a network call: the origin seizes a trunk in every direction and each exchange forwards it, until the owner claims |
+| network unit | the card that runs the flood: its own probe, its own bus master, the monitors, resolvers and forwarder |
+| monitor | a cell on the unit that reads a seizure's dial pulses and claims the call if the code is its own |
+| claim | the owner's backward A = 1 on the trunk the call arrived on |
+| resolver | the unit's hold on a forwarded flood until the claim decides which leg won |
+| guard | the window after the origin's seizure in which a break from the caller abandons the call rather than risk a wrong number: a strap on the unit, 128, 256 or 512 ms (`network.md` §6) |
+| strap | per direction on the unit: no flood is forwarded into or out of that link (rings) |
+| glare | both ends seizing one channel at once; the claim takes it and joins the callers |
+| `/NET` | grounded by a fitted network unit; makes 1 the flood key |
+| SU-1, SDU-1, STU-1 | the subscriber set, the data set, the test set (`common/`) |
+
+## 4. Documents
+
+**The design, as built** — each topic is said once, in the document that owns it.
 
 | | |
 |---|---|
-| [mvp.md](mvp.md) | **the minimum that makes calls**: two lines, one block, one register, no tones — what is fitted (≈ 70 packages of exchange logic), what an absent part reads as, a call and its release as the model ran them, wrong numbers, how each feature is added, bring-up |
-| [common-control.md](common-control.md) | **proposed**: marker, register, network unit and monitor as replaceable units; the ribbons of levels between them; the solo exchange and a basic pulse flood on the same tap |
-| [protocol.md](protocol.md) | the internal protocol, why it is bits and not voice band (measured), the highway fabric cell by cell (measured), numbering |
-| [fabric.md](fabric.md) | **how the fabric is built**: the bus, the circuit of a block and of a port by part, the one timing hazard and its cure, no re-timing flip-flop, a cleared latch that means idle (00), supervision in gates, worst-case timing, package counts, **physical form** (shared board, **block header**, **block ribbon** with **slots**, port circuit with the card), **block adapter** (non-breakout mate of the same star), bring-up |
-| [big-exchange.md](big-exchange.md) | **analysis**: a bigger fabric in 74HC is possible — 128 ports costs a third octal digit, and there is nothing honest to do with it; the exchange stays **8 × 8**, 64 ports, 512 kHz, one highway one MF8 group after conversion (`exch.py timing` 6) |
-| [mainboard.md](mainboard.md) | **the mainboard**: the fifty-five signals in full, the two ribbons that carry them and their pinouts, why three signals a block cannot come down a ribbon and how a shunt gives them, what the cable costs the fabric's margins (18 ns of 743, measured), what an absent block or a missing shunt reads as, and the one signal on the bus whose glitch can lose a call |
-| [marker.md](marker.md) | class marks, reading a number, the hunt, supervision and release — with the two faults the model found in the rule as first written — registers as a pool, dialling on the A line. The flood is the network unit (`common-control.md`) |
-| [mini-marker.md](mini-marker.md) | **built in RTL** (`newimpl/`: `make mini`, `make net`, `make chain`): **the marker** — one register inside, two-digit local calls, M and `BUSY` off the fold; with a network unit fitted (`/NET`) the same card hands key `1` to the unit, reads a port's card word before it takes a caller or connects one, and gives a claimed trunk its register. The PBX leaf (§9) and the **one-board form**, once `nano-marker.md` (§10), ran only in the retired tree |
-| [leaf-uplink.md](leaf-uplink.md) | **proposed**: PBX leaf off a central — network dials `1 e b g s` then leaf extension; leaf dials `1` for uplink dial tone |
-| [features.md](features.md) | the features that are lines: registers, analog tones, ROM announcements and their seams, operator and console, the FXO card's one change, sources anyone may listen to (a radio, a clock), data |
-| [conference.md](conference.md) | **proposed, switch measured**: meet-me conference block — attaches to the mainboard buses, private party bus, two×4 or one×8 bit-switched bridges, no codec |
-| [register.md](register.md) | the register: dial pulses into a digit store in 74HC, pulse correction, measured end to end |
-| [operator.md](operator.md) | **proposed**: the operator's **phone** — position at 04 (default), ordinary 0, night/second seat; transfer is console-only for now; phone flash deferred |
-| [console.md](console.md) | **proposed**: the operator's console — forced release, service observing, connecting two lines, dialling a port and supervising both ends (and transfer) |
-| [network.md](network.md) | **analysis**: tie trunks in up to four directions and on any carrier, `1 e b h s`, flood–monitor–claim with a worked call and its timing, the caller's own dial pulses as the network's signalling, how many exchanges an eight-channel link will carry, clocking, what was set aside (a register-sender; serial characters on A, measured) |
-| [topology.md](topology.md) | **analysis, checked call by call**: the shapes a network may take — chains, stars, a tandem with chains, trees, a split centre — what each carries and where each stops; the upper limits of the protocol (36 exchanges, four neighbours, ten hops, about 1 300 lines); rings and loops, which work with one link jumpered and fail without |
-| [terminal.md](terminal.md) | **proposed**: subscriber terminals — a trunk block with its class set to line, a stock MF8 shelf of channel cards at the far end, six lines at another site; why the cards need no change, the class a channel at a time, clocking and the case for loop-timing a terminal |
-| [mf8-unit.md](mf8-unit.md) | **adopted** exchange face: six-channel MF8 as a **block adapter** on the **block header**; **not taken**: eight-channel payload split / 10- and 16-bit frames (`mf8-spec.md` remains live frame) |
-| [local-trunk.md](local-trunk.md) | **proposed**: local eight-channel highway trunk — short-range copper, a **block adapter** on the **block header**, bidirectional highway-shaped `C`/`A` with `HCLK`/`TX_CLK` carried so RX is master-timed by the far exchange |
-| [rtl.md](rtl.md) | **measured**: what building the exchange in Verilog found — ten things these documents did not say, or said in a way that does not survive a second register or a second monitor; the one rule the half of them are instances of (an event on a wire is a race, a level valid when read is not); and what `verilog` does not settle |
-| [baseband.md](baseband.md) | **proposed**: the baseband trunk card — a tie trunk with nothing in between, four conductors and ≈ 4½ packages; and **the block's card side**, a star on a **block ribbon** ending at the **block header** (**slots** *are* the channel sockets): the channel socket pin by pin, the four things it needs that no document supplied, why the card swaps with a line card and what on the block does not swap with it |
-| [pots-trunk.md](pots-trunk.md) | **proposed**: one trunk over a dry two-wire POTS pair — voice-band codec and hybrid, A as a jumper-selected dual tone each way with notches out of the speech path |
-| [monitor.md](monitor.md) | the trunk monitor: the one part that reads a digit it was not sent — what it does, the two rules that keep it from ever claiming a wrong number (measured), where it sits and how many, the circuit sketched |
-| [extensions.md](extensions.md) | **proposed**: test lines (milliwatt, quiet termination, loopback); **what a card says about its port**: one pin for whether it rings, and one serial word for its class (including *restricted*), its options, a call nail, or a tied nail; nailed-up connections as one-way nails, a private line or ringdown being a nail on each card, nailing hop by hop, and hotlines to another exchange by a card that dials; traffic counters |
-| [pulse-gen.md](pulse-gen.md) | **proposed, measured in simulation**: hook/pulse generator card — hex buttons as pins, no handset, crystal 10 pps and an RC/DIP timebase, \*#A–D as 11–16 pulses (`make pulse_gen`) |
-| [groups.md](groups.md) | **measured**: one hunt in place of two — a port **answers to a number** in the primary word, so a hunt group, a second operator's position, cover, and a meet-me bridge are jumpers on plain cards; class *conference*, the secondary word / fifth `'151`, and the adjacent `o` run are **retired**; digit 0 → pilot 04 (`make groups`, `exch.py calls`) |
-| [observers.md](observers.md) | **proposed**: four cards that only listen — the **hook lamp field**, 64 lamps off the A highways for 8 packages and no gates, and the **busy lamp field**, which needs the marker's own word to know which row it is looking at because there is no `BUSY` highway on the cable; what each of the four states means, how a class shows itself, how the two fields diagnose a block's shunt column, a flood you can watch; the **port watch** and its stale lamp, and a **last-word display** that freezes on a jumpered match |
-| [hookbusy.md](hookbusy.md) | the hook/busy display — interface card on the cables, sixteen lamp cards on four stack buses |
-| [debugger.md](debugger.md) | the debugger card: a listener with no authority, eleven sticky lamps grouped by the board to pull — clock card, the plane, cable B, the marker — what it keeps, why it cannot light on a working exchange, what it cannot watch (`/HW`, the other 63 turns, glare), and what a network build changes |
-| [counters.md](counters.md) | the traffic counter card on the control bus |
-| [inprogress.md](inprogress.md) | **proposed; measured in RTL** (`make inprog`, 23 checks): the **calls-in-progress display** — two seven-segment digits in octal off six conductors, counting the ports that read `BUSY` in one pass of the scanner. on the scanner group — `SCAN[2:0]`, `ADVANCE` and `START`, now cable B pins 17–25 (`mainboard.md` §2.3.3, §2.3.4), which check each other so a failed conductor lights a lamp; the de-dup that a dirtied probe makes necessary, measured against a naive control; why a release is visible on the probe when it is invisible on the control bus |
-| [traffic.md](traffic.md) | **measured, in two simulators**: demand that is not smooth — bursts, a flash crowd, peak against off peak — run in the millisecond model and in `verilog`'s eight-exchange RTL, and the two read against each other; that Erlang B holds to about 1 % on a link and understates past it, because a flood is a seizure on every link at once; that the holding-time law does not matter and where the calls GO does; and how near the sixty-four codes a tandem-chain backbone goes (63 exchanges), what a fully connected core of hubs is worth (nothing the flood can use) and what long spokes cost |
-| [ss0.md](ss0.md) | **proposed, not adopted**: SS0, the number as one message a link on the MF8 frame's spare S bit, forward only, with A keeping everything else — the message, the parts, a worked call, and the live flood against it |
+| [numbering.md](numbering.md) | the number, the port map, the keys, what a failed number gets, exchange codes |
+| [fabric.md](fabric.md) | the C plane, the supervision planes `/HA` `/HB`, reading a card's word on `/WS` `/HW`, the port circuit and its gates, the block, timing |
+| [bus.md](bus.md) | the one bus: signals by function, the 2 × 25 header, the control word, two masters, what an absent part reads as |
+| [block-stack.md](block-stack.md) | the block as built: header boards and eight port cards in a stack, lanes and jumpers, the adapter commons |
+| [marker.md](marker.md) | the mini marker and the class marker: a call step by step, the walk, the hunt, `PWAIT`, the watch, release |
+| [register.md](register.md) | the register: windows, no-digit timer, circuit, its ribbon, how many |
+| [card-word.md](card-word.md) | what a card says about its port: classes, options, answers-to, nails, the secondary byte |
+| [network.md](network.md) | the pulse flood: carriers, the network unit, a call across the network, glare, the guard, rings, clocking |
+| [trunks.md](trunks.md) | trunk cards: the baseband tie, the local eight-channel trunk, the MF8 six-channel face |
+| [features.md](features.md) | tones and ringback, announcements, the operator, outside lines, sources, data lines, test lines |
+| [debugger.md](debugger.md) | the debugger card: eleven lamps that name the board to pull |
+| [decisions.md](decisions.md) | what the spec no longer holds, and why: one line each |
 
-## Tool
+**Proposed, not built** — [proposed/](proposed/)
 
-```
-python3 sim/exch.py            everything                    (sim/exch.log is the run)
-python3 sim/exch.py tandem     N codecs in tandem
-python3 sim/exch.py fabric     the highway, cell by cell
-python3 sim/exch.py calls      one exchange, a millisecond at a time
-python3 sim/exch.py announce   a message as a ROM of CVSD bits
-python3 sim/exch.py aline      serial characters on A over 1–7 trunk hops
-python3 sim/exch.py flood      the timing of a flooded call under 1 e b h s (arithmetic, not a simulation)
-python3 sim/exch.py monitor    which rules keep a flood from ever claiming a wrong number, and what a slow carrier costs them
-python3 sim/exch.py timing     the fabric's circuit in nanoseconds, worst case over the 74HC spread; then other cell widths (`big-exchange.md` §2)
-python3 sim/exch.py mainboard  what a ribbon between the blocks costs those margins: skew, the line, the edges
-python3 sim/exch.py confer     conference.md: speech detector, floor, switch
-python3 sim/exch.py ss0        SS0 against the live flood: post-dial delay, trunks held for nothing, line errors (arithmetic)
-python3 sim/exch.py net        eight exchanges call by call: the flood, the monitors, the claim, the registers, bursty demand
-python3 sim/exch.py topo       chains, stars, trees and rings: what each carries and how large, by arithmetic and call by call
-python3 sim/exch.py traffic    demand that is not smooth: bursts, herds, peak against off peak, and the RTL run beside it
-python3 sim/exch.py big        how near sixty-four exchanges the flood goes: tandem chains, meshed hubs, long spokes
-python3 sim/mf8.py             8-bit / 6-channel MF8 (canonical)
-# not taken: mf8_10.py, mf8_10_16.py, mf8_16.py, mf8_baud.py
-```
+| | |
+|---|---|
+| [console.md](proposed/console.md) | the operator's console: release, pair, patch, supervise |
+| [conference.md](proposed/conference.md) | a codec-free voice-switched bridge whose legs answer to its number |
+| [lamps.md](proposed/lamps.md) | the hook/busy lamp panel, the port watch, the last-word display |
+| [counters.md](proposed/counters.md) | the peg counter card, event codes, calls in progress |
+| [pulse-gen.md](proposed/pulse-gen.md) | a hook and pulse generator card for test |
+| [ss0.md](proposed/ss0.md) | the number as one message on MF8's spare bit, instead of the live flood |
+| [leaf-uplink.md](proposed/leaf-uplink.md) | a PBX leaf off a central exchange |
+| [pots-trunk.md](proposed/pots-trunk.md) | one trunk over a dry two-wire pair |
+| [terminal.md](proposed/terminal.md) | six subscriber lines at another site over MF8 |
 
-It imports `audio`, `cvsd` and `mf8` from the repository root and reads the
-`talker*.wav` files there (not committed; see the root README). `announce` writes
-its image, and `confer` what a conference sounds like, to `sim/out/`, which is
-not committed.
+**Analysis** — measurements and sizing behind the design; not normative. Each
+says at the top what has changed since it ran. [analysis/](analysis/)
 
-## What is settled and what is not
+| | |
+|---|---|
+| [why-bits.md](analysis/why-bits.md) | why the switch carries bits, and why 64 ports |
+| [dialling.md](analysis/dialling.md) | dial pulses as the register sees them, measured end to end |
+| [monitor-rules.md](analysis/monitor-rules.md) | the rules that keep a flood from claiming a wrong number |
+| [topology.md](analysis/topology.md) | chains, stars, trees, rings: what each carries and where it stops |
+| [traffic.md](analysis/traffic.md) | bursty demand, flash crowds, peak against off-peak |
+| [eight-channel-mf8.md](analysis/eight-channel-mf8.md) | the 16-bit, eight-channel MF8 frames — not taken |
 
-Settled, in simulation: the fabric is transparent and its delay is one frame for
-every pair of ports; a re-point costs at most one repeated bit; one exchange
-sets up, supervises and releases every call in the scenario battery with every
-latch idle at the end — once a port reads busy while a release detector is still
-timing out, and once ringing is gated by the filtered hook. Both of those came
-out of the model, not out of the design.
+The cards shared with the MF8 shelf, the subscriber line and the subscriber
+equipment are in [`../common/`](../common/), indexed in the root `README.md`.
 
-**Decided: the exchange stays 8 × 8 — 64 ports — and more lines are more
-exchanges.** Four
-ways of making one fabric bigger were worked through and set aside as too
-complex for what they bought (`protocol.md` §3.1). The same highway method
-with more slots or more wires still costs a third octal digit
-(`big-exchange.md`). A chain of four or five
-48-line exchanges is comfortable on six-channel links while most calls stay
-home, and twenty work around a tandem hub of four twelve-channel directions
-(`network.md` §5). What limits a network is its flood, which every call that
-leaves lays on every link for 2.7 s.
+**The model:** `sim/exch.py` — `python3 sim/exch.py <run>`, with the committed
+output in `sim/exch.log`: `tandem`, `fabric`, `calls`, `announce`, `aline`,
+`flood`, `monitor`, `timing`, `mainboard`, `confer`, `ss0`, `net`, `topo`,
+`traffic`, `big`. Each document names the run it cites.
 
-Decided and not yet modelled as a whole: **the network, the *pulse flood*.** All pulse, no DTMF: a
-call dialled with the key `1` opens a flood, and the caller's own dial pulses, the
-exchange's code `e b` and the line, go down it live. Every exchange's monitor
-hears them and the owner drops the call in. A local call, `h s`, never touches a
-trunk. The flood lives on the **network unit**, not in the marker
-(`common-control.md`). No
-sender, no matrix, no route table. The monitor's two rules are measured — no
-wrong number in 1 500 calls at any pause a register can read — and the rest is
-timed by arithmetic on measured constants. **`net` is the second pass, and it
-runs**: eight exchanges call by call, two hubs of four directions with three
-leaves each, against smooth and bursty demand (`network.md` §5.1). It
-confirms §5's arithmetic to two decimal places, and finds that bursts leave the
-links alone and fall on the registers. **`topo` runs the other shapes**
-(`topology.md`): the protocol holds 36 exchanges and about 1 300 lines, and a ring
-works only with one of its links jumpered. **`exch.py monitor` and `flood` run
-`1 e b h s`**: a monitor compares both `e` and `b` (and lets go after `e` when
-it is not ours). `1 8` and `1 9`, out of the network, are reserved.
+## 5. Open
 
-**Checked against the gates, and three things it changed** (`traffic.md`).
-`verilog`'s `make traffic-net` runs the same eight exchanges in RTL under the same
-demand on the same clock, and `traffic` runs it here; where they agree, `big`
-carries the shapes out to the sixty-four codes. What came of it: **Erlang B is
-right to about 1 % on a link and optimistic past it**, because a flood is a
-seizure on every link of the network at one instant and a saturated register pool
-lets callers out in clumps; **a flash crowd is worse than a burst and worst off
-peak**, because a burst is only *when* the calls come and a crowd is *where they
-go* — 42 % of seizures refused against 0.68 % for the same erlangs; and **the
-holding-time law does not matter**, which is Erlang's insensitivity holding call
-by call. The flood's own failure mode is `no claim` and not `no trunk`: a call
-blocked on any link between the caller and the owner is dialled in full and then
-times out, so **twice the busy hour costs seventeen times the calls**.
+Each document ends with its own Open section. These are the questions that
+need a decision rather than more work:
 
-**How large, with the line count free** (`traffic.md` §8). Both the traffic on
-a link and the flood on it go with the *lines* in the network and not the
-exchanges, so the way to fill the numbering plan is exchanges that are not full:
-**63 of the 64 codes**, on three tandems in a chain with a tree under each, eight
-hops and 124 ms of the origin's 128 ms guard — and what stops it is the guard,
-not the codes. **The guard is one tap on a counter**, and the next one up (256 ms)
-fills all sixty-four codes with 1 428 lines; past that what stops the search is
-the traffic on the centre and the four directions an exchange has, neither of
-which is a timer (`monitor.md` §3.5). A **fully connected core of hubs buys nothing**: the flood must
-see a tree, so every link off it is a jumper, and a jumper carries its own two ends
-only.
+**The network**
+- **A transit that cannot forward loses the call silently.** Every forwarding
+  exchange takes a resolver for each flood, with two fitted and one forwarder;
+  when none is free nothing is sent and nobody is told (`network.md` §10).
+- **The guard's reach.** A slow hop is now ≈ 22–30 ms, so the 128 ms tap covers
+  4–5 hops, not ten; the size limits in `analysis/topology.md` have not been
+  re-run. And `GUARD` code 3 (1024 ms) abandons conforming dials (`network.md`
+  §10).
+- **The mini marker's lockout with a unit fitted.** A port showing M with a
+  word of none is re-read every other pass, and the seven ports after it are
+  never offered (`marker.md` §7).
+- **A dialled tone trunk**: the class marker refuses it, the mini marker
+  connects it, so a `top_max` central cannot dial into a PBX leaf
+  (`marker.md` §7).
+- **Console arbitration**: a third bus master needs both the marker and the
+  unit to yield, and the unit has no yield input (`proposed/console.md` §9).
 
-Decided: **the port map** (`protocol.md` §5). 00 is idle, and a cleared
-latch listens to it. 01–03 are dial, busy and cannot-complete. 04–07 are a
-four-line bank (operator, night/backup, then more positions or single-channel
-trunks). MF8 trunk groups start at block 1 when networked; standalone frees
-digit 1 so 10–77 are fifty-six lines. The `calls` model uses this map; registers
-are a pool and take no port.
+**Common control**
+- **Busy on the mini marker**: 03 as built, or 02 like the class marker
+  (`numbering.md` §6).
+- **The card word's secondary byte cannot be read** at a bit a frame. Cover,
+  dual numbers, L/U/K and the trunk's all-ones check wait on a load strobe or
+  another way to get a second octet (`card-word.md` §8).
+- **Data bit `D` bars switched data**: a `D` line is nailed only, so SDU-1's
+  switched insert-1 needs `D` clear (`card-word.md` §8).
+- **A CO line rung in with no position free** stays `BUSY` and is never
+  answered (`features.md` §8).
 
-Decided, and written up as a proposal: **MF8 serves subscriber terminals as well
-as trunks**, depending on need (`terminal.md`). A trunk block with its class
-set to line, and a stock MF8 shelf at the far end, give six lines at another
-site. Voice needs nothing new. Synchronous data needs a loop-timed terminal,
-whose PLL is not designed.
-
-Proposed, with the switch and its detector measured: **sources**, which anyone
-may dial and any number may hear, and a **conference bridge with no codec**
-(`conference.md`), which passes one talker's bits to everyone else and chooses
-the talker by counting runs of three in each caller's bits. Sources are a new
-class (`fabric.md` §3.5); conference legs are ordinary lines. Neither is in
-the marker or the `calls` model yet as classes.
-
-Proposed: **the mainboard is a ribbon for what every block shares and a
-board for the three signals that are not shared** (`mainboard.md`). Block *h* drives
-highway *h* and answers to `BLK[h]`, which is the whole of a block's identity and
-the one thing an identical tap on a common ribbon cannot give it; three shunts in
-one labelled column give it back for no parts, where working it out in logic
-would cost six packages a block. Two metres of cable costs 18 ns of a 743 ns
-set-up budget, because the clock travels down it with the data and the flight
-cancels the skew. Of the fifty-five signals, **fifty-four cannot lose a call**:
-the worst a glitch does is one wrong CVSD bit, which is what a plesiochronous
-slip already does to every line in the system every 156 ms. `/RESET` is the exception, and it
-is filtered at every block.
-
-Proposed: **whatever sits behind a port says everything about it**
-(`extensions.md` §2). One pin, `/ANS`, tells the port's gates whether it
-rings. One serial word, which the marker's scanner reads at every visit, carries
-the class and its options: a trunk's direction, a hunt group, a call nail, or
-a tied nail; class *restricted* is its own code (`z b 0`: 0-only,
-busy-inbound; local-only by floor). A plain line card
-says all of it with no part, its word pin tied to ground. The earlier class on
-three pins is gone, and with it three commutators a block. Every circuit is
-still to draw. Nothing has been on a bench.
-
-Proposed: **a port answers to a number** (`groups.md`). A call that cannot be
-completed at the number dialled is offered to the first free port that says it
-answers to that number, which makes a hunt group, a second operator's position,
-cover and a bank of call-in lines out of jumpers on the members' cards, in any
-slots, and replaces both the run of adjacent `o` ports and class *operator*. The
-word's last unused form says it on a plain phone's card — **2×`'165`**, with the
-second byte spare unless a secondary number needs it (`groups.md` §3–4). A conference bridge becomes a group the same way (class *conference* and
-the secondary word / fifth `'151` retired). Nothing is measured.
+**Hardware**
+- **Who holds `/RESET` high**, and where the power-on RC and button go
+  (`bus.md` §7).
+- **Open-drain control lines** (`SDATA`, `SCLK`, `WR`): asked, not decided
+  (`bus.md` §7).
+- **Ringback has no path onto `RBT` in a block**, and the three ringback
+  cadences disagree: every block build has silent ringback until this is
+  settled (`../common/tones.md` §9).
+- **The MF8 block adapter**: its 1.024 MHz is not on the adapter commons, seats
+  0 and 4, and an eight-channel adapter's face (`trunks.md` §5).
+- **One card, two ways in**: rails on socket row c in a shelf, a harness in a
+  block (`../common/common-cards.md` §7).
+- **The line card**: the phone's loop-timing circuit
+  (`../common/subscriber-line.md` §7); the encoder's H against `TX_CLK`, the
+  §9.5 filter buffer and the detector's comparator rail
+  (`../common/channel-cards.md` §6).
+- **`mf8/mf8-spec.md` §9 owes circuit-review's fixes**: the encoder as a '112
+  (§9.2), the two-phase receiver timing (§9.4), the classifier column (§9.7),
+  and §12.1's syllabic resistors. The common/ documents already say them;
+  mf8-spec does not yet. §3.5 also still reads as if SS0 on the spare bit were
+  decided (it is proposed; the remote alarm is decided).

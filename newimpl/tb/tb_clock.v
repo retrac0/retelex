@@ -1,6 +1,6 @@
 // tb_clock -- the divider chain, and the one invariant the design rests on.
 //
-// fabric.md 7 step 1, with two additions the fold asks for: FILL and SCAN[0]
+// fabric.md §6.3 step 1, with two additions the fold asks for: FILL and SCAN[0]
 // must be the same waveform, and SCAN must step on every frame edge with no
 // exception whatever.  Since 2026-09-25 the clock card drives neither FILL
 // nor TICK, TX_CLK, TX_OCT or RX_OCT: a block makes them from SLOT2 and SCAN
@@ -78,7 +78,7 @@ module tb_clock;
         n_master = n_master + 1;
 
         // ---- things that must hold on every single master tick -------------
-        // FILL and SCAN[0] are the same divider stage (clocks.md 1).  Invert
+        // FILL and SCAN[0] are the same divider stage (clocks.md §1).  Invert
         // one of them "locally" and the whole A plane is off by a bit-time.
         if (fill    !== scan[0]) oops("FILL is not SCAN[0]");
         if (hclk    !== ~tick[2]) oops("HCLK is not /tick[2]");
@@ -87,7 +87,7 @@ module tb_clock;
 
         // SLOTQ: the '175 takes SLOT on the tick-2 edge, so it reads the new
         // cell from tick 3 and the previous one at ticks 0, 1 and 2.  That is
-        // the quarter cell of fabric.md 3.2, and the reason the strobe
+        // the quarter cell of fabric.md §2.2, and the reason the strobe
         // decoder's address only ever moves while the decoder is disabled.
         if (tick > `TICK_SLOTQ) begin
             if (slotq !== slot) oops("SLOTQ did not catch up by tick 3");

@@ -29,13 +29,13 @@
 //
 // THE CARD SETS THE BIT ORDER, NOT THIS READER.  A card's '165 is loaded in
 // frame 7 of every octet and shifted at each frame edge after it
-// (baseband_card.v; baseband.md 3.5), so frame 7 carries bit 0, frame 0 bit 1,
+// (baseband_card.v; card-word.md §3), so frame 7 carries bit 0, frame 0 bit 1,
 // and frame f bit f+1 mod 8.  The octet position is SCAN[2:0], so the eight
 // frames after a select hold all eight bits, starting wherever the port's
 // slot puts them, and the '259's outputs are wired rotated by one so each
 // lands in its own place.
 //
-// A ONE IS A PULLED-DOWN FRAME.  extensions.md 2.2: "the pin is low for a 1".
+// A ONE IS A PULLED-DOWN FRAME.  card-word.md §2: "A 1 is the pin pulled low".
 // /HW idles high, so a port with no card, a card held off by its power-up RC,
 // and a trunk whose link is down all read ALL ZEROS -- which the word table
 // calls "none / OOS".  An absent card fails SAFE.  The trap is only for a
@@ -46,9 +46,9 @@
 // every sixteen frames, and the socket carries no strobe that marks sixteen
 // (TX_OCT marks eight).  Everything a trunk says -- class, glare, direction --
 // is in the primary.  The secondary is the class marker's problem, recorded
-// as open in newimpl/README.md 6.
+// as open in card-word.md §8 and newimpl/README.md 6.
 //
-//   extensions.md 2.2, baseband.md 3.5, mainboard.md 3.4, newimpl/README.md 1
+//   fabric.md §4; card-word.md §2, §3; bus.md §2.1; newimpl/README.md 1
 `timescale 1ns/1ps
 `include "exch.vh"
 

@@ -1,5 +1,5 @@
 # Analog tone front-end — ngspice
-# tone-plan.md §5: carrier + LFO, pure / soft / hard, cadence mute → AUDIO
+# tones.md §5: carrier + LFO, pure / soft / hard, cadence mute → AUDIO
 #
 # Does not include the CVSD encoder (see ../cvsd-enc/).
 

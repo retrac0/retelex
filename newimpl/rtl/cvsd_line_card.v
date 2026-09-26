@@ -1,12 +1,12 @@
-// cvsd_line_card -- the CVSD subscriber line card.  channel-cards.md 2.
+// cvsd_line_card -- the CVSD subscriber line card.  channel-cards.md §2.
 //
 // Two pairs to one phone.  THE PHONE HOLDS THE CODEC; this card holds the two
-// line interfaces, the hook detector and the slot logic: about ten packages
-// and two transformers, with no relay, no ring generator, no ring trip and
-// nothing above the 48 V phantom.  The phone's ringer is armed by a bit
+// line interfaces, the hook detector and the slot logic -- channel-cards.md
+// §2.5's parts and two transformers, with no relay, no ring generator, no
+// ring trip and nothing above the 48 V phantom.  The phone's ringer is armed by a bit
 // pattern, and its hook is read from one.
 //
-// THE CHANNEL SOCKET, AS EVERY CARD SEES IT (common-cards.md 1).  There is no
+// THE CHANNEL SOCKET, AS EVERY CARD SEES IT (common-cards.md §1).  There is no
 // interface construct in the language both simulators accept, so the socket
 // is a PORT LIST: the fourteen signal pins in socket order, with the same
 // names in the same order on every card, whether or not the card has a part
@@ -24,7 +24,7 @@
 //   a6   A_TX       out   NOT ON_HOOK
 //   a7   RX_CLK     in    -- this card has no R domain
 //   a8   RX_OCT     in    --
-//   a9   C_RX       in    through two '74 on TX_CLK, downstream while off-hook
+//   a9   C_RX       in    through the '175 on TX_CLK, downstream while off-hook
 //   a10  A_RX       in    through an RC (2 ms) and a '14: RING the phone
 //   a11  MUTE       in    ORed into the ON_HOOK select
 //   a12  card word  out   tied to a row-c ground: all ones, a plain line
@@ -39,15 +39,15 @@
 //
 // THE CARD HAS NO MASTER CLOCK.  clk and rst_n are the simulation's timebase,
 // not pins.  Every edge the logic acts on is derived from the socket's clock
-// waveforms -- which is what the '74s clocked by TX_CLK and LOOP_HB do on
-// the board -- and the upstream receiver times its intervals in that timebase
+// waveforms -- which is what the flip-flops clocked by TX_CLK and LOOP_HB do
+// on the board -- and the upstream receiver times its intervals in that timebase
 // where the board has one-shots (dm_rx.v).
 //
 // LOOP_HB IS MADE AT THE BLOCK, not the clock card: /SLOT[1], one inverter
-// (common-cards.md 1.1, clocks.md 4).  Its rising edges are the cell boundary
+// (common-cards.md §1.1, clocks.md §4).  Its rising edges are the cell boundary
 // and mid-cell, which with H = TX_CLK is all the encoder needs.
 //
-//   channel-cards.md 2; subscriber-line.md 3, 4; mf8-spec.md 9.2, 9.4
+//   channel-cards.md §2; subscriber-line.md §3, §4; mf8-spec.md 9.2, 9.4
 `timescale 1ns/1ps
 
 module cvsd_line_card (
@@ -87,7 +87,7 @@ module cvsd_line_card (
         .clk(clk), .rst_n(rst_n), .line(line_up),
         .q(q), .q_stb(q_stb), .carrier(carrier), .viol(viol));
 
-    // ---- the hook detector: subscriber-line.md 3 ---------------------------
+    // ---- the hook detector: subscriber-line.md §3 --------------------------
     // X = Q xor Q[n-2]: half a '74 and a quarter of an '86.  1100 makes it
     // constantly 1; CVSD keeps it near the middle whatever it is fed.
     //
@@ -113,7 +113,8 @@ module cvsd_line_card (
     // cell, 256 cells to tau, only because the model has no analogue.  From
     // 0 it reaches 0.85 in 1.9 tau = 7.6 ms; from 1 it falls to 0.70 in
     // 0.36 tau = 1.4 ms.  That asymmetry is why a dial break arrives 6.1 ms
-    // short (subscriber-line.md 5), and register.md 1 is sized to it.
+    // short (subscriber-line.md §5), and the register's windows are sized to
+    // it (dialling.md §1, §2).
     localparam [15:0] HOOK_HI = 16'd55705;     // 0.85 of 65535
     localparam [15:0] HOOK_LO = 16'd45875;     // 0.70
     reg [15:0] hook_rc;
@@ -154,7 +155,7 @@ module cvsd_line_card (
     assign c_tx = q_s;
 
     // ---- A_RX through the RC (tau = 2 ms) and a quarter of a '14 ----------
-    // mf8-backplane.md 14's filter.  A Schmitt gate's thresholds sit near
+    // mf8-spec.md §14's filter.  A Schmitt gate's thresholds sit near
     // 0.55 / 0.35 of the swing; the exact figure is not load-bearing here.
     localparam [15:0] ARX_HI = 16'd36044;
     localparam [15:0] ARX_LO = 16'd22937;
@@ -179,9 +180,13 @@ module cvsd_line_card (
     wire dn_d = sel ? (a_rx_f ? 1'b0 : fill) : c_rx_s;
 
     // ---- the downstream encoder: mf8-spec.md 9.2 ---------------------------
-    // Half a '74 and a quarter of a '00: a JK wired J = K = EN, clocked by
-    // LOOP_HB, with EN = H + /bit and H = TX_CLK.  At the boundary H is 1 and
-    // it toggles whatever the bit; at mid-cell H is 0 and it toggles for a 0.
+    // Half a 74HC112 and a quarter of a '00: a JK wired J = K = EN, with
+    // EN = H + /bit and H = TX_CLK.  At the boundary H is 1 and it toggles
+    // whatever the bit; at mid-cell H is 0 and it toggles for a 0.  On the
+    // board the '112 takes LOOP_HB's FALLING edge, a quarter bit from any H
+    // edge (channel-cards.md §2.4, clocks.md §4).  The model acts on the
+    // rise and reads H after that edge, which is the same function; whether
+    // the drawn edge closes the race with H is channel-cards.md §6's.
     reg dn_bit;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin line_dn <= 1'b0; dn_bit <= 1'b1; end

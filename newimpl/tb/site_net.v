@@ -7,10 +7,10 @@
 //            pin grounded, a plain line; /ANS open, it rings
 //   01, 03   the tone sources: dial tone sends ones, cannot-complete zeros,
 //            and both tie /ANS low so they never ring (tb_mini's)
-//   TRUNKS   sockets with a baseband tie card (baseband.md), each with its own
+//   TRUNKS   sockets with a baseband tie card (trunks.md §2), each with its own
 //            word from TWORD -- class trunk, glare, direction -- and its rear
 //            connector brought out, for the bench to cable to another site
-//   LTU      blocks stuffed as a local eight-channel trunk (local-trunk.md): the
+//   LTU      blocks stuffed as a local eight-channel trunk (trunks.md §3): the
 //            unit on the block header, its word from LTWORD, its MUTE_BLK on the
 //            block and its link brought out.  All eight sockets of such a block
 //            are its; nothing else may be put in them

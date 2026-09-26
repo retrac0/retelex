@@ -1,13 +1,13 @@
-// tb_fabric -- the C plane, end to end.  fabric.md 7 steps 2 and 4.
+// tb_fabric -- the C plane, end to end.  fabric.md §6.3 steps 2 and 4.
 //
 // Every source slot to every listening slot, bit-exact, delay exactly one
-// frame -- protocol.md 3's 4 096 pairs.  Then fan-out, then a cleared latch.
+// frame -- fabric.md §2.3's 4 096 pairs.  Then fan-out, then a cleared latch.
 //
 // The strobe lines are not a bus here: a port models its '151-over-the-eight-
 // strobes as "mid-cell of the cell my latch names", so there is nothing to
 // probe.  What that timing is FOR is proved instead by the pair sweep, which
 // includes a source in slot 0 and a source in slot 7 against listeners in
-// every slot -- fabric.md 4's two worst cases -- and finds the same one frame
+// every slot -- fabric.md §7's two worst cases -- and finds the same one frame
 // of delay for all 4 096.
 `timescale 1ns/1ps
 `include "exch.vh"
@@ -58,7 +58,7 @@ module tb_fabric;
         .port_busy(port_busy));
 
     // ---- a second exchange: block 2 shunted, NOT ONE PORT CIRCUIT FITTED ---
-    // fabric.md 7 step 2, and mvp.md 2's "everything absent reads as idle".
+    // fabric.md §6.3 step 2, and bus.md §6.1's "absent reads idle".
     wire [7:0] bare_hc;  wire bare_ha_n, bare_hb_n, bare_hw_n, bare_fill;
     wire [63:0] bare_c_rx;
     exch #(.PORT_FITTED(64'd0), .BLOCK_FITTED(8'b0000_0100)) u_bare (
@@ -82,7 +82,7 @@ module tb_fabric;
 
     always @(posedge clk) if (frame_stb) begin
         if (checking) begin
-            // fabric.md 3.4: a bit sent in frame f is captured during f and
+            // fabric.md §2.3: a bit sent in frame f is captured during f and
             // sampled at the edge that begins f+1 -- WHATEVER THE TWO SLOTS.
             for (i = 0; i < 64; i = i + 1) begin
                 n_pairs = n_pairs + 1;
@@ -161,7 +161,7 @@ module tb_fabric;
         ck(n_pairs == 64, "all 64 ports took the same square");
 
         // ---- 4.  an exchange with no port circuits pulls nothing down ---------
-        // mvp.md 2, "everything absent reads as idle", and it is now ONE
+        // bus.md §6.1, "absent reads idle", and it is now ONE
         // mechanism for three wires rather than three separate pulls.  This
         // replaces the old check on bare_c_rx, which was `FITTED && c_cap` on
         // an exchange with FITTED = 0 -- true by construction whatever the

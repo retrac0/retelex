@@ -1,11 +1,12 @@
-// baseband_card -- the baseband tie trunk.  baseband.md 3.  NETWORK.
+// baseband_card -- the baseband tie trunk.  trunks.md §2.  NETWORK.
 //
 // A tie trunk with nothing in between: C and A out, C and A in, and a fifth
 // conductor each way carrying TX_CLK.  No line code, no framer, no codec.
 // What the near port hears from its fabric goes down the wire; what comes
-// back is what that port's card says (network.md 1).  About three and a half
-// packages in the 74HC population, the cheapest card in the exchange, and it
-// sits in any channel socket like a line card.
+// back is what that port's card says (network.md §1).  About two and a quarter
+// packages in the 74HC population, two more for RS-422 (trunks.md §2): the
+// cheapest card in the exchange, and it sits in any channel socket like a
+// line card.
 //
 // THE CARD SAYS WHAT IT IS.  Its word -- class trunk, glare, direction -- is
 // one '165 loaded from jumpers ON THIS CARD, and nothing else in the exchange
@@ -14,7 +15,7 @@
 // the direction of the link it is wired to, and the card is what is wired to
 // it; a strap anywhere else could disagree with the cable.
 //
-// THE LINK-DOWN DETECTOR IS THE ENABLE ON THE WORD (baseband.md 3.3, 3.5).
+// THE LINK-DOWN DETECTOR IS THE ENABLE ON THE WORD (trunks.md §2).
 // Four conductors cannot tell an idle link from a cut one; the fifth carries
 // the far end's TX_CLK, a continuous 64 kHz square wave, and half a '123
 // retriggered by it says the far end is alive.  With it gone the word pin is
@@ -28,7 +29,7 @@
 //   a4   FILL       in    --   the port idles to FILL through its own commutator
 //   a5   C_TX       out   incoming C, re-timed at the frame edge
 //   a6   A_TX       out   incoming A: this is M at the port
-//   a7   RX_CLK     in    --   the card would like to DRIVE it (baseband.md 3.5); open
+//   a7   RX_CLK     in    --   TX_CLK in a block (common-cards.md §1.1); nothing drives it
 //   a8   RX_OCT     in    --
 //   a9   C_RX       in    straight out on the line
 //   a10  A_RX       in    straight out on the line: E as it stands, a trunk never rings
@@ -38,21 +39,21 @@
 //   a14  spare      out   open
 //   rear c_out, a_out, clk_out / c_in, a_in, clk_in
 //
-//   baseband.md 1, 3; extensions.md 2.2; network.md 1, 1.1; common-cards.md 1
+//   trunks.md §1, §2; card-word.md §2, §3; network.md §1, §2; common-cards.md §1
 `timescale 1ns/1ps
 
 module baseband_card #(
     // THE WORD'S PRIMARY OCTET, in bit-time order -- WORD[n] is bit-time n.
     // Class form, family 01, member 0 (11 01 0), then g at 5 and the
-    // direction at 6-7, N=0 S=1 E=2 W=3 (extensions.md 2.2).  Jumpers.
+    // direction at 6-7, N=0 S=1 E=2 W=3 (card-word.md §2).  Jumpers.
     parameter [7:0]  WORD      = 8'b00_0_010_11,
-    // baseband.md 3.2's jumper: incoming C re-timed by the LOCAL frame edge
+    // trunks.md §2's jumper: incoming C re-timed by the LOCAL frame edge
     // (two clocks, a slip every 390-780 ms) or by the FAR end's clock on the
     // fifth conductor (one clock, bit-exact).
     parameter        ONE_CLOCK = 1'b0,
     // The power-up RC that holds the word off: 100 ms of frames.  A '165
     // clocking before its load settles says a random word, and one in 32 of
-    // those is a live flood seat (extensions.md 2.2, hold-off).
+    // those is a live flood seat (card-word.md §3, held off at power-up).
     parameter [15:0] HOLDOFF   = 16'd6400,
     // Half a '123 on the fifth conductor: three frames of silence is a cut.
     // In master ticks, because the model has no RC.
@@ -100,7 +101,7 @@ module baseband_card #(
 
     // ---- receive: half a '74 for C, the RC and a quarter '14 for A ---------
     // The RC is tens of microseconds, against 1 ms between samples of M, so
-    // dial pulses cross it undistorted (baseband.md 3.1).  Two flip-flops on
+    // dial pulses cross it undistorted (trunks.md §2).  Two flip-flops on
     // the frame edge stand in for it; the model has no analogue.
     reg c_sync, a_s1, a_s2;
 
@@ -113,7 +114,8 @@ module baseband_card #(
     wire       settled = (up_cnt == HOLDOFF);
 
     // ---- the word: one 74HC165 ---------------------------------------------
-    // SH/LD is TX_OCT . TX_CLK, a quarter '08: the load happens in the FIRST
+    // SH//LD is /(TX_OCT . TX_CLK), a quarter '00 -- the '165 loads while the
+    // pin is low (card-word.md §3) -- so the load happens in the FIRST
     // half of frame 7 and is released 32 ticks before the frame edge that
     // shifts.  Loading on TX_OCT alone would release the load at the same
     // edge that shifts, and which one won would be the board's propagation
@@ -148,7 +150,7 @@ module baseband_card #(
 
     assign c_tx = c_sync;
     // A cut cable is A = 0 whatever the receiver's failsafe says, so a call in
-    // progress releases (network.md 1.1, "Link down").  And a card still in
+    // progress releases (network.md §2, "Link down").  And a card still in
     // its power-up RC presents no M: a seizure it passed on before its word
     // could say "trunk" would be read as NONE, and taken for nobody's.
     assign a_tx = a_s2 && link_up && settled;

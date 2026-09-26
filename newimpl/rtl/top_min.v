@@ -1,4 +1,4 @@
-// top_min -- THE MINIMAL EXCHANGE.  mvp.md.
+// top_min -- THE MINIMAL EXCHANGE.  exchange/README.md §2.
 //
 // The smallest exchange that does automatic calls: two phones dial each other
 // with two digits, one rings, the other hears it ringing, they talk, and
@@ -9,7 +9,7 @@
 // exchange by adding cards, never by changing the fabric or the line cards.
 //
 // top_max instantiates THE SAME `exch`, unchanged, and adds the class marker,
-// a register pool, a network unit and monitors beside it.  What is MAXIMAL
+// a register card, a network unit and its monitors beside it.  What is MAXIMAL
 // here is two wires -- /HW, the card word bus, and /WS, the select that names
 // the card on it -- brought out, and nothing on this build pulls /WS.
 `timescale 1ns/1ps
@@ -23,7 +23,7 @@ module top_min #(
     parameter [8:0]  T_REL        = 9'd256,
     parameter [12:0] RING_ON_MS   = 13'd2048,
     parameter [12:0] RING_OFF_MS  = 13'd4096,
-    parameter [15:0] NODIG        = 16'd10000   // register.md 6; see pulse_reg
+    parameter [15:0] NODIG        = 16'd10000   // register.md §1; see pulse_reg
 )(
     input             clk,          // the 4.096 MHz crystal
     input             rst_n,
@@ -81,7 +81,7 @@ module top_min #(
 
     // ONE MASTER.  The marker's '244s are the only drivers on cable B, so the
     // bus is what they drive while enabled and the blocks' pull-downs when
-    // not -- mainboard.md 6: SCLK and WR low, which shifts and writes nothing.
+    // not -- bus.md §6.1: SCLK and WR low, which shifts and writes nothing.
     wire b_sdata = m_oe && m_sdata;
     wire b_sclk  = m_oe && m_sclk;
     wire b_wr    = m_oe && m_wr;
@@ -107,10 +107,10 @@ module top_min #(
         .fill(fill), .ring_cad_n(ring_cad_n), .tick_1k(tick_1k),
         .port_busy(port_busy));
 
-    // The marker is a CARD on the common-control tap.  It reads M off /HA and
+    // The marker is a CARD on the bus.  It reads M off /HA and
     // BUSY off /HB and drives cable B; it has no other connection to the
     // fabric.  Swap it for the class marker and nothing here changes
-    // (common-control.md 1).
+    // (exchange/README.md §2).
     //
     // NO NETWORK UNIT IS FITTED, and the lines it would drive are what an
     // empty ribbon reads: /NET and /UREQ at their pull-ups, every strobe low,

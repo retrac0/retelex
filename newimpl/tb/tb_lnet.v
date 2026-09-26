@@ -1,5 +1,5 @@
 // tb_lnet -- two exchanges on a local eight-channel trunk, and calls that are
-// DIALLED across it.  local-trunk.md; network.md 3, 4.
+// DIALLED across it.  trunks.md §3; network.md §1, §4.1.
 //
 // Exchange A is code 2 2 and exchange B is code 2 3, each top_net with phones
 // on block 2 and tone sources at 01 and 03, as tb_net's.  Their only link is

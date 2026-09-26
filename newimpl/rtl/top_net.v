@@ -1,7 +1,8 @@
-// top_net -- THE MINIMAL EXCHANGE ON A NETWORK.  common-control.md 4.  NETWORK.
+// top_net -- THE MINIMAL EXCHANGE ON A NETWORK.  exchange/README.md §2;
+// network.md §3.  NETWORK.
 //
 // top_min, with a network unit fitted beside the same mini marker.  "A flood
-// never needs a smarter marker" (common-control.md 1): the mini marker plus a
+// never needs a smarter marker" (exchange/README.md §2): the mini marker plus a
 // network unit is a pulse-flood exchange, dialled `1 e b h s` from anywhere
 // and `h s` at home.  The class marker, the register pool and the card word's
 // secondary are the maximal build's and are not here.
@@ -18,13 +19,14 @@
 //                           own word that it is a trunk and which way it faces
 //   /NET                    one conductor, grounded by the unit
 //   /UREQ                   the unit's claim on cable B
-//   /WS                     the select, one of the bus's two spares (mainboard.md
-//                           3.4): every reader's, the marker's and the unit's
+//   /WS                     the select, on what was one of the bus's two
+//                           spares (pin 47, bus.md §2.1): every reader's, the
+//                           marker's and the unit's
 //
 // CABLE B HAS TWO MASTERS HERE AND NO GRANT.  Each drives SDATA, SCLK and WR
 // through its own '244, enabled only while it holds the bus; with neither
 // enabled the blocks' pull-downs read all three low, which shifts and writes
-// nothing (mainboard.md 6).  Two enabled at once is two '244s on one wire,
+// nothing (bus.md §6.1).  Two enabled at once is two '244s on one wire,
 // and reads as x -- and `b_clash` says so, for every bench to count.  Only
 // writes cross it: neither card reads a word over cable B.
 //
@@ -44,7 +46,7 @@ module top_net #(
     parameter [8:0]  T_REL        = 9'd256,
     parameter [12:0] RING_ON_MS   = 13'd2048,
     parameter [12:0] RING_OFF_MS  = 13'd4096,
-    // the register's and the monitors' windows (register.md 2)
+    // the register's and the monitors' windows (register.md §1)
     parameter [8:0]  HIT          = 9'd8,
     parameter [8:0]  ID           = 9'd128,
     parameter [8:0]  CLR          = 9'd256,
@@ -74,14 +76,14 @@ module top_net #(
     input      [7:0]  mute_blk,
     input             rbt_in,
 
-    // ---- the clocks a card on a socket takes (common-cards.md 1.1) --------
+    // ---- the clocks a card on a socket takes (common-cards.md §1.1) -------
     output            tx_clk,
     output            loop_hb,
     output            clk_8k,       // TX_OCT
     output            rx_oct,
     output            fill,
-    // NETWORK: a block adapter that muxes at the cell rate takes HCLK on its
-    // header commons' spare (local-trunk.md 3, fabric.md 5.2)
+    // NETWORK: a block adapter that muxes at the cell rate takes HCLK on the
+    // adapter commons, J6 (trunks.md §3, block-stack.md §6)
     output            hclk,
 
     // ---- what a bench, a lamp field or a debugger watches ------------------
@@ -150,7 +152,7 @@ module top_net #(
         .port_busy(port_busy));
 
     // LOOP_HB is made at the block, /SLOT[1] through one inverter
-    // (common-cards.md 1.1, clocks.md 4); brought out for the cards.
+    // (common-cards.md §1.1, clocks.md §4); brought out for the cards.
     assign loop_hb = ~slot[1];
 
     // ---- NETWORK: the two ribbons between the marker and the unit ----------

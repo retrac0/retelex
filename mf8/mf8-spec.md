@@ -11,7 +11,7 @@ Every number here was measured by `mf8.py` unless it is marked as analysis.
 §15 lists what has not been measured.
 
 > **This is the MF8 used on trunks.** Eight- and ten-bit frames were measured
-> (`mf8_16.py`, `mf8_10.py`, `mf8_10_16.py`, `mf8_baud.py`; `exchange/mf8-unit.md`)
+> (`mf8_16.py`, `mf8_10.py`, `mf8_10_16.py`, `mf8_baud.py`; `exchange/analysis/eight-channel-mf8.md`)
 > and are **not taken**.
 
 ## 1. What changed from `mfspec.md`, and why
@@ -269,7 +269,7 @@ BER, so it is not recorded further.)
 **Decided: x is the remote alarm.** An end holds x at 1 while its own receiver
 is not locked (`MUTE`), and a receiver takes x at 1 for 32 ms as the alarm. Idle
 is x = 0, which is today's fixed guard. Between exchanges the same bit also
-carries SS0's messages (`exchange/ss0.md`). A message holds x at 1 for 17 ms
+carries SS0's messages (`exchange/proposed/ss0.md`). A message holds x at 1 for 17 ms
 at most, so the one 32 ms rule serves both kinds of link. The pair itself is not
 yet written into §2–§4 or §11.
 
@@ -908,7 +908,7 @@ of a matched pair, worst of two sources):
 
 1% resistors with a 2% `C_syl` hold the syllabic network to ±6% card to card,
 where a 5% capacitor would be ±12%. `I_min` is whatever the `Iabc` drive
-makes it: `circuit-review.md` §2.4's drive holds 51:1 with its ratio resistors
+makes it: `cvsd-codec.md` §3.1's drive holds 51:1 with its ratio resistors
 at 51.1 kΩ and 2.55 MΩ (50.9:1; 50.1 kΩ in parallel, 5 ms on 100 nF), but its
 control voltage at `I_min` falls from 157 to 98 mV, so its op-amp's offset counts
 1.6 times as much — a low-offset part, or trim.
@@ -932,7 +932,7 @@ setting for every family rate. At the only rate this frame runs it moves the
 card's best level down: 4.1 dB worse at nominal level (19.0 against 23.1),
 2.2 dB better at −30 dB. Slew and input level are one knob — scaling one is
 scaling the other — so in practice the card's level trims set it, against
-`mf8.NOMINAL_RMS` (`channel-cards.md` §3.3).
+`mf8.NOMINAL_RMS` (`channel-cards.md` §3.1).
 
 **The ratio is quoted two ways, and the standard contradicts itself.** Its §5.5
 quotes the ratio between the syllabic filter's outputs at 30% and 0%

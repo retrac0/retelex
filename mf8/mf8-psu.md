@@ -10,7 +10,7 @@ that feeds them once the shelf is a spacer-stack of 100 × 100 cards rather than
 a Eurocard subrack with a monolithic PSU slot.
 
 > **Status: proposed.** Nothing drawn, nothing on a bench. Currents are from the
-> card specs (`channel-cards.md` §3.4, `common-cards.md` §3); converter topology
+> card specs (`channel-cards.md` §3.2, `common-cards.md` §3); converter topology
 > is an assignment. **MF8 form factor is the 100 × 100 spacer-stack** (decided).
 > Ring bus amplitude is **~80 Vrms** at 20 Hz — canonical for new docs; older
 > "~90 Vrms" wording means the same bus.
@@ -78,7 +78,7 @@ PSU population, not a silent rename.
 |---|---|
 | Output | **`RING` / `RING RET`**, ~80 Vrms, 20 Hz |
 | Path | boost / flyback to HV, then a **20 Hz inverter** (H-bridge or chopper) — a ring generator, not a DC buck-boost alone |
-| Cadence | **none on this shelf.** The exchange (or far end) cadences the channel **A bit**; each FXS relay follows `A_RX` (`channel-cards.md` §3.4). The RING bus is steady 20 Hz ~80 Vrms; the phone only sees it while that relay is closed |
+| Cadence | **none on this shelf.** The exchange (or far end) cadences the channel **A bit**; each FXS relay follows `A_RX` (`channel-cards.md` §3.2). The RING bus is steady 20 Hz ~80 Vrms; the phone only sees it while that relay is closed |
 | Load | REN × open-circuit voltage — tens of mA per ringer, not an amp from −48 V |
 
 Noise from this stage is why it does not share a board with the codec rails.
@@ -176,7 +176,7 @@ two). Do not daisy-chain plant returns through channel cards into logic ground.
 |---|---|
 | `mf8-backplane.md` §8 | PSU slot becomes these two end boards; mechanical host is the 100 × 100 stack, not Eurocard slot 8 |
 | `common-cards.md` §3 | rails unchanged; supply that makes them is this document |
-| `channel-cards.md` §3.4 | FXS still expects a shelf `RING` bus and −48 feed; cadence remains on `A_RX` |
+| `channel-cards.md` §3.2 | FXS still expects a shelf `RING` bus and −48 feed; cadence remains on `A_RX` |
 | `mf8-trunk.md` | Trunk-D / Trunk-A split and pass pinout |
 
 ---
@@ -190,4 +190,4 @@ two). Do not daisy-chain plant returns through channel cards into logic ground.
 - **Safety / creepage** for −48 and ~80 Vrms beside a 15–18 V inlet on the noisy board — still required; deriving HV from LV does not retire it.  
 - **Hot-plug** of PSU boards or channel layers with feeds live — not considered.  
 - **Channel stack header C geometry** and **gateway placement** — deferred.  
-- **Exchange blocks** — out of scope; they keep per-subrack PSUs and never put −48 or `RING` on Cable A (`exchange/mainboard.md` §2.4).
+- **Exchange blocks** — out of scope; they never put −48 or `RING` on the exchange bus; those reach a block on a separate harness (`exchange/bus.md` §1, §2.3).

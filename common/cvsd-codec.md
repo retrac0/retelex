@@ -1,261 +1,142 @@
-# CVSD codec card — common encoder / decoder riser
+# CVSD codec riser — both engines on one board
 
-One **100 × 100 mm** board that holds both halves of the type-A CVSD engine
-(`mf8-spec.md` §12.1, `circuit-review.md` §2.4 / §4, `spice/cvsd-enc/`,
-`spice/cvsd-dec/`). It is a **riser**: it stacks on a subscriber base card
-(FXS / FXO / E&M / adapter carrier) and talks to that base through a short
-board-to-board header. The base keeps the channel socket, the hybrid / line
-circuit, and the A-bit logic; this card keeps only the codec.
+One 100 × 100 mm board with both halves of the type-A CVSD engine: the circuit
+for the law of `mf8-spec.md` §12.1. It stacks on a base card through header R.
+The base keeps the channel socket, the line circuit and the A-bit logic; the
+riser keeps only the codec. The CVSD subscriber line card does not take it,
+because its codec is in the phone.
 
-> **Status: proposed.** Circuit matches the ngspice type-A decks and falstad
-> `CVSD-ENC` / `CVSD-DEC` / `RECON`. Outline and stack pitch match the MF8
-> spacer-stack (`common-cards.md`, `mf8-psu.md`). Header P/N and layout not
-> drawn.
+> **Proposed.** The circuit matches the ngspice type-A decks (`spice/cvsd-enc/`, `spice/cvsd-dec/`) and falstad
+> `CVSD-ENC`, `CVSD-DEC`, `RECON`. Header part, layout and `pcb/cvsd-codec/` are not drawn.
+> **Measured in:** `tolerance.py` (`mf8-spec.md` §12.1's tolerances); §3.1's drive comparison is a scratch script.
 
-```
-  shelf C ══╗
-            ║
-     ┌──────╨──────┐
-     │ subscriber  │  hybrid / feed / ring / slot logic / word
-     │ base 100²   │
-     └──────╥──────┘
-            ║ R  (mezzanine — §3)
-     ┌──────╨──────┐
-     │ CVSD codec  │  enc + dec + recon   ← this card
-     │ riser 100²  │
-     └─────────────┘
-```
+## 1. Hosts and form
 
----
+The FXS/FXO base (`channel-cards.md` §3) and the E&M base put audio, `TX_CLK`,
+`RX_CLK` and the channel bits on R; the subscriber-adapter carrier puts
+phone-side audio and its bit clock (`subscriber-adapter.md`); a bench carrier
+takes banana or SMA audio. One layout serves every analog card, the engine is
+brought up alone before it meets a line, and a spare swaps without touching the
+line side. The riser is 1.6 mm, the upper layer of a two-layer sandwich, on the
+base's four M3 holes with spacers as the datum and a 5 mm front keep-out; the
+pitch is §6's. It does not pass the socket: clocks and bits arrive already chosen
+by the base, so the two clock domains never meet on it.
 
-## 1. Why a separate card
+## 2. Header R
 
-| | on the FXS/E&M board today (`channel-cards.md` §3) | this riser |
-|---|---|---|
-| Codec | stuffed on every analog subscriber population | **one** layout, shared |
-| Bring-up | engine + hybrid + HV on one first article | engine alone on a bench carrier, then on a live base |
-| Tolerance | enc and dec built together | same, and a spare riser swaps without touching the line side |
-| CVSD line card | codec stays in the phone | unchanged — this riser is not for that card |
-
-Hosts that fit the R header:
-
-| host | what it puts on R |
-|---|---|
-| **FXS / FXO base** | `AUDIO_TX` from the hybrid trim, `AUDIO_RX` back to it; `TX_CLK` / `RX_CLK`; `C_TX` / `C_RX` as `BIT_ENC` / `BIT_DEC` |
-| **E&M base** | the same, four-wire audio instead of a hybrid |
-| **Subscriber-adapter carrier** | phone-side audio + recovered bit clock (`subscriber-adapter.md`) |
-| **Bench carrier** | banana / SMA for `AUDIO`, 0/5 V `BIT`/`CLK`, ±12 / +5 — no shelf |
-
-The CVSD **subscriber line** card (`channel-cards.md` §2) does **not** take
-this riser: its codec is in the phone, and the card has no ±12 V path.
-
----
-
-## 2. Mechanical
-
-| | |
-|---|---|
-| Outline | **100 × 100 mm**, 1.6 mm, same as every MF8 channel layer |
-| Role in the shelf | the **upper** layer of a two-layer channel sandwich; the base below it takes the through-stack **C** socket (`mf8-backplane.md` §8) |
-| Stack pitch | **0.4″ (10.16 mm)** board-to-board — same datum family as `pcb/hookbusy/` (spacers are the datum; headers float) |
-| Keep-outs | 5 mm from the front edge for a faceplate / test points; C area on the **base** only — this riser has no DIN / C footprint |
-| Mounting | four M3 clearance holes on the common MF8 pattern (to be locked with the base); nylon spacers |
-
-The riser does **not** pass C. Clocks and bits arrive already chosen by the
-base (`TX_CLK`→encoder, `RX_CLK`→decoder). That keeps the two clock domains
-from meeting on this board, as §3.2 of `channel-cards.md` requires.
-
----
-
-## 3. Mezzanine header **R**
-
-Keyed **2×10** 0.1″ stackable header (mate on the base top / riser bottom).
-Pin 1 marked; keying blocks a 180° reverse. Names are from this card's view.
+A keyed 2×10, 0.1″, stackable (base top, riser bottom). Names from this card:
 
 | pin | name | dir | |
 |---|---|---|---|
-| 1 | `GND` | — | analog/logic return (star to base GND plane) |
-| 2 | `GND` | — | |
-| 3 | `+5 V` | in | `VDD` — 74HC + LM311 pull-up |
-| 4 | `+12 V` | in | `VCC` |
-| 5 | `−12 V` | in | `VEE` |
-| 6 | `GND` | — | |
-| 7 | `TX_CLK` | in | 64 kHz, encoder sample (rising) |
-| 8 | `RX_CLK` | in | 64 kHz, decoder sample (rising) — **separate net** |
-| 9 | `BIT_ENC` | out | encoder bit → base `C_TX[n]` |
-| 10 | `BIT_DEC` | in | from base `C_RX[n]` (after any `MUTE`/`1010` gate on the base) |
-| 11 | `AUDIO_TX` | in | to encoder; nominal **0.15 rms** of FS (`mf8.NOMINAL_RMS`) |
-| 12 | `AUDIO_RX` | out | decoder after reconstruction LPF |
-| 13 | `GND` | — | audio return sense (tie to 1/2 at base) |
-| 14 | `/OE` | in | pull-down to run; open or high three-states `BIT_ENC` (optional stuffing) |
-| 15 | `SYL_E` | out | encoder syllabic test (or NC) |
-| 16 | `SYL_D` | out | decoder syllabic test (or NC) |
-| 17 | `Y_E` | out | encoder integrator test |
-| 18 | `Y_D` | out | decoder integrator (pre-LPF) test |
-| 19 | `GND` | — | |
-| 20 | `GND` | — | |
+| 1, 2, 6, 19, 20 | `GND` | | analog and logic return, starred at the base |
+| 3 | `+5 V` | in | 74HC, the LM311 pull-up, V_A (§3.1) |
+| 4, 5 | `+12 V`, `−12 V` | in | the op-amps, the OTA, the LM311 |
+| 7 | `TX_CLK` | in | 64 kHz, encoder sample on the rise |
+| 8 | `RX_CLK` | in | 64 kHz, decoder sample on the rise: **a separate net** |
+| 9 | `BIT_ENC` | out | encoder bit → the base's `C_TX` |
+| 10 | `BIT_DEC` | in | from the base's `C_RX`, after any `MUTE` gate there |
+| 11 | `AUDIO_TX` | in | to the encoder at `mf8.NOMINAL_RMS`, 0.15 rms of full scale |
+| 12 | `AUDIO_RX` | out | the decoder after reconstruction |
+| 13 | `GND` | | audio return sense, tied to 1–2 at the base |
+| 14 | `/OE` | in | low to run; open or high three-states `BIT_ENC` (optional) |
+| 15, 16 | `SYL_E`, `SYL_D` | out | syllabic test points |
+| 17, 18 | `Y_E`, `Y_D` | out | integrator test points (the decoder's before the low-pass) |
 
-**Not on R:** `−48 V`, `RING`, A bits, the word, `FILL`, `MUTE`, tip/ring.
-Those stay on the base and on C.
+Not on R: −48 V, ringing, A bits, the word, `FILL`, `MUTE`, tip and ring. Audio is
+±1 V full scale about ground; bits and clocks are 0/5 V HC. A clock edge and an
+audio sense never share a return pin.
 
-**Levels:** `AUDIO_*` are analog about ground, ±1 V FS class. `BIT_*` and
-clocks are 0 / +5 V HC. Do not share a return pin between a clock edge and an
-audio sense — that is why GND is repeated.
-
----
-
-## 4. Block diagram
-
-```
- AUDIO_TX ──►[  optional on base: 300–3400 ]──► ENCODER ──► BIT_ENC
- TX_CLK ──────────────────────────────────────┘              │
-                                                             │  (base → C_TX)
- BIT_DEC ◄───────────────────────────────────────────────────┤
- RX_CLK ──► DECODER ──► Y_D ──►[ RECON 3.4 kHz ]──► AUDIO_RX │
-                                                             │  (base ← C_RX)
-```
-
-Type A, both engines (`spice/cvsd-enc/enc_a.sub`, `spice/cvsd-dec/dec_a.sub`):
+## 3. The engines
 
 | | encoder | decoder |
 |---|---|---|
-| Bit source | LM311 (`AUDIO_TX` vs `Y_E`) | `BIT_DEC` into the first '74 |
-| Run register | 3× ½ 74HC74 | 3× ½ 74HC74 |
-| Coincidence | 2× XOR + OR → `/COIN` | same |
-| Syllabic | 51.1 k / 2.55 M / 100 n | same |
-| `Iabc` | ½ TL072 + 2N3906, R_set 30.9 k + trim | same, own half |
-| OTA | ½ LM13700, ±±224 mV from Q/`NQ` | other ½ LM13700 |
-| Integrator | 10 nF ∥ 100 k, ½ TL072 follower | same |
-| Reconstruction | — | 3rd-order 3.4 kHz (`recon.sub`, `channel-cards.md` §3.3) |
+| bit | LM311, `AUDIO_TX` against `Y_E` | `BIT_DEC` into the first '74 |
+| run register | 3 × ½ 74HC74 | 3 × ½ 74HC74 |
+| coincidence | 2 × XOR ('86) + OR ('32) → `/COIN` | the same |
+| syllabic | 51.1 kΩ, 2.55 MΩ, 100 nF | the same |
+| `Iabc` | ½ TL072 + 2N3906, R_set 30.9 kΩ with trim | the same, its own |
+| OTA | ½ LM13700, ±224 mV from Q and /Q | the other ½ |
+| integrator | 10 nF ∥ 100 kΩ, ½ TL072 follower | the same |
+| reconstruction | — | 3rd order, 3.4 kHz: 10 kΩ + 4.7 nF buffered, then Sallen–Key 2 × 10 kΩ, 9.1 nF / 2.4 nF |
 
-Digital logic stays in HC; ADC/DAC bridges are a simulation concern only
-(`spice/cvsd-enc/models/logic.inc`). On the board the '74 / '86 / '32 are real
-packages with 0 / 5 V levels into the OTA dividers and the syllabic node
-(`circuit-review.md` §4).
+### 3.1 The `Iabc` drive
 
----
+The LM13700's bias pin sits two diode drops above V−, so resistors alone make
+`I_min` a small difference of two junction-set currents. One resistor from the
+node on ±12 V gives 1.47:1 and the codec does not compand (segSNR 9.0 / 7.8 dB
+against the law's 27.6 / 18.0); with the pin at +1.3 V, `I_min` doubles in under
+20 °C. So the law is set by resistor ratios, with the pin out of it:
 
-## 5. Parts
+```
+ /COIN ── R1 51.1k ──┬── V_node ──── (+) op-amp ── base ─┐  PNP 2N3906
+ (¼ '32, on V_A)     C_syl 100n ∥ R2 2.55M to gnd        (−) ─────────┬── emitter
+                                       V_A ── R_set ──────────────────┘   collector ──▶ Iabc pin
+ V_node = k·V_A·(1 − syl), k = R2/(R1 + R2) = 0.9804;  Iabc = (V_A − V_node) / R_set
+ I_max = V_A / R_set,  I_min = I_max·(1 − k): a ratio of 50.9, set by two resistors
+```
 
-### 5.1 Packages
+| item | value | sets |
+|---|---|---|
+| R1, R2 | 51.1 kΩ, 2.55 MΩ, 1 % | the ratio by two resistors; R1 ∥ R2 = 50.1 kΩ keeps τ_syl 5 ms on 100 nF 2 % |
+| R_set | 26.1 kΩ + 10 kΩ trimmer, 30.9 kΩ set | `I_max` 160 µA; the one trim, scaling `I_min` with it, which is pure gain |
+| V_A | +5 V through 100 Ω and 100 µF, feeding R_set and the coincidence gate's package | one node, so the law is ratiometric in it |
+| op-amp | JFET input, ±12 V | **its offset is the `I_min` spec**: 98 mV of control at `I_min`, so a TL072's 3 mV typical is 3 % and its 10 mV worst is the whole ±10 % budget. A low-offset grade, or trim |
+
+Expected `I_min` accuracy is ±5 %, against `mf8-spec.md` §12.1's ±10 %,
+independent of temperature, the rails and the OTA.
+
+### 3.2 Between the logic and the engine
+
+- **The LM311's output is a floating transistor**: collector to +5 V through
+  4.7 kΩ, emitter to logic ground.
+- **The bit into the OTA is differential**: Q and /Q each through 47 kΩ / 2.2 kΩ,
+  ±224 mV, which steers 99.96 % of `Iabc` either way. A 0/5 V bit divided down on
+  one input is 0 or +`Iabc`, with no down-step. **Check the sign**: a 1 must raise
+  the integrator the LM311 compares against. A reversed encoder sits on a rail; a
+  reversed decoder only inverts, and passes a listening test.
+- **One ground, clocks off the integrator**: the smallest step on `C_int` is
+  3.1 µA × 15.6 µs / 10 nF = 4.9 mV, so millivolts of clock there are the idle
+  step. 100 nF at every package, 10 µF each rail.
+
+## 4. Parts
 
 | ref | part | function |
 |---|---|---|
 | U1 | LM311 | encoder comparator |
-| U2 | LM13700 | both OTAs (enc + dec) |
-| U3 | TL072 | encoder `Iabc` + integrator follower |
-| U4 | TL072 | decoder `Iabc` + integrator follower |
-| U5 | TL072 | reconstruction LPF (buffer + Sallen–Key; one section spare or second-order pad) |
-| U6–U8 | 74HC74 | six run-register halves (enc ×3, dec ×3) |
-| U9 | 74HC86 | four XORs (both coincidence networks) |
-| U10 | 74HC32 | two ORs (coincidence); spare gates for `/OE` or a local `MUTE→1010` option |
+| U2 | LM13700 | both OTAs |
+| U3–U5 | TL072 | `Iabc` source and integrator follower, one per engine; reconstruction |
+| U6–U8 | 74HC74 | six run-register halves |
+| U9, U10 | 74HC86, 74HC32 | coincidence; the '32's spare gates for `/OE` or a local `MUTE` gate |
 | Q1, Q2 | 2N3906 | `Iabc` PNPs |
-| — | 1 % resistors, 2 % C_syl, 5 % film C_int | per §12.1 / `circuit-review.md` §2 |
 
-**≈ 10 IC packages** + 2 transistors. Matches the spirit of `channel-cards.md`
-§3.8's engine line, with coincidence as **'32** (type A / spice), not '08.
+About ten ICs and two transistors; 1 % resistors, 2 % `C_syl`, 5 % film `C_int`.
+Encoder and decoder side by side, the LM13700 and logic between, R at the rear,
+the two `Iabc` trims and the test points at the front; no HV on the board.
 
-### 5.2 Law values (both engines)
+## 5. Host contract and bring-up
 
-| | |
-|---|---|
-| τ_syl / τ_int | 5 ms / 1 ms |
-| Compression | 51:1 full scale (16:1 @ 30 % run-of-threes) |
-| C_int ∥ R_int | 10 nF ∥ 100 kΩ |
-| C_syl network | 51.1 kΩ, 2.55 MΩ, 100 nF 2 % |
-| I_max / I_min | 160 µA / ≈ 3.1 µA — **one trimmer per engine** on R_set |
-| OTA steer | 47 k / 2.2 k from Q and `/Q` → ±224 mV |
-| LM311 pull-up | 4.7 kΩ to +5 V; emitter at GND |
+The base powers R, drives `TX_CLK` and `RX_CLK` from socket a1 and a7 (never
+tied on the riser), gates `BIT_DEC` if it has a `MUTE` gate, and presents
+`AUDIO_TX` trimmed to nominal **before** the riser's `Iabc` trim. R is left open
+where the codec is stuffed on the base.
 
-### 5.3 Reconstruction
+Bring-up: `BIT_ENC` looped to `BIT_DEC` on a bench carrier, to the order of
+`spice/cvsd-dec`'s loopback (~17 dB tone SINAD, 20–25 dB speech segSNR); each
+`Iabc` trimmed against its `C_int`, not by ear; then on a base, then card to
+card, within ~1 dB of a matched pair (`tolerance.py`).
 
-As `spice/cvsd-dec/SPEC.md` §4 / falstad `RECON`:
+## 6. Open
 
-- first order: 10 kΩ + 4.7 nF, buffered  
-- Sallen–Key: 2× 10 kΩ, 9.1 nF / 2.4 nF  
-
-Input anti-alias (300–3400 Hz) stays on the **base** with the hybrid trim
-(`channel-cards.md` §3.3), so one riser layout serves every host.
-
----
-
-## 6. Layout zones (100 × 100)
-
-```
-  front (test points / faceplate)
-  ┌──────────────────────────────────────────┐
-  │  TP: Y_E Y_D SYL_E SYL_D BIT_ENC BIT_DEC │
-  ├───────────────┬──────────────────────────┤
-  │  ENCODER      │  DECODER + RECON         │
-  │  LM311        │  U4 TL072, ½ LM13700     │
-  │  U3 TL072     │  U5 recon                │
-  │  ½ LM13700    │  '74 ×1½, ½ '86, ¼ '32   │
-  │  '74 ×1½      │                          │
-  │  ½ '86, ¼ '32 │                          │
-  ├───────────────┴──────────────────────────┤
-  │  U2 LM13700 centre  ·  logic U6–U10      │
-  │  +5 decouple near 'HC   ±12 near OTAs    │
-  ├──────────────────────────────────────────┤
-  │           R header (rear / stack)        │
-  └──────────────────────────────────────────┘
-  rear (toward shelf / base)
-```
-
-- **Split ground:** single GND poured, with the analog steer/divider cluster
-  and C_int next to each OTA; HC clocks routed away from `AUDIO_*`.  
-- **Decouple:** 100 nF on every VDD/VCC/VEE pin; 10 µF bulk per rail at R.  
-- **Trimmers:** two R_set pots on the front edge, silk `Iabc E` / `Iabc D`.  
-- **Clearance:** no −48 / RING on this board — no HV creepage budget.
-
----
-
-## 7. Host contract
-
-The base must:
-
-1. Power R from the socket's `+5` and `±12` (FXS/E&M already take those pins).  
-2. Drive `TX_CLK` / `RX_CLK` from C `a1` / `a7` — never short them on the riser.  
-3. Gate `BIT_DEC` if it implements the `MUTE`→`1010` fix (`channel-cards.md`
-   §3.7); otherwise the decoder sees raw `C_RX[n]`.  
-4. Present `AUDIO_TX` already trimmed to nominal line level **before** the
-   riser's `Iabc` trim (`channel-cards.md` §3.3).  
-5. Leave R unpopulated / open if the codec is stuffed on-base instead (older
-   one-board builds) — the riser is optional per slot.
-
----
-
-## 8. Bring-up
-
-1. **Bench carrier:** loop `BIT_ENC`→`BIT_DEC`, tie `TX_CLK`=`RX_CLK`, feed
-   `AUDIO_TX`, listen on `AUDIO_RX`. Match `spice/cvsd-dec` loopback /
-   `talker_snr.py` order of magnitude (~17 dB tone SINAD, ~20–25 dB speech
-   segSNR).  
-2. Trim each `Iabc` against its `C_int` (`circuit-review.md` §2), not by ear.  
-3. **On base, no line:** same loop through the base's bit path.  
-4. **On base, live trunk:** levels at the hybrid, then card-to-card over C.  
-5. Card-to-card encoder/decoder mismatch within ~1 dB of a matched pair
-   (`tolerance.py`).
-
----
-
-## 9. Documents and models
-
-| | |
-|---|---|
-| Law / tolerances | `mf8-spec.md` §12.1, `circuit-review.md` §2–§4 |
-| FXS engine placement (before split) | `channel-cards.md` §3.2, §3.8 |
-| Encoder / decoder spice | `spice/cvsd-enc/enc_a.sub`, `spice/cvsd-dec/dec_a.sub`, `recon.sub` |
-| Falstad | `falstad/cvsd_engine.txt` — `CVSD-ENC`, `CVSD-DEC`, `RECON` |
-| PCB project (layout TBD) | `pcb/cvsd-codec/` |
-
----
-
-## 10. Open
-
-- Stackable header manufacturer / height for 0.4″ pitch with reliable wipe.  
-- Whether `/OE` on `BIT_ENC` is stuffed, or the base always sinks the bit.  
-- Whether a local `MUTE`→`1010` gate lives on this riser (spare '32) or only on
-  the base.  
-- MF8 hole pattern coordinates shared with the base drawing.  
-- One-board FXS stuffing option: do not delete the footprints from the base
-  library until the riser is the default.
+- **Stack pitch.** Drawn at 0.4″ (10.16 mm). That does not close with stock
+  parts: an 8.5 mm socket under a 1.6 mm board leaves 0.05 mm of air
+  (`block-stack.md` §1, which moved the block to an 11 mm gap). It blocks the
+  header choice and the mechanical drawing.
+- **±12 V in an exchange block.** The port card's edge header carries +5 V only
+  (`block-stack.md` §5), so a base in a block feeds R's ±12 V from its own
+  harness.
+- **Stuffing:** `/OE` or not; a `MUTE` gate on the riser or the base
+  (`channel-cards.md` §6); the hole pattern shared with the base.
+- **Not measured:** the drive's ±5 % is a sum of tolerances; scope V_A's ripple
+  at `I_min` first, the offset second. How `I_min` mismatch sounds (10 % moves the
+  level 0.4 dB between nominal and −20 dB) wants a render. §3.1's comparison
+  would be reproducible with a pluggable step law in `tolerance.py`.

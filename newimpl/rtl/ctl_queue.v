@@ -21,7 +21,7 @@
 // during a read changes nothing on /HW.  So this board only writes.
 //
 // THE QUEUE IS A MODEL PART.  In 74HC the sequencer holds until its word is
-// away and there is no queue (counters.md 9); here a sequencer may decide
+// away and there is no queue (bus.md §5); here a sequencer may decide
 // several writes in one tick and hand them over at once.  What the model owes
 // the board is that nothing is lost silently: a push the queue has no room for
 // sets `ovf`, sticky, and every bench that fits this reads it.  The sequencer
@@ -39,7 +39,7 @@
 // Entry: { G, CLM, BSY, SRC[5:0], DST[5:0] } -- fifteen bits, the control
 // word less its spare bit.  G = 0 is the event word.
 //
-//   mainboard.md 2.3, common-control.md 2.2, counters.md 9, console.md 2
+//   bus.md §4, §5; network.md §3.6; proposed/counters.md §5; proposed/console.md §2
 `timescale 1ns/1ps
 `include "exch.vh"
 
