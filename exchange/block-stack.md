@@ -21,6 +21,21 @@ Joel decided the form on 2026-09-25:
 - **The header is two boards, stacked like the port cards** (later the same
   day, when 19 DIPs and their connectors would not fit one 100 × 100 board).
 
+And on 2026-09-26:
+- **The stack is two 2×25**: J1 on the left carries the 19 clock-class lines
+  in a checkerboard, J2 on the right the rest. Both sit toward the front with
+  pin 1 at the back, which frees the back edge (§3).
+- **The header boards are `blkhdr_bus_RevA` (A) and `blkhdr_logic_RevA` (B).**
+- **Header A takes the bus on one right-angle IDC at its front edge**, for the
+  ribbon. The underside pair is gone. Its test strip and the adapter commons
+  go along the back edge (§6).
+- **Every jumper is a vertical header in the interior**, beside the logic it
+  sets, for low-profile shunts (§4).
+- **Header B shows each slot's M and BUSY on sixteen lamps** at its back edge,
+  held by two 74HC '595s, plus FIT, RESET and RING_CAD status lamps (§2.1).
+- **An RBT SOURCE jumper on header A** lets the block holding the ringback card
+  drive the bus `RBT` (§4, `bus.md` §7).
+
 Three alternatives were weighed and not taken:
 - electronic lane selection by POS;
 - lanes rotated a pin per layer, which through-hole cannot do because
@@ -33,8 +48,8 @@ service; this is the better form for a first breadboard.
 | | |
 |---|---|
 | Pin and part description | `pcb/tools/stackdef.py` → `pcb/lib/block-stack.json` (the tables below are generated from it) |
-| Schematics | `pcb/hdrbus/` (header A), `pcb/hdrlogic/` (header B), `pcb/portcard/` — first draft by `pcb/tools/gen_cards.py`; **the schematics are the design from here on** |
-| Boards | the same directories: placed by `pcb/tools/pcb.py`, routed by `pcb/tools/route.py` (Freerouting) |
+| Schematics | `pcb/blkhdr_bus_RevA/` (header A), `pcb/blkhdr_logic_RevA/` (header B), `pcb/portcard/` (the port card the check runs) — first draft by `pcb/tools/gen_cards.py`; **the schematics are the design from here on** |
+| Boards | header A and B in the same directories: placed by `pcb/tools/anneal.py` and `place.py`, routed by `pcb/tools/route.py` (Freerouting). The port card's board is `pcb/portcard_RevC`, maintained by hand |
 | Check | `make -C pcb netcheck` / `make -C pcb lockstep`: netlist → Verilog → the newimpl benches, `block.v` swapped for the boards, or run beside them |
 | Reference | `newimpl/rtl/block.v`, `port.v`, `frame_decode.v`. A difference means a schematic is wrong until shown otherwise |
 
@@ -45,36 +60,38 @@ service; this is the better form for a first breadboard.
 ```
         port card 7   ┐
         …             │  eight port cards, 100 × 100, 12.6 mm pitch (11 mm gap)
-        port card 0   ┘  each: J1 J2 J3 long-tail stacking headers, J4 edge header front
+        port card 0   ┘  each: J1 J2 long-tail stacking headers, J4 edge header front
    ─────────────────────
-        header B          the logic board: J1 J2 J3 long-tail like a port card;
-                          J8, a 2×6 pin header on its UNDERSIDE, into A
+        header B          the logic board: J1 J2 long-tail like a port card;
+                          J8, a 2×6 pin header on its UNDERSIDE, into A; the lamps at the back
    ─────────────────────
-        header A          the bus board: J1 J2 J3 sockets and J8's 2×6 socket on top;
-                          the bus 2×25s underneath
+        header A          the bus board: J1 J2 sockets and J8's 2×6 socket on top;
+                          the bus IDC at the front edge
    ═════════════════════  plate, 20 mm standoffs
 ```
 
 - **Pitch: an 11 mm gap, 12.6 mm board to board.** 0.4″ does not close with
   stock parts. An 8.5 mm socket body under a 1.6 mm board leaves 0.05 mm of air,
   and the upper card's solder fillets sit exactly there. At 11 mm, the stock
-  2×20 long-tail stacking header (Raspberry Pi HAT class) seats 5.9 mm deep,
+  2×25 long-tail stacking header (Raspberry Pi HAT class) seats 5.9 mm deep,
   and about **9 mm of part height** is usable under the next card: DIPs in
-  sockets, and shunts. Samtec SSQ-120-03-G-D is the gold-plated upgrade.
+  sockets, and low-profile shunts. Samtec SSQ-125-03-G-D is the gold-plated upgrade.
   - The other 0.4″ stacks (hookbusy, the CVSD riser, MF8) have the same
     problem and are not changed here.
 - **Holes.** Four M3 holes, and the datum is the standoffs, not the headers.
   H2 sits 3 mm off its corner, so a card turned round does not line up with
-  the stack.
+  the stack. The stack headers key it too: both sit toward the front.
 - **Connectors by edge.**
-  - **Stack:** left J1, back J2, right J3.
-  - **Port card front edge:** the edge header J4, the test strip J5 and the
-    jumpers, so they can be reached.
-  - **Header A front edge:** the adapter commons J6, the test strip J7 and
-    both header jumpers. Header B is above them; right-angle shunts are reached
-    from the front.
-  - **Header A underside:** the bus 2×25s, J4 on the right and J5 on the left.
-  - **Header B front edge:** its own test strip J9.
+  - **Stack:** J1 at the left edge, J2 at the right, pads y 29.0–89.96 mm
+    (front-aligned), pin 1 at the back end.
+  - **Front edge:** the port card's edge header J4; header A's bus IDC J4;
+    header B's test strip J9. Each right-angle IDC shroud stands about 9 mm,
+    so the card above keeps its leads over it trimmed to 1 mm.
+  - **Back edge:** the lamps (header B, and the port card's own); the test
+    strips of header A (J7) and the port card (J5); header A's adapter
+    commons J6.
+  - **Interior:** every jumper, vertical, beside the logic it sets (§4).
+    They are set once, with the boards above lifted off.
   - **J8, the header link,** sits at the same place on A and B (§3.1), and is
     not on the port cards.
 - **Service:** power down to change a card. A card in the middle comes out with
@@ -91,14 +108,14 @@ Between A and B, the cut follows the bus.
 - **A holds everything the bus touches:** the receivers, the strobes and the
   commutator (they run on the bus's cell timing), the plane drains, the
   adapter, the jumpers.
-- **B holds the rest:** the control word, the write decode, the frame decode and
-  the `/WS` select.
+- **B holds the rest:** the control word, the write decode, the frame decode,
+  the `/WS` select and the lamps.
 
 Everything B needs from A is already a stack net except six, which ride J8.
 Reference designators are unique across the pair, so "U14" names one part in a
 block's header.
 
-### 2.1 The block header — 20 DIP on two boards
+### 2.1 The block header — 22 DIP on two boards
 
 | ref | board | part | does | RTL |
 |---|---|---|---|---|
@@ -119,9 +136,24 @@ block's header.
 | U16 | B | '688 | SCAN[5:3] = h, for the `/WS` select | `block.v:261-268` |
 | U17 | B | '175 | the select latch: SCAN[2:0] and ours, clocked at `/STB4`'s fall while `/WS` is low | `block.v:263-270` |
 | U18 | B | '151 | lane `WORD[sel]` | `block.v:272-273` |
-| U20 | B | '02 | `hw_pd` (to A's Q3 on J8); the latch clock; the match, inverted into the latch | `block.v:273`, `:259-267` |
+| U20 | B | '02 | `hw_pd` (to A's Q3 on J8); the latch clock; the match, inverted into the latch; LAMP_CK = NOR(`/STB4`, `/SELM`), the lamps' shift clock | `block.v:273`, `:259-267` |
+| U21, U22 | B | '595 ×2 | **the lamps**: slot k's `/HA_L` (U21, M) and `/HB_L` (U22, BUSY) in its turn | none: a display |
+| D1–D16 | B | 3 mm LED, right-angle | M and BUSY for slots 0–7 in one row at the back edge, 5 mm pitch; RN10, RN11 1 k | — |
+| D17–D19 | B | 3 mm LED, standing | FIT, RESET, RING_CAD, a column at the back right behind the lamp row; each 1.5 k from +5 V to `/FIT`, `/RST`, `/RING_CAD` | — |
 
-The header also carries RN1–RN9 and R1–R11 (all on A except RN2, RN4 and RN9):
+**The lamps.** In each of the block's eight frames `/STB4` falls mid-frame
+while `/SELM` is low, so LAMP_CK rises once a slot, in slot order, and shifts
+that slot's `/HA_L` into U21 and `/HB_L` into U22. `/SELM` rises as the scan
+leaves the block and copies all eight to the outputs at once, slot 0 on Q7.
+A lamp is lit while its card pulled the plane in its last turn: one pass,
+8 ms, behind, lit by DC at about 2.9 mA, with no scanning. `/OE` is `/FIT`, so
+an unfitted block's lamps are dark. The '595 replaced the '259 first proposed:
+its shift clock is U20's spare NOR, where the '259's active-low enable would
+have needed an inverter B does not have, and it needs no address lines. The
+stack wrapper checks every lamp against its own card's drain (§8).
+
+The header also carries RN1–RN11 and R1–R15 (all on A except RN2, RN4, RN9,
+RN10, RN11 and R13–R15):
 - **Lane terminations.** `C_TXk` has 4.7 k to FILL_R, so an empty lane idles on
   FILL. `WORDk` has 10 k to +5 V, so an empty lane reads no word.
 - **Series resistors.** 33 Ω on `/STB`, `/WR`, TX_CLK, LOOP_HB and the adapter
@@ -178,6 +210,12 @@ because a digital simulator has no capacitor (§8).
   10. The one added part is U20, a '02 that takes over the three gates B needs,
   where A's '02 had them. U9's mid-frame clock is now `/STB4`'s rise, not
   SLOT2's, because SLOT2 is not on the stack.
+- **The stack is two 2×25, and the header card is ribbon-fed** (2026-09-26).
+  The three 2×20 spent 36 grounds guarding every fast line from every side;
+  the checkerboard on J1 guards each clock-class line with a ground or a
+  static line on all sides for 18. The back edge came free for lamps and test
+  strips. Header A lost its underside bus pair and J5: the block header uses
+  the ribbon fill only (`bus.md` §2.3).
 - **The number is its own jumper.** The 2×8 of `block.v:23-30` routes HC_OUT onto
   HC[h], and both of its pins are live highway nets, so a '148 cannot read it.
   - JP2 NUMBER, a 2×4, gives h directly: a shunt reads 0.
@@ -190,62 +228,58 @@ because a digital simulator has no capacitor (§8).
 
 ## 3. The stack
 
-Three 2×20, identical on both cards. The port card carries a long-tail stacking
-header (`telco:Stack_2x20_P2.54mm_LongTail`, the stock 2×20 socket's pads).
-The header carries a plain 2×20 socket in the same holes. Pin *n* of every
-card is one net. Bold marks the lines whose edges matter; each has a ground
-beside it.
+Two 2×25, identical on every card. The port cards and header B carry a
+long-tail stacking header (`telco:Stack_2x25_P2.54mm_LongTail`, the stock
+2×25 socket's pads); header A carries a plain 2×25 socket in the same holes.
+Pin *n* of every card is one net. Both sit toward the front, pads y 29.0 to
+89.96 mm, with pin 1 at the back end, so a card turned round cannot seat.
 
-**69 signals** (43 commons, 24 lanes, and the two plane lines), **12 × +5 V,
-36 × GND**, and 3 spares that pass through and connect to nothing.
+**69 signals** (43 commons, 24 lanes, and the two plane lines), **6 × +5 V,
+18 × GND**, and 7 spares that pass through and connect to nothing.
 
-#### J1 — left: the fast commons
+**J1 is the clock connector.** Its 19 lines whose edges are capture instants
+(bold: `/STB0–7`, `/WR0–7`, TX_CLK, LOOP_HB, `/RST`) sit in a checkerboard.
+Each has only GND, +5 V or a static line (H0–2, MUTE_BLK, `/RING_CAD`) beside
+it and across from it. `stackdef.py` asserts that. **J2** carries what is
+sampled mid-cell or held for a frame: SCAN, HC, the control word, the planes
+and the C_TX and WORD lanes. The '164 outputs ripple on every shift, so SRC,
+BSY and CLM are read only at a `/WR` edge, as on the bus.
 
-| pins | odd | even | | pins | odd | even |
-|---|---|---|---|---|---|---|
-| 1–2 | +5 V | +5 V | | 21–22 | **`LOOP_HB`** | GND |
-| 3–4 | **`/STB0`** | GND | | 23–24 | GND | GND |
-| 5–6 | **`/STB1`** | GND | | 25–26 | `/RST` | GND |
-| 7–8 | **`/STB2`** | GND | | 27–28 | `HA_RX` | GND |
-| 9–10 | **`/STB3`** | GND | | 29–30 | `/RING_CAD` | `MUTE_BLK` |
-| 11–12 | **`/STB4`** | GND | | 31–32 | `RBT` | `FILL` |
-| 13–14 | **`/STB5`** | GND | | 33–34 | `TX_OCT` | `RX_OCT` |
-| 15–16 | **`/STB6`** | GND | | 35–36 | GND | GND |
-| 17–18 | **`/STB7`** | GND | | 37–38 | GND | GND |
-| 19–20 | **`TX_CLK`** | GND | | 39–40 | +5 V | +5 V |
-
-#### J2 — back: the lanes and the block-local planes
+#### J1 — left: the clocks and the socket commons
 
 | pins | odd | even | | pins | odd | even |
 |---|---|---|---|---|---|---|
-| 1–2 | +5 V | +5 V | | 21–22 | `C_TX0` | `C_TX1` |
-| 3–4 | **`/WR0`** | GND | | 23–24 | `C_TX2` | `C_TX3` |
-| 5–6 | **`/WR1`** | GND | | 25–26 | `C_TX4` | `C_TX5` |
-| 7–8 | **`/WR2`** | GND | | 27–28 | `C_TX6` | `C_TX7` |
-| 9–10 | **`/WR3`** | GND | | 29–30 | `WORD0` | `WORD1` |
-| 11–12 | **`/WR4`** | GND | | 31–32 | `WORD2` | `WORD3` |
-| 13–14 | **`/WR5`** | GND | | 33–34 | `WORD4` | `WORD5` |
-| 15–16 | **`/WR6`** | GND | | 35–36 | `WORD6` | `WORD7` |
-| 17–18 | **`/WR7`** | GND | | 37–38 | `/HA_L` | `/HB_L` |
-| 19–20 | GND | GND | | 39–40 | +5 V | +5 V |
+| 1–2 | +5 V | +5 V | | 27–28 | **`/WR1`** | GND |
+| 3–4 | **`/STB0`** | GND | | 29–30 | GND | **`/WR2`** |
+| 5–6 | GND | **`/STB1`** | | 31–32 | **`/WR3`** | GND |
+| 7–8 | **`/STB2`** | GND | | 33–34 | GND | **`/WR4`** |
+| 9–10 | GND | **`/STB3`** | | 35–36 | **`/WR5`** | GND |
+| 11–12 | **`/STB4`** | GND | | 37–38 | `MUTE_BLK` | **`/WR6`** |
+| 13–14 | GND | **`/STB5`** | | 39–40 | **`/WR7`** | `/RING_CAD` |
+| 15–16 | **`/STB6`** | GND | | 41–42 | GND | `HA_RX` |
+| 17–18 | GND | **`/STB7`** | | 43–44 | `RBT` | `FILL` |
+| 19–20 | **`TX_CLK`** | `H0` | | 45–46 | `TX_OCT` | `RX_OCT` |
+| 21–22 | `H1` | **`LOOP_HB`** | | 47–48 | spare | spare |
+| 23–24 | `/RST` | `H2` | | 49–50 | +5 V | +5 V |
+| 25–26 | GND | **`/WR0`** | |  |  |  |
 
-#### J3 — right: the slow commons
+#### J2 — right: data, the planes and the lanes
 
 | pins | odd | even | | pins | odd | even |
 |---|---|---|---|---|---|---|
-| 1–2 | +5 V | +5 V | | 21–22 | `CLM` | `BSY` |
-| 3–4 | `SCAN0` | `SCAN1` | | 23–24 | `SRC0` | `SRC1` |
-| 5–6 | `SCAN2` | `SCAN3` | | 25–26 | `SRC2` | `SRC3` |
-| 7–8 | `SCAN4` | `SCAN5` | | 27–28 | `SRC4` | `SRC5` |
-| 9–10 | GND | GND | | 29–30 | GND | GND |
-| 11–12 | `HC0` | `HC1` | | 31–32 | `H0` | `H1` |
-| 13–14 | `HC2` | `HC3` | | 33–34 | `H2` | spare |
-| 15–16 | `HC4` | `HC5` | | 35–36 | spare | spare |
-| 17–18 | `HC6` | `HC7` | | 37–38 | GND | GND |
-| 19–20 | GND | GND | | 39–40 | +5 V | +5 V |
-
-The '164 outputs ripple on every shift, so SRC, BSY and CLM stay on J3, away from
-the strobes and the write lanes. They are read only at a `/WR` edge, as on the bus.
+| 1–2 | +5 V | GND | | 27–28 | `SRC4` | `SRC5` |
+| 3–4 | `SCAN0` | `SCAN1` | | 29–30 | `/HA_L` | `/HB_L` |
+| 5–6 | `SCAN2` | `SCAN3` | | 31–32 | `C_TX0` | `C_TX1` |
+| 7–8 | `SCAN4` | `SCAN5` | | 33–34 | `C_TX2` | `C_TX3` |
+| 9–10 | spare | spare | | 35–36 | `C_TX4` | `C_TX5` |
+| 11–12 | `HC0` | `HC1` | | 37–38 | `C_TX6` | `C_TX7` |
+| 13–14 | `HC2` | `HC3` | | 39–40 | spare | spare |
+| 15–16 | `HC4` | `HC5` | | 41–42 | `WORD0` | `WORD1` |
+| 17–18 | `HC6` | `HC7` | | 43–44 | `WORD2` | `WORD3` |
+| 19–20 | GND | spare | | 45–46 | `WORD4` | `WORD5` |
+| 21–22 | `CLM` | `BSY` | | 47–48 | `WORD6` | `WORD7` |
+| 23–24 | `SRC0` | `SRC1` | | 49–50 | GND | +5 V |
+| 25–26 | `SRC2` | `SRC3` | |  |  |  |
 
 **Loading.** The worst common is `/RST`: three inputs a card, 201 pF estimated
 through nine layers. `/HA_L` and `/HB_L` carry eight drains, about 230 pF on 1 k,
@@ -268,7 +302,8 @@ and trace capacitance, not measured.
   pin header on its underside, pins down into it. An 8.5 mm socket and a
   2.54 mm pin-header body mate at exactly the stack's 11 mm gap.
 - **The port cards never see it.** B's pin header does not pass through.
-- **Position.** J8 is at (47, 80) on both boards, pin 1 at the back left.
+- **Position.** J8 is at (41, 60) on both boards, pin 1 at the back left,
+  clear of the bus IDC and in the middle of what uses it.
   `stackdef.py` asserts that its two halves meet pad for pad, and `pcb.py`
   checks both boards' pads.
 - **The six nets and why.**
@@ -281,8 +316,14 @@ and trace capacitance, not measured.
 
 ## 4. Lanes and jumpers
 
-Each port card carries **four jumper blocks**, all on the front edge, and all
-must say the same slot k:
+Every jumper is a **vertical 2.54 mm header in the interior**, beside the logic
+it sets, for low-profile shunts: about 6 mm tall against the 9 mm under the
+next card (Joel, 2026-09-26: "move headers to the interior near where they are
+needed"). None needs changing with the stack assembled. A port card's follow
+its slot, and moving a card means unstacking anyway. The header's are set once
+for the block's place in the exchange, and header A is the bottom board.
+
+Each port card carries **four jumper blocks**, and all must say the same slot k:
 
 | ref | size | shunt in column k means | missing |
 |---|---|---|---|
@@ -291,12 +332,24 @@ must say the same slot k:
 | JP3 C_TX | 2×8 | this card's C (after ringback) drives lane `C_TXk` | lane k stays on FILL; the card is heard by no one |
 | JP4 WORD | 2×8 | the subscriber's a12 is lane `WORDk` | lane k reads no word: class 000, unequipped |
 
-The header has two:
+On the port card they sit by what they set: POS by U5 (the eq_own '688), WR by
+J1's `/WR` pins and U10, C_TX by J2's C_TX pins and the '157, WORD by the
+WORD pins and the edge's pull-up. Where exactly is `portcard_RevC`'s.
 
-| ref | size | means | missing |
-|---|---|---|---|
-| JP1 HC ROUTE | 2×8 | HC_OUT drives highway HC[h] (silkscreen h = 7…0) | the block drives no highway, and still listens |
-| JP2 NUMBER | 2×4 | FIT, then h0 h1 h2: a shunt reads 0; FIT shunted = the block is fitted | h reads 7; no FIT: no HC drive, no `/BLK`, no `/WS` answer, no plane turn |
+Header A has three:
+
+| ref | size | means | missing | beside |
+|---|---|---|---|---|
+| JP1 HC ROUTE | 2×8 | HC_OUT drives highway HC[h] (silkscreen h = 7…0) | the block drives no highway, and still listens | the bus's HC pins, R3 |
+| JP2 NUMBER | 2×4 | FIT, then h0 h1 h2: a shunt reads 0; FIT shunted = the block is fitted | h reads 7; no FIT: no HC drive, no `/BLK`, no `/WS` answer, no plane turn, lamps dark | RN7, U4 |
+| JP3 RBT SOURCE | 2×8 | lane k's C_TX drives the bus `RBT` through R12, 100 Ω | this block does not drive `RBT` (every block but one) | J2's C_TX pins, U15, RN1 |
+
+**RBT SOURCE** answers `bus.md` §7: nothing brought a ringback card's output to
+bus pin 42. The ringback card is a card in some block's slot k; that block
+alone gets a shunt in column k, and its lane `C_TXk` goes onto the bus through
+100 Ω, as every bus driver does (`bus.md` §2.4). Two shunted blocks would fight
+on `RBT`: one per exchange. The netlist check leaves it open, because `block.v`
+takes `rbt` as an input.
 
 Nothing checks that a card's five settings agree, or that two cards do not
 share a lane: that is the cost Joel accepted for jumpers over logic. The silkscreen
@@ -344,16 +397,15 @@ relays and electrolytics are taller than 9 mm.
 
 ## 6. The bus and the adapter commons
 
-**The bus 2×25** is `bus.md` §2.1's pinout, unchanged. It sits on the
-header's **underside**, with row 1 outermost at both edges:
-- **J4 on the right edge** is stock and serves the ribbon fill;
-- **J5 on the left edge** is the mirrored footprint and serves the bridge fill.
+**The bus 2×25** is `bus.md` §2.1's pinout, unchanged, on **one shrouded,
+keyed right-angle IDC at header A's front edge (J4)**, for the daisy-chained
+ribbon (Joel, 2026-09-26). The underside pair and J5, the mirrored bridge
+header, are gone: the block header uses the ribbon fill only. J4 is
+`Connector_IDC:IDC-Header_2x25_P2.54mm_Horizontal`, centred, pin 1 at the
+right-hand end, odd pins the inner row, like the port card's edge header; its
+pads are in the contract and `pcb.py` checks them.
 
-J5 uses `telco:Bus_2x25_P2.54mm_Mirror`: the stock 2×25 with every x negated,
-so pad 2 is at −2.54. Both are flipped to B.Cu, and their pads are checked
-against the contract by `pcb.py`.
-
-**The adapter commons J6** is a shrouded, keyed 2×5, odd pins signal and even
+**The adapter commons J6**, at header A's back edge, is a shrouded, keyed 2×5, odd pins signal and even
 pins ground: TX_CLK (1), TX_OCT (3), FILL (5), MUTE_BLK (7), HCLK (9).
 TX_CLK, TX_OCT, FILL and HCLK go out through 33 Ω. MUTE_BLK comes in with a
 10 k pull-down, so an empty J6 busies nothing; what it does in the ports is
@@ -373,9 +425,12 @@ single face for it (§9).
 | POS, h, FIT | static, shunt to GND | 10 k to +5 V | RN2 (port), RN7 (header) |
 | bus inputs | from the bus | 100 k to GND | header RN5, RN6 |
 
+| lamps | '595 outputs sink an LED from +5 V | 1 k each (RN10, RN11), about 2.9 mA | header B |
+| status lamps | `/FIT`, `/RST`, `/RING_CAD` sink an LED | 1.5 k from +5 V, about 2 mA | header B R13–R15 |
+
 Decoupling: 100 nF per package, plus 47 µF bulk on header A at the bus entry
-and 10 µF on header B and on each port card. Power enters on the bus 2×25 and
-travels up the stack on 12 pins a board.
+and 10 µF on header B and on each port card. Power enters on the bus IDC and
+travels up the stack on 6 +5 V and 18 GND pins a board.
 
 ## 8. The netlist check
 
@@ -386,7 +441,7 @@ then `pcb/sim/run.py`. The steps:
    the three schematics to `block-stack.json`.
 2. `kicad-cli sch export netlist`, then `netlist.py`'s own checks: missing
    `lib_symbols`, duplicate references. kicad-cli exits 0 on both.
-3. `net2v.py` writes `hdrbus_net`, `hdrlogic_net` and `portcard_net`:
+3. `net2v.py` writes `blkhdr_bus_RevA_net`, `blkhdr_logic_RevA_net` and `portcard_net`:
    - one instance per package of `pcb/models/74hc.v`, keyed by pin number;
    - every multi-driver net resolved with no z;
    - the jumpers as module parameters (`POS`, `LANE`, `BLOCK`, `JUMPERED`).
@@ -399,6 +454,12 @@ then `pcb/sim/run.py`. The steps:
    - Every multi-driver net is resolved from the sidecars `net2v` writes: open
      drains first, then enabled drivers, then weak ones.
    - A contention monitor sits on every net that two boards can drive.
+   - **The lamp check.** At cell 4 of each of the block's frames it takes card
+     k's own `/HA_L` and `/HB_L` drains, on both sides of `/STB4`'s fall, and
+     after the turn it holds header B's sixteen '595 outputs (probe ports of
+     `blkhdr_logic_RevA_net`) to them at every mid-cell. A slot whose card
+     moved at that instant is not judged that pass. A wrong lamp prints
+     `BLOCK-STACK`; the run ends with how many samples were right.
    - It is generated, not written by hand, so a schematic edited in KiCad
      carries straight through.
 5. `run.py` builds a newimpl bench from a snapshot of git HEAD with that file in
@@ -438,8 +499,11 @@ then `pcb/sim/run.py`. The steps:
   generator cannot carry an outside driver through a switch. So `block_stack.v`
   passes the subscriber's `word_n[k]` to lane k itself. JP4's pins are held to the
   contract by step 1.
-- **The HC ROUTE jumper is excluded.** Which highway a block drives is `mainboard.v`'s
-  model, outside `block.v`'s ports.
+- **The HC ROUTE and RBT SOURCE jumpers are excluded.** Which highway a block
+  drives is `mainboard.v`'s model, outside `block.v`'s ports; `rbt` is an input
+  of `block.v`, driven by the bench.
+- **The LEDs and their resistors are excluded.** A digital simulator has no
+  LED. The '595s that drive them are simulated and checked.
 
 ### 8.1 What the check has found so far
 
@@ -469,13 +533,41 @@ then `pcb/sim/run.py`. The steps:
   for about 1 µs, which the board's filter swallows by design. The simulated
   filter is 100 ns, and §2.1 states the 2 ms hold the real one needs.
 
-**Where a difference is expected, and masked, in a lockstep comparison:**
-- **The first pass after reset.**
-- **The frame after a write to a port.** The '273 clocks at `/WR`'s edge, one
-  `clk` earlier than `port.v`'s `wr_edge`.
-- **The capture instants** are one master tick earlier on the boards, when
-  `/STB` falls (tick 4), than in the RTL, which samples at the end of tick 4.
-  The data are mid-cell and stable either way.
+### 8.2 Results, 2026-09-26
+
+On the two-board header and the port card as drawn (newimpl at `6d69aef`; the
+block RTL has changed only in comments since), in lockstep with `block.v`:
+
+| bench | ports fitted | checks | block outputs differing from `block.v` |
+|---|---|---|---|
+| `tb_ctl` | 2 | 17 pass | none |
+| `tb_debug` | 8 | 18 pass | none |
+| `tb_line` | 2 | 23 pass | none |
+| `tb_word` | 10 | 26 pass | none |
+| `tb_tie` | 4 | 16 pass | none |
+| `tb_dial` | 2 | 36 pass | none |
+| `tb_mini` | 7 | 42 pass | none |
+| `tb_ha` | 64 | 13 pass | none |
+| `tb_fabric` | 64 | 9 pass | none |
+| `tb_probe` | 64 | 9 pass | none |
+
+Before the header split, with the boards driving the exchange: `tb_dial` 36,
+`tb_debug` 18, `tb_line` 23, `tb_word` 26 and `tb_mini` 42 passed. `tb_mini` in
+lockstep ran 2.8 hours.
+
+The model's setup-and-hold watch fires in two places, both expected:
+- **Each U9 once at power-on**, 12 ns in, before any clock has a history.
+- **The port card's C capture (U6)**, 18 times across the three 64-port
+  benches. When the '273 changes, by a write or a release, the highway select
+  and the slot select move at once, and the capture can take one spurious edge.
+  The next frame's capture replaces that bit: one bit of a new connection, which
+  CVSD does not hear. It is the frame lockstep masks after a write.
+
+Cost: a 64-port bench takes 15–45 minutes to build and up to an hour to run.
+Every run is under `pcb/tools/capped`.
+
+Where the boards may legitimately differ from `block.v` for a tick, a frame or
+a pass, and what lockstep does about it, is step 6 above.
 
 **The model library** (`pcb/models/`, `make test`) has 23 parts and 3 macro
 cells:
@@ -493,32 +585,31 @@ A runaway netlist bench once reached 18 GB and took other sessions down with it.
 
 ## 9. Not measured, and open
 
-- **Results.** See the netlist check's run log. Which benches have passed on the
-  boards is recorded there and in the commit that lands them, not here.
+- **Results** are §8.2. The network benches (`net`, `chain`, `lnet`, `lfull`,
+  `lchain`, `ltu`, `max`) have not been run on the boards: each builds a whole
+  exchange of netlists, and the slowest took 88 minutes for one block.
 - **Layout.** Placement is by script and routing by Freerouting 2.4.1, headless
   and without its optimiser.
   - All three boards are placed. Every connector is on its contract pads,
     checked by `pcb.py`, and KiCad's schematic parity is clean on each.
   - Routing state is in the commit that lands the boards, not here. The
     placement is a first pass for a human to improve.
-- **Keying** the three stack headers against a card turned round rests on the
-  offset hole alone.
+- **Keying.** A card turned round meets the offset hole and finds its stack
+  headers at the back, not the front.
+- **`portcard_RevC` is on the old stack.** Its board still has the three 2×20
+  headers (0 of 50 pads on each new connector, and a J3), and so does the
+  generated `pcb/portcard` schematic the check runs, which fails the pin
+  contract on 83 pins. The check still runs it, joined to the headers by net
+  name, so the logic is checked; the pins are not, until both are redrawn on
+  the two 2×25.
 - **Heights** are from catalogue figures, not a mock-up. Build a bare three-layer
-  mock-up with spacers before stuffing anything.
+  mock-up with spacers before stuffing anything. The tightest places are the
+  right-angle IDC shrouds, about 9 mm under an 11 mm gap: header A's bus J4
+  and adapter J6, the port card's J4. Header B keeps its parts off A's bus
+  shroud; its lamp row stands over A's J6, so those leads are trimmed.
 - **The loading estimates** in §3 are arithmetic, not measured.
 - **`exch.py mainboard`** has not been re-run for the block-local OR's single
   drain per block (`bus.md` §7).
 - **The block adapter's face.** An 8-channel adapter has no single face on
   this form: it reaches the port cards by eight J4 ribbons, or the form grows
   one. Open until an adapter is built (§6).
-- **Comments owed in the hand RTL.** They were not changed here (another session
-  owns `newimpl`):
-  - `block.v:6-7` (the mainboard's shunt field) and `:17` (cable A);
-  - `block.v:23-30` (one jumper read three ways), `:42-43`, `port.v:27`,
-    `:91-93`, `exch.v:108-113` and `mainboard.v:8-10` (the '148);
-  - `:120` (the '157s);
-  - `:233-238` (where the drains sit);
-  - `port.v:2` ("eight and a half" packages: it is 13 with the socket drivers
-    and the '157);
-  - `mainboard.v:45`, `:75` (64 drains on each plane: it is one a block);
-  - `frame_decode.v:7-8` (RX_OCT in one '74 half on TX_CLK: it is two, §8.1).

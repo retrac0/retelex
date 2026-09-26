@@ -89,7 +89,11 @@ and the centre column is ground, so a connector turned round (pin *p* to
 | ribbon | vertical male or shrouded header | — | one daisy-chained 50-way ribbon |
 
 A bridge needs no key; a position turned round does, so each header sits a
-few millimetres off the centre of its edge. Contacts are gold on both halves,
+few millimetres off the centre of its edge.
+
+**The block header takes the ribbon fill only** (Joel, 2026-09-26): one
+shrouded, keyed right-angle IDC at its front edge, and no mirrored pair
+(`block-stack.md` §6). Contacts are gold on both halves,
 about 0.76 µm; positions joined by bridges or mating sit on one flat plate.
 
 **Power.** +5 V and ground ride the bus, fed at both ends of the chain.
@@ -264,4 +268,7 @@ so **whatever drives `/RESET` must hold it low at least 2 ms**.
   **the unit's 640-tick wait**, derived by hand, not measured: bench
   questions.
 - **How a ringback card drives `RBT`** in a block: there is no wiring field
-  to bring a card's output to pin 42 (`common/tones.md` §9).
+  to bring a card's output to pin 42 (`common/tones.md` §9). Proposed, and
+  drawn on the block header: an RBT SOURCE jumper puts one lane's `C_TX` onto
+  pin 42 through 100 Ω, shunted on the one block that holds the ringback card
+  (`block-stack.md` §4). Not in `mainboard.v`.

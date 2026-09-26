@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "filename": "blkhdr_logic_RevA.kicad_pro",
+    "version": 3
+  },
+  "sheets": [
+    [
+      "ddb99468-3456-5dad-b0d7-d084427ba87e",
+      "Root"
+    ]
+  ],
+  "text_variables": {},
+  "erc": {
+    "rule_severities": {
+      "isolated_pin_label": "ignore"
+    }
+  }
+}

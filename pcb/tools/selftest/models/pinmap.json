@@ -1,0 +1,294 @@
+{
+ "_doc": "Selftest stub: the pcb/models/pinmap.json format, a subset. part -> pin -> {port, dir, type, rail, oe}.",
+ "_values": {
+  "74HC151": "hc151",
+  "74HC14": "hc14",
+  "74HC125": "hc125",
+  "2N7002": "fet_2n7002"
+ },
+ "_macros": {
+  "rc_det": {
+   "params": {
+    "T_ARM": "9'd16",
+    "T_REL": "9'd256"
+   },
+   "ports": {
+    "IN": {
+     "dir": "in"
+    },
+    "OUT": {
+     "dir": "out"
+    },
+    "OUT_n": {
+     "dir": "out"
+    },
+    "clk": {
+     "dir": "in",
+     "sim": true
+    },
+    "rst_n": {
+     "dir": "in",
+     "sim": true
+    },
+    "tick_1k": {
+     "dir": "in",
+     "sim": true
+    }
+   }
+  }
+ },
+ "hc151": {
+  "1": {
+   "port": "I3",
+   "dir": "in",
+   "type": "in"
+  },
+  "2": {
+   "port": "I2",
+   "dir": "in",
+   "type": "in"
+  },
+  "3": {
+   "port": "I1",
+   "dir": "in",
+   "type": "in"
+  },
+  "4": {
+   "port": "I0",
+   "dir": "in",
+   "type": "in"
+  },
+  "5": {
+   "port": "Y",
+   "dir": "out",
+   "type": "out"
+  },
+  "6": {
+   "port": "Y_n",
+   "dir": "out",
+   "type": "out"
+  },
+  "7": {
+   "port": "E_n",
+   "dir": "in",
+   "type": "in"
+  },
+  "8": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "GND"
+  },
+  "9": {
+   "port": "S2",
+   "dir": "in",
+   "type": "in"
+  },
+  "10": {
+   "port": "S1",
+   "dir": "in",
+   "type": "in"
+  },
+  "11": {
+   "port": "S0",
+   "dir": "in",
+   "type": "in"
+  },
+  "12": {
+   "port": "I7",
+   "dir": "in",
+   "type": "in"
+  },
+  "13": {
+   "port": "I6",
+   "dir": "in",
+   "type": "in"
+  },
+  "14": {
+   "port": "I5",
+   "dir": "in",
+   "type": "in"
+  },
+  "15": {
+   "port": "I4",
+   "dir": "in",
+   "type": "in"
+  },
+  "16": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "+5V"
+  }
+ },
+ "hc14": {
+  "1": {
+   "port": "A1",
+   "dir": "in",
+   "type": "in"
+  },
+  "2": {
+   "port": "Y1",
+   "dir": "out",
+   "type": "out"
+  },
+  "3": {
+   "port": "A2",
+   "dir": "in",
+   "type": "in"
+  },
+  "4": {
+   "port": "Y2",
+   "dir": "out",
+   "type": "out"
+  },
+  "5": {
+   "port": "A3",
+   "dir": "in",
+   "type": "in"
+  },
+  "6": {
+   "port": "Y3",
+   "dir": "out",
+   "type": "out"
+  },
+  "7": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "GND"
+  },
+  "8": {
+   "port": "Y4",
+   "dir": "out",
+   "type": "out"
+  },
+  "9": {
+   "port": "A4",
+   "dir": "in",
+   "type": "in"
+  },
+  "10": {
+   "port": "Y5",
+   "dir": "out",
+   "type": "out"
+  },
+  "11": {
+   "port": "A5",
+   "dir": "in",
+   "type": "in"
+  },
+  "12": {
+   "port": "Y6",
+   "dir": "out",
+   "type": "out"
+  },
+  "13": {
+   "port": "A6",
+   "dir": "in",
+   "type": "in"
+  },
+  "14": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "+5V"
+  }
+ },
+ "hc125": {
+  "1": {
+   "port": "OE1_n",
+   "dir": "in",
+   "type": "in"
+  },
+  "2": {
+   "port": "A1",
+   "dir": "in",
+   "type": "in"
+  },
+  "3": {
+   "port": "Y1",
+   "dir": "out",
+   "type": "tri",
+   "oe": "Y1_oe"
+  },
+  "4": {
+   "port": "OE2_n",
+   "dir": "in",
+   "type": "in"
+  },
+  "5": {
+   "port": "A2",
+   "dir": "in",
+   "type": "in"
+  },
+  "6": {
+   "port": "Y2",
+   "dir": "out",
+   "type": "tri",
+   "oe": "Y2_oe"
+  },
+  "7": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "GND"
+  },
+  "8": {
+   "port": "Y3",
+   "dir": "out",
+   "type": "tri",
+   "oe": "Y3_oe"
+  },
+  "9": {
+   "port": "A3",
+   "dir": "in",
+   "type": "in"
+  },
+  "10": {
+   "port": "OE3_n",
+   "dir": "in",
+   "type": "in"
+  },
+  "11": {
+   "port": "Y4",
+   "dir": "out",
+   "type": "tri",
+   "oe": "Y4_oe"
+  },
+  "12": {
+   "port": "A4",
+   "dir": "in",
+   "type": "in"
+  },
+  "13": {
+   "port": "OE4_n",
+   "dir": "in",
+   "type": "in"
+  },
+  "14": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "+5V"
+  }
+ },
+ "fet_2n7002": {
+  "1": {
+   "port": "G",
+   "dir": "in",
+   "type": "in"
+  },
+  "2": {
+   "port": null,
+   "dir": "power",
+   "type": "power",
+   "rail": "GND"
+  },
+  "3": {
+   "port": "pd",
+   "dir": "out",
+   "type": "od"
+  }
+ }
+}

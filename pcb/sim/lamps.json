@@ -1,0 +1,83 @@
+{
+ "_doc": "blkhdr_logic_RevA's lamp nets as probe ports: sim/mkstack.py checks each lamp against its own card's plane drain",
+ "LAMP_M0": {
+  "port": "lamp_m",
+  "index": 0,
+  "dir": "probe"
+ },
+ "LAMP_B0": {
+  "port": "lamp_b",
+  "index": 0,
+  "dir": "probe"
+ },
+ "LAMP_M1": {
+  "port": "lamp_m",
+  "index": 1,
+  "dir": "probe"
+ },
+ "LAMP_B1": {
+  "port": "lamp_b",
+  "index": 1,
+  "dir": "probe"
+ },
+ "LAMP_M2": {
+  "port": "lamp_m",
+  "index": 2,
+  "dir": "probe"
+ },
+ "LAMP_B2": {
+  "port": "lamp_b",
+  "index": 2,
+  "dir": "probe"
+ },
+ "LAMP_M3": {
+  "port": "lamp_m",
+  "index": 3,
+  "dir": "probe"
+ },
+ "LAMP_B3": {
+  "port": "lamp_b",
+  "index": 3,
+  "dir": "probe"
+ },
+ "LAMP_M4": {
+  "port": "lamp_m",
+  "index": 4,
+  "dir": "probe"
+ },
+ "LAMP_B4": {
+  "port": "lamp_b",
+  "index": 4,
+  "dir": "probe"
+ },
+ "LAMP_M5": {
+  "port": "lamp_m",
+  "index": 5,
+  "dir": "probe"
+ },
+ "LAMP_B5": {
+  "port": "lamp_b",
+  "index": 5,
+  "dir": "probe"
+ },
+ "LAMP_M6": {
+  "port": "lamp_m",
+  "index": 6,
+  "dir": "probe"
+ },
+ "LAMP_B6": {
+  "port": "lamp_b",
+  "index": 6,
+  "dir": "probe"
+ },
+ "LAMP_M7": {
+  "port": "lamp_m",
+  "index": 7,
+  "dir": "probe"
+ },
+ "LAMP_B7": {
+  "port": "lamp_b",
+  "index": 7,
+  "dir": "probe"
+ }
+}

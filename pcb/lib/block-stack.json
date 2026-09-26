@@ -1,0 +1,8532 @@
+{
+ "schema": "telco/block-stack 1",
+ "spec": "exchange/block-stack.md",
+ "date": "2026-09-26",
+ "status": "proposed; nothing drawn, nothing on a bench",
+ "conventions": {
+  "units": "mm",
+  "coords": "board-local top view in KiCad's sense: +x right, +y toward the FRONT edge; origin = back-left corner; back edge y = 0, front edge y = 100, left x = 0, right x = 100",
+  "rotation": "KiCad footprint orientation, degrees CCW as displayed; a pad's position = pos + (x cos a + y sin a, -x sin a + y cos a) from the footprint's own pad coordinates",
+  "bottom": "B.Cu parts: pads are given in the same top-view coordinates; place, then assert every pad",
+  "pads": "'pads' is the contract where fixed is true (the stack, the link, the bus and edge IDCs): a generator asserts every pad within 0.01 mm. Where fixed is false (test strips, the adapter header, every jumper) the part is placed with the board, and pos / rotation / pads record where",
+  "active_low": "a doc name /X is the net label X_N",
+  "labels": "every net in 'nets' is a global label of exactly this name, in both schematics",
+  "shunt": "a shunt pulls its net to GND and reads 0; an open position reads 1 through 10k",
+  "nc": "'NC' = no connection; the pin is left open (no-connect flag)"
+ },
+ "mechanical": {
+  "outline": [
+   100.0,
+   100.0
+  ],
+  "thickness": 1.6,
+  "corner_radius": 0.0,
+  "holes": [
+   {
+    "ref": "H1",
+    "xy": [
+     3.5,
+     3.5
+    ]
+   },
+   {
+    "ref": "H2",
+    "xy": [
+     93.5,
+     3.5
+    ],
+    "note": "the offset hole: 3 mm in from the corner position, the key"
+   },
+   {
+    "ref": "H3",
+    "xy": [
+     3.5,
+     96.5
+    ]
+   },
+   {
+    "ref": "H4",
+    "xy": [
+     96.5,
+     96.5
+    ]
+   }
+  ],
+  "hole_footprint": "MountingHole:MountingHole_3.2mm_M3",
+  "standoffs": "M3 x 11 mm between layers; M3 x 20 mm from the block header to the plate",
+  "gap": 11.0,
+  "pitch": 12.6,
+  "stack_part": "single-piece long-tail 2x25 stacking header, 2.54 mm, 8.5 mm body, >= 10 mm tail (RPi-HAT class; Samtec SSQ-125-03-G-D as the gold upgrade)",
+  "header_stack_part": "plain 2x25 female socket, 8.5 mm body, same holes",
+  "max_part_height_top": 9.0,
+  "max_lead_protrusion_bottom": 1.5,
+  "stack_columns": "J1 at the left edge, J2 at the right, both pads y 29.0-89.96 (front-aligned), pin 1 at the back end",
+  "front_edge": "the port card's edge IDC, header A's bus IDC, header B's test strip; each right-angle IDC shroud is ~9 mm tall under the card above, whose leads over it are trimmed to 1 mm",
+  "back_edge": "lamps (header B, the port card) and test strips (header A, the port card); header A's adapter commons",
+  "jumpers": "vertical, in the interior beside the logic each sets, low-profile shunts; set with the boards above lifted off"
+ },
+ "nets": [
+  {
+   "name": "+5V",
+   "doc": "+5V",
+   "group": "power",
+   "drive": "rail",
+   "note": "logic supply; bus pins 1,2,49,50 in, 6 stack pins up",
+   "stack_pins": [
+    "J1.1",
+    "J1.2",
+    "J1.49",
+    "J1.50",
+    "J2.1",
+    "J2.50"
+   ]
+  },
+  {
+   "name": "GND",
+   "doc": "GND",
+   "group": "power",
+   "drive": "rail",
+   "note": "18 stack pins; with the static lines, the shield of J1's checkerboard",
+   "stack_pins": [
+    "J1.4",
+    "J1.5",
+    "J1.8",
+    "J1.9",
+    "J1.12",
+    "J1.13",
+    "J1.16",
+    "J1.17",
+    "J1.25",
+    "J1.28",
+    "J1.29",
+    "J1.32",
+    "J1.33",
+    "J1.36",
+    "J1.41",
+    "J2.2",
+    "J2.19",
+    "J2.49"
+   ]
+  },
+  {
+   "name": "SCAN0",
+   "doc": "SCAN0",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "scan[0] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.3"
+   ],
+   "fanout": {
+    "net": "SCAN0",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 5,
+    "total_inputs": 21,
+    "est_pf": 171
+   }
+  },
+  {
+   "name": "SCAN1",
+   "doc": "SCAN1",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "scan[1] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.4"
+   ],
+   "fanout": {
+    "net": "SCAN1",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 2,
+    "total_inputs": 18,
+    "est_pf": 156
+   }
+  },
+  {
+   "name": "SCAN2",
+   "doc": "SCAN2",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "scan[2] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.5"
+   ],
+   "fanout": {
+    "net": "SCAN2",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 2,
+    "total_inputs": 18,
+    "est_pf": 156
+   }
+  },
+  {
+   "name": "SCAN3",
+   "doc": "SCAN3",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "scan[3] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.6"
+   ],
+   "fanout": {
+    "net": "SCAN3",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 1,
+    "total_inputs": 17,
+    "est_pf": 151
+   }
+  },
+  {
+   "name": "SCAN4",
+   "doc": "SCAN4",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "scan[4] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.7"
+   ],
+   "fanout": {
+    "net": "SCAN4",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 1,
+    "total_inputs": 17,
+    "est_pf": 151
+   }
+  },
+  {
+   "name": "SCAN5",
+   "doc": "SCAN5",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "scan[5] (port.v:44, block.v:57)",
+   "stack_pins": [
+    "J2.8"
+   ],
+   "fanout": {
+    "net": "SCAN5",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 1,
+    "total_inputs": 17,
+    "est_pf": 151
+   }
+  },
+  {
+   "name": "HC0",
+   "doc": "HC0",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[0] (port.v:48)",
+   "stack_pins": [
+    "J2.11"
+   ],
+   "fanout": {
+    "net": "HC0",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC1",
+   "doc": "HC1",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[1] (port.v:48)",
+   "stack_pins": [
+    "J2.12"
+   ],
+   "fanout": {
+    "net": "HC1",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC2",
+   "doc": "HC2",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[2] (port.v:48)",
+   "stack_pins": [
+    "J2.13"
+   ],
+   "fanout": {
+    "net": "HC2",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC3",
+   "doc": "HC3",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[3] (port.v:48)",
+   "stack_pins": [
+    "J2.14"
+   ],
+   "fanout": {
+    "net": "HC3",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC4",
+   "doc": "HC4",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[4] (port.v:48)",
+   "stack_pins": [
+    "J2.15"
+   ],
+   "fanout": {
+    "net": "HC4",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC5",
+   "doc": "HC5",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U3",
+   "rtl": "hc[5] (port.v:48)",
+   "stack_pins": [
+    "J2.16"
+   ],
+   "fanout": {
+    "net": "HC5",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC6",
+   "doc": "HC6",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "hc[6] (port.v:48)",
+   "stack_pins": [
+    "J2.17"
+   ],
+   "fanout": {
+    "net": "HC6",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HC7",
+   "doc": "HC7",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "hc[7] (port.v:48)",
+   "stack_pins": [
+    "J2.18"
+   ],
+   "fanout": {
+    "net": "HC7",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB0_N",
+   "doc": "/STB0",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==0 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.3"
+   ],
+   "fanout": {
+    "net": "STB0_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB1_N",
+   "doc": "/STB1",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==1 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.6"
+   ],
+   "fanout": {
+    "net": "STB1_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB2_N",
+   "doc": "/STB2",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==2 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.7"
+   ],
+   "fanout": {
+    "net": "STB2_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB3_N",
+   "doc": "/STB3",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==3 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.10"
+   ],
+   "fanout": {
+    "net": "STB3_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB4_N",
+   "doc": "/STB4",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==4 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.11"
+   ],
+   "fanout": {
+    "net": "STB4_N",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 3,
+    "total_inputs": 19,
+    "est_pf": 161
+   }
+  },
+  {
+   "name": "STB5_N",
+   "doc": "/STB5",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==5 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.14"
+   ],
+   "fanout": {
+    "net": "STB5_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB6_N",
+   "doc": "/STB6",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==6 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.15"
+   ],
+   "fanout": {
+    "net": "STB6_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "STB7_N",
+   "doc": "/STB7",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U14 via RN3 33R",
+   "fast": true,
+   "rtl": "cap_stb && slotq==7 (port.v:83, :105): falling edge = the capture instant",
+   "stack_pins": [
+    "J1.18"
+   ],
+   "fanout": {
+    "net": "STB7_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC0",
+   "doc": "SRC0",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[0] = cw[2] (block.v:147)",
+   "stack_pins": [
+    "J2.23"
+   ],
+   "fanout": {
+    "net": "SRC0",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC1",
+   "doc": "SRC1",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[1] = cw[3] (block.v:147)",
+   "stack_pins": [
+    "J2.24"
+   ],
+   "fanout": {
+    "net": "SRC1",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC2",
+   "doc": "SRC2",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[2] = cw[4] (block.v:147)",
+   "stack_pins": [
+    "J2.25"
+   ],
+   "fanout": {
+    "net": "SRC2",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC3",
+   "doc": "SRC3",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[3] = cw[5] (block.v:147)",
+   "stack_pins": [
+    "J2.26"
+   ],
+   "fanout": {
+    "net": "SRC3",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC4",
+   "doc": "SRC4",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[4] = cw[6] (block.v:147)",
+   "stack_pins": [
+    "J2.27"
+   ],
+   "fanout": {
+    "net": "SRC4",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "SRC5",
+   "doc": "SRC5",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "src[5] = cw[7] (block.v:147)",
+   "stack_pins": [
+    "J2.28"
+   ],
+   "fanout": {
+    "net": "SRC5",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 1,
+    "total_inputs": 9,
+    "est_pf": 111
+   }
+  },
+  {
+   "name": "BSY",
+   "doc": "BSY",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "bsy_in = cw[1]",
+   "stack_pins": [
+    "J2.22"
+   ],
+   "fanout": {
+    "net": "BSY",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "CLM",
+   "doc": "CLM",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U10",
+   "rtl": "clm_in = cw[0]",
+   "stack_pins": [
+    "J2.21"
+   ],
+   "fanout": {
+    "net": "CLM",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "H0",
+   "doc": "H0",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole (static)",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "BLOCK[0] (port.v:27, :99)",
+   "stack_pins": [
+    "J1.20"
+   ],
+   "fanout": {
+    "net": "H0",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 2,
+    "total_inputs": 10,
+    "est_pf": 116
+   }
+  },
+  {
+   "name": "H1",
+   "doc": "H1",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole (static)",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "BLOCK[1] (port.v:27, :99)",
+   "stack_pins": [
+    "J1.21"
+   ],
+   "fanout": {
+    "net": "H1",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 2,
+    "total_inputs": 10,
+    "est_pf": 116
+   }
+  },
+  {
+   "name": "H2",
+   "doc": "H2",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole (static)",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "BLOCK[2] (port.v:27, :99)",
+   "stack_pins": [
+    "J1.24"
+   ],
+   "fanout": {
+    "net": "H2",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 2,
+    "total_inputs": 10,
+    "est_pf": 116
+   }
+  },
+  {
+   "name": "HA_RX",
+   "doc": "HA_RX",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U6",
+   "rtl": "~ha_n (port.v:173): /HA through a Schmitt, high = someone pulling",
+   "stack_pins": [
+    "J1.42"
+   ],
+   "fanout": {
+    "net": "HA_RX",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "RING_CAD_N",
+   "doc": "/RING_CAD",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "ring_cad_n (port.v:45)",
+   "stack_pins": [
+    "J1.40"
+   ],
+   "fanout": {
+    "net": "RING_CAD_N",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "MUTE_BLK",
+   "doc": "MUTE_BLK",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "mute_blk (block.v:77, port.v:147)",
+   "stack_pins": [
+    "J1.37"
+   ],
+   "fanout": {
+    "net": "MUTE_BLK",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "RST_N",
+   "doc": "/RST",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U6",
+   "rtl": "rst_n (port.v:38): /RESET filtered once, at the header",
+   "stack_pins": [
+    "J1.23"
+   ],
+   "fanout": {
+    "net": "RST_N",
+    "group": "common",
+    "per_card": 3,
+    "header_inputs": 3,
+    "total_inputs": 27,
+    "est_pf": 201
+   }
+  },
+  {
+   "name": "RBT",
+   "doc": "RBT",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U2",
+   "rtl": "rbt (block.v:59), now read on the port card",
+   "stack_pins": [
+    "J1.43"
+   ],
+   "fanout": {
+    "net": "RBT",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "TX_CLK",
+   "doc": "TX_CLK",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U7 via R4 33R",
+   "fast": true,
+   "rtl": "frame_decode.v:47 tx_clk = ~slot2",
+   "stack_pins": [
+    "J1.19"
+   ],
+   "fanout": {
+    "net": "TX_CLK",
+    "group": "common",
+    "per_card": 2,
+    "header_inputs": 1,
+    "total_inputs": 17,
+    "est_pf": 151
+   }
+  },
+  {
+   "name": "LOOP_HB",
+   "doc": "LOOP_HB",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U7 via R5 33R",
+   "fast": true,
+   "rtl": "~slot[1] (top_net.v:154); socket a2",
+   "stack_pins": [
+    "J1.22"
+   ],
+   "fanout": {
+    "net": "LOOP_HB",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "TX_OCT",
+   "doc": "TX_OCT",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U8",
+   "rtl": "frame_decode.v:48",
+   "stack_pins": [
+    "J1.45"
+   ],
+   "fanout": {
+    "net": "TX_OCT",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 2,
+    "total_inputs": 10,
+    "est_pf": 116
+   }
+  },
+  {
+   "name": "RX_OCT",
+   "doc": "RX_OCT",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U9",
+   "rtl": "frame_decode.v:49 (a '74 on TX_CLK, not the decode)",
+   "stack_pins": [
+    "J1.46"
+   ],
+   "fanout": {
+    "net": "RX_OCT",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "FILL",
+   "doc": "FILL",
+   "group": "common",
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U4",
+   "rtl": "frame_decode.v:51 fill = scan[0]; socket a4",
+   "stack_pins": [
+    "J1.44"
+   ],
+   "fanout": {
+    "net": "FILL",
+    "group": "common",
+    "per_card": 1,
+    "header_inputs": 0,
+    "total_inputs": 8,
+    "est_pf": 106
+   }
+  },
+  {
+   "name": "HA_L_N",
+   "doc": "/HA_L",
+   "group": "wired",
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "pull": {
+    "to": "+5V",
+    "ohm": 1000,
+    "at": "blkhdr_bus_RevA R1"
+   },
+   "rtl": "|ha_pd_k (block.v:237)",
+   "stack_pins": [
+    "J2.29"
+   ],
+   "fanout": {
+    "net": "HA_L_N",
+    "group": "wired",
+    "per_card": 0,
+    "drains": 8,
+    "header_inputs": 2,
+    "est_pf": 236
+   }
+  },
+  {
+   "name": "HB_L_N",
+   "doc": "/HB_L",
+   "group": "wired",
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "pull": {
+    "to": "+5V",
+    "ohm": 1000,
+    "at": "blkhdr_bus_RevA R2"
+   },
+   "rtl": "|hb_pd_k (block.v:238)",
+   "stack_pins": [
+    "J2.30"
+   ],
+   "fanout": {
+    "net": "HB_L_N",
+    "group": "wired",
+    "per_card": 0,
+    "drains": 8,
+    "header_inputs": 2,
+    "est_pf": 236
+   }
+  },
+  {
+   "name": "WR0_N",
+   "doc": "/WR0",
+   "group": "lane",
+   "lane": 0,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[0] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.26"
+   ],
+   "fanout": {
+    "net": "WR0_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR1_N",
+   "doc": "/WR1",
+   "group": "lane",
+   "lane": 1,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[1] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.27"
+   ],
+   "fanout": {
+    "net": "WR1_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR2_N",
+   "doc": "/WR2",
+   "group": "lane",
+   "lane": 2,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[2] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.30"
+   ],
+   "fanout": {
+    "net": "WR2_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR3_N",
+   "doc": "/WR3",
+   "group": "lane",
+   "lane": 3,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[3] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.31"
+   ],
+   "fanout": {
+    "net": "WR3_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR4_N",
+   "doc": "/WR4",
+   "group": "lane",
+   "lane": 4,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[4] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.34"
+   ],
+   "fanout": {
+    "net": "WR4_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR5_N",
+   "doc": "/WR5",
+   "group": "lane",
+   "lane": 5,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[5] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.35"
+   ],
+   "fanout": {
+    "net": "WR5_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR6_N",
+   "doc": "/WR6",
+   "group": "lane",
+   "lane": 6,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[6] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.38"
+   ],
+   "fanout": {
+    "net": "WR6_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "WR7_N",
+   "doc": "/WR7",
+   "group": "lane",
+   "lane": 7,
+   "dir": "hdr->port",
+   "drive": "totem-pole",
+   "driver": "blkhdr_logic_RevA U13 via RN4 33R",
+   "fast": true,
+   "rtl": "wr_dec[7] (block.v:118) -> port wr",
+   "stack_pins": [
+    "J1.39"
+   ],
+   "fanout": {
+    "net": "WR7_N",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 0,
+    "est_pf": 71,
+    "note": "the card on lane k: 1 ('4002) + 10k"
+   }
+  },
+  {
+   "name": "C_TX0",
+   "doc": "C_TX0",
+   "group": "lane",
+   "lane": 0,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 0: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[0] (block.v:124-131)",
+   "stack_pins": [
+    "J2.31"
+   ],
+   "fanout": {
+    "net": "C_TX0",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX1",
+   "doc": "C_TX1",
+   "group": "lane",
+   "lane": 1,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 1: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[1] (block.v:124-131)",
+   "stack_pins": [
+    "J2.32"
+   ],
+   "fanout": {
+    "net": "C_TX1",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX2",
+   "doc": "C_TX2",
+   "group": "lane",
+   "lane": 2,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 2: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[2] (block.v:124-131)",
+   "stack_pins": [
+    "J2.33"
+   ],
+   "fanout": {
+    "net": "C_TX2",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX3",
+   "doc": "C_TX3",
+   "group": "lane",
+   "lane": 3,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 3: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[3] (block.v:124-131)",
+   "stack_pins": [
+    "J2.34"
+   ],
+   "fanout": {
+    "net": "C_TX3",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX4",
+   "doc": "C_TX4",
+   "group": "lane",
+   "lane": 4,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 4: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[4] (block.v:124-131)",
+   "stack_pins": [
+    "J2.35"
+   ],
+   "fanout": {
+    "net": "C_TX4",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX5",
+   "doc": "C_TX5",
+   "group": "lane",
+   "lane": 5,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 5: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[5] (block.v:124-131)",
+   "stack_pins": [
+    "J2.36"
+   ],
+   "fanout": {
+    "net": "C_TX5",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX6",
+   "doc": "C_TX6",
+   "group": "lane",
+   "lane": 6,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 6: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[6] (block.v:124-131)",
+   "stack_pins": [
+    "J2.37"
+   ],
+   "fanout": {
+    "net": "C_TX6",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "C_TX7",
+   "doc": "C_TX7",
+   "group": "lane",
+   "lane": 7,
+   "dir": "port->hdr",
+   "drive": "totem-pole",
+   "driver": "the port card jumpered to lane 7: U12 '157 (rb ? RBT : c_tx)",
+   "pull": {
+    "to": "FILL_R",
+    "ohm": 4700,
+    "at": "blkhdr_bus_RevA RN1"
+   },
+   "rtl": "c_mux[7] (block.v:124-131)",
+   "stack_pins": [
+    "J2.38"
+   ],
+   "fanout": {
+    "net": "C_TX7",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 71,
+    "note": "driven by the card on lane k"
+   }
+  },
+  {
+   "name": "WORD0",
+   "doc": "WORD0",
+   "group": "lane",
+   "lane": 0,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 0 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[0] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.41"
+   ],
+   "fanout": {
+    "net": "WORD0",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD1",
+   "doc": "WORD1",
+   "group": "lane",
+   "lane": 1,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 1 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[1] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.42"
+   ],
+   "fanout": {
+    "net": "WORD1",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD2",
+   "doc": "WORD2",
+   "group": "lane",
+   "lane": 2,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 2 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[2] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.43"
+   ],
+   "fanout": {
+    "net": "WORD2",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD3",
+   "doc": "WORD3",
+   "group": "lane",
+   "lane": 3,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 3 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[3] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.44"
+   ],
+   "fanout": {
+    "net": "WORD3",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD4",
+   "doc": "WORD4",
+   "group": "lane",
+   "lane": 4,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 4 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[4] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.45"
+   ],
+   "fanout": {
+    "net": "WORD4",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD5",
+   "doc": "WORD5",
+   "group": "lane",
+   "lane": 5,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 5 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[5] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.46"
+   ],
+   "fanout": {
+    "net": "WORD5",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD6",
+   "doc": "WORD6",
+   "group": "lane",
+   "lane": 6,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 6 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[6] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.47"
+   ],
+   "fanout": {
+    "net": "WORD6",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "WORD7",
+   "doc": "WORD7",
+   "group": "lane",
+   "lane": 7,
+   "dir": "port->hdr",
+   "drive": "open-drain",
+   "driver": "the subscriber card behind the port card jumpered to lane 7 (a12)",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_logic_RevA RN2",
+    "also": "680R on the port card (R2)"
+   },
+   "rtl": "word_n[7] (block.v:72, :136); low = a one",
+   "stack_pins": [
+    "J2.48"
+   ],
+   "fanout": {
+    "net": "WORD7",
+    "group": "lane",
+    "per_card": null,
+    "header_inputs": 1,
+    "est_pf": 91,
+    "note": "driven (open drain) behind the card on lane k"
+   }
+  },
+  {
+   "name": "SP1",
+   "doc": "SP1",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J1.47"
+   ]
+  },
+  {
+   "name": "SP2",
+   "doc": "SP2",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J1.48"
+   ]
+  },
+  {
+   "name": "SP3",
+   "doc": "SP3",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J2.9"
+   ]
+  },
+  {
+   "name": "SP4",
+   "doc": "SP4",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J2.10"
+   ]
+  },
+  {
+   "name": "SP5",
+   "doc": "SP5",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J2.20"
+   ]
+  },
+  {
+   "name": "SP6",
+   "doc": "SP6",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J2.39"
+   ]
+  },
+  {
+   "name": "SP7",
+   "doc": "SP7",
+   "group": "spare",
+   "drive": "none",
+   "note": "through-pin on every card, connected to nothing",
+   "stack_pins": [
+    "J2.40"
+   ]
+  },
+  {
+   "name": "B_HCLK",
+   "doc": "HCLK (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 3,
+   "rtl": "rebuilt from cap_stb (sim shim)",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOT0",
+   "doc": "SLOT0 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 5,
+   "rtl": "slot[0]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOT1",
+   "doc": "SLOT1 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 7,
+   "rtl": "slot[1]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOT2",
+   "doc": "SLOT2 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 9,
+   "rtl": "slot[2]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOTQ0",
+   "doc": "SLOTQ0 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 11,
+   "rtl": "slotq[0]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOTQ1",
+   "doc": "SLOTQ1 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 13,
+   "rtl": "slotq[1]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SLOTQ2",
+   "doc": "SLOTQ2 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 15,
+   "rtl": "slotq[2]",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SCLK",
+   "doc": "SCLK (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 17,
+   "rtl": "sclk",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_WR",
+   "doc": "WR (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 19,
+   "rtl": "wr",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SDATA",
+   "doc": "SDATA (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 21,
+   "rtl": "sdata",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_UREQ_N",
+   "doc": "/UREQ (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 22,
+   "rtl": "not used by a block",
+   "pull": null
+  },
+  {
+   "name": "B_RESET_N",
+   "doc": "/RESET (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 23,
+   "rtl": "rst_n",
+   "pull": {
+    "to": "GND",
+    "ohm": 100000,
+    "at": "blkhdr_bus_RevA RN5/RN6"
+   }
+  },
+  {
+   "name": "B_SCAN0",
+   "doc": "SCAN0 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 27,
+   "rtl": "scan[0]",
+   "pull": null
+  },
+  {
+   "name": "B_SCAN1",
+   "doc": "SCAN1 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 28,
+   "rtl": "scan[1]",
+   "pull": null
+  },
+  {
+   "name": "B_SCAN2",
+   "doc": "SCAN2 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 29,
+   "rtl": "scan[2]",
+   "pull": null
+  },
+  {
+   "name": "B_SCAN3",
+   "doc": "SCAN3 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 30,
+   "rtl": "scan[3]",
+   "pull": null
+  },
+  {
+   "name": "B_SCAN4",
+   "doc": "SCAN4 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 31,
+   "rtl": "scan[4]",
+   "pull": null
+  },
+  {
+   "name": "B_SCAN5",
+   "doc": "SCAN5 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 32,
+   "rtl": "scan[5]",
+   "pull": null
+  },
+  {
+   "name": "B_HC0",
+   "doc": "HC0 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 33,
+   "rtl": "hc[0]",
+   "pull": null
+  },
+  {
+   "name": "B_HC1",
+   "doc": "HC1 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 34,
+   "rtl": "hc[1]",
+   "pull": null
+  },
+  {
+   "name": "B_HC2",
+   "doc": "HC2 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 35,
+   "rtl": "hc[2]",
+   "pull": null
+  },
+  {
+   "name": "B_HC3",
+   "doc": "HC3 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 36,
+   "rtl": "hc[3]",
+   "pull": null
+  },
+  {
+   "name": "B_HC4",
+   "doc": "HC4 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 37,
+   "rtl": "hc[4]",
+   "pull": null
+  },
+  {
+   "name": "B_HC5",
+   "doc": "HC5 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 38,
+   "rtl": "hc[5]",
+   "pull": null
+  },
+  {
+   "name": "B_HC6",
+   "doc": "HC6 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 39,
+   "rtl": "hc[6]",
+   "pull": null
+  },
+  {
+   "name": "B_HC7",
+   "doc": "HC7 (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 40,
+   "rtl": "hc[7]",
+   "pull": null
+  },
+  {
+   "name": "B_RBT",
+   "doc": "RBT (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 42,
+   "rtl": "rbt",
+   "pull": null
+  },
+  {
+   "name": "B_RING_CAD_N",
+   "doc": "/RING_CAD (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 43,
+   "rtl": "ring_cad_n",
+   "pull": null
+  },
+  {
+   "name": "B_HA_N",
+   "doc": "/HA (bus)",
+   "group": "bus",
+   "drive": "open-drain",
+   "pin": 44,
+   "rtl": "ha_n (in); the header's Q1 drain is ha_pd",
+   "pull": {
+    "to": "+5V",
+    "ohm": 4700,
+    "at": "clock card (mainboard.v:25)"
+   }
+  },
+  {
+   "name": "B_HB_N",
+   "doc": "/HB (bus)",
+   "group": "bus",
+   "drive": "open-drain",
+   "pin": 45,
+   "rtl": "the header's Q2 drain is hb_pd",
+   "pull": {
+    "to": "+5V",
+    "ohm": 4700,
+    "at": "clock card (mainboard.v:25)"
+   }
+  },
+  {
+   "name": "B_HW_N",
+   "doc": "/HW (bus)",
+   "group": "bus",
+   "drive": "open-drain",
+   "pin": 46,
+   "rtl": "the header's Q3 drain is hw_pd",
+   "pull": {
+    "to": "+5V",
+    "ohm": 4700,
+    "at": "clock card (mainboard.v:25)"
+   }
+  },
+  {
+   "name": "B_WS_N",
+   "doc": "/WS (bus)",
+   "group": "bus",
+   "drive": "open-drain",
+   "pin": 47,
+   "rtl": "ws_n",
+   "pull": {
+    "to": "+5V",
+    "ohm": 4700,
+    "at": "clock card (mainboard.v:25)"
+   }
+  },
+  {
+   "name": "B_SPARE",
+   "doc": "SPARE (bus)",
+   "group": "bus",
+   "drive": "totem-pole",
+   "pin": 48,
+   "rtl": "not used",
+   "pull": null
+  },
+  {
+   "name": "A_TX_CLK",
+   "doc": "TX_CLK (adapter)",
+   "group": "adapter",
+   "dir": "out",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U5 via R6 33R"
+  },
+  {
+   "name": "A_TX_OCT",
+   "doc": "TX_OCT (adapter)",
+   "group": "adapter",
+   "dir": "out",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U5 via R7 33R"
+  },
+  {
+   "name": "A_FILL",
+   "doc": "FILL (adapter)",
+   "group": "adapter",
+   "dir": "out",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U5 via R8 33R"
+  },
+  {
+   "name": "A_MUTE_BLK",
+   "doc": "MUTE_BLK (adapter)",
+   "group": "adapter",
+   "dir": "in",
+   "drive": "totem-pole (adapter)",
+   "pull": {
+    "to": "GND",
+    "ohm": 10000,
+    "at": "blkhdr_bus_RevA R10"
+   },
+   "rtl": "mute_blk"
+  },
+  {
+   "name": "A_HCLK",
+   "doc": "HCLK (adapter, the spare)",
+   "group": "adapter",
+   "dir": "out",
+   "drive": "totem-pole",
+   "driver": "blkhdr_bus_RevA U5 via R9 33R"
+  },
+  {
+   "name": "E_TX_CLK",
+   "doc": "a1 TX_CLK",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_LOOP_HB",
+   "doc": "a2 LOOP_HB",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_TX_OCT",
+   "doc": "a3 TX_OCT",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_FILL",
+   "doc": "a4 FILL",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_C_TX",
+   "doc": "a5 C_TX",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole (subscriber card)",
+   "note": "in: 4.7k to E_FILL (R5); -> U12 '157 A"
+  },
+  {
+   "name": "E_A_TX",
+   "doc": "a6 A_TX (M)",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole (subscriber card)",
+   "note": "in: 10k pull-down (R1); M"
+  },
+  {
+   "name": "E_RX_CLK",
+   "doc": "a7 RX_CLK = TX_CLK",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_RX_OCT",
+   "doc": "a8 RX_OCT",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U13 via RN1 33R"
+  },
+  {
+   "name": "E_C_RX",
+   "doc": "a9 C_RX",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U6 1Q through U13, RN1 33R"
+  },
+  {
+   "name": "E_A_RX",
+   "doc": "a10 A_RX",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "totem-pole",
+   "note": "out: U11 through U13, RN1 33R"
+  },
+  {
+   "name": "E_WORD",
+   "doc": "a12 card word",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "open-drain (subscriber card)",
+   "note": "in, open drain: 680R pull-up (R2); to lane via JP4"
+  },
+  {
+   "name": "E_ANS_N",
+   "doc": "a13 /ANS",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "open-drain (subscriber card)",
+   "note": "in, open drain: 680R pull-up (R3); -> U8 ON"
+  },
+  {
+   "name": "E_RAI_N",
+   "doc": "a14 RAI (spare)",
+   "group": "edge",
+   "card": "portcard",
+   "drive": "open-drain (subscriber card)",
+   "note": "in, open drain: 680R pull-up (R4); unused"
+  },
+  {
+   "name": "HC_OUT",
+   "doc": "HC_OUT",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "tri-state ('244 gated by FIT_N) + 100R",
+   "rtl": "hc_out (block.v:62, :230)",
+   "note": "one side of the HC route jumper JP1"
+  },
+  {
+   "name": "FIT_N",
+   "doc": "/FIT",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_bus_RevA RN7"
+   },
+   "rtl": "JUMPERED (block.v:43), active low"
+  },
+  {
+   "name": "H0_J",
+   "doc": "H0_J",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_bus_RevA RN7"
+   },
+   "rtl": "BLOCK[0] (block.v:42)"
+  },
+  {
+   "name": "H1_J",
+   "doc": "H1_J",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_bus_RevA RN7"
+   },
+   "rtl": "BLOCK[1] (block.v:42)"
+  },
+  {
+   "name": "H2_J",
+   "doc": "H2_J",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "blkhdr_bus_RevA RN7"
+   },
+   "rtl": "BLOCK[2] (block.v:42)"
+  },
+  {
+   "name": "HA_PD",
+   "doc": "HA_PD",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "totem-pole (U19)",
+   "rtl": "ha_pd (block.v:65)",
+   "note": "gate of Q1, the /HA bus drain"
+  },
+  {
+   "name": "HB_PD",
+   "doc": "HB_PD",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "totem-pole (U19)",
+   "rtl": "hb_pd (block.v:66)",
+   "note": "gate of Q2, the /HB bus drain"
+  },
+  {
+   "name": "HW_PD",
+   "doc": "HW_PD",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "drive": "totem-pole (U19)",
+   "rtl": "hw_pd (block.v:84)",
+   "note": "gate of Q3, the /HW bus drain"
+  },
+  {
+   "name": "FILL_R",
+   "doc": "FILL_R",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "totem-pole (U4)",
+   "note": "FILL again, on its own '244 section: feeds only RN1, the eight C_TX lane pulls"
+  },
+  {
+   "name": "BLK_N",
+   "doc": "/BLK",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "totem-pole (U12)",
+   "rtl": "blk_n (block.v:104)"
+  },
+  {
+   "name": "RBT_SRC",
+   "doc": "RBT_SRC",
+   "group": "local",
+   "card": "blkhdr_bus_RevA",
+   "drive": "C_TX lane k, through the RBT SOURCE shunt",
+   "note": "through blkhdr_bus_RevA R12 (100R) onto B_RBT: on the one block whose lane k is a ringback card (bus.md 7: nothing else brings a card's output to bus pin 42)"
+  },
+  {
+   "name": "LAMP_CK",
+   "doc": "LAMP_CK",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U20",
+   "drive": "totem-pole",
+   "note": "NOR(/STB4, /SELM): rises mid-frame in each of this block's eight frames; shifts the lamp '595s"
+  },
+  {
+   "name": "LAMP_M0",
+   "doc": "LAMP_M0",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 0's M lamp: low (lit) when card 0 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B0",
+   "doc": "LAMP_B0",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 0's BUSY lamp: low (lit) when card 0 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M1",
+   "doc": "LAMP_M1",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 1's M lamp: low (lit) when card 1 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B1",
+   "doc": "LAMP_B1",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 1's BUSY lamp: low (lit) when card 1 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M2",
+   "doc": "LAMP_M2",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 2's M lamp: low (lit) when card 2 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B2",
+   "doc": "LAMP_B2",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 2's BUSY lamp: low (lit) when card 2 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M3",
+   "doc": "LAMP_M3",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 3's M lamp: low (lit) when card 3 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B3",
+   "doc": "LAMP_B3",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 3's BUSY lamp: low (lit) when card 3 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M4",
+   "doc": "LAMP_M4",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 4's M lamp: low (lit) when card 4 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B4",
+   "doc": "LAMP_B4",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 4's BUSY lamp: low (lit) when card 4 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M5",
+   "doc": "LAMP_M5",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 5's M lamp: low (lit) when card 5 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B5",
+   "doc": "LAMP_B5",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 5's BUSY lamp: low (lit) when card 5 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M6",
+   "doc": "LAMP_M6",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 6's M lamp: low (lit) when card 6 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B6",
+   "doc": "LAMP_B6",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 6's BUSY lamp: low (lit) when card 6 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_M7",
+   "doc": "LAMP_M7",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U21",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 7's M lamp: low (lit) when card 7 pulled /HA_L in its turn last pass"
+  },
+  {
+   "name": "LAMP_B7",
+   "doc": "LAMP_B7",
+   "group": "local",
+   "card": "blkhdr_logic_RevA",
+   "driver": "blkhdr_logic_RevA U22",
+   "drive": "tri-state ('595, /OE = /FIT)",
+   "note": "slot 7's BUSY lamp: low (lit) when card 7 pulled /HB_L in its turn last pass"
+  },
+  {
+   "name": "P_WR_N",
+   "doc": "/WR (this card's)",
+   "group": "local",
+   "card": "portcard",
+   "drive": "lane via JP2",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "portcard RN2"
+   },
+   "rtl": "wr (port.v:65)"
+  },
+  {
+   "name": "P_C_TX",
+   "doc": "C_TX (this card's, after ringback)",
+   "group": "local",
+   "card": "portcard",
+   "drive": "totem-pole (U12)",
+   "rtl": "c_mux[POS] (block.v:124-131)"
+  },
+  {
+   "name": "POS0",
+   "doc": "POS0",
+   "group": "local",
+   "card": "portcard",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "portcard RN2"
+   },
+   "rtl": "POS[0] (port.v:28)"
+  },
+  {
+   "name": "POS1",
+   "doc": "POS1",
+   "group": "local",
+   "card": "portcard",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "portcard RN2"
+   },
+   "rtl": "POS[1] (port.v:28)"
+  },
+  {
+   "name": "POS2",
+   "doc": "POS2",
+   "group": "local",
+   "card": "portcard",
+   "drive": "static, shunt to GND",
+   "pull": {
+    "to": "+5V",
+    "ohm": 10000,
+    "at": "portcard RN2"
+   },
+   "rtl": "POS[2] (port.v:28)"
+  },
+  {
+   "name": "BUSY_N",
+   "doc": "/BUSY",
+   "group": "local",
+   "card": "portcard",
+   "drive": "totem-pole (U10)",
+   "rtl": "busy (port.v:147); port_busy[k] = !BUSY_N",
+   "note": "test point JP-TP pin 2"
+  }
+ ],
+ "stack_connectors": [
+  {
+   "ref": "J1",
+   "role": "stack, clocks (checkerboard) and commons",
+   "edge": "left",
+   "cards": [
+    "blkhdr_bus_RevA",
+    "blkhdr_logic_RevA",
+    "portcard"
+   ],
+   "fixed": true,
+   "footprint": {
+    "portcard": "telco:Stack_2x25_P2.54mm_LongTail",
+    "blkhdr_logic_RevA": "telco:Stack_2x25_P2.54mm_LongTail",
+    "blkhdr_bus_RevA": "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"
+   },
+   "side": "top",
+   "rotation": 0,
+   "pos": [
+    5.08,
+    29.0
+   ],
+   "pad1": "back end, inner row",
+   "outer_row": "even",
+   "pins": {
+    "1": "+5V",
+    "2": "+5V",
+    "3": "STB0_N",
+    "4": "GND",
+    "5": "GND",
+    "6": "STB1_N",
+    "7": "STB2_N",
+    "8": "GND",
+    "9": "GND",
+    "10": "STB3_N",
+    "11": "STB4_N",
+    "12": "GND",
+    "13": "GND",
+    "14": "STB5_N",
+    "15": "STB6_N",
+    "16": "GND",
+    "17": "GND",
+    "18": "STB7_N",
+    "19": "TX_CLK",
+    "20": "H0",
+    "21": "H1",
+    "22": "LOOP_HB",
+    "23": "RST_N",
+    "24": "H2",
+    "25": "GND",
+    "26": "WR0_N",
+    "27": "WR1_N",
+    "28": "GND",
+    "29": "GND",
+    "30": "WR2_N",
+    "31": "WR3_N",
+    "32": "GND",
+    "33": "GND",
+    "34": "WR4_N",
+    "35": "WR5_N",
+    "36": "GND",
+    "37": "MUTE_BLK",
+    "38": "WR6_N",
+    "39": "WR7_N",
+    "40": "RING_CAD_N",
+    "41": "GND",
+    "42": "HA_RX",
+    "43": "RBT",
+    "44": "FILL",
+    "45": "TX_OCT",
+    "46": "RX_OCT",
+    "47": "SP1",
+    "48": "SP2",
+    "49": "+5V",
+    "50": "+5V"
+   },
+   "pads": {
+    "1": [
+     5.08,
+     29.0
+    ],
+    "2": [
+     2.54,
+     29.0
+    ],
+    "3": [
+     5.08,
+     31.54
+    ],
+    "4": [
+     2.54,
+     31.54
+    ],
+    "5": [
+     5.08,
+     34.08
+    ],
+    "6": [
+     2.54,
+     34.08
+    ],
+    "7": [
+     5.08,
+     36.62
+    ],
+    "8": [
+     2.54,
+     36.62
+    ],
+    "9": [
+     5.08,
+     39.16
+    ],
+    "10": [
+     2.54,
+     39.16
+    ],
+    "11": [
+     5.08,
+     41.7
+    ],
+    "12": [
+     2.54,
+     41.7
+    ],
+    "13": [
+     5.08,
+     44.24
+    ],
+    "14": [
+     2.54,
+     44.24
+    ],
+    "15": [
+     5.08,
+     46.78
+    ],
+    "16": [
+     2.54,
+     46.78
+    ],
+    "17": [
+     5.08,
+     49.32
+    ],
+    "18": [
+     2.54,
+     49.32
+    ],
+    "19": [
+     5.08,
+     51.86
+    ],
+    "20": [
+     2.54,
+     51.86
+    ],
+    "21": [
+     5.08,
+     54.4
+    ],
+    "22": [
+     2.54,
+     54.4
+    ],
+    "23": [
+     5.08,
+     56.94
+    ],
+    "24": [
+     2.54,
+     56.94
+    ],
+    "25": [
+     5.08,
+     59.48
+    ],
+    "26": [
+     2.54,
+     59.48
+    ],
+    "27": [
+     5.08,
+     62.02
+    ],
+    "28": [
+     2.54,
+     62.02
+    ],
+    "29": [
+     5.08,
+     64.56
+    ],
+    "30": [
+     2.54,
+     64.56
+    ],
+    "31": [
+     5.08,
+     67.1
+    ],
+    "32": [
+     2.54,
+     67.1
+    ],
+    "33": [
+     5.08,
+     69.64
+    ],
+    "34": [
+     2.54,
+     69.64
+    ],
+    "35": [
+     5.08,
+     72.18
+    ],
+    "36": [
+     2.54,
+     72.18
+    ],
+    "37": [
+     5.08,
+     74.72
+    ],
+    "38": [
+     2.54,
+     74.72
+    ],
+    "39": [
+     5.08,
+     77.26
+    ],
+    "40": [
+     2.54,
+     77.26
+    ],
+    "41": [
+     5.08,
+     79.8
+    ],
+    "42": [
+     2.54,
+     79.8
+    ],
+    "43": [
+     5.08,
+     82.34
+    ],
+    "44": [
+     2.54,
+     82.34
+    ],
+    "45": [
+     5.08,
+     84.88
+    ],
+    "46": [
+     2.54,
+     84.88
+    ],
+    "47": [
+     5.08,
+     87.42
+    ],
+    "48": [
+     2.54,
+     87.42
+    ],
+    "49": [
+     5.08,
+     89.96
+    ],
+    "50": [
+     2.54,
+     89.96
+    ]
+   }
+  },
+  {
+   "ref": "J2",
+   "role": "stack, data, planes and lanes",
+   "edge": "right",
+   "cards": [
+    "blkhdr_bus_RevA",
+    "blkhdr_logic_RevA",
+    "portcard"
+   ],
+   "fixed": true,
+   "footprint": {
+    "portcard": "telco:Stack_2x25_P2.54mm_LongTail",
+    "blkhdr_logic_RevA": "telco:Stack_2x25_P2.54mm_LongTail",
+    "blkhdr_bus_RevA": "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"
+   },
+   "side": "top",
+   "rotation": 0,
+   "pos": [
+    97.46,
+    29.0
+   ],
+   "pad1": "back end, outer row",
+   "outer_row": "odd",
+   "pins": {
+    "1": "+5V",
+    "2": "GND",
+    "3": "SCAN0",
+    "4": "SCAN1",
+    "5": "SCAN2",
+    "6": "SCAN3",
+    "7": "SCAN4",
+    "8": "SCAN5",
+    "9": "SP3",
+    "10": "SP4",
+    "11": "HC0",
+    "12": "HC1",
+    "13": "HC2",
+    "14": "HC3",
+    "15": "HC4",
+    "16": "HC5",
+    "17": "HC6",
+    "18": "HC7",
+    "19": "GND",
+    "20": "SP5",
+    "21": "CLM",
+    "22": "BSY",
+    "23": "SRC0",
+    "24": "SRC1",
+    "25": "SRC2",
+    "26": "SRC3",
+    "27": "SRC4",
+    "28": "SRC5",
+    "29": "HA_L_N",
+    "30": "HB_L_N",
+    "31": "C_TX0",
+    "32": "C_TX1",
+    "33": "C_TX2",
+    "34": "C_TX3",
+    "35": "C_TX4",
+    "36": "C_TX5",
+    "37": "C_TX6",
+    "38": "C_TX7",
+    "39": "SP6",
+    "40": "SP7",
+    "41": "WORD0",
+    "42": "WORD1",
+    "43": "WORD2",
+    "44": "WORD3",
+    "45": "WORD4",
+    "46": "WORD5",
+    "47": "WORD6",
+    "48": "WORD7",
+    "49": "GND",
+    "50": "+5V"
+   },
+   "pads": {
+    "1": [
+     97.46,
+     29.0
+    ],
+    "2": [
+     94.92,
+     29.0
+    ],
+    "3": [
+     97.46,
+     31.54
+    ],
+    "4": [
+     94.92,
+     31.54
+    ],
+    "5": [
+     97.46,
+     34.08
+    ],
+    "6": [
+     94.92,
+     34.08
+    ],
+    "7": [
+     97.46,
+     36.62
+    ],
+    "8": [
+     94.92,
+     36.62
+    ],
+    "9": [
+     97.46,
+     39.16
+    ],
+    "10": [
+     94.92,
+     39.16
+    ],
+    "11": [
+     97.46,
+     41.7
+    ],
+    "12": [
+     94.92,
+     41.7
+    ],
+    "13": [
+     97.46,
+     44.24
+    ],
+    "14": [
+     94.92,
+     44.24
+    ],
+    "15": [
+     97.46,
+     46.78
+    ],
+    "16": [
+     94.92,
+     46.78
+    ],
+    "17": [
+     97.46,
+     49.32
+    ],
+    "18": [
+     94.92,
+     49.32
+    ],
+    "19": [
+     97.46,
+     51.86
+    ],
+    "20": [
+     94.92,
+     51.86
+    ],
+    "21": [
+     97.46,
+     54.4
+    ],
+    "22": [
+     94.92,
+     54.4
+    ],
+    "23": [
+     97.46,
+     56.94
+    ],
+    "24": [
+     94.92,
+     56.94
+    ],
+    "25": [
+     97.46,
+     59.48
+    ],
+    "26": [
+     94.92,
+     59.48
+    ],
+    "27": [
+     97.46,
+     62.02
+    ],
+    "28": [
+     94.92,
+     62.02
+    ],
+    "29": [
+     97.46,
+     64.56
+    ],
+    "30": [
+     94.92,
+     64.56
+    ],
+    "31": [
+     97.46,
+     67.1
+    ],
+    "32": [
+     94.92,
+     67.1
+    ],
+    "33": [
+     97.46,
+     69.64
+    ],
+    "34": [
+     94.92,
+     69.64
+    ],
+    "35": [
+     97.46,
+     72.18
+    ],
+    "36": [
+     94.92,
+     72.18
+    ],
+    "37": [
+     97.46,
+     74.72
+    ],
+    "38": [
+     94.92,
+     74.72
+    ],
+    "39": [
+     97.46,
+     77.26
+    ],
+    "40": [
+     94.92,
+     77.26
+    ],
+    "41": [
+     97.46,
+     79.8
+    ],
+    "42": [
+     94.92,
+     79.8
+    ],
+    "43": [
+     97.46,
+     82.34
+    ],
+    "44": [
+     94.92,
+     82.34
+    ],
+    "45": [
+     97.46,
+     84.88
+    ],
+    "46": [
+     94.92,
+     84.88
+    ],
+    "47": [
+     97.46,
+     87.42
+    ],
+    "48": [
+     94.92,
+     87.42
+    ],
+    "49": [
+     97.46,
+     89.96
+    ],
+    "50": [
+     94.92,
+     89.96
+    ]
+   }
+  }
+ ],
+ "connectors": [
+  {
+   "ref": "J4",
+   "card": "portcard",
+   "role": "edge header to the subscriber card",
+   "footprint": "Connector_IDC:IDC-Header_2x17_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 270,
+   "pos": [
+    54.0,
+    87.2
+   ],
+   "pad1": "right end, inner row (row a)",
+   "note": "row a = odd pins (inner), row c = even pins (outer, nearer the edge)",
+   "pins": {
+    "1": "E_TX_CLK",
+    "2": "+5V",
+    "3": "E_LOOP_HB",
+    "4": "GND",
+    "5": "E_TX_OCT",
+    "6": "+5V",
+    "7": "E_FILL",
+    "8": "GND",
+    "9": "E_C_TX",
+    "10": "NC",
+    "11": "E_A_TX",
+    "12": "GND",
+    "13": "E_RX_CLK",
+    "14": "NC",
+    "15": "E_RX_OCT",
+    "16": "GND",
+    "17": "E_C_RX",
+    "18": "NC",
+    "19": "E_A_RX",
+    "20": "NC",
+    "21": "GND",
+    "22": "GND",
+    "23": "E_WORD",
+    "24": "NC",
+    "25": "E_ANS_N",
+    "26": "NC",
+    "27": "E_RAI_N",
+    "28": "GND",
+    "29": "NC",
+    "30": "NC",
+    "31": "GND",
+    "32": "GND",
+    "33": "GND",
+    "34": "GND"
+   },
+   "pads": {
+    "1": [
+     54.0,
+     87.2
+    ],
+    "2": [
+     54.0,
+     89.74
+    ],
+    "3": [
+     51.46,
+     87.2
+    ],
+    "4": [
+     51.46,
+     89.74
+    ],
+    "5": [
+     48.92,
+     87.2
+    ],
+    "6": [
+     48.92,
+     89.74
+    ],
+    "7": [
+     46.38,
+     87.2
+    ],
+    "8": [
+     46.38,
+     89.74
+    ],
+    "9": [
+     43.84,
+     87.2
+    ],
+    "10": [
+     43.84,
+     89.74
+    ],
+    "11": [
+     41.3,
+     87.2
+    ],
+    "12": [
+     41.3,
+     89.74
+    ],
+    "13": [
+     38.76,
+     87.2
+    ],
+    "14": [
+     38.76,
+     89.74
+    ],
+    "15": [
+     36.22,
+     87.2
+    ],
+    "16": [
+     36.22,
+     89.74
+    ],
+    "17": [
+     33.68,
+     87.2
+    ],
+    "18": [
+     33.68,
+     89.74
+    ],
+    "19": [
+     31.14,
+     87.2
+    ],
+    "20": [
+     31.14,
+     89.74
+    ],
+    "21": [
+     28.6,
+     87.2
+    ],
+    "22": [
+     28.6,
+     89.74
+    ],
+    "23": [
+     26.06,
+     87.2
+    ],
+    "24": [
+     26.06,
+     89.74
+    ],
+    "25": [
+     23.52,
+     87.2
+    ],
+    "26": [
+     23.52,
+     89.74
+    ],
+    "27": [
+     20.98,
+     87.2
+    ],
+    "28": [
+     20.98,
+     89.74
+    ],
+    "29": [
+     18.44,
+     87.2
+    ],
+    "30": [
+     18.44,
+     89.74
+    ],
+    "31": [
+     15.9,
+     87.2
+    ],
+    "32": [
+     15.9,
+     89.74
+    ],
+    "33": [
+     13.36,
+     87.2
+    ],
+    "34": [
+     13.36,
+     89.74
+    ]
+   },
+   "fixed": true
+  },
+  {
+   "ref": "J5",
+   "card": "portcard",
+   "role": "test strip (probe hooks at the back edge, beside the lamps)",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x12_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    20.0,
+    10.2
+   ],
+   "pad1": null,
+   "note": null,
+   "pins": {
+    "1": "GND",
+    "2": "BUSY_N",
+    "3": "E_A_TX",
+    "4": "FM_N",
+    "5": "FE",
+    "6": "E",
+    "7": "RB",
+    "8": "WC",
+    "9": "WA",
+    "10": "EQ_OWN_N",
+    "11": "WRCLK",
+    "12": "CLR_N"
+   },
+   "pads": {
+    "1": [
+     20.0,
+     10.2
+    ],
+    "2": [
+     22.54,
+     10.2
+    ],
+    "3": [
+     25.08,
+     10.2
+    ],
+    "4": [
+     27.62,
+     10.2
+    ],
+    "5": [
+     30.16,
+     10.2
+    ],
+    "6": [
+     32.7,
+     10.2
+    ],
+    "7": [
+     35.24,
+     10.2
+    ],
+    "8": [
+     37.78,
+     10.2
+    ],
+    "9": [
+     40.32,
+     10.2
+    ],
+    "10": [
+     42.86,
+     10.2
+    ],
+    "11": [
+     45.4,
+     10.2
+    ],
+    "12": [
+     47.94,
+     10.2
+    ]
+   },
+   "fixed": false
+  },
+  {
+   "ref": "J4",
+   "card": "blkhdr_bus_RevA",
+   "role": "bus 2x25, front edge (the ribbon)",
+   "footprint": "Connector_IDC:IDC-Header_2x25_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 270,
+   "pos": [
+    80.48,
+    87.2
+   ],
+   "pad1": "right end, inner row",
+   "note": "right-angle, shroud opening at the front edge; odd pins the inner row",
+   "pins": {
+    "1": "+5V",
+    "2": "+5V",
+    "3": "B_HCLK",
+    "4": "GND",
+    "5": "B_SLOT0",
+    "6": "GND",
+    "7": "B_SLOT1",
+    "8": "GND",
+    "9": "B_SLOT2",
+    "10": "GND",
+    "11": "B_SLOTQ0",
+    "12": "GND",
+    "13": "B_SLOTQ1",
+    "14": "GND",
+    "15": "B_SLOTQ2",
+    "16": "GND",
+    "17": "B_SCLK",
+    "18": "GND",
+    "19": "B_WR",
+    "20": "GND",
+    "21": "B_SDATA",
+    "22": "B_UREQ_N",
+    "23": "B_RESET_N",
+    "24": "GND",
+    "25": "GND",
+    "26": "GND",
+    "27": "B_SCAN0",
+    "28": "B_SCAN1",
+    "29": "B_SCAN2",
+    "30": "B_SCAN3",
+    "31": "B_SCAN4",
+    "32": "B_SCAN5",
+    "33": "B_HC0",
+    "34": "B_HC1",
+    "35": "B_HC2",
+    "36": "B_HC3",
+    "37": "B_HC4",
+    "38": "B_HC5",
+    "39": "B_HC6",
+    "40": "B_HC7",
+    "41": "GND",
+    "42": "B_RBT",
+    "43": "B_RING_CAD_N",
+    "44": "B_HA_N",
+    "45": "B_HB_N",
+    "46": "B_HW_N",
+    "47": "B_WS_N",
+    "48": "B_SPARE",
+    "49": "+5V",
+    "50": "+5V"
+   },
+   "pads": {
+    "1": [
+     80.48,
+     87.2
+    ],
+    "2": [
+     80.48,
+     89.74
+    ],
+    "3": [
+     77.94,
+     87.2
+    ],
+    "4": [
+     77.94,
+     89.74
+    ],
+    "5": [
+     75.4,
+     87.2
+    ],
+    "6": [
+     75.4,
+     89.74
+    ],
+    "7": [
+     72.86,
+     87.2
+    ],
+    "8": [
+     72.86,
+     89.74
+    ],
+    "9": [
+     70.32,
+     87.2
+    ],
+    "10": [
+     70.32,
+     89.74
+    ],
+    "11": [
+     67.78,
+     87.2
+    ],
+    "12": [
+     67.78,
+     89.74
+    ],
+    "13": [
+     65.24,
+     87.2
+    ],
+    "14": [
+     65.24,
+     89.74
+    ],
+    "15": [
+     62.7,
+     87.2
+    ],
+    "16": [
+     62.7,
+     89.74
+    ],
+    "17": [
+     60.16,
+     87.2
+    ],
+    "18": [
+     60.16,
+     89.74
+    ],
+    "19": [
+     57.62,
+     87.2
+    ],
+    "20": [
+     57.62,
+     89.74
+    ],
+    "21": [
+     55.08,
+     87.2
+    ],
+    "22": [
+     55.08,
+     89.74
+    ],
+    "23": [
+     52.54,
+     87.2
+    ],
+    "24": [
+     52.54,
+     89.74
+    ],
+    "25": [
+     50.0,
+     87.2
+    ],
+    "26": [
+     50.0,
+     89.74
+    ],
+    "27": [
+     47.46,
+     87.2
+    ],
+    "28": [
+     47.46,
+     89.74
+    ],
+    "29": [
+     44.92,
+     87.2
+    ],
+    "30": [
+     44.92,
+     89.74
+    ],
+    "31": [
+     42.38,
+     87.2
+    ],
+    "32": [
+     42.38,
+     89.74
+    ],
+    "33": [
+     39.84,
+     87.2
+    ],
+    "34": [
+     39.84,
+     89.74
+    ],
+    "35": [
+     37.3,
+     87.2
+    ],
+    "36": [
+     37.3,
+     89.74
+    ],
+    "37": [
+     34.76,
+     87.2
+    ],
+    "38": [
+     34.76,
+     89.74
+    ],
+    "39": [
+     32.22,
+     87.2
+    ],
+    "40": [
+     32.22,
+     89.74
+    ],
+    "41": [
+     29.68,
+     87.2
+    ],
+    "42": [
+     29.68,
+     89.74
+    ],
+    "43": [
+     27.14,
+     87.2
+    ],
+    "44": [
+     27.14,
+     89.74
+    ],
+    "45": [
+     24.6,
+     87.2
+    ],
+    "46": [
+     24.6,
+     89.74
+    ],
+    "47": [
+     22.06,
+     87.2
+    ],
+    "48": [
+     22.06,
+     89.74
+    ],
+    "49": [
+     19.52,
+     87.2
+    ],
+    "50": [
+     19.52,
+     89.74
+    ]
+   },
+   "fixed": true
+  },
+  {
+   "ref": "J6",
+   "card": "blkhdr_bus_RevA",
+   "role": "adapter commons 2x5 (block-stack.md 6), back edge",
+   "footprint": "Connector_IDC:IDC-Header_2x05_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    15.0,
+    12.8
+   ],
+   "pad1": "left end, inner row",
+   "note": "odd signal, even ground, shrouded and keyed; opening at the back edge",
+   "pins": {
+    "1": "A_TX_CLK",
+    "2": "GND",
+    "3": "A_TX_OCT",
+    "4": "GND",
+    "5": "A_FILL",
+    "6": "GND",
+    "7": "A_MUTE_BLK",
+    "8": "GND",
+    "9": "A_HCLK",
+    "10": "GND"
+   },
+   "pads": {
+    "1": [
+     15.0,
+     12.8
+    ],
+    "2": [
+     15.0,
+     10.26
+    ],
+    "3": [
+     17.54,
+     12.8
+    ],
+    "4": [
+     17.54,
+     10.26
+    ],
+    "5": [
+     20.08,
+     12.8
+    ],
+    "6": [
+     20.08,
+     10.26
+    ],
+    "7": [
+     22.62,
+     12.8
+    ],
+    "8": [
+     22.62,
+     10.26
+    ],
+    "9": [
+     25.16,
+     12.8
+    ],
+    "10": [
+     25.16,
+     10.26
+    ]
+   },
+   "fixed": false
+  },
+  {
+   "ref": "J7",
+   "card": "blkhdr_bus_RevA",
+   "role": "test strip (probe hooks at the back edge)",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    60.0,
+    10.2
+   ],
+   "pad1": null,
+   "note": null,
+   "pins": {
+    "1": "GND",
+    "2": "HA_L_N",
+    "3": "HB_L_N",
+    "4": "HC_OUT",
+    "5": "FIT_N",
+    "6": "WS_C_N",
+    "7": "HW_PD",
+    "8": "RST_N"
+   },
+   "pads": {
+    "1": [
+     60.0,
+     10.2
+    ],
+    "2": [
+     62.54,
+     10.2
+    ],
+    "3": [
+     65.08,
+     10.2
+    ],
+    "4": [
+     67.62,
+     10.2
+    ],
+    "5": [
+     70.16,
+     10.2
+    ],
+    "6": [
+     72.7,
+     10.2
+    ],
+    "7": [
+     75.24,
+     10.2
+    ],
+    "8": [
+     77.78,
+     10.2
+    ]
+   },
+   "fixed": false
+  },
+  {
+   "ref": "J9",
+   "card": "blkhdr_logic_RevA",
+   "role": "test strip (probe hooks at the front edge)",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Horizontal",
+   "side": "top",
+   "rotation": 270,
+   "pos": [
+    58.9,
+    91.5
+   ],
+   "pad1": null,
+   "note": null,
+   "pins": {
+    "1": "GND",
+    "2": "BLK_N",
+    "3": "WSCLK",
+    "4": "SELV_N",
+    "5": "G",
+    "6": "OCT_MID",
+    "7": "RX_OCT",
+    "8": "TX_OCT"
+   },
+   "pads": {
+    "1": [
+     58.9,
+     91.5
+    ],
+    "2": [
+     56.36,
+     91.5
+    ],
+    "3": [
+     53.82,
+     91.5
+    ],
+    "4": [
+     51.28,
+     91.5
+    ],
+    "5": [
+     48.74,
+     91.5
+    ],
+    "6": [
+     46.2,
+     91.5
+    ],
+    "7": [
+     43.66,
+     91.5
+    ],
+    "8": [
+     41.12,
+     91.5
+    ]
+   },
+   "fixed": false
+  },
+  {
+   "ref": "J8",
+   "card": "blkhdr_bus_RevA",
+   "role": "header link to B (socket)",
+   "footprint": "Connector_PinSocket_2.54mm:PinSocket_2x06_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    41.0,
+    60.0
+   ],
+   "pad1": "left end, back row",
+   "note": "SCLK, SDATA, WR and /FIT up; /WS (cleaned) up; hw_pd down",
+   "pins": {
+    "1": "SCLK_R",
+    "2": "GND",
+    "3": "SDATA_R",
+    "4": "GND",
+    "5": "WR_R",
+    "6": "GND",
+    "7": "FIT_N",
+    "8": "GND",
+    "9": "WS_C_N",
+    "10": "GND",
+    "11": "HW_PD",
+    "12": "GND"
+   },
+   "pads": {
+    "1": [
+     41.0,
+     60.0
+    ],
+    "2": [
+     41.0,
+     62.54
+    ],
+    "3": [
+     43.54,
+     60.0
+    ],
+    "4": [
+     43.54,
+     62.54
+    ],
+    "5": [
+     46.08,
+     60.0
+    ],
+    "6": [
+     46.08,
+     62.54
+    ],
+    "7": [
+     48.62,
+     60.0
+    ],
+    "8": [
+     48.62,
+     62.54
+    ],
+    "9": [
+     51.16,
+     60.0
+    ],
+    "10": [
+     51.16,
+     62.54
+    ],
+    "11": [
+     53.7,
+     60.0
+    ],
+    "12": [
+     53.7,
+     62.54
+    ]
+   },
+   "fixed": true
+  },
+  {
+   "ref": "J8",
+   "card": "blkhdr_logic_RevA",
+   "role": "header link to A (pin header, underside)",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical",
+   "side": "bottom",
+   "rotation": 90,
+   "pos": [
+    41.0,
+    60.0
+   ],
+   "pad1": "left end, back row",
+   "note": "flipped to B.Cu, pins down into A's J8",
+   "pins": {
+    "1": "SCLK_R",
+    "2": "GND",
+    "3": "SDATA_R",
+    "4": "GND",
+    "5": "WR_R",
+    "6": "GND",
+    "7": "FIT_N",
+    "8": "GND",
+    "9": "WS_C_N",
+    "10": "GND",
+    "11": "HW_PD",
+    "12": "GND"
+   },
+   "pads": {
+    "1": [
+     41.0,
+     60.0
+    ],
+    "2": [
+     41.0,
+     62.54
+    ],
+    "3": [
+     43.54,
+     60.0
+    ],
+    "4": [
+     43.54,
+     62.54
+    ],
+    "5": [
+     46.08,
+     60.0
+    ],
+    "6": [
+     46.08,
+     62.54
+    ],
+    "7": [
+     48.62,
+     60.0
+    ],
+    "8": [
+     48.62,
+     62.54
+    ],
+    "9": [
+     51.16,
+     60.0
+    ],
+    "10": [
+     51.16,
+     62.54
+    ],
+    "11": [
+     53.7,
+     60.0
+    ],
+    "12": [
+     53.7,
+     62.54
+    ]
+   },
+   "fixed": true
+  }
+ ],
+ "jumpers": [
+  {
+   "ref": "JP1",
+   "card": "portcard",
+   "label": "POS",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    50.0,
+    40.0
+   ],
+   "pins": {
+    "1": "POS0",
+    "2": "GND",
+    "3": "POS1",
+    "4": "GND",
+    "5": "POS2",
+    "6": "GND"
+   },
+   "pads": {
+    "1": [
+     50.0,
+     40.0
+    ],
+    "2": [
+     50.0,
+     37.46
+    ],
+    "3": [
+     52.54,
+     40.0
+    ],
+    "4": [
+     52.54,
+     37.46
+    ],
+    "5": [
+     55.08,
+     40.0
+    ],
+    "6": [
+     55.08,
+     37.46
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "S0: POS0 = 0"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "S1: POS1 = 0"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "S2: POS2 = 0"
+    }
+   ],
+   "missing": "an open position reads 1 (RN2 10k): no shunts at all is slot 7"
+  },
+  {
+   "ref": "JP2",
+   "card": "portcard",
+   "label": "WR",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    12.7,
+    52.0
+   ],
+   "pins": {
+    "1": "WR0_N",
+    "2": "P_WR_N",
+    "3": "WR1_N",
+    "4": "P_WR_N",
+    "5": "WR2_N",
+    "6": "P_WR_N",
+    "7": "WR3_N",
+    "8": "P_WR_N",
+    "9": "WR4_N",
+    "10": "P_WR_N",
+    "11": "WR5_N",
+    "12": "P_WR_N",
+    "13": "WR6_N",
+    "14": "P_WR_N",
+    "15": "WR7_N",
+    "16": "P_WR_N"
+   },
+   "pads": {
+    "1": [
+     12.7,
+     52.0
+    ],
+    "2": [
+     12.7,
+     49.46
+    ],
+    "3": [
+     15.24,
+     52.0
+    ],
+    "4": [
+     15.24,
+     49.46
+    ],
+    "5": [
+     17.78,
+     52.0
+    ],
+    "6": [
+     17.78,
+     49.46
+    ],
+    "7": [
+     20.32,
+     52.0
+    ],
+    "8": [
+     20.32,
+     49.46
+    ],
+    "9": [
+     22.86,
+     52.0
+    ],
+    "10": [
+     22.86,
+     49.46
+    ],
+    "11": [
+     25.4,
+     52.0
+    ],
+    "12": [
+     25.4,
+     49.46
+    ],
+    "13": [
+     27.94,
+     52.0
+    ],
+    "14": [
+     27.94,
+     49.46
+    ],
+    "15": [
+     30.48,
+     52.0
+    ],
+    "16": [
+     30.48,
+     49.46
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "this card is slot 0: P_WR_N = WR0_N"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "this card is slot 1: P_WR_N = WR1_N"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "this card is slot 2: P_WR_N = WR2_N"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "this card is slot 3: P_WR_N = WR3_N"
+    },
+    {
+     "pads": [
+      9,
+      10
+     ],
+     "means": "this card is slot 4: P_WR_N = WR4_N"
+    },
+    {
+     "pads": [
+      11,
+      12
+     ],
+     "means": "this card is slot 5: P_WR_N = WR5_N"
+    },
+    {
+     "pads": [
+      13,
+      14
+     ],
+     "means": "this card is slot 6: P_WR_N = WR6_N"
+    },
+    {
+     "pads": [
+      15,
+      16
+     ],
+     "means": "this card is slot 7: P_WR_N = WR7_N"
+    }
+   ],
+   "missing": "the card is never written: P_WR_N pulled up by RN2, the '273 never clocks"
+  },
+  {
+   "ref": "JP3",
+   "card": "portcard",
+   "label": "C_TX",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    70.0,
+    70.0
+   ],
+   "pins": {
+    "1": "C_TX0",
+    "2": "P_C_TX",
+    "3": "C_TX1",
+    "4": "P_C_TX",
+    "5": "C_TX2",
+    "6": "P_C_TX",
+    "7": "C_TX3",
+    "8": "P_C_TX",
+    "9": "C_TX4",
+    "10": "P_C_TX",
+    "11": "C_TX5",
+    "12": "P_C_TX",
+    "13": "C_TX6",
+    "14": "P_C_TX",
+    "15": "C_TX7",
+    "16": "P_C_TX"
+   },
+   "pads": {
+    "1": [
+     70.0,
+     70.0
+    ],
+    "2": [
+     70.0,
+     67.46
+    ],
+    "3": [
+     72.54,
+     70.0
+    ],
+    "4": [
+     72.54,
+     67.46
+    ],
+    "5": [
+     75.08,
+     70.0
+    ],
+    "6": [
+     75.08,
+     67.46
+    ],
+    "7": [
+     77.62,
+     70.0
+    ],
+    "8": [
+     77.62,
+     67.46
+    ],
+    "9": [
+     80.16,
+     70.0
+    ],
+    "10": [
+     80.16,
+     67.46
+    ],
+    "11": [
+     82.7,
+     70.0
+    ],
+    "12": [
+     82.7,
+     67.46
+    ],
+    "13": [
+     85.24,
+     70.0
+    ],
+    "14": [
+     85.24,
+     67.46
+    ],
+    "15": [
+     87.78,
+     70.0
+    ],
+    "16": [
+     87.78,
+     67.46
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "this card is slot 0: P_C_TX = C_TX0"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "this card is slot 1: P_C_TX = C_TX1"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "this card is slot 2: P_C_TX = C_TX2"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "this card is slot 3: P_C_TX = C_TX3"
+    },
+    {
+     "pads": [
+      9,
+      10
+     ],
+     "means": "this card is slot 4: P_C_TX = C_TX4"
+    },
+    {
+     "pads": [
+      11,
+      12
+     ],
+     "means": "this card is slot 5: P_C_TX = C_TX5"
+    },
+    {
+     "pads": [
+      13,
+      14
+     ],
+     "means": "this card is slot 6: P_C_TX = C_TX6"
+    },
+    {
+     "pads": [
+      15,
+      16
+     ],
+     "means": "this card is slot 7: P_C_TX = C_TX7"
+    }
+   ],
+   "missing": "lane k stays on FILL_R: heard as silence; the card's own C goes nowhere"
+  },
+  {
+   "ref": "JP4",
+   "card": "portcard",
+   "label": "WORD",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    70.0,
+    80.0
+   ],
+   "pins": {
+    "1": "WORD0",
+    "2": "E_WORD",
+    "3": "WORD1",
+    "4": "E_WORD",
+    "5": "WORD2",
+    "6": "E_WORD",
+    "7": "WORD3",
+    "8": "E_WORD",
+    "9": "WORD4",
+    "10": "E_WORD",
+    "11": "WORD5",
+    "12": "E_WORD",
+    "13": "WORD6",
+    "14": "E_WORD",
+    "15": "WORD7",
+    "16": "E_WORD"
+   },
+   "pads": {
+    "1": [
+     70.0,
+     80.0
+    ],
+    "2": [
+     70.0,
+     77.46
+    ],
+    "3": [
+     72.54,
+     80.0
+    ],
+    "4": [
+     72.54,
+     77.46
+    ],
+    "5": [
+     75.08,
+     80.0
+    ],
+    "6": [
+     75.08,
+     77.46
+    ],
+    "7": [
+     77.62,
+     80.0
+    ],
+    "8": [
+     77.62,
+     77.46
+    ],
+    "9": [
+     80.16,
+     80.0
+    ],
+    "10": [
+     80.16,
+     77.46
+    ],
+    "11": [
+     82.7,
+     80.0
+    ],
+    "12": [
+     82.7,
+     77.46
+    ],
+    "13": [
+     85.24,
+     80.0
+    ],
+    "14": [
+     85.24,
+     77.46
+    ],
+    "15": [
+     87.78,
+     80.0
+    ],
+    "16": [
+     87.78,
+     77.46
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "this card is slot 0: E_WORD = WORD0"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "this card is slot 1: E_WORD = WORD1"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "this card is slot 2: E_WORD = WORD2"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "this card is slot 3: E_WORD = WORD3"
+    },
+    {
+     "pads": [
+      9,
+      10
+     ],
+     "means": "this card is slot 4: E_WORD = WORD4"
+    },
+    {
+     "pads": [
+      11,
+      12
+     ],
+     "means": "this card is slot 5: E_WORD = WORD5"
+    },
+    {
+     "pads": [
+      13,
+      14
+     ],
+     "means": "this card is slot 6: E_WORD = WORD6"
+    },
+    {
+     "pads": [
+      15,
+      16
+     ],
+     "means": "this card is slot 7: E_WORD = WORD7"
+    }
+   ],
+   "missing": "lane k stays pulled up: no word, class 000 unequipped"
+  },
+  {
+   "ref": "JP1",
+   "card": "blkhdr_bus_RevA",
+   "label": "HC ROUTE",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 90,
+   "pos": [
+    33.0,
+    83.0
+   ],
+   "pins": {
+    "1": "B_HC7",
+    "2": "HC_OUT",
+    "3": "B_HC6",
+    "4": "HC_OUT",
+    "5": "B_HC5",
+    "6": "HC_OUT",
+    "7": "B_HC4",
+    "8": "HC_OUT",
+    "9": "B_HC3",
+    "10": "HC_OUT",
+    "11": "B_HC2",
+    "12": "HC_OUT",
+    "13": "B_HC1",
+    "14": "HC_OUT",
+    "15": "B_HC0",
+    "16": "HC_OUT"
+   },
+   "pads": {
+    "1": [
+     33.0,
+     83.0
+    ],
+    "2": [
+     33.0,
+     80.46
+    ],
+    "3": [
+     35.54,
+     83.0
+    ],
+    "4": [
+     35.54,
+     80.46
+    ],
+    "5": [
+     38.08,
+     83.0
+    ],
+    "6": [
+     38.08,
+     80.46
+    ],
+    "7": [
+     40.62,
+     83.0
+    ],
+    "8": [
+     40.62,
+     80.46
+    ],
+    "9": [
+     43.16,
+     83.0
+    ],
+    "10": [
+     43.16,
+     80.46
+    ],
+    "11": [
+     45.7,
+     83.0
+    ],
+    "12": [
+     45.7,
+     80.46
+    ],
+    "13": [
+     48.24,
+     83.0
+    ],
+    "14": [
+     48.24,
+     80.46
+    ],
+    "15": [
+     50.78,
+     83.0
+    ],
+    "16": [
+     50.78,
+     80.46
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "HC_OUT drives highway HC7; must equal NUMBER h = 7"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "HC_OUT drives highway HC6; must equal NUMBER h = 6"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "HC_OUT drives highway HC5; must equal NUMBER h = 5"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "HC_OUT drives highway HC4; must equal NUMBER h = 4"
+    },
+    {
+     "pads": [
+      9,
+      10
+     ],
+     "means": "HC_OUT drives highway HC3; must equal NUMBER h = 3"
+    },
+    {
+     "pads": [
+      11,
+      12
+     ],
+     "means": "HC_OUT drives highway HC2; must equal NUMBER h = 2"
+    },
+    {
+     "pads": [
+      13,
+      14
+     ],
+     "means": "HC_OUT drives highway HC1; must equal NUMBER h = 1"
+    },
+    {
+     "pads": [
+      15,
+      16
+     ],
+     "means": "HC_OUT drives highway HC0; must equal NUMBER h = 0"
+    }
+   ],
+   "missing": "HC_OUT reaches no highway: the block is silent on HC, and listens"
+  },
+  {
+   "ref": "JP2",
+   "card": "blkhdr_bus_RevA",
+   "label": "NUMBER",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x04_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 0,
+   "pos": [
+    44.0,
+    30.0
+   ],
+   "pins": {
+    "1": "FIT_N",
+    "2": "GND",
+    "3": "H0_J",
+    "4": "GND",
+    "5": "H1_J",
+    "6": "GND",
+    "7": "H2_J",
+    "8": "GND"
+   },
+   "pads": {
+    "1": [
+     44.0,
+     30.0
+    ],
+    "2": [
+     46.54,
+     30.0
+    ],
+    "3": [
+     44.0,
+     32.54
+    ],
+    "4": [
+     46.54,
+     32.54
+    ],
+    "5": [
+     44.0,
+     35.08
+    ],
+    "6": [
+     46.54,
+     35.08
+    ],
+    "7": [
+     44.0,
+     37.62
+    ],
+    "8": [
+     46.54,
+     37.62
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "FIT: the block is fitted (JUMPERED)"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "h0 = 0"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "h1 = 0"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "h2 = 0"
+    }
+   ],
+   "missing": "h bits read 1 when open; FIT open = unjumpered: no HC drive, no /BLK, no /WS answer, no plane turn"
+  },
+  {
+   "ref": "JP3",
+   "card": "blkhdr_bus_RevA",
+   "label": "RBT SOURCE",
+   "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
+   "side": "top",
+   "rotation": 0,
+   "pos": [
+    87.5,
+    55.5
+   ],
+   "pins": {
+    "1": "C_TX0",
+    "2": "RBT_SRC",
+    "3": "C_TX1",
+    "4": "RBT_SRC",
+    "5": "C_TX2",
+    "6": "RBT_SRC",
+    "7": "C_TX3",
+    "8": "RBT_SRC",
+    "9": "C_TX4",
+    "10": "RBT_SRC",
+    "11": "C_TX5",
+    "12": "RBT_SRC",
+    "13": "C_TX6",
+    "14": "RBT_SRC",
+    "15": "C_TX7",
+    "16": "RBT_SRC"
+   },
+   "pads": {
+    "1": [
+     87.5,
+     55.5
+    ],
+    "2": [
+     90.04,
+     55.5
+    ],
+    "3": [
+     87.5,
+     58.04
+    ],
+    "4": [
+     90.04,
+     58.04
+    ],
+    "5": [
+     87.5,
+     60.58
+    ],
+    "6": [
+     90.04,
+     60.58
+    ],
+    "7": [
+     87.5,
+     63.12
+    ],
+    "8": [
+     90.04,
+     63.12
+    ],
+    "9": [
+     87.5,
+     65.66
+    ],
+    "10": [
+     90.04,
+     65.66
+    ],
+    "11": [
+     87.5,
+     68.2
+    ],
+    "12": [
+     90.04,
+     68.2
+    ],
+    "13": [
+     87.5,
+     70.74
+    ],
+    "14": [
+     90.04,
+     70.74
+    ],
+    "15": [
+     87.5,
+     73.28
+    ],
+    "16": [
+     90.04,
+     73.28
+    ]
+   },
+   "shunts": [
+    {
+     "pads": [
+      1,
+      2
+     ],
+     "means": "lane 0's card is the exchange's ringback source: C_TX0 drives RBT"
+    },
+    {
+     "pads": [
+      3,
+      4
+     ],
+     "means": "lane 1's card is the exchange's ringback source: C_TX1 drives RBT"
+    },
+    {
+     "pads": [
+      5,
+      6
+     ],
+     "means": "lane 2's card is the exchange's ringback source: C_TX2 drives RBT"
+    },
+    {
+     "pads": [
+      7,
+      8
+     ],
+     "means": "lane 3's card is the exchange's ringback source: C_TX3 drives RBT"
+    },
+    {
+     "pads": [
+      9,
+      10
+     ],
+     "means": "lane 4's card is the exchange's ringback source: C_TX4 drives RBT"
+    },
+    {
+     "pads": [
+      11,
+      12
+     ],
+     "means": "lane 5's card is the exchange's ringback source: C_TX5 drives RBT"
+    },
+    {
+     "pads": [
+      13,
+      14
+     ],
+     "means": "lane 6's card is the exchange's ringback source: C_TX6 drives RBT"
+    },
+    {
+     "pads": [
+      15,
+      16
+     ],
+     "means": "lane 7's card is the exchange's ringback source: C_TX7 drives RBT"
+    }
+   ],
+   "missing": "no shunt (every block but one): this block's lanes stay off the bus RBT"
+  }
+ ],
+ "cards": {
+  "blkhdr_bus_RevA": {
+   "project": "pcb/blkhdr_bus_RevA/blkhdr_bus_RevA.kicad_pro",
+   "layers": 2,
+   "note": "block header A, the bus board: the bottom of the stack, the bus IDC at its front edge",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "none (bus receivers)",
+     "function": "cell timing and SCLK in from the bus",
+     "pins": {
+      "1": "GND",
+      "2": "B_HCLK",
+      "3": "SLOTQ0_R",
+      "4": "B_SLOT0",
+      "5": "SLOTQ1_R",
+      "6": "B_SLOT1",
+      "7": "SLOTQ2_R",
+      "8": "B_SLOT2",
+      "9": "SCLK_R",
+      "10": "GND",
+      "11": "B_SCLK",
+      "12": "SLOT2_R",
+      "13": "B_SLOTQ2",
+      "14": "SLOT1_R",
+      "15": "B_SLOTQ1",
+      "16": "SLOT0_R",
+      "17": "B_SLOTQ0",
+      "18": "HCLK_R",
+      "19": "GND",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U2",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "none (bus receivers)",
+     "function": "WR, SDATA, RBT, /RING_CAD, SCAN0-3 in",
+     "pins": {
+      "1": "GND",
+      "2": "B_WR",
+      "3": "SCAN0",
+      "4": "B_SDATA",
+      "5": "SCAN1",
+      "6": "B_RBT",
+      "7": "SCAN2",
+      "8": "B_RING_CAD_N",
+      "9": "SCAN3",
+      "10": "GND",
+      "11": "B_SCAN3",
+      "12": "RING_CAD_N",
+      "13": "B_SCAN2",
+      "14": "RBT",
+      "15": "B_SCAN1",
+      "16": "SDATA_R",
+      "17": "B_SCAN0",
+      "18": "WR_R",
+      "19": "GND",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U3",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "none (bus receivers)",
+     "function": "SCAN4-5, HC0-5 in",
+     "pins": {
+      "1": "GND",
+      "2": "B_SCAN4",
+      "3": "HC2",
+      "4": "B_SCAN5",
+      "5": "HC3",
+      "6": "B_HC0",
+      "7": "HC4",
+      "8": "B_HC1",
+      "9": "HC5",
+      "10": "GND",
+      "11": "B_HC5",
+      "12": "HC1",
+      "13": "B_HC4",
+      "14": "HC0",
+      "15": "B_HC3",
+      "16": "SCAN5",
+      "17": "B_HC2",
+      "18": "SCAN4",
+      "19": "GND",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U4",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "frame_decode.v:51 (FILL); block.v:77 (MUTE_BLK); port.v:27 (BLOCK)",
+     "function": "HC6-7 in; FILL and FILL_R off SCAN0; MUTE_BLK and H0-2 up the stack",
+     "pins": {
+      "1": "GND",
+      "2": "B_HC6",
+      "3": "MUTE_BLK",
+      "4": "B_HC7",
+      "5": "H0",
+      "6": "SCAN0",
+      "7": "H1",
+      "8": "SCAN0",
+      "9": "H2",
+      "10": "GND",
+      "11": "H2_J",
+      "12": "FILL_R",
+      "13": "H1_J",
+      "14": "FILL",
+      "15": "H0_J",
+      "16": "HC7",
+      "17": "A_MUTE_BLK",
+      "18": "HC6",
+      "19": "GND",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U5",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "block.v:229-230 (the '244 after the commutator); block-stack.md 6 (the adapter commons)",
+     "function": "adapter commons out (half 1); HC_OUT, gated by FIT_N (half 2)",
+     "pins": {
+      "1": "GND",
+      "2": "TX_CLK_S",
+      "3": "HC_OUT_S",
+      "4": "TX_OCT",
+      "5": "NC",
+      "6": "SCAN0",
+      "7": "NC",
+      "8": "HCLK_R",
+      "9": "NC",
+      "10": "GND",
+      "11": "GND",
+      "12": "A_HCLK_S",
+      "13": "GND",
+      "14": "A_FILL_S",
+      "15": "GND",
+      "16": "A_TX_OCT_S",
+      "17": "COMM",
+      "18": "A_TX_CLK_S",
+      "19": "FIT_N",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U6",
+     "value": "74HC14",
+     "lib_id": "74xx:74HC14",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "block.v:63-64 (/HA Schmitt); port.v:38 (/RESET filtered); block.v:83 (/WS)",
+     "function": "Schmitt inputs: /HA -> HA_RX, /WS -> WS, RESET_RC -> RST -> RST_N",
+     "pins": {
+      "1": "B_HA_N",
+      "2": "HA_RX",
+      "3": "B_WS_N",
+      "4": "WS",
+      "5": "RESET_RC",
+      "6": "RST",
+      "7": "GND",
+      "8": "RST_N",
+      "9": "RST",
+      "10": "NC",
+      "11": "GND",
+      "12": "NC",
+      "13": "GND",
+      "14": "+5V"
+     },
+     "outputs": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U7",
+     "value": "74HC14",
+     "lib_id": "74xx:74HC14",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "frame_decode.v:47 (TX_CLK); top_net.v:154 (LOOP_HB); block.v:267 (/WS clock)",
+     "function": "clean inversions: /SLOT2, /SLOT1, WS back to low-true (WS_C_N crosses to B on J8)",
+     "pins": {
+      "1": "SLOT2_R",
+      "2": "TX_CLK_S",
+      "3": "SLOT1_R",
+      "4": "LOOP_HB_S",
+      "5": "WS",
+      "6": "WS_C_N",
+      "7": "GND",
+      "8": "NC",
+      "9": "GND",
+      "10": "NC",
+      "11": "GND",
+      "12": "NC",
+      "13": "GND",
+      "14": "+5V"
+     },
+     "outputs": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U14",
+     "value": "74HC138",
+     "lib_id": "74xx:74HC138",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "none in block.v: port.v:80-83, :101-106 assume it ('the block's '138')",
+     "function": "strobe decoder: /STBk low for ticks 4-7 of cell k",
+     "pins": {
+      "1": "SLOTQ0_R",
+      "2": "SLOTQ1_R",
+      "3": "SLOTQ2_R",
+      "4": "HCLK_R",
+      "5": "GND",
+      "6": "+5V",
+      "7": "STB7_S",
+      "8": "GND",
+      "9": "STB6_S",
+      "10": "STB5_S",
+      "11": "STB4_S",
+      "12": "STB3_S",
+      "13": "STB2_S",
+      "14": "STB1_S",
+      "15": "STB0_S",
+      "16": "+5V"
+     },
+     "outputs": [
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U15",
+     "value": "74HC151",
+     "lib_id": "74xx:74LS151",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "block.v:226-230 (THE commutator)",
+     "function": "C_TX lane k in cell k",
+     "pins": {
+      "1": "C_TX3",
+      "2": "C_TX2",
+      "3": "C_TX1",
+      "4": "C_TX0",
+      "5": "COMM",
+      "6": "NC",
+      "7": "GND",
+      "8": "GND",
+      "9": "SLOT2_R",
+      "10": "SLOT1_R",
+      "11": "SLOT0_R",
+      "12": "C_TX7",
+      "13": "C_TX6",
+      "14": "C_TX5",
+      "15": "C_TX4",
+      "16": "+5V"
+     },
+     "outputs": [
+      5,
+      6
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "U19",
+     "value": "74HC02",
+     "lib_id": "74xx:74HC02",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "block.v:237-238 (the plane OR, gated by FIT)",
+     "function": "HA_PD, HB_PD: the block-local planes onto the bus drains",
+     "pins": {
+      "1": "HA_PD",
+      "2": "HA_L_N",
+      "3": "FIT_N",
+      "4": "HB_PD",
+      "5": "HB_L_N",
+      "6": "FIT_N",
+      "7": "GND",
+      "8": "GND",
+      "9": "GND",
+      "10": "NC",
+      "11": "GND",
+      "12": "GND",
+      "13": "NC",
+      "14": "+5V"
+     },
+     "outputs": [
+      1,
+      4,
+      10,
+      13
+     ],
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "Q1",
+     "value": "2N7000",
+     "lib_id": "Transistor_FET:2N7000",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "rtl": "block.v:65, :237",
+     "function": "the block's one drain on /HA",
+     "pins": {
+      "1": "GND",
+      "2": "HA_PD",
+      "3": "B_HA_N"
+     },
+     "key_by": "pin name (S, G, D)",
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "Q2",
+     "value": "2N7000",
+     "lib_id": "Transistor_FET:2N7000",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "rtl": "block.v:66, :238",
+     "function": "the block's one drain on /HB",
+     "pins": {
+      "1": "GND",
+      "2": "HB_PD",
+      "3": "B_HB_N"
+     },
+     "key_by": "pin name (S, G, D)",
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "Q3",
+     "value": "2N7000",
+     "lib_id": "Transistor_FET:2N7000",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "rtl": "block.v:84, :273",
+     "function": "the block's drain on /HW",
+     "pins": {
+      "1": "GND",
+      "2": "HW_PD",
+      "3": "B_HW_N"
+     },
+     "key_by": "pin name (S, G, D)",
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN1",
+     "value": "4.7k",
+     "lib_id": "Device:R_Network08",
+     "footprint": "Resistor_THT:R_Array_SIP9",
+     "rtl": "block.v:124-131 (the ': fill' arm)",
+     "function": "an unfitted lane idles on FILL",
+     "pins": {
+      "1": "FILL_R",
+      "2": "C_TX0",
+      "3": "C_TX1",
+      "4": "C_TX2",
+      "5": "C_TX3",
+      "6": "C_TX4",
+      "7": "C_TX5",
+      "8": "C_TX6",
+      "9": "C_TX7"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN3",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors, strobe lines up the stack (1 of 2)",
+     "pins": {
+      "1": "STB0_S",
+      "2": "STB0_N",
+      "3": "STB1_S",
+      "4": "STB1_N",
+      "5": "STB2_S",
+      "6": "STB2_N",
+      "7": "STB3_S",
+      "8": "STB3_N"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN8",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors, strobe lines up the stack (2 of 2)",
+     "pins": {
+      "1": "STB4_S",
+      "2": "STB4_N",
+      "3": "STB5_S",
+      "4": "STB5_N",
+      "5": "STB6_S",
+      "6": "STB6_N",
+      "7": "STB7_S",
+      "8": "STB7_N"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN5",
+     "value": "100k",
+     "lib_id": "Device:R_Network08",
+     "footprint": "Resistor_THT:R_Array_SIP9",
+     "rtl": "-",
+     "function": "bus.md 6.1: an unplugged header reads idle",
+     "pins": {
+      "1": "GND",
+      "2": "B_HCLK",
+      "3": "B_SLOT0",
+      "4": "B_SLOT1",
+      "5": "B_SLOT2",
+      "6": "B_SLOTQ0",
+      "7": "B_SLOTQ1",
+      "8": "B_SLOTQ2",
+      "9": "B_SCLK"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN6",
+     "value": "100k",
+     "lib_id": "Device:R_Network04",
+     "footprint": "Resistor_THT:R_Array_SIP5",
+     "rtl": "-",
+     "function": "bus.md 6.1: an unplugged header holds itself in reset and takes no write",
+     "pins": {
+      "1": "GND",
+      "2": "B_WR",
+      "3": "B_SDATA",
+      "4": "B_RESET_N",
+      "5": "NC"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "RN7",
+     "value": "10k",
+     "lib_id": "Device:R_Network04",
+     "footprint": "Resistor_THT:R_Array_SIP5",
+     "rtl": "block.v:42-43 (BLOCK, JUMPERED)",
+     "function": "number jumper pull-ups: open reads 1",
+     "pins": {
+      "1": "+5V",
+      "2": "H0_J",
+      "3": "H1_J",
+      "4": "H2_J",
+      "5": "FIT_N"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R1",
+     "value": "1k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "block.v:237",
+     "function": "/HA_L pull-up",
+     "pins": {
+      "1": "+5V",
+      "2": "HA_L_N"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R2",
+     "value": "1k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "block.v:238",
+     "function": "/HB_L pull-up",
+     "pins": {
+      "1": "+5V",
+      "2": "HB_L_N"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R3",
+     "value": "100",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "block.v:230",
+     "function": "highway driver series R (bus.md 2.4)",
+     "pins": {
+      "1": "HC_OUT_S",
+      "2": "HC_OUT"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R4",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "series R, TX_CLK up the stack",
+     "pins": {
+      "1": "TX_CLK_S",
+      "2": "TX_CLK"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R5",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "series R, LOOP_HB up the stack",
+     "pins": {
+      "1": "LOOP_HB_S",
+      "2": "LOOP_HB"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R6",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "adapter series R",
+     "pins": {
+      "1": "A_TX_CLK_S",
+      "2": "A_TX_CLK"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R7",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "adapter series R",
+     "pins": {
+      "1": "A_TX_OCT_S",
+      "2": "A_TX_OCT"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R8",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "adapter series R",
+     "pins": {
+      "1": "A_FILL_S",
+      "2": "A_FILL"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R9",
+     "value": "33",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "adapter series R",
+     "pins": {
+      "1": "A_HCLK_S",
+      "2": "A_HCLK"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R10",
+     "value": "10k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "block.v:77",
+     "function": "MUTE_BLK pulled inactive",
+     "pins": {
+      "1": "A_MUTE_BLK",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R11",
+     "value": "10k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:38 ('filtered at the block')",
+     "function": "/RESET filter",
+     "pins": {
+      "1": "B_RESET_N",
+      "2": "RESET_RC"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "R12",
+     "value": "100",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "RBT SOURCE series R: a bus driver's 100R (bus.md 2.4)",
+     "pins": {
+      "1": "RBT_SRC",
+      "2": "B_RBT"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C1",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm",
+     "rtl": "-",
+     "function": "/RESET filter, 1 ms (bus.md 6.2)",
+     "pins": {
+      "1": "RESET_RC",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C2",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U1",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C3",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U2",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C4",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U3",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C5",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U4",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C6",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U5",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C7",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U6",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C8",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U7",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C15",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U14",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C16",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U15",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C20",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U19",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    },
+    {
+     "ref": "C22",
+     "value": "47u",
+     "lib_id": "Device:C_Polarized",
+     "footprint": "Capacitor_THT:CP_Radial_D4.0mm_P1.50mm",
+     "rtl": "-",
+     "function": "bulk at the bus entry; 4 x 7 mm",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_bus_RevA"
+    }
+   ]
+  },
+  "blkhdr_logic_RevA": {
+   "project": "pcb/blkhdr_logic_RevA/blkhdr_logic_RevA.kicad_pro",
+   "layers": 2,
+   "note": "block header B, the logic board: on A like a port card, J8 underneath into A; the lamps",
+   "parts": [
+    {
+     "ref": "U8",
+     "value": "74HC11",
+     "lib_id": "74xx:74LS11",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "frame_decode.v:48",
+     "function": "TX_OCT = SCAN[2:0] == 7",
+     "pins": {
+      "1": "SCAN0",
+      "2": "SCAN1",
+      "3": "GND",
+      "4": "GND",
+      "5": "GND",
+      "6": "NC",
+      "7": "GND",
+      "8": "NC",
+      "9": "GND",
+      "10": "GND",
+      "11": "GND",
+      "12": "TX_OCT",
+      "13": "SCAN2",
+      "14": "+5V"
+     },
+     "outputs": [
+      6,
+      8,
+      12
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U9",
+     "value": "74HC74",
+     "lib_id": "74xx:74HC74",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "frame_decode.v:49 (physically TX_OCT a frame late, bus.md 3)",
+     "function": "RX_OCT in two halves: TX_OCT taken as /STB4 rises (the start of cell 5, mid-frame), then onto the frame edge (TX_CLK rises).  Each D changes well away from its clock, so RX_OCT no longer races the clock card's '4040 ripple; both clocks come off the stack",
+     "pins": {
+      "1": "+5V",
+      "2": "TX_OCT",
+      "3": "STB4_N",
+      "4": "+5V",
+      "5": "OCT_MID",
+      "6": "NC",
+      "7": "GND",
+      "8": "NC",
+      "9": "RX_OCT",
+      "10": "+5V",
+      "11": "TX_CLK",
+      "12": "OCT_MID",
+      "13": "+5V",
+      "14": "+5V"
+     },
+     "outputs": [
+      5,
+      6,
+      8,
+      9
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U10",
+     "value": "74HC164",
+     "lib_id": "74xx:74HC164",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "block.v:89-100 (cw[7:0])",
+     "function": "control word, low byte: CLM BSY SRC0-5 up the stack",
+     "pins": {
+      "1": "SDATA_R",
+      "2": "+5V",
+      "3": "CLM",
+      "4": "BSY",
+      "5": "SRC0",
+      "6": "SRC1",
+      "7": "GND",
+      "8": "SCLK_R",
+      "9": "RST_N",
+      "10": "SRC2",
+      "11": "SRC3",
+      "12": "SRC4",
+      "13": "SRC5",
+      "14": "+5V"
+     },
+     "outputs": [
+      3,
+      4,
+      5,
+      6,
+      10,
+      11,
+      12,
+      13
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U11",
+     "value": "74HC164",
+     "lib_id": "74xx:74HC164",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "block.v:89-100 (cw[15:8])",
+     "function": "control word, high byte: DST0-5, spare, G",
+     "pins": {
+      "1": "SRC5",
+      "2": "+5V",
+      "3": "DST0",
+      "4": "DST1",
+      "5": "DST2",
+      "6": "DST3",
+      "7": "GND",
+      "8": "SCLK_R",
+      "9": "RST_N",
+      "10": "DST4",
+      "11": "DST5",
+      "12": "NC",
+      "13": "G",
+      "14": "+5V"
+     },
+     "outputs": [
+      3,
+      4,
+      5,
+      6,
+      10,
+      11,
+      12,
+      13
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U12",
+     "value": "74HC688",
+     "lib_id": "74xx:74HC688",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "block.v:102-104 (/BLK) and :110-113 (the guard G, on the spare pair)",
+     "function": "/BLK = !(FIT && DST[5:3]==h && G)",
+     "pins": {
+      "1": "FIT_N",
+      "2": "DST3",
+      "3": "H0",
+      "4": "DST4",
+      "5": "H1",
+      "6": "DST5",
+      "7": "H2",
+      "8": "G",
+      "9": "+5V",
+      "10": "GND",
+      "11": "GND",
+      "12": "GND",
+      "13": "GND",
+      "14": "GND",
+      "15": "GND",
+      "16": "GND",
+      "17": "GND",
+      "18": "GND",
+      "19": "BLK_N",
+      "20": "+5V"
+     },
+     "outputs": [
+      19
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U13",
+     "value": "74HC138",
+     "lib_id": "74xx:74HC138",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "block.v:115-118 (write decoder)",
+     "function": "/WRk = /BLK . WR . G decoded by DST[2:0]",
+     "pins": {
+      "1": "DST0",
+      "2": "DST1",
+      "3": "DST2",
+      "4": "BLK_N",
+      "5": "GND",
+      "6": "WR_R",
+      "7": "WR7_S",
+      "8": "GND",
+      "9": "WR6_S",
+      "10": "WR5_S",
+      "11": "WR4_S",
+      "12": "WR3_S",
+      "13": "WR2_S",
+      "14": "WR1_S",
+      "15": "WR0_S",
+      "16": "+5V"
+     },
+     "outputs": [
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U16",
+     "value": "74HC688",
+     "lib_id": "74xx:74HC688",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "block.v:261-268 (the /WS '688: SCAN[5:3] vs h)",
+     "function": "SELM_N = !(FIT && SCAN[5:3]==h)",
+     "pins": {
+      "1": "FIT_N",
+      "2": "SCAN3",
+      "3": "H0",
+      "4": "SCAN4",
+      "5": "H1",
+      "6": "SCAN5",
+      "7": "H2",
+      "8": "GND",
+      "9": "GND",
+      "10": "GND",
+      "11": "GND",
+      "12": "GND",
+      "13": "GND",
+      "14": "GND",
+      "15": "GND",
+      "16": "GND",
+      "17": "GND",
+      "18": "GND",
+      "19": "SELM_N",
+      "20": "+5V"
+     },
+     "outputs": [
+      19
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U17",
+     "value": "74HC175",
+     "lib_id": "74xx:74LS175",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "block.v:263-270 (sel_v, sel_slot)",
+     "function": "the /WS latch, clocked at /STB4's fall while /WS is low.  The match goes in ACTIVE HIGH (U7 inverts the '688) and /SELV comes off /Q3, so a cleared latch -- after /RST -- reads NOT selected, as block.v's sel_v resets to 0",
+     "pins": {
+      "1": "RST_N",
+      "2": "SEL0",
+      "3": "NC",
+      "4": "SCAN0",
+      "5": "SCAN1",
+      "6": "NC",
+      "7": "SEL1",
+      "8": "GND",
+      "9": "WSCLK",
+      "10": "SEL2",
+      "11": "NC",
+      "12": "SCAN2",
+      "13": "SELM",
+      "14": "SELV_N",
+      "15": "NC",
+      "16": "+5V"
+     },
+     "outputs": [
+      2,
+      3,
+      6,
+      7,
+      10,
+      11,
+      14,
+      15
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U18",
+     "value": "74HC151",
+     "lib_id": "74xx:74LS151",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "block.v:272-273 (the word '151)",
+     "function": "WORD lane sel_slot",
+     "pins": {
+      "1": "WORD3",
+      "2": "WORD2",
+      "3": "WORD1",
+      "4": "WORD0",
+      "5": "WORD_Y",
+      "6": "NC",
+      "7": "GND",
+      "8": "GND",
+      "9": "SEL2",
+      "10": "SEL1",
+      "11": "SEL0",
+      "12": "WORD7",
+      "13": "WORD6",
+      "14": "WORD5",
+      "15": "WORD4",
+      "16": "+5V"
+     },
+     "outputs": [
+      5,
+      6
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U20",
+     "value": "74HC02",
+     "lib_id": "74xx:74HC02",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "block.v:273 (hw_pd); :259/:267 (the latch clock); :264 (the match, inverted)",
+     "function": "HW_PD (crosses to A on J8), WSCLK, SELM; LAMP_CK, the lamp '595s' shift clock",
+     "pins": {
+      "1": "HW_PD",
+      "2": "SELV_N",
+      "3": "WORD_Y",
+      "4": "WSCLK",
+      "5": "STB4_N",
+      "6": "WS_C_N",
+      "7": "GND",
+      "8": "SELM_N",
+      "9": "SELM_N",
+      "10": "SELM",
+      "11": "STB4_N",
+      "12": "SELM_N",
+      "13": "LAMP_CK",
+      "14": "+5V"
+     },
+     "outputs": [
+      1,
+      4,
+      10,
+      13
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U21",
+     "value": "74HC595",
+     "lib_id": "74xx:74HC595",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "none: a display of port.v:112-123 (M on /HA_L)",
+     "function": "the M (hook) lamps: slot k's HA_L_N in its turn -> LAMP_Mk",
+     "pins": {
+      "1": "LAMP_M6",
+      "2": "LAMP_M5",
+      "3": "LAMP_M4",
+      "4": "LAMP_M3",
+      "5": "LAMP_M2",
+      "6": "LAMP_M1",
+      "7": "LAMP_M0",
+      "8": "GND",
+      "9": "NC",
+      "10": "+5V",
+      "11": "LAMP_CK",
+      "12": "SELM_N",
+      "13": "FIT_N",
+      "14": "HA_L_N",
+      "15": "LAMP_M7",
+      "16": "+5V"
+     },
+     "outputs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      15
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "U22",
+     "value": "74HC595",
+     "lib_id": "74xx:74HC595",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "none: a display of port.v:112-124 (BUSY on /HB_L)",
+     "function": "the BUSY lamps: slot k's HB_L_N in its turn -> LAMP_Bk",
+     "pins": {
+      "1": "LAMP_B6",
+      "2": "LAMP_B5",
+      "3": "LAMP_B4",
+      "4": "LAMP_B3",
+      "5": "LAMP_B2",
+      "6": "LAMP_B1",
+      "7": "LAMP_B0",
+      "8": "GND",
+      "9": "NC",
+      "10": "+5V",
+      "11": "LAMP_CK",
+      "12": "SELM_N",
+      "13": "FIT_N",
+      "14": "HB_L_N",
+      "15": "LAMP_B7",
+      "16": "+5V"
+     },
+     "outputs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      15
+     ],
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "RN2",
+     "value": "10k",
+     "lib_id": "Device:R_Network08",
+     "footprint": "Resistor_THT:R_Array_SIP9",
+     "rtl": "block.v:136 (PORT_FITTED & ~word_n)",
+     "function": "an unfitted lane reads no word",
+     "pins": {
+      "1": "+5V",
+      "2": "WORD0",
+      "3": "WORD1",
+      "4": "WORD2",
+      "5": "WORD3",
+      "6": "WORD4",
+      "7": "WORD5",
+      "8": "WORD6",
+      "9": "WORD7"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "RN4",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors, write lanes up the stack (1 of 2)",
+     "pins": {
+      "1": "WR0_S",
+      "2": "WR0_N",
+      "3": "WR1_S",
+      "4": "WR1_N",
+      "5": "WR2_S",
+      "6": "WR2_N",
+      "7": "WR3_S",
+      "8": "WR3_N"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "RN9",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors, write lanes up the stack (2 of 2)",
+     "pins": {
+      "1": "WR4_S",
+      "2": "WR4_N",
+      "3": "WR5_S",
+      "4": "WR5_N",
+      "5": "WR6_S",
+      "6": "WR6_N",
+      "7": "WR7_S",
+      "8": "WR7_N"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "RN10",
+     "value": "1k",
+     "lib_id": "Device:R_Network08",
+     "footprint": "Resistor_THT:R_Array_SIP9",
+     "rtl": "-",
+     "function": "the M lamps' current, ~2.9 mA each",
+     "pins": {
+      "1": "+5V",
+      "2": "LAMP_M0_A",
+      "3": "LAMP_M1_A",
+      "4": "LAMP_M2_A",
+      "5": "LAMP_M3_A",
+      "6": "LAMP_M4_A",
+      "7": "LAMP_M5_A",
+      "8": "LAMP_M6_A",
+      "9": "LAMP_M7_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "RN11",
+     "value": "1k",
+     "lib_id": "Device:R_Network08",
+     "footprint": "Resistor_THT:R_Array_SIP9",
+     "rtl": "-",
+     "function": "the BUSY lamps' current, ~2.9 mA each",
+     "pins": {
+      "1": "+5V",
+      "2": "LAMP_B0_A",
+      "3": "LAMP_B1_A",
+      "4": "LAMP_B2_A",
+      "5": "LAMP_B3_A",
+      "6": "LAMP_B4_A",
+      "7": "LAMP_B5_A",
+      "8": "LAMP_B6_A",
+      "9": "LAMP_B7_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D1",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 0 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M0",
+      "2": "LAMP_M0_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D2",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 0 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B0",
+      "2": "LAMP_B0_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D3",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 1 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M1",
+      "2": "LAMP_M1_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D4",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 1 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B1",
+      "2": "LAMP_B1_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D5",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 2 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M2",
+      "2": "LAMP_M2_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D6",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 2 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B2",
+      "2": "LAMP_B2_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D7",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 3 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M3",
+      "2": "LAMP_M3_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D8",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 3 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B3",
+      "2": "LAMP_B3_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D9",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 4 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M4",
+      "2": "LAMP_M4_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D10",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 4 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B4",
+      "2": "LAMP_B4_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D11",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 5 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M5",
+      "2": "LAMP_M5_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D12",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 5 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B5",
+      "2": "LAMP_B5_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D13",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 6 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M6",
+      "2": "LAMP_M6_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D14",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 6 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B6",
+      "2": "LAMP_B6_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D15",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 7 M (hook): lit = off-hook",
+     "pins": {
+      "1": "LAMP_M7",
+      "2": "LAMP_M7_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D16",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 7 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B7",
+      "2": "LAMP_B7_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "R13",
+     "value": "1.5k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "status lamp D17, ~2 mA into FIT_N",
+     "pins": {
+      "1": "+5V",
+      "2": "STAT_D17_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D17",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "LED_THT:LED_D3.0mm",
+     "rtl": "-",
+     "function": "status: FIT: the NUMBER jumper's FIT shunt is in",
+     "pins": {
+      "1": "FIT_N",
+      "2": "STAT_D17_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "R14",
+     "value": "1.5k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "status lamp D18, ~2 mA into RST_N",
+     "pins": {
+      "1": "+5V",
+      "2": "STAT_D18_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D18",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "LED_THT:LED_D3.0mm",
+     "rtl": "-",
+     "function": "status: RESET: /RST low",
+     "pins": {
+      "1": "RST_N",
+      "2": "STAT_D18_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "R15",
+     "value": "1.5k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "-",
+     "function": "status lamp D19, ~2 mA into RING_CAD_N",
+     "pins": {
+      "1": "+5V",
+      "2": "STAT_D19_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D19",
+     "value": "LED",
+     "lib_id": "Device:LED",
+     "footprint": "LED_THT:LED_D3.0mm",
+     "rtl": "-",
+     "function": "status: RING_CAD: the ringing cadence, lit while ringing may sound",
+     "pins": {
+      "1": "RING_CAD_N",
+      "2": "STAT_D19_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C9",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U8",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C10",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U9",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C11",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U10",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C12",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U11",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C13",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U12",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C14",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U13",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C17",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U16",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C18",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U17",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C19",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U18",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C21",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U20",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C24",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U21",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C25",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U22",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "C23",
+     "value": "10u",
+     "lib_id": "Device:C_Polarized",
+     "footprint": "Capacitor_THT:CP_Radial_D4.0mm_P1.50mm",
+     "rtl": "-",
+     "function": "bulk on the logic board; <= 7 mm tall",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     },
+     "card": "blkhdr_logic_RevA"
+    }
+   ]
+  },
+  "portcard": {
+   "project": "pcb/portcard/portcard.kicad_pro",
+   "layers": 2,
+   "note": "the generated port card the netlist check runs; the board is pcb/portcard_RevC, by hand",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "74HC273",
+     "lib_id": "74xx:74HC273",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "port.v:70-73, :190-194 (the listen latch; CLR = release or reset)",
+     "function": "addr[5:0], bsy, clm; clocked on /WR's leading edge",
+     "pins": {
+      "1": "CLR_N",
+      "2": "ADDR0",
+      "3": "SRC0",
+      "4": "SRC1",
+      "5": "ADDR1",
+      "6": "ADDR2",
+      "7": "SRC2",
+      "8": "SRC3",
+      "9": "ADDR3",
+      "10": "GND",
+      "11": "WRCLK",
+      "12": "ADDR4",
+      "13": "SRC4",
+      "14": "SRC5",
+      "15": "ADDR5",
+      "16": "BSYQ",
+      "17": "BSY",
+      "18": "CLM",
+      "19": "CLMQ",
+      "20": "+5V"
+     },
+     "outputs": [
+      2,
+      5,
+      6,
+      9,
+      12,
+      15,
+      16,
+      19
+     ]
+    },
+    {
+     "ref": "U2",
+     "value": "74HC151",
+     "lib_id": "74xx:74LS151",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "port.v:75-78 (highway select)",
+     "function": "C_SEL = HC[addr[5:3]]",
+     "pins": {
+      "1": "HC3",
+      "2": "HC2",
+      "3": "HC1",
+      "4": "HC0",
+      "5": "C_SEL",
+      "6": "NC",
+      "7": "GND",
+      "8": "GND",
+      "9": "ADDR5",
+      "10": "ADDR4",
+      "11": "ADDR3",
+      "12": "HC7",
+      "13": "HC6",
+      "14": "HC5",
+      "15": "HC4",
+      "16": "+5V"
+     },
+     "outputs": [
+      5,
+      6
+     ]
+    },
+    {
+     "ref": "U3",
+     "value": "74HC151",
+     "lib_id": "74xx:74LS151",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "port.v:80-83 (slot select; W is the capture clock)",
+     "function": "WC = W, rising at /STB[addr[2:0]]'s fall",
+     "pins": {
+      "1": "STB3_N",
+      "2": "STB2_N",
+      "3": "STB1_N",
+      "4": "STB0_N",
+      "5": "NC",
+      "6": "WC",
+      "7": "GND",
+      "8": "GND",
+      "9": "ADDR2",
+      "10": "ADDR1",
+      "11": "ADDR0",
+      "12": "STB7_N",
+      "13": "STB6_N",
+      "14": "STB5_N",
+      "15": "STB4_N",
+      "16": "+5V"
+     },
+     "outputs": [
+      5,
+      6
+     ]
+    },
+    {
+     "ref": "U4",
+     "value": "74HC688",
+     "lib_id": "74xx:74HC688",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "port.v:85-88 (eq_src)",
+     "function": "EQ_SRC_N = !(SCAN == addr)",
+     "pins": {
+      "1": "GND",
+      "2": "SCAN0",
+      "3": "ADDR0",
+      "4": "SCAN1",
+      "5": "ADDR1",
+      "6": "SCAN2",
+      "7": "ADDR2",
+      "8": "SCAN3",
+      "9": "ADDR3",
+      "10": "GND",
+      "11": "SCAN4",
+      "12": "ADDR4",
+      "13": "SCAN5",
+      "14": "ADDR5",
+      "15": "GND",
+      "16": "GND",
+      "17": "GND",
+      "18": "GND",
+      "19": "EQ_SRC_N",
+      "20": "+5V"
+     },
+     "outputs": [
+      19
+     ]
+    },
+    {
+     "ref": "U5",
+     "value": "74HC688",
+     "lib_id": "74xx:74HC688",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "port.v:90-99 (eq_own: SCAN vs {BLOCK, POS})",
+     "function": "EQ_OWN_N = !(SCAN == {h, POS})",
+     "pins": {
+      "1": "GND",
+      "2": "SCAN0",
+      "3": "POS0",
+      "4": "SCAN1",
+      "5": "POS1",
+      "6": "SCAN2",
+      "7": "POS2",
+      "8": "SCAN3",
+      "9": "H0",
+      "10": "GND",
+      "11": "SCAN4",
+      "12": "H1",
+      "13": "SCAN5",
+      "14": "H2",
+      "15": "GND",
+      "16": "GND",
+      "17": "GND",
+      "18": "GND",
+      "19": "EQ_OWN_N",
+      "20": "+5V"
+     },
+     "outputs": [
+      19
+     ]
+    },
+    {
+     "ref": "U6",
+     "value": "74HC74",
+     "lib_id": "74xx:74HC74",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:108, :169-173 (the '74 pair)",
+     "function": "C capture on WC; E capture on WA",
+     "pins": {
+      "1": "RST_N",
+      "2": "C_SEL",
+      "3": "WC",
+      "4": "+5V",
+      "5": "C_RX",
+      "6": "NC",
+      "7": "GND",
+      "8": "NC",
+      "9": "E",
+      "10": "+5V",
+      "11": "WA",
+      "12": "HA_RX",
+      "13": "RST_N",
+      "14": "+5V"
+     },
+     "outputs": [
+      5,
+      6,
+      8,
+      9
+     ]
+    },
+    {
+     "ref": "U7",
+     "value": "74HC14",
+     "lib_id": "74xx:74HC14",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:134-136, :175-188 (the detectors and their CR squarers); port.v:109 (M)",
+     "function": "RC_M -> /FM, RC_E -> /FE -> FE, CR_M -> /REL_M, CR_E -> /REL_E, A_TX -> /M",
+     "pins": {
+      "1": "RC_M",
+      "2": "FM_N",
+      "3": "RC_E",
+      "4": "FE_N",
+      "5": "FE_N",
+      "6": "FE",
+      "7": "GND",
+      "8": "REL_M_N",
+      "9": "CR_M",
+      "10": "REL_E_N",
+      "11": "CR_E",
+      "12": "M_N",
+      "13": "E_A_TX",
+      "14": "+5V"
+     },
+     "outputs": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12
+     ]
+    },
+    {
+     "ref": "U8",
+     "value": "74HC11",
+     "lib_id": "74xx:74LS11",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:144, :146, :193 (ON, RB, the clear)",
+     "function": "ON = RINGS./M./FM; RB = ON.E; /CLR = /REL_M./REL_E./RST",
+     "pins": {
+      "1": "E_ANS_N",
+      "2": "M_N",
+      "3": "ON",
+      "4": "E",
+      "5": "+5V",
+      "6": "RB",
+      "7": "GND",
+      "8": "CLR_N",
+      "9": "REL_M_N",
+      "10": "REL_E_N",
+      "11": "RST_N",
+      "12": "ON",
+      "13": "FM_N",
+      "14": "+5V"
+     },
+     "outputs": [
+      6,
+      8,
+      12
+     ]
+    },
+    {
+     "ref": "U9",
+     "value": "74HC02",
+     "lib_id": "74xx:74HC02",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:123-124 (drains), :105-106 (WA), :147 (fM./M)",
+     "function": "FMNM = FM./M; HA_G = EQ_OWN.M; HB_G = EQ_OWN.BUSY; WA = STB4.EQ_SRC",
+     "pins": {
+      "1": "FMNM",
+      "2": "FM_N",
+      "3": "E_A_TX",
+      "4": "HA_G",
+      "5": "EQ_OWN_N",
+      "6": "M_N",
+      "7": "GND",
+      "8": "EQ_OWN_N",
+      "9": "BUSY_N",
+      "10": "HB_G",
+      "11": "STB4_N",
+      "12": "EQ_SRC_N",
+      "13": "WA",
+      "14": "+5V"
+     },
+     "outputs": [
+      1,
+      4,
+      10,
+      13
+     ]
+    },
+    {
+     "ref": "U10",
+     "value": "74HC4002",
+     "lib_id": "4xxx:4002",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:147 (BUSY); :131-132 (the '273 on WR's leading edge)",
+     "function": "/BUSY = NOR(BSY, FE, FM./M, MUTE_BLK); WRCLK = NOT /WR",
+     "pins": {
+      "1": "BUSY_N",
+      "2": "BSYQ",
+      "3": "FE",
+      "4": "FMNM",
+      "5": "MUTE_BLK",
+      "6": "NC",
+      "7": "GND",
+      "8": "NC",
+      "9": "P_WR_N",
+      "10": "GND",
+      "11": "GND",
+      "12": "GND",
+      "13": "WRCLK",
+      "14": "+5V"
+     },
+     "outputs": [
+      1,
+      13
+     ]
+    },
+    {
+     "ref": "U11",
+     "value": "74HC00",
+     "lib_id": "74xx:74HC00",
+     "footprint": "Package_DIP:DIP-14_W7.62mm",
+     "rtl": "port.v:153 (A_RX)",
+     "function": "A_RX = (E + CLM) . /(ON . ring_cad_n)",
+     "pins": {
+      "1": "ON",
+      "2": "RING_CAD_N",
+      "3": "RCX",
+      "4": "RCX",
+      "5": "E",
+      "6": "N1",
+      "7": "GND",
+      "8": "N2",
+      "9": "RCX",
+      "10": "CLMQ",
+      "11": "A_RX",
+      "12": "N1",
+      "13": "N2",
+      "14": "+5V"
+     },
+     "outputs": [
+      3,
+      6,
+      8,
+      11
+     ]
+    },
+    {
+     "ref": "U12",
+     "value": "74HC157",
+     "lib_id": "74xx:74LS157",
+     "footprint": "Package_DIP:DIP-16_W7.62mm",
+     "rtl": "block.v:120-131 (ringback substitution), moved here",
+     "function": "P_C_TX = RB ? RBT : C_TX",
+     "pins": {
+      "1": "RB",
+      "2": "E_C_TX",
+      "3": "RBT",
+      "4": "P_C_TX",
+      "5": "GND",
+      "6": "GND",
+      "7": "NC",
+      "8": "GND",
+      "9": "NC",
+      "10": "GND",
+      "11": "GND",
+      "12": "NC",
+      "13": "GND",
+      "14": "GND",
+      "15": "GND",
+      "16": "+5V"
+     },
+     "outputs": [
+      4,
+      7,
+      9,
+      12
+     ]
+    },
+    {
+     "ref": "U13",
+     "value": "74HC244",
+     "lib_id": "74xx:74HC244",
+     "footprint": "Package_DIP:DIP-20_W7.62mm",
+     "rtl": "none (socket drivers; port.v:153-154 for a9, a10)",
+     "function": "a1-a4, a7-a10 out through RN1",
+     "pins": {
+      "1": "GND",
+      "2": "TX_CLK",
+      "3": "E_RX_CLK_S",
+      "4": "LOOP_HB",
+      "5": "E_RX_OCT_S",
+      "6": "TX_OCT",
+      "7": "E_C_RX_S",
+      "8": "FILL",
+      "9": "E_A_RX_S",
+      "10": "GND",
+      "11": "A_RX",
+      "12": "E_FILL_S",
+      "13": "C_RX",
+      "14": "E_TX_OCT_S",
+      "15": "RX_OCT",
+      "16": "E_LOOP_HB_S",
+      "17": "TX_CLK",
+      "18": "E_TX_CLK_S",
+      "19": "GND",
+      "20": "+5V"
+     },
+     "outputs": [
+      3,
+      5,
+      7,
+      9,
+      12,
+      14,
+      16,
+      18
+     ]
+    },
+    {
+     "ref": "Q1",
+     "value": "2N7000",
+     "lib_id": "Transistor_FET:2N7000",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "rtl": "port.v:112-123",
+     "function": "M onto /HA_L in this port's turn",
+     "pins": {
+      "1": "GND",
+      "2": "HA_G",
+      "3": "HA_L_N"
+     },
+     "key_by": "pin name (S, G, D)"
+    },
+    {
+     "ref": "Q2",
+     "value": "2N7000",
+     "lib_id": "Transistor_FET:2N7000",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "rtl": "port.v:112-124",
+     "function": "BUSY onto /HB_L in this port's turn",
+     "pins": {
+      "1": "GND",
+      "2": "HB_G",
+      "3": "HB_L_N"
+     },
+     "key_by": "pin name (S, G, D)"
+    },
+    {
+     "ref": "RN1",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors into the ribbon (1 of 2)",
+     "pins": {
+      "1": "E_TX_CLK_S",
+      "2": "E_TX_CLK",
+      "3": "E_LOOP_HB_S",
+      "4": "E_LOOP_HB",
+      "5": "E_TX_OCT_S",
+      "6": "E_TX_OCT",
+      "7": "E_FILL_S",
+      "8": "E_FILL"
+     }
+    },
+    {
+     "ref": "RN3",
+     "value": "33",
+     "lib_id": "Device:R_Pack04_SIP",
+     "footprint": "Resistor_THT:R_Array_SIP8",
+     "rtl": "-",
+     "function": "series resistors into the ribbon (2 of 2)",
+     "pins": {
+      "1": "E_RX_CLK_S",
+      "2": "E_RX_CLK",
+      "3": "E_RX_OCT_S",
+      "4": "E_RX_OCT",
+      "5": "E_C_RX_S",
+      "6": "E_C_RX",
+      "7": "E_A_RX_S",
+      "8": "E_A_RX"
+     }
+    },
+    {
+     "ref": "RN2",
+     "value": "10k",
+     "lib_id": "Device:R_Network04",
+     "footprint": "Resistor_THT:R_Array_SIP5",
+     "rtl": "port.v:28 (POS)",
+     "function": "POS pull-ups (open = 1); /WR held idle with no lane shunt",
+     "pins": {
+      "1": "+5V",
+      "2": "POS0",
+      "3": "POS1",
+      "4": "POS2",
+      "5": "P_WR_N"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "10k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "common/common-cards.md 1.4",
+     "function": "A_TX pull-down: a pulled card reads on-hook",
+     "pins": {
+      "1": "E_A_TX",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "680",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "card-word.md 2",
+     "function": "card word pull-up",
+     "pins": {
+      "1": "+5V",
+      "2": "E_WORD"
+     }
+    },
+    {
+     "ref": "R3",
+     "value": "680",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:138-142",
+     "function": "/ANS pull-up: open = rings",
+     "pins": {
+      "1": "+5V",
+      "2": "E_ANS_N"
+     }
+    },
+    {
+     "ref": "R4",
+     "value": "680",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "common/common-cards.md 1.1",
+     "function": "a14 pull-up, unused",
+     "pins": {
+      "1": "+5V",
+      "2": "E_RAI_N"
+     }
+    },
+    {
+     "ref": "R5",
+     "value": "4.7k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "common/common-cards.md 1.4",
+     "function": "a pulled subscriber card leaves FILL",
+     "pins": {
+      "1": "E_C_TX",
+      "2": "E_FILL"
+     }
+    },
+    {
+     "ref": "D1",
+     "value": "1N4148",
+     "lib_id": "Device:D",
+     "footprint": "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_AnodeUp",
+     "rtl": "port.v:175-188 (in the rc_det cluster)",
+     "function": "fM: the fast (charging) path",
+     "pins": {
+      "1": "DET_M",
+      "2": "E_A_TX"
+     }
+    },
+    {
+     "ref": "R6",
+     "value": "18k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:175-188",
+     "function": "fM up in ~16 ms (with C1)",
+     "pins": {
+      "1": "DET_M",
+      "2": "RC_M"
+     }
+    },
+    {
+     "ref": "R7",
+     "value": "270k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:175-188",
+     "function": "fM down in ~256 ms (with C1)",
+     "pins": {
+      "1": "E_A_TX",
+      "2": "RC_M"
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "1u",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Rect_L7.2mm_W3.5mm_P5.00mm_FKS2_FKP2_MKS2_MKP2",
+     "rtl": "-",
+     "function": "fM timing",
+     "pins": {
+      "1": "RC_M",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "D2",
+     "value": "1N4148",
+     "lib_id": "Device:D",
+     "footprint": "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_AnodeUp",
+     "rtl": "port.v:175-188 (in the rc_det cluster)",
+     "function": "fE: the fast path",
+     "pins": {
+      "1": "DET_E",
+      "2": "E"
+     }
+    },
+    {
+     "ref": "R8",
+     "value": "18k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:175-188",
+     "function": "fE up in ~16 ms (with C2)",
+     "pins": {
+      "1": "DET_E",
+      "2": "RC_E"
+     }
+    },
+    {
+     "ref": "R9",
+     "value": "270k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:175-188",
+     "function": "fE down in ~256 ms (with C2)",
+     "pins": {
+      "1": "E",
+      "2": "RC_E"
+     }
+    },
+    {
+     "ref": "C2",
+     "value": "1u",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Rect_L7.2mm_W3.5mm_P5.00mm_FKS2_FKP2_MKS2_MKP2",
+     "rtl": "-",
+     "function": "fE timing",
+     "pins": {
+      "1": "RC_E",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C3",
+     "value": "1n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm",
+     "rtl": "-",
+     "function": "CR: /FM's rise (fM's fall) -> /REL_M, ~10 us",
+     "pins": {
+      "1": "FM_N",
+      "2": "CR_M"
+     }
+    },
+    {
+     "ref": "R10",
+     "value": "10k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:180, :193",
+     "function": "CR squarer",
+     "pins": {
+      "1": "CR_M",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "D3",
+     "value": "1N4148",
+     "lib_id": "Device:D",
+     "footprint": "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_AnodeUp",
+     "rtl": "port.v:190-194 (in the cr_rel cluster)",
+     "function": "clamps the CR node's negative swing",
+     "pins": {
+      "1": "CR_M",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C4",
+     "value": "1n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P2.50mm",
+     "rtl": "-",
+     "function": "CR: /FE's rise (fE's fall) -> /REL_E, ~10 us",
+     "pins": {
+      "1": "FE_N",
+      "2": "CR_E"
+     }
+    },
+    {
+     "ref": "R11",
+     "value": "10k",
+     "lib_id": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical",
+     "rtl": "port.v:186, :193",
+     "function": "CR squarer",
+     "pins": {
+      "1": "CR_E",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "D4",
+     "value": "1N4148",
+     "lib_id": "Device:D",
+     "footprint": "Diode_THT:D_DO-35_SOD27_P2.54mm_Vertical_AnodeUp",
+     "rtl": "port.v:190-194 (in the cr_rel cluster)",
+     "function": "clamps the CR node's negative swing",
+     "pins": {
+      "1": "CR_E",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C5",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U1",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C6",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U2",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C7",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U3",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C8",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U4",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C9",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U5",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C10",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U6",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C11",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U7",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C12",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U8",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C13",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U9",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C14",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U10",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C15",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U11",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C16",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U12",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C17",
+     "value": "100n",
+     "lib_id": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm",
+     "rtl": "-",
+     "function": "decoupling, U13",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    },
+    {
+     "ref": "C18",
+     "value": "10u",
+     "lib_id": "Device:C_Polarized",
+     "footprint": "Capacitor_THT:CP_Radial_D4.0mm_P1.50mm",
+     "rtl": "-",
+     "function": "bulk; <= 7 mm tall",
+     "pins": {
+      "1": "+5V",
+      "2": "GND"
+     }
+    }
+   ]
+  }
+ },
+ "fanout": [
+  {
+   "net": "STB0_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB1_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB2_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB3_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB4_N",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 3,
+   "total_inputs": 19,
+   "est_pf": 161
+  },
+  {
+   "net": "STB5_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB6_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "STB7_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "TX_CLK",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 1,
+   "total_inputs": 17,
+   "est_pf": 151
+  },
+  {
+   "net": "H0",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 2,
+   "total_inputs": 10,
+   "est_pf": 116
+  },
+  {
+   "net": "H1",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 2,
+   "total_inputs": 10,
+   "est_pf": 116
+  },
+  {
+   "net": "LOOP_HB",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "RST_N",
+   "group": "common",
+   "per_card": 3,
+   "header_inputs": 3,
+   "total_inputs": 27,
+   "est_pf": 201
+  },
+  {
+   "net": "H2",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 2,
+   "total_inputs": 10,
+   "est_pf": 116
+  },
+  {
+   "net": "WR0_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR1_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR2_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR3_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR4_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR5_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "MUTE_BLK",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "WR6_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "WR7_N",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 0,
+   "est_pf": 71,
+   "note": "the card on lane k: 1 ('4002) + 10k"
+  },
+  {
+   "net": "RING_CAD_N",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HA_RX",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "RBT",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "FILL",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "TX_OCT",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 2,
+   "total_inputs": 10,
+   "est_pf": 116
+  },
+  {
+   "net": "RX_OCT",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SCAN0",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 5,
+   "total_inputs": 21,
+   "est_pf": 171
+  },
+  {
+   "net": "SCAN1",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 2,
+   "total_inputs": 18,
+   "est_pf": 156
+  },
+  {
+   "net": "SCAN2",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 2,
+   "total_inputs": 18,
+   "est_pf": 156
+  },
+  {
+   "net": "SCAN3",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 1,
+   "total_inputs": 17,
+   "est_pf": 151
+  },
+  {
+   "net": "SCAN4",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 1,
+   "total_inputs": 17,
+   "est_pf": 151
+  },
+  {
+   "net": "SCAN5",
+   "group": "common",
+   "per_card": 2,
+   "header_inputs": 1,
+   "total_inputs": 17,
+   "est_pf": 151
+  },
+  {
+   "net": "HC0",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC1",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC2",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC3",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC4",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC5",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC6",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "HC7",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "CLM",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "BSY",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC0",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC1",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC2",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC3",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC4",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 0,
+   "total_inputs": 8,
+   "est_pf": 106
+  },
+  {
+   "net": "SRC5",
+   "group": "common",
+   "per_card": 1,
+   "header_inputs": 1,
+   "total_inputs": 9,
+   "est_pf": 111
+  },
+  {
+   "net": "HA_L_N",
+   "group": "wired",
+   "per_card": 0,
+   "drains": 8,
+   "header_inputs": 2,
+   "est_pf": 236
+  },
+  {
+   "net": "HB_L_N",
+   "group": "wired",
+   "per_card": 0,
+   "drains": 8,
+   "header_inputs": 2,
+   "est_pf": 236
+  },
+  {
+   "net": "C_TX0",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX1",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX2",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX3",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX4",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX5",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX6",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "C_TX7",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 71,
+   "note": "driven by the card on lane k"
+  },
+  {
+   "net": "WORD0",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD1",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD2",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD3",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD4",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD5",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD6",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  },
+  {
+   "net": "WORD7",
+   "group": "lane",
+   "per_card": null,
+   "header_inputs": 1,
+   "est_pf": 91,
+   "note": "driven (open drain) behind the card on lane k"
+  }
+ ],
+ "netlist_check": {
+  "module": "block",
+  "source": "newimpl/rtl/block.v:41-88 (parameters and ports, exactly)",
+  "parameters": {
+   "BLOCK": "blkhdr_bus_RevA JP2 (NUMBER): shunt = 0, open = 1, h = {H2_J,H1_J,H0_J}; JP1 (HC ROUTE) at column h (checked statically)",
+   "JUMPERED": "blkhdr_bus_RevA JP2 FIT shunt: fitted = 1",
+   "PORT_FITTED": "bit k = a port card is present whose JP1 POS reads k and whose JP2, JP3, JP4 shunts are all in column k",
+   "T_ARM": "rc_det macro parameter on every detector cluster (sim only)",
+   "T_REL": "rc_det macro parameter on every detector cluster (sim only)"
+  },
+  "ports": [
+   [
+    "clk",
+    "in",
+    "sim only: the HCLK shim and the rc_det / cr_rel macro cells; nothing on the boards"
+   ],
+   [
+    "rst_n",
+    "in",
+    "B_RESET_N (bus pin 23); the R11/C1 filter is a wire in simulation"
+   ],
+   [
+    "slot[2:0]",
+    "in",
+    "B_SLOT0..2 (bus 5, 7, 9)"
+   ],
+   [
+    "slotq[2:0]",
+    "in",
+    "B_SLOTQ0..2 (bus 11, 13, 15)"
+   ],
+   [
+    "cap_stb",
+    "in",
+    "sim only: rebuilds B_HCLK through the shim"
+   ],
+   [
+    "frame_stb",
+    "in",
+    "unused (block.v:275-278), as in the RTL"
+   ],
+   [
+    "tick_1k",
+    "in",
+    "sim only: the rc_det time base"
+   ],
+   [
+    "scan[5:0]",
+    "in",
+    "B_SCAN0..5 (bus 27-32)"
+   ],
+   [
+    "fill",
+    "in",
+    "unused: the header takes FILL off B_SCAN0; the bench asserts fill == scan[0]"
+   ],
+   [
+    "rbt",
+    "in",
+    "B_RBT (bus 42)"
+   ],
+   [
+    "ring_cad_n",
+    "in",
+    "B_RING_CAD_N (bus 43)"
+   ],
+   [
+    "hc[7:0]",
+    "in",
+    "B_HC0..7 (bus 33-40)"
+   ],
+   [
+    "hc_out",
+    "out",
+    "HC_OUT (after R3, before JP1); JP1 is not in the module: mainboard.v:66-70 does the routing"
+   ],
+   [
+    "ha_n",
+    "in",
+    "B_HA_N (bus 44), read by U6"
+   ],
+   [
+    "ha_pd",
+    "out",
+    "HA_PD: the gate of Q1"
+   ],
+   [
+    "hb_pd",
+    "out",
+    "HB_PD: the gate of Q2"
+   ],
+   [
+    "c_tx[7:0]",
+    "in",
+    "port card k's E_C_TX (edge a5, J4 pin 9); ignored where PORT_FITTED[k] = 0"
+   ],
+   [
+    "a_tx[7:0]",
+    "in",
+    "port card k's E_A_TX (a6, J4 pin 11)"
+   ],
+   [
+    "ans_n[7:0]",
+    "in",
+    "port card k's E_ANS_N (a13, J4 pin 25)"
+   ],
+   [
+    "word_n[7:0]",
+    "in",
+    "port card k's E_WORD (a12, J4 pin 23)"
+   ],
+   [
+    "c_rx[7:0]",
+    "out",
+    "port card k's E_C_RX (a9, J4 pin 17, after RN1); 0 where PORT_FITTED[k] = 0"
+   ],
+   [
+    "a_rx[7:0]",
+    "out",
+    "port card k's E_A_RX (a10, J4 pin 19, after RN1); 0 where PORT_FITTED[k] = 0"
+   ],
+   [
+    "mute_blk",
+    "in",
+    "A_MUTE_BLK (adapter J6 pin 7)"
+   ],
+   [
+    "sdata",
+    "in",
+    "B_SDATA (bus 21)"
+   ],
+   [
+    "sclk",
+    "in",
+    "B_SCLK (bus 17)"
+   ],
+   [
+    "wr",
+    "in",
+    "B_WR (bus 19)"
+   ],
+   [
+    "ws_n",
+    "in",
+    "B_WS_N (bus 47)"
+   ],
+   [
+    "hw_pd",
+    "out",
+    "HW_PD: the gate of Q3"
+   ],
+   [
+    "port_busy[7:0]",
+    "out",
+    "!BUSY_N of port card k (its J5 pin 2); 0 where PORT_FITTED[k] = 0"
+   ]
+  ],
+  "hclk_shim": "reg [1:0] n; always @(posedge clk or negedge rst_n) n <= !rst_n ? 0 : cap_stb ? 3 : (n != 0 ? n - 1 : 0); B_HCLK = !(cap_stb || n != 0)  -- low for ticks 4-7 exactly as clock_card.v:72",
+  "sim_only": [
+   "clk",
+   "cap_stb -> B_HCLK shim",
+   "tick_1k",
+   "rc_det: D1/R6/R7/C1/U7.1 and D2/R8/R9/C2/U7.2 become a counter on tick_1k with T_ARM/T_REL (port.v:175-188); outputs FM_N / FE_N",
+   "cr_rel: C3/R10/D3/U7.4 and C4/R11/D4/U7.5 become REL_*_N low for one clk, one clk after the detector falls (port.v:166, :180, :186)",
+   "R11/C1 (/RESET RC) is a wire",
+   "SCAN delayed ~50 ns against SLOT2 in the harness (the '4040 ripple RX_OCT relies on)",
+   "model delays are procedural (<= #d), never 'assign #d' (pcb/out/synth_dly)"
+  ],
+  "compare": [
+   "hc_out at ticks 5-7 of every cell, where JUMPERED",
+   "ha_pd, hb_pd, hw_pd and port_busy at CELL_A (exch.vh:315)",
+   "c_rx, a_rx at frame_stb",
+   "masked: the first pass after reset plus T_ARM; the frame after a write to that port (the '273 clocks at /WR's edge, one clk before port.v's wr_edge; and a slot select moved onto a low strobe gives one extra W edge)",
+   "each card's a1-a4, a7, a8 against a reference frame_decode (the benches never read them)"
+  ],
+  "strap_rules": [
+   "every fitted card: POS == JP2 column == JP3 column == JP4 column",
+   "no two cards on one lane",
+   "blkhdr_bus_RevA: JP1 column == NUMBER h, when FIT is fitted",
+   "blkhdr_bus_RevA: JP3 (RBT SOURCE) open in simulation: the bench drives rbt, as block.v's input"
+  ],
+  "mutations": [
+   "two lane shunts of one card in different columns",
+   "two cards on one lane",
+   "RN1 removed",
+   "U18 select pins swapped",
+   "JP1 in a column other than h",
+   "FIT open (the block must go silent and still listen)",
+   "Q1 drain on HB_L_N"
+  ]
+ },
+ "local_nets": {
+  "blkhdr_bus_RevA": [
+   "A_FILL_S",
+   "A_HCLK_S",
+   "A_TX_CLK_S",
+   "A_TX_OCT_S",
+   "COMM",
+   "HCLK_R",
+   "HC_OUT_S",
+   "LOOP_HB_S",
+   "RESET_RC",
+   "RST",
+   "SCLK_R",
+   "SDATA_R",
+   "SLOT0_R",
+   "SLOT1_R",
+   "SLOT2_R",
+   "SLOTQ0_R",
+   "SLOTQ1_R",
+   "SLOTQ2_R",
+   "STB0_S",
+   "STB1_S",
+   "STB2_S",
+   "STB3_S",
+   "STB4_S",
+   "STB5_S",
+   "STB6_S",
+   "STB7_S",
+   "TX_CLK_S",
+   "WR_R",
+   "WS",
+   "WS_C_N"
+  ],
+  "blkhdr_logic_RevA": [
+   "DST0",
+   "DST1",
+   "DST2",
+   "DST3",
+   "DST4",
+   "DST5",
+   "G",
+   "LAMP_B0_A",
+   "LAMP_B1_A",
+   "LAMP_B2_A",
+   "LAMP_B3_A",
+   "LAMP_B4_A",
+   "LAMP_B5_A",
+   "LAMP_B6_A",
+   "LAMP_B7_A",
+   "LAMP_M0_A",
+   "LAMP_M1_A",
+   "LAMP_M2_A",
+   "LAMP_M3_A",
+   "LAMP_M4_A",
+   "LAMP_M5_A",
+   "LAMP_M6_A",
+   "LAMP_M7_A",
+   "OCT_MID",
+   "SCLK_R",
+   "SDATA_R",
+   "SEL0",
+   "SEL1",
+   "SEL2",
+   "SELM",
+   "SELM_N",
+   "SELV_N",
+   "STAT_D17_A",
+   "STAT_D18_A",
+   "STAT_D19_A",
+   "WORD_Y",
+   "WR0_S",
+   "WR1_S",
+   "WR2_S",
+   "WR3_S",
+   "WR4_S",
+   "WR5_S",
+   "WR6_S",
+   "WR7_S",
+   "WR_R",
+   "WSCLK",
+   "WS_C_N"
+  ],
+  "portcard": [
+   "ADDR0",
+   "ADDR1",
+   "ADDR2",
+   "ADDR3",
+   "ADDR4",
+   "ADDR5",
+   "A_RX",
+   "BSYQ",
+   "CLMQ",
+   "CLR_N",
+   "CR_E",
+   "CR_M",
+   "C_RX",
+   "C_SEL",
+   "DET_E",
+   "DET_M",
+   "E",
+   "EQ_OWN_N",
+   "EQ_SRC_N",
+   "E_A_RX_S",
+   "E_C_RX_S",
+   "E_FILL_S",
+   "E_LOOP_HB_S",
+   "E_RX_CLK_S",
+   "E_RX_OCT_S",
+   "E_TX_CLK_S",
+   "E_TX_OCT_S",
+   "FE",
+   "FE_N",
+   "FMNM",
+   "FM_N",
+   "HA_G",
+   "HB_G",
+   "M_N",
+   "N1",
+   "N2",
+   "ON",
+   "RB",
+   "RCX",
+   "RC_E",
+   "RC_M",
+   "REL_E_N",
+   "REL_M_N",
+   "WA",
+   "WC",
+   "WRCLK"
+  ]
+ }
+}

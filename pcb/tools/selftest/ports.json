@@ -1,0 +1,122 @@
+{
+ "_doc": "Selftest port map: schematic net -> module port.  index makes a vector; dir probe exports an on-card net.",
+ "/D0": {
+  "port": "d",
+  "index": 0
+ },
+ "/D1": {
+  "port": "d",
+  "index": 1
+ },
+ "/D2": {
+  "port": "d",
+  "index": 2
+ },
+ "/D3": {
+  "port": "d",
+  "index": 3
+ },
+ "/D4": {
+  "port": "d",
+  "index": 4
+ },
+ "/D5": {
+  "port": "d",
+  "index": 5
+ },
+ "/D6": {
+  "port": "d",
+  "index": 6
+ },
+ "/D7": {
+  "port": "d",
+  "index": 7
+ },
+ "/S0": {
+  "port": "s",
+  "index": 0
+ },
+ "/S1": {
+  "port": "s",
+  "index": 1
+ },
+ "/S2": {
+  "port": "s",
+  "index": 2
+ },
+ "/E_N": {
+  "port": "e_n",
+  "dir": "in"
+ },
+ "/OE_N": {
+  "port": "oe_n",
+  "dir": "in"
+ },
+ "/OE2_N": {
+  "port": "oe2_n",
+  "dir": "in"
+ },
+ "/FILL": {
+  "port": "fill",
+  "dir": "in"
+ },
+ "/HOOK": {
+  "port": "hook",
+  "dir": "in"
+ },
+ "/FM": {
+  "port": "fm",
+  "dir": "out"
+ },
+ "/BUSY": {
+  "port": "busy",
+  "dir": "out"
+ },
+ "/OWN_N": {
+  "port": "own_n",
+  "dir": "out"
+ },
+ "/YB": {
+  "port": "yb",
+  "dir": "out"
+ },
+ "/HA_L": {
+  "port": "ha_l"
+ },
+ "/LANE0": {
+  "port": "lane",
+  "index": 0
+ },
+ "/LANE1": {
+  "port": "lane",
+  "index": 1
+ },
+ "/LANE2": {
+  "port": "lane",
+  "index": 2
+ },
+ "/LANE3": {
+  "port": "lane",
+  "index": 3
+ },
+ "/LANE4": {
+  "port": "lane",
+  "index": 4
+ },
+ "/LANE5": {
+  "port": "lane",
+  "index": 5
+ },
+ "/LANE6": {
+  "port": "lane",
+  "index": 6
+ },
+ "/LANE7": {
+  "port": "lane",
+  "index": 7
+ },
+ "/BUSY_N": {
+  "port": "busy_n_tp",
+  "dir": "probe"
+ }
+}

@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "blkhdr_bus_RevA.kicad_pro",
+    "version": 3
+  },
+  "sheets": [
+    [
+      "65b7e6bb-2896-5d00-8ddc-9c88eac2595f",
+      "Root"
+    ],
+    [
+      "c3ce9bf5-6932-5842-abc1-caf13c1a2b40",
+      "RSTF"
+    ]
+  ],
+  "text_variables": {},
+  "erc": {
+    "rule_severities": {
+      "isolated_pin_label": "ignore"
+    }
+  }
+}

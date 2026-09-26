@@ -1,0 +1,6 @@
+#!/bin/sh
+# capped -- run a command in its own cgroup with a memory ceiling, so a
+# runaway simulation is killed alone instead of taking the desktop and every
+# other session with it (2026-09-25: a generated netlist on tb_fabric reached
+# 18 GB of a 23 GB machine, three times).  CAP_MEM overrides the ceiling.
+exec systemd-run --user --scope -q -p MemoryMax="${CAP_MEM:-3G}" -p MemorySwapMax=0 "$@"
