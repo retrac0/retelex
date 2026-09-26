@@ -13,8 +13,8 @@ Everything else follows from that.
 > is block-steered any more, and `/BLK` survives only to gate a block's
 > writes.
 
-> **Status: measured in simulation — 15 benches, 394 checks under Verilator,
-> and 33 faults, each shown to turn its bench red but the two held twice by
+> **Status: measured in simulation — 17 benches, 482 checks under Verilator,
+> and 34 faults, each shown to turn its bench red but the two held twice by
 > design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
@@ -321,10 +321,12 @@ function changed.
 | `tie` | two exchanges on two crystals and a baseband tie trunk, patched by hand: each end reads its own card's word; 32 bits cross each way in order; the hook crosses as M; `/ANS` is low; a cut cable drops both link detectors, reads NONE at both ends and drops A |
 | `ltu` | two exchanges on two crystals and a local eight-channel trunk, patched by hand: all sixteen channels read their unit's word; **a cut with no call busies all sixteen ports through `MUTE_BLK`**, reads NONE and sends `FILL`; eight hotlines carry eight patterns each way, in order, **no channel ever carrying another's**; A crosses channel by channel end to end, and a 40 ms make keeps its length to 0.05 ms; a cut in a call drops every A; and **1000 ppm apart every channel slips and still carries only its own bits**; beside them a bare pair of units, their headers driven with a random bit a frame on C and on A: **A slips in all sixteen directions, each slip one bit doubled or dropped, A and C together, and no A bit on another channel** |
 | `lnet` | two exchanges whose only link is a local eight-channel trunk, **calls dialled across it**, B's crystal 100 ppm fast: the key seizes the lowest channel, B claims, B21 rings, voice both ways; **two calls on two channels at once**, the busy channel passed by; from B the glare end **hunts from the top**, B17, and the call lands on A17; the cable pulled busies all sixteen channels and a key finds no trunk |
+| `lfull` | the same two exchanges with the local trunk **filled**: five local calls at A touch no channel; **eight calls across at once**, each key taking the lowest free channel and each channel carrying only its own pair; a ninth call from either end finds none, cannot-complete and `EV_NOTRUNK`; one channel freed, and B's key, hunting from the top, passes seven busy ones to take it; and **glare on the last free channel** — each origin counts it and takes the other's M as its claim, `EV_GLARE` names the channel on both cables B, neither end also takes its own seized channel as an incoming call, and the two callers are joined to each other with nobody rung |
 | `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; and no clash on either cable B, ever |
 | `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
+| `lchain` | `chain`'s three exchanges with every link a local trunk, B 100 ppm fast and C 100 ppm slow: A to C **through B, across both of B's units**, B's monitor letting go at `b` and its resolver at the claim; **two transits through B at once**, each on its own channels; three local calls at B beside them, the transits untouched; C to A from the glare end, B forwarding from the top of its own glare group; and a call from the middle, flooded both ways, the west channel let go at the claim |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 33 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 34 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
 the bench meant to catch each: the unit released on `gone` alone, a sweep on an
 even stride, the 5 s rule gone, the claim wait from the last digit, the second
@@ -334,7 +336,8 @@ old serialiser rate, `CLM` tied off, no unhold, the origin reading the shared
 sweep, no per-port memory, a second key allowed, a one-key number waiting for
 four, `/HW` steered by `DST` again, every block answering a select, a reader
 selecting inside another read's eight frames, the sweep taking a trunk that was
-busy at its select, and more. **Every one turns its bench red** on the final
+busy at its select, the classifier holding a channel its own origin had just
+seized, and more. **Every one turns its bench red** on the final
 tree — except two whose rule is held twice, which stay green by design and each
 have a second fault removing both holds, which is red: the refusal landing
 after `CLAIM` (the unit's handshake, and its rank on cable B), and a trunk's M
@@ -347,7 +350,12 @@ settled — the origin reading a sweep result a forward had just cleared; two
 waiting lines starving the sweep; a hold on a seizure that died before the port
 armed, left BUSY for good; a phantom flood when the called party hung up first;
 and a second key after the call's own code. Each is fixed, each has its
-scenario, and each has its fault in `faults.py`.
+scenario, and each has its fault in `faults.py`. `lfull`'s glare scenario
+found a sixth: a far seizure reaching a channel in the pass or two before this
+end's own seizure showed BUSY was held by the classifier as an incoming call,
+over the origin's write, so one caller heard the other and the other heard
+cannot-complete. The classifier now leaves alone every port the unit has
+seized for itself (F35).
 
 **What these do not cover**, so the count is not read as more than it is:
 
@@ -367,15 +375,17 @@ scenario, and each has its fault in `faults.py`.
   cable timing and do not scale, so the guard covers less than one hop there:
   its mechanism is tested, not its reach. No relayed pulse is measured at real
   speed.
-- **No glare** is provoked, so `EV_GLARE` and the glare count are unexercised.
+- **Glare** is provoked only on the local trunk's last free channel
+  (`lfull` 5): not on a baseband tie, not at a transit, and never with more
+  than one channel free, which the word's `g` bit is there to prevent.
   No hub (a fan-out of two or more legs), no ring and its jumper, no two
   floods at once on one exchange (`net` 16 has two calls up at once, but its
   second flood starts after the first is connected), and no MF8.
 - The network benches' phones are the socket's pins driven by hand, as
   `mini`'s are, not `cvsd_line_card`.
-- The local trunk: `ltu` patches by hand and `lnet` dials, but **no transit
-  crosses one**, no call uses all eight channels, glare is not provoked on it,
-  and neither sees the 512 kbps eye on a real cable.
+- The local trunk: `ltu` patches by hand, `lnet` and `lfull` dial across it
+  and `lchain` transits two, but nothing sees the 512 kbps eye on a real
+  cable, and no cut falls during a dialled call.
 
 ---
 

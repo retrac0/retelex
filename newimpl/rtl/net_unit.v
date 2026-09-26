@@ -277,9 +277,11 @@ module net_unit #(
     reg [63:0]     st;
 
     // M and BUSY clear: an incoming seizure or a caller, and only the card
-    // knows which.  Port 00 is never fitted.
+    // knows which.  Port 00 is never fitted.  A port this card has seized for
+    // its own call is neither, whatever its BUSY says yet (`mine`, below).
+    reg  mine;
     wire cls_seen  = (cst == C_IDLE) && sp_fresh && sp_m && !sp_busy &&
-                     (sp_port != P00) && !st[sp_port];
+                     !mine && (sp_port != P00) && !st[sp_port];
 
     // THE CLASSIFIER'S BEFORE THE SWEEP'S.  A sweep keeps the reader busy from
     // one select to the next, a select every nine frames, so a seizure seen
@@ -409,6 +411,31 @@ module net_unit #(
     wire       guarding = !f2 && (tmr < t_guard);
     wire       o_net   = (nst == N_NET) || (nst == N_WAITCL);
     wire       o_gone  = r_gone || r_nodig || !r_busy;
+
+    // MINE: the port on the probe is one this card has seized -- an origin
+    // trunk or a forward's leg, from the sweep's answer until it is let go.
+    // Its own seizure makes the port BUSY only once the word is out and the
+    // port's turn comes round, a pass or two, and a far end seizing the same
+    // channel inside that window shows M with BUSY clear.  That is glare: the
+    // far M is the origin's claim, or the resolver's (network.md 1, "residual
+    // glare joins two callers"), and the classifier must not ALSO hold the
+    // port as an incoming seizure -- listening to 00 over this card's own
+    // write -- and give it a monitor.  The origin and the resolvers already
+    // compare the probe's port with every trunk and leg they hold (the claim
+    // watches below); this ORs them, with the sweep's answer until it is
+    // written.  tb_lfull 5 found it: one caller heard the other, and the
+    // other heard cannot-complete.
+    integer mn, mr;
+    always @* begin
+        mine = 1'b0;
+        for (mn = 0; mn < 4; mn = mn + 1) begin
+            if ((nst == N_SEIZE) && o_ok[mn] && (sp_port == o_cand[mn*`PW +: `PW])) mine = 1'b1;
+            if (d_held[mn] && (sp_port == d_trunk[mn*`PW +: `PW]))                  mine = 1'b1;
+            if ((fst == F_WRITE) && f_ok[mn] && (sp_port == f_cand[mn*`PW +: `PW])) mine = 1'b1;
+            for (mr = 0; mr < NRES; mr = mr + 1)
+                if (rs_held[mr*4 + mn] && (sp_port == rs_leg[(mr*4 + mn)*`PW +: `PW])) mine = 1'b1;
+        end
+    end
 
     // ======================================================================
     // THE SWEEP

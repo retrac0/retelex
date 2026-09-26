@@ -21,8 +21,11 @@ payload seats where fused MF8 gives six.
 > seizes the lowest channel and B claims; two calls ride two channels at once;
 > from the glare end the key hunts from the top, so the two ends start at
 > opposite channels; a pulled cable busies the group and a key finds no trunk.
-> Not measured: a transit through it, all eight channels busy, glare provoked,
-> the eye on a real cable.
+> `tb_lfull.v` fills all eight channels, refuses a ninth call from either end,
+> and provokes glare on the last free one: both origins count it and the two
+> callers are joined, as `network.md` §1 has it. `tb_lchain.v` transits a
+> middle exchange across two groups, two calls at once.
+> Not measured: the eye on a real cable, a cut during a dialled call.
 > Package counts are a sketch.
 
 ---

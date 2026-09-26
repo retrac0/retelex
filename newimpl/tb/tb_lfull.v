@@ -28,15 +28,16 @@
 //                Neither end may also take the channel it seized as an
 //                incoming call.
 //
-// RED AT WRITING (2026-09-25), ON PURPOSE.  Scenario 5 found a defect in
-// net_unit.v: when the far end's M reaches a channel before this end's own
-// seizure write has made it BUSY, the classifier (cls_seen, which does not
-// know the origin has just taken that port) holds it as an incoming seizure,
-// writes it listening to 00 over the origin's latch, and attaches a monitor.
-// The monitor counts the far caller's digits; here they are B's own code, so
-// it claims, the busy register is refused, and the channel is written to
-// cannot-complete.  B21 hears A31; A31 hears cannot-complete.  Two checks go
-// red on it: "neither end also took..." and "A31 hears B21".
+// Scenario 5 was red when it was written (2026-09-25): it found a defect in
+// net_unit.v.  When the far end's M reached a channel before this end's own
+// seizure write had made it BUSY, the classifier -- which did not know the
+// origin had just taken that port -- held it as an incoming seizure, wrote it
+// listening to 00 over the origin's latch, and attached a monitor.  The
+// monitor counted the far caller's digits, B's own code, and claimed, and the
+// busy register was refused: B21 heard A31, and A31 heard cannot-complete.
+// The classifier now leaves alone any port the unit has seized itself (`mine`
+// in net_unit.v).  faults.py F35 puts the old rule back, and "neither end also
+// took..." and "A31 hears B21" go red.
 //
 // Timers scaled by 8 through the straps, as tb_net's.  Does not cover: a
 // transit (tb_lchain), a cut during a call, or glare on a group with more
