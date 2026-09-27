@@ -1,0 +1,30 @@
+====================================================================================================
+run_c3_r1.log  seizures 101  lifts 11
+  rise->hold all n= 101  p50    1.7  p90    1.7  p99   15.6  max   19.3  >19ms    1  >40ms    0  >100ms    0
+  rise->hold W   n=  44  p50    1.4  p90    4.3  p99   19.3  max   19.3  >19ms    1  >40ms    0  >100ms    0
+  rise->hold E   n=  57  p50    1.7  p90    1.7  p99    8.7  max   15.6  >19ms    0  >40ms    0  >100ms    0
+  never held 0 (of which dialled: 0)
+  held after the first break: 0   cells armed after the first break: 0
+  re-held (nhold>1): 0   unholds of live seizures: 0   claims 5   WRONG 0
+  3 2 callers t1    0-100   n=  1  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  100-150   n=  7  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  150-200   n=  6  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  200-300   n=  4  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  300-500   n= 18  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  500-10000 n= 19  held-late  0  emin<3  0  wrong  0
+  backlog at rise -> mean hold delay: 0:2.1(n100)  1:19.3(n1)
+  by port mean hold delay: 10.0:15.3  11.0:1.3  12.0:5.8  13.0:5.3  14.0:1.3  15.0:1.7  16.0:1.4  17.0:1.4  40.0:3.6  41.0:1.7  42.0:1.7  43.0:2.7  44.0:1.7  45.0:1.7  46.0:1.7  47.0:1.7
+  dial tone n=11  p50 3.0  p90 1390.0  p99 1834.0  max 1834.0  none 0
+  |    5631.415  MARKER TAKES TRUNK 12 AS A CALLER
+  |   10545.403  MARKER TAKES TRUNK 46 AS A CALLER
+  |   15320.658  MARKER TAKES TRUNK 16 AS A CALLER
+  | SUMMARY floods=101 blocked=37 wrong_claims=0 ok_claims=5 late_cells=0 hold_after_first_break=0 unhold_live=0 reclass=0 trunk_as_caller=3 refusals=2 origin_claims=0 resolver_leg_claims=0 seizures_without_cell=0 n_nofwd=13
+  | SUMMARY cls_busy=1929/38466 ms backlog_mean=0.007 backlog_max=2 mk_reads trunk=42 line=14
+  | SUMMARY sweeps=101 mean=10.45 max=10.74 ms; marker read req->select n=56 mean=1.15 max=8.99 ms; cls read req->select n=111 mean=0.99 max=0.99 ms
+  | SUMMARY lifts=11 nodt=0
+  | HIST rise->hold  <2 <5 <20 <40 <60 <100 <150 <250 <500 more: all 94 1 6 0 0 0 0 0 0 0
+  | HIST rise->hold W(low ports)  39 1 4 0 0 0 0 0 0 0
+  | HIST rise->hold E(high ports) 55 0 2 0 0 0 0 0 0 0
+  | HIST dialtone <5 <10 <20 <50 <100 <250 <500 <1000 <3000 none: 7 1 0 0 1 0 0 0 2 0
+  |     FAIL  10: no wrong claim, no trunk taken as a caller, no stranger as an origin's claim
+  |   4 checks, 1 errors.  FAIL

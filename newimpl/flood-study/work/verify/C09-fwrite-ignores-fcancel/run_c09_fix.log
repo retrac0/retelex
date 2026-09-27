@@ -1,0 +1,63 @@
+
+  tb_c09 -- A20 hangs up in B's CONFIRM, real timers, k 4
+    ok    links up
+    [519 ms] A20 dials 1
+    [720 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [722 ms] B HOLD pushed for 77
+    [722 ms] B cableB UNIT   G1 dst 77 src 00 bsy 1 clm 0
+    [732 ms] B's forward in CONFIRM; B77 fM 0
+    [732 ms] A20 hangs up (B scan 4)
+    [732 ms] B77's M -> 0 at B scan 18 (hst 2 fst 2)
+    [733 ms] B sweep done (h_done), owner 1 h_ok 0100, last CONFIRM visit 77, fst 2
+    [733 ms] B UNHOLD pushed for 77; fst 2 f_in 77
+    [733 ms] B cableB UNIT   G1 dst 77 src 00 bsy 0 clm 0
+    [751 ms] B77 addr 00 bsy 0 fM 0; B13 addr 00 bsy 0; res_b 00 mon_b 01
+    [3751 ms] 3 s on: B77 addr 00 bsy 0 BUSY 0; B13 addr 00 bsy 0 BUSY 0; res_b 00 mon_b 00; A busy 0000000000000000
+    ok    1: B77, whose seizure died, is not BUSY 3 s on
+    ok    1: B13, the leg forwarded from it, is not BUSY
+    ok    1: no resolver held at B
+    [3751 ms] A20 calls B21: 1 2 3 2 1
+    [4252 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [4254 ms] B HOLD pushed for 77
+    [4254 ms] B cableB UNIT   G1 dst 77 src 00 bsy 1 clm 0
+    [4265 ms] B sweep done (h_done), owner 1 h_ok 0100, last CONFIRM visit 77, fst 2
+    [4265 ms] B FORWARD pushed: f_in 77 f_ok 0100 f_cancel 0
+    [4265 ms] B cableB UNIT   G1 dst 13 src 77 bsy 1 clm 0
+    [4265 ms] B cableB UNIT   G1 dst 77 src 13 bsy 1 clm 0
+    [4871 ms] after key 1: A dirs 0100, B77 BUSY 1, B mon 01 res 01
+    [4872 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [4932 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [4972 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [5032 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [5792 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [5852 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [5892 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [5952 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [5992 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [6052 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [6182 ms] B cableB UNIT   G1 dst 77 src 00 bsy 1 clm 1
+    [6182 ms] B cableB UNIT   G1 dst 13 src 00 bsy 0 clm 0
+    [7011 ms] after b: A claimed 1, B reg 1, B mon 00
+    ok    2: B claimed A20's call to it
+    [7012 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [7072 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [7112 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [7172 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [7302 ms] B cableB MARKER G1 dst 77 src 00 bsy 1 clm 1
+    [7932 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [7992 ms] B77's M -> 1 at B scan 18 (hst 0 fst 0)
+    [8123 ms] B cableB MARKER G1 dst 77 src 21 bsy 1 clm 1
+    [8123 ms] B cableB MARKER G1 dst 21 src 77 bsy 1 clm 0
+    [9251 ms] after h s: A claimed 1, B reg 0, A reg 0
+    [9252 ms] B77's M -> 0 at B scan 18 (hst 0 fst 0)
+    [10751 ms] 1.5 s after A20 hangs up: B77 addr 00 bsy 0; B13 addr 00 bsy 0; res_b 00; busy_a 0000000000000000 busy_b 0000000000000000
+    ok    3: A and B idle after the second call
+    ok    no clash, no overflow
+
+  7 checks, 0 errors.  PASS
+
+- work/verify/C09-fwrite-ignores-fcancel/tb_c09.v:197: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 11s; walltime 411.718 s; speed 26.066 ms/s
+- Verilator: cpu 280.724 s on 1 threads; allocated 8 MB
+rc=0

@@ -1,0 +1,50 @@
+--- ../../../rtl/mini_marker.v	2026-09-26 00:42:05.693071020 -0400
++++ rtl_fix/mini_marker.v	2026-09-26 22:15:31.563341281 -0400
+@@ -264,6 +264,13 @@
+     reg           y_nogo;        // the unit's nogo, kept until there is room to act on it
+     reg           rd_caller;     // the word being read is a caller candidate's
+     reg [1:0]     hold;          // ticks for the unit's restart to land
++    // C16 FIX: a bit a port -- ITS WORD SAID TRUNK, AND M HAS STOOD SINCE.  Set
++    // by a caller-candidate read that finds a flood trunk, cleared by any
++    // sample of the port with M down.  A port with its bit set is not read
++    // again as a caller: an unheld trunk (the called party hung up first,
++    // or a classifier backlog) is read once, not every other pass.  On the
++    // board a 64-stage delay line like the unit's st.
++    reg [63:0]    tk;
+ 
+     assign caller_o = caller;
+     assign called_o = called;
+@@ -286,7 +293,7 @@
+             state <= S_IDLE; called <= {`PW{1'b0}}; caller <= {`PW{1'b0}};
+             hwy <= 3'd0; have_h <= 1'b0; ctx_clm <= 1'b0; rd_caller <= 1'b0;
+             keyed <= 1'b0; y_nogo <= 1'b0;
+-            hold <= 2'd0;
++            hold <= 2'd0; tk <= 64'd0;
+             r_attach <= 1'b0; r_release <= 1'b0; r_restart <= 1'b0;
+             r_port <= {`PW{1'b0}};
+             push_v <= 2'd0; push_d <= 30'd0;
+@@ -301,6 +308,7 @@
+             rd_req    <= 1'b0;
+             flood_go  <= 1'b0;
+             att_ack   <= 1'b0;
++            if (p_fresh && !p_m) tk[p_port] <= 1'b0;     // C16 FIX
+ 
+             if (att_take) begin
+                 // ---- NETWORK: a claimed trunk is given the register ----------
+@@ -334,7 +342,7 @@
+                 y_nogo  <= 1'b0;
+                 // A call request is M and not BUSY.  That is the whole rule --
+                 // on an exchange with no unit.
+-                if (p_fresh && p_m && !p_busy && !r_busy && bus_idle) begin
++                if (p_fresh && p_m && !p_busy && !r_busy && bus_idle && !tk[p_port]) begin
+                     if (net) begin
+                         // NETWORK: ask the card first.  A flood trunk's M is
+                         // the unit's, never a caller's.
+@@ -363,6 +371,7 @@
+                     // is all ones.  Anything else is taken if it is still
+                     // asking when it comes round.
+                     state <= (rd_trunk || (rd_word == 8'd0)) ? S_IDLE : S_TAKE;
++                    if (rd_trunk) tk[called] <= 1'b1;         // C16 FIX
+                 end else if (rd_trunk) begin
+                     // a trunk is never dialled: marker.md 2
+                     if (room >= 5'd1) begin

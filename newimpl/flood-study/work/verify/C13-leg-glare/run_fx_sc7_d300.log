@@ -1,0 +1,78 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=7 var=0 dly=300 load=0
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc7: glare on a forward's leg, the far M 300 us after B's leg write
+     31.514 ms  fst 0 -> 1
+     31.514 ms  mon_held 00 -> 01
+     31.514 ms  fst 1 -> 2
+     31.514 ms  hst 0 -> 1 (owner 1)
+     31.798 ms  port 30 BUSY -> 1
+     31.798 ms  port 30 latch -> src 00 bsy 1 clm 0
+     41.014 ms  hst 1 -> 2 (owner 1)
+     42.005 ms  hst 2 -> 0 (owner 1)
+     42.005 ms  fst 2 -> 3
+     42.006 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     42.006 ms  fst 3 -> 0
+     42.290 ms  port 74 BUSY -> 1
+     42.290 ms  port 74 latch -> src 30 bsy 1 clm 0
+     42.389 ms  port 74 a_out (far M) -> 1
+     42.424 ms  port 40 BUSY -> 1
+     42.424 ms  port 40 latch -> src 30 bsy 1 clm 0
+     42.521 ms  VERIFY: B's probe sees S40 BUSY 1, M 0 -- an arming sample
+     42.557 ms  port 10 BUSY -> 1
+     42.557 ms  port 10 latch -> src 30 bsy 1 clm 0
+     42.723 ms  the S neighbour's M reaches S40 (0.300 ms after S40 went BUSY)
+     43.389 ms  port 40 a_out (far M) -> 1
+     43.411 ms  far LTU ch 0: M seen by W neighbour -> 1
+     43.521 ms  VERIFY: B's probe first sees M 1 on S40 (BUSY 1); armed before it: 1
+     43.521 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     43.805 ms  port 74 BUSY -> 0
+     43.805 ms  port 74 latch -> src 00 bsy 0 clm 0
+     43.939 ms  port 10 BUSY -> 0
+     43.939 ms  port 10 latch -> src 00 bsy 0 clm 0
+     44.014 ms  port 74 a_out (far M) -> 0
+     44.036 ms  far LTU ch 0: M seen by W neighbour -> 0
+     44.073 ms  port 30 latch -> src 40 bsy 1 clm 0
+     44.514 ms  port 30 a_out (far M) -> 1
+     72.004 ms  latch 30: src 40 bsy 1 clm 0   BUSY 1  a_out 1
+     72.004 ms  latch 40: src 30 bsy 1 clm 0   BUSY 1  a_out 1
+     72.004 ms  latch 10: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+     72.004 ms  latch 74: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    FAIL  the E flood's incoming is not re-pointed at S40
+    FAIL  the glare is counted (n_glare or EV_GLARE)
+  n_glare 0 -> 0, EV_GLARE 0 -> 0, armed-before-M 1
+     72.389 ms  port 40 a_out (far M) -> 0
+     72.514 ms  port 30 a_out (far M) -> 0
+    328.004 ms  port 30 BUSY -> 0
+    328.004 ms  port 30 latch -> src 00 bsy 0 clm 0
+    328.004 ms  port 40 BUSY -> 0
+    328.004 ms  port 40 latch -> src 00 bsy 0 clm 0
+    329.004 ms  mon_held 01 -> 00
+    ok    sc7: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  6 checks, 2 errors.  FAIL
+
+- work/verify/C13-leg-glare/tb_fx.v:552: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 972ms; walltime 29.275 s; speed 33.202 ms/s
+- Verilator: cpu 28.117 s on 1 threads; allocated 8 MB
+rc=0 secs=29

@@ -1,0 +1,71 @@
+LOG work/load/timing/run_cv8.log
+KNOBS idg_ms=300 idg_jit_ms=0 idg0_ms=255 idg0_jit_ms=50 dest_mode=4 pairs=A20Z21,B20Z21 burst_ms=5000 pair_gap_ms=0 bad_e=4 bad_b=3 pnet=500 idle_ms=300000 dur_ms=30000 seed=1 scale=1
+sim end t=8285.9 ms
+CALLS 4 {'SILENT': 4}
+  by kind {('BAD', 'SILENT'): 4}
+  why {'-': 4}
+COUNTS {'floods': 4, 'cell digits': 28}
+OTHER {}
+MARGIN arm->first brk at port (all)          n=28   mean= 108.57 p50= 107.01 p90= 155.00 p99= 160.01 max= 160.01 min=  41.00
+MARGIN arm->first brk at port, hop 1         n=6    mean= 149.17 p50= 155.01 p90= 160.01 p99= 160.01 max= 160.01 min= 126.99
+MARGIN arm->first brk at port, hop 2         n=4    mean= 128.50 p50= 130.50 p90= 145.49 p99= 146.84 max= 146.99 min= 106.01
+MARGIN arm->first brk at port, hop 3         n=4    mean= 115.50 p50= 117.50 p90= 132.51 p99= 133.86 max= 134.01 min=  92.99
+MARGIN arm->first brk at port, hop 4         n=4    mean= 102.50 p50= 104.50 p90= 119.49 p99= 120.84 max= 120.99 min=  80.01
+MARGIN arm->first brk at port, hop 5         n=4    mean=  89.50 p50=  91.50 p90= 106.51 p99= 107.86 max= 108.01 min=  66.99
+MARGIN arm->first brk at port, hop 6         n=4    mean=  76.50 p50=  78.50 p90=  93.49 p99=  94.84 max=  94.99 min=  54.01
+MARGIN arm->first brk at port, hop 7         n=2    mean=  47.50 p50=  47.50 p90=  52.69 p99=  53.86 max=  53.99 min=  41.00
+MARGIN hold->first brk at port (all)         n=28   mean= 109.45 p50= 107.89 p90= 155.89 p99= 160.89 max= 160.90 min=  41.88
+MARGIN hold->first brk at port, hop 1        n=6    mean= 150.05 p50= 155.89 p90= 160.89 p99= 160.90 max= 160.90 min= 127.87
+MARGIN hold->first brk at port, hop 2        n=4    mean= 129.38 p50= 131.38 p90= 146.37 p99= 147.72 max= 147.87 min= 106.89
+MARGIN hold->first brk at port, hop 3        n=4    mean= 116.38 p50= 118.38 p90= 133.39 p99= 134.74 max= 134.89 min=  93.87
+MARGIN hold->first brk at port, hop 4        n=4    mean= 103.38 p50= 105.38 p90= 120.37 p99= 121.72 max= 121.87 min=  80.89
+MARGIN hold->first brk at port, hop 5        n=4    mean=  90.38 p50=  92.38 p90= 107.39 p99= 108.74 max= 108.89 min=  67.88
+MARGIN hold->first brk at port, hop 6        n=4    mean=  77.38 p50=  79.38 p90=  94.37 p99=  95.72 max=  95.87 min=  54.89
+MARGIN hold->first brk at port, hop 7        n=2    mean=  48.38 p50=  48.38 p90=  53.58 p99=  54.75 max=  54.88 min=  41.88
+age at arrival, hop 1                        n=6    mean=   1.87 p50=   1.94 p90=   2.22 p99=   2.22 max=   2.22 min=   1.29
+age at arrival, hop 2                        n=4    mean=  15.54 p50=  15.67 p90=  16.14 p99=  16.14 max=  16.14 min=  14.69
+age at arrival, hop 3                        n=4    mean=  32.54 p50=  32.17 p90=  36.17 p99=  36.57 max=  36.62 min=  29.21
+age at arrival, hop 4                        n=4    mean=  46.04 p50=  45.67 p90=  49.25 p99=  49.65 max=  49.69 min=  43.13
+age at arrival, hop 5                        n=4    mean=  59.54 p50=  59.17 p90=  63.16 p99=  63.57 max=  63.62 min=  56.21
+age at arrival, hop 6                        n=4    mean=  73.04 p50=  72.67 p90=  76.25 p99=  76.65 max=  76.70 min=  70.13
+age at arrival, hop 7                        n=2    mean=  89.86 p50=  89.86 p90=  90.46 p99=  90.60 max=  90.61 min=  89.11
+arrival->first brk at port, hop 1            n=6    mean= 151.17 p50= 157.01 p90= 162.01 p99= 162.02 max= 162.02 min= 128.99
+arrival->first brk at port, hop 2            n=4    mean= 134.00 p50= 135.50 p90= 147.49 p99= 148.84 max= 148.99 min= 116.01
+arrival->first brk at port, hop 3            n=4    mean= 117.50 p50= 119.50 p90= 134.51 p99= 135.86 max= 136.01 min=  94.99
+arrival->first brk at port, hop 4            n=4    mean= 104.50 p50= 106.50 p90= 121.49 p99= 122.84 max= 122.99 min=  82.01
+arrival->first brk at port, hop 5            n=4    mean=  91.50 p50=  93.50 p90= 108.51 p99= 109.86 max= 110.01 min=  68.99
+arrival->first brk at port, hop 6            n=4    mean=  78.50 p50=  80.50 p90=  95.49 p99=  96.84 max=  96.99 min=  56.01
+arrival->first brk at port, hop 7            n=2    mean=  49.50 p50=  49.50 p90=  54.70 p99=  55.87 max=  56.00 min=  43.00
+hold->fsweep                                 n=28   mean=   0.00 p50=   0.00 p90=   0.00 p99=   0.00 max=   0.00 min=   0.00
+hop 1->2 (rise to rise)                      n=4    mean=  13.51 p50=  13.51 p90=  13.93 p99=  13.93 max=  13.93 min=  13.08
+hop 2->3 (rise to rise)                      n=4    mean=  17.00 p50=  16.50 p90=  21.32 p99=  21.87 max=  21.93 min=  13.07
+hop 3->4 (rise to rise)                      n=4    mean=  13.50 p50=  13.50 p90=  13.92 p99=  13.93 max=  13.93 min=  13.08
+hop 4->5 (rise to rise)                      n=4    mean=  13.50 p50=  13.50 p90=  13.92 p99=  13.92 max=  13.92 min=  13.08
+hop 5->6 (rise to rise)                      n=4    mean=  13.50 p50=  13.50 p90=  13.92 p99=  13.92 max=  13.92 min=  13.08
+hop 6->7 (rise to rise)                      n=2    mean=  13.91 p50=  13.91 p90=  13.92 p99=  13.92 max=  13.92 min=  13.90
+key->osweep                                  n=4    mean=   0.00 p50=   0.00 p90=   0.00 p99=   0.00 max=   0.00 min=   0.00
+key->seize                                   n=4    mean=  10.00 p50=  10.00 p90=  10.00 p99=  10.00 max=  10.00 min=  10.00
+origin seize->hop1 rise                      n=6    mean=   1.87 p50=   1.94 p90=   2.22 p99=   2.22 max=   2.22 min=   1.29
+relayed break - origin break, hop 1          n=60   mean=  -0.03 p50=   0.01 p90=   0.01 p99=   0.01 max=   0.01 min=  -0.99
+relayed break - origin break, hop 2          n=40   mean=  -0.05 p50=   0.00 p90=   0.01 p99=   0.01 max=   0.01 min=  -1.00
+relayed break - origin break, hop 3          n=40   mean=  -0.05 p50=  -0.01 p90=   0.01 p99=   0.01 max=   0.01 min=  -0.99
+relayed break - origin break, hop 4          n=40   mean=  -0.05 p50=   0.00 p90=   0.01 p99=   0.01 max=   0.01 min=  -1.00
+relayed break - origin break, hop 5          n=40   mean=  -0.05 p50=  -0.01 p90=   0.01 p99=   0.01 max=   0.01 min=  -0.99
+relayed break - origin break, hop 6          n=40   mean=  -0.05 p50=   0.00 p90=   0.01 p99=   0.01 max=   0.01 min=  -1.00
+relayed break - origin break, hop 7          n=20   mean=  -0.01 p50=  -0.01 p90=  -0.01 p99=  -0.01 max=  -0.00 min=  -0.01
+relayed break length (all hops)              n=280  mean=  59.96 p50=  59.99 p90=  60.01 p99=  60.01 max=  60.01 min=  58.99
+rise->arm                                    n=28   mean=   2.50 p50=   2.00 p90=   2.00 p99=   9.46 max=  10.00 min=   2.00
+rise->cread                                  n=28   mean=   0.50 p50=   0.00 p90=   0.00 p99=   7.46 max=   8.00 min=   0.00
+rise->fwd legs written                       n=22   mean=  12.49 p50=  11.86 p90=  11.86 p99=  19.43 max=  19.85 min=  11.84
+rise->hold                                   n=28   mean=   1.62 p50=   1.12 p90=   1.12 p99=   8.58 max=   9.12 min=   1.12
+seize->arm, hop 1                            n=6    mean=   3.87 p50=   3.94 p90=   4.22 p99=   4.22 max=   4.22 min=   3.29
+seize->arm, hop 2                            n=4    mean=  21.04 p50=  20.67 p90=  24.24 p99=  24.65 max=  24.69 min=  18.14
+seize->arm, hop 3                            n=4    mean=  34.54 p50=  34.17 p90=  38.17 p99=  38.57 max=  38.62 min=  31.21
+seize->arm, hop 4                            n=4    mean=  48.04 p50=  47.67 p90=  51.25 p99=  51.65 max=  51.69 min=  45.14
+seize->arm, hop 5                            n=4    mean=  61.54 p50=  61.17 p90=  65.16 p99=  65.57 max=  65.62 min=  58.21
+seize->arm, hop 6                            n=4    mean=  75.04 p50=  74.67 p90=  78.25 p99=  78.65 max=  78.70 min=  72.13
+seize->arm, hop 7                            n=2    mean=  91.86 p50=  91.86 p90=  92.46 p99=  92.60 max=  92.61 min=  91.11
+seize->caller e brk (origin probe)           n=4    mean= 148.26 p50= 149.76 p90= 161.75 p99= 163.10 max= 163.25 min= 130.26
+transit hop (rise to next rise), all         n=22   mean=  14.17 p50=  13.90 p90=  13.93 p99=  21.50 max=  21.93 min=  13.07
+ANOM (0, first 30)
+ONELINE run_cv8.log | sim_end=8286ms calls=4 {'SILENT': 4} | floods=4 guard_ab=0 no_seize=0 | miscount=0/28 falseclaim=0 regmis=0 latearm=0 reseize=0 C06=0 unwatched=0 nofwd=0 inwatch=0 | seize->arm h1:3.9/4.2/4.2(n6) h2:21.0/24.6/24.7(n4) h3:34.5/38.6/38.6(n4) h4:48.0/51.6/51.7(n4) h5:61.5/65.6/65.6(n4) h6:75.0/78.7/78.7(n4) h7:91.9/92.6/92.6(n2) | margin(all) 108.6/160.0/160.0(n28) | WRONG=0

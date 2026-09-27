@@ -1,0 +1,40 @@
+
+  tb_c07 -- a link outage is a dial pulse.  sc=16 pause=680, real timers
+    ok    the links are up
+  --- sc4: A20 dials 1 4 3 2 1; cable out from the key's pause to mid-e
+  TR 501.2 ms  B cst 0 -> 1
+  TR 502.3 ms  B cst 1 -> 2
+  TR 502.3 ms  B cst 2 -> 3
+  TR 502.3 ms  B mon held 01 armed 00 st 0001
+  TR 502.6 ms  B11 BUSY 1
+  TR 503.2 ms  B mon held 01 armed 01 st 0001
+  TR 520.0 ms  B cst 3 -> 0
+  OBS 700.0 ms  cable cut
+  TR 956.0 ms  B11 BUSY 0
+  TR 957.0 ms  B mon d_clr 01
+  TR 957.0 ms  B mon held 00 armed 00 st 0001
+  OBS 1285.0 ms  cable back (5 ms into e's 2nd make)
+  TR 1341.2 ms  B cst 0 -> 1
+  TR 1342.3 ms  B cst 1 -> 2
+  TR 1342.3 ms  B cst 2 -> 3
+  TR 1342.3 ms  B mon held 01 armed 00 st 0001
+  TR 1342.6 ms  B11 BUSY 1
+  TR 1343.2 ms  B mon held 01 armed 01 st 0001
+  TR 1360.0 ms  B cst 3 -> 0
+  TR 1570.0 ms  B mon d_stb 01 cnt 01 st 0001
+  TR 1570.0 ms  B mon held 00 armed 00 st 0001
+  TR 4805.1 ms  B11 BUSY 0
+  OBS B21 rang 0, B22 rang 0; A claimed 0
+    ok    link back mid-e: nobody claims a call dialled to exchange 43
+    ok    link back mid-e: B21 (23-21, never dialled) does not ring
+    ok    link back mid-e: both exchanges idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  6 checks, 0 errors.  PASS
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C07-link-outage-pulse/tb_c07.v:384: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 9s; walltime 148.017 s; speed 58.912 ms/s
+- Verilator: cpu 146.290 s on 1 threads; allocated 8 MB
+rc=0 secs=148

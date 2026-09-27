@@ -1,0 +1,13 @@
+build obj_r4both rc=0 wall_s=69
+run p1 (both b=3 0 0 0 0 0) rc=0 wall_s=54   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p2 (both b=3 500 130 870 310 250) rc=0 wall_s=59   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p3 (both b=3 910 450 60 720 640) rc=0 wall_s=61   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p4 (both b=3 230 780 390 950 90) rc=0 wall_s=67   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p5 (both b=3 670 20 540 180 830) rc=0 wall_s=70   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p6 (both b=3 120 610 290 460 370) rc=0 wall_s=77   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p7 (both b=3 840 330 710 50 560) rc=0 wall_s=84   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p8 (both b=3 360 900 150 620 10) rc=0 wall_s=85   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p9 (both b=3 50 470 980 270 710) rc=0 wall_s=78   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p10 (both b=3 760 240 430 810 480) rc=0 wall_s=67   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p11 (both b=3 290 560 20 390 940) rc=0 wall_s=65   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+run p12 (both b=3 980 80 650 530 200) rc=0 wall_s=72   OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=0/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1

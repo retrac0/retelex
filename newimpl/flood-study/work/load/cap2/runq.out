@@ -1,0 +1,49 @@
+12:35:05 START l2_p1000_i30k: work/load/obj_load2/tb_load2 +seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000
+12:35:07 START l2_p300_i30k: work/load/obj_load2/tb_load2 +seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=300
+12:51:05 DONE l2_p1000_i30k rc=0 wall_s=960
+12:51:05 START l2_p1000_i60k: work/load/obj_load2/tb_load2 +seed=11 +dur_ms=12000 +idle_ms=60000 +pnet=1000
+12:51:06 DONE l2_p300_i30k rc=0 wall_s=959
+12:51:06 START l2_p300_i60k: work/load/obj_load2/tb_load2 +seed=11 +dur_ms=12000 +idle_ms=60000 +pnet=300
+13:06:04 DONE l2_p1000_i60k rc=0 wall_s=899
+13:06:04 START build_c2_load2: verilator --binary --timing -j 2 -Irtl -Iwork/load/cap2 -Wno-fatal --top-module tb_load2 --Mdir work/load/cap2/obj_c2_load2 -o tb_load2 $(cat work/RTL.list) tb/site_net.v work/load/cap2/tb_load2.sv
+13:09:46 DONE build_c2_load2 rc=0 wall_s=222
+13:09:46 START l2_oneway_i30k: work/load/cap2/obj_c2_load2/tb_load2 +seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000 +dest_mode=1 +orig_x=1
+13:23:41 DONE l2_oneway_i30k rc=0 wall_s=835
+13:23:41 START build_c2_load2_cac: verilator --binary --timing -j 2 -Irtl -Iwork/load/cap2 -Wno-fatal --top-module tb_load2 --Mdir work/load/cap2/obj_c2_load2_cac -o tb_load2 $(cat work/load/cap2/fix_cac/RTL.list) tb/site_net.v work/load/cap2/tb_load2.sv
+13:50:27 switched to runqb.sh (batches) after 30+ min slot waits
+13:50:27 BATCH batch_1325560_1790445027.sh waiting for a slot: 3 jobs
+13:50:28 BATCH batch_1325592_1790445028.sh waiting for a slot: 2 jobs
+14:13:58 lane-2 batch rewritten: build_c2_load2_s1, s1_p1000_i190k, l2_p300_i60k
+14:45:24 batches extended: lane1 +l2_p1000_i15k +l2b_p1000_i60k; lane2 +l2_p300_i15k
+16:24:46 START build_c2_load2_s1
+16:26:10 DONE build_c2_load2_s1 rc=0 wall_s=84
+16:26:10 START s1_p1000_i190k
+17:05:56 DONE s1_p1000_i190k rc=0 wall_s=2386
+17:05:56 START l2_p300_i60k
+17:06:59 lane-1 runner killed; its 5 jobs (build_cac, cac_p1000_i30k, l2b_p1000_i30k, l2_p1000_i15k, l2b_p1000_i60k) appended to the RUNNING lane-2 batch
+17:07:10 appended l2_p1000_i60k_s12 to the running batch
+17:12:45 DONE l2_p300_i60k rc=0 wall_s=409
+17:12:45 START l2_p300_i15k
+17:21:27 DONE l2_p300_i15k rc=0 wall_s=522
+17:21:27 START build_c2_load2_cac
+17:22:50 DONE build_c2_load2_cac rc=0 wall_s=83
+17:22:50 START cac_p1000_i30k
+17:31:06 DONE cac_p1000_i30k rc=0 wall_s=496
+17:31:06 START l2b_p1000_i30k
+17:40:31 DONE l2b_p1000_i30k rc=0 wall_s=565
+17:40:31 START l2_p1000_i15k
+17:41:04 appended l2_p1000_i120k l2b_p300_i30k l2_p300_i120k l2b_p1000_i15k to the running batch
+17:51:28 DONE l2_p1000_i15k rc=0 wall_s=657
+17:51:28 START l2b_p1000_i60k
+18:01:44 DONE l2b_p1000_i60k rc=0 wall_s=616
+18:01:44 START l2_p1000_i60k_s12
+18:13:27 DONE l2_p1000_i60k_s12 rc=0 wall_s=703
+18:13:27 START l2_p1000_i120k
+18:29:03 DONE l2_p1000_i120k rc=0 wall_s=936
+18:29:03 START l2b_p300_i30k
+18:42:12 DONE l2b_p300_i30k rc=0 wall_s=789
+18:42:12 START l2_p300_i120k
+18:43:05 lane-2 runner (runqb.sh) stopped; the running batch continues (l2_p300_i120k, l2b_p1000_i15k left); no further batches will be queued
+19:07:18 DONE l2_p300_i120k rc=0 wall_s=1506
+19:07:18 START l2b_p1000_i15k
+19:25:55 DONE l2b_p1000_i15k rc=0 wall_s=1117

@@ -1,0 +1,35 @@
+
+  tb_attw -- a claim that waits out S_WATCH, scen 1          
+    ok    links up
+    [52 ms] B cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [108 ms] B cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [229 ms] B's marker in S_WATCH: B20 connected to B21; B20 chatters
+    [229 ms] B cableB MARKER G1 dst 20 src 21 bsy 1 clm 0
+    [229 ms] B cableB MARKER G1 dst 21 src 20 bsy 1 clm 0
+    [232 ms] A cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [268 ms] A cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [278 ms] A cableB UNIT   G1 dst 11 src 20 bsy 1 clm 0
+    [281 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 0
+    [569 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 1
+    ok    B's monitor claimed and B's unit raised att
+    ok    while B's marker is still in S_WATCH (the claim waits)
+    ok    (A's origin sees the claim once backward A arrives)
+    [569 ms] B's unit raises att for 11; B's marker is in state 7
+    [593 ms] B's marker REFUSED the claim on 11 (state was 0, r_busy 0)
+    [593 ms] B cableB MARKER G1 dst 11 src 03 bsy 1 clm 1
+    [610 ms] B11 latch: addr 03 bsy 1 clm 1; B reg busy 0 caller 20
+    FAIL  WATCH over, the register free: the claim that waited is TAKEN (design intent)
+    [880 ms] A cableB UNIT   G1 dst 20 src 11 bsy 1 clm 0
+    FAIL  B22 rings: A20's call completed through B
+    A20 hears 03 cannot-complete (steady 0)
+    ok    no clash on cable B
+    ok    no queue overflow
+    takes 0 refusals 1
+
+  8 checks, 2 errors.  FAIL
+
+- work/audit/cableb/tb_attw.v:277: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 62.221 s; speed 28.447 ms/s
+- Verilator: cpu 53.163 s on 1 threads; allocated 8 MB
+rc=0 secs=63

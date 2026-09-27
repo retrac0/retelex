@@ -1,0 +1,26 @@
+
+  tb_c20z -- a phone fitted at X00 and off-hook; A20 dials 1 3 4 2 1 (Y, west)
+    ok    the links are up
+    X21 (idle, on-hook, no call anywhere) marked being-rung in 50 of 50 ms
+    FAIL  OBSERVE: X21 is not rung with no call (expected to FAIL under the fault)
+    ok    A20 has A's register
+    A seized A11 (E, to X) at 590 ms
+    30 ms after the seizure: A claimed=0 trunk 00 glare#=0 dirs=0000
+    ok    OBSERVE: no claim before a digit is dialled (expected to FAIL under the fault)
+  [  720 ms] A origin state 0 -> 1 (claimed=0 trunk 00 dirs=0000 glare#=0)
+  [  720 ms] A origin state 1 -> 2 (claimed=0 trunk 00 dirs=0000 glare#=0)
+  [  730 ms] A origin state 2 -> 8 (claimed=0 trunk 00 dirs=0000 glare#=0)
+  [  730 ms] A origin state 8 -> 0 (claimed=0 trunk 00 dirs=0000 glare#=0)
+    after 1 3 4 2 1: A origin state 0, A20 listens to 03, A20 hears 0, X00 sends 1
+    ok    OBSERVE: A20 is not connected to the trunk to X (expected to FAIL)
+    X lines 20-27 busy=11111111; X unit register requests=0
+    ok    WRONG NUMBER?: X's unit never claims the call (e b = 3 4)
+    FAIL  WRONG NUMBER?: no X line 20-27 is seized by the call
+    ok    no bus clash, no queue refusal (last sample)
+
+  8 checks, 2 errors.  FAIL
+
+- work/verify/C20-misc/tb_c20z.v:163: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 126.696 s; speed 44.121 ms/s
+- Verilator: cpu 123.005 s on 1 threads; allocated 8 MB

@@ -1,0 +1,451 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 30
+    ok    links 11, 12 up; 13 cut
+
+  S2. A20 dials 1 3 2 2 1 while B20 dials 1 2 2 2 1
+  [   30.271] A mk  0 -> 4  reg_busy 0
+  [   30.271] A cls 0 -> 1 port 20
+  [   31.389] A mk  4 -> 5  reg_busy 0
+  [   31.389] A cls 1 -> 0 port 20
+  [   32.271] A mk  5 -> 1  reg_busy 0
+  [   32.271] B mk  0 -> 4  reg_busy 0
+  [   32.271] B cls 0 -> 1 port 20
+  [   32.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   33.389] B mk  4 -> 5  reg_busy 0
+  [   33.389] B cls 1 -> 0 port 20
+  [   34.271] B mk  5 -> 1  reg_busy 0
+  [   34.399] B wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   69.005] A mk  1 -> 6  reg_busy 1
+  [   69.006] A nst 0 -> 1  (ndig 0)
+  [   69.006] A nst 1 -> 2  (ndig 0)
+  [   69.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [   71.005] B mk  1 -> 6  reg_busy 1
+  [   71.006] B nst 0 -> 1  (ndig 0)
+  [   71.006] B nst 1 -> 2  (ndig 0)
+  [   71.133] B wr  g1 dst 20 src 00 bsy 1 clm 0
+  [   79.005] A nst 2 -> 3  (ndig 0)
+  [   79.006] A nst 3 -> 4  (ndig 0)
+  [   79.289] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [   81.005] B nst 2 -> 3  (ndig 0)
+  [   81.006] B nst 3 -> 4  (ndig 0)
+  [   81.161] B cls 0 -> 1 port 11
+  [   81.290] B wr  g1 dst 12 src 20 bsy 1 clm 0
+  [   82.279] B cls 1 -> 2 port 11
+  [   82.280] B mon_held 01
+  [   82.280] B cls 2 -> 3 port 11
+  [   82.564] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [   83.177] A cls 0 -> 1 port 12
+  [   84.295] A cls 1 -> 2 port 12
+  [   84.295] A mon_held 01
+  [   84.295] A cls 2 -> 3 port 12
+  [   84.579] A wr  g1 dst 12 src 00 bsy 1 clm 0
+  [   86.005] B cls 3 -> 0 port 11
+  [   88.005] A cls 3 -> 0 port 12
+  [  351.005] B nst 4 -> 5  (ndig 2)
+  [  352.005] A mon_held 00
+  [  352.289] A wr  g1 dst 12 src 00 bsy 1 clm 1
+  [  352.295] A att 1 port 12 (mk 6 reg_busy 1)
+  [  352.295] A att_ack: REFUSED  (mk 6 reg_busy 1)
+  [  352.295] A att 0 port 12 (mk 6 reg_busy 1)
+  [  352.423] A wr  g1 dst 12 src 03 bsy 1 clm 1
+  [  353.176] B CLAIMED on 12  (guarding 0, n_glare 0)
+  [  369.005] A nst 4 -> 5  (ndig 2)
+  [  370.005] B mon_held 00
+  [  370.289] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  370.295] B att 1 port 11 (mk 6 reg_busy 1)
+  [  370.295] B att_ack: REFUSED  (mk 6 reg_busy 1)
+  [  370.295] B att 0 port 11 (mk 6 reg_busy 1)
+  [  370.423] B wr  g1 dst 11 src 03 bsy 1 clm 1
+  [  371.161] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [  611.004] B nst 5 -> 6  (ndig 4)
+  [  611.004] B nst 6 -> 0  (ndig 4)
+  [  611.004] B mk  6 -> 3  reg_busy 1
+  [  611.005] B mk  3 -> 0  reg_busy 0
+  [  611.288] B wr  g1 dst 20 src 12 bsy 1 clm 0
+  [  629.004] A nst 5 -> 6  (ndig 4)
+  [  629.004] A nst 6 -> 0  (ndig 4)
+  [  629.004] A mk  6 -> 3  reg_busy 1
+  [  629.005] A mk  3 -> 0  reg_busy 0
+  [  629.288] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  OBS S2: A21 ring-hi 0, B21 ring-hi 0; refusals A 1 B 1; claimed A 1 B 1
+    FAIL  S2 intent: neither claim is refused (both called lines are free)
+    ok    S2: idle again
+
+  S3a. control: A20 dials 1 1 3 2 2 with 100 ms pauses (no exchange 13)
+  [ 1350.267] A mk  0 -> 4  reg_busy 0
+  [ 1350.267] A cls 0 -> 1 port 20
+  [ 1351.386] A mk  4 -> 5  reg_busy 0
+  [ 1351.386] A cls 1 -> 0 port 20
+  [ 1352.267] A mk  5 -> 1  reg_busy 0
+  [ 1352.395] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 1389.002] A mk  1 -> 6  reg_busy 1
+  [ 1389.002] A nst 0 -> 1  (ndig 0)
+  [ 1389.002] A nst 1 -> 2  (ndig 0)
+  [ 1389.130] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 1399.002] A nst 2 -> 3  (ndig 0)
+  [ 1399.002] A nst 3 -> 4  (ndig 0)
+  [ 1399.286] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 1401.158] B mk  0 -> 4  reg_busy 0
+  [ 1401.158] B cls 0 -> 1 port 11
+  [ 1402.276] B mk  4 -> 0  reg_busy 0
+  [ 1402.276] B cls 1 -> 2 port 11
+  [ 1402.276] B mon_held 01
+  [ 1402.276] B cls 2 -> 3 port 11
+  [ 1402.560] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 1406.002] B cls 3 -> 0 port 11
+  [ 1510.001] B mon_held 00
+  [ 1669.001] A nst 4 -> 5  (ndig 2)
+  [ 1919.000] A nst 5 -> 7  (ndig 3)
+  [ 1919.001] A nst 7 -> 8  (ndig 3)
+  [ 1919.001] A nst 8 -> 0  (ndig 3)
+  [ 1919.001] A mk  6 -> 3  reg_busy 1
+  [ 1919.285] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 1919.418] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 1919.425] A mk  3 -> 0  reg_busy 0
+  OBS S3a: B reg_busy 0, A claimed 0
+    ok    S3a: nobody claims a call to 13
+    ok    S3a: idle again
+
+  S3b. A20 keys 1 with a 20 ms make, so e's break begins before the seizure
+  [ 2640.264] A mk  0 -> 4  reg_busy 0
+  [ 2640.264] A cls 0 -> 1 port 20
+  [ 2641.382] A mk  4 -> 5  reg_busy 0
+  [ 2641.382] A cls 1 -> 0 port 20
+  [ 2642.264] A mk  5 -> 1  reg_busy 0
+  [ 2642.392] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 2678.999] A mk  1 -> 6  reg_busy 1
+  [ 2678.999] A nst 0 -> 1  (ndig 0)
+  [ 2678.999] A nst 1 -> 2  (ndig 0)
+  [ 2679.127] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 2688.999] A nst 2 -> 3  (ndig 0)
+  [ 2688.999] A nst 3 -> 4  (ndig 0)
+  [ 2689.283] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 2695.155] B mk  0 -> 4  reg_busy 0
+  [ 2695.155] B cls 0 -> 1 port 11
+  [ 2696.273] B mk  4 -> 0  reg_busy 0
+  [ 2696.273] B cls 1 -> 2 port 11
+  [ 2696.273] B mon_held 01
+  [ 2696.273] B cls 2 -> 3 port 11
+  [ 2696.557] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 2699.998] B cls 3 -> 0 port 11
+  [ 2870.998] A nst 4 -> 5  (ndig 2)
+  [ 3011.998] B mon_held 00
+  [ 3012.282] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 3012.288] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 3012.288] B mk  0 -> 1  reg_busy 0
+  [ 3012.288] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 3012.289] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 3013.154] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 3150.997] A nst 5 -> 6  (ndig 4)
+  [ 3150.998] A nst 6 -> 0  (ndig 4)
+  [ 3150.998] A mk  6 -> 3  reg_busy 1
+  [ 3150.998] A mk  3 -> 0  reg_busy 0
+  [ 3151.282] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 3152.125] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  OBS S3b: after 1 1 3 2 2: A claimed 1 on 11, B reg_busy 1, B caller 11
+    FAIL  S3b intent: a call dialled to 13 is never claimed by 32
+  [ 3271.997] B mk  1 -> 4  reg_busy 1
+  [ 3272.396] B mk  4 -> 2  reg_busy 1
+  [ 3273.278] B mk  2 -> 7  reg_busy 1
+  [ 3273.406] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 3273.540] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 3276.997] B mk  7 -> 0  reg_busy 1
+  OBS S3b: B21 ring hi 101 lo 199
+    FAIL  S3b intent: B21 (never dialled) does not ring
+  OBS S3b: A20 follows B21 4/4
+    ok    S3b: idle again
+
+  S4. A20 dials 1 3 2; link 11 cut 80 ms; A20 dials 2 1; then A22 calls B20 on A11
+  [ 4027.261] A mk  0 -> 4  reg_busy 0
+  [ 4027.261] A cls 0 -> 1 port 20
+  [ 4028.379] A mk  4 -> 5  reg_busy 0
+  [ 4028.379] A cls 1 -> 0 port 20
+  [ 4029.261] A mk  5 -> 1  reg_busy 0
+  [ 4029.388] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 4065.995] A mk  1 -> 6  reg_busy 1
+  [ 4065.995] A nst 0 -> 1  (ndig 0)
+  [ 4065.996] A nst 1 -> 2  (ndig 0)
+  [ 4066.123] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 4075.995] A nst 2 -> 3  (ndig 0)
+  [ 4075.995] A nst 3 -> 4  (ndig 0)
+  [ 4076.279] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 4078.151] B mk  0 -> 4  reg_busy 0
+  [ 4078.151] B cls 0 -> 1 port 11
+  [ 4079.269] B mk  4 -> 0  reg_busy 0
+  [ 4079.269] B cls 1 -> 2 port 11
+  [ 4079.270] B mon_held 01
+  [ 4079.270] B cls 2 -> 3 port 11
+  [ 4079.553] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 4082.995] B cls 3 -> 0 port 11
+  [ 4365.994] A nst 4 -> 5  (ndig 2)
+  [ 4366.994] B mon_held 00
+  [ 4367.278] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 4367.285] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 4367.285] B mk  0 -> 1  reg_busy 0
+  [ 4367.285] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 4367.285] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 4368.150] A CLAIMED on 11  (guarding 0, n_glare 0)
+  OBS S4: A claimed 1 on 11
+  [ 4489.994] B mk  1 -> 3  reg_busy 1
+  [ 4490.122] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 4490.128] B mk  3 -> 0  reg_busy 0
+  OBS S4: after cut: A11 busy 0, A nst 5, B reg_busy 0
+  [ 4785.993] A nst 5 -> 6  (ndig 4)
+  [ 4785.993] A nst 6 -> 0  (ndig 4)
+  [ 4785.994] A mk  6 -> 3  reg_busy 1
+  [ 4785.994] A mk  3 -> 0  reg_busy 0
+  [ 4786.277] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  OBS S4: A nst 0 reg_a 0  (A20 now latched to A11?)
+    ok    S4: A's origin finished
+  [ 4807.290] A mk  0 -> 4  reg_busy 0
+  [ 4807.290] A cls 0 -> 1 port 22
+  [ 4808.408] A mk  4 -> 5  reg_busy 0
+  [ 4808.408] A cls 1 -> 0 port 22
+  [ 4809.290] A mk  5 -> 1  reg_busy 0
+  [ 4809.418] A wr  g1 dst 22 src 01 bsy 1 clm 0
+  [ 4845.993] A mk  1 -> 6  reg_busy 1
+  [ 4845.993] A nst 0 -> 1  (ndig 0)
+  [ 4845.994] A nst 1 -> 2  (ndig 0)
+  [ 4846.121] A wr  g1 dst 22 src 00 bsy 1 clm 0
+  [ 4855.993] A nst 2 -> 3  (ndig 0)
+  [ 4855.993] A nst 3 -> 4  (ndig 0)
+  [ 4856.277] A wr  g1 dst 11 src 22 bsy 1 clm 0
+  [ 4857.149] B mk  0 -> 4  reg_busy 0
+  [ 4857.149] B cls 0 -> 1 port 11
+  [ 4858.267] B mk  4 -> 0  reg_busy 0
+  [ 4858.267] B cls 1 -> 2 port 11
+  [ 4858.268] B mon_held 01
+  [ 4858.268] B cls 2 -> 3 port 11
+  [ 4858.551] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 4861.993] B cls 3 -> 0 port 11
+  [ 5145.992] A nst 4 -> 5  (ndig 2)
+  [ 5146.992] B mon_held 00
+  [ 5147.276] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 5147.283] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 5147.283] B mk  0 -> 1  reg_busy 0
+  [ 5147.283] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 5147.283] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 5148.148] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 5287.120] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 5585.991] A nst 5 -> 6  (ndig 4)
+  [ 5585.991] A nst 6 -> 0  (ndig 4)
+  [ 5585.992] A mk  6 -> 3  reg_busy 1
+  [ 5585.992] A mk  3 -> 0  reg_busy 0
+  [ 5586.275] A wr  g1 dst 22 src 11 bsy 1 clm 0
+  [ 5586.991] B mk  1 -> 4  reg_busy 1
+  [ 5587.375] B mk  4 -> 2  reg_busy 1
+  [ 5588.257] B mk  2 -> 7  reg_busy 1
+  [ 5588.385] B wr  g1 dst 11 src 20 bsy 1 clm 1
+  [ 5588.518] B wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 5591.991] B mk  7 -> 0  reg_busy 1
+  OBS S4: B20 ring hi 90 lo 210; A22's trunk 11
+  OBS S4: A22 follows B20 4/4
+  OBS S4: A20 (who dialled B21, whose call died) follows B20 4/4
+    ok    S4: A22's call to B20 is up
+    FAIL  S4 intent: A20 does NOT hear A22's call (no listen-in)
+    ok    S4: idle again
+    ok    S5: the N/S link is up
+
+  S5.0 A20 dials 1 3 2 2 1 with the N/S link up (phase +0 us)
+  [ 6398.254] A mk  0 -> 4  reg_busy 0
+  [ 6398.254] A cls 0 -> 1 port 20
+  [ 6399.373] A mk  4 -> 5  reg_busy 0
+  [ 6399.373] A cls 1 -> 0 port 20
+  [ 6400.254] A mk  5 -> 1  reg_busy 0
+  [ 6400.382] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 6436.989] A mk  1 -> 6  reg_busy 1
+  [ 6436.989] A nst 0 -> 1  (ndig 0)
+  [ 6436.990] A nst 1 -> 2  (ndig 0)
+  [ 6437.117] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 6446.989] A nst 2 -> 3  (ndig 0)
+  [ 6446.989] A nst 3 -> 4  (ndig 0)
+  [ 6447.273] A wr  g1 dst 13 src 20 bsy 1 clm 0
+  [ 6447.407] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 6449.145] B mk  0 -> 4  reg_busy 0
+  [ 6449.145] B cls 0 -> 1 port 11
+  [ 6450.263] B mk  4 -> 0  reg_busy 0
+  [ 6450.263] B cls 1 -> 2 port 11
+  [ 6450.263] B mon_held 01
+  [ 6450.263] B cls 2 -> 3 port 11
+  [ 6450.547] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 6451.176] B mk  0 -> 4  reg_busy 0
+  [ 6453.989] B cls 3 -> 0 port 11
+  [ 6454.176] B cls 0 -> 5 port 13
+  [ 6454.232] B cls 5 -> 1 port 13
+  [ 6455.294] B mk  4 -> 0  reg_busy 0
+  [ 6455.294] B cls 1 -> 2 port 13
+  [ 6455.295] B mon_held 11
+  [ 6455.295] B cls 2 -> 3 port 13
+  [ 6455.579] B wr  g1 dst 13 src 00 bsy 1 clm 0
+  [ 6458.989] B cls 3 -> 0 port 13
+    ok    S5: the key seized one trunk E and one N
+  [ 6736.988] A nst 4 -> 5  (ndig 2)
+  [ 6737.988] B mon_held 10
+  [ 6738.272] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 6738.279] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 6738.279] B mk  0 -> 1  reg_busy 0
+  [ 6738.279] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 6738.279] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 6738.279] B mon_held 00
+  [ 6738.563] B wr  g1 dst 13 src 00 bsy 1 clm 1
+  [ 6738.570] B att 1 port 13 (mk 1 reg_busy 1)
+  [ 6738.570] B att_ack: REFUSED  (mk 1 reg_busy 1)
+  [ 6738.570] B att 0 port 13 (mk 1 reg_busy 1)
+  [ 6738.698] B wr  g1 dst 13 src 03 bsy 1 clm 1
+  [ 6739.144] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 6739.428] A wr  g1 dst 13 src 00 bsy 0 clm 0
+  [ 6878.116] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 6996.988] A nst 5 -> 6  (ndig 4)
+  [ 6996.988] A nst 6 -> 0  (ndig 4)
+  [ 6996.988] A mk  6 -> 3  reg_busy 1
+  [ 6996.988] A mk  3 -> 0  reg_busy 0
+  [ 6997.272] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 6997.988] B mk  1 -> 4  reg_busy 1
+  [ 6998.387] B mk  4 -> 2  reg_busy 1
+  [ 6999.269] B mk  2 -> 7  reg_busy 1
+  [ 6999.397] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 6999.530] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 7002.987] B mk  7 -> 0  reg_busy 1
+  OBS S5.0: B21 ring hi 125; B refusals 1; A monitor attached after the claim 0; A nofwd 1
+    ok    S5: B21 rings
+    ok    S5 intent: the dropped copy's late claim is not taken at A as a new seizure
+    ok    S5: idle again
+
+  S5.1 A20 dials 1 3 2 2 1 with the N/S link up (phase +330 us)
+  [ 7757.251] A mk  0 -> 4  reg_busy 0
+  [ 7757.251] A cls 0 -> 1 port 20
+  [ 7758.369] A mk  4 -> 5  reg_busy 0
+  [ 7758.369] A cls 1 -> 0 port 20
+  [ 7759.251] A mk  5 -> 1  reg_busy 0
+  [ 7759.379] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 7795.986] A mk  1 -> 6  reg_busy 1
+  [ 7795.986] A nst 0 -> 1  (ndig 0)
+  [ 7795.986] A nst 1 -> 2  (ndig 0)
+  [ 7796.113] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 7805.986] A nst 2 -> 3  (ndig 0)
+  [ 7805.986] A nst 3 -> 4  (ndig 0)
+  [ 7806.270] A wr  g1 dst 13 src 20 bsy 1 clm 0
+  [ 7806.403] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 7808.142] B mk  0 -> 4  reg_busy 0
+  [ 7808.142] B cls 0 -> 1 port 11
+  [ 7809.260] B mk  4 -> 0  reg_busy 0
+  [ 7809.260] B cls 1 -> 2 port 11
+  [ 7809.260] B mon_held 01
+  [ 7809.260] B cls 2 -> 3 port 11
+  [ 7809.544] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 7810.173] B mk  0 -> 4  reg_busy 0
+  [ 7812.985] B cls 3 -> 0 port 11
+  [ 7813.173] B cls 0 -> 5 port 13
+  [ 7813.228] B cls 5 -> 1 port 13
+  [ 7814.291] B mk  4 -> 0  reg_busy 0
+  [ 7814.291] B cls 1 -> 2 port 13
+  [ 7814.291] B mon_held 11
+  [ 7814.291] B cls 2 -> 3 port 13
+  [ 7814.575] B wr  g1 dst 13 src 00 bsy 1 clm 0
+  [ 7817.985] B cls 3 -> 0 port 13
+    ok    S5: the key seized one trunk E and one N
+  [ 8095.985] A nst 4 -> 5  (ndig 2)
+  [ 8096.985] B mon_held 10
+  [ 8097.269] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 8097.275] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 8097.275] B mk  0 -> 1  reg_busy 0
+  [ 8097.275] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 8097.276] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 8097.276] B mon_held 00
+  [ 8097.560] B wr  g1 dst 13 src 00 bsy 1 clm 1
+  [ 8097.566] B att 1 port 13 (mk 1 reg_busy 1)
+  [ 8097.566] B att_ack: REFUSED  (mk 1 reg_busy 1)
+  [ 8097.567] B att 0 port 13 (mk 1 reg_busy 1)
+  [ 8097.694] B wr  g1 dst 13 src 03 bsy 1 clm 1
+  [ 8098.141] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 8098.425] A wr  g1 dst 13 src 00 bsy 0 clm 0
+  [ 8237.112] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 8355.984] A nst 5 -> 6  (ndig 4)
+  [ 8355.984] A nst 6 -> 0  (ndig 4)
+  [ 8355.985] A mk  6 -> 3  reg_busy 1
+  [ 8355.985] A mk  3 -> 0  reg_busy 0
+  [ 8356.268] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 8356.984] B mk  1 -> 4  reg_busy 1
+  [ 8357.383] B mk  4 -> 2  reg_busy 1
+  [ 8358.265] B mk  2 -> 7  reg_busy 1
+  [ 8358.393] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 8358.527] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 8361.984] B mk  7 -> 0  reg_busy 1
+  OBS S5.1: B21 ring hi 128; B refusals 1; A monitor attached after the claim 0; A nofwd 1
+    ok    S5: B21 rings
+    ok    S5 intent: the dropped copy's late claim is not taken at A as a new seizure
+    ok    S5: idle again
+
+  S5.2 A20 dials 1 3 2 2 1 with the N/S link up (phase +660 us)
+  [ 9116.248] A mk  0 -> 4  reg_busy 0
+  [ 9116.248] A cls 0 -> 1 port 20
+  [ 9117.366] A mk  4 -> 5  reg_busy 0
+  [ 9117.366] A cls 1 -> 0 port 20
+  [ 9118.248] A mk  5 -> 1  reg_busy 0
+  [ 9118.375] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 9154.982] A mk  1 -> 6  reg_busy 1
+  [ 9154.982] A nst 0 -> 1  (ndig 0)
+  [ 9154.983] A nst 1 -> 2  (ndig 0)
+  [ 9155.110] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 9164.982] A nst 2 -> 3  (ndig 0)
+  [ 9164.982] A nst 3 -> 4  (ndig 0)
+  [ 9165.266] A wr  g1 dst 13 src 20 bsy 1 clm 0
+  [ 9165.400] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 9167.138] B mk  0 -> 4  reg_busy 0
+  [ 9167.138] B cls 0 -> 1 port 11
+  [ 9168.256] B mk  4 -> 0  reg_busy 0
+  [ 9168.256] B cls 1 -> 2 port 11
+  [ 9168.256] B mon_held 01
+  [ 9168.256] B cls 2 -> 3 port 11
+  [ 9168.540] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 9169.169] B mk  0 -> 4  reg_busy 0
+  [ 9171.982] B cls 3 -> 0 port 11
+  [ 9172.169] B cls 0 -> 5 port 13
+  [ 9172.225] B cls 5 -> 1 port 13
+  [ 9173.287] B mk  4 -> 0  reg_busy 0
+  [ 9173.287] B cls 1 -> 2 port 13
+  [ 9173.288] B mon_held 11
+  [ 9173.288] B cls 2 -> 3 port 13
+  [ 9173.572] B wr  g1 dst 13 src 00 bsy 1 clm 0
+  [ 9176.982] B cls 3 -> 0 port 13
+    ok    S5: the key seized one trunk E and one N
+  [ 9454.981] A nst 4 -> 5  (ndig 2)
+  [ 9455.981] B mon_held 10
+  [ 9456.265] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 9456.272] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 9456.272] B mk  0 -> 1  reg_busy 0
+  [ 9456.272] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 9456.272] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 9456.272] B mon_held 00
+  [ 9456.556] B wr  g1 dst 13 src 00 bsy 1 clm 1
+  [ 9456.563] B att 1 port 13 (mk 1 reg_busy 1)
+  [ 9456.563] B att_ack: REFUSED  (mk 1 reg_busy 1)
+  [ 9456.563] B att 0 port 13 (mk 1 reg_busy 1)
+  [ 9456.691] B wr  g1 dst 13 src 03 bsy 1 clm 1
+  [ 9457.137] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 9457.421] A wr  g1 dst 13 src 00 bsy 0 clm 0
+  [ 9596.109] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 9714.981] A nst 5 -> 6  (ndig 4)
+  [ 9714.981] A nst 6 -> 0  (ndig 4)
+  [ 9714.981] A mk  6 -> 3  reg_busy 1
+  [ 9714.981] A mk  3 -> 0  reg_busy 0
+  [ 9715.265] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 9715.981] B mk  1 -> 4  reg_busy 1
+  [ 9716.380] B mk  4 -> 2  reg_busy 1
+  [ 9717.262] B mk  2 -> 7  reg_busy 1
+  [ 9717.390] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 9717.523] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 9720.980] B mk  7 -> 0  reg_busy 1
+  OBS S5.2: B21 ring hi 128; B refusals 1; A monitor attached after the claim 0; A nofwd 1
+    ok    S5: B21 rings
+    ok    S5 intent: the dropped copy's late claim is not taken at A as a new seizure
+    ok    S5: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  27 checks, 4 errors, idle-bad 0.  FAIL
+
+- work/audit/origin/tb_orig.v:426: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 10s; walltime 484.630 s; speed 21.614 ms/s
+- Verilator: cpu 400.572 s on 1 threads; allocated 8 MB

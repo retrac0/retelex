@@ -1,0 +1,112 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:120:28: Operator MODDIV expects 32 bits on the LHS, but LHS's FUNCREF 'rnd' generates 31 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  120 |         uni = lo + (rnd(0) % (hi - lo + 1));
+      |                            ^
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:180:21: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  180 |                     if (verbose) $display("  %9.3f  RECLASS  %o (held %0d times already; far alive %0d)", now_ms(0), q6, n_hold[q6], alive[q6]);
+      |                     ^~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:196:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  196 |             if (verbose) $display("  %9.3f  HOLD      %o  dir %0d  mine %0d  nst %0d  word-dir", now_ms(0), q6, S.u_x.u_net.cls_dir, S.u_x.u_net.mine, S.u_x.u_net.nst);
+      |             ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:204:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  204 |             if (verbose) $display("  %9.3f  UNHOLD    %o  far alive %0d  nst %0d d_held %b", now_ms(0), q6, alive[q6], S.u_x.u_net.nst, S.u_x.u_net.d_held);
+      |             ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:206:85: Logical operator LOGAND expects 1 bit on the RHS, but RHS's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  206 |         if ((S.u_x.u_net.cst == 3'd1) && S.u_x.u_net.rd_done && !S.u_x.u_net.rd_own && verbose)
+      |                                                                                     ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:215:17: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  215 |                 if (verbose) $display("  %9.3f  mon%0d arm  %o%s", now_ms(0), gx, q6, (now_ms(0) > t_fb[q6]) ? "  AFTER THE FIRST BREAK" : "");
+      |                 ^~
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:218:50: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  218 |                 if (e_first[q6] < 0) e_first[q6] = S.u_x.u_net.d_cnt[gx*4 +: 4];
+      |                                                  ^
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:219:73: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  219 |                 if (S.u_x.u_net.d_cnt[gx*4 +: 4] < e_min[q6]) e_min[q6] = S.u_x.u_net.d_cnt[gx*4 +: 4];
+      |                                                                         ^
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:219:50: Operator LT expects 32 bits on the LHS, but LHS's SEL generates 4 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  219 |                 if (S.u_x.u_net.d_cnt[gx*4 +: 4] < e_min[q6]) e_min[q6] = S.u_x.u_net.d_cnt[gx*4 +: 4];
+      |                                                  ^
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:233:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  233 |             if (verbose) $display("  %9.3f  CLAIM     %o", now_ms(0), q6);
+      |             ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:235:31: Logical operator LOGAND expects 1 bit on the RHS, but RHS's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  235 |         if (S.u_x.u_net.w_fwd && verbose)
+      |                               ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:257:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  257 |             if (verbose) $display("  %9.3f  MK register -> %o%s", now_ms(0), S.u_x.u_mk.r_port, S.u_x.u_mk.att_ack ? " (claim)" : "");
+      |             ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:261:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'verbose' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  261 |             if (verbose) $display("  %9.3f  MK refuses the claim on %o", now_ms(0), S.u_x.u_mk.u_att_port);
+      |             ^~
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:339:24: Operator ADD expects 32 bits on the LHS, but LHS's VARREF 'P_T_REL' generates 9 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  339 |             ms(P_T_REL + 40);
+      |                        ^
+%Warning-WIDTHEXPAND: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:390:25: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's LTS generates 1 bits.
+                                                                                          : ... note: In instance 'tb_cls'
+  390 |                     net = (uni(0, 999) < pnet);
+      |                         ^
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:394:25: Logical operator IF expects 1 bit on the If, but If's VARREF 'net' generates 32 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  394 |                         if (net) begin dial(p, 1); dial(p, 5); dial(p, 5); dial(p, 2); dial(p, 1); ms(2500); end
+      |                         ^~
+%Warning-WIDTHTRUNC: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:553:13: Operator TASKREF 'ck' expects 640 bits on the Function Argument, but Function Argument's CONST '656'h736331303a206e6f2077726f6e6720636c61696d2c206e6f207472756e6b2074616b656e20617320612063616c6c65722c206e6f20737472616e67657220617320616e206f726967696e277320636c61696d' generates 656 bits.
+                                                                                         : ... note: In instance 'tb_cls'
+  553 |             ck(T_wrong == 0 && T_trunk_caller == 0 && T_origin_claim == 0, "sc10: no wrong claim, no trunk taken as a caller, no stranger as an origin's claim");
+      |             ^~
+%Warning-ZERODLY: /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:594:9: Value of # delay control statically unknown. Assuming it can be #0.
+                                                                                     : ... If all # delays are non-zero at runtime,
+                                                                                     : ... use '--no-sched-zero-delay' for improved performance.
+                                                                                     : ... If a real #0 is expected at runtime,
+                                                                                     : ... use '--sched-zero-delay' to suppress this warning.
+  594 |         #(maxms * 1.0e6); $display("  WATCHDOG at %0d ms", maxms); $finish;
+      |         ^
+                  ... For warning description see https://verilator.org/warn/ZERODLY?v=5.050
+                  ... Use "/* verilator lint_off ZERODLY */" and lint_on around source to disable this message.
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/audit/cls/obj_f4b'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_cls__pch.h -o Vtb_cls__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_cls__pch.h -o Vtb_cls__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls___024root__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls___024root__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls___024root__2.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls___024root__3.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls___024root__4.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.fast -c Vtb_cls__main.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.slow -c Vtb_cls__ConstPool__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.slow -c Vtb_cls___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.slow -c Vtb_cls___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_cls__pch.h.slow -c Vtb_cls__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_cls__ALL.a    -pthread -lpthread -latomic   -o tb_cls
+rm Vtb_cls__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/audit/cls/obj_f4b'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.254 MB sources in 27 modules, into 3.540 MB in 11 C++ files needing 0.010 MB
+- Verilator: Walltime 119.099 s (elab=0.424, cvt=2.517, bld=115.578); cpu 2.741 s on 2 threads; allocated 255.637 MB

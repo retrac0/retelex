@@ -1,0 +1,21 @@
+[sim.sh] slot 2: /home/joel/telco/newimpl/build/flood/work/verify/C18-late-claims/job_fix.sh
+[fix] build start 23:50:47
+[fix] build done 23:52:12
+[fix] DLY 31000 rc=0 23:53:33 0 FAIL
+[fix] DLY 32000 rc=0 23:54:55 0 FAIL
+[fix] DLY 32500 rc=0 23:56:25 0 FAIL
+[fix] DLY 33000 rc=0 23:57:57 0 FAIL
+[fix] DLY 33500 rc=0 23:59:20 0 FAIL
+[fix] DLY 34000 rc=0 00:00:38 0 FAIL
+[fix] DLY 35000 rc=0 00:02:00 0 FAIL
+[mc] build start 00:02:00
+[mc] build done 00:03:07
+[mc] DLY 31000 rc=0 00:04:27 0 FAIL
+[mc] DLY 32000 rc=0 00:05:47 0 FAIL
+[mc] DLY 32500 rc=0 00:07:06 0 FAIL
+[mc] DLY 33000 rc=0 00:08:26 0 FAIL
+[mc] DLY 33500 rc=0 00:09:44 0 FAIL
+[mc] DLY 34000 rc=0 00:11:05 0 FAIL
+[mc] DLY 35000 rc=0 00:12:24 0 FAIL
+[pchain] done 00:16:48 - Verilator: cpu 205.793 s on 1 threads; allocated 8 MB
+[net] done 00:30:19   88 checks, 0 errors.  PASS

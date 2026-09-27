@@ -1,0 +1,807 @@
+KNOB seed=28
+KNOB dur_ms=12000
+KNOB idle_ms=30000
+KNOB dt_ms=3000
+KNOB pnet=1000
+KNOB dest_mode=0
+KNOB brk_ms=12
+KNOB mk_ms=8
+KNOB idg_ms=100
+KNOB idg_jit_ms=0
+KNOB pre_ms=60
+KNOB abandon=30
+KNOB pd_ms=1500
+KNOB ans_ms=300
+KNOB noans=0
+KNOB hold_ms=1500
+KNOB lag_ms=50
+KNOB rest_ms=120
+KNOB ringmax_ms=1500
+KNOB hup_ms=100
+KNOB grace_ms=0
+KNOB drain_ms=2500
+KNOB nlines=64
+KNOB orig_x=14
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=2
+KNOB bad_b=7
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=2000
+KNOB wd_port_ms=448
+KNOB wd_reg_ms=7500
+KNOB wd_org_ms=4625
+KNOB wd_mon_ms=1378
+KNOB wd_res_ms=1878
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=1350
+KNOB phantom_grace_ms=384
+KNOB max_ms=0
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=0
+KNOB hold_fixed=0
+KNOB switch_ms=0
+KNOB idle2_ms=60000
+KNOB net_to=14
+KNOB pairs=
+KNOB hot=-
+KNOB dbg_misdial=-
+KNOB dbg_sig=-:-
+KNOB scale=8 NX=4 NMON=2 NRES=2 T_ARM=2 T_REL=32 RING=64/128 HIT=1 ID=16 CLR=32 NODIG=1250 T_GUARD0=16 T_KEY=625 T_CLAIM=250
+TOPO ex=A code=11 lines=16
+TOPO ex=B code=22 lines=40
+TOPO ex=C code=23 lines=40
+TOPO ex=D code=24 lines=48
+SELFTEST sig PASS  ok=436 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 12021
+HUB t=286.595 ex=B SEIZE port=B37 dir=E from=C37[src=C24 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=287.623 ex=A SEIZE port=A37 dir=E from=C17[src=C24 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=296.976 ex=B FWD in=B37 legs=1 S:B17 res=0
+HUB t=298.005 ex=A FWD in=A37 legs=2 N:A10 S:A50 res=0
+HUB t=299.373 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=300.234 ex=B SEIZE port=B10 dir=S from=A10[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=300.249 ex=D SEIZE port=D10 dir=N from=A50[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=310.005 ex=A FWD in=A17 legs=2 S:A51 E:A30 res=1
+HUB t=310.974 ex=B FWD in=B10 legs=1 E:B30 res=1
+HUB t=313.264 ex=D SEIZE port=D11 dir=N from=A51[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=313.294 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=318.545 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=325.037 ex=C FWD in=C10 legs=1 N:C36 res=0
+HUB t=327.575 ex=B SEIZE port=B36 dir=E from=C36[src=C10 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=383.872 ex=A SEIZE port=A57 dir=S from=D17[src=D34 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=450.357 ex=A SEIZE port=A16 dir=N from=B16[src=B24 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=450.573 ex=C SEIZE port=C31 dir=N from=B31[src=B24 b=1 c=0 B=1] by=ORIG mon=0 fwd=        ok             
+HUB t=461.050 ex=C FWD in=C31 legs=1 W:C16 res=1
+HUB t=462.607 ex=A SEIZE port=A36 dir=E from=C16[src=C31 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=579.975 ex=D CLAIM port=D10 from=A50[src=A37 b=1 c=0 B=1]
+HUB t=580.644 ex=A RES r=0 LEG in=A37 leg=S:A50 two=1 held_ms=282.6 far=D10[src=D03 b=1 c=1 B=1] hops=1
+HUB t=580.975 ex=D CLAIM port=D11 from=A51[src=A17 b=1 c=0 B=1]
+HUB t=581.660 ex=A RES r=1 LEG in=A17 leg=S:A51 two=1 held_ms=271.7 far=D11[src=D03 b=1 c=1 B=1] hops=1
+HUB t=582.311 ex=C OCLAIM trunk=C17 far=A37[src=A50 b=1 c=0 B=1] hops=2
+HUB t=583.196 ex=B RES r=0 LEG in=B37 leg=S:B17 two=0 held_ms=286.2 far=A17[src=A51 b=1 c=0 B=1] hops=2
+HUB t=613.084 ex=B RES r=1 GONE in=B10 held_ms=302.1
+HUB t=613.205 ex=C RES r=0 GONE in=C10 held_ms=288.2
+HUB t=989.524 ex=B SEIZE port=B37 dir=E from=C37[src=C26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=989.590 ex=A SEIZE port=A35 dir=E from=C15[src=C26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=999.905 ex=B FWD in=B37 legs=1 S:B17 res=0
+HUB t=1000.003 ex=A FWD in=A35 legs=2 N:A10 S:A51 res=0
+HUB t=1002.163 ex=B SEIZE port=B10 dir=S from=A10[src=A35 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1002.228 ex=D SEIZE port=D11 dir=N from=A51[src=A35 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1002.371 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1004.508 ex=C RES r=1 GONE in=C31 held_ms=543.5
+HUB t=1012.903 ex=B FWD in=B10 legs=1 E:B30 res=1
+HUB t=1013.003 ex=A FWD in=A17 legs=2 S:A52 E:A30 res=1
+HUB t=1015.611 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1016.243 ex=D SEIZE port=D12 dir=N from=A52[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1020.362 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=1028.104 ex=C FWD in=C30 legs=1 W:C16 res=0
+HUB t=1030.605 ex=A SEIZE port=A36 dir=E from=C16[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=1 from=C24 to=D42 kind=N dial=12442 lift=182 dt=187 key=259 last=867 tone=887 alert=- bell=- ans=- end=987 rel=987 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=2 from=D34 to=B43 kind=N dial=12243 lift=279 dt=284 key=356 last=- tone=890 alert=- bell=- ans=- end=990 rel=990 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=1123.355 ex=A SEIZE port=A16 dir=N from=B16[src=B64 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=1123.637 ex=C SEIZE port=C31 dir=N from=B31[src=B64 b=1 c=0 B=1] by=ORIG mon=0 fwd=        ok             
+HUB t=1134.114 ex=C FWD in=C31 legs=1 W:C17 res=1
+HUB t=1136.621 ex=A SEIZE port=A37 dir=E from=C17[src=C31 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+CALL id=3 from=B24 to=C61 kind=N dial=12361 lift=345 dt=350 key=422 last=- tone=976 alert=- bell=- ans=- end=1076 rel=1076 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=1241.880 ex=B CLAIM port=B37 from=C37[src=C26 b=1 c=0 B=1] HERE r=0 held_ms=242.0
+HUB t=1242.624 ex=C OCLAIM trunk=C37 far=B37[src=B03 b=1 c=1 B=1] hops=1
+HUB t=1242.880 ex=B CLAIM port=B10 from=A10[src=A35 b=1 c=0 B=1] HERE r=1 held_ms=230.0
+HUB t=1244.143 ex=A RES r=0 LEG in=A35 leg=N:A10 two=1 held_ms=244.1 far=B10[src=B03 b=1 c=1 B=1] hops=1
+HUB t=1274.252 ex=A RES r=1 GONE in=A17 held_ms=261.2
+HUB t=1275.518 ex=C RES r=0 GONE in=C30 held_ms=247.4
+HUB t=1697.574 ex=C RES r=1 GONE in=C31 held_ms=563.5
+HUB t=1751.431 ex=B SEIZE port=B36 dir=E from=C36[src=C76 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=1751.619 ex=A SEIZE port=A37 dir=E from=C17[src=C76 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=1761.828 ex=B FWD in=B36 legs=1 S:B17 res=0
+HUB t=1762.001 ex=A FWD in=A37 legs=2 N:A10 S:A50 res=0
+HUB t=1764.086 ex=B SEIZE port=B10 dir=S from=A10[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1764.173 ex=D SEIZE port=D10 dir=N from=A50[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1764.369 ex=A SEIZE port=A17 dir=N from=B17[src=B36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1775.001 ex=A FWD in=A17 legs=2 S:A51 E:A30 res=1
+HUB t=1775.353 ex=A SEIZE port=A16 dir=N from=B16[src=B66 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=1775.684 ex=C SEIZE port=C30 dir=N from=B30[src=B66 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=1778.188 ex=D SEIZE port=D11 dir=N from=A51[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=1780.435 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=1782.826 ex=B FWD in=B10 legs=1 E:B31 res=1
+HUB t=1785.701 ex=C SEIZE port=C31 dir=N from=B31[src=B10 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=1790.177 ex=C FWD in=C30 legs=1 W:C16 res=0
+HUB t=1792.603 ex=A SEIZE port=A36 dir=E from=C16[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=1801.869 ex=A SEIZE port=A57 dir=S from=D17[src=D67 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=4 from=C26 to=B47 kind=N dial=12247 lift=548 dt=889 key=961 last=1629 tone=1649 alert=- bell=- ans=- end=1749 rel=1749 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=5 from=B64 to=D35 kind=N dial=12435 lift=1018 dt=1023 key=1095 last=- tone=1669 alert=- bell=- ans=- end=1769 rel=1769 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=2000 calls=10 ok=0 busy=0 nogo=5 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1979 started=10 ok=0 failed=5 reg_occ A=0.00 B=0.81 C=0.92 D=0.46
+HUB t=2044.900 ex=D CLAIM port=D10 from=A50[src=A37 b=1 c=0 B=1]
+HUB t=2045.641 ex=A RES r=0 LEG in=A37 leg=S:A50 two=1 held_ms=283.6 far=D10[src=D03 b=1 c=1 B=1] hops=1
+HUB t=2045.900 ex=D CLAIM port=D11 from=A51[src=A17 b=1 c=0 B=1]
+HUB t=2046.656 ex=A RES r=1 LEG in=A17 leg=S:A51 two=1 held_ms=271.7 far=D11[src=D03 b=1 c=1 B=1] hops=1
+HUB t=2047.451 ex=C OCLAIM trunk=C17 far=A37[src=A50 b=1 c=0 B=1] hops=2
+HUB t=2048.049 ex=B RES r=0 LEG in=B36 leg=S:B17 two=0 held_ms=286.2 far=A17[src=A51 b=1 c=0 B=1] hops=2
+HUB t=2077.936 ex=B RES r=1 GONE in=B10 held_ms=295.1
+HUB t=2345.621 ex=C RES r=0 GONE in=C30 held_ms=555.4
+HUB t=2408.867 ex=A SEIZE port=A57 dir=S from=D17[src=D72 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=2418.999 ex=A FWD in=A57 legs=2 N:A10 E:A30 res=0
+HUB t=2419.367 ex=A SEIZE port=A17 dir=N from=B17[src=B26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=2420.746 ex=C SEIZE port=C30 dir=N from=B30[src=B26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=2421.020 ex=B SEIZE port=B10 dir=S from=A10[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=2425.496 ex=C SEIZE port=C10 dir=W from=A30[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=2429.999 ex=A FWD in=A17 legs=2 S:A51 E:A31 res=1
+HUB t=2431.760 ex=B FWD in=B10 legs=1 E:B31 res=0
+HUB t=2432.513 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=2433.154 ex=D SEIZE port=D11 dir=N from=A51[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=2435.239 ex=C FWD in=C30 legs=1 W:C16 res=0
+HUB t=2437.602 ex=A SEIZE port=A36 dir=E from=C16[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=2437.763 ex=C SEIZE port=C31 dir=N from=B31[src=B10 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=2449.376 ex=B SEIZE port=B37 dir=E from=C37[src=C53 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=2449.586 ex=A SEIZE port=A35 dir=E from=C15[src=C53 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=2457.241 ex=C FWD in=C31 legs=1 W:C14 res=1
+HUB t=2459.570 ex=A SEIZE port=A34 dir=E from=C14[src=C31 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=2459.757 ex=B FWD in=B37 legs=1 S:B16 res=1
+HUB t=2464.351 ex=A SEIZE port=A16 dir=N from=B16[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=7 from=C76 to=D21 kind=N dial=12421 lift=1459 dt=1652 key=1724 last=2272 tone=2291 alert=- bell=- ans=- end=2391 rel=2391 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=8 from=D67 to=B67 kind=N dial=12267 lift=1695 dt=1700 key=1772 last=- tone=2306 alert=- bell=- ans=- end=2406 rel=2406 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=6 from=B66 to=D62 kind=N dial=12462 lift=1258 dt=1671 key=1743 last=- tone=2317 alert=- bell=- ans=- end=2417 rel=2417 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=2661.737 ex=B CLAIM port=B10 from=A10[src=A57 b=1 c=0 B=1] HERE r=0 held_ms=230.0
+HUB t=2662.139 ex=A RES r=0 LEG in=A57 leg=N:A10 two=1 held_ms=243.1 far=B10[src=B00 b=1 c=1 B=1] hops=1
+HUB t=2664.118 ex=D OCLAIM trunk=D17 far=A57[src=A10 b=1 c=0 B=1] hops=2
+HUB t=2686.734 ex=B CLAIM port=B37 from=C37[src=C53 b=1 c=0 B=1] HERE r=1 held_ms=227.0
+HUB t=2687.763 ex=C OCLAIM trunk=C37 far=B37[src=B03 b=1 c=1 B=1] hops=1
+HUB t=2692.263 ex=C CLAIM port=C30 from=B30[src=B26 b=1 c=0 B=1] HERE r=0 held_ms=257.0
+HUB t=2693.124 ex=B OCLAIM trunk=B30 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=2694.670 ex=C RES r=1 GONE in=C31 held_ms=237.4
+HUB t=2725.248 ex=A RES r=1 GONE in=A17 held_ms=295.2
+HUB t=3089.850 ex=A SEIZE port=A56 dir=S from=D16[src=D44 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=3099.998 ex=A FWD in=A56 legs=2 N:A11 E:A30 res=0
+HUB t=3101.967 ex=B SEIZE port=B11 dir=S from=A11[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3102.561 ex=C SEIZE port=C10 dir=W from=A30[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3112.692 ex=B FWD in=B11 legs=1 E:B31 res=0
+HUB t=3113.304 ex=C FWD in=C10 legs=1 N:C36 res=0
+HUB t=3115.828 ex=C SEIZE port=C31 dir=N from=B31[src=B11 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3116.293 ex=B SEIZE port=B36 dir=E from=C36[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3126.305 ex=C FWD in=C31 legs=1 W:C17 res=1
+HUB t=3126.690 ex=B FWD in=B36 legs=1 S:B17 res=1
+HUB t=3128.365 ex=A SEIZE port=A17 dir=N from=B17[src=B36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3133.615 ex=A SEIZE port=A37 dir=E from=C17[src=C31 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=3140.997 ex=A FWD in=A17 legs=2 S:A50 E:A31 res=1
+HUB t=3143.581 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=3144.102 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+CALL id=10 from=D72 to=B61 kind=N dial=12261 lift=1894 dt=2308 key=2380 last=2968 tone=2988 alert=- bell=- ans=- end=3088 rel=3088 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=3306.862 ex=C SEIZE port=C32 dir=N from=B32[src=B44 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=3307.349 ex=A SEIZE port=A16 dir=N from=B16[src=B44 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+CALL id=11 from=C53 to=B65 kind=N dial=12265 lift=2328 dt=2334 key=2406 last=3074 tone=3094 alert=- bell=- ans=- end=3194 rel=3194 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=9 from=B26 to=C76 kind=N dial=12376 lift=1706 dt=2320 key=2392 last=3120 tone=3139 alert=- bell=- ans=- end=3239 rel=3239 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=3363.327 ex=C CLAIM port=C10 from=A30[src=A56 b=1 c=0 B=1] HERE r=0 held_ms=250.0
+HUB t=3363.752 ex=C CLAIM port=C31 from=B31[src=B11 b=1 c=0 B=1] HERE r=1 held_ms=237.4
+HUB t=3364.072 ex=B RES r=0 LEG in=B11 leg=E:B31 two=0 held_ms=251.4 far=C31[src=C00 b=1 c=1 B=1] hops=1
+HUB t=3364.153 ex=A RES r=0 LEG in=A56 leg=N:A11 two=1 held_ms=264.2 far=B11[src=B31 b=1 c=0 B=1] hops=2
+HUB t=3366.066 ex=D OCLAIM trunk=D16 far=A56[src=A11 b=1 c=0 B=1] hops=3
+HUB t=3396.147 ex=B RES r=1 GONE in=B36 held_ms=269.5
+HUB t=3397.247 ex=A RES r=1 GONE in=A17 held_ms=256.2
+HUB t=3934.363 ex=A SEIZE port=A17 dir=N from=B17[src=B43 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=3934.891 ex=C SEIZE port=C30 dir=N from=B30[src=B43 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=3944.995 ex=A FWD in=A17 legs=2 S:A50 E:A30 res=0
+HUB t=3945.383 ex=C FWD in=C30 legs=1 W:C17 res=0
+HUB t=3947.613 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3947.642 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3948.060 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+CALL id=12 from=D44 to=C72 kind=N dial=12372 lift=2823 dt=2990 key=3062 last=3710 tone=3730 alert=- bell=- ans=- end=3830 rel=3830 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=3957.995 ex=A FWD in=A37 legs=2 N:A10 S:A51 res=1
+HUB t=3958.385 ex=C FWD in=C10 legs=1 N:C37 res=1
+HUB t=3959.865 ex=B SEIZE port=B10 dir=S from=A10[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3960.075 ex=D SEIZE port=D11 dir=N from=A51[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=3965.223 ex=B SEIZE port=B37 dir=E from=C37[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=3972.605 ex=B FWD in=B10 legs=1 E:B31 res=0
+HUB t=3974.910 ex=C SEIZE port=C31 dir=N from=B31[src=B10 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+PROG t=4000 calls=14 ok=0 busy=0 nogo=12 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=4 ok=0 failed=7 reg_occ A=0.00 B=0.96 C=0.54 D=0.86
+CALL id=13 from=B44 to=C55 kind=N dial=12355 lift=3202 dt=3207 key=3279 last=- tone=3833 alert=- bell=- ans=- end=3933 rel=3933 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=4227.787 ex=D CLAIM port=D10 from=A50[src=A17 b=1 c=0 B=1]
+HUB t=4228.635 ex=A RES r=0 LEG in=A17 leg=S:A50 two=1 held_ms=283.6 far=D10[src=D03 b=1 c=1 B=1] hops=1
+HUB t=4228.787 ex=D CLAIM port=D11 from=A51[src=A37 b=1 c=0 B=1]
+HUB t=4229.651 ex=A RES r=1 LEG in=A37 leg=S:A51 two=1 held_ms=271.7 far=D11[src=D03 b=1 c=1 B=1] hops=1
+HUB t=4229.829 ex=B OCLAIM trunk=B17 far=A17[src=A50 b=1 c=0 B=1] hops=2
+HUB t=4231.660 ex=C RES r=0 LEG in=C30 leg=W:C17 two=0 held_ms=286.3 far=A37[src=A51 b=1 c=0 B=1] hops=2
+HUB t=4240.180 ex=B SEIZE port=B36 dir=E from=C36[src=C21 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=4240.597 ex=A SEIZE port=A36 dir=E from=C16[src=C21 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=4250.577 ex=B FWD in=B36 legs=1 S:B16 res=1
+HUB t=4250.995 ex=A FWD in=A36 legs=2 N:A11 S:A52 res=0
+HUB t=4252.347 ex=A SEIZE port=A16 dir=N from=B16[src=B36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4252.851 ex=B SEIZE port=B11 dir=S from=A11[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=4253.075 ex=D SEIZE port=D12 dir=N from=A52[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4260.554 ex=C RES r=1 GONE in=C10 held_ms=302.2
+HUB t=4261.716 ex=B RES r=0 GONE in=B10 held_ms=289.1
+HUB t=4261.863 ex=A SEIZE port=A57 dir=S from=D17[src=D37 b=1 c=0 B=1] by=ORIG mon=0 fwd= BUSY-FWDR             
+HUB t=4263.995 ex=A FWD in=A16 legs=2 S:A53 E:A31 res=1
+HUB t=4266.688 ex=C SEIZE port=C11 dir=W from=A31[src=A16 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4267.090 ex=D SEIZE port=D13 dir=N from=A53[src=A16 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=4277.415 ex=C FWD in=C11 legs=1 N:C37 res=0
+HUB t=4280.192 ex=B SEIZE port=B37 dir=E from=C37[src=C11 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=4290.573 ex=B FWD in=B37 legs=1 S:B15 res=0
+HUB t=4292.331 ex=A SEIZE port=A15 dir=N from=B15[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=4491.552 ex=B CLAIM port=B36 from=C36[src=C21 b=1 c=0 B=1] HERE r=1 held_ms=241.0
+HUB t=4491.920 ex=C OCLAIM trunk=C36 far=B36[src=B00 b=1 c=1 B=1] hops=1
+HUB t=4492.552 ex=B CLAIM port=B11 from=A11[src=A36 b=1 c=0 B=1] LATE (its resolver resolved by a leg 1128.5 ms ago)
+HUB t=4493.150 ex=A RES r=0 LEG in=A36 leg=N:A11 two=1 held_ms=242.2 far=B11[src=B03 b=1 c=1 B=1] hops=1
+HUB t=4524.228 ex=A RES r=1 GONE in=A16 held_ms=260.2
+HUB t=4524.595 ex=C RES r=0 GONE in=C11 held_ms=247.2
+HUB t=4526.049 ex=B RES r=0 GONE in=B37 held_ms=235.5
+HUB t=4867.861 ex=A SEIZE port=A57 dir=S from=D17[src=D35 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+CALL id=14 from=B43 to=D20 kind=N dial=12420 lift=3603 dt=3835 key=3907 last=4635 tone=4654 alert=- bell=- ans=- end=4754 rel=4754 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=4877.993 ex=A FWD in=A57 legs=2 N:A10 E:A30 res=0
+HUB t=4880.731 ex=C SEIZE port=C10 dir=W from=A30[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4880.772 ex=B SEIZE port=B10 dir=S from=A10[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4891.474 ex=C FWD in=C10 legs=1 N:C37 res=0
+HUB t=4891.512 ex=B FWD in=B10 legs=1 E:B30 res=0
+HUB t=4893.983 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4894.130 ex=B SEIZE port=B37 dir=E from=C37[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4904.475 ex=C FWD in=C30 legs=1 W:C17 res=1
+HUB t=4904.511 ex=B FWD in=B37 legs=1 S:B17 res=1
+HUB t=4906.361 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4911.611 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=4918.993 ex=A FWD in=A17 legs=2 S:A50 E:A31 res=1
+HUB t=4921.751 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=4922.010 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=4941.094 ex=B SEIZE port=B35 dir=E from=C35[src=C22 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=4942.595 ex=A SEIZE port=A36 dir=E from=C16[src=C22 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=16 from=D37 to=B75 kind=N dial=12275 lift=4155 dt=4160 key=4232 last=- tone=4766 alert=- bell=- ans=- end=4866 rel=4866 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=5047.345 ex=A SEIZE port=A16 dir=N from=B16[src=B24 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=5048.013 ex=C SEIZE port=C31 dir=N from=B31[src=B24 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=15 from=C21 to=B44 kind=N dial=12244 lift=4134 dt=4139 key=4211 last=4819 tone=4839 alert=- bell=- ans=- end=4939 rel=4939 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=5121.489 ex=B CLAIM port=B10 from=A10[src=A57 b=1 c=0 B=1] HERE r=0 held_ms=230.0
+HUB t=5121.913 ex=B CLAIM port=B37 from=C37[src=C10 b=1 c=0 B=1] HERE r=1 held_ms=217.4
+HUB t=5122.133 ex=A RES r=0 LEG in=A57 leg=N:A10 two=1 held_ms=244.1 far=B10[src=B03 b=1 c=1 B=1] hops=1
+HUB t=5122.996 ex=C RES r=0 LEG in=C10 leg=N:C37 two=0 held_ms=231.5 far=B37[src=B03 b=1 c=1 B=1] hops=1
+HUB t=5123.990 ex=D OCLAIM trunk=D17 far=A57[src=A10 b=1 c=0 B=1] hops=2
+HUB t=5154.242 ex=A RES r=1 GONE in=A17 held_ms=235.2
+HUB t=5154.889 ex=C RES r=1 GONE in=C30 held_ms=250.4
+HUB t=5489.844 ex=A SEIZE port=A56 dir=S from=D16[src=D61 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=5499.991 ex=A FWD in=A56 legs=2 N:A11 E:A30 res=0
+HUB t=5502.725 ex=B SEIZE port=B11 dir=S from=A11[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5502.791 ex=C SEIZE port=C10 dir=W from=A30[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5513.449 ex=B FWD in=B11 legs=1 E:B30 res=0
+HUB t=5513.533 ex=C FWD in=C10 legs=1 N:C37 res=0
+HUB t=5516.042 ex=C SEIZE port=C30 dir=N from=B30[src=B11 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5516.067 ex=B SEIZE port=B37 dir=E from=C37[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5526.448 ex=B FWD in=B37 legs=1 S:B17 res=1
+HUB t=5526.535 ex=C FWD in=C30 legs=1 W:C17 res=1
+HUB t=5528.359 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5533.609 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=5540.991 ex=A FWD in=A17 legs=2 S:A50 E:A31 res=1
+HUB t=5543.810 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=5543.977 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=5591.593 ex=A SEIZE port=A36 dir=E from=C16[src=C53 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=5592.044 ex=B SEIZE port=B36 dir=E from=C36[src=C53 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=18 from=D35 to=B22 kind=N dial=12222 lift=4465 dt=4768 key=4840 last=5368 tone=5388 alert=- bell=- ans=- end=5488 rel=5488 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=5695.343 ex=A SEIZE port=A16 dir=N from=B16[src=B44 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=5696.075 ex=C SEIZE port=C31 dir=N from=B31[src=B44 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=19 from=C22 to=D37 kind=N dial=12437 lift=4691 dt=4841 key=4913 last=- tone=5488 alert=- bell=- ans=- end=5588 rel=5588 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=5743.426 ex=B CLAIM port=B11 from=A11[src=A56 b=1 c=0 B=1] HERE r=0 held_ms=230.0
+HUB t=5743.851 ex=B CLAIM port=B37 from=C37[src=C10 b=1 c=0 B=1] HERE r=1 held_ms=217.4
+HUB t=5744.147 ex=A RES r=0 LEG in=A56 leg=N:A11 two=1 held_ms=244.2 far=B11[src=B03 b=1 c=1 B=1] hops=1
+HUB t=5745.055 ex=C RES r=0 LEG in=C10 leg=N:C37 two=0 held_ms=231.5 far=B37[src=B03 b=1 c=1 B=1] hops=1
+HUB t=5745.943 ex=D OCLAIM trunk=D16 far=A56[src=A11 b=1 c=0 B=1] hops=2
+HUB t=5775.949 ex=C RES r=1 GONE in=C30 held_ms=249.4
+HUB t=5776.240 ex=A RES r=1 GONE in=A17 held_ms=235.2
+CALL id=21 from=D66 to=C55 kind=N dial=12355 lift=4947 dt=- key=- last=- tone=- alert=- bell=- ans=- end=5658 rel=5658 out=ABANDON why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+CALL id=20 from=B24 to=D50 kind=N dial=12450 lift=4942 dt=4947 key=5019 last=- tone=5593 alert=- bell=- ans=- end=5693 rel=5693 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=6000 calls=25 ok=0 busy=0 nogo=19 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=11 ok=0 failed=8 reg_occ A=0.00 B=0.85 C=0.93 D=0.92
+HUB t=6171.858 ex=A SEIZE port=A57 dir=S from=D17[src=D33 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=6181.990 ex=A FWD in=A57 legs=2 N:A10 E:A30 res=0
+HUB t=6184.640 ex=B SEIZE port=B10 dir=S from=A10[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=6184.856 ex=C SEIZE port=C10 dir=W from=A30[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=6195.381 ex=B FWD in=B10 legs=1 E:B30 res=0
+HUB t=6195.599 ex=C FWD in=C10 legs=1 N:C37 res=0
+HUB t=6197.998 ex=B SEIZE port=B37 dir=E from=C37[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=6198.108 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=6208.379 ex=B FWD in=B37 legs=1 S:B17 res=1
+HUB t=6209.981 ex=B SEIZE port=B36 dir=E from=C36[src=C74 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=6210.358 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=6215.608 ex=A SEIZE port=A37 dir=E from=C17[src=C74 b=1 c=0 B=1] by=ORIG mon=0 fwd= BUSY-FWDR             
+HUB t=6217.601 ex=C FWD in=C30 legs=1 W:C16 res=1
+HUB t=6220.592 ex=A SEIZE port=A36 dir=E from=C16[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=6223.990 ex=A FWD in=A17 legs=2 S:A50 E:A31 res=1
+HUB t=6226.876 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=6226.942 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+CALL id=23 from=D61 to=B25 kind=N dial=12225 lift=5244 dt=5390 key=5462 last=6050 tone=6069 alert=- bell=- ans=- end=6169 rel=6169 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=17 from=C53 to=B52 kind=N dial=12252 lift=4178 dt=5490 key=5562 last=- tone=6096 alert=- bell=- ans=- end=6196 rel=6196 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=22 from=B44 to=C64 kind=N dial=12364 lift=5034 dt=5596 key=5668 last=- tone=6222 alert=- bell=- ans=- end=6322 rel=6322 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=6444.622 ex=C CLAIM port=C10 from=A30[src=A57 b=1 c=0 B=1] HERE r=0 held_ms=249.0
+HUB t=6445.379 ex=A RES r=0 LEG in=A57 leg=E:A30 two=1 held_ms=263.4 far=C10[src=C03 b=1 c=1 B=1] hops=1
+HUB t=6445.622 ex=C CLAIM port=C30 from=B30[src=B10 b=1 c=0 B=1] HERE r=1 held_ms=228.0
+HUB t=6446.746 ex=B RES r=0 LEG in=B10 leg=E:B30 two=0 held_ms=251.4 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=6446.922 ex=D OCLAIM trunk=D17 far=A57[src=A30 b=1 c=0 B=1] hops=2
+HUB t=6477.239 ex=A RES r=1 GONE in=A17 held_ms=253.2
+HUB t=6477.852 ex=B RES r=1 GONE in=B37 held_ms=269.5
+CALL id=25 from=C74 to=D30 kind=N dial=12430 lift=5585 dt=6098 key=6170 last=- tone=6744 alert=- bell=- ans=- end=6844 rel=6844 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=7009.185 ex=C SEIZE port=C30 dir=N from=B30[src=B44 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=7009.355 ex=A SEIZE port=A17 dir=N from=B17[src=B44 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=7019.678 ex=C FWD in=C30 legs=1 W:C17 res=0
+HUB t=7019.988 ex=A FWD in=A17 legs=2 S:A50 E:A31 res=0
+HUB t=7021.605 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7022.901 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7022.952 ex=C SEIZE port=C11 dir=W from=A31[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7031.987 ex=A FWD in=A37 legs=2 N:A10 S:A51 res=1
+HUB t=7033.679 ex=C FWD in=C11 legs=1 N:C37 res=1
+HUB t=7033.916 ex=D SEIZE port=D11 dir=N from=A51[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7034.554 ex=B SEIZE port=B10 dir=S from=A10[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7039.913 ex=B SEIZE port=B37 dir=E from=C37[src=C11 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=7047.295 ex=B FWD in=B10 legs=1 E:B31 res=0
+HUB t=7050.205 ex=C SEIZE port=C31 dir=N from=B31[src=B10 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=24 from=D33 to=C20 kind=N dial=12320 lift=5584 dt=6072 key=6144 last=6852 tone=6871 alert=- bell=- ans=- end=6971 rel=6971 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=7124.590 ex=A SEIZE port=A36 dir=E from=C16[src=C51 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=7124.889 ex=B SEIZE port=B36 dir=E from=C36[src=C51 b=1 c=0 B=1] by=ORIG mon=0 fwd=        ok             
+HUB t=7135.286 ex=B FWD in=B36 legs=1 S:B16 res=1
+HUB t=7137.340 ex=A SEIZE port=A16 dir=N from=B16[src=B36 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=7255.855 ex=A SEIZE port=A57 dir=S from=D17[src=D71 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=7279.702 ex=C CLAIM port=C30 from=B30[src=B44 b=1 c=0 B=1] HERE r=0 held_ms=260.0
+HUB t=7280.661 ex=B OCLAIM trunk=B30 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=7280.702 ex=C CLAIM port=C11 from=A31[src=A17 b=1 c=0 B=1] HERE r=1 held_ms=247.0
+HUB t=7281.393 ex=A RES r=0 LEG in=A17 leg=E:A31 two=1 held_ms=261.4 far=C11[src=C03 b=1 c=1 B=1] hops=1
+HUB t=7312.487 ex=A RES r=1 GONE in=A37 held_ms=280.5
+HUB t=7313.408 ex=B RES r=0 GONE in=B10 held_ms=266.1
+HUB t=7699.713 ex=B RES r=1 GONE in=B36 held_ms=564.4
+HUB t=7772.839 ex=B SEIZE port=B37 dir=E from=C37[src=C62 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=7773.604 ex=A SEIZE port=A37 dir=E from=C17[src=C62 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=7783.221 ex=B FWD in=B37 legs=1 S:B17 res=0
+HUB t=7783.986 ex=A FWD in=A37 legs=2 N:A10 S:A50 res=0
+HUB t=7785.353 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7785.861 ex=D SEIZE port=D10 dir=N from=A50[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7786.479 ex=B SEIZE port=B10 dir=S from=A10[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7795.986 ex=A FWD in=A17 legs=2 S:A51 E:A30 res=1
+HUB t=7797.219 ex=B FWD in=B10 legs=1 E:B31 res=1
+HUB t=7798.876 ex=D SEIZE port=D11 dir=N from=A51[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7799.011 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=7804.277 ex=C SEIZE port=C31 dir=N from=B31[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=7810.753 ex=C FWD in=C10 legs=1 N:C36 res=0
+HUB t=7813.820 ex=B SEIZE port=B36 dir=E from=C36[src=C10 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=7889.301 ex=C SEIZE port=C32 dir=N from=B32[src=B50 b=1 c=0 B=1] by=ORIG mon=0 fwd=        ok             
+HUB t=7889.338 ex=A SEIZE port=A16 dir=N from=B16[src=B50 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=28 from=C51 to=D22 kind=N dial=12422 lift=7020 dt=7025 key=7097 last=7665 tone=7671 alert=- bell=- ans=- end=7771 rel=7771 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=7899.762 ex=C FWD in=C32 legs=1 W:C16 res=1
+HUB t=7901.588 ex=A SEIZE port=A36 dir=E from=C16[src=C32 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+CALL id=29 from=D71 to=B46 kind=N dial=12246 lift=7151 dt=7156 key=7228 last=- tone=7762 alert=- bell=- ans=- end=7862 rel=7862 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=8000 calls=30 ok=0 busy=0 nogo=26 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=5 ok=0 failed=7 reg_occ A=0.00 B=0.66 C=0.86 D=0.73
+CALL id=26 from=B44 to=C60 kind=N dial=12360 lift=6901 dt=6907 key=6979 last=7767 tone=7787 alert=- bell=- ans=- end=7887 rel=7887 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=8066.588 ex=D CLAIM port=D10 from=A50[src=A37 b=1 c=0 B=1]
+HUB t=8066.879 ex=D CLAIM port=D11 from=A51[src=A17 b=1 c=0 B=1]
+HUB t=8067.625 ex=A RES r=0 LEG in=A37 leg=S:A50 two=1 held_ms=283.6 far=D10[src=D00 b=1 c=1 B=1] hops=1
+HUB t=8067.641 ex=A RES r=1 LEG in=A17 leg=S:A51 two=1 held_ms=271.7 far=D11[src=D03 b=1 c=1 B=1] hops=1
+HUB t=8069.028 ex=C OCLAIM trunk=C17 far=A37[src=A50 b=1 c=0 B=1] hops=2
+HUB t=8069.441 ex=B RES r=0 LEG in=B37 leg=S:B17 two=0 held_ms=286.2 far=A17[src=A51 b=1 c=0 B=1] hops=2
+HUB t=8099.329 ex=B RES r=1 GONE in=B10 held_ms=302.1
+HUB t=8100.922 ex=C RES r=0 GONE in=C10 held_ms=290.2
+HUB t=8464.238 ex=C RES r=1 GONE in=C32 held_ms=564.5
+CALL id=27 from=B50 to=D25 kind=N dial=12425 lift=7003 dt=7789 key=7861 last=- tone=8435 alert=- bell=- ans=- end=8535 rel=8535 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=8695.586 ex=A SEIZE port=A36 dir=E from=C16[src=C72 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=8695.746 ex=B SEIZE port=B37 dir=E from=C37[src=C72 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=8702.851 ex=A SEIZE port=A57 dir=S from=D17[src=D76 b=1 c=0 B=1] by=ORIG mon=1 fwd= BUSY-FWDR             
+HUB t=8706.127 ex=B FWD in=B37 legs=1 S:B17 res=0
+HUB t=8707.983 ex=A FWD in=A36 legs=2 N:A10 S:A51 res=0
+HUB t=8708.351 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=8709.829 ex=D SEIZE port=D11 dir=N from=A51[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=8710.385 ex=B SEIZE port=B10 dir=S from=A10[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=8718.983 ex=A FWD in=A17 legs=2 S:A52 E:A30 res=1
+HUB t=8721.126 ex=B FWD in=B10 legs=1 E:B30 res=1
+HUB t=8721.844 ex=D SEIZE port=D12 dir=N from=A52[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=8722.099 ex=C SEIZE port=C10 dir=W from=A30[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=8727.350 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=8733.842 ex=C FWD in=C10 legs=1 N:C36 res=0
+HUB t=8736.727 ex=B SEIZE port=B36 dir=E from=C36[src=C10 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=8988.540 ex=D CLAIM port=D11 from=A51[src=A36 b=1 c=0 B=1]
+HUB t=8989.540 ex=D CLAIM port=D12 from=A52[src=A17 b=1 c=0 B=1]
+HUB t=8989.638 ex=A RES r=0 LEG in=A36 leg=S:A51 two=1 held_ms=281.7 far=D11[src=D03 b=1 c=1 B=1] hops=1
+HUB t=8990.654 ex=A RES r=1 LEG in=A17 leg=S:A52 two=1 held_ms=271.7 far=D12[src=D03 b=1 c=1 B=1] hops=1
+HUB t=8991.100 ex=C OCLAIM trunk=C16 far=A36[src=A51 b=1 c=0 B=1] hops=2
+HUB t=8992.348 ex=B RES r=0 LEG in=B37 leg=S:B17 two=0 held_ms=286.2 far=A17[src=A52 b=1 c=0 B=1] hops=2
+HUB t=9021.236 ex=B RES r=1 GONE in=B10 held_ms=300.1
+HUB t=9023.010 ex=C RES r=0 GONE in=C10 held_ms=289.2
+HUB t=9311.850 ex=A SEIZE port=A57 dir=S from=D17[src=D34 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=9321.982 ex=A FWD in=A57 legs=2 N:A10 E:A30 res=0
+HUB t=9324.157 ex=C SEIZE port=C10 dir=W from=A30[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9324.323 ex=B SEIZE port=B10 dir=S from=A10[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9335.064 ex=B FWD in=B10 legs=1 E:B30 res=0
+HUB t=9335.899 ex=C FWD in=C10 legs=1 N:C37 res=0
+HUB t=9337.408 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9338.681 ex=B SEIZE port=B37 dir=E from=C37[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9347.901 ex=C FWD in=C30 legs=1 W:C15 res=1
+HUB t=9349.062 ex=B FWD in=B37 legs=1 S:B17 res=1
+HUB t=9349.568 ex=A SEIZE port=A35 dir=E from=C15[src=C30 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9354.349 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=9360.982 ex=A FWD in=A35 legs=2 N:A11 S:A52 res=1
+HUB t=9362.811 ex=D SEIZE port=D12 dir=N from=A52[src=A35 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=9363.335 ex=B SEIZE port=B11 dir=S from=A11[src=A35 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=31 from=D76 to=B23 kind=N dial=12223 lift=8145 dt=8603 key=8675 last=- tone=9208 alert=- bell=- ans=- end=9308 rel=9308 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=9433.552 ex=A SEIZE port=A34 dir=E from=C14[src=C53 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=9433.656 ex=B SEIZE port=B36 dir=E from=C36[src=C53 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=32 from=C72 to=D42 kind=N dial=12442 lift=8194 dt=8595 key=8667 last=9275 tone=9295 alert=- bell=- ans=- end=9395 rel=9395 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=9525.333 ex=A SEIZE port=A16 dir=N from=B16[src=B42 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=9525.442 ex=C SEIZE port=C31 dir=N from=B31[src=B42 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=30 from=C62 to=D70 kind=N dial=12470 lift=7232 dt=7673 key=7745 last=8573 tone=- alert=8596 bell=8642 ans=8668 end=9451 rel=9451 out=OK why=- heard=- rang=D70 cb=0 xv=1 cv=1 ab=- mid=-
+HUB t=9584.923 ex=C CLAIM port=C10 from=A30[src=A57 b=1 c=0 B=1] HERE r=0 held_ms=249.0
+HUB t=9585.348 ex=C CLAIM port=C30 from=B30[src=B10 b=1 c=0 B=1] HERE r=1 held_ms=237.4
+HUB t=9585.371 ex=A RES r=0 LEG in=A57 leg=E:A30 two=1 held_ms=263.4 far=C10[src=C00 b=1 c=1 B=1] hops=1
+HUB t=9586.429 ex=B RES r=0 LEG in=B10 leg=E:B30 two=0 held_ms=251.4 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=9586.760 ex=D OCLAIM trunk=D17 far=A57[src=A30 b=1 c=0 B=1] hops=2
+HUB t=9617.449 ex=A RES r=1 GONE in=A35 held_ms=256.5
+HUB t=9617.535 ex=B RES r=1 GONE in=B37 held_ms=268.5
+PROG t=10000 calls=41 ok=1 busy=0 nogo=30 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=11 ok=1 failed=4 reg_occ A=0.00 B=0.51 C=0.98 D=0.96
+HUB t=10034.832 ex=A SEIZE port=A56 dir=S from=D16[src=D32 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=10041.598 ex=A SEIZE port=A37 dir=E from=C17[src=C66 b=1 c=0 B=1] by=ORIG mon=1 fwd= BUSY-FWDR             
+HUB t=10041.611 ex=B SEIZE port=B37 dir=E from=C37[src=C66 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=10045.980 ex=A FWD in=A56 legs=2 N:A10 E:A31 res=0
+HUB t=10048.242 ex=C SEIZE port=C11 dir=W from=A31[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10048.250 ex=B SEIZE port=B10 dir=S from=A10[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd= BUSY-FWDR             
+HUB t=10053.991 ex=B FWD in=B37 legs=1 S:B17 res=0
+HUB t=10056.348 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=10058.969 ex=C FWD in=C11 legs=1 N:C36 res=0
+HUB t=10061.593 ex=B SEIZE port=B36 dir=E from=C36[src=C11 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=10066.980 ex=A FWD in=A17 legs=2 S:A50 E:A32 res=1
+HUB t=10069.743 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10070.259 ex=C SEIZE port=C12 dir=W from=A32[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10071.990 ex=B FWD in=B36 legs=1 S:B15 res=1
+HUB t=10074.316 ex=A SEIZE port=A15 dir=N from=B15[src=B36 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=10080.971 ex=C FWD in=C12 legs=1 N:C35 res=1
+HUB t=10083.575 ex=B SEIZE port=B35 dir=E from=C35[src=C12 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=33 from=D34 to=C71 kind=N dial=12371 lift=8752 dt=9211 key=9283 last=9911 tone=9931 alert=- bell=- ans=- end=10031 rel=10031 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=35 from=C53 to=B70 kind=N dial=12270 lift=9324 dt=9333 key=9405 last=- tone=9939 alert=- bell=- ans=- end=10039 rel=10039 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=10176.332 ex=A SEIZE port=A16 dir=N from=B16[src=B44 b=1 c=0 B=1] by=ORIG mon=1 fwd=BUSY-NORES             
+HUB t=10176.488 ex=C SEIZE port=C30 dir=N from=B30[src=B44 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+CALL id=38 from=D53 to=C76 kind=N dial=12376 lift=9440 dt=- key=- last=- tone=- alert=- bell=- ans=- end=10093 rel=10093 out=ABANDON why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+HUB t=10287.967 ex=B CLAIM port=B10 from=A10[src=A56 b=1 c=0 B=1] LATE (its resolver resolved by a leg 701.5 ms ago)
+HUB t=10289.120 ex=A RES r=0 LEG in=A56 leg=N:A10 two=1 held_ms=243.1 far=B10[src=B03 b=1 c=1 B=1] hops=1
+CALL id=37 from=B42 to=D70 kind=N dial=12470 lift=9420 dt=9425 key=9497 last=- tone=10071 alert=- bell=- ans=- end=10171 rel=10171 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=10290.708 ex=D OCLAIM trunk=D16 far=A56[src=A10 b=1 c=0 B=1] hops=2
+HUB t=10322.150 ex=C RES r=0 GONE in=C11 held_ms=263.2
+HUB t=10322.448 ex=B RES r=1 GONE in=B36 held_ms=250.5
+HUB t=10335.471 ex=D CLAIM port=D10 from=A50[src=A17 b=1 c=0 B=1]
+HUB t=10336.619 ex=A RES r=1 LEG in=A17 leg=S:A50 two=1 held_ms=269.6 far=D10[src=D03 b=1 c=1 B=1] hops=1
+HUB t=10338.212 ex=B RES r=0 LEG in=B37 leg=S:B17 two=0 held_ms=284.2 far=A17[src=A50 b=1 c=0 B=1] hops=2
+HUB t=10338.495 ex=C OCLAIM trunk=C37 far=B37[src=B17 b=1 c=0 B=1] hops=3
+HUB t=10369.170 ex=C RES r=1 GONE in=C12 held_ms=288.2
+HUB t=10777.846 ex=A SEIZE port=A57 dir=S from=D17[src=D37 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=10787.978 ex=A FWD in=A57 legs=2 N:A11 E:A30 res=0
+HUB t=10790.191 ex=B SEIZE port=B11 dir=S from=A11[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10790.297 ex=C SEIZE port=C10 dir=W from=A30[src=A57 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10800.916 ex=B FWD in=B11 legs=1 E:B30 res=0
+HUB t=10801.040 ex=C FWD in=C10 legs=1 N:C36 res=0
+HUB t=10803.518 ex=B SEIZE port=B36 dir=E from=C36[src=C10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10803.548 ex=C SEIZE port=C30 dir=N from=B30[src=B11 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10813.915 ex=B FWD in=B36 legs=1 S:B16 res=1
+HUB t=10814.041 ex=C FWD in=C30 legs=1 W:C17 res=1
+HUB t=10815.596 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10820.330 ex=A SEIZE port=A16 dir=N from=B16[src=B36 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=10826.314 ex=A SEIZE port=A15 dir=N from=B15[src=B71 b=1 c=0 B=1] by=ORIG mon=0 fwd= BUSY-FWDR             
+HUB t=10826.566 ex=C SEIZE port=C31 dir=N from=B31[src=B71 b=1 c=0 B=1] by=ORIG mon=0 fwd=BUSY-NORES             
+HUB t=10829.978 ex=A FWD in=A37 legs=2 N:A12 S:A51 res=1
+HUB t=10831.720 ex=D SEIZE port=D11 dir=N from=A51[src=A37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=10832.203 ex=B SEIZE port=B12 dir=S from=A12[src=A37 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+CALL id=41 from=D32 to=B55 kind=N dial=12255 lift=9903 dt=9934 key=10006 last=10654 tone=10674 alert=- bell=- ans=- end=10774 rel=10774 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=40 from=C66 to=D73 kind=N dial=12473 lift=9819 dt=9941 key=10013 last=10701 tone=10721 alert=- bell=- ans=- end=10821 rel=10821 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=42 from=B44 to=D55 kind=N dial=12455 lift=10011 dt=10076 key=10148 last=- tone=10722 alert=- bell=- ans=- end=10822 rel=10822 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=11051.063 ex=C CLAIM port=C10 from=A30[src=A57 b=1 c=0 B=1] HERE r=0 held_ms=250.0
+HUB t=11051.488 ex=C CLAIM port=C30 from=B30[src=B11 b=1 c=0 B=1] HERE r=1 held_ms=237.4
+HUB t=11052.281 ex=B RES r=0 LEG in=B11 leg=E:B30 two=0 held_ms=251.4 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=11052.368 ex=A RES r=0 LEG in=A57 leg=E:A30 two=1 held_ms=264.4 far=C10[src=C00 b=1 c=1 B=1] hops=1
+HUB t=11053.684 ex=D OCLAIM trunk=D17 far=A57[src=A30 b=1 c=0 B=1] hops=2
+HUB t=11084.372 ex=B RES r=1 GONE in=B36 held_ms=270.5
+HUB t=11084.477 ex=A RES r=1 GONE in=A37 held_ms=254.5
+CALL id=43 from=C27 to=D57 kind=N dial=12457 lift=11226 dt=- key=- last=- tone=- alert=- bell=- ans=- end=11258 rel=11258 out=ABANDON why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+HUB t=11499.828 ex=A SEIZE port=A56 dir=S from=D16[src=D52 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=11509.976 ex=A FWD in=A56 legs=2 N:A10 E:A31 res=0
+HUB t=11512.103 ex=B SEIZE port=B10 dir=S from=A10[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11512.382 ex=C SEIZE port=C11 dir=W from=A31[src=A56 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11522.843 ex=B FWD in=B10 legs=1 E:B30 res=0
+HUB t=11523.109 ex=C FWD in=C11 legs=1 N:C37 res=0
+HUB t=11525.461 ex=B SEIZE port=B37 dir=E from=C37[src=C11 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11525.618 ex=C SEIZE port=C30 dir=N from=B30[src=B10 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11535.842 ex=B FWD in=B37 legs=1 S:B17 res=1
+HUB t=11536.110 ex=C FWD in=C30 legs=1 W:C17 res=1
+HUB t=11538.344 ex=A SEIZE port=A17 dir=N from=B17[src=B37 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11543.594 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=0 fwd= BUSY-FWDR             
+HUB t=11550.976 ex=A FWD in=A17 legs=2 S:A50 E:A32 res=1
+HUB t=11553.401 ex=C SEIZE port=C12 dir=W from=A32[src=A17 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+HUB t=11553.667 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+CALL id=39 from=B71 to=D61 kind=N dial=12461 lift=9810 dt=10724 key=10796 last=- tone=11370 alert=- bell=- ans=- end=11470 rel=11470 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+HUB t=11773.132 ex=C CLAIM port=C11 from=A31[src=A56 b=1 c=0 B=1] HERE r=0 held_ms=250.0
+HUB t=11773.557 ex=C CLAIM port=C30 from=B30[src=B10 b=1 c=0 B=1] HERE r=1 held_ms=237.4
+HUB t=11774.208 ex=B RES r=0 LEG in=B10 leg=E:B30 two=0 held_ms=251.4 far=C30[src=C03 b=1 c=1 B=1] hops=1
+HUB t=11774.381 ex=A RES r=0 LEG in=A56 leg=E:A31 two=1 held_ms=264.4 far=C11[src=C03 b=1 c=1 B=1] hops=1
+HUB t=11775.631 ex=D OCLAIM trunk=D16 far=A56[src=A31 b=1 c=0 B=1] hops=2
+HUB t=11787.419 ex=B SEIZE port=B36 dir=E from=C36[src=C26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=11788.578 ex=A SEIZE port=A36 dir=E from=C16[src=C26 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=11797.815 ex=B FWD in=B36 legs=1 S:B16 res=0
+HUB t=11798.975 ex=A FWD in=A36 legs=2 N:A11 S:A51 res=0
+HUB t=11800.328 ex=A SEIZE port=A16 dir=N from=B16[src=B36 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=11800.669 ex=D SEIZE port=D11 dir=N from=A51[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11801.089 ex=B SEIZE port=B11 dir=S from=A11[src=A36 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=11806.225 ex=A RES r=1 GONE in=A17 held_ms=255.2
+HUB t=11806.314 ex=B RES r=1 GONE in=B37 held_ms=270.5
+HUB t=11920.655 ex=C SEIZE port=C30 dir=N from=B30[src=B50 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=11921.343 ex=A SEIZE port=A17 dir=N from=B17[src=B50 b=1 c=0 B=1] by=ORIG mon=1 fwd=        ok             
+HUB t=11931.148 ex=C FWD in=C30 legs=1 W:C17 res=0
+HUB t=11931.975 ex=A FWD in=A17 legs=2 S:A50 E:A32 res=1
+HUB t=11933.593 ex=A SEIZE port=A37 dir=E from=C17[src=C30 b=1 c=0 B=1] by=LEG mon=1 fwd=BUSY-NORES             
+HUB t=11934.438 ex=C SEIZE port=C12 dir=W from=A32[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11934.647 ex=D SEIZE port=D10 dir=N from=A50[src=A17 b=1 c=0 B=1] by=LEG mon=1 fwd=        ok             
+HUB t=11945.149 ex=C FWD in=C12 legs=1 N:C37 res=1
+HUB t=11948.418 ex=B SEIZE port=B37 dir=E from=C37[src=C12 b=1 c=0 B=1] by=LEG mon=0 fwd=        ok             
+HUB t=11958.799 ex=B FWD in=B37 legs=1 S:B15 res=1
+HUB t=11961.312 ex=A SEIZE port=A15 dir=N from=B15[src=B37 b=1 c=0 B=1] by=LEG mon=0 fwd=BUSY-NORES             
+PROG t=12000 calls=46 ok=1 busy=0 nogo=37 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=5 ok=0 failed=9 reg_occ A=0.00 B=0.77 C=0.69 D=1.00
+STOP t=12021 no new calls
+CALL id=46 from=B50 to=C44 kind=N dial=12344 lift=11816 dt=11821 key=11893 last=- tone=- alert=- bell=- ans=- end=12021 rel=12021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=45 from=C26 to=B53 kind=N dial=12253 lift=11682 dt=11687 key=11759 last=- tone=- alert=- bell=- ans=- end=12021 rel=12021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=36 from=D37 to=C53 kind=N dial=12353 lift=9407 dt=10677 key=10749 last=11377 tone=- alert=11401 bell=11524 ans=11537 end=12021 rel=12021 out=OK why=- heard=- rang=C53 cb=0 xv=1 cv=-1 ab=- mid=-
+CALL id=34 from=D52 to=C70 kind=N dial=12370 lift=9027 dt=11400 key=11472 last=- tone=- alert=- bell=- ans=- end=12021 rel=12021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=44 from=D64 to=B53 kind=N dial=12253 lift=11322 dt=- key=- last=- tone=- alert=- bell=- ans=- end=12021 rel=12021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+HANGUP t=12021 every phone on hook; drain 2500 ms
+HUB t=12042.275 ex=B RES r=0 GONE in=B36 held_ms=244.5
+HUB t=12042.459 ex=A RES r=0 GONE in=A36 held_ms=243.5
+HUB t=12044.224 ex=A RES r=1 GONE in=A17 held_ms=112.2
+HUB t=12044.549 ex=C RES r=0 GONE in=C30 held_ms=113.4
+HUB t=12045.290 ex=B RES r=1 GONE in=B37 held_ms=86.5
+HUB t=12045.330 ex=C RES r=1 GONE in=C12 held_ms=100.2
+PROG t=14000 calls=46 ok=2 busy=0 nogo=37 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=0 ok=1 failed=0 reg_occ A=0.00 B=0.02 C=0.02 D=0.03
+INVARIANT PASS ports_idle ex=A busy=0
+INVARIANT PASS register_free ex=A
+INVARIANT PASS marker_idle ex=A state=0
+INVARIANT PASS origin_free ex=A dirs_held=0000
+INVARIANT PASS monitors_free ex=A mon_held=00
+INVARIANT PASS resolvers_free ex=A res_busy=00
+INVARIANT PASS sweep_idle ex=A
+INVARIANT PASS unit_idle ex=A origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=A
+INVARIANT PASS no_b_clash ex=A clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=A un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=A
+INVARIANT PASS ports_idle ex=B busy=0
+INVARIANT PASS register_free ex=B
+INVARIANT PASS marker_idle ex=B state=0
+INVARIANT PASS origin_free ex=B dirs_held=0000
+INVARIANT PASS monitors_free ex=B mon_held=00
+INVARIANT PASS resolvers_free ex=B res_busy=00
+INVARIANT PASS sweep_idle ex=B
+INVARIANT PASS unit_idle ex=B origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=B
+INVARIANT PASS no_b_clash ex=B clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=B un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=B
+INVARIANT PASS ports_idle ex=C busy=0
+INVARIANT PASS register_free ex=C
+INVARIANT PASS marker_idle ex=C state=0
+INVARIANT PASS origin_free ex=C dirs_held=0000
+INVARIANT PASS monitors_free ex=C mon_held=00
+INVARIANT PASS resolvers_free ex=C res_busy=00
+INVARIANT PASS sweep_idle ex=C
+INVARIANT PASS unit_idle ex=C origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=C
+INVARIANT PASS no_b_clash ex=C clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=C un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=C
+INVARIANT PASS ports_idle ex=D busy=0
+INVARIANT PASS register_free ex=D
+INVARIANT PASS marker_idle ex=D state=0
+INVARIANT PASS origin_free ex=D dirs_held=0000
+INVARIANT PASS monitors_free ex=D mon_held=00
+INVARIANT PASS resolvers_free ex=D res_busy=00
+INVARIANT PASS sweep_idle ex=D
+INVARIANT PASS unit_idle ex=D origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=D
+INVARIANT PASS no_b_clash ex=D clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=D un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=D
+INVARIANT PASS phones_quiet (none ringing or off hook)
+INVARIANT PASS signature_selftest
+INVARIANT TOTAL pass=50 fail=0
+SUMMARY run scale=8 seed=28 traffic_ms=11999 sim_ms=14521 phones=144 calls=46
+SUMMARY outcome total=46 OK=2 BUSY=0 NOGO=37 NODT=0 ABANDON=3 NOANS=0 WRONG=0 JOINED=0 DTAGAIN=0 SILENT=0 XTALK=0 NOSPEECH=0 COLLIDE=0 CUT=4
+SUMMARY outcome kind=L total=0
+SUMMARY outcome kind=N total=46 OK=2 NOGO=37 ABANDON=3 CUT=4
+SUMMARY outcome kind=BAD total=0
+SUMMARY attempts ex=A total=0 per_s=0.000
+SUMMARY attempts ex=B total=14 per_s=1.167 NOGO=13 CUT=1
+SUMMARY attempts ex=C total=15 per_s=1.250 OK=1 NOGO=12 ABANDON=1 CUT=1
+SUMMARY attempts ex=D total=17 per_s=1.417 OK=1 NOGO=12 ABANDON=2 CUT=2
+SUMMARY why N_TCLAIM=20 F_REFUSE=10
+SUMMARY safety wrong=0 joined=0 xtalk=0 nospeech=0 dtagain=0 silent=0 phantom=0 wrongring=0 idlehear=0 ring_anon=0 drainring=0 alert_nobell=0 stuck=0
+SUMMARY carried erlangs=0.106 talk_ms=1267 traffic_ms=11999
+SUMMARY dialtone_delay n=42 mean=315.7 p50=146 p99=2373 max=2373
+SUMMARY postdial_alert n=2 mean=23.5 p50=23 p99=24 max=24
+SUMMARY postdial_nogo n=18 mean=18.9 p50=20 p99=20 max=20 (and 19 heard before the last digit)
+SUMMARY exchange ex=A reg_occ=0.000 reg_maxrun_ms=0 dt_wait_mean=0.00 dt_wait_max=0 offhook_mean=0.00 origin_occ=0.000 hunting_occ=0.035 sweeps=36 mon_mean=0.475 mon_max=2 res_mean=0.769 res_max=2 busB_occ=0.0024
+SUMMARY link ex=A blk=1 channels=8 busy_mean=1.808 busy_max=6
+SUMMARY link ex=A blk=3 channels=8 busy_mean=1.908 busy_max=5
+SUMMARY link ex=A blk=5 channels=8 busy_mean=1.761 busy_max=5
+SUMMARY unit ex=A floods=0 local=0 done=0 nogo=0 seized_in=79 nomon=28 unhold=0 nofwd_busy=43 nofwd_empty=0 n_nofwd=43 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=A
+SUMMARY checks ex=A un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=B reg_occ=0.760 reg_maxrun_ms=881 dt_wait_mean=0.30 dt_wait_max=2 offhook_mean=0.99 origin_occ=0.641 hunting_occ=0.043 sweeps=49 mon_mean=0.769 mon_max=2 res_mean=0.766 res_max=2 busB_occ=0.0029
+SUMMARY link ex=B blk=1 channels=8 busy_mean=1.793 busy_max=5
+SUMMARY link ex=B blk=3 channels=8 busy_mean=2.052 busy_max=5
+SUMMARY unit ex=B floods=14 local=0 done=3 nogo=10 seized_in=50 nomon=14 unhold=0 nofwd_busy=15 nofwd_empty=0 n_nofwd=15 claims=11 att_take=0 att_refuse=11 refuse_unattributed=8 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=B N_TCLAIM=10 F_REFUSE=11
+SUMMARY checks ex=B un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=C reg_occ=0.819 reg_maxrun_ms=919 dt_wait_mean=0.30 dt_wait_max=2 offhook_mean=1.11 origin_occ=0.666 hunting_occ=0.043 sweeps=47 mon_mean=0.717 mon_max=2 res_mean=0.773 res_max=2 busB_occ=0.0029
+SUMMARY link ex=C blk=1 channels=8 busy_mean=1.897 busy_max=5
+SUMMARY link ex=C blk=3 channels=8 busy_mean=2.047 busy_max=5
+SUMMARY unit ex=C floods=14 local=0 done=8 nogo=5 seized_in=54 nomon=19 unhold=0 nofwd_busy=21 nofwd_empty=0 n_nofwd=21 claims=13 att_take=2 att_refuse=11 refuse_unattributed=5 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=C N_TCLAIM=5 F_REFUSE=11
+SUMMARY checks ex=C un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=D reg_occ=0.823 reg_maxrun_ms=799 dt_wait_mean=0.68 dt_wait_max=4 offhook_mean=1.51 origin_occ=0.660 hunting_occ=0.035 sweeps=40 mon_mean=0.542 mon_max=2 res_mean=0.000 res_max=0 busB_occ=0.0012
+SUMMARY link ex=D blk=1 channels=8 busy_mean=1.730 busy_max=4
+SUMMARY unit ex=D floods=14 local=0 done=8 nogo=5 seized_in=27 nomon=0 unhold=0 nofwd_busy=1 nofwd_empty=26 n_nofwd=27 claims=11 att_take=1 att_refuse=10 refuse_unattributed=7 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=D N_TCLAIM=5 F_REFUSE=10
+SUMMARY checks ex=D un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY line A20 att=0 ok=0 rung=0 answered=0
+SUMMARY line A21 att=0 ok=0 rung=0 answered=0
+SUMMARY line A22 att=0 ok=0 rung=0 answered=0
+SUMMARY line A23 att=0 ok=0 rung=0 answered=0
+SUMMARY line A24 att=0 ok=0 rung=0 answered=0
+SUMMARY line A25 att=0 ok=0 rung=0 answered=0
+SUMMARY line A26 att=0 ok=0 rung=0 answered=0
+SUMMARY line A27 att=0 ok=0 rung=0 answered=0
+SUMMARY line A40 att=0 ok=0 rung=0 answered=0
+SUMMARY line A41 att=0 ok=0 rung=0 answered=0
+SUMMARY line A42 att=0 ok=0 rung=0 answered=0
+SUMMARY line A43 att=0 ok=0 rung=0 answered=0
+SUMMARY line A44 att=0 ok=0 rung=0 answered=0
+SUMMARY line A45 att=0 ok=0 rung=0 answered=0
+SUMMARY line A46 att=0 ok=0 rung=0 answered=0
+SUMMARY line A47 att=0 ok=0 rung=0 answered=0
+SUMMARY line B20 att=0 ok=0 rung=0 answered=0
+SUMMARY line B21 att=0 ok=0 rung=0 answered=0
+SUMMARY line B22 att=0 ok=0 rung=0 answered=0
+SUMMARY line B23 att=0 ok=0 rung=0 answered=0
+SUMMARY line B24 att=2 ok=0 rung=0 answered=0 NOGO=2
+SUMMARY line B25 att=0 ok=0 rung=0 answered=0
+SUMMARY line B26 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B27 att=0 ok=0 rung=0 answered=0
+SUMMARY line B40 att=0 ok=0 rung=0 answered=0
+SUMMARY line B41 att=0 ok=0 rung=0 answered=0
+SUMMARY line B42 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B43 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B44 att=4 ok=0 rung=0 answered=0 NOGO=4
+SUMMARY line B45 att=0 ok=0 rung=0 answered=0
+SUMMARY line B46 att=0 ok=0 rung=0 answered=0
+SUMMARY line B47 att=0 ok=0 rung=0 answered=0
+SUMMARY line B50 att=2 ok=0 rung=0 answered=0 NOGO=1 CUT=1
+SUMMARY line B51 att=0 ok=0 rung=0 answered=0
+SUMMARY line B52 att=0 ok=0 rung=0 answered=0
+SUMMARY line B53 att=0 ok=0 rung=0 answered=0
+SUMMARY line B54 att=0 ok=0 rung=0 answered=0
+SUMMARY line B55 att=0 ok=0 rung=0 answered=0
+SUMMARY line B56 att=0 ok=0 rung=0 answered=0
+SUMMARY line B57 att=0 ok=0 rung=0 answered=0
+SUMMARY line B60 att=0 ok=0 rung=0 answered=0
+SUMMARY line B61 att=0 ok=0 rung=0 answered=0
+SUMMARY line B62 att=0 ok=0 rung=0 answered=0
+SUMMARY line B63 att=0 ok=0 rung=0 answered=0
+SUMMARY line B64 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B65 att=0 ok=0 rung=0 answered=0
+SUMMARY line B66 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B67 att=0 ok=0 rung=0 answered=0
+SUMMARY line B70 att=0 ok=0 rung=0 answered=0
+SUMMARY line B71 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B72 att=0 ok=0 rung=0 answered=0
+SUMMARY line B73 att=0 ok=0 rung=0 answered=0
+SUMMARY line B74 att=0 ok=0 rung=0 answered=0
+SUMMARY line B75 att=0 ok=0 rung=0 answered=0
+SUMMARY line B76 att=0 ok=0 rung=0 answered=0
+SUMMARY line B77 att=0 ok=0 rung=0 answered=0
+SUMMARY line C20 att=0 ok=0 rung=0 answered=0
+SUMMARY line C21 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C22 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C23 att=0 ok=0 rung=0 answered=0
+SUMMARY line C24 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C25 att=0 ok=0 rung=0 answered=0
+SUMMARY line C26 att=2 ok=0 rung=0 answered=0 NOGO=1 CUT=1
+SUMMARY line C27 att=1 ok=0 rung=0 answered=0 ABANDON=1
+SUMMARY line C40 att=0 ok=0 rung=0 answered=0
+SUMMARY line C41 att=0 ok=0 rung=0 answered=0
+SUMMARY line C42 att=0 ok=0 rung=0 answered=0
+SUMMARY line C43 att=0 ok=0 rung=0 answered=0
+SUMMARY line C44 att=0 ok=0 rung=0 answered=0
+SUMMARY line C45 att=0 ok=0 rung=0 answered=0
+SUMMARY line C46 att=0 ok=0 rung=0 answered=0
+SUMMARY line C47 att=0 ok=0 rung=0 answered=0
+SUMMARY line C50 att=0 ok=0 rung=0 answered=0
+SUMMARY line C51 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C52 att=0 ok=0 rung=0 answered=0
+SUMMARY line C53 att=3 ok=0 rung=1 answered=1 NOGO=3
+SUMMARY line C54 att=0 ok=0 rung=0 answered=0
+SUMMARY line C55 att=0 ok=0 rung=0 answered=0
+SUMMARY line C56 att=0 ok=0 rung=0 answered=0
+SUMMARY line C57 att=0 ok=0 rung=0 answered=0
+SUMMARY line C60 att=0 ok=0 rung=0 answered=0
+SUMMARY line C61 att=0 ok=0 rung=0 answered=0
+SUMMARY line C62 att=1 ok=1 rung=0 answered=0
+SUMMARY line C63 att=0 ok=0 rung=0 answered=0
+SUMMARY line C64 att=0 ok=0 rung=0 answered=0
+SUMMARY line C65 att=0 ok=0 rung=0 answered=0
+SUMMARY line C66 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C67 att=0 ok=0 rung=0 answered=0
+SUMMARY line C70 att=0 ok=0 rung=0 answered=0
+SUMMARY line C71 att=0 ok=0 rung=0 answered=0
+SUMMARY line C72 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C73 att=0 ok=0 rung=0 answered=0
+SUMMARY line C74 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C75 att=0 ok=0 rung=0 answered=0
+SUMMARY line C76 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C77 att=0 ok=0 rung=0 answered=0
+SUMMARY line D20 att=0 ok=0 rung=0 answered=0
+SUMMARY line D21 att=0 ok=0 rung=0 answered=0
+SUMMARY line D22 att=0 ok=0 rung=0 answered=0
+SUMMARY line D23 att=0 ok=0 rung=0 answered=0
+SUMMARY line D24 att=0 ok=0 rung=0 answered=0
+SUMMARY line D25 att=0 ok=0 rung=0 answered=0
+SUMMARY line D26 att=0 ok=0 rung=0 answered=0
+SUMMARY line D27 att=0 ok=0 rung=0 answered=0
+SUMMARY line D30 att=0 ok=0 rung=0 answered=0
+SUMMARY line D31 att=0 ok=0 rung=0 answered=0
+SUMMARY line D32 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D33 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D34 att=2 ok=0 rung=0 answered=0 NOGO=2
+SUMMARY line D35 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D36 att=0 ok=0 rung=0 answered=0
+SUMMARY line D37 att=2 ok=1 rung=0 answered=0 NOGO=1
+SUMMARY line D40 att=0 ok=0 rung=0 answered=0
+SUMMARY line D41 att=0 ok=0 rung=0 answered=0
+SUMMARY line D42 att=0 ok=0 rung=0 answered=0
+SUMMARY line D43 att=0 ok=0 rung=0 answered=0
+SUMMARY line D44 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D45 att=0 ok=0 rung=0 answered=0
+SUMMARY line D46 att=0 ok=0 rung=0 answered=0
+SUMMARY line D47 att=0 ok=0 rung=0 answered=0
+SUMMARY line D50 att=0 ok=0 rung=0 answered=0
+SUMMARY line D51 att=0 ok=0 rung=0 answered=0
+SUMMARY line D52 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line D53 att=1 ok=0 rung=0 answered=0 ABANDON=1
+SUMMARY line D54 att=0 ok=0 rung=0 answered=0
+SUMMARY line D55 att=0 ok=0 rung=0 answered=0
+SUMMARY line D56 att=0 ok=0 rung=0 answered=0
+SUMMARY line D57 att=0 ok=0 rung=0 answered=0
+SUMMARY line D60 att=0 ok=0 rung=0 answered=0
+SUMMARY line D61 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D62 att=0 ok=0 rung=0 answered=0
+SUMMARY line D63 att=0 ok=0 rung=0 answered=0
+SUMMARY line D64 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line D65 att=0 ok=0 rung=0 answered=0
+SUMMARY line D66 att=1 ok=0 rung=0 answered=0 ABANDON=1
+SUMMARY line D67 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D70 att=0 ok=0 rung=1 answered=1
+SUMMARY line D71 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D72 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D73 att=0 ok=0 rung=0 answered=0
+SUMMARY line D74 att=0 ok=0 rung=0 answered=0
+SUMMARY line D75 att=0 ok=0 rung=0 answered=0
+SUMMARY line D76 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line D77 att=0 ok=0 rung=0 answered=0
+END t=14521
+- work/load/hub/load_harness.svh:1640: Verilog $finish
+HUBSUM ex=A seize ORIG=42 LEG=37 RECENT=0 CLAIM=0 NONE=0 nomon=28 fwd=36 legs1=0 legs2=36 legs3=0 nofwd_fwdr=12 nofwd_nores=31 nofwd_empty=0 res_leg=23 res_gone=13 res_here=0 hold0_mean=264.6 hold0_max=283.6 hold1_mean=246.1 hold1_max=295.2 hold2_mean=0.0 hold2_max=0.0 rleg_noclaim=0 claims=0 late_claims=0 oclaims=0 oclaim_suspect=0
+HUBSUM ex=B seize ORIG=14 LEG=36 RECENT=0 CLAIM=0 NONE=0 nomon=14 fwd=35 legs1=35 legs2=0 legs3=0 nofwd_fwdr=3 nofwd_nores=12 nofwd_empty=0 res_leg=10 res_gone=16 res_here=9 hold0_mean=268.6 hold0_max=286.2 hold1_mean=280.3 hold1_max=564.4 hold2_mean=229.4 hold2_max=242.0 rleg_noclaim=0 claims=11 late_claims=2 oclaims=3 oclaim_suspect=0
+HUBSUM ex=C seize ORIG=14 LEG=40 RECENT=0 CLAIM=0 NONE=0 nomon=19 fwd=33 legs1=33 legs2=0 legs3=0 nofwd_fwdr=8 nofwd_nores=13 nofwd_empty=0 res_leg=3 res_gone=17 res_here=13 hold0_mean=249.8 hold0_max=286.3 hold1_mean=317.3 hold1_max=564.5 hold2_mean=245.4 hold2_max=260.0 rleg_noclaim=0 claims=13 late_claims=0 oclaims=8 oclaim_suspect=0
+HUBSUM ex=D seize ORIG=0 LEG=27 RECENT=0 CLAIM=0 NONE=0 nomon=0 fwd=0 legs1=0 legs2=0 legs3=0 nofwd_fwdr=1 nofwd_nores=0 nofwd_empty=26 res_leg=0 res_gone=0 res_here=0 hold0_mean=0.0 hold0_max=0.0 hold1_mean=0.0 hold1_max=0.0 hold2_mean=0.0 hold2_max=0.0 rleg_noclaim=0 claims=11 late_claims=0 oclaims=9 oclaim_suspect=0
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 15s; walltime 3035.247 s; speed 4.784 ms/s
+- Verilator: cpu 1955.114 s on 1 threads; allocated 9 MB

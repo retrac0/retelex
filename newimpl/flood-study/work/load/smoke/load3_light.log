@@ -1,0 +1,63 @@
+KNOB seed=12
+KNOB dur_ms=15000
+KNOB idle_ms=60000
+KNOB dt_ms=3000
+KNOB pnet=600
+KNOB dest_mode=0
+KNOB brk_ms=12
+KNOB mk_ms=8
+KNOB idg_ms=100
+KNOB idg_jit_ms=0
+KNOB pre_ms=60
+KNOB abandon=50
+KNOB pd_ms=1500
+KNOB ans_ms=300
+KNOB noans=0
+KNOB hold_ms=1500
+KNOB lag_ms=50
+KNOB rest_ms=120
+KNOB ringmax_ms=1500
+KNOB hup_ms=100
+KNOB grace_ms=0
+KNOB drain_ms=2500
+KNOB nlines=64
+KNOB orig_x=255
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=2
+KNOB bad_b=7
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=2000
+KNOB wd_port_ms=448
+KNOB wd_reg_ms=7500
+KNOB wd_org_ms=4625
+KNOB wd_mon_ms=1378
+KNOB wd_res_ms=1878
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=1350
+KNOB phantom_grace_ms=384
+KNOB max_ms=0
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=0
+KNOB hold_fixed=0
+KNOB switch_ms=0
+KNOB idle2_ms=60000
+KNOB pairs=
+KNOB hot=-
+KNOB dbg_misdial=-
+KNOB dbg_sig=-:-
+KNOB scale=8 NX=3 NMON=2 NRES=2 T_ARM=2 T_REL=32 RING=64/128 HIT=1 ID=16 CLR=32 NODIG=1250 T_GUARD0=16 T_KEY=625 T_CLAIM=250
+TOPO ex=A code=22 lines=48
+TOPO ex=B code=23 lines=40
+TOPO ex=C code=24 lines=48
+SELFTEST sig PASS  ok=412 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 15021
+CALL id=1 from=C25 to=B20 kind=N dial=12320 lift=213 dt=218 key=290 last=998 tone=- alert=1019 bell=1019 ans=1028 end=1078 rel=1115 out=OK why=- heard=- rang=B20 cb=0 xv=1 cv=1 ab=- mid=-
+PROG t=2000 calls=5 ok=1 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1979 started=5 ok=1 failed=0 reg_occ A=0.18 B=0.57 C=0.90
+CALL id=2 from=C67 to=B74 kind=N dial=12374 lift=761 dt=1021 key=1093 last=1781 tone=1800 alert=- bell=- ans=- end=1900 rel=1900 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=4 from=C42 to=C33 kind=L dial=33 lift=1305 dt=1802 key=1914 last=2066 tone=- alert=2088 bell=2115 ans=2159 end=2510 rel=2510 out=OK why=- heard=- rang=C33 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=3 from=B21 to=A44 kind=N dial=12244 lift=772 dt=1026 key=1098 last=1706 tone=- alert=1727 bell=1730 ans=1802 end=3715 rel=3715 out=OK why=- heard=- rang=A44 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=7 from=B51 to=B52 kind=L dial=52 lift=2510 dt=2854 key=3006 last=3138 tone=- alert=3160 bell=3266 ans=3452 end=3729 rel=3731 out=OK why=- heard=- rang=B52 cb=0 xv=1 cv=1 ab=- mid=-
+PROG t=4000 calls=11 ok=4 busy=0 nogo=1 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=2000 started=6 ok=3 failed=1 reg_occ A=0.71 B=0.75 C=0.67

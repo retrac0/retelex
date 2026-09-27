@@ -1,0 +1,34 @@
+{
+ "id": "C09-fwrite-ignores-fcancel",
+ "title": "F_WRITE ignores f_cancel: a seizure dying at the sweep end leaves port and leg BUSY for good and a resolver held",
+ "findings": [
+  {
+   "id": "fwrite-ignores-fcancel",
+   "title": "F_WRITE ignores f_cancel: an UNHOLD pushed on the sweep's last tick is followed by the forward's leg and way back, and the dead seizure's port, its leg and a resolver are held for good",
+   "category": "race",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "C_UNHOLD pushes the unhold and sets f_cancel (net_unit.v:590-594, 593). F_WANT (714) and F_HUNT (720-724) honour f_cancel; F_WRITE (725-743) does not. F_HUNT reads the old f_cancel on the tick the UNHOLD sets it. The sweep's last read is port 70 (h_idx = 1 + 9 x 63 mod 64, 769-770), whose word ends in port 00's bit-time, so CONFIRM counts ports 00..77 and h_done is always raised at port 77's visit (779-785). A seizure on 77 whose first low sample is that visit therefore gets C_UNHOLD and h_done on one tick. The UNHOLD (77 <- 00, b 0) is pushed, F_HUNT goes to F_WRITE, and the next tick pushes the leg (13 <- 77, B) and, because there is one leg, the way back (77 <- 13, B) (732-736). The order on cable B is unhold, leg, way back. At the real T_ARM the ~12 ms seizure never armed 77's fM; 77 listens to a leg whose M is 0 and the leg listens to dead 77, so no detector will ever fall (port.v:176-194). The resolver (rs_two) waits for R_LEG or R_GONE (688-689), and 77's BUSY never drops.",
+   "trigger": "tb_fcan: one exchange, trunks looped to themselves, 77 facing W (blip on its incoming A) and 13 facing E. T_ARM 16 ms (real), other timers scale 8. The seizure on 77 ends at scan 16 during CONFIRM (it stood 12.25 ms).",
+   "consequence": "77 and 13 stay BUSY and a resolver (1 of 2) stays held 400 ms after the seizure died and for good. A second occurrence exhausts NRES = 2 and the exchange stops forwarding. The trunk group loses two channels.",
+   "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_fcan_mode0.log: '[66 ms] seizure on 77 ends: it stood 12250 us, fM armed 0' / '[67 ms] sweep done (h_done) ... last CONFIRM visit port 77' / '[67 ms] UNHOLD pushed for 77; fst 2' / '[67 ms] FORWARD pushed: f_in 77 f_ok 0100 f_cancel 1' / cable B in order: 'dst 77 src 00 bsy 0', 'dst 13 src 77 bsy 1', 'dst 77 src 13 bsy 1' / '[485 ms] 77 addr 13 bsy 1 BUSY 1; 13 addr 77 bsy 1 BUSY 1; res 01'. Control run_fcan_mode1.log (the same seizure dying one pass earlier): the UNHOLD comes before h_done, F_HUNT cancels, clean. run_fcan_mode0fixfc.log (F_WRITE honours f_cancel): clean.",
+   "fix": "In F_WRITE, 'if (f_cancel) fst <= F_IDLE' ahead of w_fwd, and gate w_fwd with !f_cancel (tested, +fixfc; one gate). Alternatively F_HUNT takes the cancel combinationally from (w_cls && cst == C_UNHOLD && cls_port == f_in).",
+   "realistic": "It needs a seizure that dies in the millisecond before the forwarder's sweep ends, about 11-13 ms after it arrived (a far origin's guard abandoning, glare, a blip), on the trunk in socket 77. Other ports are exposed only if the UNHOLD lands in the 1-3 ticks while w_fwd waits behind a claim, hold or origin write. The permanent state needs a one-leg forward (a chain); with 2-3 legs, R_GONE sees 77 free and drops them. Rare but permanent. The benches' scale-8 T_ARM of 2 ms hides it, because the port arms within the sweep and releases itself.",
+   "audit": "cableb"
+  },
+  {
+   "id": "fwrite-ignores-fcancel",
+   "title": "F_WRITE ignores f_cancel. A seizure on port 77 that dies in the last CONFIRM sample leaves 77 and its one leg BUSY for good and a resolver held.",
+   "category": "stuck-state",
+   "severity": "low",
+   "confidence": "reproduced",
+   "mechanism": "C_UNHOLD sets f_cancel (net_unit.v:593), but only F_WANT (:714) and F_HUNT at h_done (:722) read it. F_WRITE (:725-743) and w_fwd (:492-493) do not.\n\nThe sweep's last read is always port 70, and it ends in port 00's bit-time. So CONFIRM always visits exactly 00..77, and h_done falls on 77's sample.\n\nA seizure on 77 whose first M-low sample is that one gets its unhold queued first, because w_cls outranks w_fwd (:488). The forward follows it. For a one-leg forward, the way back (:732-736) then re-holds 77 BUSY, listening to the leg.\n\nAt real timers the watch (17-18 ms) outlasts a forward (~11-12 ms), so the window exists. At scale 8 (watch ~4 ms) it does not.",
+   "trigger": "Real timers. A flood on port 77 dies (a bounce, a break inside the far origin's guard, a link glitch) 11-13 ms after it rose, in the pass that ends the forward's CONFIRM. Exactly one other direction has a free trunk.",
+   "consequence": "Neither port can ever release itself: 77 gets no fM edge and its leg no fE edge, so both stay BUSY with bsy=1. The resolver waits for an R_GONE that cannot come.\n\nIt heals only when the leg's far exchange seizes that channel. R_LEG then frees the resolver, and that neighbour's call is patched straight through B to the N neighbour; B's classifier never sees it, because the leg is BUSY. The pair clears when that call ends.",
+   "realistic": "Rare: one port in 64, one pass in ~18, and only seizures that die within T_ARM. It only happens at real timers.",
+   "evidence": "Reproduced by the cableb slice, not by me: work/audit/cableb/run_fcan_mode0.log.\n- '[67 ms] FORWARD pushed: f_in 77 f_ok 0100 f_cancel 1'.\n- '[485 ms] 400 ms on: 77 addr 13 bsy 1 BUSY 1; 13 addr 77 bsy 1 BUSY 1; res 01': FAIL.\n- Control run_fcan_mode1.log and fixed run_fcan_mode0fixfc.log both pass.\n\nMy own analysis adds the resolver-level consequence and the misroute when the leg's far end reuses the channel.",
+   "fix": "In F_WRITE: if (f_cancel) fst <= F_IDLE; and add !f_cancel to w_fwd. One gate. Included in work/audit/fwd/rtl_fix/net_unit.v, where tb_chain and tb_lchain are green.",
+   "audit": "forwarder"
+  }
+ ]
+}

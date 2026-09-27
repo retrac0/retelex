@@ -1,0 +1,20 @@
+{
+ "id": "C17-nogo-after-release",
+ "title": "A unit nogo landing after the caller port released leaves the line BUSY until next lifted",
+ "findings": [
+  {
+   "id": "nogo-write-after-caller-release",
+   "title": "A unit nogo that lands between the caller port's own release and the register's gone leaves the line BUSY until it is next lifted",
+   "category": "race",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "CLR (register) equals T_REL (port) in top_net: 256 and 256, or 32 and 32 at scale. The port sees M directly (port.v:178), but pulse_reg sees it through its 1 ms probe (pulse_rx.v:93, pulse_reg.v:139), so gone rises 0-1 ms after the port has already cleared its latch. In S_YIELD a u_nogo is acted on before gone exists: the marker writes caller<-NOGO with BSY (mini_marker.v:515-523). If that word lands after the port's release, the port is BUSY with no edge to come. The unit's timers can issue that nogo independently of the hang-up: T_KEY (net_unit.v:876), T_CLAIM (:882), or 8 or 9 in the code.",
+   "trigger": "A caller whose flood reaches nobody hangs up about 1.74 s after b, so that the CLR moment of the hang-up coincides within about 1 ms with T_CLAIM expiry. Demonstrated in correlated form by the one-sample claim-loss fix (run_fix_s6.log, A20 left BUSY).",
+   "consequence": "The line is BUSY listening to 03. It is unreachable (callers hear busy) until its subscriber next lifts and hangs up, which clears it.",
+   "evidence": "Reasoning plus the correlated reproduction in work/audit/origin/run_fix_s6.log: [428.160] A nst 5->7 before r_gone at 429, [428.578] A wr dst 20 src 03 bsy 1, and at the end IDLE? busy_a 0000000000010000 (A20).",
+   "fix": "Make the register's gone lead the port's release: CLR a few ms shorter than T_REL (the register's taps are separate from the port RC). Alternatively, in S_YIELD's nogo branch, write BSY only while the register's `hook` reads off-hook. That is one gate, but it changes what a caller in mid-break hears after a guard abandon (tb_net 7).",
+   "realistic": "About 1 in 1000 of calls that time out while their caller is hanging up. The effect is temporary, until the next off-hook.",
+   "audit": "origin"
+  }
+ ]
+}

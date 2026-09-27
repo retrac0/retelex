@@ -1,0 +1,3 @@
+[sim.sh] slot 2: bash work/verify/C20-misc/run_r.sh n11d
+build_n11d=0
+run_scan=0

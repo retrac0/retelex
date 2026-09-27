@@ -1,0 +1,34 @@
+{
+ "id": "C16-marker-reread",
+ "title": "The mini marker re-reads an unheld trunk every pass, blinding it to the eight ports after it and slowing the unit",
+ "findings": [
+  {
+   "id": "marker-rereads-unheld-trunks",
+   "title": "The mini marker re-reads the word of every M-and-not-BUSY trunk each time it comes round",
+   "category": "overload",
+   "severity": "low",
+   "confidence": "reproduced",
+   "mechanism": "mini_marker.v:337-354 reads any M and not-BUSY port while idle; 358-365 returns a trunk to S_IDLE with nothing remembered (the unit has st, the marker has no equivalent). While a trunk waits to be held (a classifier backlog), or for about T_REL after a called party hangs up first under a standing far M, the marker selects it every pass. Each read holds /WS and /HW for 8 frames, pushing the unit's sweep and classifier selects to the next pass, and a line within 8 scan positions after that trunk is passed over every pass.",
+   "trigger": "A burst of seizures; or a terminating call where the called party hangs up first.",
+   "consequence": "Slower classification and sweeps; line callers delayed up to about 256 ms.",
+   "evidence": "Burst traces in run_mc_all.log and run_real13_all.log: mk=4 (S_READ) alternating with mk=0 while T12-T15 await their holds; cls=5 (C_WAIT) entries.",
+   "fix": "Give the marker a read-once bit per port (the unit's st delay line, shared on the tap).",
+   "realistic": "Transient and bounded.",
+   "audit": "monclaim"
+  },
+  {
+   "id": "marker-reread-loop",
+   "title": "The mini marker re-reads a trunk port showing M with BUSY clear every other pass, and cannot see the eight ports after it meanwhile",
+   "category": "starvation",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "S_IDLE (mini_marker.v:337-345) sends any fresh M.!BUSY port to S_READ, and a trunk's word sends it straight back to S_IDLE (:365). The marker keeps no per-port 'already read' bit like the unit's st. The read waits a pass for its select, then collects for 8 frames. The marker is therefore in S_READ at the turns of ports T+1..T+8 in every pass, and never sees a caller there. Each select also blocks the unit's /WS reads for 8 frames, costing its sweep about one pass per collision.",
+   "trigger": "Any trunk with M up and BUSY down. Normally this lasts at most about 2xT_REL: after a claimed trunk is dropped, or when the called party hangs up first (tb_net 2). It would last for ever if such a state were ever permanent.",
+   "consequence": "Lines numbered T+1 to T+8 get no dial tone while it lasts, typically up to about 0.5 s real. The unit's sweeps stretch by about 30-50% during it.",
+   "evidence": "Reasoning from the code. It was not triggered while the marker was idle in these runs: in S5 the marker was in YIELD throughout.",
+   "fix": "Add a per-port 'word said trunk, M has stood since' bit in the marker, like st in net_unit.v:277, or skip a port whose last read was a trunk until its M is seen low. About one package (a 64-stage delay line).",
+   "realistic": "Frequent but short: every call whose called party hangs up first.",
+   "audit": "origin"
+  }
+ ]
+}

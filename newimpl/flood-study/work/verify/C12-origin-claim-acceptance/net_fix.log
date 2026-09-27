@@ -1,0 +1,49 @@
+
+  tb_net -- two exchanges, one link, calls that are dialled
+  1. A20 dials 2 1
+  2. A20 dials 1 2 3 2 1
+C12T 22 f2 t=1475001473000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=1477157473000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=1480157466000 f2=1 guard=0 tmr=5 nst=5
+  3. A20 dials 1 2 2 2 1
+  4. A20 dials 1 2 4
+C12T 22 f2 t=4739993115000 cl_n=0 claimed=0
+  5. A20 dials 1 8, then 1 2 9
+  6. A20 dials 1, and stops
+  7. a break inside the guard
+  8. B's register busy when B claims
+C12T 22 f2 t=9492980947000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=9495136947000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=9498136940000 f2=1 guard=0 tmr=5 nst=5
+  9. A20 dials 2 5, a trunk
+  10. every link cut
+  11. A20 dials 1 2 3, and stops
+C12T 22 f2 t=11947974662000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=11950130662000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=11953130655000 f2=1 guard=0 tmr=5 nst=5
+  12. A22 and A24 wait while A20 dials 1 2 3 2 1
+C12T 22 f2 t=14177968953000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=14180124954000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=14183124946000 f2=1 guard=0 tmr=5 nst=5
+  13. A20 dials 1 2 3 0
+C12T 22 f2 t=15986964322000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=15989120323000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=15992120315000 f2=1 guard=0 tmr=5 nst=5
+  14. a 0.9 ms blip of A into B11
+  15. A20 dials 1 2 2 1
+  16. A20 up on B21 through A11; then A22 dials 1 2 3 2 0
+C12T 22 f2 t=18546957769000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=18549113769000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=11 t=18552113761000 f2=1 guard=0 tmr=5 nst=5
+C12T 22 f2 t=19276955900000 cl_n=0 claimed=0
+C12T 22 rise port=12 t=19279127525000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=12 t=19282127518000 f2=1 guard=0 tmr=5 nst=5
+  17. B20 calls B21 while a seizure reaches B12, five times
+
+  88 checks, 0 errors.  PASS
+
+- tb/tb_net.v:515: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 23s; walltime 804.073 s; speed 28.484 ms/s
+- Verilator: cpu 748.361 s on 1 threads; allocated 8 MB
+rc=0 secs=804

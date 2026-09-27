@@ -1,0 +1,18 @@
+A build fx rc=0 116s
+A sc4 rc=0 47s
+B build fxpf rc=0 119s
+A sc5 rc=0 304s
+A build fx nres3 rc=0 109s
+A nres3 sc4 rc=0 43s
+A DONE
+B pf sc5 rc=0 330s
+B pf sc4 rc=0 38s
+B build netpf rc=0 112s
+B pf tb_net rc=0 827s
+B DONE
+C build chain-leafstrap rc=0 70s
+C chain-leafstrap rc=0 212s
+C DONE
+C build chain-counters(no strap) rc=0 54s
+C chain-counters rc=0 187s
+C2 DONE

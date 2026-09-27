@@ -1,0 +1,20 @@
+{
+ "id": "C06-pre-seizure-break",
+ "title": "A break between the key being recognised and the origin seizure write is invisible to the guard; far monitors count shifted digits",
+ "findings": [
+  {
+   "id": "pre-seizure-break-unguarded",
+   "title": "A break between the key's recognition and the seizure write is invisible to the guard, and the far monitors count the next digits as e and b",
+   "category": "wrong-number",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "r_brk is a one-tick pulse. The origin looks at it only in N_NET and N_WAITCL (net_unit.v:862), and tmr is reset at the seizure push (net_unit.v:815). N_WANT, N_HUNT and N_SEIZE (net_unit.v:847-857, :808-817) ignore it, and the sweep takes about 10 ms plus any wait for a forwarder sweep. If e's first break begins inside that window, the trunk is seized onto a caller who is already on-hook. The far port's M then rises only at the make that ends the pulse, so every far monitor sees the rise after that pulse, which satisfies monitor rule 1. If e is a single pulse, no break follows inside the guard. The far monitors then read b as e and h as b, and the exchange whose code is (b, h) claims. The origin takes that as a genuine claim and connects at o_last.",
+   "trigger": "A 22, B 32. A20 dials the key with only a 20 ms make (ID is 16 ms at scale 8), so e=1's break straddles the seizure write, then dials 3 2 2 (meaning exchange 13, line 22), then one more digit, 1 (tb_orig S3b). The control (S3a) is the same number with 100 ms pauses.",
+   "consequence": "Exchange 32 claims a call dialled to 13. The origin connects its caller to 32's register, which reads the caller's s as h. With one more digit, B21 rings and A20 is connected to a line never dialled: a wrong number. With exactly five digits, 32's register waits for NODIG (10 s, holding 32's only register) and then gives NOGO. A class-marker exchange would complete a one-key 0 or 9 there, which is also a wrong number.",
+   "evidence": "work/audit/origin/run_s2_5.log S3b: [2678.999] A nst 0->1 (flood_go); [2689.283] A wr dst 11 src 20 (seizure, 10.3 ms later, during e's break); [2695.155] B cls 0->1 port 11 (the rise seen at the end of e's pulse); [3012.282] B wr dst 11 clm 1 (B claims at A's third digit); [3150.997] A N_DONE; OBS: B21 ring hi 101, A20 follows B21 4/4; FAIL x2. S3a control: nobody claims. Patched (run_fix2.log S3b): A claimed 0, B21 does not ring.",
+   "fix": "Add a sticky o_brk, set by r_brk in N_WANT, N_HUNT and N_SEIZE and cleared at flood_go. Abandon at h_done if it is set, without seizing, and treat it as a guard break in N_NET's first ticks (rtl_fix/net_unit.v). Cost: one flip-flop and two gates.",
+   "realistic": "At real timing the window is the key-to-e pause in roughly [128, 140-160] ms: ID plus the hunt, plus up to about 10 ms waiting for a forward sweep, plus queue time. e must also be a single pulse (codes 1x), or its whole train must end before the seizure. Conforming rotary dials pause much longer, so this needs a fast electronic pulse source, such as a DTR-pulsing data card or a pulse-out adaptor. The register itself accepts any pause of ID or more, so the protocol's never-a-wrong-number promise has a hole exactly there. At scale 8 the window is 8 times wider relative to dialling.",
+   "audit": "origin"
+  }
+ ]
+}

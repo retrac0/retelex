@@ -1,0 +1,46 @@
+
+  tb_pchain -- three exchanges; glare on a forward, and a seizure with no origin.  sc=3
+    ok    all links up
+  --- sc0: a forward and an origin glare on B14-C11
+  OBS calibration: B14 written 41.285 ms after A's key
+  OBS calibration: C11 written 27.285 ms after C's key
+    ok    calibration: idle again
+  OBS glare at try 0: C's key 14.000 ms after A's
+  OBS at the glare: A dirs 0100 cla 1 glare 0 reg 1 | B mon 01 res 00 reg 0 nofwd 0 glare 0 B11->14 clm 0 B14->11 bsy 1 | C dirs 1000 cla 1 mon 00 reg 1 glare 1 C11->20 C20->0
+  OBS glare between B's forward and C's origin on the one channel (documented residual glare)
+    ok    A counts no glare: A11 was never seized from both ends
+  OBS after dialling: A dirs 0000 cla 1 glare 0 reg 0 | B mon 00 res 00 reg 0 nofwd 0 glare 0 B11->0 clm 0 B14->0 bsy 0 | C dirs 0000 cla 1 mon 00 reg 0 glare 1 C11->0 C20->3
+    FAIL  A20 reached B21, as dialled
+    ok    A21 (C20's number) is not rung: C20's call went nowhere
+  OBS A20 sends 1: B21 hears 1, C20 hears 0
+    ok    B21 hears A20
+    ok    C20 does NOT hear A20 (no listen-in on a stranger's call)
+  OBS A20 sends 0: C20 hears 01 (s1 s0)
+    FAIL  A20 hears B21
+    ok    sc0: all three idle again
+  --- sc1: the A conductor into B11 sticks at 1
+  OBS 100 ms after: A dirs 0000 cla 1 glare 0 reg 0 | B mon 01 res 01 reg 0 nofwd 0 glare 0 B11->14 clm 0 B14->11 bsy 1 | C dirs 0000 cla 1 mon 01 reg 0 glare 1 C11->0 C20->0
+  OBS 1.1 s after (8.8 s real): A dirs 0000 cla 1 glare 0 reg 0 | B mon 01 res 01 reg 0 nofwd 0 glare 0 B11->14 clm 0 B14->11 bsy 1 | C dirs 0000 cla 1 mon 01 reg 0 glare 1 C11->0 C20->0
+    FAIL  a seizure nobody dials on does not hold a monitor or a resolver for good
+    FAIL  nor the B-C channel
+  OBS C20 keys 1: C dirs 0000, hears s1 0 s0 1
+    FAIL  C can still reach the network
+  OBS A20 keys 1: A dirs 0100, A11 busy 1 A12 busy 0
+  OBS A20 dialled B: A claimed 0, hears s1 0 s0 1, B reg 0
+    FAIL  A20 can still reach its neighbour B
+  OBS B20 dialled A: B dirs 1000 claimed 1, A reg 1
+    ok    B20 reaches A (B's glare order takes B13, whose far end is sound)
+  OBS mended, 200 ms after: A dirs 0000 cla 0 glare 0 reg 0 | B mon 00 res 00 reg 0 nofwd 0 glare 0 B11->0 clm 0 B14->0 bsy 0 | C dirs 0000 cla 0 mon 00 reg 0 glare 1 C11->0 C20->0
+    ok    sc1: mended -- everything released
+    ok    after the mend A20 reaches C again
+    ok    sc1: idle at the end
+    ok    no cable B had two masters driving at once
+    ok    no queue refused a write
+
+  19 checks, 6 errors.  FAIL
+
+- work/audit/proto/tb_pchain.v:349: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 779.502 s; speed 7.958 ms/s
+- Verilator: cpu 412.303 s on 1 threads; allocated 8 MB
+rc=0 secs=916

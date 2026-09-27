@@ -1,0 +1,3 @@
+build obj_r4r rc=0 wall_s=75
+run p5 (REAL one b=4 670 20 540 180 830) rc=0 wall_s=322   OUTCOME b=4 rang=0 (hi 0 lo 1500) owner_taken=11 owner_refused=14 origin_kept=74 X20_rx1=0/50 claims X0 Y0 Z2 V0 seizures X2 Y2 Z2 V2 fwds X0 Y2 Z2 V2
+run p1 (REAL one b=4 0 0 0 0 0) rc=0 wall_s=306   OUTCOME b=4 rang=1 (hi 516 lo 984) owner_taken=11 owner_refused=14 origin_kept=04 X20_rx1=50/50 claims X0 Y0 Z2 V0 seizures X2 Y2 Z2 V2 fwds X0 Y2 Z2 V2

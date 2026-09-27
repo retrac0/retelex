@@ -1,0 +1,104 @@
+
+  tb_mc2 -- the stale cell end to end, real timers: A (22) -- X (13)
+    ok    the link is up
+  [   31 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=0 mk=4 caller=00 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [   32 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=0 mk=5 caller=00 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [   33 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=0 mk=1 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [   33 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=1 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+    ok    A20 has A's register; A21 waits
+  [  440 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  440 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=1 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  440 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=2 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  450 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=3 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  450 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  450 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  451 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  452 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=4 X2x busy=00000000
+  [  453 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=00 port=00/00 st=0/0 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  453 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  453 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  455 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  456 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=7 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=8 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=3 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=3 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=3 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  464 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=0 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  465 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=4 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  466 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=5 caller=20 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  467 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=0 mk=1 caller=21 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  467 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=1 caller=21 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+    A let A11 go at 474 ms (the guard)
+    ok    X wrote its hold on the short seizure away (C_UNHOLD)
+    ok    OBSERVE: X's cell given to that seizure is still held
+    A21 has the register at 504 ms
+  [  694 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=0 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  694 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=1 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  694 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=2 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  704 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=3 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  704 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+    A seized A11 again at 704 ms, 230 ms after it let it go
+  [  704 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  705 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  706 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=4 X2x busy=00000000
+  [  707 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=00/11 st=0/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  707 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [  707 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/1 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+    ok    OBSERVE: two X cells now watch X11
+  [  835 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1504 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=0 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1564 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1604 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=0 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1664 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1704 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=0 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1764 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=11 port=11/11 st=1/2 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1894 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=01 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1894 ms] A11 busy=1 X11 busy=1 | X11 bkA=0 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1894 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=0 X2x busy=00000000
+  [ 1894 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=0 mk=1 X2x busy=00000000
+  [ 1894 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=0 | X reg=1 mk=1 X2x busy=00000000
+  [ 1895 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+    FAIL  SAFETY: X (13) does not claim a call to exchange 32
+  [ 2604 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 2664 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 2704 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 2764 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=4 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 2893 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 3604 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 3664 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 3704 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 3764 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=1 X2x busy=00000000
+  [ 3893 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=4 X2x busy=00000000
+  [ 3893 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=2 X2x busy=00000000
+  [ 3894 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=7 X2x busy=00000000
+  [ 3894 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=7 X2x busy=00000100
+  [ 3926 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=1 mk=0 X2x busy=00000100
+  [ 3926 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4604 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4664 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=5 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4793 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=6 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4793 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=6 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4793 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=1 mk=3 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 4793 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=1 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=0 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+    FAIL  SAFETY: X22 is not rung by a caller who dialled 1 3 2 2 1
+    A21 hears X22 go 1: 1
+    A21 hears X22 go 0: 0
+    FAIL  SAFETY: A21 is not talking to X22
+  [ 5714 ms] A11 busy=1 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=0 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 5970 ms] A11 busy=0 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=0 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 5970 ms] A11 busy=0 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=4 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000100
+  [ 5970 ms] A11 busy=0 X11 busy=1 | X11 bkA=1 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=4 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000000
+  [ 5970 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=4 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000000
+  [ 5970 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=4 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000000
+  [ 5971 ms] A11 busy=1 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=0 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000000
+  [ 6226 ms] A11 busy=0 X11 busy=0 | X11 bkA=0 A11 M-in=0 | X cells held=00 port=11/11 st=1/3 | A reg=0 mk=0 caller=21 origin=0 claimed=1 | X reg=0 mk=0 X2x busy=00000000
+    ok    and afterwards both exchanges are idle
+
+  9 checks, 3 errors.  FAIL
+
+- work/audit/monclaim/tb_mc2.v:175: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 7s; walltime 223.739 s; speed 30.004 ms/s
+- Verilator: cpu 154.451 s on 1 threads; allocated 8 MB

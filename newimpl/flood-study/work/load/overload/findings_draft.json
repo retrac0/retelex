@@ -1,0 +1,17 @@
+[
+ {"id": "overload-register-spent-on-refused-network-attempts",
+  "title": "Under overload the one register spends 64-96% of its time on network attempts that are refused, so completions fall past the knee and network completion is ~0 above ~1.5x",
+  "category": "overload", "severity": "high", "confidence": "reproduced", "cluster": "C15"},
+ {"id": "network-jam-denies-local-service",
+  "title": "A saturated network side takes the exchange's only register from local callers: lines numbered above the network callers get no dial tone at all; below them, dial tone 5.7x slower and half the calls BUSY",
+  "category": "starvation", "severity": "high", "confidence": "reproduced", "cluster": "new"},
+ {"id": "tick-aligned-release-fixed-port-priority",
+  "title": "Waiting callers are served lowest port first because the register is freed on tick_1k (scan 00); under sustained overload blocks 5x-7x get almost no dial tone, at both scales",
+  "category": "starvation", "severity": "low", "confidence": "reproduced", "cluster": "new"},
+ {"id": "recovery-time-is-dial-tone-patience",
+  "title": "Recovery after overload takes one dial-tone timeout (3 s scale 8, 15-20 s real): the backlog is flushed only by callers giving up; nothing is latched",
+  "category": "overload", "severity": "info", "confidence": "reproduced", "cluster": "new"},
+ {"id": "partial-dial-holds-origin-register-to-nodig",
+  "title": "A caller who stops after 1 e b of a real code holds the origin register and a trunk until the register's NODIG (10 s real), because the far refusal is not heard before o_last",
+  "category": "capacity", "severity": "low", "confidence": "reproduced", "cluster": "C15"}
+]

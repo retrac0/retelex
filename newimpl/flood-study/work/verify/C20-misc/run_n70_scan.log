@@ -1,0 +1,260 @@
+
+  tb_c20r -- drop then re-seize, real timers: TA=70 A T_REL=256 fd=0 us hu=50 rs=258 scan=1
+    ok    the links are up
+  [   31 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=0 TA busy=0 A13 busy=0
+  [   32 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=0 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [  620 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=0 TA busy=0 A13 busy=0
+  [  629 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=0 TA busy=0 A13 busy=0
+  [  630 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=0 TA busy=0 A13 busy=0
+    A seized TA/A12 at 630 ms
+  [  630 ms] A's TA seized
+  [  631 ms] X11 M rises (X11 busy=0)
+  [  633 ms] X holds X11 as a fresh seizure (hold #1)
+    A20 hung up at 679 ms (49 ms after the seizure)
+  [  680 ms] X11 M falls
+  [  923 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=0 TA busy=1 A13 busy=0
+  [  924 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=0 TA busy=1 A13 busy=0
+  [  924 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=0 TA busy=1 A13 busy=0
+  [  924 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=0 TA busy=1 A13 busy=0
+  [  934 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0000 res=00 nofwd=0 TA busy=1 A13 busy=1
+  [  935 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0000 res=00 nofwd=0 TA busy=1 A13 busy=1
+  [  935 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=1 TA busy=1 A13 busy=1
+  [  936 ms] A's TA free at A
+  [  936 ms] X11 free at X
+  [  942 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=1 TA busy=0 A13 busy=1
+  SCAN rs=244: NOT re-seized
+  [ 1893 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=1 TA busy=0 A13 busy=0
+  [ 1894 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=1 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [ 2482 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=1 TA busy=0 A13 busy=0
+  [ 2491 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=1 TA busy=0 A13 busy=0
+  [ 2492 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=1 TA busy=0 A13 busy=0
+    A seized TA/A12 at 2492 ms
+  [ 2492 ms] A's TA seized
+  [ 2493 ms] X11 M rises (X11 busy=0)
+  [ 2495 ms] X holds X11 as a fresh seizure (hold #2)
+    A20 hung up at 2541 ms (49 ms after the seizure)
+  [ 2542 ms] X11 M falls
+  [ 2786 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=1 TA busy=1 A13 busy=0
+  [ 2787 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=1 TA busy=1 A13 busy=0
+  [ 2787 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=1 TA busy=1 A13 busy=0
+  [ 2787 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=1 TA busy=1 A13 busy=0
+  [ 2797 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0000 res=00 nofwd=1 TA busy=1 A13 busy=1
+  [ 2798 ms] A's TA free at A
+  [ 2798 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0000 res=00 nofwd=1 TA busy=0 A13 busy=1
+  [ 2798 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=1
+  [ 2798 ms] X11 free at X
+  [ 2805 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=1
+  SCAN rs=245: NOT re-seized
+  [ 3756 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=0
+  [ 3757 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [ 4345 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=0
+  [ 4354 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=2 TA busy=0 A13 busy=0
+  [ 4355 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=2 TA busy=0 A13 busy=0
+    A seized TA/A12 at 4355 ms
+  [ 4355 ms] A's TA seized
+  [ 4356 ms] X11 M rises (X11 busy=0)
+  [ 4357 ms] X holds X11 as a fresh seizure (hold #3)
+    A20 hung up at 4404 ms (49 ms after the seizure)
+  [ 4405 ms] X11 M falls
+  [ 4650 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=2 TA busy=1 A13 busy=0
+  [ 4651 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=2 TA busy=1 A13 busy=0
+  [ 4651 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=2 TA busy=1 A13 busy=0
+  [ 4651 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=2 TA busy=1 A13 busy=0
+  [ 4661 ms] A's TA free at A
+  [ 4661 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=1
+  [ 4661 ms] X11 free at X
+  [ 4662 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0000 res=00 nofwd=2 TA busy=0 A13 busy=1
+  [ 4662 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 4669 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=1
+  SCAN rs=246: NOT re-seized
+  [ 5620 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 5621 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [ 6209 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 6218 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 6219 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 6219 ms
+  [ 6219 ms] A's TA seized
+  [ 6220 ms] X11 M rises (X11 busy=0)
+  [ 6221 ms] X holds X11 as a fresh seizure (hold #4)
+    A20 hung up at 6268 ms (49 ms after the seizure)
+  [ 6269 ms] X11 M falls
+  [ 6515 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 6516 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 6516 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 6516 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 6524 ms] X11 free at X
+  [ 6525 ms] A's TA free at A
+  [ 6526 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 6527 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 6527 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 6527 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [ 6527 ms] A's TA seized
+  [ 6528 ms] X11 M rises (X11 busy=0)
+  [ 6529 ms] X holds X11 as a fresh seizure (hold #5)
+  [ 6534 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=247: safe, margin 3.891 ms (X11 free -> re-seizure M at X11); A free->seize 2.285 ms; X free - A free -0.679 ms
+  [ 6558 ms] X11 M falls
+  [ 6813 ms] X11 free at X
+  [ 6814 ms] A's TA free at A
+  [ 7458 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 7459 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [ 8047 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 8056 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 8057 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 8057 ms
+  [ 8057 ms] A's TA seized
+  [ 8058 ms] X11 M rises (X11 busy=0)
+  [ 8059 ms] X holds X11 as a fresh seizure (hold #6)
+    A20 hung up at 8106 ms (49 ms after the seizure)
+  [ 8107 ms] X11 M falls
+  [ 8354 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 8355 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 8355 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 8355 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [ 8362 ms] X11 free at X
+  [ 8363 ms] A's TA free at A
+  [ 8365 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 8366 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 8366 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [ 8366 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [ 8366 ms] A's TA seized
+  [ 8367 ms] X11 M rises (X11 busy=0)
+  [ 8368 ms] X holds X11 as a fresh seizure (hold #7)
+  [ 8373 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=248: safe, margin 4.797 ms (X11 free -> re-seizure M at X11); A free->seize 3.285 ms; X free - A free -0.589 ms
+  [ 8397 ms] X11 M falls
+  [ 8652 ms] X11 free at X
+  [ 8653 ms] A's TA free at A
+  [ 9297 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 9298 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [ 9886 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 9895 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [ 9896 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 9896 ms
+  [ 9896 ms] A's TA seized
+  [ 9897 ms] X11 M rises (X11 busy=0)
+  [ 9898 ms] X holds X11 as a fresh seizure (hold #8)
+    A20 hung up at 9945 ms (49 ms after the seizure)
+  [ 9946 ms] X11 M falls
+  [10194 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [10195 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [10195 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [10195 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [10201 ms] X11 free at X
+  [10202 ms] A's TA free at A
+  [10205 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [10206 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [10206 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [10206 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [10206 ms] A's TA seized
+  [10207 ms] X11 M rises (X11 busy=0)
+  [10208 ms] X holds X11 as a fresh seizure (hold #9)
+  [10213 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=249: safe, margin 5.703 ms (X11 free -> re-seizure M at X11); A free->seize 4.285 ms; X free - A free -0.498 ms
+  [10237 ms] X11 M falls
+  [10492 ms] X11 free at X
+  [10493 ms] A's TA free at A
+  [11137 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [11138 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [11726 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [11735 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [11736 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 11736 ms
+  [11736 ms] A's TA seized
+  [11737 ms] X11 M rises (X11 busy=0)
+  [11738 ms] X holds X11 as a fresh seizure (hold #10)
+    A20 hung up at 11785 ms (49 ms after the seizure)
+  [11786 ms] X11 M falls
+  [12035 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [12036 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [12036 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [12036 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [12041 ms] X11 free at X
+  [12042 ms] A's TA free at A
+  [12046 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [12047 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [12047 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [12047 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [12047 ms] A's TA seized
+  [12048 ms] X11 M rises (X11 busy=0)
+  [12049 ms] X holds X11 as a fresh seizure (hold #11)
+  [12054 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=250: safe, margin 6.609 ms (X11 free -> re-seizure M at X11); A free->seize 5.285 ms; X free - A free -0.408 ms
+  [12078 ms] X11 M falls
+  [12333 ms] X11 free at X
+  [12334 ms] A's TA free at A
+  [12978 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [12979 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [13567 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [13576 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [13577 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 13577 ms
+  [13577 ms] A's TA seized
+  [13578 ms] X11 M rises (X11 busy=0)
+  [13579 ms] X holds X11 as a fresh seizure (hold #12)
+    A20 hung up at 13626 ms (49 ms after the seizure)
+  [13627 ms] X11 M falls
+  [13877 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [13878 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [13878 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [13878 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [13882 ms] X11 free at X
+  [13883 ms] A's TA free at A
+  [13888 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [13889 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [13889 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [13889 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [13889 ms] A's TA seized
+  [13890 ms] X11 M rises (X11 busy=0)
+  [13891 ms] X holds X11 as a fresh seizure (hold #13)
+  [13896 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=251: safe, margin 7.516 ms (X11 free -> re-seizure M at X11); A free->seize 6.285 ms; X free - A free -0.317 ms
+  [13920 ms] X11 M falls
+  [14175 ms] X11 free at X
+  [14176 ms] A's TA free at A
+  [14820 ms] A cls 1(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [14821 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    ok    A20 has A's register
+  [15409 ms] A cls 0(port 20) fwd 0 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [15418 ms] A cls 0(port 20) fwd 0 sweep 2 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+  [15419 ms] A cls 0(port 20) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=0 A13 busy=0
+    A seized TA/A12 at 15419 ms
+  [15419 ms] A's TA seized
+  [15420 ms] X11 M rises (X11 busy=0)
+  [15422 ms] X holds X11 as a fresh seizure (hold #14)
+    A20 hung up at 15468 ms (49 ms after the seizure)
+  [15469 ms] X11 M falls
+  [15720 ms] A cls 1(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [15721 ms] A cls 2(port 13) fwd 0 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [15721 ms] A cls 3(port 13) fwd 1 sweep 0 h_ok=1100 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [15721 ms] A cls 3(port 13) fwd 2 sweep 1 h_ok=0000 res=00 nofwd=3 TA busy=1 A13 busy=0
+  [15724 ms] X11 free at X
+  [15725 ms] A's TA free at A
+  [15731 ms] A cls 3(port 13) fwd 2 sweep 2 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [15732 ms] A cls 3(port 13) fwd 2 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [15732 ms] A cls 3(port 13) fwd 3 sweep 0 h_ok=0100 res=00 nofwd=3 TA busy=0 A13 busy=1
+  [15732 ms] A cls 3(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=0 A13 busy=1
+  [15732 ms] A's TA seized
+  [15733 ms] X11 M rises (X11 busy=0)
+  [15735 ms] X holds X11 as a fresh seizure (hold #15)
+  [15739 ms] A cls 0(port 13) fwd 0 sweep 0 h_ok=0100 res=01 nofwd=3 TA busy=1 A13 busy=1
+  SCAN rs=252: safe, margin 8.438 ms (X11 free -> re-seizure M at X11); A free->seize 7.285 ms; X free - A free -0.227 ms
+  [15763 ms] X11 M falls
+  [16018 ms] X11 free at X
+  [16019 ms] A's TA free at A
+    ok    no bus clash, no queue refusal (last sample)
+
+  11 checks, 0 errors.  PASS
+
+- work/verify/C20-misc/tb_c20r.v:272: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 17s; walltime 385.993 s; speed 43.166 ms/s
+- Verilator: cpu 368.949 s on 1 threads; allocated 8 MB

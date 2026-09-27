@@ -1,0 +1,16 @@
+# lane 1
+l2_p1000_i30k|work/load/obj_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000
+l2_p1000_i60k|work/load/obj_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=60000 +pnet=1000
+build_c2_load2|verilator|5400|--binary --timing -j 2 -Irtl -Iwork/load/cap2 -Wno-fatal --top-module tb_load2 --Mdir work/load/cap2/obj_c2_load2 -o tb_load2 $(cat work/RTL.list) tb/site_net.v work/load/cap2/tb_load2.sv
+l2_oneway_i30k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000 +dest_mode=1 +orig_x=1
+build_c2_load2_cac|verilator|5400|--binary --timing -j 2 -Irtl -Iwork/load/cap2 -Wno-fatal --top-module tb_load2 --Mdir work/load/cap2/obj_c2_load2_cac -o tb_load2 $(cat work/load/cap2/fix_cac/RTL.list) tb/site_net.v work/load/cap2/tb_load2.sv
+cac_p1000_i30k|work/load/cap2/obj_c2_load2_cac/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000
+l2b_p1000_i30k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000
+build_c2_load2_s1|verilator|5400|--binary --timing -j 2 -Irtl -Iwork/load/cap2 -Wno-fatal +define+SCALE1 --top-module tb_load2 --Mdir work/load/cap2/obj_c2_load2_s1 -o tb_load2 $(cat work/RTL.list) tb/site_net.v work/load/cap2/tb_load2.sv
+s1_p1000_i190k|work/load/cap2/obj_c2_load2_s1/tb_load2|12000|+seed=11 +dur_ms=60000 +drain_ms=15000 +idle_ms=190000 +pnet=1000 +prog_ms=10000
+l2_p1000_i15k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=15000 +pnet=1000
+l2_p1000_i120k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=16000 +idle_ms=120000 +pnet=1000
+l2b_p1000_i60k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=12000 +idle_ms=60000 +pnet=1000
+l2_p1000_i60k_s12|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=12 +dur_ms=12000 +idle_ms=60000 +pnet=1000
+l2b_p1000_i15k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=12000 +idle_ms=15000 +pnet=1000
+l2_p1000_i240k|work/load/cap2/obj_c2_load2/tb_load2|12000|+seed=11 +dur_ms=20000 +idle_ms=240000 +pnet=1000

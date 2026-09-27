@@ -1,0 +1,82 @@
+--- rtl/net_unit.v	2026-09-26 00:42:05.680752092 -0400
++++ work/audit/monclaim/rtl_fix/net_unit.v	2026-09-26 01:15:35.157530443 -0400
+@@ -299,7 +299,8 @@
+     reg  [NMON-1:0]      m_held, m_armed, m_want;
+     reg  [NMON*`PW-1:0]  m_port;
+     reg  [NMON*2-1:0]    m_st;
+-    wire [NMON-1:0]      mp_m, mp_fresh, d_stb, d_clr;
++    wire [NMON-1:0]      mp_m, mp_fresh, d_stb, d_clr, d_lbrk;
++    reg  [NMON-1:0]      cls_cell;          // AUDIT FIX: the cell given to the seizure in C_HOLD
+     wire [NMON*`PW-1:0]  mp_port;
+     wire [NMON*4-1:0]    d_cnt;
+ 
+@@ -317,7 +318,7 @@
+             .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
+             .arm(m_armed[g]), .m(mp_m[g]),
+             .cnt(d_cnt[g*4 +: 4]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
+-            .counting(cnt_u), .brk_stb(brk_u), .steady(stdy_u));
++            .counting(cnt_u), .brk_stb(brk_u), .steady(stdy_u), .longbrk(d_lbrk[g]));
+         wire _unused_cell = &{1'b0, mp_busy_u, cnt_u, brk_u, stdy_u, 1'b0};
+     end endgenerate
+ 
+@@ -518,7 +519,7 @@
+             rd_req <= 1'b0; rd_port <= P00; rd_own <= 1'b0;
+             restart <= 1'b0; local_go <= 1'b0; done <= 1'b0; nogo <= 1'b0;
+             att <= 1'b0; att_port <= P00; cl_st <= CL_IDLE;
+-            cst <= C_IDLE; cls_port <= P00; cls_dir <= 2'd0; cls_ms <= 9'd0;
++            cst <= C_IDLE; cls_port <= P00; cls_dir <= 2'd0; cls_ms <= 9'd0; cls_cell <= {NMON{1'b0}};
+             st <= 64'd0; f_cancel <= 1'b0; o_ok <= 4'd0; o_cand <= {4*`PW{1'b0}};
+             m_held <= {NMON{1'b0}}; m_armed <= {NMON{1'b0}}; m_want <= {NMON{1'b0}};
+             m_port <= {NMON*`PW{1'b0}}; m_st <= {NMON*2{1'b0}};
+@@ -591,6 +592,11 @@
+                 push_v <= 5'b00001;
+                 push_d <= {60'd0, ent(cls_port, P00, 1'b0, 1'b0)};
+                 if ((fst != F_IDLE) && (f_in == cls_port)) f_cancel <= 1'b1;
++                // AUDIT FIX (a): the seizure is gone, and so is its cell
++                for (i = 0; i < NMON; i = i + 1)
++                    if (cls_cell[i] && (m_port[i*`PW +: `PW] == cls_port)) begin
++                        m_held[i] <= 1'b0; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
++                    end
+                 cst <= C_IDLE;
+             end else if (w_cls) begin
+                 // ---- an incoming seizure ----------------------------------
+@@ -609,6 +615,7 @@
+                 push_v <= 5'b00001;
+                 push_d <= {60'd0, ent(cls_port, P00, 1'b1, 1'b0)};
+                 cst    <= C_HOLD; cls_ms <= 9'd0;
++                cls_cell <= m_free1;                          // AUDIT FIX (a)
+                 for (i = 0; i < NMON; i = i + 1) if (m_free1[i]) begin
+                     m_held[i] <= 1'b1; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
+                     m_port[i*`PW +: `PW] <= cls_port; m_st[i*2 +: 2] <= M_WANT_E;
+@@ -643,8 +650,9 @@
+                     default: ;
+                     endcase
+                 end
+-                // the trunk released: 256 ms of break
+-                if (m_held[i] && d_clr[i]) begin
++                // the trunk released: 256 ms of break.  AUDIT FIX (b): and a
++                // break no dial makes (ID) is no pulse of e or b either
++                if (m_held[i] && (d_clr[i] || d_lbrk[i])) begin
+                     m_held[i] <= 1'b0; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
+                 end
+             end
+--- rtl/pulse_rx.v	2026-09-26 00:42:05.690881303 -0400
++++ work/audit/monclaim/rtl_fix/pulse_rx.v	2026-09-26 01:15:35.156530431 -0400
+@@ -42,7 +42,8 @@
+     output reg       clear,      // one tick: 256 ms of break -- the caller went away
+     output           counting,   // a digit is part-collected
+     output reg       brk_stb,    // one tick: a break was just counted
+-    output           steady      // a make has stood SETTLE, no break since
++    output           steady,     // a make has stood SETTLE, no break since
++    output           longbrk     // AUDIT FIX: a break has lasted ID -- no dial pulse is that long
+ );
+     reg [8:0] t;      // milliseconds in the state m has been in
+     reg       m_d;
+@@ -61,6 +62,7 @@
+     // reads it (mini_marker S_WATCH), to know that the called port's E detector,
+     // counting the same samples of the same wire, has risen.
+     assign steady = arm && m_d && (t >= SETTLE);
++    assign longbrk = arm && !m_d && (t >= ID);
+ 
+     always @(posedge clk or negedge rst_n) begin
+         if (!rst_n) begin

@@ -1,0 +1,152 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=4 var=0 dly=112 load=0
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc4: four floods at once through a two-resolver transit
+     31.514 ms  fst 0 -> 1
+     31.514 ms  mon_held 00 -> 01
+     31.514 ms  fst 1 -> 2
+     31.514 ms  hst 0 -> 1 (owner 1)
+     31.798 ms  port 30 BUSY -> 1
+     31.798 ms  port 30 latch -> src 00 bsy 1 clm 0
+     41.014 ms  hst 1 -> 2 (owner 1)
+     42.005 ms  hst 2 -> 0 (owner 1)
+     42.005 ms  fst 2 -> 3
+     42.006 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     42.006 ms  fst 3 -> 0
+     42.290 ms  port 74 BUSY -> 1
+     42.290 ms  port 74 latch -> src 30 bsy 1 clm 0
+     42.389 ms  port 74 a_out (far M) -> 1
+     42.424 ms  port 40 BUSY -> 1
+     42.424 ms  port 40 latch -> src 30 bsy 1 clm 0
+     42.557 ms  port 10 BUSY -> 1
+     42.557 ms  port 10 latch -> src 30 bsy 1 clm 0
+     43.389 ms  port 40 a_out (far M) -> 1
+     43.411 ms  far LTU ch 0: M seen by W neighbour -> 1
+     71.655 ms  fst 0 -> 1
+     71.655 ms  mon_held 01 -> 11
+     71.655 ms  fst 1 -> 2
+     71.655 ms  hst 0 -> 1 (owner 1)
+     71.939 ms  port 41 BUSY -> 1
+     71.939 ms  port 41 latch -> src 00 bsy 1 clm 0
+     81.014 ms  hst 1 -> 2 (owner 1)
+     82.005 ms  hst 2 -> 0 (owner 1)
+     82.005 ms  fst 2 -> 3
+     82.006 ms  rs_busy 01 -> 11   in 30 41  held 1011 1101  legs0 74 40 00 10  legs1 75 40 31 11
+     82.006 ms  fst 3 -> 0
+     82.290 ms  port 75 BUSY -> 1
+     82.290 ms  port 75 latch -> src 41 bsy 1 clm 0
+     82.423 ms  port 31 BUSY -> 1
+     82.423 ms  port 31 latch -> src 41 bsy 1 clm 0
+     82.529 ms  port 31 a_out (far M) -> 1
+     82.529 ms  port 75 a_out (far M) -> 1
+     82.557 ms  port 11 BUSY -> 1
+     82.557 ms  port 11 latch -> src 41 bsy 1 clm 0
+     83.552 ms  far LTU ch 1: M seen by W neighbour -> 1
+    111.295 ms  n_nofwd 0 -> 1
+    111.579 ms  port 12 BUSY -> 1
+    111.579 ms  port 12 latch -> src 00 bsy 1 clm 0
+    152.123 ms  n_nofwd 1 -> 2
+    152.407 ms  port 77 BUSY -> 1
+    152.407 ms  port 77 latch -> src 00 bsy 1 clm 0
+    190.004 ms  latch 30: src 00 bsy 1 clm 0   BUSY 1  a_out 0
+    190.004 ms  latch 41: src 00 bsy 1 clm 0   BUSY 1  a_out 0
+    190.004 ms  latch 12: src 00 bsy 1 clm 0   BUSY 1  a_out 0
+    190.004 ms  latch 77: src 00 bsy 1 clm 0   BUSY 1  a_out 0
+    ok    two resolvers hold two forwards
+    ok    the third and fourth floods were held and not passed on (n_nofwd +2)
+    ok    both are held here (BUSY) though nobody passes them on
+  mon_held 11: the first two floods have the two monitors
+    190.521 ms  rs_busy 11 -> 10   in 30 41  held 0000 1101  legs0 74 40 00 10  legs1 75 40 31 11
+    190.805 ms  port 74 latch -> src 00 bsy 0 clm 0
+    190.939 ms  port 10 latch -> src 00 bsy 0 clm 0
+    191.013 ms  port 74 a_out (far M) -> 0
+    191.036 ms  far LTU ch 0: M seen by W neighbour -> 0
+    191.072 ms  port 30 latch -> src 40 bsy 1 clm 0
+    191.513 ms  port 30 a_out (far M) -> 1
+    ok    S40 claimed the E flood: E30 now listens to it, a resolver is free
+    232.107 ms  fst 0 -> 1
+    232.108 ms  fst 1 -> 2
+    232.108 ms  hst 0 -> 1 (owner 1)
+    232.392 ms  port 76 BUSY -> 1
+    232.392 ms  port 76 latch -> src 00 bsy 1 clm 0
+    242.013 ms  hst 1 -> 2 (owner 1)
+    243.005 ms  hst 2 -> 0 (owner 1)
+    243.005 ms  fst 2 -> 3
+    243.005 ms  rs_busy 10 -> 11   in 76 41  held 1110 1101  legs0 75 42 32 13  legs1 75 40 31 11
+    243.005 ms  fst 3 -> 0
+    243.289 ms  port 42 BUSY -> 1
+    243.289 ms  port 42 latch -> src 76 bsy 1 clm 0
+    243.423 ms  port 32 BUSY -> 1
+    243.423 ms  port 32 latch -> src 76 bsy 1 clm 0
+    243.557 ms  port 13 BUSY -> 1
+    243.557 ms  port 13 latch -> src 76 bsy 1 clm 0
+    243.982 ms  port 32 a_out (far M) -> 1
+    243.982 ms  port 42 a_out (far M) -> 1
+    244.004 ms  far LTU ch 3: M seen by W neighbour -> 1
+    270.004 ms  latch 76: src 00 bsy 1 clm 0   BUSY 1  a_out 0
+    ok    a fifth flood, N76, took the freed resolver
+    270.388 ms  port 40 a_out (far M) -> 0
+    270.513 ms  port 30 a_out (far M) -> 0
+    270.529 ms  port 31 a_out (far M) -> 0
+    270.529 ms  port 75 a_out (far M) -> 0
+    270.551 ms  far LTU ch 1: M seen by W neighbour -> 0
+    270.982 ms  port 32 a_out (far M) -> 0
+    270.982 ms  port 42 a_out (far M) -> 0
+    271.004 ms  far LTU ch 3: M seen by W neighbour -> 0
+    447.004 ms  port 10 BUSY -> 0
+    447.004 ms  port 74 BUSY -> 0
+    526.004 ms  port 11 BUSY -> 0
+    526.004 ms  port 11 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 12 BUSY -> 0
+    526.004 ms  port 12 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 13 BUSY -> 0
+    526.004 ms  port 13 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 30 BUSY -> 0
+    526.004 ms  port 30 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 31 BUSY -> 0
+    526.004 ms  port 31 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 32 BUSY -> 0
+    526.004 ms  port 32 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 40 BUSY -> 0
+    526.004 ms  port 40 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 41 BUSY -> 0
+    526.004 ms  port 41 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 42 BUSY -> 0
+    526.004 ms  port 42 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 75 BUSY -> 0
+    526.004 ms  port 75 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 76 BUSY -> 0
+    526.004 ms  port 76 latch -> src 00 bsy 0 clm 0
+    526.004 ms  port 77 BUSY -> 0
+    526.004 ms  port 77 latch -> src 00 bsy 0 clm 0
+    526.535 ms  rs_busy 11 -> 01   in 76 41  held 1110 0000  legs0 75 42 32 13  legs1 75 40 31 11
+    526.989 ms  rs_busy 01 -> 00   in 76 41  held 0000 0000  legs0 75 42 32 13  legs1 75 40 31 11
+    527.004 ms  mon_held 11 -> 00
+    ok    sc4: all released, nothing held
+    ok    no clash, no queue overflow
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  10 checks, 0 errors.  PASS
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 1s; walltime 37.819 s; speed 30.936 ms/s
+- Verilator: cpu 32.393 s on 1 threads; allocated 8 MB

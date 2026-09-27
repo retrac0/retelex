@@ -1,0 +1,28 @@
+[sim.sh] slot 1: make -s net
+
+  tb_net -- two exchanges, one link, calls that are dialled
+  1. A20 dials 2 1
+  2. A20 dials 1 2 3 2 1
+  3. A20 dials 1 2 2 2 1
+  4. A20 dials 1 2 4
+  5. A20 dials 1 8, then 1 2 9
+  6. A20 dials 1, and stops
+  7. a break inside the guard
+  8. B's register busy when B claims
+  9. A20 dials 2 5, a trunk
+  10. every link cut
+  11. A20 dials 1 2 3, and stops
+  12. A22 and A24 wait while A20 dials 1 2 3 2 1
+  13. A20 dials 1 2 3 0
+  14. a 0.9 ms blip of A into B11
+  15. A20 dials 1 2 2 1
+  16. A20 up on B21 through A11; then A22 dials 1 2 3 2 0
+  17. B20 calls B21 while a seizure reaches B12, five times
+
+  88 checks, 0 errors.  PASS
+
+- tb/tb_net.v:515: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 23s; walltime 880.203 s; speed 26.020 ms/s
+- Verilator: cpu 739.716 s on 1 threads; allocated 8 MB
+rc=0 secs=995

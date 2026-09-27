@@ -1,0 +1,873 @@
+
+  tb_cls3 sc=10 NMON=8 NRES=8 T_ARM=16 guard=128  lam=30000/1000s dur=15000 t1=100..400 pexp=150 pown=0 loc=8000 pnet=300 seed=3 mode=1
+    ok    every trunk's link is up
+     23.373  cls read  17  word 11001011  trunk 1
+     24.373  HOLD      17  dir 3  mine 0  nst 0  word-dir
+     25.255  mon0 arm  17                       
+     35.005  FWD       17 -> ok 0111 cand 71 30 40 00
+     54.748  cls read  47  word 10001011  trunk 1
+     55.748  HOLD      47  dir 2  mine 0  nst 0  word-dir
+     56.630  mon1 arm  47                       
+     66.005  FWD       47 -> ok 1000 cand 71 30 40 10
+     93.732  cls read  46  word 10001011  trunk 1
+     94.733  HOLD      46  dir 2  mine 0  nst 0  word-dir
+     95.614  mon2 arm  46                       
+    105.005  FWD       46 -> ok 1000 cand 71 30 40 11
+    113.357  cls read  16  word 11001011  trunk 1
+    114.357  HOLD      16  dir 3  mine 0  nst 0  word-dir
+    115.239  mon3 arm  16                       
+    125.005  FWD       16 -> ok 0100 cand 71 30 41 11
+    133.342  cls read  15  word 11001011  trunk 1
+    134.342  HOLD      15  dir 3  mine 0  nst 0  word-dir
+    135.224  mon4 arm  15                       
+    145.005  FWD       15 -> ok 0100 cand 71 30 42 11
+    153.717  cls read  45  word 10001011  trunk 1
+    154.717  HOLD      45  dir 2  mine 0  nst 0  word-dir
+    155.599  mon5 arm  45                       
+    165.005  FWD       45 -> ok 1000 cand 71 30 42 12
+    251.326  cls read  14  word 11001011  trunk 1
+    252.326  HOLD      14  dir 3  mine 0  nst 0  word-dir
+    253.208  mon6 arm  14                       
+    263.005  FWD       14 -> ok 0100 cand 71 30 43 12
+    320.310  cls read  13  word 11001011  trunk 1
+    321.310  HOLD      13  dir 3  mine 0  nst 0  word-dir
+    322.192  mon7 arm  13                       
+    332.005  FWD       13 -> ok 0100 cand 71 30 44 12
+SZ id=0 q=17 dir=W t1=107 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    484.372  cls read  17  word 11001011  trunk 1
+    485.372  HOLD      17  dir 3  mine 0  nst 0  word-dir
+    486.254  mon0 arm  17                       
+    496.004  FWD       17 -> ok 0111 cand 71 30 40 12
+    585.262  cls read  10  word 11001011  trunk 1
+    586.263  HOLD      10  dir 3  mine 0  nst 0  word-dir
+    587.144  mon1 arm  10                       
+SZ id=1 q=47 dir=E t1=247 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    598.004  FWD       10 -> ok 0100 cand 71 30 47 12
+    639.434  cls read  23  word 11111111  trunk 0
+    640.316  MK register -> 23        
+LC p=23 t=638.0 dt=3.00 net=1
+    641.668  cls read  42  word 10001011  trunk 1
+    642.669  HOLD      42  dir 2  mine 0  nst 0  word-dir
+    643.550  mon3 arm  42                       
+    653.004  FWD       42 -> ok 1000 cand 71 30 47 15
+SZ id=3 q=16 dir=W t1=254 e=0 b=0 back=0 seen=8.2 hold=10.4 arm=11.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    661.653  cls read  41  word 10001011  trunk 1
+    662.653  HOLD      41  dir 2  mine 0  nst 0  word-dir
+    663.535  mon4 arm  41                       
+SZ id=4 q=15 dir=W t1=246 e=0 b=0 back=0 seen=4.2 hold=6.3 arm=7.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    681.356  cls read  16  word 11001011  trunk 1
+    682.356  HOLD      16  dir 3  mine 0  nst 0  word-dir
+SZ id=2 q=46 dir=E t1=359 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    752.731  cls read  46  word 10001011  trunk 1
+SZ id=5 q=45 dir=E t1=327 e=0 b=0 back=1 seen=22.6 hold=24.7 arm=25.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    753.731  HOLD      46  dir 2  mine 0  nst 0  word-dir
+    754.613  mon2 arm  46                       
+    764.004  FWD       46 -> ok 1000 cand 71 30 47 11
+    772.293  cls read  12  word 11001011  trunk 1
+    773.293  HOLD      12  dir 3  mine 0  nst 0  word-dir
+    774.175  mon5 arm  12                       
+    784.003  FWD       12 -> ok 0100 cand 71 30 45 11
+SZ id=6 q=14 dir=W t1=298 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    940.324  cls read  14  word 11001011  trunk 1
+    941.324  HOLD      14  dir 3  mine 0  nst 0  word-dir
+    942.206  mon6 arm  14                       
+    952.003  FWD       14 -> ok 0100 cand 71 30 43 11
+SZ id=7 q=13 dir=W t1=338 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+    960.699  cls read  44  word 10001011  trunk 1
+    961.699  HOLD      44  dir 2  mine 0  nst 0  word-dir
+    962.581  mon7 arm  44                       
+    972.003  FWD       44 -> ok 1000 cand 71 30 43 13
+   1050.745  cls read  47  word 10001011  trunk 1
+   1051.746  HOLD      47  dir 2  mine 0  nst 0  word-dir
+   1052.628  mon1 arm  47                       
+SZ id=9 q=10 dir=W t1=173 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1062.003  FWD       47 -> ok 1000 cand 71 30 43 10
+SZ id=8 q=17 dir=W t1=382 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=11 q=41 dir=E t1=237 e=0 b=0 back=0 seen=13.5 hold=15.7 arm=16.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1200.651  cls read  41  word 10001011  trunk 1
+   1201.652  HOLD      41  dir 2  mine 0  nst 4  word-dir
+   1202.533  mon0 arm  41                       
+SZ id=13 q=46 dir=E t1=201 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1313.729  cls read  46  word 10001011  trunk 1
+   1314.729  HOLD      46  dir 2  mine 0  nst 4  word-dir
+   1315.611  mon2 arm  46                       
+   1325.002  FWD       46 -> ok 1000 cand 71 30 40 11
+SZ id=12 q=16 dir=W t1=359 e=0 b=0 back=0 seen=8.2 hold=10.4 arm=-1.0 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=0 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1340.354  cls read  16  word 11001011  trunk 1
+   1341.354  HOLD      16  dir 3  mine 0  nst 4  word-dir
+   1342.236  mon4 arm  16                       
+SZ id=15 q=14 dir=W t1=176 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1420.323  cls read  14  word 11001011  trunk 1
+   1421.323  HOLD      14  dir 3  mine 0  nst 4  word-dir
+   1422.205  mon3 arm  14                       
+SZ id=14 q=12 dir=W t1=371 e=0 b=0 back=0 seen=12.2 hold=14.3 arm=15.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1432.002  FWD       14 -> ok 0100 cand 71 30 43 11
+   1440.713  cls read  45  word 10001011  trunk 1
+   1441.713  HOLD      45  dir 2  mine 0  nst 4  word-dir
+   1442.595  mon5 arm  45                       
+   1452.002  FWD       45 -> ok 1000 cand 71 30 43 12
+   1471.260  cls read  10  word 11001011  trunk 1
+   1472.260  HOLD      10  dir 3  mine 1  nst 4  word-dir
+   1473.142  mon1 arm  10                       
+   1483.002  FWD       10 -> ok 0100 cand 71 30 47 12
+SZ id=17 q=47 dir=E t1=151 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=16 q=44 dir=E t1=354 e=0 b=0 back=1 seen=18.6 hold=20.7 arm=21.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1611.697  cls read  44  word 10001011  trunk 1
+   1612.697  HOLD      44  dir 2  mine 0  nst 4  word-dir
+   1613.579  mon6 arm  44                       
+   1623.001  FWD       44 -> ok 1000 cand 71 30 47 13
+SZ id=18 q=41 dir=E t1=261 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1771.650  cls read  41  word 10001011  trunk 1
+   1772.650  HOLD      41  dir 2  mine 0  nst 4  word-dir
+   1773.532  mon0 arm  41                       
+SZ id=22 q=45 dir=E t1=149 e=0 b=0 back=0 seen=15.6 hold=17.7 arm=18.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   1885.290  cls read  12  word 11001011  trunk 1
+   1886.290  HOLD      12  dir 3  mine 0  nst 4  word-dir
+   1887.172  mon5 arm  12                       
+   1897.001  FWD       12 -> ok 0100 cand 71 30 45 13
+   2039.680  cls read  43  word 10001011  trunk 1
+   2040.681  HOLD      43  dir 2  mine 0  nst 4  word-dir
+   2041.563  mon3 arm  43                       
+SZ id=21 q=14 dir=W t1=336 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2051.000  FWD       43 -> ok 1000 cand 71 30 45 14
+   2097.305  cls read  13  word 11001011  trunk 1
+   2098.306  HOLD      13  dir 3  mine 0  nst 4  word-dir
+   2099.187  mon2 arm  13                       
+   2109.000  FWD       13 -> ok 0100 cand 71 30 44 14
+SZ id=24 q=44 dir=E t1=217 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=23 q=10 dir=W t1=378 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2193.258  cls read  10  word 11001011  trunk 1
+   2194.258  HOLD      10  dir 3  mine 1  nst 4  word-dir
+   2195.140  mon1 arm  10                       
+   2213.743  cls read  47  word 10001011  trunk 1
+   2214.743  HOLD      47  dir 2  mine 0  nst 4  word-dir
+   2215.625  mon4 arm  47                       
+SZ id=25 q=41 dir=E t1=301 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2403.648  cls read  41  word 10001011  trunk 1
+   2404.649  HOLD      41  dir 2  mine 0  nst 4  word-dir
+   2405.530  mon0 arm  41                       
+   2529.710  cls read  45  word 10001011  trunk 1
+   2530.711  HOLD      45  dir 2  mine 0  nst 4  word-dir
+   2531.593  mon5 arm  45                       
+   2540.999  FWD       45 -> ok 1000 cand 71 30 44 12
+SZ id=26 q=12 dir=W t1=381 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=10 q=42 dir=E t1=336 e=3 b=2 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   2642.335  cls read  15  word 11001011  trunk 1
+   2643.335  HOLD      15  dir 3  mine 0  nst 4  word-dir
+   2644.217  mon6 arm  15                       
+   2653.999  FWD       15 -> ok 0100 cand 71 30 42 12
+   2684.319  cls read  14  word 11001011  trunk 1
+SZ id=30 q=47 dir=E t1=192 e=0 b=0 back=0 seen=15.6 hold=17.7 arm=18.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2685.320  HOLD      14  dir 3  mine 0  nst 4  word-dir
+   2686.201  mon3 arm  14                       
+   2695.999  FWD       14 -> ok 0100 cand 71 30 43 12
+SZ id=27 q=43 dir=E t1=383 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=28 q=13 dir=W t1=364 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2793.304  cls read  13  word 11001011  trunk 1
+   2794.304  HOLD      13  dir 3  mine 0  nst 4  word-dir
+   2795.186  mon0 arm  13                       
+   2804.998  FWD       13 -> ok 0100 cand 71 30 41 12
+SZ id=31 q=41 dir=E t1=111 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=29 q=10 dir=W t1=339 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   2879.256  cls read  10  word 11001011  trunk 1
+   2880.257  HOLD      10  dir 3  mine 1  nst 4  word-dir
+   2881.138  mon1 arm  10                       
+   2890.998  FWD       10 -> ok 0100 cand 71 30 44 12
+   2906.741  cls read  47  word 10001011  trunk 1
+   2907.741  HOLD      47  dir 2  mine 0  nst 4  word-dir
+   2908.623  mon2 arm  47                       
+   3183.537  cls read  32  word 11111111  trunk 0
+   3187.662  cls read  42  word 10001011  trunk 1
+   3188.662  HOLD      42  dir 2  mine 0  nst 5  word-dir
+   3189.544  mon4 arm  42                       
+   3198.997  FWD       42 -> ok 1000 cand 71 30 44 14
+   3207.677  cls read  43  word 10001011  trunk 1
+   3208.678  HOLD      43  dir 2  mine 0  nst 5  word-dir
+   3209.560  mon3 arm  43                       
+   3218.997  FWD       43 -> ok 1000 cand 71 30 44 15
+SZ id=33 q=15 dir=W t1=283 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=34 q=14 dir=W t1=251 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=20 q=16 dir=W t1=242 e=3 b=2 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   3278.349  cls read  16  word 11001011  trunk 1
+   3279.349  HOLD      16  dir 3  mine 0  nst 5  word-dir
+   3280.231  mon5 arm  16                       
+   3324.271  cls read  11  word 11001011  trunk 1
+   3325.271  HOLD      11  dir 3  mine 0  nst 5  word-dir
+   3326.153  mon6 arm  11                       
+   3335.997  FWD       11 -> ok 0100 cand 71 30 46 15
+SZ id=19 q=46 dir=E t1=371 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=37 q=47 dir=E t1=231 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=36 q=10 dir=W t1=301 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   3524.255  cls read  10  word 11001011  trunk 1
+   3525.255  HOLD      10  dir 3  mine 1  nst 5  word-dir
+   3526.137  mon0 arm  10                       
+   3535.996  FWD       10 -> ok 0100 cand 71 30 44 15
+   3576.739  cls read  47  word 10001011  trunk 1
+   3577.739  HOLD      47  dir 2  mine 0  nst 5  word-dir
+   3578.621  mon1 arm  47                       
+SZ id=39 q=43 dir=E t1=175 e=0 b=0 back=0 seen=4.6 hold=6.7 arm=7.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   3677.676  cls read  43  word 10001011  trunk 1
+   3678.676  HOLD      43  dir 2  mine 0  nst 5  word-dir
+   3679.558  mon2 arm  43                       
+   3688.996  FWD       43 -> ok 1000 cand 71 30 44 14
+   3697.332  cls read  15  word 11001011  trunk 1
+   3698.333  HOLD      15  dir 3  mine 0  nst 5  word-dir
+   3699.215  mon3 arm  15                       
+SZ id=38 q=42 dir=E t1=221 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   3708.996  FWD       15 -> ok 0100 cand 71 30 42 14
+SZ id=40 q=16 dir=W t1=228 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   3820.348  cls read  16  word 11001011  trunk 1
+   3821.348  HOLD      16  dir 3  mine 0  nst 5  word-dir
+   3822.230  mon4 arm  16                       
+SZ id=41 q=11 dir=W t1=390 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=43 q=47 dir=E t1=148 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4024.738  cls read  47  word 10001011  trunk 1
+   4025.738  HOLD      47  dir 2  mine 0  nst 5  word-dir
+   4026.620  mon1 arm  47                       
+   4035.995  FWD       47 -> ok 1000 cand 71 30 42 11
+SZ id=44 q=43 dir=E t1=103 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4090.316  cls read  14  word 11001011  trunk 1
+   4091.316  HOLD      14  dir 3  mine 0  nst 5  word-dir
+   4092.198  mon2 arm  14                       
+   4101.995  FWD       14 -> ok 0100 cand 71 30 43 11
+   4197.722  cls read  46  word 10001011  trunk 1
+   4198.722  HOLD      46  dir 2  mine 0  nst 5  word-dir
+   4199.604  mon0 arm  46                       
+   4208.995  FWD       46 -> ok 1000 cand 71 30 43 15
+SZ id=45 q=15 dir=W t1=267 e=0 b=0 back=1 seen=19.2 hold=21.3 arm=22.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4253.659  cls read  42  word 10001011  trunk 1
+   4254.659  HOLD      42  dir 2  mine 0  nst 5  word-dir
+   4255.541  mon3 arm  42                       
+   4363.284  cls read  12  word 11001011  trunk 1
+   4364.284  HOLD      12  dir 3  mine 0  nst 5  word-dir
+   4365.166  mon5 arm  12                       
+   4374.994  FWD       12 -> ok 0100 cand 71 30 45 15
+SZ id=32 q=45 dir=E t1=210 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=46 q=16 dir=W t1=325 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4468.346  cls read  16  word 11001011  trunk 1
+   4469.346  HOLD      16  dir 3  mine 0  nst 5  word-dir
+   4470.228  mon4 arm  16                       
+SZ id=47 q=47 dir=E t1=284 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4623.268  cls read  11  word 11001011  trunk 1
+   4624.268  HOLD      11  dir 3  mine 0  nst 5  word-dir
+   4625.150  mon1 arm  11                       
+   4643.736  cls read  47  word 10001011  trunk 1
+   4644.737  HOLD      47  dir 2  mine 0  nst 5  word-dir
+   4645.618  mon6 arm  47                       
+   4697.642  cls read  41  word 10001011  trunk 1
+   4698.643  HOLD      41  dir 2  mine 0  nst 5  word-dir
+   4699.524  mon7 arm  41                       
+   4708.993  FWD       41 -> ok 1000 cand 71 30 45 13
+SZ id=35 q=13 dir=W t1=272 e=3 b=2 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=49 q=46 dir=E t1=252 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4754.720  cls read  46  word 10001011  trunk 1
+   4755.721  HOLD      46  dir 2  mine 0  nst 5  word-dir
+   4756.602  mon0 arm  46                       
+   4765.993  FWD       46 -> ok 1000 cand 71 30 45 14
+SZ id=48 q=14 dir=W t1=398 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=51 q=12 dir=W t1=163 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4825.705  cls read  45  word 10001011  trunk 1
+   4826.705  HOLD      45  dir 2  mine 0  nst 5  word-dir
+   4827.587  mon2 arm  45                       
+   4836.993  FWD       45 -> ok 1000 cand 71 30 45 12
+   4862.329  cls read  15  word 11001011  trunk 1
+   4863.330  HOLD      15  dir 3  mine 0  nst 5  word-dir
+   4864.212  mon3 arm  15                       
+   4873.993  FWD       15 -> ok 0100 cand 71 30 42 12
+   4882.673  cls read  43  word 10001011  trunk 1
+   4883.673  HOLD      43  dir 2  mine 0  nst 5  word-dir
+SZ id=50 q=42 dir=E t1=336 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4884.555  mon5 arm  43                       
+SZ id=52 q=16 dir=W t1=168 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   4933.414  MK register -> 32        
+LC p=32 t=3182.0 dt=1752.00 net=0
+   4961.345  cls read  16  word 11001011  trunk 1
+   4962.345  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   4963.227  mon4 arm  16                       
+SZ id=53 q=11 dir=W t1=180 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5121.266  cls read  11  word 11001011  trunk 1
+   5122.267  HOLD      11  dir 3  mine 0  nst 0  word-dir
+   5123.148  mon1 arm  11                       
+   5216.360  cls read  17  word 11001011  trunk 1
+   5217.360  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   5227.992  FWD       17 -> ok 0111 cand 71 30 40 12
+SZ id=54 q=47 dir=E t1=367 e=0 b=0 back=0 seen=13.6 hold=15.7 arm=16.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5329.735  cls read  47  word 10001011  trunk 1
+   5330.735  HOLD      47  dir 2  mine 0  nst 0  word-dir
+   5331.617  mon3 arm  47                       
+SZ id=58 q=15 dir=W t1=176 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5340.992  FWD       47 -> ok 1000 cand 71 30 40 15
+   5349.656  cls read  42  word 10001011  trunk 1
+   5350.657  HOLD      42  dir 2  mine 0  nst 0  word-dir
+   5351.538  mon0 arm  42                       
+SZ id=59 q=43 dir=E t1=181 e=0 b=0 back=0 seen=6.6 hold=8.7 arm=9.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5360.992  FWD       42 -> ok 1000 cand 71 30 40 16
+SZ id=60 q=16 dir=W t1=108 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5391.281  cls read  12  word 11001011  trunk 1
+   5392.281  HOLD      12  dir 3  mine 0  nst 0  word-dir
+   5393.163  mon2 arm  12                       
+   5402.992  FWD       12 -> ok 0100 cand 71 30 43 16
+SZ id=57 q=45 dir=E t1=287 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5438.703  cls read  45  word 10001011  trunk 1
+   5439.703  HOLD      45  dir 2  mine 0  nst 0  word-dir
+   5440.585  mon4 arm  45                       
+   5449.992  FWD       45 -> ok 1000 cand 71 30 43 10
+SZ id=42 q=10 dir=W t1=275 e=3 b=2 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   5470.687  cls read  44  word 10001011  trunk 1
+   5471.688  HOLD      44  dir 2  mine 0  nst 0  word-dir
+   5472.569  mon5 arm  44                       
+SZ id=61 q=11 dir=W t1=168 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5622.265  cls read  11  word 11001011  trunk 1
+   5623.265  HOLD      11  dir 3  mine 0  nst 0  word-dir
+   5624.147  mon1 arm  11                       
+   5682.624  cls read  40  word 10001011  trunk 1
+   5683.624  HOLD      40  dir 2  mine 0  nst 0  word-dir
+   5684.506  mon6 arm  40                       
+SZ id=62 q=17 dir=W t1=182 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=-1.0 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=0 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5693.991  FWD       40 -> ok 1011 cand 71 30 43 17
+SZ id=67 q=44 dir=E t1=112 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5893.686  cls read  44  word 10001011  trunk 1
+   5894.686  HOLD      44  dir 2  mine 0  nst 0  word-dir
+   5895.568  mon2 arm  44                       
+   5904.990  FWD       44 -> ok 1000 cand 71 30 43 12
+SZ id=65 q=12 dir=W t1=229 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5977.342  cls read  16  word 11001011  trunk 1
+   5978.342  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   5979.224  mon0 arm  16                       
+SZ id=64 q=42 dir=E t1=353 e=0 b=0 back=0 seen=16.5 hold=18.7 arm=19.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=63 q=47 dir=E t1=363 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   5988.990  FWD       16 -> ok 0100 cand 71 30 42 12
+   5997.327  cls read  15  word 11001011  trunk 1
+   5998.327  HOLD      15  dir 3  mine 0  nst 0  word-dir
+   5999.209  mon3 arm  15                       
+   6008.990  FWD       15 -> ok 0100 cand 71 30 47 12
+   6017.670  cls read  43  word 10001011  trunk 1
+   6018.671  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   6019.552  mon5 arm  43                       
+   6042.248  cls read  10  word 11001011  trunk 1
+   6043.249  HOLD      10  dir 3  mine 1  nst 0  word-dir
+   6044.130  mon4 arm  10                       
+   6053.990  FWD       10 -> ok 0100 cand 71 30 45 12
+SZ id=66 q=45 dir=E t1=336 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6123.357  cls read  17  word 11001011  trunk 1
+   6124.358  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   6125.240  mon6 arm  17                       
+SZ id=69 q=40 dir=E t1=153 e=0 b=0 back=0 seen=0.5 hold=2.6 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6134.990  FWD       17 -> ok 0111 cand 71 30 40 12
+   6168.404  cls read  22  word 11111111  trunk 0
+   6325.286  MK register -> 22        
+LC p=22 t=6167.0 dt=159.00 net=0
+   6422.654  cls read  42  word 10001011  trunk 1
+   6423.654  HOLD      42  dir 2  mine 0  nst 0  word-dir
+   6424.536  mon0 arm  42                       
+   6433.989  FWD       42 -> ok 1000 cand 71 30 40 16
+SZ id=71 q=16 dir=W t1=170 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6461.279  cls read  12  word 11001011  trunk 1
+   6462.279  HOLD      12  dir 3  mine 0  nst 0  word-dir
+   6463.161  mon1 arm  12                       
+   6472.989  FWD       12 -> ok 0100 cand 71 30 44 16
+SZ id=70 q=44 dir=E t1=299 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6500.294  cls read  13  word 11001011  trunk 1
+   6501.294  HOLD      13  dir 3  mine 0  nst 0  word-dir
+   6502.176  mon2 arm  13                       
+   6511.989  FWD       13 -> ok 0100 cand 71 30 41 16
+SZ id=55 q=41 dir=E t1=163 e=3 b=2 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=72 q=43 dir=E t1=240 e=0 b=0 back=0 seen=31.6 hold=33.7 arm=34.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6531.669  cls read  43  word 10001011  trunk 1
+   6532.669  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   6533.551  mon5 arm  43                       
+SZ id=56 q=46 dir=E t1=192 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   6626.716  cls read  46  word 10001011  trunk 1
+   6627.716  HOLD      46  dir 2  mine 0  nst 0  word-dir
+   6628.598  mon6 arm  46                       
+   6637.988  FWD       46 -> ok 1011 cand 71 30 41 14
+SZ id=75 q=17 dir=W t1=229 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   6835.621  cls read  40  word 10001011  trunk 1
+   6836.622  HOLD      40  dir 2  mine 1  nst 0  word-dir
+   6837.503  mon3 arm  40                       
+   6855.356  cls read  17  word 11001011  trunk 1
+   6856.356  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   6857.238  mon4 arm  17                       
+   6917.684  cls read  44  word 10001011  trunk 1
+   6918.684  HOLD      44  dir 2  mine 0  nst 0  word-dir
+   6919.566  mon1 arm  44                       
+   6928.988  FWD       44 -> ok 1000 cand 71 30 41 12
+SZ id=77 q=12 dir=W t1=186 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7021.308  cls read  14  word 11001011  trunk 1
+   7022.309  HOLD      14  dir 3  mine 0  nst 0  word-dir
+   7023.190  mon6 arm  14                       
+   7032.987  FWD       14 -> ok 0111 cand 71 30 46 12
+SZ id=80 q=46 dir=E t1=130 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7082.339  cls read  16  word 11001011  trunk 1
+   7083.340  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   7084.221  mon0 arm  16                       
+   7093.987  FWD       16 -> ok 0100 cand 71 30 42 12
+SZ id=76 q=42 dir=E t1=381 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=79 q=43 dir=E t1=308 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=78 q=13 dir=W t1=378 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7173.667  cls read  43  word 10001011  trunk 1
+   7174.668  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   7175.549  mon2 arm  43                       
+   7184.987  FWD       43 -> ok 1000 cand 71 30 42 13
+   7193.636  cls read  41  word 10001011  trunk 1
+   7194.636  HOLD      41  dir 2  mine 0  nst 0  word-dir
+   7195.518  mon5 arm  41                       
+SZ id=82 q=17 dir=W t1=202 e=0 b=0 back=0 seen=13.3 hold=15.4 arm=16.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7353.354  cls read  17  word 11001011  trunk 1
+   7354.355  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   7355.236  mon4 arm  17                       
+SZ id=81 q=40 dir=E t1=321 e=0 b=0 back=0 seen=0.5 hold=2.6 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7457.620  cls read  40  word 10001011  trunk 1
+   7458.620  HOLD      40  dir 2  mine 1  nst 0  word-dir
+   7459.502  mon3 arm  40                       
+SZ id=68 q=11 dir=W t1=192 e=3 b=2 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   7468.986  FWD       40 -> ok 1000 cand 71 30 42 11
+   7495.276  cls read  12  word 11001011  trunk 1
+   7496.276  HOLD      12  dir 3  mine 0  nst 0  word-dir
+   7497.158  mon1 arm  12                       
+   7506.986  FWD       12 -> ok 0100 cand 71 30 44 11
+SZ id=83 q=44 dir=E t1=319 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=85 q=16 dir=W t1=178 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=86 q=43 dir=E t1=100 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7569.651  cls read  42  word 10001011  trunk 1
+   7570.651  HOLD      42  dir 2  mine 0  nst 0  word-dir
+   7571.533  mon0 arm  42                       
+   7580.986  FWD       42 -> ok 1000 cand 71 30 44 13
+   7589.338  cls read  16  word 11001011  trunk 1
+   7590.338  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   7591.220  mon2 arm  16                       
+   7609.666  cls read  43  word 10001011  trunk 1
+   7610.666  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   7611.548  mon7 arm  43                       
+   7863.259  cls read  11  word 11001011  trunk 1
+   7864.260  HOLD      11  dir 3  mine 0  nst 0  word-dir
+   7865.141  mon3 arm  11                       
+   7874.985  FWD       11 -> ok 0100 cand 71 30 40 13
+SZ id=89 q=40 dir=E t1=136 e=0 b=0 back=0 seen=0.5 hold=2.6 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   7993.728  cls read  47  word 10001011  trunk 1
+   7994.728  HOLD      47  dir 2  mine 0  nst 0  word-dir
+   7995.610  mon5 arm  47                       
+   8004.985  FWD       47 -> ok 1000 cand 71 30 40 15
+SZ id=73 q=15 dir=W t1=380 e=3 b=2 back=1 seen=5.2 hold=7.3 arm=8.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   8027.696  cls read  45  word 10001011  trunk 1
+   8028.697  HOLD      45  dir 2  mine 0  nst 0  word-dir
+   8029.578  mon4 arm  45                       
+SZ id=88 q=17 dir=W t1=389 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8038.985  FWD       45 -> ok 1000 cand 71 30 40 10
+SZ id=74 q=10 dir=W t1=356 e=3 b=2 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=92 q=43 dir=E t1=240 e=0 b=0 back=1 seen=39.6 hold=41.7 arm=42.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8137.352  cls read  17  word 11001011  trunk 1
+   8138.353  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   8139.234  mon1 arm  17                       
+SZ id=90 q=12 dir=W t1=352 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8148.985  FWD       17 -> ok 0100 cand 71 30 43 10
+   8157.680  cls read  44  word 10001011  trunk 1
+   8158.681  HOLD      44  dir 2  mine 0  nst 0  word-dir
+   8159.562  mon6 arm  44                       
+   8177.274  cls read  12  word 11001011  trunk 1
+   8178.274  HOLD      12  dir 3  mine 0  nst 0  word-dir
+   8179.156  mon7 arm  12                       
+SZ id=93 q=16 dir=W t1=398 e=0 b=0 back=1 seen=13.2 hold=15.4 arm=16.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8330.336  cls read  16  word 11001011  trunk 1
+   8331.336  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   8332.218  mon0 arm  16                       
+   8398.617  cls read  40  word 10001011  trunk 1
+   8399.618  HOLD      40  dir 2  mine 0  nst 0  word-dir
+   8400.499  mon2 arm  40                       
+   8409.984  FWD       40 -> ok 1000 cand 71 30 43 11
+SZ id=94 q=11 dir=W t1=276 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8546.320  cls read  15  word 11001011  trunk 1
+   8547.320  HOLD      15  dir 3  mine 0  nst 0  word-dir
+   8548.202  mon3 arm  15                       
+   8557.984  FWD       15 -> ok 0100 cand 71 30 47 11
+SZ id=95 q=47 dir=E t1=286 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8576.664  cls read  43  word 10001011  trunk 1
+   8577.664  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   8578.546  mon1 arm  43                       
+   8587.984  FWD       43 -> ok 1000 cand 71 30 47 17
+SZ id=97 q=17 dir=W t1=171 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8678.242  cls read  10  word 11001011  trunk 1
+   8679.242  HOLD      10  dir 3  mine 1  nst 0  word-dir
+   8680.124  mon4 arm  10                       
+SZ id=99 q=12 dir=W t1=227 e=0 b=0 back=0 seen=16.2 hold=18.3 arm=19.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8690.983  FWD       10 -> ok 0100 cand 71 30 45 17
+SZ id=96 q=45 dir=E t1=379 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8738.273  cls read  12  word 11001011  trunk 1
+   8739.273  HOLD      12  dir 3  mine 0  nst 0  word-dir
+   8740.155  mon5 arm  12                       
+SZ id=98 q=44 dir=E t1=302 e=0 b=0 back=0 seen=9.6 hold=11.7 arm=12.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8749.983  FWD       12 -> ok 0100 cand 71 30 44 17
+SZ id=100 q=16 dir=W t1=215 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8845.335  cls read  16  word 11001011  trunk 1
+   8846.335  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   8847.217  mon0 arm  16                       
+   8916.257  cls read  11  word 11001011  trunk 1
+   8917.257  HOLD      11  dir 3  mine 0  nst 0  word-dir
+   8918.139  mon2 arm  11                       
+SZ id=101 q=40 dir=E t1=226 e=0 b=0 back=0 seen=0.5 hold=2.6 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   8927.983  FWD       11 -> ok 0100 cand 71 30 40 17
+SZ id=87 q=41 dir=E t1=137 e=3 b=2 back=0 seen=3.5 hold=5.7 arm=6.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=84 q=14 dir=W t1=357 e=3 b=2 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=102 q=15 dir=W t1=243 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9099.725  cls read  47  word 10001011  trunk 1
+   9100.725  HOLD      47  dir 2  mine 0  nst 0  word-dir
+   9101.607  mon1 arm  47                       
+   9110.982  FWD       47 -> ok 1011 cand 71 30 40 10
+   9119.709  cls read  46  word 10001011  trunk 1
+   9120.709  HOLD      46  dir 2  mine 0  nst 0  word-dir
+   9121.591  mon3 arm  46                       
+SZ id=103 q=43 dir=E t1=257 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9130.982  FWD       46 -> ok 1000 cand 71 30 40 14
+SZ id=104 q=10 dir=W t1=163 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9176.350  cls read  17  word 11001011  trunk 1
+   9177.350  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   9178.232  mon4 arm  17                       
+   9187.982  FWD       17 -> ok 0100 cand 71 30 41 14
+   9210.693  cls read  45  word 10001011  trunk 1
+   9211.694  HOLD      45  dir 2  mine 0  nst 0  word-dir
+   9212.575  mon6 arm  45                       
+   9221.982  FWD       45 -> ok 1000 cand 71 30 41 15
+   9233.662  cls read  43  word 10001011  trunk 1
+   9234.662  HOLD      43  dir 2  mine 0  nst 0  word-dir
+   9235.544  mon7 arm  43                       
+SZ id=106 q=16 dir=W t1=170 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9313.334  cls read  16  word 11001011  trunk 1
+   9314.334  HOLD      16  dir 3  mine 0  nst 0  word-dir
+   9315.216  mon0 arm  16                       
+   9456.286  cls read  13  word 11001011  trunk 1
+   9457.287  HOLD      13  dir 3  mine 0  nst 0  word-dir
+   9467.981  FWD       13 -> ok 0100 cand 71 30 42 15
+SZ id=91 q=42 dir=E t1=264 e=3 b=2 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+   9530.302  cls read  14  word 11001011  trunk 1
+SZ id=109 q=46 dir=E t1=130 e=0 b=0 back=0 seen=13.6 hold=15.7 arm=16.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9531.302  HOLD      14  dir 3  mine 0  nst 0  word-dir
+   9532.184  mon1 arm  14                       
+SZ id=108 q=47 dir=E t1=148 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9541.981  FWD       14 -> ok 0111 cand 71 30 46 15
+SZ id=110 q=17 dir=W t1=117 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9599.724  cls read  47  word 10001011  trunk 1
+   9600.724  HOLD      47  dir 2  mine 0  nst 0  word-dir
+   9601.606  mon2 arm  47                       
+   9610.981  FWD       47 -> ok 1000 cand 71 30 46 10
+   9630.349  cls read  17  word 11001011  trunk 1
+   9631.349  HOLD      17  dir 3  mine 0  nst 0  word-dir
+   9632.231  mon3 arm  17                       
+   9641.981  FWD       17 -> ok 0100 cand 71 30 41 10
+SZ id=112 q=43 dir=E t1=149 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=111 q=45 dir=E t1=214 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+   9762.317  cls read  15  word 11001011  trunk 1
+   9763.317  HOLD      15  dir 3  mine 0  nst 0  word-dir
+   9764.199  mon4 arm  15                       
+   9773.980  FWD       15 -> ok 0100 cand 71 30 43 10
+   9881.692  cls read  45  word 10001011  trunk 1
+   9882.692  HOLD      45  dir 2  mine 0  nst 0  word-dir
+   9883.574  mon5 arm  45                       
+   9924.363  cls read  20  word 11111111  trunk 0
+   9925.245  MK register -> 20        
+LC p=20 t=9923.0 dt=3.00 net=0
+  10022.238  cls read  10  word 11001011  trunk 1
+  10023.238  HOLD      10  dir 3  mine 0  nst 0  word-dir
+  10024.120  mon0 arm  10                       
+  10033.980  FWD       10 -> ok 0100 cand 71 30 42 10
+SZ id=116 q=47 dir=E t1=155 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=114 q=13 dir=W t1=314 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=-1.0 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=0 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  10140.722  cls read  47  word 10001011  trunk 1
+  10141.722  HOLD      47  dir 2  mine 0  nst 0  word-dir
+  10142.604  mon1 arm  47                       
+  10151.980  FWD       47 -> ok 1011 cand 71 30 42 13
+SZ id=115 q=14 dir=W t1=336 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=117 q=17 dir=W t1=246 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  10221.519  cls read  32  word 11111111  trunk 0
+  10277.706  cls read  46  word 10001011  trunk 1
+  10278.706  HOLD      46  dir 2  mine 0  nst 0  word-dir
+  10279.588  mon2 arm  46                       
+  10288.979  FWD       46 -> ok 1000 cand 71 30 42 14
+  10378.347  cls read  17  word 11001011  trunk 1
+  10379.347  HOLD      17  dir 3  mine 0  nst 0  word-dir
+  10380.229  mon3 arm  17                       
+  10389.979  FWD       17 -> ok 0100 cand 71 30 41 14
+  10398.659  cls read  43  word 10001011  trunk 1
+  10399.659  HOLD      43  dir 2  mine 0  nst 0  word-dir
+  10400.541  mon4 arm  43                       
+SZ id=118 q=15 dir=W t1=344 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  10409.979  FWD       43 -> ok 1000 cand 71 30 41 15
+  10423.643  cls read  42  word 10001011  trunk 1
+  10424.644  HOLD      42  dir 2  mine 0  nst 0  word-dir
+  10425.525  mon0 arm  42                       
+  10434.979  FWD       42 -> ok 1000 cand 71 30 41 10
+SZ id=120 q=10 dir=W t1=134 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  10746.674  cls read  44  word 10001011  trunk 1
+  10747.674  HOLD      44  dir 2  mine 0  nst 0  word-dir
+  10748.556  mon1 arm  44                       
+  10757.978  FWD       44 -> ok 1011 cand 71 30 41 12
+SZ id=105 q=12 dir=W t1=370 e=3 b=2 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  10766.283  cls read  13  word 11001011  trunk 1
+  10767.283  HOLD      13  dir 3  mine 0  nst 0  word-dir
+  10768.165  mon5 arm  13                       
+  10777.978  FWD       13 -> ok 0100 cand 71 30 47 12
+SZ id=121 q=47 dir=E t1=348 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=107 q=11 dir=W t1=249 e=3 b=2 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  10823.252  cls read  11  word 11001011  trunk 1
+  10824.252  HOLD      11  dir 3  mine 0  nst 0  word-dir
+  10825.134  mon6 arm  11                       
+  10834.978  FWD       11 -> ok 0100 cand 71 30 40 12
+  10935.626  cls read  41  word 10001011  trunk 1
+  10936.627  HOLD      41  dir 2  mine 0  nst 0  word-dir
+  10937.508  mon0 arm  41                       
+  10946.977  FWD       41 -> ok 1000 cand 71 30 40 17
+SZ id=123 q=17 dir=W t1=296 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  11054.392  cls read  22  word 11111111  trunk 0
+  11158.720  cls read  47  word 10001011  trunk 1
+  11159.720  HOLD      47  dir 2  mine 0  nst 0  word-dir
+  11160.602  mon2 arm  47                       
+SZ id=127 q=13 dir=W t1=110 e=0 b=0 back=0 seen=3.2 hold=5.3 arm=6.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  11169.977  FWD       47 -> ok 1000 cand 71 30 40 13
+SZ id=113 q=16 dir=W t1=285 e=3 b=2 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  11266.329  cls read  16  word 11001011  trunk 1
+  11267.329  HOLD      16  dir 3  mine 0  nst 0  word-dir
+  11268.211  mon3 arm  16                       
+  11317.273  MK register -> 22        
+LC p=22 t=11053.0 dt=265.00 net=1
+SZ id=128 q=11 dir=W t1=323 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  11483.609  cls read  40  word 10001011  trunk 1
+  11484.610  HOLD      40  dir 2  mine 0  nst 0  word-dir
+  11485.491  mon0 arm  40                       
+SZ id=129 q=41 dir=E t1=261 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  11494.976  FWD       40 -> ok 1000 cand 71 30 40 11
+  11508.344  cls read  17  word 11001011  trunk 1
+  11509.344  HOLD      17  dir 3  mine 0  nst 0  word-dir
+  11510.226  mon1 arm  17                       
+  11519.976  FWD       17 -> ok 0100 cand 71 30 41 11
+  11778.281  cls read  13  word 11001011  trunk 1
+  11779.281  HOLD      13  dir 3  mine 0  nst 0  word-dir
+  11780.163  mon2 arm  13                       
+  11789.975  FWD       13 -> ok 0100 cand 71 30 45 11
+SZ id=130 q=47 dir=E t1=351 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=119 q=45 dir=E t1=277 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=131 q=16 dir=W t1=298 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  11893.327  cls read  16  word 11001011  trunk 1
+  11894.327  HOLD      16  dir 3  mine 0  nst 4  word-dir
+  11895.209  mon3 arm  16                       
+SZ id=133 q=17 dir=W t1=230 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  12036.342  cls read  17  word 11001011  trunk 1
+  12037.343  HOLD      17  dir 3  mine 0  nst 4  word-dir
+  12038.224  mon1 arm  17                       
+  12056.624  cls read  41  word 10001011  trunk 1
+  12057.624  HOLD      41  dir 2  mine 0  nst 4  word-dir
+  12058.506  mon0 arm  41                       
+  12067.975  FWD       41 -> ok 1000 cand 71 30 47 11
+SZ id=132 q=40 dir=E t1=316 e=0 b=0 back=0 seen=0.5 hold=2.6 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=125 q=42 dir=E t1=120 e=3 b=2 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=124 q=43 dir=E t1=221 e=3 b=2 back=0 seen=8.6 hold=10.7 arm=11.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=134 q=13 dir=W t1=204 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=122 q=46 dir=E t1=366 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  12376.701  cls read  46  word 10001011  trunk 1
+  12377.701  HOLD      46  dir 2  mine 0  nst 4  word-dir
+  12378.583  mon2 arm  46                       
+  12387.974  FWD       46 -> ok 1000 cand 71 30 47 10
+  12483.685  cls read  45  word 10001011  trunk 1
+  12484.685  HOLD      45  dir 2  mine 0  nst 4  word-dir
+  12485.567  mon4 arm  45                       
+  12494.974  FWD       45 -> ok 1000 cand 71 30 47 13
+  12503.310  cls read  15  word 11001011  trunk 1
+  12504.310  HOLD      15  dir 3  mine 0  nst 4  word-dir
+  12505.192  mon5 arm  15                       
+  12514.973  FWD       15 -> ok 0100 cand 71 30 40 13
+  12524.294  cls read  14  word 11001011  trunk 1
+  12525.294  HOLD      14  dir 3  mine 0  nst 4  word-dir
+  12526.176  mon3 arm  14                       
+  12535.973  FWD       14 -> ok 0100 cand 71 30 42 13
+  12544.654  cls read  43  word 10001011  trunk 1
+  12545.654  HOLD      43  dir 2  mine 0  nst 4  word-dir
+  12546.536  mon6 arm  43                       
+SZ id=135 q=16 dir=W t1=360 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  12555.973  FWD       43 -> ok 1000 cand 71 30 42 16
+SZ id=136 q=17 dir=W t1=284 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  12620.341  cls read  17  word 11001011  trunk 1
+  12621.341  HOLD      17  dir 3  mine 0  nst 4  word-dir
+  12622.223  mon0 arm  17                       
+  12631.973  FWD       17 -> ok 0100 cand 71 30 41 16
+SZ id=137 q=41 dir=E t1=302 e=0 b=0 back=1 seen=18.5 hold=20.7 arm=21.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  12640.247  cls read  11  word 11001011  trunk 1
+  12641.247  HOLD      11  dir 3  mine 0  nst 4  word-dir
+  12642.129  mon1 arm  11                       
+  12729.262  cls read  12  word 11001011  trunk 1
+  12730.263  HOLD      12  dir 3  mine 0  nst 4  word-dir
+  12731.145  mon7 arm  12                       
+  12740.973  FWD       12 -> ok 0111 cand 71 30 44 16
+SZ id=126 q=44 dir=E t1=351 e=3 b=2 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  12954.231  cls read  10  word 11001011  trunk 1
+  12955.231  HOLD      10  dir 3  mine 0  nst 4  word-dir
+  12956.113  mon2 arm  10                       
+  12965.972  FWD       10 -> ok 0100 cand 71 30 46 16
+SZ id=138 q=46 dir=E t1=298 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=139 q=45 dir=E t1=265 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13095.683  cls read  45  word 10001011  trunk 1
+  13096.684  HOLD      45  dir 2  mine 0  nst 4  word-dir
+  13097.565  mon4 arm  45                       
+  13106.972  FWD       45 -> ok 1000 cand 71 30 46 13
+  13121.621  cls read  41  word 10001011  trunk 1
+  13122.621  HOLD      41  dir 2  mine 0  nst 4  word-dir
+  13123.503  mon0 arm  41                       
+  13132.972  FWD       41 -> ok 1000 cand 71 30 46 15
+SZ id=143 q=17 dir=W t1=224 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13141.636  cls read  42  word 10001011  trunk 1
+  13142.637  HOLD      42  dir 2  mine 0  nst 4  word-dir
+  13143.518  mon3 arm  42                       
+  13152.972  FWD       42 -> ok 1000 cand 71 30 46 14
+  13161.339  cls read  17  word 11001011  trunk 1
+  13162.340  HOLD      17  dir 3  mine 0  nst 4  word-dir
+SZ id=140 q=15 dir=W t1=383 e=0 b=0 back=1 seen=18.2 hold=20.3 arm=21.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13163.222  mon5 arm  17                       
+SZ id=141 q=14 dir=W t1=353 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13172.972  FWD       17 -> ok 0111 cand 71 30 40 14
+SZ id=145 q=12 dir=W t1=173 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+LC p=32 t=10220.0 dt=-1.00 net=0
+  13287.667  cls read  44  word 10001011  trunk 1
+  13288.668  HOLD      44  dir 2  mine 0  nst 4  word-dir
+  13289.549  mon1 arm  44                       
+  13307.261  cls read  12  word 11001011  trunk 1
+  13308.261  HOLD      12  dir 3  mine 0  nst 4  word-dir
+  13309.143  mon6 arm  12                       
+SZ id=146 q=10 dir=W t1=113 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13395.698  cls read  46  word 10001011  trunk 1
+  13396.698  HOLD      46  dir 2  mine 0  nst 4  word-dir
+  13397.580  mon2 arm  46                       
+  13406.971  FWD       46 -> ok 1000 cand 71 30 40 10
+  13648.276  cls read  13  word 11001011  trunk 1
+  13649.276  HOLD      13  dir 3  mine 0  nst 5  word-dir
+  13650.158  mon4 arm  13                       
+  13659.971  FWD       13 -> ok 0100 cand 71 30 45 10
+SZ id=147 q=45 dir=E t1=283 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=148 q=41 dir=E t1=295 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=149 q=42 dir=E t1=284 e=0 b=0 back=0 seen=6.5 hold=8.7 arm=9.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=151 q=44 dir=E t1=134 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13718.401  cls read  23  word 11111111  trunk 0
+SZ id=150 q=17 dir=W t1=314 e=0 b=0 back=0 seen=15.3 hold=17.4 arm=18.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13809.338  cls read  17  word 11001011  trunk 1
+  13810.338  HOLD      17  dir 3  mine 0  nst 5  word-dir
+  13811.220  mon0 arm  17                       
+  13820.970  FWD       17 -> ok 0111 cand 71 30 40 10
+  13829.307  cls read  15  word 11001011  trunk 1
+  13830.307  HOLD      15  dir 3  mine 0  nst 5  word-dir
+  13831.189  mon1 arm  15                       
+  13840.970  FWD       15 -> ok 0100 cand 71 30 41 10
+  13850.291  cls read  14  word 11001011  trunk 1
+  13851.291  HOLD      14  dir 3  mine 0  nst 5  word-dir
+  13852.173  mon3 arm  14                       
+  13861.970  FWD       14 -> ok 0100 cand 71 30 42 10
+  13870.666  cls read  44  word 10001011  trunk 1
+  13871.666  HOLD      44  dir 2  mine 0  nst 5  word-dir
+  13872.548  mon5 arm  44                       
+SZ id=152 q=12 dir=W t1=356 e=0 b=0 back=0 seen=11.2 hold=13.3 arm=14.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  13951.259  cls read  12  word 11001011  trunk 1
+  13952.260  HOLD      12  dir 3  mine 0  nst 5  word-dir
+  13953.141  mon6 arm  12                       
+SZ id=153 q=46 dir=E t1=324 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14016.228  cls read  10  word 11001011  trunk 1
+  14017.228  HOLD      10  dir 3  mine 0  nst 5  word-dir
+  14018.110  mon2 arm  10                       
+  14027.970  FWD       10 -> ok 0100 cand 71 30 46 10
+  14138.681  cls read  45  word 10001011  trunk 1
+  14139.681  HOLD      45  dir 2  mine 0  nst 5  word-dir
+  14140.563  mon4 arm  45                       
+  14149.969  FWD       45 -> ok 1000 cand 71 30 46 13
+SZ id=154 q=13 dir=W t1=217 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=157 q=14 dir=W t1=119 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14308.633  cls read  42  word 10001011  trunk 1
+  14309.634  HOLD      42  dir 2  mine 0  nst 5  word-dir
+  14310.515  mon3 arm  42                       
+  14319.969  FWD       42 -> ok 1000 cand 71 30 46 14
+SZ id=142 q=43 dir=E t1=181 e=3 b=2 back=0 seen=6.6 hold=8.7 arm=9.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+  14374.321  cls read  16  word 11001011  trunk 1
+  14375.321  HOLD      16  dir 3  mine 0  nst 5  word-dir
+  14376.203  mon7 arm  16                       
+  14385.969  FWD       16 -> ok 0100 cand 71 30 43 14
+SZ id=155 q=17 dir=W t1=334 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14443.336  cls read  17  word 11001011  trunk 1
+  14444.336  HOLD      17  dir 3  mine 0  nst 5  word-dir
+  14445.218  mon0 arm  17                       
+  14454.968  FWD       17 -> ok 0011 cand 71 30 43 14
+  14463.602  cls read  40  word 10001011  trunk 1
+  14464.602  HOLD      40  dir 2  mine 1  nst 5  word-dir
+  14465.484  mon1 arm  40                       
+  14474.968  FWD       40 -> ok 1000 cand 71 30 43 15
+  14483.617  cls read  41  word 10001011  trunk 1
+  14484.618  HOLD      41  dir 2  mine 0  nst 5  word-dir
+  14485.499  mon5 arm  41                       
+SZ id=156 q=15 dir=W t1=378 e=0 b=0 back=0 seen=10.2 hold=12.3 arm=13.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14494.968  FWD       41 -> ok 1000 cand 71 30 43 11
+SZ id=144 q=11 dir=W t1=228 e=3 b=2 back=0 seen=15.2 hold=17.3 arm=18.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=3 emin=3 claim=0 wrong=0
+SZ id=158 q=44 dir=E t1=359 e=0 b=0 back=0 seen=12.6 hold=14.7 arm=15.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=159 q=12 dir=W t1=310 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14564.258  cls read  12  word 11001011  trunk 1
+  14565.258  HOLD      12  dir 3  mine 0  nst 5  word-dir
+  14566.140  mon2 arm  12                       
+  14575.968  FWD       12 -> ok 0100 cand 71 30 44 11
+SZ id=160 q=10 dir=W t1=275 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14616.226  cls read  10  word 11001011  trunk 1
+  14617.227  HOLD      10  dir 3  mine 0  nst 5  word-dir
+  14618.108  mon6 arm  10                       
+  14636.695  cls read  46  word 10001011  trunk 1
+  14637.695  HOLD      46  dir 2  mine 0  nst 5  word-dir
+  14670.273  cls read  13  word 11001011  trunk 1
+  14671.273  HOLD      13  dir 3  mine 0  nst 5  word-dir
+  14672.155  mon4 arm  13                       
+  14681.968  FWD       13 -> ok 0100 cand 71 30 45 11
+SZ id=161 q=45 dir=E t1=273 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=162 q=42 dir=E t1=138 e=0 b=0 back=0 seen=0.5 hold=2.7 arm=3.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14747.289  cls read  14  word 11001011  trunk 1
+  14748.289  HOLD      14  dir 3  mine 0  nst 5  word-dir
+  14749.171  mon3 arm  14                       
+  14758.968  FWD       14 -> ok 0100 cand 71 30 42 11
+  14826.304  cls read  15  word 11001011  trunk 1
+  14827.304  HOLD      15  dir 3  mine 0  nst 5  word-dir
+  14828.186  mon0 arm  15                       
+  14837.968  FWD       15 -> ok 0111 cand 71 30 40 11
+SZ id=165 q=40 dir=E t1=100 e=0 b=0 back=1 seen=18.5 hold=20.6 arm=21.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14849.241  cls read  11  word 11001011  trunk 1
+  14850.242  HOLD      11  dir 3  mine 0  nst 5  word-dir
+  14851.123  mon1 arm  11                       
+SZ id=164 q=17 dir=W t1=119 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14860.967  FWD       11 -> ok 0100 cand 71 30 41 11
+SZ id=166 q=41 dir=E t1=124 e=0 b=0 back=1 seen=27.5 hold=29.7 arm=30.5 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  14886.335  cls read  17  word 11001011  trunk 1
+  14887.335  HOLD      17  dir 3  mine 0  nst 5  word-dir
+  14888.217  mon5 arm  17                       
+  14946.647  cls read  43  word 10001011  trunk 1
+  14947.648  HOLD      43  dir 2  mine 0  nst 5  word-dir
+  14948.529  mon7 arm  43                       
+  14957.967  FWD       43 -> ok 1000 cand 71 30 41 16
+SZ id=163 q=16 dir=W t1=308 e=0 b=0 back=0 seen=0.2 hold=2.4 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=170 q=13 dir=W t1=142 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=169 q=46 dir=E t1=218 e=0 b=0 back=1 seen=19.6 hold=21.7 arm=-1.0 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=0 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=168 q=10 dir=W t1=247 e=0 b=0 back=0 seen=0.1 hold=2.3 arm=3.1 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=167 q=12 dir=W t1=349 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=173 q=11 dir=W t1=240 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=171 q=14 dir=W t1=349 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=172 q=15 dir=W t1=319 e=0 b=0 back=0 seen=0.2 hold=2.3 arm=3.2 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=174 q=17 dir=W t1=338 e=0 b=0 back=0 seen=0.3 hold=2.4 arm=3.3 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+SZ id=175 q=43 dir=E t1=322 e=0 b=0 back=0 seen=0.6 hold=2.7 arm=3.6 nseen=1 nhold=1 nunh=0 nunhlive=0 ncell=1 nlate=0 efirst=-1 emin=-1 claim=0 wrong=0
+  15610.278  MK register -> 23        
+LC p=23 t=13717.0 dt=1894.00 net=1
+
+SUMMARY floods=176 blocked=238 wrong_claims=0 ok_claims=0 late_cells=0 hold_after_first_break=0 unhold_live=0 reclass=0 trunk_as_caller=0 refusals=0 origin_claims=0 resolver_leg_claims=0 seizures_without_cell=4 n_nofwd=47
+SUMMARY cls_busy=3527/22517 ms backlog_mean=0.046 backlog_max=2 mk_reads trunk=95 line=6
+SUMMARY sweeps=179 mean=10.51 max=11.74 ms; marker read req->select n=101 mean=2.43 max=8.99 ms; cls read req->select n=359 mean=0.93 max=0.99 ms
+SUMMARY lifts=7 nodt=1
+HIST rise->hold  <2 <5 <20 <40 <60 <100 <150 <250 <500 more: all 0 139 27 9 1 0 0 0 0 0
+HIST rise->hold W(low ports)  0 79 13 2 0 0 0 0 0 0
+HIST rise->hold E(high ports) 0 60 14 7 1 0 0 0 0 0
+HIST dialtone <5 <10 <20 <50 <100 <250 <500 <1000 <3000 none: 2 0 0 0 0 1 1 0 2 1
+    ok    10: no wrong claim, no trunk taken as a caller, no stranger as an origin's claim
+    ok    sc10: after the drain nothing is held
+      reg 0 mk 0 dirs 0000 res 00000000 mon 00000000 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+
+  4 checks, 0 errors.  PASS
+
+- /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:589: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 23s; walltime 436.739 s; speed 51.559 ms/s
+- Verilator: cpu 427.911 s on 1 threads; allocated 8 MB
+rc=0 wall=437

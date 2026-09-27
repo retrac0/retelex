@@ -1,0 +1,14 @@
+22:35:43 start c12_snap
+22:44:31 start net_fix
+22:54:33 done c12_snap rc=0   12 checks, 4 errors.  FAIL
+22:54:33 start mc2_snap
+22:58:22 done mc2_snap rc=0   9 checks, 3 errors.  FAIL
+22:58:58 done net_fix rc=0   88 checks, 0 errors.  PASS
+22:58:58 start chain_fix
+23:03:06 done chain_fix rc=0   32 checks, 0 errors.  PASS
+23:03:07 start lfull_fix
+23:21:33 done lfull_fix rc=0   40 checks, 0 errors.  PASS
+23:21:33 start c12_fix
+23:37:29 done c12_fix rc=0   12 checks, 0 errors.  PASS
+23:37:29 start mc2_fix
+23:40:44 done mc2_fix rc=0   9 checks, 1 errors.  FAIL

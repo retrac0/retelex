@@ -1,0 +1,2 @@
+build obj_r1 rc=0 wall_s=220
+run r1 rc=0 wall_s=1788

@@ -1,0 +1,30 @@
+
+  tb_ring4 STX 0100 STY 0000  dx 670 dy 20 dz 540 dv 180 dd 830  X20 dials 1 2 4 2 1
+  [  732.220] Y SEIZE port 04 dir 3 mon_free 1 fwd ok/none
+  [  732.489] V SEIZE port 13 dir 2 mon_free 1 fwd ok/none
+  [  743.024] Y FWD in 04 ok 0100 cand 00060000
+  [  743.184] V FWD in 13 ok 1000 cand 12000000
+  [  745.818] Z SEIZE port 11 dir 3 mon_free 1 fwd ok/none
+  [  756.544] Z FWD in 11 ok 0100 cand 00130000
+  [  759.458] V SEIZE port 11 dir 3 mon_free 1 fwd ok/none
+  [  764.865] Z SEIZE port 14 dir 2 mon_free 1 fwd ok/none
+  [  770.184] V FWD in 11 ok 0100 cand 12140000
+  [  772.761] X SEIZE port 75 dir 3 mon_free 1 fwd ok/none
+  [  775.544] Z FWD in 14 ok 1000 cand 12130000
+  [  778.267] Y SEIZE port 07 dir 2 mon_free 1 fwd ok/none
+  [  783.674] X NOFWD-EMPTY in 75
+  [  789.024] Y FWD in 07 ok 1000 cand 05060000
+  [  791.886] X SEIZE port 05 dir 2 mon_free 1 fwd ok/none
+  [ 1350.671] after key: X dirs 1100
+  [ 2760.538] Z CLAIM port 11 (want 11)
+  [ 2760.963] Z att_ack TAKEN port 11
+  [ 2760.963] Z CLAIM port 14 (want 10)
+  [ 2761.388] Z att_ack REFUSED port 14
+  [ 2761.622] X ORIGIN TAKES claim on 74
+  OUTCOME b=4 rang=0 (hi 0 lo 1500) owner_taken=11 owner_refused=14 origin_kept=74 X20_rx1=0/50 claims X0 Y0 Z2 V0 seizures X2 Y2 Z2 V2 fwds X0 Y2 Z2 V2
+  IDLE-CHECK busy X 0000000000000000 Y 0000000000000000 Z 0000000000000000 V 0000000000000000 reg 0000 res 00 00 00 00 mon 00 00 00 00
+  clash 0
+- work/verify/C19-rings/tb_ring4r.v:202: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 8s; walltime 321.339 s; speed 25.551 ms/s
+- Verilator: cpu 301.279 s on 1 threads; allocated 8 MB

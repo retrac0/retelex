@@ -1,0 +1,409 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'h8b00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'heb00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:688:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  688 |             ph_dg[g*5 + 1] = LD_CODE_E[y*3 +: 3];
+      |                            ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:689:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  689 |             ph_dg[g*5 + 2] = LD_CODE_B[y*3 +: 3];
+      |                            ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:738:33: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  738 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:738:33: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  738 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:743:38: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  743 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:743:38: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  743 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:749:63: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  749 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:749:63: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  749 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:753:67: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  753 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:753:67: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+  753 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:767:5: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                           : ... note: In instance 'tb_tr3'
+  767 |     if (k_trace) $display("TR t=%0d %s -> %s", now_ms, pn(g), sname(st));
+      |     ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:825:22: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'k_holdfix' generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  825 |     hold = k_holdfix ? k_hold : erand(g, k_hold);
+      |                      ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:832:26: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  832 |     if (y >= 0 && y < NG && c_live[y] && ph_role[y] == 0 &&
+      |                          ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:843:30: Logical operator LOGAND expects 1 bit on the RHS, but RHS's AND generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  843 |         (rs_why[g] == W_NONE && (c_cb[g] & 1))) return O_BUSY;
+      |                              ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:849:33: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  849 |     return (y >= 0) && (y < NG) && c_live[y] && ph_role[y] == 0 &&
+      |                                 ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:858:42: Logical operator LOGOR expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  858 |         if (c_dest[y] == g && (c_live[y] || (now_ms - c_lastend[y] <= k_phgrace))) return 1;
+      |                                          ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:872:19: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  872 |     if (c_live[g] && ph_role[g] == 0 && c_abt[g] >= 0 && now_ms >= c_abt[g] &&
+      |                   ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:933:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_quit' generates 32 bits.
+                                                            : ... note: In instance 'tb_tr3'
+  933 |             if (k_quit) begin
+      |             ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1041:28: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1041 |                 if (z >= 0 && c_live[z]) begin
+      |                            ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1072:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1072 |         if (c_live[g] && ph_role[g] == 0) call_print(g);
+      |                       ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1065:71: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1065 |     P_REST: if (h >= 0 && calling(h) && c_dest[h] == g && !(c_live[g] && ph_role[g] == 0)) begin
+      |                                                                       ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1095:17: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1095 |                 if (k_trace) $display("TR t=%0d %s rings, dialled, caller not heard", now_ms, pn(g));
+      |                 ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1086:33: Logical operator LOGNOT expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1086 |         if (ph_bellt[g] >= 0 && !ph_phj[g] && now_ms >= ph_bellt[g] + 8) begin
+      |                                 ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1132:19: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1132 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1132:19: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h41' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1132 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1133:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1133 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1133:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1133 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1134:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1134 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1134:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1134 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1247:38: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1247 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1247:38: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1247 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1247:74: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1247 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1247:74: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1247 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1320:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1320 |             code = bsh[7:2];
+      |                  ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1322:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h4' generates 6 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1322 |             else if (code == 6'o04) ev_gl[ldx]++;
+      |                           ^~
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1321:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h8' generates 6 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1321 |             if      (code == 6'o10) ev_nt[ldx]++;
+      |                           ^~
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1347:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1347 |         k = ld_p_nst[ldx*4 +: 4];
+      |           ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1358:61: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1358 |         pn_f1 = ld_p_f1[ldx]; pn_f2 = ld_p_f2[ldx]; pn_ndig = ld_p_rndig[ldx*3 +: 3];
+      |                                                             ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1364:21: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1364 |                 dst = ld_p_mpd[ldx*30 + w*15 +: 6];
+      |                     ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1385:39: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1385 |                         if (c_live[y] && ph_role[y] == 0 && c_kind[y] == K_NET &&
+      |                                       ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1377:35: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1377 |                 if (LD_PHONES[gd] && c_live[gd] && rs_why[gd] == W_NONE) rs_why[gd] = why;
+      |                                   ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1396:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1396 |         pm_state = ld_mks[ldx*3 +: 3]; pm_ref = ld_p_mref[ldx] && !ld_p_mtake[ldx];
+      |                  ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1398:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1398 |         pm_called = ld_p_mcalled[ldx*6 +: 6];
+      |                   ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_harness.svh:1411:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 8 bits.
+                                                              : ... note: In instance 'tb_tr3'
+ 1411 |         k = ld_gl[x*8 +: 8];
+      |           ^
+                      work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1478:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1478 |         if (c_live[g] && ph_role[g] == 0) begin
+      |                       ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1554:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1554 |         for (o = 1; o < NO; o++) if (n_cls_k[b*NO + o]) $write(" %s=%0d", oname(o), n_cls_k[b*NO + o]);
+      |                                  ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1560:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1560 |         for (o = 1; o < NO; o++) if (n_cls_x[x*NO + o]) $write(" %s=%0d", oname(o), n_cls_x[x*NO + o]);
+      |                                  ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1564:30: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1564 |     for (w = 1; w < NW; w++) if (n_why[w]) $write(" %s=%0d", wname(w), n_why[w]);
+      |                              ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1571:25: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_dt' generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1571 |              n_dt, n_dt ? real'(s_dt) / n_dt : 0.0, pctl(0, n_dt, 50), pctl(0, n_dt, 99), mx_dt);
+      |                         ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1573:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdd' generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1573 |              n_pdd, n_pdd ? real'(s_pdd) / n_pdd : 0.0, pctl(1, n_pdd, 50), pctl(1, n_pdd, 99), mx_pdd);
+      |                           ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1575:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdn' generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1575 |              n_pdn, n_pdn ? real'(s_pdn) / n_pdn : 0.0, pctl(2, n_pdn, 50), pctl(2, n_pdn, 99), mx_pdn, n_middial);
+      |                           ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1589:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1589 |         for (w = 1; w < NW; w++) if (x_why[x*NW + w]) $write(" %s=%0d", wname(w), x_why[x*NW + w]);
+      |                                  ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1596:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1596 |         for (o = 2; o < NO; o++) if (ln_cls[g*NO + o]) $write(" %s=%0d", oname(o), ln_cls[g*NO + o]);
+      |                                  ^~
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_harness.svh:1634:49: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'iv_ms' generates 32 bits.
+                                                             : ... note: In instance 'tb_tr3'
+ 1634 |                 $write(" %s=%.2f", xn(x), iv_ms ? real'(iv_reg[x]) / iv_ms : 0.0);
+      |                                                 ^
+                     work/load/transit/tb_tr3.sv:35:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHTRUNC: work/load/transit/tr_probe_common.svh:122:53: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's ARRAYSEL generates 32 bits.
+                                                                 : ... note: In instance 'tb_tr3'
+  122 |                      tp_hn[x*4 + k], tp_hn[x*4 + k] ? tp_hs[x*4 + k] / tp_hn[x*4 + k] : 0.0,
+      |                                                     ^
+                     work/load/transit/tb_tr3.sv:36:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:18:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'cls_port' generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   18 |         p = A.u_x.u_net.cls_port; g = x*64 + p;
+      |           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:55:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'cls_port' generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   55 |         p = A.u_x.u_net.cls_port;
+      |           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:59:43: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'f_in' generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   59 |                  A.u_x.u_net.fst, pn(x*64 + A.u_x.u_net.f_in), t - tp_seize_t[x*64 + p]);
+      |                                           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:63:83: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'f_in' generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   63 |         $display("TP t=%.3f n=%0d ex=%s NFEMPTY in=%s", t, now_ms, xn(x), pn(x*64 + A.u_x.u_net.f_in));
+      |                                                                                   ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:67:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'f_in' generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   67 |         p = A.u_x.u_net.f_in; g = x*64 + p;
+      |           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:76:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   76 |             leg = A.u_x.u_net.f_cand[j*6 +: 6];
+      |                 ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:89:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   89 |             p = A.u_x.u_net.rs_in[v*6 +: 6];
+      |               ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:91:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 2 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   91 |                 j = A.u_x.u_net.rs_cl[v*2 +: 2];
+      |                   ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:92:21: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                               : ... note: In instance 'tb_tr3'
+   92 |                 leg = A.u_x.u_net.rs_leg[(v*4 + j)*6 +: 6];
+      |                     ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:114:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'm_want_port' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  114 |         p = A.u_x.u_net.m_want_port; g = x*64 + p;
+      |           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:131:86: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'caller' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  131 |         $display("TP t=%.3f n=%0d ex=%s OFLOOD caller=%s", t, now_ms, xn(x), pn(x*64 + A.u_x.u_net.caller));
+      |                                                                                      ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:137:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  137 |             leg = A.u_x.u_net.o_cand[j*6 +: 6];
+      |                 ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:143:26: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'caller' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  143 |                  pn(x*64 + A.u_x.u_net.caller), A.u_x.u_net.o_ok, A.u_x.u_net.o_cand, nleg, t - tp_flood_t[x]);
+      |                          ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:147:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'trunk' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  147 |         p = A.u_x.u_net.trunk; g = x*64 + p;
+      |           ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:153:44: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'caller' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  153 |                  t, now_ms, xn(x), pn(x*64 + A.u_x.u_net.caller), pn(g), A.u_x.u_net.ev_glare,
+      |                                            ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:159:26: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'caller' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  159 |                  pn(x*64 + A.u_x.u_net.caller), pn(x*64 + A.u_x.u_net.trunk), t - tp_flood_t[x]);
+      |                          ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:159:57: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'trunk' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  159 |                  pn(x*64 + A.u_x.u_net.caller), pn(x*64 + A.u_x.u_net.trunk), t - tp_flood_t[x]);
+      |                                                         ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:168:33: Operator ADD expects 32 bits on the RHS, but RHS's VARXREF 'caller' generates 6 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  168 |                  xn(x), pn(x*64 + A.u_x.u_net.caller), A.u_x.u_net.o_after, tp_pnst[x],
+      |                                 ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+%Warning-WIDTHEXPAND: work/load/transit/tr_probe_unit.svh:171:16: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'nst' generates 4 bits.
+                                                                : ... note: In instance 'tb_tr3'
+  171 |     tp_pnst[x] = A.u_x.u_net.nst;
+      |                ^
+                      work/load/transit/tb_tr3.sv:88:1: ... note: In file included from 'tb_tr3.sv'
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/load/transit/obj_fx'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_tr3__pch.h -o Vtb_tr3__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_tr3__pch.h -o Vtb_tr3__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.fast -c Vtb_tr3.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.fast -c Vtb_tr3___024root__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.fast -c Vtb_tr3_vm_classes_0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.fast -c Vtb_tr3_vm_classes_1.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.slow -c Vtb_tr3___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.slow -c Vtb_tr3___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.slow -c Vtb_tr3_exch__pi7__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.slow -c Vtb_tr3_exch__pi7__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_tr3__pch.h.slow -c Vtb_tr3__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_tr3__ALL.a    -pthread -lpthread -latomic   -o tb_tr3
+rm Vtb_tr3__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/load/transit/obj_fx'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.321 MB sources in 27 modules, into 20.043 MB in 15 C++ files needing 0.018 MB
+- Verilator: Walltime 455.783 s (elab=0.790, cvt=15.224, bld=436.081); cpu 12.847 s on 2 threads; allocated 384.418 MB

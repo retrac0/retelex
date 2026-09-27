@@ -1,0 +1,2 @@
+[sim.sh] slot 3: work/verify/C07-link-outage-pulse/job.sh fix work/audit/proto/RTL_fix.list 62:680 --net
+jobB rc=0

@@ -1,0 +1,48 @@
+
+  tb_c20r -- drop then re-seize, real timers: TA=11 A T_REL=256 fd=0 us hu=50 rs=258 scan=0
+    ok    the links are up
+    ok    A20 has A's register
+    A seized TA/A12 at 630 ms
+  [  630 ms] A's TA seized
+  [  631 ms] X11 M rises (X11 busy=0)
+  [  633 ms] X holds X11 as a fresh seizure (hold #1)
+    A20 hung up at 679 ms (49 ms after the seizure)
+  [  680 ms] X11 M falls
+  [  936 ms] A's TA free at A
+  [  936 ms] X11 free at X
+  [  949 ms] A's TA seized
+    A re-seized TA (forward of A13): yes, 270 ms after the break; X11 busy=0
+  [  950 ms] X11 M rises (X11 busy=0)
+  [  952 ms] X holds X11 as a fresh seizure (hold #2)
+  [ 1537 ms] X11 M falls
+  [ 1597 ms] X11 M rises (X11 busy=1)
+  [ 2437 ms] X11 M falls
+  [ 2497 ms] X11 M rises (X11 busy=1)
+  [ 2537 ms] X11 M falls
+  [ 2597 ms] X11 M rises (X11 busy=1)
+  [ 2637 ms] X11 M falls
+  [ 2697 ms] X11 M rises (X11 busy=1)
+    ok    X claims the flood dialled to it: Y sees backward A on A13
+    ok    X's register is attached
+  [ 3537 ms] X11 M falls
+  [ 3597 ms] X11 M rises (X11 busy=1)
+  [ 3637 ms] X11 M falls
+  [ 3697 ms] X11 M rises (X11 busy=1)
+  [ 4537 ms] X11 M falls
+  [ 4597 ms] X11 M rises (X11 busy=1)
+  [ 4637 ms] X11 M falls
+  [ 4697 ms] X11 M rises (X11 busy=1)
+    X2x busy=00000100 (X22 is bit 2); X holds of X11 as fresh=2
+    ok    X22 is rung by the flood dialled 1 3 2 2
+  [ 5637 ms] X11 M falls
+  [ 5892 ms] X11 free at X
+  [ 6148 ms] A's TA free at A
+    ok    and afterwards both exchanges are idle
+    ok    no bus clash, no queue refusal (last sample)
+
+  7 checks, 0 errors.  PASS
+
+- work/verify/C20-misc/tb_c20r.v:254: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 7s; walltime 167.157 s; speed 42.690 ms/s
+- Verilator: cpu 160.532 s on 1 threads; allocated 8 MB

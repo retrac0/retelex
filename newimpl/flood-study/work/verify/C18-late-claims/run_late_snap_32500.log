@@ -1,0 +1,111 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 64
+    ok    links 11, 12 up; 13 cut
+    ok    S7: the N/S link is up
+
+  S7 DLY 32500 us: A20 dials 1 3 2 2 1 with the N/S link up; B's marker blind to att for DLY
+  [   60.271] A mk  0 -> 4  reg_busy 0
+  [   60.271] A cls 0 -> 1 port 20
+  [   61.389] A mk  4 -> 5  reg_busy 0
+  [   61.389] A cls 1 -> 0 port 20
+  [   62.271] A mk  5 -> 1  reg_busy 0
+  [   62.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   99.005] A mk  1 -> 6  reg_busy 1
+  [   99.005] A nst 0 -> 1  (ndig 0)
+  [   99.006] A nst 1 -> 2  (ndig 0)
+  [   99.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [  109.005] A nst 2 -> 3  (ndig 0)
+  [  109.005] A nst 3 -> 4  (ndig 0)
+  [  109.289] A wr  g1 dst 13 src 20 bsy 1 clm 0
+  [  109.290] A13 port: src 20 bsy 1 clm 0 fE 0 fM 0 M 0 | BUSY 1
+  [  109.423] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [  110.286] B13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 1 | BUSY 0
+  [  111.161] B mk  0 -> 4  reg_busy 0
+  [  111.161] B cls 0 -> 1 port 11
+  [  112.005] A13 port: src 20 bsy 1 clm 0 fE 1 fM 0 M 0 | BUSY 1
+  [  112.005] B13 port: src 00 bsy 0 clm 0 fE 0 fM 1 M 1 | BUSY 0
+  [  112.279] B mk  4 -> 0  reg_busy 0
+  [  112.279] B cls 1 -> 2 port 11
+  [  112.280] B mon_held 01
+  [  112.280] B cls 2 -> 3 port 11
+  [  112.564] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [  113.192] B mk  0 -> 4  reg_busy 0
+  [  116.005] B cls 3 -> 0 port 11
+  [  116.192] B cls 0 -> 5 port 13
+  [  116.248] B cls 5 -> 1 port 13
+  [  117.311] B mk  4 -> 0  reg_busy 0
+  [  117.311] B cls 1 -> 2 port 13
+  [  117.311] B mon_held 11
+  [  117.311] B cls 2 -> 3 port 13
+  [  117.595] B wr  g1 dst 13 src 00 bsy 1 clm 0
+  [  117.595] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  121.005] B cls 3 -> 0 port 13
+    ok    S7: the key seized one trunk E and one N
+  [  190.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  202.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  210.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  222.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  230.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  242.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  350.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  362.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  370.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  382.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  399.004] A nst 4 -> 5  (ndig 2)
+  [  400.004] B m_want 11
+  [  400.005] B m_want 10
+  [  400.005] B mon_held 10
+  [  400.288] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  400.295] BENCH: B's marker blind to att for 32500 us
+  [  400.295] B att 1 port 11 (mk 0 reg_busy 0)
+  [  401.160] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [  401.445] A wr  g1 dst 13 src 00 bsy 0 clm 0
+  [  401.445] A13 port: src 00 bsy 0 clm 0 fE 1 fM 0 M 0 | BUSY 1
+  [  402.035] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  432.795] BENCH: released
+  [  432.795] B mk  0 -> 1  reg_busy 0
+  [  432.795] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [  432.795] B att 0 port 11 (mk 1 reg_busy 1)
+  [  432.796] B m_want 00
+  [  432.796] B mon_held 00
+  [  433.080] B wr  g1 dst 13 src 00 bsy 1 clm 1
+  [  433.080] B13 port: src 00 bsy 1 clm 1 fE 0 fM 1 M 0 | BUSY 1
+  [  433.086] B att 1 port 13 (mk 1 reg_busy 1)
+  [  433.086] B att_ack: REFUSED  (mk 1 reg_busy 1)
+  [  433.086] B att 0 port 13 (mk 1 reg_busy 1)
+  [  433.098] A13 port: src 00 bsy 0 clm 0 fE 1 fM 0 M 1 | BUSY 1
+  [  433.191] A probe 13: M 1 BUSY 1 st 0 mine 0 cst 0
+  [  433.214] B wr  g1 dst 13 src 03 bsy 1 clm 1
+  [  433.214] B13 port: src 03 bsy 1 clm 1 fE 0 fM 1 M 0 | BUSY 1
+  [  434.004] A13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 1 | BUSY 0
+  [  434.004] B13 port: src 03 bsy 1 clm 1 fE 0 fM 0 M 0 | BUSY 1
+  [  434.004] B13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 0 | BUSY 0
+  [  434.035] A13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 0 | BUSY 0
+  [  434.191] A probe 13: M 0 BUSY 0 st 1 mine 0 cst 0
+  [  540.132] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  659.004] A nst 5 -> 6  (ndig 4)
+  [  659.004] A nst 6 -> 0  (ndig 4)
+  [  659.004] A mk  6 -> 3  reg_busy 1
+  [  659.005] A mk  3 -> 0  reg_busy 0
+  [  659.288] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [  660.004] B mk  1 -> 4  reg_busy 1
+  [  660.403] B mk  4 -> 2  reg_busy 1
+  [  661.285] B mk  2 -> 7  reg_busy 1
+  [  661.413] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [  661.547] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [  665.004] B mk  7 -> 0  reg_busy 1
+  OBS S7 DLY 32500: B21 ring hi 123; A monitor after claim 0; A cls busy on 13 for 0 ms; busy A13 0 B13 0
+  OBS S7 DLY 32500, 400 ms after A20 hung up: busy A13 0 B13 0; A mon 00 res 00; B mon 00; A13 src 00 bsy 0; B13 src 00 bsy 0 clm 0
+    ok    S7 intent: claim 2 is not taken at A as a fresh seizure
+    ok    S7: A13/B13 free and A's cells free after the call
+    ok    S7: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  8 checks, 0 errors, idle-bad 0.  PASS
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C18-late-claims/tb_late.v:568: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 83.402 s; speed 21.810 ms/s
+- Verilator: cpu 74.487 s on 1 threads; allocated 8 MB
+rc=0 secs=83

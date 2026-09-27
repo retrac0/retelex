@@ -1,0 +1,139 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=2 var=1 dly=112 load=0
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc2: a forward whose incoming link goes down; the resolver outlives it
+     51.264 ms  fst 0 -> 1
+     51.264 ms  mon_held 00 -> 01
+     51.264 ms  fst 1 -> 2
+     51.264 ms  hst 0 -> 1 (owner 1)
+     51.548 ms  port 10 BUSY -> 1
+     51.548 ms  port 10 latch -> src 00 bsy 1 clm 0
+     61.014 ms  hst 1 -> 2 (owner 1)
+     62.005 ms  hst 2 -> 0 (owner 1)
+     62.005 ms  fst 2 -> 3
+     62.006 ms  rs_busy 00 -> 01   in 10 00  held 0110 0000  legs0 00 40 30 00  legs1 00 00 00 00
+     62.006 ms  fst 3 -> 0
+     62.290 ms  port 40 BUSY -> 1
+     62.290 ms  port 40 latch -> src 10 bsy 1 clm 0
+     62.424 ms  port 30 BUSY -> 1
+     62.424 ms  port 30 latch -> src 10 bsy 1 clm 0
+     63.139 ms  port 30 a_out (far M) -> 1
+     63.139 ms  port 40 a_out (far M) -> 1
+    ok    B10 held and forwarded into E30 and S40; one resolver holds the forward
+    ok    both legs carry the W caller's M onward
+     90.051 ms  B's LTU link_up -> 0
+     90.051 ms  port 11 BUSY -> 1
+     90.051 ms  port 12 BUSY -> 1
+     90.051 ms  port 13 BUSY -> 1
+     90.051 ms  port 14 BUSY -> 1
+     90.051 ms  port 15 BUSY -> 1
+     90.051 ms  port 16 BUSY -> 1
+     90.051 ms  port 17 BUSY -> 1
+     90.139 ms  port 30 a_out (far M) -> 0
+     90.139 ms  port 40 a_out (far M) -> 0
+    ok    MUTE_BLK: all eight LTU ports read BUSY
+    346.004 ms  port 10 latch -> src 00 bsy 0 clm 0
+    346.004 ms  port 30 BUSY -> 0
+    346.004 ms  port 30 latch -> src 00 bsy 0 clm 0
+    346.004 ms  port 40 BUSY -> 0
+    346.004 ms  port 40 latch -> src 00 bsy 0 clm 0
+    347.004 ms  mon_held 01 -> 00
+    ok    the legs released themselves: their E fell
+    FAIL  the resolver let go of a forward whose incoming is dead
+    500.003 ms  latch 10: src 00 bsy 0 clm 0   BUSY 1  a_out 0
+    500.003 ms  latch 30: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    500.003 ms  latch 40: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+  sc2 var1: the E neighbour seizes E30 (an old leg) to call B21; later the cable is mended
+    500.395 ms  rs_busy 01 -> 00   in 10 00  held 0000 0000  legs0 00 40 30 00  legs1 00 00 00 00
+    500.813 ms  port 10 latch -> src 30 bsy 1 clm 0
+    502.513 ms  fst 0 -> 1
+    502.513 ms  mon_held 00 -> 01
+    502.513 ms  fst 1 -> 2
+    502.513 ms  hst 0 -> 1 (owner 1)
+    502.797 ms  port 30 BUSY -> 1
+    502.797 ms  port 30 latch -> src 00 bsy 1 clm 0
+    512.013 ms  hst 1 -> 2 (owner 1)
+    513.004 ms  hst 2 -> 0 (owner 1)
+    513.004 ms  fst 2 -> 3
+    513.004 ms  rs_busy 00 -> 01   in 30 00  held 0010 0000  legs0 00 40 30 00  legs1 00 00 00 00
+    513.004 ms  fst 3 -> 0
+    513.289 ms  port 40 BUSY -> 1
+    513.289 ms  port 40 latch -> src 30 bsy 1 clm 0
+    513.387 ms  port 40 a_out (far M) -> 1
+    513.422 ms  port 30 latch -> src 40 bsy 1 clm 0
+    530.003 ms  latch 10: src 30 bsy 1 clm 0   BUSY 1  a_out 0
+    530.003 ms  latch 30: src 40 bsy 1 clm 0   BUSY 1  a_out 0
+    530.003 ms  latch 40: src 30 bsy 1 clm 0   BUSY 1  a_out 1
+    FAIL  B holds E30 as an incoming seizure
+   1130.386 ms  port 40 a_out (far M) -> 0
+   1190.386 ms  port 40 a_out (far M) -> 1
+   1230.386 ms  port 40 a_out (far M) -> 0
+   1290.385 ms  port 40 a_out (far M) -> 1
+   2030.384 ms  port 40 a_out (far M) -> 0
+   2090.383 ms  port 40 a_out (far M) -> 1
+   2130.383 ms  port 40 a_out (far M) -> 0
+   2190.383 ms  port 40 a_out (far M) -> 1
+   2230.383 ms  port 40 a_out (far M) -> 0
+   2290.383 ms  port 40 a_out (far M) -> 1
+   2418.999 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 00 40 30 00  legs1 00 00 00 00
+   2418.999 ms  mon_held 01 -> 00
+   2419.283 ms  port 30 a_out (far M) -> 1
+   2419.283 ms  port 30 latch -> src 00 bsy 1 clm 1
+   2419.417 ms  port 40 latch -> src 00 bsy 0 clm 0
+   2420.008 ms  port 40 a_out (far M) -> 0
+    ok    B claimed the E call
+   2675.998 ms  port 40 BUSY -> 0
+   4020.404 ms  port 30 latch -> src 21 bsy 1 clm 1
+   4020.538 ms  port 21 BUSY -> 1
+   4020.538 ms  port 21 latch -> src 30 bsy 1 clm 0
+    ok    B connected E30 and B21
+   4629.993 ms  B's LTU link_up -> 1
+   4629.993 ms  port 11 BUSY -> 0
+   4629.993 ms  port 12 BUSY -> 0
+   4629.993 ms  port 13 BUSY -> 0
+   4629.993 ms  port 14 BUSY -> 0
+   4629.993 ms  port 15 BUSY -> 0
+   4629.993 ms  port 16 BUSY -> 0
+   4629.993 ms  port 17 BUSY -> 0
+   4630.009 ms  far LTU ch 0: M seen by W neighbour -> 1
+   4729.992 ms  latch 10: src 30 bsy 1 clm 0   BUSY 1  a_out 0
+    FAIL  after the mend channel 0 is free, and the W neighbour sees no M on it
+    FAIL  the E caller's voice does not reach the W neighbour on channel 0
+    FAIL  a second later: still no M on channel 0 at the W neighbour
+   5736.397 ms  far LTU ch 0: M seen by W neighbour -> 0
+   5990.990 ms  port 21 latch -> src 00 bsy 0 clm 0
+   5991.990 ms  port 21 BUSY -> 0
+   5991.990 ms  port 10 BUSY -> 0
+   5991.990 ms  port 10 latch -> src 00 bsy 0 clm 0
+   5991.990 ms  port 30 BUSY -> 0
+   5991.990 ms  port 30 a_out (far M) -> 0
+   5991.990 ms  port 30 latch -> src 00 bsy 0 clm 0
+    ok    after the call ends channel 0 is free
+    ok    sc2: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  16 checks, 5 errors.  FAIL
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 8s; walltime 194.833 s; speed 38.679 ms/s
+- Verilator: cpu 191.354 s on 1 threads; allocated 8 MB
+rc=0 secs=195

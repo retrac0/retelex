@@ -1,0 +1,17 @@
+
+  tb_lfull -- sixteen lines a side, a local trunk, all eight channels at once
+  1. five two-digit calls at A, ten lines
+  2. A20-A27 dial 1 2 3 3 k: eight calls across
+  3. A30 and B20 key 1 with no channel free
+  4. channel 3 hangs up; B20 dials 1 2 2 3 0
+  5. A31 and B21 key 1 together, one channel free
+     glare at try 0, B's key 0 us after A's
+    FAIL  B21 hears A31
+    FAIL  A31 hears B21: residual glare joins the two callers
+
+  40 checks, 2 errors.  FAIL
+
+[15889963838000] %Fatal: tb_lfull.v:398: Assertion failed in tb_lfull
+%Error: tb/tb_lfull.v:398: Verilog $stop
+Aborting...
+rc=1 secs=1439

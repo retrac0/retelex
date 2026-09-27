@@ -1,0 +1,23 @@
+256c256,260
+<                      C_UNHOLD = 3'd4, C_WAIT = 3'd5;
+---
+>                      C_UNHOLD = 3'd4, C_WAIT = 3'd5, C_LOW = 3'd6;
+>     // VERIFY FIX (C04): how long M must stay down in the watch to be a death.
+>     // CLR by default (a break past it is a hang-up); +lowid picks ID instead.
+>     reg [8:0] C_LOWT;
+>     initial C_LOWT = $test$plusargs("lowid") ? ID : CLR;
+583a588,591
+>             // VERIFY FIX (C04): M down in the watch is a death only when it
+>             // outlasts a dial break.  C_LOW writes nothing; M up again is the
+>             // make, and the watch starts over from it; M down for CLR is the
+>             // death, and the hold is written away.
+586c594
+<                 if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= C_UNHOLD;
+---
+>                 if (sp_fresh && (sp_port == cls_port) && !sp_m) begin cst <= C_LOW; cls_ms <= 9'd0; end
+587a596,600
+>             end
+>             if (cst == C_LOW) begin
+>                 if (tick_1k) cls_ms <= cls_ms + 9'd1;
+>                 if (sp_fresh && (sp_port == cls_port) && sp_m) begin cst <= C_HOLD; cls_ms <= 9'd0; end
+>                 else if (cls_ms >= C_LOWT)                         cst <= C_UNHOLD;

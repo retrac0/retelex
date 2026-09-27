@@ -1,0 +1,21 @@
+  120.00 ms  card settled=1 link_up=1 a_tx=1; register armed
+  150.00 ms  --- chatter starts (CLK only) for 30 ms
+  159.00 ms  pulse_rx COUNTED A BREAK (cnt->2)
+  180.00 ms  --- contact closed for good
+  309.00 ms  pulse_rx DIGIT 1
+sc A (CLK chatter): breaks 1, digits 1, poison 0
+  600.00 ms  --- chatter starts (   CLK+A) for 30 ms
+  609.00 ms  pulse_rx COUNTED A BREAK (cnt->2)
+  630.00 ms  --- contact closed for good
+  759.00 ms  pulse_rx DIGIT 1
+sc B (CLK+A chatter): breaks 2, digits 2, poison 0 (cumulative)
+ 1000.00 ms  --- clean cut of CLK, 30 ms
+ 1004.02 ms  card POISONED
+ 1009.00 ms  pulse_rx COUNTED A BREAK (cnt->2)
+ 1030.00 ms  --- CLK back
+ 1257.00 ms  pulse_rx CLEAR (hang-up)
+sc C (clean cut): breaks 3, digits 2, clears 1, poison 1 (cumulative)
+- work/verify/C07-skeptic-realism/tb_chat.v:78: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 1s; walltime 7.859 s; speed 178.046 ms/s
+- Verilator: cpu 7.814 s on 1 threads; allocated 7 MB

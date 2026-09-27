@@ -1,0 +1,376 @@
+%Warning-PINMISSING: work/audit/fwd/site_fx.v:147:70: Instance has missing pin: 'ws_n'
+  147 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:51:30: Operator ADD expects 32 bits on the LHS, but LHS's CONST '6'h18' generates 6 bits.
+                                                  : ... note: In instance 'tb_fx'
+   51 |                 tw_of[(6'o30 + q)*8 +: 8] = WE;
+      |                              ^
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:52:30: Operator ADD expects 32 bits on the LHS, but LHS's CONST '6'h20' generates 6 bits.
+                                                  : ... note: In instance 'tb_fx'
+   52 |                 tw_of[(6'o40 + q)*8 +: 8] = WS;
+      |                              ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:53:30: Operator ADD expects 32 bits on the LHS, but LHS's CONST '6'h3c' generates 6 bits.
+                                                  : ... note: In instance 'tb_fx'
+   53 |                 tw_of[(6'o74 + q)*8 +: 8] = WN;
+      |                              ^
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:28: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_fx.B.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                            ^
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:54: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_fx.B.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                                                      ^
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:81: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_fx.B.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                                                                                 ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:256:41: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 3 bits.
+                                                   : ... note: In instance 'tb_fx'
+  256 |         far_of = (p[5:3] == 3'd1) ? (64 + p[2:0]) : p;
+      |                                         ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:256:35: Operator COND expects 32 bits on the Conditional False, but Conditional False's VARREF 'p' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  256 |         far_of = (p[5:3] == 3'd1) ? (64 + p[2:0]) : p;
+      |                                   ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:317:62: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  317 |             ck(rsb == 2'b01 && busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o10 && la(6'o40) == 6'o10,
+      |                                                              ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:317:84: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  317 |             ck(rsb == 2'b01 && busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o10 && la(6'o40) == 6'o10,
+      |                                                                                    ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:327:13: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h8' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  327 |             dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |             ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:327:30: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  327 |             dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                              ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:327:47: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  327 |             dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                                               ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:331:17: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  331 |                 pdial(6'o20, 1);                        
+      |                 ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:333:71: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  333 |                 ck(d_held == 4'b0110 && busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o20 && la(6'o40) == 6'o20,
+      |                                                                       ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:333:93: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  333 |                 ck(d_held == 4'b0110 && busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o20 && la(6'o40) == 6'o20,
+      |                                                                                             ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:336:17: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  336 |                 pdial(6'o20, 4);                        
+      |                 ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:339:17: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h8' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  339 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                 ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:339:34: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  339 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                                  ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:339:51: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  339 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                                                   ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:340:50: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  340 |                 ck(busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o20 && la(6'o40) == 6'o20,
+      |                                                  ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:340:72: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  340 |                 ck(busy[6'o30] && busy[6'o40] && la(6'o30) == 6'o20 && la(6'o40) == 6'o20,
+      |                                                                        ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:345:26: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  345 |                 ms(600); pdial(6'o20, 4); ms(150);
+      |                          ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:347:26: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  347 |                 ms(500); pdial(6'o20, 2); ms(600); pdial(6'o20, 1); ms(300);
+      |                          ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:347:52: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  347 |                 ms(500); pdial(6'o20, 2); ms(600); pdial(6'o20, 1); ms(300);
+      |                                                    ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:348:17: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  348 |                 dump_lat(6'o20); dump_lat(6'o30); dump_lat(6'o40);
+      |                 ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:348:34: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  348 |                 dump_lat(6'o20); dump_lat(6'o30); dump_lat(6'o40);
+      |                                  ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:348:51: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  348 |                 dump_lat(6'o20); dump_lat(6'o30); dump_lat(6'o40);
+      |                                                   ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:349:42: Operator TASKREF 'hear_rx' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  349 |                 sc[6'o30] = 1'b1; ms(3); hear_rx(6'o20); ck(s1 && !s0, "B20 hears the E party (1)");
+      |                                          ^~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:350:42: Operator TASKREF 'hear_rx' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  350 |                 sc[6'o30] = 1'b0; ms(3); hear_rx(6'o20); ck(s0 && !s1, "B20 hears the E party (0)");
+      |                                          ^~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:351:42: Operator TASKREF 'hear_out' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  351 |                 tx[6'o20] = 1'b1; ms(3); hear_out(6'o30); ck(s1 && !s0, "the E party hears B20 (1)");
+      |                                          ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:352:42: Operator TASKREF 'hear_out' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  352 |                 tx[6'o20] = 1'b0; ms(3); hear_out(6'o30); ck(s0 && !s1, "the E party hears B20 (0)");
+      |                                          ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:359:17: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h8' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  359 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                 ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:359:34: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  359 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                                  ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:359:51: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  359 |                 dump_lat(6'o10); dump_lat(6'o30); dump_lat(6'o40);
+      |                                                   ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:360:35: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  360 |                 ck(busy[6'o30] && la(6'o30) == 6'o00, "B holds E30 as an incoming seizure");
+      |                                   ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:361:26: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  361 |                 ms(600); pdial(6'o30, 2); ms(700); pdial(6'o30, 3); ms(300);
+      |                          ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:361:52: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  361 |                 ms(600); pdial(6'o30, 2); ms(700); pdial(6'o30, 3); ms(300);
+      |                                                    ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:363:26: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  363 |                 ms(300); pdial(6'o30, 2); ms(700); pdial(6'o30, 1); ms(400);
+      |                          ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:363:52: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  363 |                 ms(300); pdial(6'o30, 2); ms(700); pdial(6'o30, 1); ms(400);
+      |                                                    ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:364:20: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h11' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  364 |                 ck(la(6'o21) == 6'o30 && la(6'o30) == 6'o21, "B connected E30 and B21");
+      |                    ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:364:42: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  364 |                 ck(la(6'o21) == 6'o30 && la(6'o30) == 6'o21, "B connected E30 and B21");
+      |                                          ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:368:17: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h8' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  368 |                 dump_lat(6'o10);
+      |                 ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:370:63: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's LOGAND generates 1 bits.
+                                                   : ... note: In instance 'tb_fx'
+  370 |                 sc[6'o30] = 1'b1; ms(3); hear_out(64); t_hold = s1 && !s0;
+      |                                                               ^
+%Warning-WIDTHTRUNC: work/audit/fwd/tb_fx.v:372:29: Logical operator LOGAND expects 1 bit on the LHS, but LHS's VARREF 't_hold' generates 32 bits.
+                                                  : ... note: In instance 'tb_fx'
+  372 |                 ck(!(t_hold && s0 && !s1), "the E caller's voice does not reach the W neighbour on channel 0");
+      |                             ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:386:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARREF 'ngl' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  386 |             ng0 = ngl; eg0 = ev_glare;
+      |                 ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:394:13: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  394 |             dump_lat(6'o30); dump_lat(6'o40); dump_lat(6'o10); dump_lat(6'o74);
+      |             ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:394:30: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h20' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  394 |             dump_lat(6'o30); dump_lat(6'o40); dump_lat(6'o10); dump_lat(6'o74);
+      |                              ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:394:47: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h8' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  394 |             dump_lat(6'o30); dump_lat(6'o40); dump_lat(6'o10); dump_lat(6'o74);
+      |                                               ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:394:64: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h3c' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  394 |             dump_lat(6'o30); dump_lat(6'o40); dump_lat(6'o10); dump_lat(6'o74);
+      |                                                                ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:395:16: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  395 |             ck(la(6'o30) != 6'o40, "the E flood's incoming is not re-pointed at S40");
+      |                ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:396:38: Operator TASKREF 'hear_out' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  396 |             sc[6'o40] = 1'b1; ms(3); hear_out(6'o30); t_hold = s1 && !s0;
+      |                                      ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:396:62: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's LOGAND generates 1 bits.
+                                                   : ... note: In instance 'tb_fx'
+  396 |             sc[6'o40] = 1'b1; ms(3); hear_out(6'o30); t_hold = s1 && !s0;
+      |                                                              ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:397:38: Operator TASKREF 'hear_out' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  397 |             sc[6'o40] = 1'b0; ms(3); hear_out(6'o30);
+      |                                      ^~~~~~~~
+%Warning-WIDTHTRUNC: work/audit/fwd/tb_fx.v:398:25: Logical operator LOGAND expects 1 bit on the LHS, but LHS's VARREF 't_hold' generates 32 bits.
+                                                  : ... note: In instance 'tb_fx'
+  398 |             ck(!(t_hold && s0 && !s1), "the E caller does not hear the S caller");
+      |                         ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:400:46: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 1 bits.
+                                                   : ... note: In instance 'tb_fx'
+  400 |             sm[6'o40] = 1'b0; ms(20); t_hold = a_out[6'o30]; sm[6'o40] = 1'b1; ms(20);
+      |                                              ^
+%Warning-WIDTHTRUNC: work/audit/fwd/tb_fx.v:401:18: Logical operator LOGNOT expects 1 bit on the LHS, but LHS's VARREF 't_hold' generates 32 bits.
+                                                  : ... note: In instance 'tb_fx'
+  401 |             ck(!(!t_hold && a_out[6'o30]), "the E origin's backward A does not follow the S caller's hook");
+      |                  ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:402:20: Operator NEQ expects 32 bits on the LHS, but LHS's VARREF 'ngl' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  402 |             ck(ngl != ng0 || ev_glare != eg0, "the glare is counted (n_glare or EV_GLARE)");
+      |                    ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:411:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARREF 'nnf' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  411 |             nf0 = nnf;
+      |                 ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:416:13: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  416 |             dump_lat(6'o30); dump_lat(6'o41); dump_lat(6'o12); dump_lat(6'o77);
+      |             ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:416:30: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h21' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  416 |             dump_lat(6'o30); dump_lat(6'o41); dump_lat(6'o12); dump_lat(6'o77);
+      |                              ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:416:47: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'ha' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  416 |             dump_lat(6'o30); dump_lat(6'o41); dump_lat(6'o12); dump_lat(6'o77);
+      |                                               ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:416:64: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h3f' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  416 |             dump_lat(6'o30); dump_lat(6'o41); dump_lat(6'o12); dump_lat(6'o77);
+      |                                                                ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:418:20: Operator SUB expects 32 bits on the LHS, but LHS's VARREF 'nnf' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  418 |             ck(nnf - nf0 == 2, "the third and fourth floods were held and not passed on (n_nofwd +2)");
+      |                    ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:423:16: Operator FUNCREF 'la' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  423 |             ck(la(6'o30) == 6'o40 && rsb != 2'b11, "S40 claimed the E flood: E30 now listens to it, a resolver is free");
+      |                ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:425:13: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h3e' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  425 |             dump_lat(6'o76);
+      |             ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:455:17: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  455 |                 pdial(6'o20, 1);
+      |                 ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:464:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARREF 'nnf' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  464 |             nf0 = nnf;
+      |                 ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:466:13: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h10' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  466 |             pdial(6'o20, 1);
+      |             ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:475:51: Operator SUB expects 32 bits on the LHS, but LHS's VARREF 'nnf' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  475 |                      rs_in[5:0], rs_in[11:6], nnf - nf0);
+      |                                                   ^
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:476:20: Operator EQ expects 32 bits on the LHS, but LHS's VARREF 'nnf' generates 8 bits.
+                                                   : ... note: In instance 'tb_fx'
+  476 |             ck(nnf == nf0, "5d: a second flood 1 ms behind the first, behind an origin sweep, is still forwarded");
+      |                    ^~
+%Warning-WIDTHTRUNC: work/audit/fwd/tb_fx.v:485:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'load' generates 32 bits.
+                                                  : ... note: In instance 'tb_fx'
+  485 |             if (load) begin sm[6'o41] = 1'b1; ms(1); end    
+      |             ^~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:491:23: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  491 |                       pdial(6'o30, 3); end                 
+      |                       ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:493:22: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  493 |             ms(700); pdial(6'o30, 3); ms(400);            
+      |                      ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:495:22: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  495 |             ms(300); pdial(6'o30, 2); ms(700); pdial(6'o30, 1); ms(400);
+      |                      ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:495:48: Operator TASKREF 'pdial' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  495 |             ms(300); pdial(6'o30, 2); ms(700); pdial(6'o30, 1); ms(400);
+      |                                                ^~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:497:13: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h18' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  497 |             dump_lat(6'o30); dump_lat(6'o21);
+      |             ^~~~~~~~
+%Warning-WIDTHEXPAND: work/audit/fwd/tb_fx.v:497:30: Operator TASKREF 'dump_lat' expects 32 bits on the Function Argument, but Function Argument's CONST '6'h11' generates 6 bits.
+                                                   : ... note: In instance 'tb_fx'
+  497 |             dump_lat(6'o30); dump_lat(6'o21);
+      |                              ^~~~~~~~
+%Warning-ZERODLY: work/audit/fwd/tb_fx.v:437:33: Value of # delay control statically unknown. Assuming it can be #0.
+                                               : ... If all # delays are non-zero at runtime,
+                                               : ... use '--no-sched-zero-delay' for improved performance.
+                                               : ... If a real #0 is expected at runtime,
+                                               : ... use '--sched-zero-delay' to suppress this warning.
+  437 |                 @(posedge t1k); #(ph * 250_000 + 7_000);
+      |                                 ^
+                  ... For warning description see https://verilator.org/warn/ZERODLY?v=5.050
+                  ... Use "/* verilator lint_off ZERODLY */" and lint_on around source to disable this message.
+%Warning-ZERODLY: work/audit/fwd/tb_fx.v:445:33: Value of # delay control statically unknown. Assuming it can be #0.
+                                               : ... If all # delays are non-zero at runtime,
+                                               : ... use '--no-sched-zero-delay' for improved performance.
+                                               : ... If a real #0 is expected at runtime,
+                                               : ... use '--sched-zero-delay' to suppress this warning.
+  445 |                 @(posedge t1k); #(ph * 500_000 + 7_000);
+      |                                 ^
+%Warning-ZERODLY: work/audit/fwd/tb_fx.v:457:17: Value of # delay control statically unknown. Assuming it can be #0.
+                                               : ... If all # delays are non-zero at runtime,
+                                               : ... use '--no-sched-zero-delay' for improved performance.
+                                               : ... If a real #0 is expected at runtime,
+                                               : ... use '--sched-zero-delay' to suppress this warning.
+  457 |                 #(ph * 3_000_000);
+      |                 ^
+%Warning-ZERODLY: work/audit/fwd/tb_fx.v:490:23: Value of # delay control statically unknown. Assuming it can be #0.
+                                               : ... If all # delays are non-zero at runtime,
+                                               : ... use '--no-sched-zero-delay' for improved performance.
+                                               : ... If a real #0 is expected at runtime,
+                                               : ... use '--sched-zero-delay' to suppress this warning.
+  490 |                 begin #((129 - dly) * 1_000_000);
+      |                       ^
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/verify/C05-late-flood-guard-reach/obj_cls'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_fx__pch.h -o Vtb_fx__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_fx__pch.h -o Vtb_fx__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.fast -c Vtb_fx.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.fast -c Vtb_fx___024root__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.fast -c Vtb_fx___024root__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.fast -c Vtb_fx___024root__2.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.fast -c Vtb_fx__main.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.slow -c Vtb_fx__ConstPool__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.slow -c Vtb_fx___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.slow -c Vtb_fx___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_fx__pch.h.slow -c Vtb_fx__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_fx__ALL.a    -pthread -lpthread -latomic   -o tb_fx
+rm Vtb_fx__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/verify/C05-late-flood-guard-reach/obj_cls'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.276 MB sources in 27 modules, into 2.676 MB in 9 C++ files needing 0.008 MB
+- Verilator: Walltime 80.323 s (elab=0.295, cvt=2.027, bld=77.453); cpu 2.367 s on 2 threads; allocated 182.156 MB
+build rc=0 secs=80

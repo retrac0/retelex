@@ -1,0 +1,61 @@
+
+  tb_c07 -- a link outage is a dial pulse.  sc=192 pause=680, real timers
+    ok    the links are up
+  --- sc6: A20 dials 1 2 2 2 1; 40 ms of chatter (3.0 ms open / 60 us closed) in b's last make
+  TR 501.2 ms  B cst 0 -> 1
+  TR 502.3 ms  B cst 1 -> 2
+  TR 502.3 ms  B cst 2 -> 3
+  TR 502.3 ms  B mon held 01 armed 00 st 0001
+  TR 502.6 ms  B11 BUSY 1
+  TR 503.2 ms  B mon held 01 armed 01 st 0001
+  TR 520.0 ms  B cst 3 -> 0
+  TR 1370.0 ms  B mon d_stb 01 cnt 02 st 0001
+  OBS 2150.0 ms  chatter starts
+  OBS 2189.8 ms  chatter ends
+  TR 2319.0 ms  B mon d_stb 01 cnt 04 st 0010
+  TR 2319.0 ms  B mon held 00 armed 00 st 0010
+  OBS 2839.0 ms  b is in (A's register: 2 digits, 0022)
+  TR 4505.1 ms  B11 BUSY 0
+  OBS B21 rang 0, B22 rang 0; A claimed 0
+    ok    chatter in b: nobody claims a call dialled to exchange 22
+    ok    chatter in b: B21 (23-21, never dialled) does not ring
+    ok    chatter in b: both exchanges idle again
+  --- sc7: A20 dials 1 4 3 2 1; B restarts (1 ms reset) at 1100 ms
+  TR 500.3 ms  B cst 0 -> 1
+  TR 501.4 ms  B cst 1 -> 2
+  TR 501.4 ms  B cst 2 -> 3
+  TR 501.4 ms  B mon held 01 armed 00 st 0001
+  TR 501.7 ms  B11 BUSY 1
+  TR 502.3 ms  B mon held 01 armed 01 st 0001
+  TR 519.1 ms  B cst 3 -> 0
+  OBS 1100.0 ms  B reset
+  TR 1100.0 ms  B mon held 00 armed 00 st 0000
+  TR 1100.0 ms  B11 BUSY 0
+  OBS 1101.0 ms  B out of reset
+  TR 1241.2 ms  B cst 0 -> 1
+  TR 1242.3 ms  B cst 1 -> 2
+  TR 1242.3 ms  B cst 2 -> 3
+  TR 1242.3 ms  B mon held 01 armed 00 st 0001
+  TR 1242.6 ms  B11 BUSY 1
+  TR 1243.2 ms  B mon held 01 armed 01 st 0001
+  TR 1260.0 ms  B cst 3 -> 0
+  TR 1570.0 ms  B mon d_stb 01 cnt 02 st 0001
+  TR 2550.0 ms  B mon d_stb 01 cnt 03 st 0010
+  TR 2550.0 ms  B mon held 00 armed 00 st 0011
+  OBS 2550.3 ms  B raises att: a claim on B11
+  OBS 2551.2 ms  A's origin has its claim
+  OBS B21 rang 1, B22 rang 0; A claimed 1
+    FAIL  B restart mid-e: nobody claims a call dialled to exchange 43
+    FAIL  B restart mid-e: B21 (23-21, never dialled) does not ring
+  TR 8056.1 ms  B11 BUSY 0
+    ok    B restart mid-e: both exchanges idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  9 checks, 2 errors.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C07-skeptic-mechanism/tb_c07k.v:459: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 17s; walltime 220.416 s; speed 78.120 ms/s
+- Verilator: cpu 219.106 s on 1 threads; allocated 8 MB
+rc=0 secs=221

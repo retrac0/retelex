@@ -1,0 +1,22 @@
+
+  tb_ring4 STX 0100 STY 1000  dx 50 dy 470 dz 980 dv 270 dd 710  X20 dials 1 2 3 2 1
+  [   81.581] V SEIZE port 13 dir 2 mon_free 1 fwd ok/none
+  [   81.672] Y SEIZE port 04 dir 3 mon_free 1 fwd ok/none
+  [   92.276] V FWD in 13 ok 1000 cand 12000000
+  [   95.307] Z SEIZE port 14 dir 2 mon_free 1 fwd ok/none
+  [  105.986] Z FWD in 14 ok 1000 cand 12000000
+  [  108.719] Y SEIZE port 07 dir 2 mon_free 1 fwd ok/none
+  [  119.475] Y NOFWD-EMPTY in 07
+  [  160.054] after key: X dirs 1100
+  [  369.475] Y CLAIM port 04 (want 01)
+  [  369.766] Y att_ack TAKEN port 04
+  [  370.133] X ORIGIN TAKES claim on 04
+  [  370.475] Y CLAIM port 07 (want 10)
+  [  370.766] Y att_ack REFUSED port 07
+  OUTCOME b=3 rang=1 (hi 128 lo 272) owner_taken=04 owner_refused=07 origin_kept=04 X20_rx1=50/50 claims X0 Y2 Z0 V0 seizures X0 Y2 Z1 V1 fwds X0 Y0 Z1 V1
+  IDLE-CHECK busy X 0000000000000000 Y 0000000000000000 Z 0000000000000000 V 0000000000000000 reg 0000 res 00 00 00 00 mon 00 00 00 00
+  clash 0
+- work/verify/C19-rings/tb_ring4.v:201: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 77.687 s; speed 21.883 ms/s
+- Verilator: cpu 64.647 s on 1 threads; allocated 8 MB

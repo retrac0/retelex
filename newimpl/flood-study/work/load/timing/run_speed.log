@@ -1,0 +1,110 @@
+KNOB tim=1
+KNOB ppm_a=0 ppm_b=100 ppm_c=-100 ppm_d=50 ppm_e=-50
+KNOB seed=1
+KNOB dur_ms=1000
+KNOB idle_ms=300000
+KNOB dt_ms=20000
+KNOB pnet=500
+KNOB dest_mode=4
+KNOB brk_ms=60
+KNOB mk_ms=40
+KNOB idg_ms=720
+KNOB idg_jit_ms=0
+KNOB pre_ms=500
+KNOB abandon=0
+KNOB pd_ms=12000
+KNOB ans_ms=3000
+KNOB noans=0
+KNOB hold_ms=10000
+KNOB lag_ms=400
+KNOB rest_ms=800
+KNOB ringmax_ms=12000
+KNOB hup_ms=800
+KNOB grace_ms=0
+KNOB drain_ms=20000
+KNOB nlines=64
+KNOB orig_x=255
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=2
+KNOB bad_b=7
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=500
+KNOB wd_port_ms=8192
+KNOB wd_reg_ms=60000
+KNOB wd_org_ms=37000
+KNOB wd_mon_ms=11024
+KNOB wd_res_ms=15024
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=10100
+KNOB phantom_grace_ms=7680
+KNOB max_ms=4000
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=1
+KNOB hold_fixed=0
+KNOB switch_ms=0
+KNOB idle2_ms=300000
+KNOB burst_ms=100000
+KNOB idg0_ms=-1
+KNOB idg0_jit_ms=0
+KNOB pairs=A20E20
+KNOB hot=-
+KNOB dbg_misdial=-
+KNOB dbg_sig=-:-
+KNOB scale=1 NX=5 NMON=2 NRES=2 T_ARM=16 T_REL=256 RING=2048/4096 HIT=8 ID=128 CLR=256 NODIG=10000 T_GUARD0=128 T_KEY=5000 T_CLAIM=2000
+TOPO ex=A code=22 lines=16
+TOPO ex=B code=23 lines=16
+TOPO ex=C code=24 lines=16
+TOPO ex=D code=25 lines=16
+TOPO ex=E code=26 lines=16
+TOPO pair A20 -> E20
+SELFTEST sig PASS  ok=244 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 1021
+PROG t=500 calls=1 ok=0 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=479 started=1 ok=0 failed=0 reg_occ A=0.99 B=0.00 C=0.00 D=0.00 E=0.00
+TE 715.004 A KEY 20 1 dial=12620 dest=E20
+TE 715.004 A OSWEEP 20 1
+TE 725.004 A SEIZE 10 1 caller=20
+TE 727.072 B RISE 10 1 bsy=0
+TE 727.072 B CREAD 10 1
+TE 728.191 B HOLD 10 1 cell=0 fwd=1
+TE 728.191 B FSWEEP 10 1
+TE 729.072 B ARM 10 1 cell=0
+TE 738.931 B FWD 10 1 legs= 30
+TE 740.217 C RISE 10 1 bsy=0
+TE 740.217 C CREAD 10 1
+TE 741.335 C HOLD 10 1 cell=0 fwd=1
+TE 741.336 C FSWEEP 10 1
+TE 742.217 C ARM 10 1 cell=0
+TE 752.078 C FWD 10 1 legs= 30
+TE 754.107 D RISE 10 1 bsy=0
+TE 754.107 D CREAD 10 1
+TE 755.225 D HOLD 10 1 cell=0 fwd=1
+TE 755.225 D FSWEEP 10 1
+TE 756.107 D ARM 10 1 cell=0
+TE 765.966 D FWD 10 1 legs= 30
+TE 767.181 E RISE 10 1 bsy=0
+TE 767.181 E CREAD 10 1
+TE 768.300 E HOLD 10 1 cell=0 fwd=1
+TE 768.300 E FSWEEP 10 1
+TE 769.182 E ARM 10 1 cell=0
+TE 779.042 E FNONE 10 1 cancel=0 legs=0
+PROG t=1000 calls=1 ok=0 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=500 started=0 ok=0 failed=0 reg_occ A=1.00 B=0.00 C=0.00 D=0.00 E=0.00
+STOP t=1021 no new calls
+CALL id=1 from=A20 to=E20 kind=N dial=12620 lift=22 dt=27 key=587 last=- tone=- alert=- bell=- ans=- end=1021 rel=1021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+HANGUP t=1021 every phone on hook; drain 20000 ms
+TE 1020.268 A FALL 20 1 bsy=1
+TE 1021.043 B FALL 10 1 bsy=1
+TE 1021.243 C FALL 10 1 bsy=1
+TE 1022.093 D FALL 10 1 bsy=1
+TE 1022.193 E FALL 10 1 bsy=1
+TE 1276.017 B RES 10 1 act=GONE leg=0
+TE 1276.268 C RES 10 1 act=GONE leg=0
+TE 1277.002 A ODROP 20 1 after=0 guard=0 brk=0 tmr=552 from=4
+TE 1277.080 D RES 10 1 act=GONE leg=0
+TE 1277.876 B MREL 10 1 cell=0
+TE 1278.128 C MREL 10 1 cell=0
+TE 1278.939 D MREL 10 1 cell=0
+TE 1279.065 E MREL 10 1 cell=0
+PROG t=1500 calls=1 ok=0 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=500 started=0 ok=0 failed=0 reg_occ A=0.56 B=0.00 C=0.00 D=0.00 E=0.00

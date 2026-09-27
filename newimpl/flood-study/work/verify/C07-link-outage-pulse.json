@@ -1,0 +1,48 @@
+{
+ "id": "C07-link-outage-pulse",
+ "title": "A link outage of 8-256 ms is a dial pulse to every monitor and register beyond; a longer outage that ends mid-dial is a fresh seizure counted from mid-number",
+ "findings": [
+  {
+   "id": "link-outage-dial-pulse",
+   "title": "A link outage of 8-256 ms is a dial pulse to every monitor and register beyond it: a wrong number",
+   "category": "wrong-number",
+   "severity": "high",
+   "confidence": "reproduced",
+   "mechanism": "A trunk card drops A the instant its link-up detector falls and raises it again when the link returns: baseband_card.v:109 (link_up = quiet < DEAD, 192 master ticks = 47 us of silence on the fifth conductor) and :154 (a_tx = a_s2 && link_up && settled); local_trunk.v:127/170/188 do the same for all eight channels (a_tx = live ? x_a : 0). The far port's release detector rides an outage shorter than T_REL (port.v:176-188), but every pulse counter reading that M counts it: a break of HIT (8 ms) or more is a pulse (pulse_rx.v:84). Before the claim those are the monitor cells (net_unit.v:316-320 pulse_rx on the cell's probe; 633-645 decide e and b on the count). After the claim it is the owner's register, which the marker attaches to the claimed trunk (mini_marker.v:305-319), and which reads the trunk's M. The origin's register reads its own caller, never the trunk, and nothing compares the two counts. An outage inside a digit adds a pulse; one in a pause adds a digit 1. network.md 1.1 (lines 71, 79) tells a carrier to 'let A fall' on link down, and bounds only lengthened makes and breaks, never an inserted one. monitor.md's two rules act only on the first digit heard.",
+   "trigger": "work/audit/proto/tb_pflap.v at REAL timers (HIT 8, ID 128, CLR 256, T_REL 256, guard 128, T_CLAIM 2000; dial 10 pps 60/40, 600 ms pauses). A = 2 1, B = 2 3, two baseband channels A11-B11, A12-B12. sc1: A20 dials 1 2 2 2 1 (exchange 22 exists nowhere); the cable (all five conductors, both channels) is out for 40 ms, starting 30 ms into the make after b's second pulse. sc2: A20 dials 1 2 3 2 1; B claims; the cable is out for 40 ms in the make after s's one pulse.",
+   "consequence": "sc1: B's monitor counts b = 3, B claims a call dialled to 22, A's origin takes the claim, and B's register reads 2 1 and connects B21. A20 dialled 22-21 and talks to 23-21. sc2: B's register counts s = 2 and B22 rings instead of B21. The caller gets no sign either way. Any link on the path counts, not only the origin's. An outage in the pause between the key and e makes every monitor beyond it read (1, e) as the code, i.e. the 10-17 range the numbering plan gives the backbone and hubs. On a local trunk one outage hits all eight channels' calls at once.",
+   "realistic": "Survives real timing: reproduced at real timers. It needs an outage of 8-256 ms on any link of the path while the caller is dialling e b (before the claim) or h s (after it), about 4-5 s per call. On copper in one room that is a disturbed connector or a clock-conductor glitch (DEAD is only 47 us). On MF8 (not in this RTL) it is a loss of frame lock that MUTEs A while the link re-syncs (network.md 1: 'MUTE clears the A hold'). Rare per call, but it is the one path to a wrong number that the guard and rule 1 do not address, and every link of every path is exposed.",
+   "evidence": "work/audit/proto/run_pflap.log. Control sc0 green ('control: nobody claims a call to exchange 22', 'control: A20 hears cannot-complete after the claim wait'). sc1: 'OBS 1990.0 ms cable cut for 40 ms' / 'OBS 2159.4 ms B raises att: a claim on B11' / 'OBS 2160.2 ms A's origin has its claim' / 'OBS 2600.0 ms b is in (A's register: 2 digits, 0022)' / 'OBS B21 rang 1, B22 rang 0; A claimed 1' / 'FAIL outage in b: nobody claims a call dialled to exchange 22' / 'FAIL outage in b: B21 (23-21, never dialled) does not ring'. sc2: 'OBS 3590.0 ms cable cut for 40 ms' / 'OBS B21 rang 0, B22 rang 1' / 'FAIL outage in s: B22 (never dialled) does not ring'. ('rang' = B's marker wrote the line BUSY, i.e. connected it.)",
+   "fix": "Make an outage a RELEASE, never a pulse. The trunk card POISONS itself on an outage of RIDE = 4 ms or more; RIDE is below HIT, so anything shorter can never count. While poisoned it holds A at 0 both ways, into its port and out to the far card, until the link is up AND its own port's A_RX has been idle for 300 ms (past T_REL and CLR). Both ends then release and their monitors and registers clear. An origin that still holds the trunk keeps its card poisoned, so the far end never sees a fresh seizure (finding link-return-fresh-seizure) and the origin times out at T_CLAIM. Cost: about half a '4040, a '74 and two gates per baseband card. For the local trunk, a poison bit per channel plus one shared timer, about 2 packages. The price is that an established call dies on any outage of 4 ms or more instead of clicking. TESTED in a copy, work/audit/proto/rtl_fix/baseband_card.v (RTL_fix.list), with the same bench: sc1 no claim, 'ok outage in b: nobody claims'. sc2 the claimed call is dropped: neither B21 nor B22 rings, so a failed call replaces the wrong line. sc3 no false claim. Both exchanges idle after each (work/audit/proto/run_pflap_fix.log). Not run against the tree's benches. Also add to network.md 1.1's carrier table: 'A must never show a break the caller did not make'.",
+   "audit": "protocol"
+  },
+  {
+   "id": "link-return-fresh-seizure",
+   "title": "A link that returns while the caller is still dialling is a fresh seizure at the far end, counted from mid-number: a false claim",
+   "category": "wrong-number",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "An outage of T_REL or more releases the far hold (port.v:176-194: the fM detector falls, rel clears the latch). Its monitor clears at CLR (net_unit.v:647-649), and st[] for the port is cleared by the M-down sample (net_unit.v:566-567). The origin sees no event: its trunk's M was 0 before any claim. It keeps the trunk listening to its caller (net_unit.v:811-815) and waits for T_CLAIM. When the link returns, the far port shows M with BUSY clear and st clear. cls_seen (net_unit.v:283-284) takes it as a new seizure: a hold, a new monitor and a new forward. The rise is real, so monitor.md rule 1 is met, and the origin's guard expired long ago. The new monitor counts the caller's remaining digits as e b.",
+   "trigger": "tb_pflap.v sc3, real timers: A (2 1) and B (2 3). A20 dials 1 2 2 3 1 (exchange 22: nobody). The cable is out for 500 ms starting 200 ms after e's first break, so e's two pulses are through, and it returns in the pause after e.",
+   "consequence": "B's new monitor reads b = 2 as e and h = 3 as b, and B (2 3) claims a call dialled to 22. A's origin takes that claim. B's register then gets s = 1 as its first digit, reads it as a key from a claimed trunk and refuses (mini_marker.v:423, NOGO with CLM), so A20 hears cannot-complete. With s = 2..7 instead, B's only register would sit on the call for NODIG (10 s) waiting for a digit that never comes, refusing every other claim and local caller meanwhile. The real owner, had it existed beyond B, never gets the call, because the flood beyond the outage was released.",
+   "realistic": "Reproduced at real timers. Needs an outage of 256 ms or more that ends while the caller is still dialling: a cable re-seated, or an MF8 link re-locking. Rarer than link-outage-dial-pulse; same family, same fix.",
+   "evidence": "work/audit/proto/run_pflap.log sc3: 'OBS 1200.0 ms cable cut for 500 ms' / 'OBS 1700.0 ms cable back' / 'OBS 2989.7 ms B raises att: a claim on B11' (= end of h's third pulse + ID 128) / 'OBS 2990.1 ms A's origin has its claim' / 'FAIL link back mid-dial: nobody claims a call dialled to exchange 22'. With the fixed card: 'OBS 4500.0 ms all dialled; B mon 00 reg 0; A claimed 0' / 'ok link back mid-dial: nobody claims' (run_pflap_fix.log).",
+   "fix": "Same card fix as link-outage-dial-pulse: the origin side's card stays poisoned while its port's A_RX is up, i.e. while the origin still has the caller on it. Tested: no false claim. A unit-side alternative is weaker: the classifier cannot tell a returning link from a new seizure, because the word read (net_unit.v:572-573) looks the same.",
+   "audit": "protocol"
+  },
+  {
+   "id": "link-hit-extra-pulse",
+   "title": "A link drop shorter than CLR during the flood adds a pulse at every downstream cell but not at the origin",
+   "category": "other",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "baseband_card.v:154 and local_trunk.v:188 force A to 0 while link_up is false (about 47 us without the far clock). For a held trunk that is a break the cells count (pulse_rx.v:84-90), while the origin's register never sees it.",
+   "trigger": "A cable hit or clock glitch during e or b.",
+   "consequence": "A partial or extra count, and a possible false claim.",
+   "evidence": "Reasoning.",
+   "fix": "A cell could drop on its block's MUTE, which is not visible to the unit today, or the card could hold A through short hits.",
+   "realistic": "Carrier-dependent.",
+   "audit": "monclaim"
+  }
+ ]
+}

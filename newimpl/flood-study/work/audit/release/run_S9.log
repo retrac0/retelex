@@ -1,0 +1,155 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000000001000000000 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  port T_REL: A 32  X 32  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+T fam=-1 k=2 act=0 d=0.00  hangA=830.998 hangB=880.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 707.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  REF pattern 2: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 -0.00 CLAIM -0.00 claimed -0.00 Xres0 707.16 att_ack -0.00 done -0.00 connect -0.00 rung -0.00 watch_end -0.00 answer -0.00
+  -- family 9: pattern 2 actor 0 anchor 2 d0 588.00 ms step 0.500 ms n 14
+T fam=9 k=0 act=0 d=588.00  hangA=637.001 hangB=688.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 669.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=1 act=0 d=588.50  hangA=637.501 hangB=688.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 670.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=2 act=0 d=589.00  hangA=638.001 hangB=689.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 670.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=3 act=0 d=589.50  hangA=638.501 hangB=689.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 671.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=4 act=0 d=590.00  hangA=639.001 hangB=690.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 671.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=5 act=0 d=590.50  hangA=639.501 hangB=690.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 672.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=6 act=0 d=591.00  hangA=640.001 hangB=691.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 672.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=7 act=0 d=591.50  hangA=640.501 hangB=691.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 673.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=8 act=0 d=592.00  hangA=641.001 hangB=692.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 673.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=9 act=0 d=592.50  hangA=641.501 hangB=692.998  LEAK  idle+800ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 674.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+    LEAK: still held 800 ms after the last phone went down
+      A: busy=0000000000000000200000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=03 bsy=1 clm=0  m=0 fm=0  e=0 fe=0  BUSY=1  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+      LIFT A20 (BUSY 1): hears zeros (03 or 00), marker 0, reg 0
+      ... hung up again: BUSY now 0
+    after the lifts, 200 ms more:
+      A: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+T fam=9 k=10 act=0 d=593.00  hangA=642.001 hangB=693.998  LEAK  idle+800ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 674.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+    LEAK: still held 800 ms after the last phone went down
+      A: busy=0000000000000000200000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=03 bsy=1 clm=0  m=0 fm=0  e=0 fe=0  BUSY=1  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+      LIFT A20 (BUSY 1): hears zeros (03 or 00), marker 0, reg 0
+      ... hung up again: BUSY now 0
+    after the lifts, 200 ms more:
+      A: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+T fam=9 k=11 act=0 d=593.50  hangA=642.501 hangB=693.998  LEAK  idle+800ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 675.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+    LEAK: still held 800 ms after the last phone went down
+      A: busy=0000000000000000200000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=03 bsy=1 clm=0  m=0 fm=0  e=0 fe=0  BUSY=1  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+      LIFT A20 (BUSY 1): hears zeros (03 or 00), marker 0, reg 0
+      ... hung up again: BUSY now 0
+    after the lifts, 200 ms more:
+      A: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      X: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+      B: busy=0000000000000000000000 M=0000000000000000000000 reg=0 mk=0 dirs=0000 res=00 mon=00 cst=0 fst=0 nst=0 hst=0 cl=0 att=0
+        A20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        A12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X13 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X15 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        X30 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B20 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B21 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B11 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+        B12 addr=00 bsy=0 clm=0  m=0 fm=0  e=0 fe=0  BUSY=0  rb=0
+      mon cells: A 00/00 X 11/00 B 11/00   res: X in=0011 legs=0000000000133000 held=00000000 act=0000
+T fam=9 k=12 act=0 d=594.00  hangA=643.001 hangB=694.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 675.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=9 k=13 act=0 d=594.50  hangA=643.501 hangB=694.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 676.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  15 trials: 3 LEAK, 0 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j1.v:663: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 15s; walltime 951.663 s; speed 15.808 ms/s
+- Verilator: cpu 871.975 s on 1 threads; allocated 8 MB
+rc=0 secs=952

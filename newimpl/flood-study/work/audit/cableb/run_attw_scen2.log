@@ -1,0 +1,41 @@
+
+  tb_attw -- a claim that waits out S_WATCH, scen 2          
+    ok    links up
+    [52 ms] B cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [108 ms] B cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [229 ms] B's marker in S_WATCH: B20 connected to B21; B20 chatters
+    [229 ms] B cableB MARKER G1 dst 20 src 21 bsy 1 clm 0
+    [229 ms] B cableB MARKER G1 dst 21 src 20 bsy 1 clm 0
+    [232 ms] A cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [268 ms] A cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [278 ms] A cableB UNIT   G1 dst 11 src 20 bsy 1 clm 0
+    [281 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 0
+    [569 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 1
+    ok    B's monitor claimed and B's unit raised att
+    ok    while B's marker is still in S_WATCH (the claim waits)
+    ok    (A's origin sees the claim once backward A arrives)
+    [569 ms] A20 hangs up; B20 keeps chattering for 150 ms
+    [569 ms] B's unit raises att for 11; B's marker is in state 7
+    [603 ms] A cableB UNIT   G1 dst 11 src 00 bsy 0 clm 0
+    [603 ms] A cableB MARKER G1 dst 20 src 00 bsy 0 clm 0
+    [725 ms] B's marker REFUSED the claim on 11 (state was 0, r_busy 0)
+    [725 ms] B cableB MARKER G1 dst 11 src 03 bsy 1 clm 1
+    [727 ms] A cableB UNIT   G1 dst 11 src 00 bsy 1 clm 0
+    [740 ms] B11 latch: addr 03 bsy 1 clm 1; B11 BUSY 1; A11 BUSY 1
+    [1540 ms] after everyone hung up and 800 ms: B11 addr 03 bsy 1 clm 1 BUSY 1
+              A11 BUSY 1, A monitors 01, A unit cst 0, A n_nofwd 1
+    FAIL  B11 is free again once every phone is on-hook
+    FAIL  A11 is free again
+    FAIL  no monitor held at either exchange
+    FAIL  both exchanges idle
+    ok    no clash on cable B
+    ok    no queue overflow
+    takes 0 refusals 1
+
+  10 checks, 4 errors.  FAIL
+
+- work/audit/cableb/tb_attw.v:277: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 44.141 s; speed 34.458 ms/s
+- Verilator: cpu 40.180 s on 1 threads; allocated 8 MB
+rc=0 secs=44

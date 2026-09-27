@@ -1,0 +1,2 @@
+[sim.sh] slot 1: bash -c SECONDS=0; timeout 9000 work/load/obj_load2/tb_load2 +seed=11 +dur_ms=20000 +abandon=50 > work/load/smoke/load2_light.log 2>&1; echo rc=$? secs=$SECONDS
+rc=0 secs=2648

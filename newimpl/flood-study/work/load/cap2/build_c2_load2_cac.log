@@ -1,0 +1,332 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'h8b00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'heb00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:682:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                               : ... note: In instance 'tb_load2'
+  682 |             ph_dg[g*5 + 1] = LD_CODE_E[y*3 +: 3];
+      |                            ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:683:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                               : ... note: In instance 'tb_load2'
+  683 |             ph_dg[g*5 + 2] = LD_CODE_B[y*3 +: 3];
+      |                            ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:732:33: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  732 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:732:33: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  732 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:737:38: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  737 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:737:38: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  737 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:743:63: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  743 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:743:63: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  743 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:747:67: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  747 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:747:67: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+  747 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:761:5: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                             : ... note: In instance 'tb_load2'
+  761 |     if (k_trace) $display("TR t=%0d %s -> %s", now_ms, pn(g), sname(st));
+      |     ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:819:22: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'k_holdfix' generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  819 |     hold = k_holdfix ? k_hold : erand(g, k_hold);
+      |                      ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:826:26: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  826 |     if (y >= 0 && y < NG && c_live[y] && ph_role[y] == 0 &&
+      |                          ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:837:30: Logical operator LOGAND expects 1 bit on the RHS, but RHS's AND generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  837 |         (rs_why[g] == W_NONE && (c_cb[g] & 1))) return O_BUSY;
+      |                              ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:843:33: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  843 |     return (y >= 0) && (y < NG) && c_live[y] && ph_role[y] == 0 &&
+      |                                 ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:852:42: Logical operator LOGOR expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  852 |         if (c_dest[y] == g && (c_live[y] || (now_ms - c_lastend[y] <= k_phgrace))) return 1;
+      |                                          ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:866:19: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  866 |     if (c_live[g] && ph_role[g] == 0 && c_abt[g] >= 0 && now_ms >= c_abt[g] &&
+      |                   ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:927:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_quit' generates 32 bits.
+                                                              : ... note: In instance 'tb_load2'
+  927 |             if (k_quit) begin
+      |             ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1035:28: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1035 |                 if (z >= 0 && c_live[z]) begin
+      |                            ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1066:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1066 |         if (c_live[g] && ph_role[g] == 0) call_print(g);
+      |                       ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1059:71: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1059 |     P_REST: if (h >= 0 && calling(h) && c_dest[h] == g && !(c_live[g] && ph_role[g] == 0)) begin
+      |                                                                       ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1089:17: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1089 |                 if (k_trace) $display("TR t=%0d %s rings, dialled, caller not heard", now_ms, pn(g));
+      |                 ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1080:33: Logical operator LOGNOT expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1080 |         if (ph_bellt[g] >= 0 && !ph_phj[g] && now_ms >= ph_bellt[g] + 8) begin
+      |                                 ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1126:19: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1126 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1126:19: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h41' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1126 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1127:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1127 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1127:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1127 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1128:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1128 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1128:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1128 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1239:38: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1239 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1239:38: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1239 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1239:74: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1239 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1239:74: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1239 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1312:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1312 |             code = bsh[7:2];
+      |                  ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1314:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h4' generates 6 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1314 |             else if (code == 6'o04) ev_gl[ldx]++;
+      |                           ^~
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1313:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h8' generates 6 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1313 |             if      (code == 6'o10) ev_nt[ldx]++;
+      |                           ^~
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1339:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1339 |         k = ld_p_nst[ldx*4 +: 4];
+      |           ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1350:61: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1350 |         pn_f1 = ld_p_f1[ldx]; pn_f2 = ld_p_f2[ldx]; pn_ndig = ld_p_rndig[ldx*3 +: 3];
+      |                                                             ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1356:21: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1356 |                 dst = ld_p_mpd[ldx*30 + w*15 +: 6];
+      |                     ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1377:39: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1377 |                         if (c_live[y] && ph_role[y] == 0 && c_kind[y] == K_NET &&
+      |                                       ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1369:35: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1369 |                 if (LD_PHONES[gd] && c_live[gd] && rs_why[gd] == W_NONE) rs_why[gd] = why;
+      |                                   ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1396:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1396 |         pm_state = ld_mks[ldx*3 +: 3]; pm_ref = ld_p_mref[ldx] && !ld_p_mtake[ldx];
+      |                  ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1398:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1398 |         pm_called = ld_p_mcalled[ldx*6 +: 6];
+      |                   ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHEXPAND: work/load/cap2/load_harness_c2.svh:1411:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 8 bits.
+                                                                : ... note: In instance 'tb_load2'
+ 1411 |         k = ld_gl[x*8 +: 8];
+      |           ^
+                      work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1481:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1481 |         if (c_live[g] && ph_role[g] == 0) begin
+      |                       ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1561:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1561 |         for (o = 1; o < NO; o++) if (n_cls_k[b*NO + o]) $write(" %s=%0d", oname(o), n_cls_k[b*NO + o]);
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1567:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1567 |         for (o = 1; o < NO; o++) if (n_cls_x[x*NO + o]) $write(" %s=%0d", oname(o), n_cls_x[x*NO + o]);
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1571:30: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1571 |     for (w = 1; w < NW; w++) if (n_why[w]) $write(" %s=%0d", wname(w), n_why[w]);
+      |                              ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1578:25: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_dt' generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1578 |              n_dt, n_dt ? real'(s_dt) / n_dt : 0.0, pctl(0, n_dt, 50), pctl(0, n_dt, 99), mx_dt);
+      |                         ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1580:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdd' generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1580 |              n_pdd, n_pdd ? real'(s_pdd) / n_pdd : 0.0, pctl(1, n_pdd, 50), pctl(1, n_pdd, 99), mx_pdd);
+      |                           ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1582:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdn' generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1582 |              n_pdn, n_pdn ? real'(s_pdn) / n_pdn : 0.0, pctl(2, n_pdn, 50), pctl(2, n_pdn, 99), mx_pdn, n_middial);
+      |                           ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1596:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1596 |         for (w = 1; w < NW; w++) if (x_why[x*NW + w]) $write(" %s=%0d", wname(w), x_why[x*NW + w]);
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1603:13: Logical operator IF expects 1 bit on the If, but If's MODDIVS generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1603 |             if (w % 2) $write(" %s/c=%0d", c2sn(w / 2), c2_refst[x*16 + w]); else $write(" %s=%0d", c2sn(w / 2), c2_refst[x*16 + w]);
+      |             ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1602:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1602 |         for (w = 0; w < 16; w++) if (c2_refst[x*16 + w]) begin
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1608:13: Logical operator IF expects 1 bit on the If, but If's MODDIVS generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1608 |             if (w % 2) $write(" %s/c=%0d", c2sn(w / 2), c2_takest[x*16 + w]); else $write(" %s=%0d", c2sn(w / 2), c2_takest[x*16 + w]);
+      |             ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1607:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1607 |         for (w = 0; w < 16; w++) if (c2_takest[x*16 + w]) begin
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1615:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1615 |         for (o = 2; o < NO; o++) if (ln_cls[g*NO + o]) $write(" %s=%0d", oname(o), ln_cls[g*NO + o]);
+      |                                  ^~
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+%Warning-WIDTHTRUNC: work/load/cap2/load_harness_c2.svh:1653:49: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'iv_ms' generates 32 bits.
+                                                               : ... note: In instance 'tb_load2'
+ 1653 |                 $write(" %s=%.2f", xn(x), iv_ms ? real'(iv_reg[x]) / iv_ms : 0.0);
+      |                                                 ^
+                     work/load/cap2/tb_load2.sv:34:1: ... note: In file included from 'tb_load2.sv'
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/load/cap2/obj_c2_load2_cac'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_load2__pch.h -o Vtb_load2__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_load2__pch.h -o Vtb_load2__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2___024root__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2___024root__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2___024root__2.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2_exch__pi5__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2_exch__pi5__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.fast -c Vtb_load2__main.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.slow -c Vtb_load2___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.slow -c Vtb_load2___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.slow -c Vtb_load2_exch__pi5__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.slow -c Vtb_load2_exch__pi5__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_load2__pch.h.slow -c Vtb_load2__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_load2__ALL.a    -pthread -lpthread -latomic   -o tb_load2
+rm Vtb_load2__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/load/cap2/obj_c2_load2_cac'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.278 MB sources in 27 modules, into 9.827 MB in 12 C++ files needing 0.011 MB
+- Verilator: Walltime 82.525 s (elab=0.259, cvt=3.624, bld=78.062); cpu 4.790 s on 2 threads; allocated 378.973 MB

@@ -1,0 +1,1150 @@
+KNOB tim=1
+KNOB ppm_a=0 ppm_b=100 ppm_c=-100 ppm_d=50 ppm_e=-50
+KNOB seed=6
+KNOB dur_ms=10000
+KNOB idle_ms=300000
+KNOB dt_ms=20000
+KNOB pnet=500
+KNOB dest_mode=4
+KNOB brk_ms=60
+KNOB mk_ms=40
+KNOB idg_ms=300
+KNOB idg_jit_ms=0
+KNOB pre_ms=200
+KNOB abandon=0
+KNOB pd_ms=700
+KNOB ans_ms=3000
+KNOB noans=0
+KNOB hold_ms=10000
+KNOB lag_ms=400
+KNOB rest_ms=300
+KNOB ringmax_ms=12000
+KNOB hup_ms=200
+KNOB grace_ms=0
+KNOB drain_ms=3000
+KNOB nlines=64
+KNOB orig_x=255
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=3
+KNOB bad_b=2
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=5000
+KNOB wd_port_ms=8192
+KNOB wd_reg_ms=60000
+KNOB wd_org_ms=37000
+KNOB wd_mon_ms=11024
+KNOB wd_res_ms=15024
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=10100
+KNOB phantom_grace_ms=7680
+KNOB max_ms=0
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=0
+KNOB hold_fixed=0
+KNOB switch_ms=0
+KNOB idle2_ms=300000
+KNOB burst_ms=5000
+KNOB idg0_ms=255
+KNOB idg0_jit_ms=50
+KNOB pair_off n=5
+KNOB pairs=A20Z21,B20Z21,C20Z21,D20Z21,E20Z21
+KNOB hot=-
+KNOB dbg_misdial=-
+KNOB dbg_sig=-:-
+KNOB scale=1 NX=5 NMON=2 NRES=2 T_ARM=16 T_REL=256 RING=2048/4096 HIT=8 ID=128 CLR=256 NODIG=10000 T_GUARD0=128 T_KEY=5000 T_CLAIM=2000
+TOPO ex=A code=22 lines=16
+TOPO ex=B code=23 lines=16
+TOPO ex=C code=24 lines=16
+TOPO ex=D code=25 lines=16
+TOPO ex=E code=26 lines=16
+TOPO pair A20 -> code 32, then 21
+TOPO pair B20 -> code 32, then 21
+TOPO pair C20 -> code 32, then 21
+TOPO pair D20 -> code 32, then 21
+TOPO pair E20 -> code 32, then 21
+SELFTEST sig PASS  ok=244 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 10021
+TE 414.964 B KEY 20 2 dial=13221 dest=BAD
+TE 414.964 B OSWEEP 20 2
+TE 415.004 A KEY 20 1 dial=13221 dest=BAD
+TE 415.005 A OSWEEP 20 1
+TE 416.045 C KEY 20 3 dial=13221 dest=BAD
+TE 416.046 C OSWEEP 20 3
+TE 416.984 D KEY 20 4 dial=13221 dest=BAD
+TE 416.984 D OSWEEP 20 4
+TE 418.025 E KEY 20 5 dial=13221 dest=BAD
+TE 418.026 E OSWEEP 20 5
+TE 424.963 B SEIZE 30 2 caller=20
+TE 424.963 B SEIZE 17 2 caller=20
+TE 425.004 A SEIZE 10 1 caller=20
+TE 426.046 C SEIZE 30 3 caller=20
+TE 426.046 C SEIZE 17 3 caller=20
+TE 426.254 A RISE 17 2 bsy=0
+TE 426.254 A CREAD 17 2
+TE 426.983 D SEIZE 30 4 caller=20
+TE 426.983 D SEIZE 17 4 caller=20
+TE 427.103 B RISE 10 1 bsy=0
+TE 427.103 B CREAD 10 1
+TE 427.187 C RISE 10 2 bsy=0
+TE 427.187 C CREAD 10 2
+TE 427.372 A HOLD 17 2 cell=0 fwd=1
+TE 427.373 A FSWEEP 17 2
+TE 427.462 B RISE 37 3 bsy=0
+TE 428.026 E SEIZE 17 5 caller=20
+TE 428.124 D RISE 10 3 bsy=0
+TE 428.124 D CREAD 10 3
+TE 428.221 B HOLD 10 1 cell=0 fwd=1
+TE 428.221 B FSWEEP 10 1
+TE 428.254 A ARM 17 2 cell=0
+TE 428.305 C HOLD 10 2 cell=0 fwd=1
+TE 428.306 C FSWEEP 10 2
+TE 428.546 C RISE 37 4 bsy=0
+TE 429.103 B ARM 10 1 cell=0
+TE 429.166 E RISE 10 4 bsy=0
+TE 429.166 E CREAD 10 4
+TE 429.187 C ARM 10 2 cell=0
+TE 429.242 D HOLD 10 3 cell=0 fwd=1
+TE 429.242 D FSWEEP 10 3
+TE 429.483 D RISE 37 5 bsy=0
+TE 430.124 D ARM 10 3 cell=0
+TE 430.284 E HOLD 10 4 cell=0 fwd=1
+TE 430.285 E FSWEEP 10 4
+TE 431.166 E ARM 10 4 cell=0
+TE 438.004 A FNONE 17 2 cancel=0 legs=0
+TE 438.961 B FWD 10 1 legs= 31
+TE 439.048 C FWD 10 2 legs= 31
+TE 439.983 D FWD 10 3 legs= 31
+TE 440.203 C RISE 11 1 bsy=0
+TE 441.026 E FNONE 10 4 cancel=0 legs=0
+TE 441.138 D RISE 11 2 bsy=0
+TE 441.182 E RISE 11 3 bsy=0
+TE 446.204 C CREAD 11 1
+TE 446.460 B CREAD 37 3
+TE 447.138 D CREAD 11 2
+TE 447.323 C HOLD 11 1 cell=1 fwd=1
+TE 447.323 C FSWEEP 11 1
+TE 447.578 B HOLD 37 3 cell=1 fwd=1
+TE 447.579 B FSWEEP 37 3
+TE 448.182 E CREAD 11 3
+TE 448.204 C ARM 11 1 cell=1
+TE 448.257 D HOLD 11 2 cell=1 fwd=1
+TE 448.257 D FSWEEP 11 2
+TE 448.460 B ARM 37 3 cell=1
+TE 449.138 D ARM 11 2 cell=1
+TE 449.301 E HOLD 11 3 cell=1 fwd=1
+TE 449.301 E FSWEEP 11 3
+TE 450.183 E ARM 11 3 cell=1
+TE 457.959 B FWD 37 3 legs= 16
+TE 458.049 C FWD 11 1 legs= 32
+TE 458.982 D FWD 11 2 legs= 32
+TE 459.238 A RISE 16 3 bsy=0
+TE 459.238 A CREAD 16 3
+TE 460.027 E FNONE 11 3 cancel=0 legs=0
+TE 460.153 D RISE 12 1 bsy=0
+TE 460.198 E RISE 12 2 bsy=0
+TE 460.357 A HOLD 16 3 cell=1 fwd=1
+TE 460.357 A FSWEEP 16 3
+TE 461.238 A ARM 16 3 cell=1
+TE 465.550 C CREAD 37 4
+TE 466.153 D CREAD 12 1
+TE 466.668 C HOLD 37 4 cell=- fwd=0
+TE 467.199 E CREAD 12 2
+TE 467.271 D HOLD 12 1 cell=- fwd=0
+TE 468.317 E HOLD 12 2 cell=- fwd=1
+TE 468.318 E FSWEEP 12 2
+TE 471.004 A FNONE 16 3 cancel=0 legs=0
+TE 479.028 E FNONE 12 2 cancel=0 legs=0
+TE 485.480 D CREAD 37 5
+TE 486.598 D HOLD 37 5 cell=- fwd=0
+TE 544.296 E FALL 20 5 bsy=1
+TE 544.477 D FALL 37 5 bsy=1
+TE 553.031 E ODROP 20 5 after=1 guard=1 brk=1 tmr=125 from=4
+TE 556.324 C FALL 20 3 bsy=1
+TE 556.449 B FALL 37 3 bsy=1
+TE 557.117 D FALL 10 3 bsy=1
+TE 557.187 E FALL 11 3 bsy=1
+TE 557.238 A FALL 16 3 bsy=1
+TE 566.269 A FALL 20 1 bsy=1
+TE 567.088 B FALL 10 1 bsy=1
+TE 567.216 C FALL 11 1 bsy=1
+TE 568.148 D FALL 12 1 bsy=1
+TE 581.212 B FALL 20 2 bsy=1
+TE 581.254 A FALL 17 2 bsy=1
+TE 582.201 C FALL 10 2 bsy=1
+TE 583.131 D FALL 11 2 bsy=1
+TE 583.204 E FALL 12 2 bsy=1
+TE 593.240 D FALL 20 4 bsy=1
+TE 593.562 C FALL 37 4 bsy=1
+TE 594.173 E FALL 10 4 bsy=1
+TE 616.330 C RISE 20 3 bsy=1
+TE 616.443 B RISE 37 3 bsy=1
+TE 617.114 D RISE 10 3 bsy=1
+TE 617.190 E RISE 11 3 bsy=1
+TE 617.238 A RISE 16 3 bsy=1
+TE 626.269 A RISE 20 1 bsy=1
+TE 627.082 B RISE 10 1 bsy=1
+TE 627.221 C RISE 11 1 bsy=1
+TE 628.144 D RISE 12 1 bsy=1
+TE 641.206 B RISE 20 2 bsy=1
+TE 641.253 A RISE 17 2 bsy=1
+TE 642.207 C RISE 10 2 bsy=1
+TE 643.128 D RISE 11 2 bsy=1
+TE 643.207 E RISE 12 2 bsy=1
+TE 653.237 D RISE 20 4 bsy=1
+TE 653.568 C RISE 37 4 bsy=1
+TE 654.176 E RISE 10 4 bsy=1
+TE 656.334 C FALL 20 3 bsy=1
+TE 656.439 B FALL 37 3 bsy=1
+TE 657.112 D FALL 10 3 bsy=1
+TE 657.192 E FALL 11 3 bsy=1
+TE 657.238 A FALL 16 3 bsy=1
+TE 666.269 A FALL 20 1 bsy=1
+TE 667.078 B FALL 10 1 bsy=1
+TE 667.225 C FALL 11 1 bsy=1
+TE 668.142 D FALL 12 1 bsy=1
+TE 681.202 B FALL 20 2 bsy=1
+TE 681.253 A FALL 17 2 bsy=1
+TE 682.211 C FALL 10 2 bsy=1
+TE 683.126 D FALL 11 2 bsy=1
+TE 683.209 E FALL 12 2 bsy=1
+TE 693.235 D FALL 20 4 bsy=1
+TE 693.571 C FALL 37 4 bsy=1
+TE 694.178 E FALL 10 4 bsy=1
+TE 716.339 C RISE 20 3 bsy=1
+TE 716.433 B RISE 37 3 bsy=1
+TE 717.109 D RISE 10 3 bsy=1
+TE 717.195 E RISE 11 3 bsy=1
+TE 717.238 A RISE 16 3 bsy=1
+TE 726.269 A RISE 20 1 bsy=1
+TE 727.072 B RISE 10 1 bsy=1
+TE 727.231 C RISE 11 1 bsy=1
+TE 728.139 D RISE 12 1 bsy=1
+TE 741.196 B RISE 20 2 bsy=1
+TE 741.217 C RISE 10 2 bsy=1
+TE 741.253 A RISE 17 2 bsy=1
+TE 742.123 D RISE 11 2 bsy=1
+TE 742.212 E RISE 12 2 bsy=1
+TE 753.232 D RISE 20 4 bsy=1
+TE 753.577 C RISE 37 4 bsy=1
+TE 754.181 E RISE 10 4 bsy=1
+TE 756.343 C FALL 20 3 bsy=1
+TE 756.429 B FALL 37 3 bsy=1
+TE 757.106 D FALL 10 3 bsy=1
+TE 757.197 E FALL 11 3 bsy=1
+TE 757.237 A FALL 16 3 bsy=1
+TE 766.269 A FALL 20 1 bsy=1
+TE 767.068 B FALL 10 1 bsy=1
+TE 767.235 C FALL 11 1 bsy=1
+TE 768.137 D FALL 12 1 bsy=1
+TE 781.192 B FALL 20 2 bsy=1
+TE 781.221 C FALL 10 2 bsy=1
+TE 781.253 A FALL 17 2 bsy=1
+TE 782.121 D FALL 11 2 bsy=1
+TE 782.213 E FALL 12 2 bsy=1
+TE 793.230 D FALL 20 4 bsy=1
+TE 793.581 C FALL 37 4 bsy=1
+TE 794.183 E FALL 10 4 bsy=1
+TE 816.349 C RISE 20 3 bsy=1
+TE 816.423 B RISE 37 3 bsy=1
+TE 817.103 D RISE 10 3 bsy=1
+TE 817.199 E RISE 11 3 bsy=1
+TE 817.237 A RISE 16 3 bsy=1
+TE 826.269 A RISE 20 1 bsy=1
+TE 827.062 B RISE 10 1 bsy=1
+TE 827.241 C RISE 11 1 bsy=1
+TE 828.134 D RISE 12 1 bsy=1
+TE 841.186 B RISE 20 2 bsy=1
+TE 841.226 C RISE 10 2 bsy=1
+TE 841.253 A RISE 17 2 bsy=1
+TE 842.118 D RISE 11 2 bsy=1
+TE 842.216 E RISE 12 2 bsy=1
+TE 853.227 D RISE 20 4 bsy=1
+TE 853.587 C RISE 37 4 bsy=1
+TE 854.185 E RISE 10 4 bsy=1
+TE 944.910 B MDIG 37 3 cell=1 st=E cnt=3
+TE 944.910 B MREL 37 3 cell=1
+TE 945.956 D MDIG 10 3 cell=0 st=E cnt=3
+TE 945.956 D MREL 10 3 cell=0
+TE 946.003 A MDIG 16 3 cell=1 st=E cnt=3
+TE 946.003 A MREL 16 3 cell=1
+TE 946.049 E MDIG 11 3 cell=1 st=E cnt=3
+TE 946.049 E MREL 11 3 cell=1
+TE 955.909 B MDIG 10 1 cell=0 st=E cnt=3
+TE 955.909 B MREL 10 1 cell=0
+TE 956.097 C MDIG 11 1 cell=1 st=E cnt=3
+TE 956.097 C MREL 11 1 cell=1
+TE 970.003 A MDIG 17 2 cell=0 st=E cnt=3
+TE 970.003 A MREL 17 2 cell=0
+TE 970.098 C MDIG 10 2 cell=0 st=E cnt=3
+TE 970.098 C MREL 10 2 cell=0
+TE 970.955 D MDIG 11 2 cell=1 st=E cnt=3
+TE 970.955 D MREL 11 2 cell=1
+TE 983.051 E MDIG 10 4 cell=0 st=E cnt=3
+TE 983.051 E MREL 10 4 cell=0
+CALL id=5 from=E20 to=32?? kind=BAD dial=13221 lift=25 dt=30 key=290 last=- tone=557 alert=- bell=- ans=- end=757 rel=757 out=NOGO why=N_GUARD heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TE 1116.378 C FALL 20 3 bsy=1
+TE 1116.392 B FALL 37 3 bsy=1
+TE 1117.088 D FALL 10 3 bsy=1
+TE 1117.213 E FALL 11 3 bsy=1
+TE 1117.237 A FALL 16 3 bsy=1
+TE 1126.268 A FALL 20 1 bsy=1
+TE 1127.032 B FALL 10 1 bsy=1
+TE 1127.269 C FALL 11 1 bsy=1
+TE 1128.119 D FALL 12 1 bsy=1
+TE 1141.156 B FALL 20 2 bsy=1
+TE 1141.252 A FALL 17 2 bsy=1
+TE 1141.255 C FALL 10 2 bsy=1
+TE 1142.102 D FALL 11 2 bsy=1
+TE 1142.230 E FALL 12 2 bsy=1
+TE 1153.211 D FALL 20 4 bsy=1
+TE 1153.616 C FALL 37 4 bsy=1
+TE 1154.199 E FALL 10 4 bsy=1
+TE 1176.383 C RISE 20 3 bsy=1
+TE 1177.085 D RISE 10 3 bsy=1
+TE 1177.216 E RISE 11 3 bsy=1
+TE 1177.386 B RISE 37 3 bsy=1
+TE 1178.236 A RISE 16 3 bsy=1
+TE 1186.268 A RISE 20 1 bsy=1
+TE 1187.026 B RISE 10 1 bsy=1
+TE 1187.275 C RISE 11 1 bsy=1
+TE 1188.115 D RISE 12 1 bsy=1
+TE 1201.150 B RISE 20 2 bsy=1
+TE 1201.252 A RISE 17 2 bsy=1
+TE 1201.261 C RISE 10 2 bsy=1
+TE 1202.099 D RISE 11 2 bsy=1
+TE 1202.233 E RISE 12 2 bsy=1
+TE 1213.208 D RISE 20 4 bsy=1
+TE 1213.621 C RISE 37 4 bsy=1
+TE 1214.202 E RISE 10 4 bsy=1
+TE 1216.387 C FALL 20 3 bsy=1
+TE 1217.083 D FALL 10 3 bsy=1
+TE 1217.218 E FALL 11 3 bsy=1
+TE 1217.382 B FALL 37 3 bsy=1
+TE 1218.236 A FALL 16 3 bsy=1
+TE 1226.267 A FALL 20 1 bsy=1
+TE 1227.022 B FALL 10 1 bsy=1
+TE 1227.279 C FALL 11 1 bsy=1
+TE 1228.113 D FALL 12 1 bsy=1
+TE 1241.145 B FALL 20 2 bsy=1
+TE 1241.252 A FALL 17 2 bsy=1
+TE 1241.265 C FALL 10 2 bsy=1
+TE 1242.097 D FALL 11 2 bsy=1
+TE 1242.235 E FALL 12 2 bsy=1
+TE 1253.206 D FALL 20 4 bsy=1
+TE 1253.625 C FALL 37 4 bsy=1
+TE 1254.204 E FALL 10 4 bsy=1
+TE 1276.393 C RISE 20 3 bsy=1
+TE 1277.080 D RISE 10 3 bsy=1
+TE 1277.221 E RISE 11 3 bsy=1
+TE 1277.376 B RISE 37 3 bsy=1
+TE 1278.236 A RISE 16 3 bsy=1
+TE 1286.267 A RISE 20 1 bsy=1
+TE 1287.016 B RISE 10 1 bsy=1
+TE 1287.285 C RISE 11 1 bsy=1
+TE 1288.110 D RISE 12 1 bsy=1
+TE 1301.139 B RISE 20 2 bsy=1
+TE 1301.252 A RISE 17 2 bsy=1
+TE 1301.270 C RISE 10 2 bsy=1
+TE 1302.094 D RISE 11 2 bsy=1
+TE 1302.238 E RISE 12 2 bsy=1
+TE 1313.203 D RISE 20 4 bsy=1
+TE 1313.631 C RISE 37 4 bsy=1
+TE 1314.207 E RISE 10 4 bsy=1
+TE 1576.422 C FALL 20 3 bsy=1
+TE 1577.064 D FALL 10 3 bsy=1
+TE 1577.235 E FALL 11 3 bsy=1
+TE 1577.346 B FALL 37 3 bsy=1
+TE 1578.235 A FALL 16 3 bsy=1
+TE 1586.267 A FALL 20 1 bsy=1
+TE 1586.986 B FALL 10 1 bsy=1
+TE 1587.313 C FALL 11 1 bsy=1
+TE 1588.095 D FALL 12 1 bsy=1
+TE 1601.109 B FALL 20 2 bsy=1
+TE 1601.251 A FALL 17 2 bsy=1
+TE 1601.299 C FALL 10 2 bsy=1
+TE 1602.078 D FALL 11 2 bsy=1
+TE 1602.252 E FALL 12 2 bsy=1
+TE 1613.187 D FALL 20 4 bsy=1
+TE 1613.221 E FALL 10 4 bsy=1
+TE 1613.660 C FALL 37 4 bsy=1
+TE 1636.427 C RISE 20 3 bsy=1
+TE 1637.061 D RISE 10 3 bsy=1
+TE 1637.238 E RISE 11 3 bsy=1
+TE 1637.340 B RISE 37 3 bsy=1
+TE 1638.235 A RISE 16 3 bsy=1
+TE 1646.266 A RISE 20 1 bsy=1
+TE 1646.980 B RISE 10 1 bsy=1
+TE 1647.319 C RISE 11 1 bsy=1
+TE 1648.092 D RISE 12 1 bsy=1
+TE 1661.103 B RISE 20 2 bsy=1
+TE 1661.251 A RISE 17 2 bsy=1
+TE 1661.305 C RISE 10 2 bsy=1
+TE 1662.075 D RISE 11 2 bsy=1
+TE 1662.254 E RISE 12 2 bsy=1
+TE 1673.184 D RISE 20 4 bsy=1
+TE 1673.224 E RISE 10 4 bsy=1
+TE 1673.665 C RISE 37 4 bsy=1
+TE 1676.431 C FALL 20 3 bsy=1
+TE 1677.059 D FALL 10 3 bsy=1
+TE 1677.239 E FALL 11 3 bsy=1
+TE 1677.336 B FALL 37 3 bsy=1
+TE 1678.235 A FALL 16 3 bsy=1
+TE 1686.266 A FALL 20 1 bsy=1
+TE 1686.975 B FALL 10 1 bsy=1
+TE 1687.323 C FALL 11 1 bsy=1
+TE 1688.090 D FALL 12 1 bsy=1
+TE 1701.099 B FALL 20 2 bsy=1
+TE 1701.251 A FALL 17 2 bsy=1
+TE 1701.309 C FALL 10 2 bsy=1
+TE 1702.073 D FALL 11 2 bsy=1
+TE 1702.256 E FALL 12 2 bsy=1
+TE 1713.182 D FALL 20 4 bsy=1
+TE 1713.226 E FALL 10 4 bsy=1
+TE 1713.669 C FALL 37 4 bsy=1
+TE 1736.437 C RISE 20 3 bsy=1
+TE 1737.056 D RISE 10 3 bsy=1
+TE 1737.242 E RISE 11 3 bsy=1
+TE 1737.330 B RISE 37 3 bsy=1
+TE 1738.235 A RISE 16 3 bsy=1
+TE 1746.266 A RISE 20 1 bsy=1
+TE 1746.969 B RISE 10 1 bsy=1
+TE 1747.329 C RISE 11 1 bsy=1
+TE 1748.086 D RISE 12 1 bsy=1
+TE 1761.093 B RISE 20 2 bsy=1
+TE 1761.250 A RISE 17 2 bsy=1
+TE 1761.314 C RISE 10 2 bsy=1
+TE 1762.070 D RISE 11 2 bsy=1
+TE 1762.259 E RISE 12 2 bsy=1
+TE 1773.179 D RISE 20 4 bsy=1
+TE 1773.228 E RISE 10 4 bsy=1
+TE 1773.675 C RISE 37 4 bsy=1
+TE 2036.466 C FALL 20 3 bsy=1
+TE 2037.040 D FALL 10 3 bsy=1
+TE 2037.256 E FALL 11 3 bsy=1
+TE 2037.300 B FALL 37 3 bsy=1
+TE 2038.234 A FALL 16 3 bsy=1
+TE 2046.265 A FALL 20 1 bsy=1
+TE 2046.939 B FALL 10 1 bsy=1
+TE 2047.357 C FALL 11 1 bsy=1
+TE 2048.071 D FALL 12 1 bsy=1
+TE 2061.063 B FALL 20 2 bsy=1
+TE 2061.250 A FALL 17 2 bsy=1
+TE 2061.343 C FALL 10 2 bsy=1
+TE 2062.055 D FALL 11 2 bsy=1
+TE 2062.273 E FALL 12 2 bsy=1
+TE 2073.163 D FALL 20 4 bsy=1
+TE 2073.242 E FALL 10 4 bsy=1
+TE 2073.704 C FALL 37 4 bsy=1
+TE 2096.471 C RISE 20 3 bsy=1
+TE 2097.037 D RISE 10 3 bsy=1
+TE 2097.259 E RISE 11 3 bsy=1
+TE 2097.293 B RISE 37 3 bsy=1
+TE 2098.234 A RISE 16 3 bsy=1
+TE 2106.265 A RISE 20 1 bsy=1
+TE 2106.933 B RISE 10 1 bsy=1
+TE 2107.363 C RISE 11 1 bsy=1
+TE 2108.068 D RISE 12 1 bsy=1
+TE 2121.057 B RISE 20 2 bsy=1
+TE 2121.250 A RISE 17 2 bsy=1
+TE 2121.349 C RISE 10 2 bsy=1
+TE 2122.052 D RISE 11 2 bsy=1
+TE 2122.276 E RISE 12 2 bsy=1
+TE 2133.160 D RISE 20 4 bsy=1
+TE 2133.245 E RISE 10 4 bsy=1
+TE 2133.709 C RISE 37 4 bsy=1
+TE 2796.538 C FALL 20 3 bsy=1
+TE 2797.001 D FALL 10 3 bsy=1
+TE 2797.223 B FALL 37 3 bsy=1
+TE 2797.292 E FALL 11 3 bsy=1
+TE 2798.232 A FALL 16 3 bsy=1
+TE 2806.263 A FALL 20 1 bsy=1
+TE 2806.863 B FALL 10 1 bsy=1
+TE 2807.430 C FALL 11 1 bsy=1
+TE 2808.032 D FALL 12 1 bsy=1
+TE 2821.986 B FALL 20 2 bsy=1
+TE 2822.248 A FALL 17 2 bsy=1
+TE 2822.416 C FALL 10 2 bsy=1
+TE 2823.015 D FALL 11 2 bsy=1
+TE 2823.308 E FALL 12 2 bsy=1
+TE 2833.124 D FALL 20 4 bsy=1
+TE 2833.278 E FALL 10 4 bsy=1
+TE 2833.776 C FALL 37 4 bsy=1
+TE 3051.988 D RES 10 3 act=GONE leg=0
+TE 3052.197 B RES 37 3 act=GONE leg=0
+TE 3053.298 C ODROP 20 3 after=0 guard=0 brk=0 tmr=1648 from=5
+TE 3061.837 B RES 10 1 act=GONE leg=0
+TE 3062.455 C RES 11 1 act=GONE leg=0
+TE 3062.998 A ODROP 20 1 after=0 guard=0 brk=0 tmr=1648 from=5
+TE 3077.441 C RES 10 2 act=GONE leg=0
+TE 3078.002 D RES 11 2 act=GONE leg=0
+TE 3078.695 B ODROP 20 2 after=0 guard=0 brk=0 tmr=1649 from=5
+TE 3089.846 D ODROP 20 4 after=0 guard=0 brk=0 tmr=1648 from=5
+CALL id=3 from=C20 to=32?? kind=BAD dial=13221 lift=23 dt=28 key=288 last=2097 tone=- alert=- bell=- ans=- end=2797 rel=2797 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=1 from=A20 to=32?? kind=BAD dial=13221 lift=22 dt=27 key=287 last=2107 tone=- alert=- bell=- ans=- end=2807 rel=2807 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=2 from=B20 to=32?? kind=BAD dial=13221 lift=22 dt=27 key=287 last=2122 tone=- alert=- bell=- ans=- end=2822 rel=2822 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=4 from=D20 to=32?? kind=BAD dial=13221 lift=24 dt=29 key=289 last=2134 tone=- alert=- bell=- ans=- end=2834 rel=2834 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=5000 calls=5 ok=0 busy=0 nogo=1 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=4979 started=5 ok=0 failed=5 reg_occ A=0.61 B=0.61 C=0.61 D=0.62 E=0.11
+TE 5020.258 A RISE 20 1 bsy=0
+TE 5021.764 B RISE 20 2 bsy=0
+TE 5022.752 C RISE 20 3 bsy=0
+TE 5023.011 D RISE 20 4 bsy=0
+TE 5024.505 E RISE 20 5 bsy=0
+TE 5225.257 A FALL 20 1 bsy=1
+TE 5226.743 B FALL 20 2 bsy=1
+TE 5227.771 C FALL 20 3 bsy=1
+TE 5228.000 D FALL 20 4 bsy=1
+TE 5229.514 E FALL 20 5 bsy=1
+TE 5285.257 A RISE 20 1 bsy=1
+TE 5286.737 B RISE 20 2 bsy=1
+TE 5287.777 C RISE 20 3 bsy=1
+TE 5288.997 D RISE 20 4 bsy=1
+TE 5289.517 E RISE 20 5 bsy=1
+TE 5413.992 A KEY 20 6 dial=13221 dest=BAD
+TE 5413.992 A OSWEEP 20 6
+TE 5415.459 B KEY 20 7 dial=13221 dest=BAD
+TE 5415.460 B OSWEEP 20 7
+TE 5416.524 C KEY 20 8 dial=13221 dest=BAD
+TE 5416.525 C OSWEEP 20 8
+TE 5417.725 D KEY 20 9 dial=13221 dest=BAD
+TE 5417.726 D OSWEEP 20 9
+TE 5418.258 E KEY 20 10 dial=13221 dest=BAD
+TE 5418.258 E OSWEEP 20 10
+TE 5423.992 A SEIZE 10 6 caller=20
+TE 5425.458 B SEIZE 30 7 caller=20
+TE 5425.458 B SEIZE 17 7 caller=20
+TE 5425.598 B RISE 10 6 bsy=0
+TE 5425.598 B CREAD 10 6
+TE 5426.525 C SEIZE 30 8 caller=20
+TE 5426.525 C SEIZE 17 8 caller=20
+TE 5426.717 B HOLD 10 6 cell=0 fwd=1
+TE 5426.717 B FSWEEP 10 6
+TE 5427.241 A RISE 17 7 bsy=0
+TE 5427.241 A CREAD 17 7
+TE 5427.598 B ARM 10 6 cell=0
+TE 5427.665 C RISE 10 7 bsy=0
+TE 5427.665 C CREAD 10 7
+TE 5427.725 D SEIZE 30 9 caller=20
+TE 5427.725 D SEIZE 17 9 caller=20
+TE 5427.865 D RISE 10 8 bsy=0
+TE 5427.865 D CREAD 10 8
+TE 5427.958 B RISE 37 8 bsy=0
+TE 5428.258 E SEIZE 17 10 caller=20
+TE 5428.360 A HOLD 17 7 cell=0 fwd=1
+TE 5428.360 A FSWEEP 17 7
+TE 5428.784 C HOLD 10 7 cell=0 fwd=1
+TE 5428.784 C FSWEEP 10 7
+TE 5428.983 D HOLD 10 8 cell=0 fwd=1
+TE 5428.984 D FSWEEP 10 8
+TE 5429.025 C RISE 37 9 bsy=0
+TE 5429.241 A ARM 17 7 cell=0
+TE 5429.399 E RISE 10 9 bsy=0
+TE 5429.399 E CREAD 10 9
+TE 5429.666 C ARM 10 7 cell=0
+TE 5429.865 D ARM 10 8 cell=0
+TE 5430.224 D RISE 37 10 bsy=0
+TE 5430.517 E HOLD 10 9 cell=0 fwd=1
+TE 5430.518 E FSWEEP 10 9
+TE 5431.399 E ARM 10 9 cell=0
+TE 5437.457 B FWD 10 6 legs= 31
+TE 5438.682 C RISE 11 6 bsy=0
+TE 5438.992 A FNONE 17 7 cancel=0 legs=0
+TE 5439.526 C FWD 10 7 legs= 31
+TE 5439.724 D FWD 10 8 legs= 31
+TE 5440.880 D RISE 11 7 bsy=0
+TE 5441.259 E FNONE 10 9 cancel=0 legs=0
+TE 5441.415 E RISE 11 8 bsy=0
+TE 5444.956 B CREAD 37 8
+TE 5446.074 B HOLD 37 8 cell=1 fwd=1
+TE 5446.075 B FSWEEP 37 8
+TE 5446.683 C CREAD 11 6
+TE 5446.880 D CREAD 11 7
+TE 5446.956 B ARM 37 8 cell=1
+TE 5447.801 C HOLD 11 6 cell=1 fwd=1
+TE 5447.802 C FSWEEP 11 6
+TE 5447.998 D HOLD 11 7 cell=1 fwd=1
+TE 5447.998 D FSWEEP 11 7
+TE 5448.415 E CREAD 11 8
+TE 5448.683 C ARM 11 6 cell=1
+TE 5448.880 D ARM 11 7 cell=1
+TE 5449.534 E HOLD 11 8 cell=1 fwd=1
+TE 5449.534 E FSWEEP 11 8
+TE 5450.416 E ARM 11 8 cell=1
+TE 5456.455 B FWD 37 8 legs= 16
+TE 5457.225 A RISE 16 8 bsy=0
+TE 5457.225 A CREAD 16 8
+TE 5458.344 A HOLD 16 8 cell=1 fwd=1
+TE 5458.344 A FSWEEP 16 8
+TE 5458.528 C FWD 11 6 legs= 32
+TE 5458.723 D FWD 11 7 legs= 32
+TE 5459.226 A ARM 16 8 cell=1
+TE 5459.895 D RISE 12 6 bsy=0
+TE 5460.260 E FNONE 11 8 cancel=0 legs=0
+TE 5460.431 E RISE 12 7 bsy=0
+TE 5465.894 D CREAD 12 6
+TE 5466.028 C CREAD 37 9
+TE 5467.013 D HOLD 12 6 cell=- fwd=0
+TE 5467.147 C HOLD 37 9 cell=- fwd=0
+TE 5467.432 E CREAD 12 7
+TE 5468.550 E HOLD 12 7 cell=- fwd=1
+TE 5468.551 E FSWEEP 12 7
+TE 5468.991 A FNONE 16 8 cancel=0 legs=0
+TE 5479.261 E FNONE 12 7 cancel=0 legs=0
+TE 5485.221 D CREAD 37 10
+TE 5486.340 D HOLD 37 10 cell=- fwd=0
+TE 5553.256 A FALL 20 6 bsy=1
+TE 5553.585 B FALL 10 6 bsy=1
+TE 5553.693 C FALL 11 6 bsy=1
+TE 5553.890 D FALL 12 6 bsy=1
+TE 5578.805 C FALL 20 8 bsy=1
+TE 5578.857 D FALL 10 8 bsy=1
+TE 5578.942 B FALL 37 8 bsy=1
+TE 5579.225 A FALL 16 8 bsy=1
+TE 5579.421 E FALL 11 8 bsy=1
+TE 5581.982 D FALL 20 9 bsy=1
+TE 5582.039 C FALL 37 9 bsy=1
+TE 5582.406 E FALL 10 9 bsy=1
+TE 5585.707 B FALL 20 7 bsy=1
+TE 5586.241 A FALL 17 7 bsy=1
+TE 5586.681 C FALL 10 7 bsy=1
+TE 5586.872 D FALL 11 7 bsy=1
+TE 5587.437 E FALL 12 7 bsy=1
+TE 5594.531 E FALL 20 10 bsy=1
+TE 5595.216 D FALL 37 10 bsy=1
+TE 5613.256 A RISE 20 6 bsy=1
+TE 5613.579 B RISE 10 6 bsy=1
+TE 5613.699 C RISE 11 6 bsy=1
+TE 5613.887 D RISE 12 6 bsy=1
+TE 5638.811 C RISE 20 8 bsy=1
+TE 5638.854 D RISE 10 8 bsy=1
+TE 5638.936 B RISE 37 8 bsy=1
+TE 5639.225 A RISE 16 8 bsy=1
+TE 5639.424 E RISE 11 8 bsy=1
+TE 5641.979 D RISE 20 9 bsy=1
+TE 5642.045 C RISE 37 9 bsy=1
+TE 5642.409 E RISE 10 9 bsy=1
+TE 5645.701 B RISE 20 7 bsy=1
+TE 5646.241 A RISE 17 7 bsy=1
+TE 5646.686 C RISE 10 7 bsy=1
+TE 5646.869 D RISE 11 7 bsy=1
+TE 5647.440 E RISE 12 7 bsy=1
+TE 5653.256 A FALL 20 6 bsy=1
+TE 5653.575 B FALL 10 6 bsy=1
+TE 5653.703 C FALL 11 6 bsy=1
+TE 5653.885 D FALL 12 6 bsy=1
+TE 5654.534 E RISE 20 10 bsy=1
+TE 5655.213 D RISE 37 10 bsy=1
+TE 5678.814 C FALL 20 8 bsy=1
+TE 5678.852 D FALL 10 8 bsy=1
+TE 5678.932 B FALL 37 8 bsy=1
+TE 5679.225 A FALL 16 8 bsy=1
+TE 5679.426 E FALL 11 8 bsy=1
+TE 5681.977 D FALL 20 9 bsy=1
+TE 5682.049 C FALL 37 9 bsy=1
+TE 5682.410 E FALL 10 9 bsy=1
+TE 5685.697 B FALL 20 7 bsy=1
+TE 5686.240 A FALL 17 7 bsy=1
+TE 5686.690 C FALL 10 7 bsy=1
+TE 5686.867 D FALL 11 7 bsy=1
+TE 5687.442 E FALL 12 7 bsy=1
+TE 5694.536 E FALL 20 10 bsy=1
+TE 5695.210 D FALL 37 10 bsy=1
+TE 5713.256 A RISE 20 6 bsy=1
+TE 5713.569 B RISE 10 6 bsy=1
+TE 5713.708 C RISE 11 6 bsy=1
+TE 5713.881 D RISE 12 6 bsy=1
+TE 5738.820 C RISE 20 8 bsy=1
+TE 5738.849 D RISE 10 8 bsy=1
+TE 5738.926 B RISE 37 8 bsy=1
+TE 5739.225 A RISE 16 8 bsy=1
+TE 5739.429 E RISE 11 8 bsy=1
+TE 5741.974 D RISE 20 9 bsy=1
+TE 5742.055 C RISE 37 9 bsy=1
+TE 5742.413 E RISE 10 9 bsy=1
+TE 5745.691 B RISE 20 7 bsy=1
+TE 5746.240 A RISE 17 7 bsy=1
+TE 5746.696 C RISE 10 7 bsy=1
+TE 5746.864 D RISE 11 7 bsy=1
+TE 5747.445 E RISE 12 7 bsy=1
+TE 5753.256 A FALL 20 6 bsy=1
+TE 5753.565 B FALL 10 6 bsy=1
+TE 5753.712 C FALL 11 6 bsy=1
+TE 5753.879 D FALL 12 6 bsy=1
+TE 5754.539 E RISE 20 10 bsy=1
+TE 5755.207 D RISE 37 10 bsy=1
+TE 5778.824 C FALL 20 8 bsy=1
+TE 5778.847 D FALL 10 8 bsy=1
+TE 5778.922 B FALL 37 8 bsy=1
+TE 5779.225 A FALL 16 8 bsy=1
+TE 5779.431 E FALL 11 8 bsy=1
+TE 5781.972 D FALL 20 9 bsy=1
+TE 5782.059 C FALL 37 9 bsy=1
+TE 5782.415 E FALL 10 9 bsy=1
+TE 5785.687 B FALL 20 7 bsy=1
+TE 5786.240 A FALL 17 7 bsy=1
+TE 5786.700 C FALL 10 7 bsy=1
+TE 5786.862 D FALL 11 7 bsy=1
+TE 5787.447 E FALL 12 7 bsy=1
+TE 5794.541 E FALL 20 10 bsy=1
+TE 5795.205 D FALL 37 10 bsy=1
+TE 5813.256 A RISE 20 6 bsy=1
+TE 5813.559 B RISE 10 6 bsy=1
+TE 5813.718 C RISE 11 6 bsy=1
+TE 5813.876 D RISE 12 6 bsy=1
+TE 5838.830 C RISE 20 8 bsy=1
+TE 5838.916 B RISE 37 8 bsy=1
+TE 5839.224 A RISE 16 8 bsy=1
+TE 5839.844 D RISE 10 8 bsy=1
+TE 5840.433 E RISE 11 8 bsy=1
+TE 5841.969 D RISE 20 9 bsy=1
+TE 5842.064 C RISE 37 9 bsy=1
+TE 5842.418 E RISE 10 9 bsy=1
+TE 5845.681 B RISE 20 7 bsy=1
+TE 5845.705 C RISE 10 7 bsy=1
+TE 5845.859 D RISE 11 7 bsy=1
+TE 5846.240 A RISE 17 7 bsy=1
+TE 5846.449 E RISE 12 7 bsy=1
+TE 5854.543 E RISE 20 10 bsy=1
+TE 5855.202 D RISE 37 10 bsy=1
+TE 5942.406 B MDIG 10 6 cell=0 st=E cnt=3
+TE 5942.406 B MREL 10 6 cell=0
+TE 5942.574 C MDIG 11 6 cell=1 st=E cnt=3
+TE 5942.574 C MREL 11 6 cell=1
+TE 5967.403 B MDIG 37 8 cell=1 st=E cnt=3
+TE 5967.403 B MREL 37 8 cell=1
+TE 5967.990 A MDIG 16 8 cell=1 st=E cnt=3
+TE 5967.990 A MREL 16 8 cell=1
+TE 5968.696 D MDIG 10 8 cell=0 st=E cnt=3
+TE 5968.697 D MREL 10 8 cell=0
+TE 5969.283 E MDIG 11 8 cell=1 st=E cnt=3
+TE 5969.283 E MREL 11 8 cell=1
+TE 5971.283 E MDIG 10 9 cell=0 st=E cnt=3
+TE 5971.284 E MREL 10 9 cell=0
+TE 5974.577 C MDIG 10 7 cell=0 st=E cnt=3
+TE 5974.577 C MREL 10 7 cell=0
+TE 5974.696 D MDIG 11 7 cell=1 st=E cnt=3
+TE 5974.696 D MREL 11 7 cell=1
+TE 5974.990 A MDIG 17 7 cell=0 st=E cnt=3
+TE 5974.990 A MREL 17 7 cell=0
+TE 6113.255 A FALL 20 6 bsy=1
+TE 6113.529 B FALL 10 6 bsy=1
+TE 6113.747 C FALL 11 6 bsy=1
+TE 6113.861 D FALL 12 6 bsy=1
+TE 6138.858 C FALL 20 8 bsy=1
+TE 6138.886 B FALL 37 8 bsy=1
+TE 6139.224 A FALL 16 8 bsy=1
+TE 6139.828 D FALL 10 8 bsy=1
+TE 6140.447 E FALL 11 8 bsy=1
+TE 6141.953 D FALL 20 9 bsy=1
+TE 6142.093 C FALL 37 9 bsy=1
+TE 6142.432 E FALL 10 9 bsy=1
+TE 6145.651 B FALL 20 7 bsy=1
+TE 6145.734 C FALL 10 7 bsy=1
+TE 6145.843 D FALL 11 7 bsy=1
+TE 6146.239 A FALL 17 7 bsy=1
+TE 6146.463 E FALL 12 7 bsy=1
+TE 6154.557 E FALL 20 10 bsy=1
+TE 6155.187 D FALL 37 10 bsy=1
+TE 6173.255 A RISE 20 6 bsy=1
+TE 6173.523 B RISE 10 6 bsy=1
+TE 6173.752 C RISE 11 6 bsy=1
+TE 6173.858 D RISE 12 6 bsy=1
+TE 6198.864 C RISE 20 8 bsy=1
+TE 6198.880 B RISE 37 8 bsy=1
+TE 6199.224 A RISE 16 8 bsy=1
+TE 6199.825 D RISE 10 8 bsy=1
+TE 6200.450 E RISE 11 8 bsy=1
+TE 6201.950 D RISE 20 9 bsy=1
+TE 6202.099 C RISE 37 9 bsy=1
+TE 6202.435 E RISE 10 9 bsy=1
+TE 6205.645 B RISE 20 7 bsy=1
+TE 6205.740 C RISE 10 7 bsy=1
+TE 6205.840 D RISE 11 7 bsy=1
+TE 6206.239 A RISE 17 7 bsy=1
+TE 6206.466 E RISE 12 7 bsy=1
+TE 6213.255 A FALL 20 6 bsy=1
+TE 6213.519 B FALL 10 6 bsy=1
+TE 6213.756 C FALL 11 6 bsy=1
+TE 6213.856 D FALL 12 6 bsy=1
+TE 6214.560 E RISE 20 10 bsy=1
+TE 6215.184 D RISE 37 10 bsy=1
+TE 6238.868 C FALL 20 8 bsy=1
+TE 6239.823 D FALL 10 8 bsy=1
+TE 6239.876 B FALL 37 8 bsy=1
+TE 6240.223 A FALL 16 8 bsy=1
+TE 6240.452 E FALL 11 8 bsy=1
+TE 6241.948 D FALL 20 9 bsy=1
+TE 6242.103 C FALL 37 9 bsy=1
+TE 6242.437 E FALL 10 9 bsy=1
+TE 6245.641 B FALL 20 7 bsy=1
+TE 6245.744 C FALL 10 7 bsy=1
+TE 6245.838 D FALL 11 7 bsy=1
+TE 6246.239 A FALL 17 7 bsy=1
+TE 6246.468 E FALL 12 7 bsy=1
+TE 6254.562 E FALL 20 10 bsy=1
+TE 6255.182 D FALL 37 10 bsy=1
+TE 6273.255 A RISE 20 6 bsy=1
+TE 6273.513 B RISE 10 6 bsy=1
+TE 6273.762 C RISE 11 6 bsy=1
+TE 6273.852 D RISE 12 6 bsy=1
+TE 6298.874 C RISE 20 8 bsy=1
+TE 6299.820 D RISE 10 8 bsy=1
+TE 6299.870 B RISE 37 8 bsy=1
+TE 6300.223 A RISE 16 8 bsy=1
+TE 6300.455 E RISE 11 8 bsy=1
+TE 6301.945 D RISE 20 9 bsy=1
+TE 6302.108 C RISE 37 9 bsy=1
+TE 6302.439 E RISE 10 9 bsy=1
+TE 6305.635 B RISE 20 7 bsy=1
+TE 6305.749 C RISE 10 7 bsy=1
+TE 6305.835 D RISE 11 7 bsy=1
+TE 6306.239 A RISE 17 7 bsy=1
+TE 6306.471 E RISE 12 7 bsy=1
+TE 6314.565 E RISE 20 10 bsy=1
+TE 6315.178 D RISE 37 10 bsy=1
+TE 6573.254 A FALL 20 6 bsy=1
+TE 6573.483 B FALL 10 6 bsy=1
+TE 6573.791 C FALL 11 6 bsy=1
+TE 6573.837 D FALL 12 6 bsy=1
+TE 6598.902 C FALL 20 8 bsy=1
+TE 6599.804 D FALL 10 8 bsy=1
+TE 6599.839 B FALL 37 8 bsy=1
+TE 6600.222 A FALL 16 8 bsy=1
+TE 6600.469 E FALL 11 8 bsy=1
+TE 6601.929 D FALL 20 9 bsy=1
+TE 6602.137 C FALL 37 9 bsy=1
+TE 6602.453 E FALL 10 9 bsy=1
+TE 6605.604 B FALL 20 7 bsy=1
+TE 6605.778 C FALL 10 7 bsy=1
+TE 6605.820 D FALL 11 7 bsy=1
+TE 6606.238 A FALL 17 7 bsy=1
+TE 6606.485 E FALL 12 7 bsy=1
+TE 6614.579 E FALL 20 10 bsy=1
+TE 6615.163 D FALL 37 10 bsy=1
+TE 6633.254 A RISE 20 6 bsy=1
+TE 6633.477 B RISE 10 6 bsy=1
+TE 6633.796 C RISE 11 6 bsy=1
+TE 6633.834 D RISE 12 6 bsy=1
+TE 6658.908 C RISE 20 8 bsy=1
+TE 6659.801 D RISE 10 8 bsy=1
+TE 6659.833 B RISE 37 8 bsy=1
+TE 6660.222 A RISE 16 8 bsy=1
+TE 6660.472 E RISE 11 8 bsy=1
+TE 6661.926 D RISE 20 9 bsy=1
+TE 6662.143 C RISE 37 9 bsy=1
+TE 6662.456 E RISE 10 9 bsy=1
+TE 6665.598 B RISE 20 7 bsy=1
+TE 6665.784 C RISE 10 7 bsy=1
+TE 6665.817 D RISE 11 7 bsy=1
+TE 6666.238 A RISE 17 7 bsy=1
+TE 6666.488 E RISE 12 7 bsy=1
+TE 6673.254 A FALL 20 6 bsy=1
+TE 6673.472 B FALL 10 6 bsy=1
+TE 6673.800 C FALL 11 6 bsy=1
+TE 6673.832 D FALL 12 6 bsy=1
+TE 6674.582 E RISE 20 10 bsy=1
+TE 6675.160 D RISE 37 10 bsy=1
+TE 6698.912 C FALL 20 8 bsy=1
+TE 6699.799 D FALL 10 8 bsy=1
+TE 6699.829 B FALL 37 8 bsy=1
+TE 6700.222 A FALL 16 8 bsy=1
+TE 6700.473 E FALL 11 8 bsy=1
+TE 6701.924 D FALL 20 9 bsy=1
+TE 6702.147 C FALL 37 9 bsy=1
+TE 6702.458 E FALL 10 9 bsy=1
+TE 6705.594 B FALL 20 7 bsy=1
+TE 6705.788 C FALL 10 7 bsy=1
+TE 6705.814 D FALL 11 7 bsy=1
+TE 6706.238 A FALL 17 7 bsy=1
+TE 6706.489 E FALL 12 7 bsy=1
+TE 6714.584 E FALL 20 10 bsy=1
+TE 6715.158 D FALL 37 10 bsy=1
+TE 6733.253 A RISE 20 6 bsy=1
+TE 6733.466 B RISE 10 6 bsy=1
+TE 6733.806 C RISE 11 6 bsy=1
+TE 6733.829 D RISE 12 6 bsy=1
+TE 6758.918 C RISE 20 8 bsy=1
+TE 6759.796 D RISE 10 8 bsy=1
+TE 6759.823 B RISE 37 8 bsy=1
+TE 6760.222 A RISE 16 8 bsy=1
+TE 6760.476 E RISE 11 8 bsy=1
+TE 6761.921 D RISE 20 9 bsy=1
+TE 6762.152 C RISE 37 9 bsy=1
+TE 6762.461 E RISE 10 9 bsy=1
+TE 6765.588 B RISE 20 7 bsy=1
+TE 6765.793 C RISE 10 7 bsy=1
+TE 6766.238 A RISE 17 7 bsy=1
+TE 6766.811 D RISE 11 7 bsy=1
+TE 6767.492 E RISE 12 7 bsy=1
+TE 6774.586 E RISE 20 10 bsy=1
+TE 6775.155 D RISE 37 10 bsy=1
+TE 7033.253 A FALL 20 6 bsy=1
+TE 7033.436 B FALL 10 6 bsy=1
+TE 7033.835 C FALL 11 6 bsy=1
+TE 7034.813 D FALL 12 6 bsy=1
+TE 7058.947 C FALL 20 8 bsy=1
+TE 7059.781 D FALL 10 8 bsy=1
+TE 7059.793 B FALL 37 8 bsy=1
+TE 7060.221 A FALL 16 8 bsy=1
+TE 7060.490 E FALL 11 8 bsy=1
+TE 7061.905 D FALL 20 9 bsy=1
+TE 7062.181 C FALL 37 9 bsy=1
+TE 7062.475 E FALL 10 9 bsy=1
+TE 7065.558 B FALL 20 7 bsy=1
+TE 7065.822 C FALL 10 7 bsy=1
+TE 7066.237 A FALL 17 7 bsy=1
+TE 7066.796 D FALL 11 7 bsy=1
+TE 7067.506 E FALL 12 7 bsy=1
+TE 7074.600 E FALL 20 10 bsy=1
+TE 7075.139 D FALL 37 10 bsy=1
+TE 7093.252 A RISE 20 6 bsy=1
+TE 7093.430 B RISE 10 6 bsy=1
+TE 7093.840 C RISE 11 6 bsy=1
+TE 7094.810 D RISE 12 6 bsy=1
+TE 7118.952 C RISE 20 8 bsy=1
+TE 7119.777 D RISE 10 8 bsy=1
+TE 7119.787 B RISE 37 8 bsy=1
+TE 7120.221 A RISE 16 8 bsy=1
+TE 7120.493 E RISE 11 8 bsy=1
+TE 7121.902 D RISE 20 9 bsy=1
+TE 7122.187 C RISE 37 9 bsy=1
+TE 7122.478 E RISE 10 9 bsy=1
+TE 7125.552 B RISE 20 7 bsy=1
+TE 7125.828 C RISE 10 7 bsy=1
+TE 7126.237 A RISE 17 7 bsy=1
+TE 7126.793 D RISE 11 7 bsy=1
+TE 7127.509 E RISE 12 7 bsy=1
+TE 7134.603 E RISE 20 10 bsy=1
+TE 7135.136 D RISE 37 10 bsy=1
+TE 7793.251 A FALL 20 6 bsy=1
+TE 7793.360 B FALL 10 6 bsy=1
+TE 7793.907 C FALL 11 6 bsy=1
+TE 7794.774 D FALL 12 6 bsy=1
+TE 7818.019 C FALL 20 8 bsy=1
+TE 7818.716 B FALL 37 8 bsy=1
+TE 7818.741 D FALL 10 8 bsy=1
+TE 7819.219 A FALL 16 8 bsy=1
+TE 7819.526 E FALL 11 8 bsy=1
+TE 7821.866 D FALL 20 9 bsy=1
+TE 7822.254 C FALL 37 9 bsy=1
+TE 7822.510 E FALL 10 9 bsy=1
+TE 7825.481 B FALL 20 7 bsy=1
+TE 7825.895 C FALL 10 7 bsy=1
+TE 7826.235 A FALL 17 7 bsy=1
+TE 7826.757 D FALL 11 7 bsy=1
+TE 7827.542 E FALL 12 7 bsy=1
+TE 7834.636 E FALL 20 10 bsy=1
+TE 7835.100 D FALL 37 10 bsy=1
+TE 8048.932 C RES 11 6 act=GONE leg=0
+TE 8049.334 B RES 10 6 act=GONE leg=0
+TE 8049.985 A ODROP 20 6 after=0 guard=0 brk=0 tmr=1648 from=5
+TE 8073.691 B RES 37 8 act=GONE leg=0
+TE 8073.728 D RES 10 8 act=GONE leg=0
+TE 8074.779 C ODROP 20 8 after=0 guard=0 brk=0 tmr=1647 from=5
+TE 8078.588 D ODROP 20 9 after=0 guard=0 brk=0 tmr=1648 from=5
+TE 8080.920 C RES 10 7 act=GONE leg=0
+TE 8081.744 D RES 11 7 act=GONE leg=0
+TE 8082.190 B ODROP 20 7 after=0 guard=0 brk=0 tmr=1648 from=5
+TE 8091.383 E ODROP 20 10 after=0 guard=0 brk=0 tmr=1648 from=5
+CALL id=6 from=A20 to=32?? kind=BAD dial=13221 lift=5021 dt=5026 key=5286 last=7094 tone=- alert=- bell=- ans=- end=7794 rel=7794 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=8 from=C20 to=32?? kind=BAD dial=13221 lift=5023 dt=5028 key=5288 last=7119 tone=- alert=- bell=- ans=- end=7819 rel=7819 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=9 from=D20 to=32?? kind=BAD dial=13221 lift=5024 dt=5029 key=5289 last=7122 tone=- alert=- bell=- ans=- end=7822 rel=7822 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=7 from=B20 to=32?? kind=BAD dial=13221 lift=5022 dt=5027 key=5287 last=7126 tone=- alert=- bell=- ans=- end=7826 rel=7826 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=10 from=E20 to=32?? kind=BAD dial=13221 lift=5025 dt=5030 key=5290 last=7135 tone=- alert=- bell=- ans=- end=7835 rel=7835 out=SILENT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=10000 calls=10 ok=0 busy=0 nogo=1 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=5000 started=5 ok=0 failed=5 reg_occ A=0.61 B=0.61 C=0.61 D=0.61 E=0.61
+STOP t=10021 no new calls
+HANGUP t=10021 every phone on hook; drain 3000 ms
+INVARIANT PASS ports_idle ex=A busy=0
+INVARIANT PASS register_free ex=A
+INVARIANT PASS marker_idle ex=A state=0
+INVARIANT PASS origin_free ex=A dirs_held=0000
+INVARIANT PASS monitors_free ex=A mon_held=00
+INVARIANT PASS resolvers_free ex=A res_busy=00
+INVARIANT PASS sweep_idle ex=A
+INVARIANT PASS unit_idle ex=A origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=A
+INVARIANT PASS no_b_clash ex=A clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=A un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=A
+INVARIANT PASS ports_idle ex=B busy=0
+INVARIANT PASS register_free ex=B
+INVARIANT PASS marker_idle ex=B state=0
+INVARIANT PASS origin_free ex=B dirs_held=0000
+INVARIANT PASS monitors_free ex=B mon_held=00
+INVARIANT PASS resolvers_free ex=B res_busy=00
+INVARIANT PASS sweep_idle ex=B
+INVARIANT PASS unit_idle ex=B origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=B
+INVARIANT PASS no_b_clash ex=B clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=B un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=B
+INVARIANT PASS ports_idle ex=C busy=0
+INVARIANT PASS register_free ex=C
+INVARIANT PASS marker_idle ex=C state=0
+INVARIANT PASS origin_free ex=C dirs_held=0000
+INVARIANT PASS monitors_free ex=C mon_held=00
+INVARIANT PASS resolvers_free ex=C res_busy=00
+INVARIANT PASS sweep_idle ex=C
+INVARIANT PASS unit_idle ex=C origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=C
+INVARIANT PASS no_b_clash ex=C clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=C un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=C
+INVARIANT PASS ports_idle ex=D busy=0
+INVARIANT PASS register_free ex=D
+INVARIANT PASS marker_idle ex=D state=0
+INVARIANT PASS origin_free ex=D dirs_held=0000
+INVARIANT PASS monitors_free ex=D mon_held=00
+INVARIANT PASS resolvers_free ex=D res_busy=00
+INVARIANT PASS sweep_idle ex=D
+INVARIANT PASS unit_idle ex=D origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=D
+INVARIANT PASS no_b_clash ex=D clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=D un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=D
+INVARIANT PASS ports_idle ex=E busy=0
+INVARIANT PASS register_free ex=E
+INVARIANT PASS marker_idle ex=E state=0
+INVARIANT PASS origin_free ex=E dirs_held=0000
+INVARIANT PASS monitors_free ex=E mon_held=00
+INVARIANT PASS resolvers_free ex=E res_busy=00
+INVARIANT PASS sweep_idle ex=E
+INVARIANT PASS unit_idle ex=E origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=E
+INVARIANT PASS no_b_clash ex=E clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=E un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=E
+INVARIANT PASS phones_quiet (none ringing or off hook)
+INVARIANT PASS signature_selftest
+INVARIANT TOTAL pass=62 fail=0
+SUMMARY run scale=1 seed=6 traffic_ms=9999 sim_ms=13021 phones=80 calls=10
+SUMMARY outcome total=10 OK=0 BUSY=0 NOGO=1 NODT=0 ABANDON=0 NOANS=0 WRONG=0 JOINED=0 DTAGAIN=0 SILENT=9 XTALK=0 NOSPEECH=0 COLLIDE=0 CUT=0
+SUMMARY outcome kind=L total=0
+SUMMARY outcome kind=N total=0
+SUMMARY outcome kind=BAD total=10 NOGO=1 SILENT=9
+SUMMARY attempts ex=A total=2 per_s=0.200 SILENT=2
+SUMMARY attempts ex=B total=2 per_s=0.200 SILENT=2
+SUMMARY attempts ex=C total=2 per_s=0.200 SILENT=2
+SUMMARY attempts ex=D total=2 per_s=0.200 SILENT=2
+SUMMARY attempts ex=E total=2 per_s=0.200 NOGO=1 SILENT=1
+SUMMARY why N_GUARD=1
+SUMMARY safety wrong=0 joined=0 xtalk=0 nospeech=0 dtagain=0 silent=9 phantom=0 wrongring=0 idlehear=0 ring_anon=0 drainring=0 alert_nobell=0 stuck=0
+SUMMARY carried erlangs=0.000 talk_ms=0 traffic_ms=9999
+SUMMARY dialtone_delay n=10 mean=5.0 p50=5 p99=5 max=5
+SUMMARY postdial_alert n=0 mean=0.0 p50=-1 p99=-1 max=0
+SUMMARY postdial_nogo n=0 mean=0.0 p50=-1 p99=-1 max=0 (and 1 heard before the last digit)
+SUMMARY exchange ex=A reg_occ=0.607 reg_maxrun_ms=3040 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.45 origin_occ=0.526 hunting_occ=0.006 sweeps=6 mon_mean=0.209 mon_max=2 res_mean=0.000 res_max=0 busB_occ=0.0002
+SUMMARY link ex=A blk=1 channels=8 busy_mean=1.578 busy_max=3
+SUMMARY unit ex=A floods=2 local=0 done=0 nogo=0 seized_in=4 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=4 n_nofwd=4 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=A
+SUMMARY checks ex=A un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=B reg_occ=0.611 reg_maxrun_ms=3059 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.45 origin_occ=0.531 hunting_occ=0.006 sweeps=6 mon_mean=0.206 mon_max=2 res_mean=1.045 res_max=2 busB_occ=0.0004
+SUMMARY link ex=B blk=1 channels=8 busy_mean=1.578 busy_max=3
+SUMMARY link ex=B blk=3 channels=8 busy_mean=1.578 busy_max=3
+SUMMARY unit ex=B floods=2 local=0 done=0 nogo=0 seized_in=4 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=0 n_nofwd=0 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=B
+SUMMARY checks ex=B un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=C reg_occ=0.608 reg_maxrun_ms=3050 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.45 origin_occ=0.528 hunting_occ=0.006 sweeps=6 mon_mean=0.209 mon_max=2 res_mean=1.047 res_max=2 busB_occ=0.0004
+SUMMARY link ex=C blk=1 channels=8 busy_mean=1.579 busy_max=3
+SUMMARY link ex=C blk=3 channels=8 busy_mean=2.098 busy_max=4
+SUMMARY unit ex=C floods=2 local=0 done=0 nogo=0 seized_in=6 nomon=2 unhold=0 nofwd_busy=2 nofwd_empty=0 n_nofwd=2 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=C
+SUMMARY checks ex=C un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=D reg_occ=0.612 reg_maxrun_ms=3064 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.45 origin_occ=0.531 hunting_occ=0.006 sweeps=6 mon_mean=0.210 mon_max=2 res_mean=1.049 res_max=2 busB_occ=0.0005
+SUMMARY link ex=D blk=1 channels=8 busy_mean=2.102 busy_max=4
+SUMMARY link ex=D blk=3 channels=8 busy_mean=1.872 busy_max=4
+SUMMARY unit ex=D floods=2 local=0 done=0 nogo=0 seized_in=8 nomon=4 unhold=0 nofwd_busy=4 nofwd_empty=0 n_nofwd=4 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=D
+SUMMARY checks ex=D un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=E reg_occ=0.359 reg_maxrun_ms=3065 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.27 origin_occ=0.279 hunting_occ=0.009 sweeps=8 mon_mean=0.211 mon_max=2 res_mean=0.000 res_max=0 busB_occ=0.0002
+SUMMARY link ex=E blk=1 channels=8 busy_mean=1.879 busy_max=4
+SUMMARY unit ex=E floods=2 local=0 done=0 nogo=1 seized_in=6 nomon=2 unhold=0 nofwd_busy=0 nofwd_empty=6 n_nofwd=6 claims=0 att_take=0 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=E N_GUARD=1
+SUMMARY checks ex=E un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY line A20 att=2 ok=0 rung=0 answered=0 SILENT=2
+SUMMARY line A21 att=0 ok=0 rung=0 answered=0
+SUMMARY line A22 att=0 ok=0 rung=0 answered=0
+SUMMARY line A23 att=0 ok=0 rung=0 answered=0
+SUMMARY line A24 att=0 ok=0 rung=0 answered=0
+SUMMARY line A25 att=0 ok=0 rung=0 answered=0
+SUMMARY line A26 att=0 ok=0 rung=0 answered=0
+SUMMARY line A27 att=0 ok=0 rung=0 answered=0
+SUMMARY line A40 att=0 ok=0 rung=0 answered=0
+SUMMARY line A41 att=0 ok=0 rung=0 answered=0
+SUMMARY line A42 att=0 ok=0 rung=0 answered=0
+SUMMARY line A43 att=0 ok=0 rung=0 answered=0
+SUMMARY line A44 att=0 ok=0 rung=0 answered=0
+SUMMARY line A45 att=0 ok=0 rung=0 answered=0
+SUMMARY line A46 att=0 ok=0 rung=0 answered=0
+SUMMARY line A47 att=0 ok=0 rung=0 answered=0
+SUMMARY line B20 att=2 ok=0 rung=0 answered=0 SILENT=2
+SUMMARY line B21 att=0 ok=0 rung=0 answered=0
+SUMMARY line B22 att=0 ok=0 rung=0 answered=0
+SUMMARY line B23 att=0 ok=0 rung=0 answered=0
+SUMMARY line B24 att=0 ok=0 rung=0 answered=0
+SUMMARY line B25 att=0 ok=0 rung=0 answered=0
+SUMMARY line B26 att=0 ok=0 rung=0 answered=0
+SUMMARY line B27 att=0 ok=0 rung=0 answered=0
+SUMMARY line B40 att=0 ok=0 rung=0 answered=0
+SUMMARY line B41 att=0 ok=0 rung=0 answered=0
+SUMMARY line B42 att=0 ok=0 rung=0 answered=0
+SUMMARY line B43 att=0 ok=0 rung=0 answered=0
+SUMMARY line B44 att=0 ok=0 rung=0 answered=0
+SUMMARY line B45 att=0 ok=0 rung=0 answered=0
+SUMMARY line B46 att=0 ok=0 rung=0 answered=0
+SUMMARY line B47 att=0 ok=0 rung=0 answered=0
+SUMMARY line C20 att=2 ok=0 rung=0 answered=0 SILENT=2
+SUMMARY line C21 att=0 ok=0 rung=0 answered=0
+SUMMARY line C22 att=0 ok=0 rung=0 answered=0
+SUMMARY line C23 att=0 ok=0 rung=0 answered=0
+SUMMARY line C24 att=0 ok=0 rung=0 answered=0
+SUMMARY line C25 att=0 ok=0 rung=0 answered=0
+SUMMARY line C26 att=0 ok=0 rung=0 answered=0
+SUMMARY line C27 att=0 ok=0 rung=0 answered=0
+SUMMARY line C40 att=0 ok=0 rung=0 answered=0
+SUMMARY line C41 att=0 ok=0 rung=0 answered=0
+SUMMARY line C42 att=0 ok=0 rung=0 answered=0
+SUMMARY line C43 att=0 ok=0 rung=0 answered=0
+SUMMARY line C44 att=0 ok=0 rung=0 answered=0
+SUMMARY line C45 att=0 ok=0 rung=0 answered=0
+SUMMARY line C46 att=0 ok=0 rung=0 answered=0
+SUMMARY line C47 att=0 ok=0 rung=0 answered=0
+SUMMARY line D20 att=2 ok=0 rung=0 answered=0 SILENT=2
+SUMMARY line D21 att=0 ok=0 rung=0 answered=0
+SUMMARY line D22 att=0 ok=0 rung=0 answered=0
+SUMMARY line D23 att=0 ok=0 rung=0 answered=0
+SUMMARY line D24 att=0 ok=0 rung=0 answered=0
+SUMMARY line D25 att=0 ok=0 rung=0 answered=0
+SUMMARY line D26 att=0 ok=0 rung=0 answered=0
+SUMMARY line D27 att=0 ok=0 rung=0 answered=0
+SUMMARY line D40 att=0 ok=0 rung=0 answered=0
+SUMMARY line D41 att=0 ok=0 rung=0 answered=0
+SUMMARY line D42 att=0 ok=0 rung=0 answered=0
+SUMMARY line D43 att=0 ok=0 rung=0 answered=0
+SUMMARY line D44 att=0 ok=0 rung=0 answered=0
+SUMMARY line D45 att=0 ok=0 rung=0 answered=0
+SUMMARY line D46 att=0 ok=0 rung=0 answered=0
+SUMMARY line D47 att=0 ok=0 rung=0 answered=0
+SUMMARY line E20 att=2 ok=0 rung=0 answered=0 NOGO=1 SILENT=1
+SUMMARY line E21 att=0 ok=0 rung=0 answered=0
+SUMMARY line E22 att=0 ok=0 rung=0 answered=0
+SUMMARY line E23 att=0 ok=0 rung=0 answered=0
+SUMMARY line E24 att=0 ok=0 rung=0 answered=0
+SUMMARY line E25 att=0 ok=0 rung=0 answered=0
+SUMMARY line E26 att=0 ok=0 rung=0 answered=0
+SUMMARY line E27 att=0 ok=0 rung=0 answered=0
+SUMMARY line E40 att=0 ok=0 rung=0 answered=0
+SUMMARY line E41 att=0 ok=0 rung=0 answered=0
+SUMMARY line E42 att=0 ok=0 rung=0 answered=0
+SUMMARY line E43 att=0 ok=0 rung=0 answered=0
+SUMMARY line E44 att=0 ok=0 rung=0 answered=0
+SUMMARY line E45 att=0 ok=0 rung=0 answered=0
+SUMMARY line E46 att=0 ok=0 rung=0 answered=0
+SUMMARY line E47 att=0 ok=0 rung=0 answered=0
+END t=13021
+- work/load/timing/tim_harness.svh:1660: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 13s; walltime 2251.899 s; speed 5.782 ms/s
+- Verilator: cpu 2136.702 s on 1 threads; allocated 9 MB

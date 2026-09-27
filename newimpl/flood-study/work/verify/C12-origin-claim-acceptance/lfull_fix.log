@@ -1,0 +1,49 @@
+
+  tb_lfull -- sixteen lines a side, a local trunk, all eight channels at once
+  1. five two-digit calls at A, ten lines
+  2. A20-A27 dial 1 2 3 3 k: eight calls across
+C12T 22 f2 t=4018994960000 cl_n=0 claimed=0
+C12T 22 rise port=10 t=4020135338000 f2=1 guard=0 tmr=1 nst=5
+C12T 22 ACCEPT port=10 t=4023135331000 f2=1 guard=0 tmr=4 nst=5
+C12T 22 f2 t=5198991940000 cl_n=0 claimed=0
+C12T 22 rise port=11 t=5200147942000 f2=1 guard=0 tmr=1 nst=5
+C12T 22 ACCEPT port=11 t=5203147935000 f2=1 guard=0 tmr=4 nst=5
+C12T 22 f2 t=6198989380000 cl_n=0 claimed=0
+C12T 22 rise port=12 t=6200161007000 f2=1 guard=0 tmr=1 nst=5
+C12T 22 ACCEPT port=12 t=6203161000000 f2=1 guard=0 tmr=4 nst=5
+C12T 22 f2 t=7218986768000 cl_n=0 claimed=0
+C12T 22 rise port=13 t=7220174021000 f2=1 guard=0 tmr=1 nst=5
+C12T 22 ACCEPT port=13 t=7223174014000 f2=1 guard=0 tmr=4 nst=5
+C12T 22 f2 t=8258984106000 cl_n=0 claimed=0
+C12T 22 rise port=14 t=8260186984000 f2=1 guard=0 tmr=1 nst=5
+C12T 22 ACCEPT port=14 t=8263186976000 f2=1 guard=0 tmr=4 nst=5
+C12T 22 f2 t=9318981392000 cl_n=0 claimed=0
+C12T 22 rise port=15 t=9321199893000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=15 t=9324199885000 f2=1 guard=0 tmr=5 nst=5
+C12T 22 f2 t=10398978628000 cl_n=0 claimed=0
+C12T 22 rise port=16 t=10401212753000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=16 t=10404212745000 f2=1 guard=0 tmr=5 nst=5
+C12T 22 f2 t=11498975812000 cl_n=0 claimed=0
+C12T 22 rise port=17 t=11501225562000 f2=1 guard=0 tmr=2 nst=5
+C12T 22 ACCEPT port=17 t=11504225554000 f2=1 guard=0 tmr=5 nst=5
+  3. A30 and B20 key 1 with no channel free
+  4. channel 3 hangs up; B20 dials 1 2 2 3 0
+C12T 23 f2 t=13285277153000 cl_n=0 claimed=0
+C12T 23 rise port=13 t=13286464522000 f2=1 guard=0 tmr=1 nst=5
+C12T 23 ACCEPT port=13 t=13289464810000 f2=1 guard=0 tmr=4 nst=5
+  5. A31 and B21 key 1 together, one channel free
+C12T 23 rise port=13 t=14333564766000 f2=0 guard=1 tmr=0 nst=4
+C12T 22 rise port=13 t=14335155807000 f2=0 guard=1 tmr=2 nst=4
+C12T 23 ACCEPT port=13 t=14336565054000 f2=0 guard=1 tmr=3 nst=4
+C12T 22 ACCEPT port=13 t=14338155799000 f2=0 guard=1 tmr=5 nst=4
+     glare at try 0, B's key 0 us after A's
+C12T 23 f2 t=14613404301000 cl_n=0 claimed=1
+C12T 22 f2 t=14632967789000 cl_n=0 claimed=1
+
+  40 checks, 0 errors.  PASS
+
+- tb/tb_lfull.v:399: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 16s; walltime 1047.687 s; speed 15.167 ms/s
+- Verilator: cpu 1014.324 s on 1 threads; allocated 8 MB
+rc=0 secs=1048

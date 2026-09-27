@@ -1,0 +1,19 @@
+start 21:51
+lint tb_rc.v [] rc=0 errors=0
+lint tb_rc.v [+define+SCALE1] rc=0 errors=0
+lint tb_rc.v [+define+SCALE1 +define+NODIGR=3000 +define+TRELX=9'd205] rc=0 errors=0
+build s8 rc=0
+S10 done 22:32 7 leaks
+build x26 rc=0
+S12x26 done 22:47 0 leaks
+S12eq done 22:54 0 leaks
+S3 done 23:01 0 leaks
+S4 done 23:08 0 leaks
+S7 done 23:15 0 leaks
+S2 done 23:18 0 leaks
+S1 done 23:21 0 leaks
+S5 done 23:29 0 leaks
+S6 done 23:35 0 leaks
+S9 done 23:50 3 leaks
+ALLDONE 23:50
+next1 23:50

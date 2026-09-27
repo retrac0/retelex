@@ -1,0 +1,17 @@
+[sim.sh] slot 2: make -s lfull
+
+  tb_lfull -- sixteen lines a side, a local trunk, all eight channels at once
+  1. five two-digit calls at A, ten lines
+  2. A20-A27 dial 1 2 3 3 k: eight calls across
+  3. A30 and B20 key 1 with no channel free
+  4. channel 3 hangs up; B20 dials 1 2 2 3 0
+  5. A31 and B21 key 1 together, one channel free
+     glare at try 0, B's key 0 us after A's
+
+  40 checks, 0 errors.  PASS
+
+- tb/tb_lfull.v:399: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 16s; walltime 1048.516 s; speed 15.155 ms/s
+- Verilator: cpu 984.355 s on 1 threads; allocated 8 MB
+rc=0 secs=1516

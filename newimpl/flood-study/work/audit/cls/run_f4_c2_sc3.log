@@ -1,0 +1,33 @@
+
+  tb_cls sc=3 K=8 D=128 E=3 B=2 pause=400  NMON=2 NRES=2  T_ARM=16 guard=128
+    ok    every trunk's link is up
+     20.302  cls_seen  22  (cst 0, rd_free 1)
+     21.420  cls read  22  word 11111111  trunk 0
+     21.420  MK read    22  word 11111111  (caller?)
+     22.302  MK register -> 22
+    ok    sc3: 22 holds the one register
+    631.027  far seizure on 10
+    631.144  cls_seen  10  (cst 0, rd_free 1)
+    632.128  select of 10 (unit 1 marker 0): glitching its link
+    632.262  cls read  10  word 01001000  trunk 0
+    633.262  cls read  10  word 11001011  trunk 1
+    634.262  HOLD      10  dir 3  mine 0  nst 0
+    635.144  mon0 arm  10
+    645.004  FWD       10 -> ok 0111 cand 71 30 40 00
+   1146.002  mon0 10 digit 3 (as e)
+  21 ringing: hi 0 lo 600
+  32 ringing: hi 0 lo 600
+  10: seen 1 held 1 unheld 0 claimed 0, e counted 3; marker caller 22
+    ok    a far caller dialling 3 2 2 1 rings nobody at exchange 2 2
+    ok    sc2/3: far caller gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00 mon 00 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  5 checks, 0 errors.  PASS
+
+- /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls2.v:444: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 125.810 s; speed 47.985 ms/s
+- Verilator: cpu 118.261 s on 1 threads; allocated 8 MB
+rc=0 wall=126

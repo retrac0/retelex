@@ -1,0 +1,36 @@
+
+  tb_cls sc=1 K=1 D=10 E=3 B=2 pause=400  NMON=2 NRES=2  T_ARM=16 guard=128
+    ok    every trunk's link is up
+     21.029  1 far seizures on W trunks
+     21.146  cls_seen  10  (cst 0, rd_free 1)
+     22.264  cls read  10  word 11001011  trunk 1
+     22.264  MK read    10  word 11001011  (caller?)
+     22.264  HOLD      10  dir 3  mine 0  nst 0
+     23.146  mon0 arm  10
+     24.317  cls_seen  23  (cst 0, rd_free 0)
+     25.436  cls read  23  word 11111111  trunk 0
+     25.436  MK read    23  word 11111111  (caller?)
+     26.318  MK register -> 23
+     26.446  23 BUSY (dial tone) 2.417 ms after its lift
+     35.005  FWD       10 -> ok 0111 cand 71 30 40 00
+    420.004  mon0 10 digit 3 (as e)
+  21 ringing: hi 0 lo 600
+
+  port  seen    hold    arm     fwd     e-cnt  claims  nseen nhold nunhold   (ms after the seizure; first break at +10.0)
+  10       0.1     1.2     2.1    14.0    3    0       1     1     0
+  leg 30 carried 10: its far end saw M rise at +  70.1 ( AFTER the first break)
+  leg 40 carried 10: its far end saw M rise at +  70.1 ( AFTER the first break)
+  leg 71 carried 10: its far end saw M rise at +  70.1 ( AFTER the first break)
+  n_nofwd 0, monitors armed after the first break 0, trunks that claimed 0 (dialled 3 2, own 2 2)
+    ok    sc1: every far caller gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00 mon 00 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  3 checks, 0 errors.  PASS
+
+- work/audit/cls/tb_cls2.v:444: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 5s; walltime 218.357 s; speed 20.705 ms/s
+- Verilator: cpu 99.972 s on 1 threads; allocated 8 MB
+rc=0

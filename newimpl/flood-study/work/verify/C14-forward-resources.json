@@ -1,0 +1,76 @@
+{
+ "id": "C14-forward-resources",
+ "title": "Every forward needs an idle forwarder and a free resolver at classification, even a one-leg chain patch; otherwise silently not forwarded; doomed floods hold longest; NMON exhaustion",
+ "findings": [
+  {
+   "id": "forward-needs-resolver-and-idle-forwarder",
+   "title": "Every forward, even a chain's one-leg patch, needs a free resolver and an idle forwarder at the moment of classification. Otherwise the flood silently stops here.",
+   "category": "capacity",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "A seizure is forwarded only if fst == F_IDLE && rs_free_any at C_ACT (net_unit.v:616-617). There is no retry: the seizure is held (:609-611) and counted in n_nofwd (:506-507, :545).\n\nF_WRITE allocates a resolver for one-leg forwards too (:737-741, rs_two). A resolver is freed only by:\n- R_LEG, a claim coming back through this exchange;\n- rs_mine, a claim here;\n- R_GONE, the incoming reading free T_REL after its origin let go.\n\nSo each resolver is held for the flood's e b dialling (2.0-3.8 s, mean 2.7 s) plus 0.26 s when the claim is made elsewhere.\n\nThis contradicts network.md 3.2 on two points: 'no resolver free: patch into the first direction found, as a chain would', and 'a transit on a chain ... holds nothing'.",
+   "trigger": "tb_fx sc4: floods on E30, S41, W12 and N77, 40 ms apart, at a four-direction transit with NRES=2 and NMON=2.\n\ntb_fx sc5d: B20 keys 1, then floods arrive on S41 and E30 1 ms apart while B's origin sweep runs.",
+   "consequence": "In sc4 the third and fourth floods are held BUSY but never passed on, and not watched either (both monitors are taken). Their callers hear cannot-complete only T_CLAIM (2 s) after b, about 5 s after the key, and every channel and resolver upstream stays held until then.\n\nIn sc5d the second flood is lost even though a resolver is free: the forwarder was still sweeping after waiting 10.5 ms for the origin.\n\nArithmetic (Erlang B, 2.9 s holds, 48 lines an exchange, 3 calls a line an hour; every flood passes every transit):\n- 8 exchanges, 30% leaving: 0.24 E, 2.3% of floods not forwarded.\n- 8 exchanges, 50% leaving: 5.6%.\n- 20 exchanges: 0.66 E, 11.6% with NRES=2, 2.5% with 3, 0.4% with 4.\n\nBehaviour at the limit is graceful: nothing stays stuck, a freed resolver is reused at once, and everything is idle after release. It is slow, though, and doomed floods hold resources upstream.",
+   "realistic": "Yes, at real timers.\n\nThe forwarder-busy loss needs an origin sweep ahead of a pair of floods arriving within ~20 ms. At real timers the ~19 ms T_ARM watch otherwise keeps classifications apart. At scale 8 the watch is only ~4 ms, so scale-8 load studies overstate this loss.",
+   "evidence": "All logs are under work/audit/fwd/.\n\nrun_fx_sc4.log:\n- :43: both monitors held.\n- :62 '111.295 n_nofwd 0 -> 1' and :65 '152.123 n_nofwd 1 -> 2'.\n- :70-71: 12 and 77 held with src 00 bsy 1.\n- :92: the freed resolver is reused.\n- PASS on idle afterwards.\n\nrun_fx_sc5.log:\n- :460 '7708.495 n_nofwd 0 -> 1'.\n- :482-483: the second flood was not forwarded.",
+   "fix": "- Stuff NRES = 3 at a hub and 4 at a large centre, as network.md asks: about 4.5 packages each.\n- Implement the documented fallback: with no resolver free, write a one-leg patch (two latches) into the first direction found, and keep that leg's number in the monitor cell (one '574 per cell) so a local claim can still drop it.\n- Keep a seizure the busy forwarder missed pending (cls_port already holds it) and forward it when the forwarder frees, if it is still under ~40 ms old.\n- Optionally, claim-to-refuse at a chain transit that could not forward.",
+   "audit": "forwarder"
+  },
+  {
+   "id": "chain-forward-holds-resolver",
+   "title": "Every forward, even a chain transit's one leg, holds a resolver for the whole flood, and with none free the seizure is not forwarded at all",
+   "category": "capacity",
+   "severity": "medium",
+   "confidence": "likely",
+   "mechanism": "A forward starts only if a resolver is free (net_unit.v:616-621, nf_busy 506-507). Every forward, one leg included (rs_two), takes a resolver (737-741). The resolver is held until the claim comes back through its leg (R_LEG) or the incoming port's BUSY falls (R_GONE), i.e. until the origin drops the trunk plus T_REL (681-708). The docs promise otherwise: network.md:176 'One found: patch it, two latches, and forget', :241-243 and :267-268 'a transit on a chain ... holds nothing', and :286 'no resolver free: patch into the first direction found'. The RTL has no such fallback.",
+   "trigger": "Any transit, chain or hub, while NRES = 2 floods are already in progress through it.",
+   "consequence": "The third concurrent flood through a transit is held but not passed on (n_nofwd). Every exchange beyond misses the call, and if the owner is beyond, the caller gets cannot-complete only at T_CLAIM (about 2 s after b, 4-5 s after the key). At real timers the resolver hold is about 2.5-5.5 s: to the claim, or to the drop plus 0.26 s, or to T_CLAIM for a failed call. A central transit sees every network flood. For the doc's 8-exchange network (348 lines, 30 % leaving, 0.087 floods/s): A = 0.26 E, 2.6 % of floods not forwarded per central transit (0.2 % with 3 resolvers). For 20 exchanges of 48 lines: 0.72 E, 13 % (3.0 % with 3, 0.55 % with 4). At 50 % leaving: 25 %. A call crossing k such transits is lost with 1-(1-B)^k. Graceful in kind (a clean cannot-complete, nothing stuck, never a wrong number) but slow.",
+   "realistic": "Real timers. The hold times are protocol digit times, not scaled wiring.",
+   "evidence": "RTL lines above. Erlang B on hold times read from the RTL. The fwd slice reproduced the pool running out ('sc4: resolver pool exhausted: floods held and not passed on', work/audit/fwd/run_fx_sc4.log).",
+   "fix": "The one-leg forward does need its leg remembered: for a local claim's drop (659-665) and as the safety net for a leg written on a seizure that dies inside T_ARM, whose leg then has no fE edge. So either (a) the docs change to 'a resolver at every transit, sized on all network floods: 3 at 8 exchanges, 4 at 20', or (b) keep a one-leg forward's leg in the monitor cell holding the incoming port (a '174 a cell) with a T_ARM watch on the leg, and reserve resolvers for fan-outs. Implement the doc's fallback only together with (b).",
+   "audit": "protocol"
+  },
+  {
+   "id": "leaf-sweeps-for-nothing",
+   "title": "A leaf (one direction) runs a full 10 ms forward sweep for every incoming flood and counts it as 'not forwarded'",
+   "category": "other",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "fwd_mask excludes only the incoming direction and the strapped ones (net_unit.v:505, 618). The unit has no record of which directions exist, so at a leaf fwd_mask is non-zero, F_WANT starts a sweep (714-719), it finds nothing (h_ok = 0, 722), and nf_empty increments n_nofwd (508, 545).",
+   "trigger": "Every incoming flood at an end-of-chain or leaf exchange.",
+   "consequence": "The leaf's own origin can wait up to 10 ms more for the sweep (net_unit.v:848), and a sweep in progress delays classifier and marker reads by about 1 ms each. n_nofwd counts normal events, so it cannot serve as a loss counter or alarm.",
+   "realistic": "Every incoming call at every leaf; cheap but constant.",
+   "evidence": "RTL reading.",
+   "fix": "A 4-bit 'directions present' register, set by every sweep for every trunk word read, free or not (at 759), and cleared by a sweep that reads none. Skip the forward when fwd_mask & present == 0. One '175 and gates.",
+   "audit": "protocol"
+  },
+  {
+   "id": "doomed-floods-hold-longest",
+   "title": "Under overload a call that will fail holds its flood about 2 s longer than one that succeeds: positive feedback on links and resolvers",
+   "category": "overload",
+   "severity": "medium",
+   "confidence": "likely",
+   "mechanism": "A successful call's losing legs are dropped at the claim (net_unit.v:800, 831-837), about 2.2-3.2 s after the key at real dialling, then T_REL. A call whose flood could not reach its owner is dropped only at T_CLAIM, 2 s after b (net_unit.v:882), i.e. 4.4-5.4 s after the key. That includes the trunk no forward could take, the resolver no transit had and the monitor no owner had. Nothing can end it sooner. A transit that cannot forward only counts it (nf_empty/nf_busy, 506-508). The doc's 'transit may claim to refuse' (network.md:203-206) is not built, and would be unsafe: a transit cannot know whether the owner is reachable through another direction of the origin, and its refusal claim would win the race against the real owner's. T_CLAIM's 2 s is sized for a 0.9 s carrier round trip (network.md:75). In this RTL the claim returns in milliseconds: the owner decides b at the same instant as the origin, the CLAIM write is about 0.3 ms, and the way back is about 1-2 ms a hop.",
+   "trigger": "A network near its link or resolver capacity: floods that fail hold every link they reached for T_CLAIM more.",
+   "consequence": "Flood occupancy grows by about 0.75 x the blocking fraction. Example: 20 exchanges of 48 lines, 30 % leaving, 2 central transits with NRES = 2. Blocking alone is 24 %; with the feedback the fixed point is about 32 %. Retries amplify it. It is not a livelock or a collapse (every hold is bounded), but it is ungraceful: resources are held longest by calls that will fail. The caller hears cannot-complete about 2 s after b.",
+   "realistic": "Real timers. The magnitude depends on the carrier mix: with copper and MF8 only, T_CLAIM could be much shorter.",
+   "evidence": "RTL lines above; arithmetic (fixed point of A = lambda (3 s (1-p) + 5 s p), p = 1-(1-B(2,A))^2).",
+   "fix": "Make T_CLAIM a jumpered tap like the guard: about 500 ms for copper and MF8 networks (covers the owner's b + ID + CLAIM write + a S_WATCH SETTLE wait + the path), 2 s only where a slow carrier needs it. No parts, one tap. Do not build the transit refusal.",
+   "audit": "protocol"
+  },
+  {
+   "id": "monitor-pool-exhaustion",
+   "title": "NMON = 2: a third concurrent seizure is unwatched for good. A call to the exchange then fails slowly, and the whole flood is held 2 s longer",
+   "category": "capacity",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "When m_free1 is empty at w_cls (net_unit.v:612), no cell is given. The hold and the forward still go ahead. Nobody here can claim.",
+   "trigger": "Three or more floods overlapping at one exchange within the 1.5-2.7 s a cell is held per flood (released at e's ID if e is not ours, at b's ID otherwise).",
+   "consequence": "The call is lost: cannot-complete 2 s after b. The unwatched trunk, every link's flood trunk and the origin's register are held that long, then released cleanly. Erlang B for cells held 1.5-2.7 s per flood: at 0.26 E, 2 cells lose 2.6% (3 cells 0.2%); 0.5 E: 7.7% (1.3%); 0.93 E (monitor.md 4's 47 exchanges): 18% (3 cells 5.4%, 5 cells 0.2%). Stale cells (stale-cell-starves-monitors) lower the effective NMON.",
+   "evidence": "run_mc_all.log and run_real13_all.log scenario 2: 'backward A after b: 00011', and 'T13/T14/T15 unwatched: backward A=0, still held=1'; then '2: every trunk, cell, resolver and the register released' after the far ends drop.",
+   "fix": "Fit NMON per monitor.md 4 (3 up to 20 exchanges, 4-5 beyond); it is a parameter already. Graceful: no stuck state, but slow.",
+   "realistic": "A documented limit; the consequence here is quantified and it degrades gracefully.",
+   "audit": "monclaim"
+  }
+ ]
+}

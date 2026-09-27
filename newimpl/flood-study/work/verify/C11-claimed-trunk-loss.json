@@ -1,0 +1,20 @@
+{
+ "id": "C11-claimed-trunk-loss",
+ "title": "The claimed trunk dying before N_DONE is never noticed: the caller is latched to a dead channel and later overhears another call",
+ "findings": [
+  {
+   "id": "claimed-trunk-loss-listen-in",
+   "title": "The claimed trunk dying before N_DONE is never noticed: the caller is latched to a dead channel and later hears someone else's call on it",
+   "category": "race",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "`claimed` is set on the first M sample (net_unit.v:795-804) and never re-examined. N_WAITCL waits only for o_last (net_unit.v:881), and N_DONE then writes caller<-trunk with BSY (net_unit.v:818-822). If the claim's M falls in between, the trunk port releases itself and becomes free for hunting, but the origin still connects the caller to it. The caller's latch then has no edge to clear it while the caller stays off-hook, because its E is 0. The next call on that channel, from this exchange's own origin or forwarder or from the far end, is heard by the stranded caller.",
+   "trigger": "A20 dials 1 3 2 and B claims. Link 11 is cut for 80 ms (more than T_REL and CLR at scale). A20 dials 2 1, and A connects A20<-A11. A22 then dials 1 3 2 2 0, A's sweep takes the now-free A11, B20 rings and answers (tb_orig S4). Other triggers: glare whose far origin then abandons (its own code, 8 or 9, or a hang-up), or a far reset.",
+   "consequence": "A20 hears nothing, and no NOGO, until it hangs up. Meanwhile it overhears B20 talking to A22, a one-way listen-in by a caller who dialled someone else (safety property 1). The far register it was claimed by has abandoned.",
+   "evidence": "run_s2_5.log S4: [4368.150] A CLAIMED on 11; cut; [4490.122] B wr dst 11 src 00 bsy 0 (B abandons); A still nst 5; [4786.277] A wr dst 20 src 11 bsy 1 (N_DONE onto the dead trunk); [4856.277] A wr dst 11 src 22 (A22's seizure of the same channel); OBS: A20 follows B20 4/4, FAIL. Patched (run_fix2.log S4): A abandons at the loss, A20 follows 2/4 (chance level for NOGO), ok.",
+   "fix": "While claimed and before N_DONE, count consecutive probe samples of `trunk` with M low. At 4, abandon with O_NOGO through N_DROP. This needs a 3-bit counter and the existing claim comparator (rtl_fix/net_unit.v `lost`). The persistence is required. A one-sample version was tried (run_fix_s6.log): when the caller's own hang-up is what dropped the claim, it fired about 1 ms before the register's gone and wrote NOGO with BSY onto the caller's already-released port, leaving A20 BUSY ([428.160] nst 5->7, [428.578] A wr dst 20 src 03 bsy 1; IDLE? busy_a bit 16). A side effect for Joel to decide on: a glare 'claim' is the far caller's dial pulses, so it breaks within about 60 ms and this fix turns documented residual glare (tb_lfull 5, 'joins two callers') into two clean cannot-completes.",
+   "realistic": "Survives real timing. It needs the claim's M to be lost for at least T_REL (256 ms) during the 1.5-3 s from the claim to the last digit (a link flap, far reset or glare followed by far abandon), and then a new call on that channel while the caller waits in silence. Rare, but a privacy failure and a silent dead call.",
+   "audit": "origin"
+  }
+ ]
+}

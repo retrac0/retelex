@@ -1,0 +1,38 @@
+
+  tb_brk -- a dial break inside a downstream hold's T_ARM watch
+    ok    links up
+  -- attempt: first break of e at A's tmr = 16 + 0 ms
+    [116 ms] C HOLD 11 (tmr at A 17)
+    [116 ms] C attaches a monitor cell (held 01)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 300
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 1 ms
+    [1480 ms] C HOLD 11 (tmr at A 17)
+    [1480 ms] C attaches a monitor cell (held 01)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 300
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 2 ms
+    [2845 ms] C HOLD 11 (tmr at A 17)
+    [2845 ms] C attaches a monitor cell (held 01)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 300
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 3 ms
+    [4211 ms] C HOLD 11 (tmr at A 17)
+    [4211 ms] C attaches a monitor cell (held 01)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 300
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 60 ms
+    [5578 ms] C HOLD 11 (tmr at A 17)
+    [5578 ms] C attaches a monitor cell (held 01)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 300
+    ok    idle again after the attempt
+    ok    1 3 4 2 1 dials nobody: no exchange claims, no phone rings
+    wrong-number attempts 0 of 5; C unholds 0, B unholds 0, C monitor cells attached 5
+
+  7 checks, 0 errors.  PASS
+
+- work/audit/cableb/tb_brk.v:192: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 7s; walltime 358.415 s; speed 19.296 ms/s
+- Verilator: cpu 247.000 s on 1 threads; allocated 8 MB
+rc=0 secs=359

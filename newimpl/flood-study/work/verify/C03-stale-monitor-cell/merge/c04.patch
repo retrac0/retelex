@@ -1,0 +1,37 @@
+--- rtl/net_unit.v	2026-09-26 00:42:05.680752092 -0400
++++ work/verify/C04-hold-watch-dial-break/fix/net_unit.v	2026-09-26 12:39:06.170493850 -0400
+@@ -253,7 +253,11 @@
+     // THE CLASSIFIER
+     // ======================================================================
+     localparam [2:0] C_IDLE = 3'd0, C_READ = 3'd1, C_ACT = 3'd2, C_HOLD = 3'd3,
+-                     C_UNHOLD = 3'd4, C_WAIT = 3'd5;
++                     C_UNHOLD = 3'd4, C_WAIT = 3'd5, C_LOW = 3'd6;
++    // VERIFY FIX (C04): how long M must stay down in the watch to be a death.
++    // CLR by default (a break past it is a hang-up); +lowid picks ID instead.
++    reg [8:0] C_LOWT;
++    initial C_LOWT = $test$plusargs("lowid") ? ID : CLR;
+     reg [2:0]      cst;
+     reg [`PW-1:0]  cls_port;
+     reg [1:0]      cls_dir;
+@@ -581,11 +585,20 @@
+             // leaves a hold with no edge to clear it, and the trunk BUSY for
+             // good.  So for T_ARM this card watches, and if M falls it writes
+             // the hold away itself, and calls off the forward.
++            // VERIFY FIX (C04): M down in the watch is a death only when it
++            // outlasts a dial break.  C_LOW writes nothing; M up again is the
++            // make, and the watch starts over from it; M down for CLR is the
++            // death, and the hold is written away.
+             if (cst == C_HOLD) begin
+                 if (tick_1k) cls_ms <= cls_ms + 9'd1;
+-                if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= C_UNHOLD;
++                if (sp_fresh && (sp_port == cls_port) && !sp_m) begin cst <= C_LOW; cls_ms <= 9'd0; end
+                 else if (cls_ms > T_ARM + 9'd1)                   cst <= C_IDLE;
+             end
++            if (cst == C_LOW) begin
++                if (tick_1k) cls_ms <= cls_ms + 9'd1;
++                if (sp_fresh && (sp_port == cls_port) && sp_m) begin cst <= C_HOLD; cls_ms <= 9'd0; end
++                else if (cls_ms >= C_LOWT)                         cst <= C_UNHOLD;
++            end
+ 
+             if (w_cls && (cst == C_UNHOLD)) begin
+                 push_v <= 5'b00001;

@@ -1,0 +1,2 @@
+[sim.sh] slot 5: bash work/audit/cls/run_all.sh
+sim.sh rc=0

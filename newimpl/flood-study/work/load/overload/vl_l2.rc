@@ -1,0 +1,2 @@
+[sim.sh] slot 1: bash -c SECONDS=0; verilator --binary --timing -j 2 -Irtl -Iwork/load/overload -Wno-fatal --top-module tb_load2 --Mdir work/load/overload/obj_l2 -o tb_load2 $(cat work/RTL.list) tb/site_net.v work/load/overload/tb_load2.sv > work/load/overload/vl_l2.log 2>&1; echo BUILD_rc=$? secs=$SECONDS
+BUILD_rc=0 secs=281

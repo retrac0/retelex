@@ -1,0 +1,4 @@
+[sim.sh] slot 4: bash work/verify/C20-misc/run_r.sh n70
+build_n70=0
+run_scan=0
+run_fd=0

@@ -1,0 +1,26 @@
+
+  tb_ring4 STX 0100 STY 0000  dx 120 dy 610 dz 290 dv 460 dd 370  X20 dials 1 2 4 2 1
+  [   81.771] V SEIZE port 13 dir 2 mon_free 1 fwd ok/none
+  [   81.812] Y SEIZE port 04 dir 3 mon_free 1 fwd ok/none
+  [   92.466] V FWD in 13 ok 1000 cand 12000000
+  [   92.616] Y FWD in 04 ok 0100 cand 00060000
+  [   95.570] Z SEIZE port 11 dir 3 mon_free 1 fwd ok/none
+  [  100.617] Z SEIZE port 14 dir 2 mon_free 1 fwd BUSY
+  [  108.295] Z FWD in 11 ok 0100 cand 00130000
+  [  110.740] V SEIZE port 11 dir 3 mon_free 1 fwd ok/none
+  [  121.466] V FWD in 11 ok 0100 cand 12140000
+  [  124.212] X SEIZE port 75 dir 3 mon_free 1 fwd ok/none
+  [  135.125] X NOFWD-EMPTY in 75
+  [  160.124] after key: X dirs 1100
+  [  390.295] Z CLAIM port 11 (want 11)
+  [  390.719] Z att_ack TAKEN port 11
+  [  390.719] Z CLAIM port 14 (want 10)
+  [  391.010] Z att_ack REFUSED port 14
+  [  391.203] X ORIGIN TAKES claim on 04
+  OUTCOME b=4 rang=1 (hi 144 lo 256) owner_taken=11 owner_refused=14 origin_kept=04 X20_rx1=0/50 claims X0 Y0 Z2 V0 seizures X1 Y1 Z2 V2 fwds X0 Y1 Z1 V2
+  IDLE-CHECK busy X 0000000000000000 Y 0000000000000000 Z 0000000000000000 V 0000000000000000 reg 0000 res 00 00 00 00 mon 00 00 00 00
+  clash 0
+- work/verify/C19-rings/tb_ring4.v:201: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 63.469 s; speed 27.102 ms/s
+- Verilator: cpu 61.417 s on 1 threads; allocated 8 MB

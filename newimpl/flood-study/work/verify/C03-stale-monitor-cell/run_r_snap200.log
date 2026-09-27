@@ -1,0 +1,108 @@
+
+  tb_c03r -- abandon after T_ARM, A's T_REL=200, re-seizure by a transit forward, real timers: hu=50 rs=202 p0=600
+    ok    the links are up
+    ok    A20 has A's register
+  [  620 ms] A busy13..11=000 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=1 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  620 ms] A busy13..11=000 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=2 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  630 ms] A busy13..11=000 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=3 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  630 ms] A busy13..11=000 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+    A seized A11/A12 at 630 ms
+  [  630 ms] A busy13..11=001 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  630 ms] A busy13..11=011 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  631 ms] A busy13..11=011 X11 busy=0 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  632 ms] A busy13..11=011 X11 busy=0 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=1 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=4 X2x busy=00000000
+  [  633 ms] A busy13..11=011 X11 busy=0 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=00 port=00/00 st=0/0 cnt=0/0 cls=2 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  633 ms] A busy13..11=011 X11 busy=0 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=3 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  633 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=3 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  651 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=011 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+    A20 hung up at 679 ms (49 ms after the seizure)
+  [  680 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=0 | A origin=4 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  689 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=0 | A origin=7 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  689 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=0 | A origin=8 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  689 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  690 ms] A busy13..11=011 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+    A11 free at A at 880 ms (201 ms after the break)
+    ok    OBSERVE: X's cell on X11 still counting when A11 frees at A
+    ok    OBSERVE: X11 still held when A11 frees at A
+  [  880 ms] A busy13..11=000 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  881 ms] A busy13..11=000 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  882 ms] A busy13..11=000 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=1 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  882 ms] A busy13..11=000 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=2 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  882 ms] A busy13..11=100 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=2 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  893 ms] A busy13..11=100 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=3 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [  893 ms] A busy13..11=100 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+    A re-seized A11 (forward of A13) at 893 ms, 214 ms after the break
+  [  893 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [  894 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/1 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+    X cells held=01 ports 00/11, X11 busy=1
+  [ 1024 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1493 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1493 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1553 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1553 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1593 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1593 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/1 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1602 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/2 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1653 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/2 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1653 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/2 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1693 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/2 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1693 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/2 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1702 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=01 port=00/11 st=0/2 cnt=0/3 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1753 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=000 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/3 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1753 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/2 cnt=0/3 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=01 port=00/11 st=0/3 cnt=0/3 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/3 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=0 | A a_out13..11=001 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=001 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=0 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=001 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=0 mk=1 X2x busy=00000000
+  [ 1882 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=001 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=1 mk=1 X2x busy=00000000
+  [ 1883 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=01 | X reg=1 mk=1 X2x busy=00000000
+  [ 1883 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+    FAIL  SAFETY: X (13) does not claim a flood dialled to exchange 3x
+    FAIL  SAFETY: X's register is not attached
+  [ 2593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2693 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2693 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2753 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 2753 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3693 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3693 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3753 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3753 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=1 X2x busy=00000000
+  [ 3882 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=4 X2x busy=00000000
+  [ 3882 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=2 X2x busy=00000000
+  [ 3883 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=7 X2x busy=00000000
+  [ 3883 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=7 X2x busy=00000100
+  [ 3915 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=1 mk=0 X2x busy=00000100
+  [ 3915 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 4593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 4593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 4653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 4653 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=10 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+    X2x busy=00000100 (X22 is bit 2)
+    FAIL  SAFETY: X22 is not rung by a flood dialled 1 3 2 2 1
+  [ 5593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=101 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5593 ms] A busy13..11=101 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5793 ms] A busy13..11=100 X11 busy=1 bkA=1 | A a_out13..11=100 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5793 ms] A busy13..11=100 X11 busy=1 bkA=1 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5848 ms] A busy13..11=100 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5848 ms] A busy13..11=101 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000100
+  [ 5849 ms] A busy13..11=101 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [ 5993 ms] A busy13..11=001 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+  [ 6048 ms] A busy13..11=000 X11 busy=0 bkA=0 | A a_out13..11=000 Y M13,12=00 | X cells held=00 port=00/11 st=0/3 cnt=0/0 cls=0 | A origin=0 claimed=0 glare#=0 fwd=0 res=00 | X reg=0 mk=0 X2x busy=00000000
+    ok    and afterwards both exchanges are idle
+    ok    no bus clash, no queue refusal (last sample)
+
+  9 checks, 3 errors.  FAIL
+
+- work/verify/C03-stale-monitor-cell/tb_c03r.v:204: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 7s; walltime 217.957 s; speed 32.538 ms/s
+- Verilator: cpu 149.845 s on 1 threads; allocated 8 MB

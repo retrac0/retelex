@@ -1,0 +1,2 @@
+[sim.sh] slot 5: bash -c SECONDS=0; timeout 5400 work/load/obj_load2/tb_load2 +seed=22 +dur_ms=10000 +idle_ms=20000 +prog_ms=1000 > work/load/overload/r2_l2_i20k.log 2>&1; echo rc=$? secs=$SECONDS
+rc=0 secs=801

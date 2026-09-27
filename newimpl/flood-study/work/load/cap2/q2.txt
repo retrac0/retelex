@@ -1,0 +1,9 @@
+# lane 2
+l2_p300_i30k|work/load/obj_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=300
+l2_p300_i60k|work/load/obj_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=60000 +pnet=300
+l2_p300_i15k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=15000 +pnet=300
+l2_p300_i120k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=16000 +idle_ms=120000 +pnet=300
+l2b_p300_i30k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=300
+l2_p300_i6k|work/load/cap2/obj_c2_load2/tb_load2|9000|+seed=11 +dur_ms=12000 +idle_ms=6000 +pnet=300
+l2b_p1000_i120k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=16000 +idle_ms=120000 +pnet=1000
+l2b_p1000_i6k|work/load/obj_load2b/tb_load2b|9000|+seed=11 +dur_ms=12000 +idle_ms=6000 +pnet=1000

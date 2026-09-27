@@ -1,0 +1,12 @@
+[sim.sh] slot 1: bash -c 
+W=work/audit/monclaim
+rm -rf $W/obj_r13 $W/obj_fix13 $W/obj_rf13
+verilator --binary --timing -j 2 -I$W/rtl_fix -Irtl -Wno-fatal --top-module tb_mc2 --Mdir $W/obj_fmc2 -o tb_mc2 $(cat $W/RTL_fix.list) tb/site_net.v $W/tb_mc2.v > $W/vl_fmc2.log 2>&1; echo b1=$?
+timeout 2400 $W/obj_fmc2/tb_mc2 > $W/run_fix_mc2.log 2>&1; echo r1=$?
+verilator --binary --timing -j 2 -I$W/rtl_fix -Irtl -Wno-fatal --top-module tb_net --Mdir $W/obj_fnet -o tb_net $(cat $W/RTL_fix.list) tb/site_net.v tb/tb_net.v > $W/vl_fnet.log 2>&1; echo b2=$?
+timeout 3000 $W/obj_fnet/tb_net > $W/run_fix_tbnet.log 2>&1; echo r2=$?
+
+b1=0
+r1=0
+b2=0
+r2=0

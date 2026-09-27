@@ -1,0 +1,64 @@
+
+  tb_cls sc=6 K=8 D=128 E=3 B=2 pause=400  NMON=2 NRES=2  T_ARM=16 guard=128
+    ok    every trunk's link is up
+     21.146  cls_seen  10  (cst 0, rd_free 1)
+     22.264  cls read  10  word 11001011  trunk 1
+     22.264  MK read    10  word 11001011  (caller?)
+     22.264  HOLD      10  dir 3  mine 0  nst 0
+     23.146  mon0 arm  10
+     33.005  FWD       10 -> ok 0111 cand 71 30 40 00
+    438.004  mon0 10 digit 2 (as e)
+   1038.002  mon0 10 digit 2 (as b)
+   1038.003  CLAIM     10
+   1038.695  MK register -> 10
+   2138.399  MK read    21  word 11111111  ( called)
+   2139.281  MK CONNECT caller 10 called 21
+    ok    sc6: 2 2 2 1 from the far caller rings 21
+   3106.256  MK read    10  word 11001011  (caller?)
+   3108.256  MK read    10  word 11001011  (caller?)
+   3110.256  MK read    10  word 11001011  (caller?)
+   3112.256  MK read    10  word 11001011  (caller?)
+   3114.256  MK read    10  word 11001011  (caller?)
+   3116.256  MK read    10  word 11001011  (caller?)
+   3118.256  MK read    10  word 11001011  (caller?)
+   3120.256  MK read    10  word 11001011  (caller?)
+   3122.256  MK read    10  word 11001011  (caller?)
+   3124.256  MK read    10  word 11001011  (caller?)
+   3126.256  MK read    10  word 11001011  (caller?)
+   3128.256  MK read    10  word 11001011  (caller?)
+   3130.256  MK read    10  word 11001011  (caller?)
+   3132.256  MK read    10  word 11001011  (caller?)
+   3134.256  MK read    10  word 11001011  (caller?)
+   3136.256  MK read    10  word 11001011  (caller?)
+   3138.256  MK read    10  word 11001011  (caller?)
+   3140.256  MK read    10  word 11001011  (caller?)
+   3142.256  MK read    10  word 11001011  (caller?)
+   3144.256  MK read    10  word 11001011  (caller?)
+   3144.996  10 latch -> 00 bsy 0 busy 0, far M still up; st[10] 1
+   3205.137  cls_seen  10  (cst 0, rd_free 1)
+   3206.256  cls read  10  word 11001011  trunk 1
+   3206.256  MK read    10  word 11001011  (caller?)
+   3206.256  HOLD      10  dir 3  mine 0  nst 0
+   3207.138  mon0 arm  10
+   3216.997  FWD       10 -> ok 0111 cand 71 30 40 00
+   3533.996  mon0 10 digit 2 (as e)
+   4133.994  mon0 10 digit 2 (as b)
+   4133.995  CLAIM     10
+   4134.687  MK register -> 10
+   5234.391  MK read    21  word 11111111  ( called)
+   5235.273  MK CONNECT caller 10 called 21
+  after the far caller dialled on: classified -62 more times, claims 1 more
+  21 ringing: hi 600 lo 0
+    FAIL  sc6: a released trunk under a standing far M is not taken again mid-dial
+    ok    sc6: far caller gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00 mon 00 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  5 checks, 1 errors.  FAIL
+
+- work/audit/cls/tb_cls2.v:444: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 8s; walltime 276.538 s; speed 28.296 ms/s
+- Verilator: cpu 165.697 s on 1 threads; allocated 8 MB
+rc=0

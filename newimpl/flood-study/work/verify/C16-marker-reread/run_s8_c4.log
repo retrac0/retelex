@@ -1,0 +1,22 @@
+
+  tb_c16 -- B's marker and an unheld trunk (case 4, SC 1)
+    ok    links up
+    CONTROL: B20 (B11+7) dial-tone delay 2.27 ms
+    CONTROL: B21 (B11+8) dial-tone delay 2.28 ms
+    ok    control: idle
+    CONTROL: A21 (A11+8) dial-tone delay 2.28 ms
+    ok    4: claimed, B's register on B11
+    ok    4: B21 rings
+    ok    4: A11 released (fE), under the stuck far A
+    A20 (A11+7) with A11 unheld under a stuck A: dial-tone delay -1.00 ms (-1 = none in 1000 ms)
+    A21 (A11+8) with A11 unheld under a stuck A: dial-tone delay 3.28 ms
+    A marker reads of A11 meanwhile: 651
+    ok    4: idle again once the fault clears
+    ok    no queue refused a write
+
+  7 checks, 0 errors.  PASS
+
+- work/verify/C16-marker-reread/tb_c16.v:281: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 4s; walltime 103.835 s; speed 42.972 ms/s
+- Verilator: cpu 101.130 s on 1 threads; allocated 8 MB

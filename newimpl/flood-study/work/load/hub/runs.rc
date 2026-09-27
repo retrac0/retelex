@@ -1,0 +1,40 @@
+13:36 start 010_build_directed.sh
+13:40 build obj_hub rc=0 wall_s=248 defs=
+14:00 r1_directed rc=0 wall_s=1207 bin=work/load/hub/obj_hub/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=B20C21,B21A21,B22Z23,D20B23,C20D24 +pair_gap_ms=1500 +dur_ms=7400 +grace_ms=1000 +drain_ms=800
+14:06 r2_three rc=0 wall_s=325 bin=work/load/hub/obj_hub/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=B20Z21,C20Z22,D20C23 +pair_gap_ms=60 +dur_ms=300 +grace_ms=1500 +drain_ms=800
+14:11 r3_threeH rc=0 wall_s=303 bin=work/load/hub/obj_hub/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=B20Z21,C20Z22,D20A21 +pair_gap_ms=60 +dur_ms=300 +grace_ms=1500 +drain_ms=800
+14:11 start 015_burst.sh
+14:15 r5_burst rc=0 wall_s=271 bin=work/load/hub/obj_hub/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=B20Z21,C20Z22,D20C23 +pair_gap_ms=3 +dur_ms=50 +grace_ms=1500 +drain_ms=800
+14:15 start 020_abandon.sh
+14:46 r4_abandon rc=0 wall_s=1848 bin=work/load/hub/obj_hub/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=3 +abandon=1000 +pairs=B20C21 +pair_gap_ms=1200 +dur_ms=14000 +grace_ms=1000 +drain_ms=800
+14:46 start 030_loadA.sh
+15:20 la_idle60 rc=0 wall_s=2010 bin=work/load/hub/obj_hub/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=21 +idle_ms=60000 +dur_ms=16000
+15:20 start 040_loadC.sh
+15:47 lc_idle5 rc=0 wall_s=1627 bin=work/load/hub/obj_hub/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=23 +idle_ms=5000 +dur_ms=10000
+15:47 start 050_s1.sh
+15:51 build obj_hub_s1 rc=0 wall_s=259 defs=+define+SCALE1
+16:19 s1_directed rc=0 wall_s=1689 bin=work/load/hub/obj_hub_s1/tb_hub args=+dest_mode=4 +hold_ms=1000 +hold_fixed=1 +ans_ms=500 +trace=1 +seed=1 +pairs=B20C21,D20A21 +pair_gap_ms=4000 +dur_ms=4100 +grace_ms=7500 +drain_ms=2000
+16:35 s1_burst rc=0 wall_s=924 bin=work/load/hub/obj_hub_s1/tb_hub args=+dest_mode=4 +hold_ms=1000 +hold_fixed=1 +ans_ms=500 +trace=1 +seed=1 +pairs=B20Z21,C20Z22,D20C23 +pair_gap_ms=3 +dur_ms=50 +grace_ms=7000 +drain_ms=2000
+16:35 start 060_ring.sh
+16:37 build obj_ring rc=0 wall_s=128 defs=+define+HUB_RING
+16:39 build obj_ringst rc=0 wall_s=133 defs=+define+HUB_RING +define+HUB_STRAP
+16:52 g1_ring_unstrapped rc=0 wall_s=775 bin=work/load/hub/obj_ring/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=D20C21,B20C22,C23B24,A20C24,D21B25 +pair_gap_ms=1500 +dur_ms=7400 +grace_ms=1000 +drain_ms=800
+17:06 g2_ring_strapped rc=0 wall_s=841 bin=work/load/hub/obj_ringst/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=D20C21,B20C22,C23B24,A20C24,D21B25 +pair_gap_ms=1500 +dur_ms=7400 +grace_ms=1000 +drain_ms=800
+17:06 start 070_loadB.sh
+17:27 lb_idle20 rc=0 wall_s=1264 bin=work/load/hub/obj_hub/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=22 +idle_ms=20000 +dur_ms=12000
+17:27 start 080_nres3.sh
+17:29 build obj_hub_r3 rc=0 wall_s=134 defs=+define+LD_NRES=3
+17:57 lb_idle20_nres3 rc=0 wall_s=1693 bin=work/load/hub/obj_hub_r3/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=22 +idle_ms=20000 +dur_ms=12000
+17:57 start 085_bb.sh
+18:00 build obj_hubb (tb_hubb.sv) rc=0 wall_s=179 defs=
+18:05 bb_directed rc=0 wall_s=282 bin=work/load/hub/obj_hubb/tb_hub args=+dest_mode=4 +hold_ms=200 +hold_fixed=1 +ans_ms=100 +trace=1 +seed=1 +pairs=B20C21 +pair_gap_ms=1500 +dur_ms=1400 +grace_ms=500 +drain_ms=800
+18:37 bb_idle20 rc=0 wall_s=1883 bin=work/load/hub/obj_hubb/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=27 +idle_ms=20000 +dur_ms=12000
+18:37 start 087_ringload.sh
+19:27 g3_ringload_unstrapped rc=0 wall_s=3035 bin=work/load/hub/obj_ring/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=28 +idle_ms=30000 +dur_ms=12000
+19:27 start 088_ringload_st.sh
+20:15 g4_ringload_strapped rc=0 wall_s=2899 bin=work/load/hub/obj_ringst/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=28 +idle_ms=30000 +dur_ms=12000
+20:15 start 090_loadE.sh
+21:01 le_all_idle20 rc=0 wall_s=2762 bin=work/load/hub/obj_hub/tb_hub args=+orig_x=15 +net_to=15 +pnet=1000 +abandon=30 +seed=25 +idle_ms=20000 +dur_ms=12000
+21:01 start 089_step.sh
+21:53 lstep_5to120 rc=0 wall_s=3120 bin=work/load/hub/obj_hub/tb_hub args=+orig_x=14 +net_to=14 +pnet=1000 +abandon=30 +seed=26 +idle_ms=5000 +switch_ms=5000 +idle2_ms=120000 +dur_ms=15000
+21:53 runner exit

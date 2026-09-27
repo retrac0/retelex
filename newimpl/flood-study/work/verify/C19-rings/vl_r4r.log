@@ -1,0 +1,140 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:141:77: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  141 |             if (0 == owner) begin if (X.u_x.u_mk.r_attach) begin taken_port = X.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                             ^
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: work/verify/C19-rings/tb_ring4r.v:141:115: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's TIME generates 64 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  141 |             if (0 == owner) begin if (X.u_x.u_mk.r_attach) begin taken_port = X.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                                                                   ^
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:141:53: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  141 |                                   else refused_port = X.u_x.u_net.att_port; end end 
+      |                                                     ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:141:30: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'trunk' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  141 |             if (0 == 0) kept = X.u_x.u_net.trunk; end 
+      |                              ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:142:77: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  142 |             if (1 == owner) begin if (Y.u_x.u_mk.r_attach) begin taken_port = Y.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                             ^
+%Warning-WIDTHTRUNC: work/verify/C19-rings/tb_ring4r.v:142:115: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's TIME generates 64 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  142 |             if (1 == owner) begin if (Y.u_x.u_mk.r_attach) begin taken_port = Y.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                                                                   ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:142:53: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  142 |                                   else refused_port = Y.u_x.u_net.att_port; end end 
+      |                                                     ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:142:30: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'trunk' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  142 |             if (1 == 0) kept = Y.u_x.u_net.trunk; end 
+      |                              ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:143:77: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  143 |             if (2 == owner) begin if (Z.u_x.u_mk.r_attach) begin taken_port = Z.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                             ^
+%Warning-WIDTHTRUNC: work/verify/C19-rings/tb_ring4r.v:143:115: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's TIME generates 64 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  143 |             if (2 == owner) begin if (Z.u_x.u_mk.r_attach) begin taken_port = Z.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                                                                   ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:143:53: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  143 |                                   else refused_port = Z.u_x.u_net.att_port; end end 
+      |                                                     ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:143:30: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'trunk' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  143 |             if (2 == 0) kept = Z.u_x.u_net.trunk; end 
+      |                              ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:144:77: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  144 |             if (3 == owner) begin if (V.u_x.u_mk.r_attach) begin taken_port = V.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                             ^
+%Warning-WIDTHTRUNC: work/verify/C19-rings/tb_ring4r.v:144:115: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's TIME generates 64 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  144 |             if (3 == owner) begin if (V.u_x.u_mk.r_attach) begin taken_port = V.u_x.u_net.att_port; first_taken_t = $time; end 
+      |                                                                                                                   ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:144:53: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'att_port' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  144 |                                   else refused_port = V.u_x.u_net.att_port; end end 
+      |                                                     ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:144:30: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's VARXREF 'trunk' generates 6 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  144 |             if (3 == 0) kept = V.u_x.u_net.trunk; end 
+      |                              ^
+%Warning-WIDTHEXPAND: work/verify/C19-rings/tb_ring4r.v:189:17: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's GTS generates 1 bits.
+                                                              : ... note: In instance 'tb_ring4r'
+  189 |         ring_ok = (hi > 50);
+      |                 ^
+%Warning-ZERODLY: work/verify/C19-rings/tb_ring4r.v:171:19: Value of # delay control statically unknown. Assuming it can be #0.
+                                                          : ... If all # delays are non-zero at runtime,
+                                                          : ... use '--no-sched-zero-delay' for improved performance.
+                                                          : ... If a real #0 is expected at runtime,
+                                                          : ... use '--sched-zero-delay' to suppress this warning.
+  171 |             begin #(5000 + dxu * 1000); rst_x = 1'b1; end
+      |                   ^
+                  ... For warning description see https://verilator.org/warn/ZERODLY?v=5.050
+                  ... Use "/* verilator lint_off ZERODLY */" and lint_on around source to disable this message.
+%Warning-ZERODLY: work/verify/C19-rings/tb_ring4r.v:172:19: Value of # delay control statically unknown. Assuming it can be #0.
+                                                          : ... If all # delays are non-zero at runtime,
+                                                          : ... use '--no-sched-zero-delay' for improved performance.
+                                                          : ... If a real #0 is expected at runtime,
+                                                          : ... use '--sched-zero-delay' to suppress this warning.
+  172 |             begin #(5000 + dyu * 1000); rst_y = 1'b1; end
+      |                   ^
+%Warning-ZERODLY: work/verify/C19-rings/tb_ring4r.v:173:19: Value of # delay control statically unknown. Assuming it can be #0.
+                                                          : ... If all # delays are non-zero at runtime,
+                                                          : ... use '--no-sched-zero-delay' for improved performance.
+                                                          : ... If a real #0 is expected at runtime,
+                                                          : ... use '--sched-zero-delay' to suppress this warning.
+  173 |             begin #(5000 + dzu * 1000); rst_z = 1'b1; end
+      |                   ^
+%Warning-ZERODLY: work/verify/C19-rings/tb_ring4r.v:174:19: Value of # delay control statically unknown. Assuming it can be #0.
+                                                          : ... If all # delays are non-zero at runtime,
+                                                          : ... use '--no-sched-zero-delay' for improved performance.
+                                                          : ... If a real #0 is expected at runtime,
+                                                          : ... use '--sched-zero-delay' to suppress this warning.
+  174 |             begin #(5000 + dvu * 1000); rst_v = 1'b1; end
+      |                   ^
+%Warning-ZERODLY: work/verify/C19-rings/tb_ring4r.v:178:9: Value of # delay control statically unknown. Assuming it can be #0.
+                                                         : ... If all # delays are non-zero at runtime,
+                                                         : ... use '--no-sched-zero-delay' for improved performance.
+                                                         : ... If a real #0 is expected at runtime,
+                                                         : ... use '--sched-zero-delay' to suppress this warning.
+  178 |         #(ddu * 1000);
+      |         ^
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/verify/C19-rings/obj_r4r'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_ring4r__pch.h -o Vtb_ring4r__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_ring4r__pch.h -o Vtb_ring4r__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r___024root__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r___024root__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r___024root__2.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r_exch__Pz20_BBz21__0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.fast -c Vtb_ring4r__main.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.slow -c Vtb_ring4r___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.slow -c Vtb_ring4r___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.slow -c Vtb_ring4r_exch__Pz20_BBz21__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.slow -c Vtb_ring4r_exch__Pz20_BBz21__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_ring4r__pch.h.slow -c Vtb_ring4r__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_ring4r__ALL.a    -pthread -lpthread -latomic   -o tb_ring4r
+rm Vtb_ring4r__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/verify/C19-rings/obj_r4r'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.218 MB sources in 27 modules, into 3.183 MB in 11 C++ files needing 0.002 MB
+- Verilator: Walltime 74.859 s (elab=0.612, cvt=3.553, bld=70.318); cpu 4.165 s on 2 threads; allocated 353.945 MB

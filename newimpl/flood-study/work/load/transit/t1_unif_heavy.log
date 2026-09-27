@@ -1,0 +1,649 @@
+KNOB seed=5
+KNOB dur_ms=15000
+KNOB idle_ms=30000
+KNOB dt_ms=3000
+KNOB pnet=600
+KNOB dest_mode=0
+KNOB brk_ms=12
+KNOB mk_ms=8
+KNOB idg_ms=100
+KNOB idg_jit_ms=0
+KNOB pre_ms=60
+KNOB abandon=0
+KNOB pd_ms=1500
+KNOB ans_ms=300
+KNOB noans=0
+KNOB hold_ms=1500
+KNOB lag_ms=50
+KNOB rest_ms=120
+KNOB ringmax_ms=1500
+KNOB hup_ms=100
+KNOB grace_ms=0
+KNOB drain_ms=2500
+KNOB nlines=64
+KNOB orig_x=255
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=2
+KNOB bad_b=7
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=1000
+KNOB wd_port_ms=448
+KNOB wd_reg_ms=7500
+KNOB wd_org_ms=4625
+KNOB wd_mon_ms=1378
+KNOB wd_res_ms=1878
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=1350
+KNOB phantom_grace_ms=384
+KNOB max_ms=0
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=0
+KNOB pair_per_ms=0
+KNOB pair_jit_ms=0
+KNOB hold_fixed=0
+KNOB switch_ms=0
+KNOB idle2_ms=60000
+KNOB pairs=
+KNOB hot=-
+KNOB dbg_misdial=-
+KNOB dbg_sig=-:-
+KNOB scale=8 NX=3 NMON=2 NRES=2 T_ARM=2 T_REL=32 RING=64/128 HIT=1 ID=16 CLR=32 NODIG=1250 T_GUARD0=16 T_KEY=625 T_CLAIM=250
+TOPO ex=A code=22 lines=48
+TOPO ex=B code=23 lines=40
+TOPO ex=C code=24 lines=48
+SELFTEST sig PASS  ok=412 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 15021
+TP t=822.085 n=823 ex=C OFLOOD caller=C21
+TP t=832.085 n=833 ex=C OSEIZE caller=C21 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=834.539 n=835 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.45
+TP t=844.920 n=845 ex=B FWD in=B37 ok=1000 cand=17000000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=847.371 n=848 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.45
+TP t=858.003 n=859 ex=A NFEMPTY in=A17
+PROG t=1000 calls=4 ok=0 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=979 started=4 ok=0 failed=0 reg_occ A=0.39 B=0.00 C=0.61
+TP t=1106.894 n=1107 ex=B RES v=0 MINE in=B37 hold_ms=261.97
+TP t=1106.894 n=1107 ex=B CLAIM p=B37 mine=01 since_seize=272.35
+TP t=1107.361 n=1108 ex=C OCLAIM caller=C21 trunk=C17 guard_glare=0 since_seize=275.28 farheld=0
+CALL id=1 from=C22 to=C35 kind=L dial=35 lift=240 dt=245 key=357 last=549 tone=- alert=571 bell=579 ans=633 end=1241 rel=1241 out=OK why=- heard=- rang=C35 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=1450.144 n=1451 ex=C ODONE caller=C21 trunk=C17 since_flood=628.06
+CALL id=2 from=A67 to=A33 kind=L dial=33 lift=613 dt=619 key=731 last=883 tone=- alert=905 bell=962 ans=1027 end=1530 rel=1530 out=OK why=- heard=- rang=A33 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=1852.183 n=1853 ex=C OFLOOD caller=C74
+TP t=1862.184 n=1863 ex=C OSEIZE caller=C74 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=1864.420 n=1865 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.24
+TP t=1874.816 n=1875 ex=B FWD in=B36 ok=1000 cand=17000000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.40
+TP t=1877.369 n=1878 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.55
+TP t=1888.000 n=1889 ex=A NFEMPTY in=A17
+PROG t=2000 calls=8 ok=2 busy=0 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=4 ok=2 failed=0 reg_occ A=0.81 B=0.38 C=0.69
+TP t=2063.798 n=2064 ex=B OFLOOD caller=B50
+TP t=2073.796 n=2074 ex=B OSEIZE caller=B50 ok=1100 cand=16300000 taken=0 after_flood=10.00
+TP t=2076.352 n=2077 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.56
+TP t=2076.463 n=2077 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.67
+TP t=2087.000 n=2088 ex=A NFEMPTY in=A16
+TP t=2087.205 n=2088 ex=C NFEMPTY in=C10
+CALL id=3 from=C21 to=B26 kind=N dial=12326 lift=729 dt=734 key=806 last=1434 tone=- alert=1456 bell=1538 ans=1572 end=1955 rel=1972 out=OK why=- heard=- rang=B26 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=2118.000 n=2119 ex=A CLAIM p=A17 mine=00 since_seize=240.63
+TP t=2119.042 n=2120 ex=B RES v=0 LEG in=B36 leg=B17 far=A17 farclaim_ago=1.04 farheld=0 hold_ms=244.23
+TP t=2119.443 n=2120 ex=C OCLAIM caller=C74 trunk=C16 guard_glare=0 since_seize=257.26 farheld=0
+CALL id=5 from=A51 to=A46 kind=L dial=46 lift=1404 dt=1409 key=1541 last=1753 tone=- alert=1773 bell=1773 ans=1946 end=2007 rel=2022 out=OK why=- heard=- rang=A46 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=2328.999 n=2330 ex=A CLAIM p=A16 mine=00 since_seize=252.65
+TP t=2330.005 n=2331 ex=B OCLAIM caller=B50 trunk=B16 guard_glare=0 since_seize=256.21 farheld=0
+TP t=2440.239 n=2441 ex=C ODONE caller=C74 trunk=C16 since_flood=588.06
+TP t=2535.249 n=2536 ex=C OFLOOD caller=C51
+TP t=2545.249 n=2546 ex=C OSEIZE caller=C51 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=2547.366 n=2548 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.12
+TP t=2557.748 n=2558 ex=B FWD in=B37 ok=1000 cand=15300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=2560.336 n=2561 ex=A SEIZE p=A15 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.59
+TP t=2570.999 n=2572 ex=A NFEMPTY in=A15
+CALL id=7 from=C74 to=A52 kind=N dial=12252 lift=1760 dt=1765 key=1837 last=2425 tone=2444 alert=- bell=- ans=- end=2544 rel=2544 out=BUSY why=- heard=- rang=- cb=1 xv=-1 cv=-1 ab=- mid=-
+CALL id=4 from=A73 to=A52 kind=L dial=52 lift=826 dt=911 key=1063 last=1195 tone=- alert=1215 bell=1215 ans=1412 end=2584 rel=2584 out=OK why=- heard=- rang=A52 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=2771.726 n=2772 ex=B ODONE caller=B50 trunk=B16 since_flood=707.93
+TP t=2800.998 n=2802 ex=A CLAIM p=A15 mine=00 since_seize=240.66
+TP t=2801.941 n=2802 ex=B RES v=0 LEG in=B37 leg=B15 far=A15 farclaim_ago=0.94 farheld=0 hold_ms=244.19
+TP t=2802.524 n=2803 ex=C OCLAIM caller=C51 trunk=C17 guard_glare=0 since_seize=257.27 farheld=0
+PROG t=3000 calls=11 ok=5 busy=1 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=3 ok=3 failed=1 reg_occ A=0.77 B=0.77 C=1.00
+CALL id=6 from=A62 to=A45 kind=L dial=45 lift=1628 dt=1780 key=1912 last=2104 tone=- alert=2124 bell=2124 ans=2393 end=3106 rel=3106 out=OK why=- heard=- rang=A45 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=3303.322 n=3304 ex=C ODONE caller=C51 trunk=C17 since_flood=768.07
+TP t=3397.331 n=3398 ex=C OFLOOD caller=C62
+TP t=3407.332 n=3408 ex=C OSEIZE caller=C62 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=3409.264 n=3410 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.93
+TP t=3419.661 n=3420 ex=B FWD in=B36 ok=1000 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.40
+TP t=3421.365 n=3422 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.70
+TP t=3431.996 n=3433 ex=A NFEMPTY in=A17
+TP t=3656.996 n=3658 ex=A OFLOOD caller=A63
+TP t=3666.996 n=3668 ex=A OSEIZE caller=A63 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=3669.894 n=3670 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=01 hop=2.90
+TP t=3680.634 n=3681 ex=B FWD in=B10 ok=0100 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=3682.634 n=3683 ex=B RES v=0 MINE in=B36 hold_ms=262.97
+TP t=3682.634 n=3683 ex=B CLAIM p=B36 mine=01 since_seize=273.37
+TP t=3683.592 n=3684 ex=C OCLAIM caller=C62 trunk=C16 guard_glare=0 since_seize=276.26 farheld=0
+TP t=3683.617 n=3684 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.98
+TP t=3694.359 n=3695 ex=C NFEMPTY in=C10
+TP t=3942.608 n=3943 ex=B RES v=1 MINE in=B10 hold_ms=261.97
+TP t=3942.608 n=3943 ex=B CLAIM p=B10 mine=10 since_seize=272.71
+TP t=3943.136 n=3944 ex=A OCLAIM caller=A63 trunk=A10 guard_glare=0 since_seize=276.14 farheld=0
+PROG t=4000 calls=13 ok=6 busy=1 nogo=0 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=2 ok=1 failed=0 reg_occ A=0.74 B=0.32 C=1.00
+TP t=4005.389 n=4006 ex=C ODONE caller=C62 trunk=C16 since_flood=608.06
+TP t=4304.994 n=4306 ex=A ODONE caller=A63 trunk=A10 since_flood=648.00
+CALL id=10 from=C62 to=B52 kind=N dial=12352 lift=2404 dt=3310 key=3382 last=3990 tone=- alert=4013 bell=4034 ans=4182 end=4388 rel=4388 out=OK why=- heard=- rang=B52 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=4511.438 n=4512 ex=C OFLOOD caller=C26
+TP t=4521.438 n=4522 ex=C OSEIZE caller=C26 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=4523.152 n=4524 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.71
+CALL id=12 from=A63 to=B27 kind=N dial=12327 lift=3564 dt=3569 key=3641 last=4289 tone=4309 alert=- bell=- ans=- end=4409 rel=4409 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=4533.548 n=4534 ex=B FWD in=B36 ok=1000 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.40
+TP t=4535.362 n=4536 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.81
+TP t=4545.994 n=4547 ex=A NFEMPTY in=A17
+CALL id=9 from=C51 to=A60 kind=N dial=12260 lift=2017 dt=2447 key=2519 last=3287 tone=- alert=3308 bell=3308 ans=3491 end=4472 rel=4488 out=OK why=- heard=- rang=A60 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=4775.993 n=4777 ex=A CLAIM p=A17 mine=00 since_seize=240.63
+TP t=4776.773 n=4777 ex=B RES v=0 LEG in=B36 leg=B17 far=A17 farclaim_ago=0.78 farheld=0 hold_ms=243.23
+TP t=4777.697 n=4778 ex=C OCLAIM caller=C26 trunk=C16 guard_glare=0 since_seize=256.26 farheld=0
+CALL id=13 from=C33 to=C66 kind=L dial=66 lift=3922 dt=4011 key=4183 last=4395 tone=- alert=4417 bell=4419 ans=4712 end=4762 rel=4790 out=OK why=- heard=- rang=C66 cb=0 xv=1 cv=1 ab=- mid=-
+PROG t=5000 calls=15 ok=9 busy=1 nogo=1 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=2 ok=3 failed=1 reg_occ A=0.53 B=0.01 C=1.00
+CALL id=8 from=B50 to=A67 kind=N dial=12267 lift=1971 dt=1976 key=2048 last=2756 tone=- alert=2779 bell=2882 ans=3034 end=4892 rel=4922 out=OK why=- heard=- rang=A67 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=5139.498 n=5140 ex=C ODONE caller=C26 trunk=C16 since_flood=628.06
+TP t=5233.507 n=5234 ex=C OFLOOD caller=C24
+TP t=5243.508 n=5244 ex=C OSEIZE caller=C24 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=5245.094 n=5246 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.59
+TP t=5255.475 n=5256 ex=B FWD in=B37 ok=1000 cand=16300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=5257.344 n=5258 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.87
+TP t=5267.992 n=5269 ex=A NFEMPTY in=A16
+TP t=5497.991 n=5499 ex=A CLAIM p=A16 mine=00 since_seize=240.65
+TP t=5498.685 n=5499 ex=B RES v=0 LEG in=B37 leg=B16 far=A16 farclaim_ago=0.69 farheld=0 hold_ms=243.21
+TP t=5498.782 n=5499 ex=C OCLAIM caller=C24 trunk=C17 guard_glare=0 since_seize=255.27 farheld=0
+CALL id=14 from=C26 to=A45 kind=N dial=12245 lift=4203 dt=4423 key=4495 last=5123 tone=- alert=5146 bell=5186 ans=5220 end=5536 rel=5536 out=OK why=- heard=- rang=A45 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=5921.572 n=5922 ex=C ODONE caller=C24 trunk=C17 since_flood=688.07
+TP t=5967.404 n=5968 ex=B OFLOOD caller=B64
+TP t=5977.403 n=5978 ex=B OSEIZE caller=B64 ok=1100 cand=17300000 taken=0 after_flood=10.00
+TP t=5979.837 n=5980 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.43
+TP t=5980.358 n=5981 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.96
+TP t=5990.579 n=5991 ex=C NFEMPTY in=C10
+TP t=5990.990 n=5992 ex=A NFEMPTY in=A17
+PROG t=6000 calls=19 ok=11 busy=1 nogo=1 nodt=0 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=4 ok=2 failed=0 reg_occ A=0.65 B=0.39 C=1.00
+TP t=6021.990 n=6023 ex=A OFLOOD caller=A24
+TP t=6031.990 n=6033 ex=A OSEIZE caller=A24 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=6033.655 n=6034 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.67
+TP t=6044.396 n=6045 ex=B FWD in=B10 ok=0100 cand=17310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=6046.859 n=6047 ex=C SEIZE p=C11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.46
+TP t=6057.585 n=6058 ex=C NFEMPTY in=C11
+CALL id=11 from=C72 to=C70 kind=L dial=70 lift=2999 dt=- key=- last=- tone=- alert=- bell=- ans=- end=5999 rel=5999 out=NODT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=6231.989 n=6233 ex=A CLAIM p=A17 mine=00 since_seize=251.63
+TP t=6232.627 n=6233 ex=B OCLAIM caller=B64 trunk=B17 guard_glare=0 since_seize=255.22 farheld=0
+CALL id=15 from=C24 to=A20 kind=N dial=12220 lift=4620 dt=5145 key=5217 last=5905 tone=- alert=5928 bell=5954 ans=6071 end=6121 rel=6121 out=OK why=- heard=- rang=A20 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=6326.611 n=6327 ex=C CLAIM p=C11 mine=00 since_seize=279.75
+TP t=6327.773 n=6328 ex=B RES v=0 LEG in=B10 leg=B31 far=C11 farclaim_ago=1.16 farheld=0 hold_ms=283.38
+TP t=6328.130 n=6329 ex=A OCLAIM caller=A24 trunk=A10 guard_glare=0 since_seize=296.14 farheld=0
+TP t=6655.334 n=6656 ex=B ODONE caller=B64 trunk=B17 since_flood=687.93
+CALL id=17 from=C30 to=C50 kind=L dial=50 lift=5385 dt=5928 key=6080 last=6372 tone=- alert=6392 bell=6392 ans=6508 end=6583 rel=6583 out=OK why=- heard=- rang=C50 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=6749.988 n=6751 ex=A ODONE caller=A24 trunk=A10 since_flood=728.00
+CALL id=16 from=B24 to=B23 kind=L dial=23 lift=5051 dt=5056 key=5148 last=5300 tone=- alert=5322 bell=5378 ans=5654 end=6726 rel=6726 out=OK why=- heard=- rang=B23 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=19 from=B64 to=A57 kind=N dial=12257 lift=5875 dt=5880 key=5952 last=6640 tone=6659 alert=- bell=- ans=- end=6759 rel=6759 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=6922.988 n=6924 ex=A OFLOOD caller=A37
+TP t=6932.988 n=6934 ex=A OSEIZE caller=A37 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=6935.564 n=6936 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.58
+TP t=6946.305 n=6947 ex=B FWD in=B10 ok=0100 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=6948.929 n=6949 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.62
+TP t=6961.672 n=6962 ex=C NFEMPTY in=C10
+CALL id=18 from=A24 to=C75 kind=N dial=12475 lift=5800 dt=5934 key=6006 last=6734 tone=6754 alert=- bell=- ans=- end=6854 rel=6854 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+PROG t=7000 calls=24 ok=14 busy=1 nogo=3 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=5 ok=3 failed=3 reg_occ A=0.92 B=1.00 C=0.93
+CALL id=20 from=C76 to=C23 kind=L dial=23 lift=6074 dt=6399 key=6491 last=6643 tone=- alert=6664 bell=6723 ans=6770 end=6981 rel=6981 out=OK why=- heard=- rang=C23 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=7208.278 n=7209 ex=B RES v=0 MINE in=B10 hold_ms=261.97
+TP t=7208.278 n=7209 ex=B CLAIM p=B10 mine=01 since_seize=272.71
+TP t=7209.127 n=7210 ex=A OCLAIM caller=A37 trunk=A10 guard_glare=0 since_seize=276.14 farheld=0
+CALL id=22 from=C24 to=C21 kind=L dial=21 lift=6432 dt=6670 key=6762 last=6874 tone=- alert=6896 bell=6915 ans=7100 end=7150 rel=7159 out=OK why=- heard=- rang=C21 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=21 from=B66 to=B20 kind=L dial=20 lift=6167 dt=6662 key=6754 last=7046 tone=- alert=7067 bell=7106 ans=7239 end=7317 rel=7317 out=OK why=- heard=- rang=B20 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=7730.986 n=7732 ex=A ODONE caller=A37 trunk=A10 since_flood=808.00
+PROG t=8000 calls=27 ok=17 busy=1 nogo=3 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=3 ok=3 failed=0 reg_occ A=0.94 B=0.86 C=0.77
+TP t=8278.171 n=8279 ex=B OFLOOD caller=B44
+TP t=8288.169 n=8289 ex=B OSEIZE caller=B44 ok=1100 cand=17300000 taken=0 after_flood=10.00
+TP t=8290.058 n=8291 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.89
+TP t=8290.352 n=8291 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.18
+TP t=8300.800 n=8301 ex=C NFEMPTY in=C10
+TP t=8300.984 n=8302 ex=A NFEMPTY in=A17
+TP t=8371.984 n=8373 ex=A OFLOOD caller=A23
+TP t=8381.984 n=8383 ex=A OSEIZE caller=A23 ok=0100 cand=00110000 taken=0 after_flood=10.00
+TP t=8383.434 n=8384 ex=B SEIZE p=B11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.45
+TP t=8394.159 n=8395 ex=B FWD in=B11 ok=0100 cand=17310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.72
+TP t=8397.084 n=8398 ex=C SEIZE p=C11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.92
+TP t=8407.810 n=8408 ex=C NFEMPTY in=C11
+TP t=8582.827 n=8583 ex=C CLAIM p=C10 mine=00 since_seize=292.77
+TP t=8583.530 n=8584 ex=B OCLAIM caller=B44 trunk=B30 guard_glare=0 since_seize=295.36 farheld=0
+TP t=8677.836 n=8678 ex=C CLAIM p=C11 mine=00 since_seize=280.75
+TP t=8678.536 n=8679 ex=B RES v=0 LEG in=B11 leg=B31 far=C11 farclaim_ago=0.70 farheld=0 hold_ms=284.38
+TP t=8679.139 n=8680 ex=A OCLAIM caller=A23 trunk=A11 guard_glare=0 since_seize=297.16 farheld=0
+CALL id=26 from=B43 to=B62 kind=L dial=62 lift=7721 dt=7744 key=7916 last=8048 tone=- alert=8068 bell=8068 ans=8235 end=8616 rel=8616 out=OK why=- heard=- rang=B62 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=25 from=C53 to=C47 kind=L dial=47 lift=7397 dt=7402 key=7534 last=7766 tone=- alert=7788 bell=7875 ans=8143 end=8781 rel=8781 out=OK why=- heard=- rang=C47 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=8986.099 n=8987 ex=B ODONE caller=B44 trunk=B30 since_flood=707.93
+PROG t=9000 calls=31 ok=19 busy=1 nogo=3 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=4 ok=2 failed=0 reg_occ A=0.76 B=0.87 C=0.41
+TP t=9079.982 n=9081 ex=A ODONE caller=A23 trunk=A11 since_flood=708.00
+TP t=9085.876 n=9086 ex=C OFLOOD caller=C24
+TP t=9095.876 n=9096 ex=C OSEIZE caller=C24 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=9097.706 n=9098 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.83
+TP t=9108.087 n=9109 ex=B FWD in=B37 ok=1000 cand=17310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=9110.350 n=9111 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.26
+TP t=9120.982 n=9122 ex=A NFEMPTY in=A17
+TP t=9173.982 n=9175 ex=A OFLOOD caller=A54
+TP t=9183.982 n=9185 ex=A OSEIZE caller=A54 ok=0100 cand=00120000 taken=0 after_flood=10.00
+TP t=9186.369 n=9187 ex=B SEIZE p=B12 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=01 hop=2.39
+TP t=9197.078 n=9198 ex=B FWD in=B12 ok=0100 cand=17320000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.71
+TP t=9200.176 n=9201 ex=C SEIZE p=C12 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=3.10
+TP t=9210.887 n=9211 ex=C NFEMPTY in=C12
+CALL id=29 from=A23 to=C74 kind=N dial=12474 lift=8279 dt=8284 key=8356 last=9064 tone=9084 alert=- bell=- ans=- end=9184 rel=9184 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=9370.060 n=9371 ex=B RES v=0 MINE in=B37 hold_ms=261.97
+TP t=9370.060 n=9371 ex=B CLAIM p=B37 mine=01 since_seize=272.35
+TP t=9371.152 n=9372 ex=C OCLAIM caller=C24 trunk=C17 guard_glare=0 since_seize=275.28 farheld=0
+TP t=9479.913 n=9480 ex=C CLAIM p=C12 mine=00 since_seize=279.74
+TP t=9480.471 n=9481 ex=B RES v=1 LEG in=B12 leg=B32 far=C12 farclaim_ago=0.56 farheld=0 hold_ms=283.39
+TP t=9481.153 n=9482 ex=A OCLAIM caller=A54 trunk=A12 guard_glare=0 since_seize=297.17 farheld=0
+TP t=9693.934 n=9694 ex=C ODONE caller=C24 trunk=C17 since_flood=608.06
+CALL id=23 from=A37 to=B70 kind=N dial=12370 lift=6830 dt=6835 key=6907 last=7715 tone=- alert=7737 bell=7737 ans=7975 end=9591 rel=9591 out=OK why=- heard=- rang=B70 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=9787.943 n=9788 ex=C OFLOOD caller=C52
+TP t=9793.018 n=9794 ex=B OFLOOD caller=B45
+TP t=9797.944 n=9798 ex=C OSEIZE caller=C52 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=9800.619 n=9801 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=1 hown=0 rsb=00 hop=2.68
+TP t=9804.017 n=9805 ex=B OSEIZE caller=B45 ok=1100 cand=17310000 taken=0 after_flood=11.00
+TP t=9806.219 n=9807 ex=C SEIZE p=C11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.20
+TP t=9806.348 n=9807 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.33
+TP t=9814.016 n=9815 ex=B FWD in=B36 ok=1000 cand=16310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=13.40
+TP t=9816.333 n=9817 ex=A SEIZE p=A16 dir=2 mon=1 fwd=FWDBUSY fst=2 hst=1 hown=1 rsb=00 hop=2.32
+TP t=9816.945 n=9817 ex=C NFEMPTY in=C11
+TP t=9818.980 n=9820 ex=A NFEMPTY in=A17
+TP t=9921.980 n=9923 ex=A ODONE caller=A54 trunk=A12 since_flood=748.00
+PROG t=10000 calls=36 ok=20 busy=1 nogo=4 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=5 ok=1 failed=1 reg_occ A=1.00 B=0.63 C=1.00
+TP t=10072.989 n=10074 ex=B RES v=0 MINE in=B36 hold_ms=258.97
+TP t=10072.989 n=10074 ex=B CLAIM p=B36 mine=01 since_seize=272.37
+TP t=10074.204 n=10075 ex=C OCLAIM caller=C52 trunk=C16 guard_glare=0 since_seize=276.26 farheld=0
+TP t=10097.972 n=10098 ex=C CLAIM p=C11 mine=00 since_seize=291.75
+TP t=10098.393 n=10099 ex=B OCLAIM caller=B45 trunk=B31 guard_glare=0 since_seize=294.38 farheld=0
+CALL id=30 from=A54 to=C30 kind=N dial=12430 lift=8584 dt=9086 key=9158 last=9906 tone=9926 alert=- bell=- ans=- end=10026 rel=10026 out=NOGO why=F_REFUSE heard=- rang=- cb=1 xv=-1 cv=-1 ab=- mid=-
+TP t=10367.979 n=10369 ex=A OFLOOD caller=A56
+TP t=10377.979 n=10379 ex=A OSEIZE caller=A56 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=10380.217 n=10381 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.24
+TP t=10390.957 n=10391 ex=B FWD in=B10 ok=0100 cand=16320000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=10393.290 n=10394 ex=C SEIZE p=C12 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.33
+TP t=10404.001 n=10405 ex=C NFEMPTY in=C12
+CALL id=27 from=A30 to=A31 kind=L dial=31 lift=7794 dt=7799 key=7911 last=8023 tone=- alert=8044 bell=8066 ans=8074 end=10317 rel=10346 out=OK why=- heard=- rang=A31 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=10500.946 n=10501 ex=B ODONE caller=B45 trunk=B31 since_flood=707.93
+TP t=10536.014 n=10537 ex=C ODONE caller=C52 trunk=C16 since_flood=748.07
+CALL id=24 from=C33 to=C30 kind=L dial=30 lift=6956 dt=6961 key=7073 last=7365 tone=- alert=7386 bell=7491 ans=7683 end=10445 rel=10452 out=OK why=- heard=- rang=C30 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=10630.023 n=10631 ex=C OFLOOD caller=C51
+CALL id=31 from=C24 to=B43 kind=N dial=12343 lift=8751 dt=8998 key=9070 last=9678 tone=- alert=9699 bell=9794 ans=9881 end=10473 rel=10515 out=OK why=- heard=- rang=B43 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=10640.024 n=10641 ex=C OSEIZE caller=C51 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=10642.550 n=10643 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=01 hop=2.53
+TP t=10652.931 n=10653 ex=B FWD in=B37 ok=1000 cand=17320000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=10655.346 n=10656 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.42
+TP t=10665.978 n=10667 ex=A NFEMPTY in=A17
+TP t=10673.027 n=10674 ex=C CLAIM p=C12 mine=00 since_seize=279.74
+TP t=10673.350 n=10674 ex=B RES v=0 LEG in=B10 leg=B32 far=C12 farclaim_ago=0.32 farheld=0 hold_ms=282.39
+TP t=10674.119 n=10675 ex=A OCLAIM caller=A56 trunk=A10 guard_glare=0 since_seize=296.14 farheld=0
+CALL id=35 from=B45 to=C65 kind=N dial=12465 lift=9406 dt=9705 key=9777 last=10485 tone=10505 alert=- bell=- ans=- end=10605 rel=10605 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=32 from=C52 to=B77 kind=N dial=12377 lift=9114 dt=9700 key=9772 last=10520 tone=10540 alert=- bell=- ans=- end=10640 rel=10640 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=10895.977 n=10897 ex=A CLAIM p=A17 mine=00 since_seize=240.63
+TP t=10897.156 n=10898 ex=B RES v=1 LEG in=B37 leg=B17 far=A17 farclaim_ago=1.18 farheld=0 hold_ms=244.23
+TP t=10897.299 n=10898 ex=C OCLAIM caller=C51 trunk=C17 guard_glare=0 since_seize=257.27 farheld=0
+PROG t=11000 calls=38 ok=23 busy=1 nogo=7 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=2 ok=3 failed=3 reg_occ A=1.00 B=0.77 C=1.00
+TP t=11195.977 n=11197 ex=A ODONE caller=A56 trunk=A10 since_flood=828.00
+TP t=11238.081 n=11239 ex=C ODONE caller=C51 trunk=C17 since_flood=608.06
+CALL id=28 from=B44 to=C47 kind=N dial=12447 lift=8185 dt=8190 key=8262 last=8970 tone=- alert=8993 bell=9027 ans=9127 end=11138 rel=11185 out=OK why=- heard=- rang=C47 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=11332.091 n=11333 ex=C OFLOOD caller=C57
+TP t=11342.091 n=11343 ex=C OSEIZE caller=C57 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=11344.463 n=11345 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.37
+TP t=11354.860 n=11355 ex=B FWD in=B36 ok=1000 cand=16320000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.40
+TP t=11357.329 n=11358 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.47
+TP t=11367.976 n=11369 ex=A NFEMPTY in=A16
+TP t=11377.977 n=11379 ex=A OFLOOD caller=A34
+TP t=11387.976 n=11389 ex=A OSEIZE caller=A34 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=11390.115 n=11391 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=01 hop=2.14
+TP t=11400.855 n=11401 ex=B FWD in=B10 ok=0100 cand=16300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=11403.356 n=11404 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.50
+TP t=11414.098 n=11415 ex=C NFEMPTY in=C10
+CALL id=34 from=A56 to=C70 kind=N dial=12470 lift=9191 dt=10280 key=10352 last=11180 tone=11200 alert=- bell=- ans=- end=11300 rel=11300 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=38 from=C51 to=A35 kind=N dial=12235 lift=10525 dt=10542 key=10614 last=11222 tone=11242 alert=- bell=- ans=- end=11342 rel=11342 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=11597.976 n=11599 ex=A CLAIM p=A16 mine=00 since_seize=240.65
+TP t=11599.070 n=11600 ex=B RES v=0 LEG in=B36 leg=B16 far=A16 farclaim_ago=1.09 farheld=0 hold_ms=244.21
+TP t=11599.350 n=11600 ex=C OCLAIM caller=C57 trunk=C16 guard_glare=0 since_seize=257.26 farheld=0
+TP t=11662.829 n=11663 ex=B RES v=1 MINE in=B10 hold_ms=261.97
+TP t=11662.829 n=11663 ex=B CLAIM p=B10 mine=10 since_seize=272.71
+TP t=11664.116 n=11665 ex=A OCLAIM caller=A34 trunk=A10 guard_glare=0 since_seize=276.14 farheld=0
+TP t=11985.975 n=11987 ex=A ODONE caller=A34 trunk=A10 since_flood=608.00
+PROG t=12000 calls=40 ok=24 busy=1 nogo=9 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=2 ok=1 failed=2 reg_occ A=0.90 B=0.33 C=1.00
+TP t=12000.154 n=12001 ex=C ODONE caller=C57 trunk=C16 since_flood=668.06
+TP t=12094.164 n=12095 ex=C OFLOOD caller=C46
+TP t=12104.164 n=12105 ex=C OSEIZE caller=C46 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=12106.402 n=12107 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.24
+TP t=12116.783 n=12117 ex=B FWD in=B37 ok=1000 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=12119.342 n=12120 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.56
+TP t=12129.974 n=12131 ex=A NFEMPTY in=A17
+CALL id=36 from=C57 to=A65 kind=N dial=12265 lift=9785 dt=11244 key=11316 last=11984 tone=12004 alert=- bell=- ans=- end=12104 rel=12104 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=12378.757 n=12379 ex=B RES v=0 MINE in=B37 hold_ms=261.97
+TP t=12378.757 n=12379 ex=B CLAIM p=B37 mine=01 since_seize=272.35
+TP t=12379.440 n=12380 ex=C OCLAIM caller=C46 trunk=C17 guard_glare=0 since_seize=275.28 farheld=0
+TP t=12642.216 n=12643 ex=C ODONE caller=C46 trunk=C17 since_flood=548.05
+TP t=12744.720 n=12745 ex=B OFLOOD caller=B26
+TP t=12754.719 n=12755 ex=B OSEIZE caller=B26 ok=1100 cand=17300000 taken=0 after_flood=10.00
+TP t=12756.485 n=12757 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.77
+TP t=12757.341 n=12758 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.62
+TP t=12767.228 n=12768 ex=C NFEMPTY in=C10
+TP t=12767.973 n=12769 ex=A NFEMPTY in=A17
+PROG t=13000 calls=43 ok=24 busy=1 nogo=10 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=3 ok=0 failed=1 reg_occ A=0.00 B=0.61 C=1.00
+TP t=13049.255 n=13050 ex=C CLAIM p=C10 mine=00 since_seize=292.77
+TP t=13050.079 n=13051 ex=B OCLAIM caller=B26 trunk=B30 guard_glare=0 since_seize=295.36 farheld=0
+TP t=13148.265 n=13149 ex=C OFLOOD caller=C35
+TP t=13158.265 n=13159 ex=C OSEIZE caller=C35 ok=1000 cand=16000000 taken=0 after_flood=10.00
+TP t=13160.280 n=13161 ex=B SEIZE p=B36 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.02
+TP t=13170.677 n=13171 ex=B FWD in=B36 ok=1000 cand=17300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.40
+TP t=13172.340 n=13173 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.66
+TP t=13182.972 n=13184 ex=A NFEMPTY in=A17
+TP t=13412.971 n=13414 ex=A CLAIM p=A17 mine=00 since_seize=240.63
+TP t=13413.902 n=13414 ex=B RES v=0 LEG in=B36 leg=B17 far=A17 farclaim_ago=0.93 farheld=0 hold_ms=243.23
+TP t=13414.524 n=13415 ex=C OCLAIM caller=C35 trunk=C16 guard_glare=0 since_seize=256.26 farheld=0
+TP t=13429.971 n=13431 ex=A OFLOOD caller=A77
+CALL id=39 from=A34 to=B25 kind=N dial=12325 lift=11285 dt=11290 key=11362 last=11970 tone=- alert=11992 bell=12097 ans=12232 end=13318 rel=13318 out=OK why=- heard=- rang=B25 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=13439.971 n=13441 ex=A OSEIZE caller=A77 ok=0100 cand=00100000 taken=0 after_flood=10.00
+TP t=13442.908 n=13443 ex=B SEIZE p=B10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.94
+TP t=13452.649 n=13453 ex=B ODONE caller=B26 trunk=B30 since_flood=707.93
+TP t=13453.648 n=13454 ex=B FWD in=B10 ok=0100 cand=17310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.74
+TP t=13456.568 n=13457 ex=C SEIZE p=C11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.92
+CALL id=33 from=A51 to=A72 kind=L dial=72 lift=9138 dt=9928 key=10120 last=10252 tone=- alert=10274 bell=10370 ans=10618 end=13342 rel=13342 out=OK why=- heard=- rang=A72 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=13467.295 n=13468 ex=C NFEMPTY in=C11
+TP t=13636.630 n=13637 ex=B OFLOOD caller=B20
+TP t=13646.629 n=13647 ex=B OSEIZE caller=B20 ok=1100 cand=16300000 taken=0 after_flood=10.00
+TP t=13649.323 n=13650 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.69
+TP t=13649.571 n=13650 ex=C SEIZE p=C10 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.94
+TP t=13659.970 n=13661 ex=A NFEMPTY in=A16
+TP t=13660.313 n=13661 ex=C NFEMPTY in=C10
+CALL id=43 from=B26 to=C65 kind=N dial=12465 lift=12652 dt=12657 key=12729 last=13437 tone=13456 alert=- bell=- ans=- end=13556 rel=13556 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=13735.320 n=13736 ex=C CLAIM p=C11 mine=00 since_seize=278.75
+TP t=13736.026 n=13737 ex=B RES v=0 LEG in=B10 leg=B31 far=C11 farclaim_ago=0.71 farheld=0 hold_ms=282.38
+TP t=13736.111 n=13737 ex=A OCLAIM caller=A77 trunk=A10 guard_glare=0 since_seize=296.14 farheld=0
+TP t=13876.334 n=13877 ex=C ODONE caller=C35 trunk=C16 since_flood=728.07
+TP t=13941.340 n=13942 ex=C CLAIM p=C10 mine=00 since_seize=291.77
+TP t=13941.990 n=13943 ex=B OCLAIM caller=B20 trunk=B30 guard_glare=0 since_seize=295.36 farheld=0
+TP t=13970.343 n=13971 ex=C OFLOOD caller=C26
+TP t=13980.344 n=13981 ex=C OSEIZE caller=C26 ok=1000 cand=15000000 taken=0 after_flood=10.00
+TP t=13982.182 n=13983 ex=B SEIZE p=B35 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.84
+TP t=13992.594 n=13993 ex=B FWD in=B35 ok=1000 cand=16300000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.41
+TP t=13994.322 n=13995 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.73
+PROG t=14000 calls=49 ok=26 busy=1 nogo=11 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=6 ok=2 failed=1 reg_occ A=0.66 B=0.91 C=1.00
+TP t=14004.969 n=14006 ex=A NFEMPTY in=A16
+CALL id=42 from=C35 to=A40 kind=N dial=12240 lift=12424 dt=13060 key=13132 last=13860 tone=13880 alert=- bell=- ans=- end=13980 rel=13980 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=14117.969 n=14119 ex=A ODONE caller=A77 trunk=A10 since_flood=688.00
+TP t=14211.969 n=14213 ex=A OFLOOD caller=A24
+TP t=14221.969 n=14223 ex=A OSEIZE caller=A24 ok=0100 cand=00110000 taken=0 after_flood=10.00
+TP t=14223.845 n=14224 ex=B SEIZE p=B11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=01 hop=1.88
+TP t=14234.570 n=14235 ex=B FWD in=B11 ok=0100 cand=16320000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.72
+TP t=14237.658 n=14238 ex=C SEIZE p=C12 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=3.09
+TP t=14248.369 n=14249 ex=C NFEMPTY in=C12
+TP t=14254.567 n=14255 ex=B RES v=0 MINE in=B35 hold_ms=261.97
+TP t=14254.567 n=14255 ex=B CLAIM p=B35 mine=01 since_seize=272.39
+TP t=14255.589 n=14256 ex=C OCLAIM caller=C26 trunk=C15 guard_glare=0 since_seize=275.24 farheld=0
+CALL id=44 from=A77 to=C64 kind=N dial=12464 lift=13335 dt=13341 key=13413 last=14101 tone=14122 alert=- bell=- ans=- end=14222 rel=14222 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=14444.548 n=14445 ex=B ODONE caller=B20 trunk=B30 since_flood=807.92
+TP t=14517.395 n=14518 ex=C CLAIM p=C12 mine=00 since_seize=279.74
+TP t=14517.963 n=14518 ex=B RES v=1 LEG in=B11 leg=B32 far=C12 farclaim_ago=0.57 farheld=0 hold_ms=283.39
+TP t=14518.124 n=14519 ex=A OCLAIM caller=A24 trunk=A11 guard_glare=0 since_seize=296.16 farheld=0
+TP t=14538.539 n=14539 ex=B OFLOOD caller=B52
+TP t=14548.538 n=14549 ex=B OSEIZE caller=B52 ok=1100 cand=17310000 taken=0 after_flood=10.00
+TP t=14550.673 n=14551 ex=C SEIZE p=C11 dir=3 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=2.13
+TP t=14551.336 n=14552 ex=A SEIZE p=A17 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=2.80
+TP t=14561.968 n=14563 ex=A NFEMPTY in=A17
+TP t=14562.399 n=14563 ex=C NFEMPTY in=C11
+TP t=14618.405 n=14619 ex=C ODONE caller=C26 trunk=C15 since_flood=648.06
+CALL id=45 from=B20 to=C60 kind=N dial=12460 lift=13542 dt=13548 key=13620 last=14428 tone=14448 alert=- bell=- ans=- end=14548 rel=14548 out=NOGO why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+TP t=14713.414 n=14714 ex=C OFLOOD caller=C34
+CALL id=40 from=C46 to=B22 kind=N dial=12322 lift=11927 dt=12006 key=12078 last=12626 tone=- alert=12648 bell=12673 ans=12787 end=14597 rel=14597 out=OK why=- heard=- rang=B22 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=14723.415 n=14724 ex=C OSEIZE caller=C34 ok=1000 cand=17000000 taken=0 after_flood=10.00
+TP t=14725.138 n=14726 ex=B SEIZE p=B37 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=0 rsb=00 hop=1.72
+TP t=14735.519 n=14736 ex=B FWD in=B37 ok=1000 cand=16310000 in_busy=1 in_m=1 fcan=0 legtaken=0 after_ms=10.38
+TP t=14737.320 n=14738 ex=A SEIZE p=A16 dir=2 mon=1 fwd=yes fst=0 hst=0 hown=1 rsb=00 hop=1.80
+TP t=14747.967 n=14749 ex=A NFEMPTY in=A16
+TP t=14802.967 n=14804 ex=A CLAIM p=A17 mine=00 since_seize=251.63
+TP t=14803.762 n=14804 ex=B OCLAIM caller=B52 trunk=B17 guard_glare=0 since_seize=255.22 farheld=0
+CALL id=48 from=C26 to=B63 kind=N dial=12363 lift=13740 dt=13882 key=13954 last=14602 tone=14622 alert=- bell=- ans=- end=14722 rel=14722 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=41 from=C31 to=C75 kind=L dial=75 lift=12366 dt=12648 key=12840 last=13032 tone=- alert=13055 bell=13060 ans=13068 end=14768 rel=14768 out=OK why=- heard=- rang=C75 cb=0 xv=1 cv=1 ab=- mid=-
+TP t=14919.967 n=14921 ex=A ODONE caller=A24 trunk=A11 since_flood=708.00
+TP t=14977.967 n=14979 ex=A CLAIM p=A16 mine=00 since_seize=240.65
+TP t=14978.729 n=14979 ex=B RES v=0 LEG in=B37 leg=B16 far=A16 farclaim_ago=0.76 farheld=0 hold_ms=243.21
+TP t=14979.689 n=14980 ex=C OCLAIM caller=C34 trunk=C17 guard_glare=0 since_seize=256.27 farheld=0
+PROG t=15000 calls=55 ok=28 busy=1 nogo=15 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=6 ok=2 failed=4 reg_occ A=1.00 B=1.00 C=1.00
+STOP t=15021 no new calls
+CALL id=46 from=A24 to=C47 kind=N dial=12447 lift=13547 dt=14124 key=14196 last=14904 tone=14924 alert=- bell=- ans=- end=15021 rel=15021 out=NOGO why=F_REFUSE heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=49 from=A26 to=A76 kind=L dial=76 lift=13867 dt=14926 key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=50 from=A41 to=A71 kind=L dial=71 lift=14374 dt=- key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+CALL id=54 from=A77 to=C55 kind=N dial=12455 lift=14615 dt=- key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+CALL id=51 from=B42 to=C52 kind=N dial=12452 lift=14480 dt=- key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+CALL id=47 from=B52 to=A35 kind=N dial=12235 lift=13613 dt=14451 key=14523 last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=37 from=B66 to=B23 kind=L dial=23 lift=10349 dt=10507 key=10599 last=10751 tone=- alert=10770 bell=10770 ans=10847 end=14997 rel=14997 out=OK why=- heard=- rang=B23 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=53 from=B71 to=B53 kind=L dial=53 lift=14588 dt=- key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+CALL id=52 from=C34 to=A54 kind=N dial=12254 lift=14560 dt=14625 key=14697 last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=DIAL mid=-
+CALL id=55 from=C50 to=A46 kind=N dial=12246 lift=14840 dt=- key=- last=- tone=- alert=- bell=- ans=- end=15021 rel=15021 out=CUT why=- heard=- rang=- cb=0 xv=-1 cv=-1 ab=WAITDT mid=-
+HANGUP t=15021 every phone on hook; drain 2500 ms
+TP t=15052.487 n=15053 ex=B OEND caller=B52 after=0 from_nst=7 claimed=1 since_flood=513.95
+TP t=15053.447 n=15054 ex=C OEND caller=C34 after=0 from_nst=7 claimed=1 since_flood=340.03
+PROG t=16000 calls=55 ok=29 busy=1 nogo=16 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=0 ok=1 failed=1 reg_occ A=0.05 B=0.05 C=0.05
+PROG t=17000 calls=55 ok=29 busy=1 nogo=16 nodt=1 wrong=0 joined=0 stuck=0 | iv_ms=1000 started=0 ok=0 failed=0 reg_occ A=0.00 B=0.00 C=0.00
+INVARIANT PASS ports_idle ex=A busy=0
+INVARIANT PASS register_free ex=A
+INVARIANT PASS marker_idle ex=A state=0
+INVARIANT PASS origin_free ex=A dirs_held=0000
+INVARIANT PASS monitors_free ex=A mon_held=00
+INVARIANT PASS resolvers_free ex=A res_busy=00
+INVARIANT PASS sweep_idle ex=A
+INVARIANT PASS unit_idle ex=A origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=A
+INVARIANT PASS no_b_clash ex=A clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=A un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=A
+INVARIANT PASS ports_idle ex=B busy=0
+INVARIANT PASS register_free ex=B
+INVARIANT PASS marker_idle ex=B state=0
+INVARIANT PASS origin_free ex=B dirs_held=0000
+INVARIANT PASS monitors_free ex=B mon_held=00
+INVARIANT PASS resolvers_free ex=B res_busy=00
+INVARIANT PASS sweep_idle ex=B
+INVARIANT PASS unit_idle ex=B origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=B
+INVARIANT PASS no_b_clash ex=B clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=B un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=B
+INVARIANT PASS ports_idle ex=C busy=0
+INVARIANT PASS register_free ex=C
+INVARIANT PASS marker_idle ex=C state=0
+INVARIANT PASS origin_free ex=C dirs_held=0000
+INVARIANT PASS monitors_free ex=C mon_held=00
+INVARIANT PASS resolvers_free ex=C res_busy=00
+INVARIANT PASS sweep_idle ex=C
+INVARIANT PASS unit_idle ex=C origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=C
+INVARIANT PASS no_b_clash ex=C clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=C un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=C
+INVARIANT PASS phones_quiet (none ringing or off hook)
+INVARIANT PASS signature_selftest
+INVARIANT TOTAL pass=38 fail=0
+SUMMARY run scale=8 seed=5 traffic_ms=14999 sim_ms=17521 phones=136 calls=55
+SUMMARY outcome total=55 OK=29 BUSY=1 NOGO=16 NODT=1 ABANDON=0 NOANS=0 WRONG=0 JOINED=0 DTAGAIN=0 SILENT=0 XTALK=0 NOSPEECH=0 COLLIDE=0 CUT=8
+SUMMARY outcome kind=L total=22 OK=18 NODT=1 CUT=3
+SUMMARY outcome kind=N total=33 OK=11 BUSY=1 NOGO=16 CUT=5
+SUMMARY outcome kind=BAD total=0
+SUMMARY attempts ex=A total=18 per_s=1.200 OK=8 NOGO=7 CUT=3
+SUMMARY attempts ex=B total=13 per_s=0.867 OK=6 NOGO=4 CUT=3
+SUMMARY attempts ex=C total=24 per_s=1.600 OK=15 BUSY=1 NOGO=5 NODT=1 CUT=2
+SUMMARY why F_REFUSE=12
+SUMMARY safety wrong=0 joined=0 xtalk=0 nospeech=0 dtagain=0 silent=0 phantom=0 wrongring=0 idlehear=0 ring_anon=0 drainring=0 alert_nobell=0 stuck=0
+SUMMARY carried erlangs=2.007 talk_ms=30100 traffic_ms=14999
+SUMMARY dialtone_delay n=49 mean=267.1 p50=89 p99=1459 max=1459
+SUMMARY postdial_alert n=29 mean=21.6 p50=22 p99=23 max=23
+SUMMARY postdial_nogo n=17 mean=19.9 p50=20 p99=21 max=21 (and 0 heard before the last digit)
+SUMMARY exchange ex=A reg_occ=0.738 reg_maxrun_ms=920 dt_wait_mean=0.37 dt_wait_max=3 offhook_mean=2.36 origin_occ=0.425 hunting_occ=0.021 sweeps=29 mon_mean=0.361 mon_max=2 res_mean=0.000 res_max=0 busB_occ=0.0010
+SUMMARY link ex=A blk=1 channels=8 busy_mean=1.682 busy_max=4
+SUMMARY unit ex=A floods=9 local=0 done=9 nogo=0 seized_in=21 nomon=0 unhold=0 nofwd_busy=1 nofwd_empty=20 n_nofwd=21 claims=11 att_take=4 att_refuse=7 refuse_unattributed=3 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=A F_REFUSE=7
+SUMMARY checks ex=A un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=B reg_occ=0.590 reg_maxrun_ms=901 dt_wait_mean=0.19 dt_wait_max=2 offhook_mean=2.03 origin_occ=0.316 hunting_occ=0.021 sweeps=30 mon_mean=0.415 mon_max=2 res_mean=0.400 res_max=2 busB_occ=0.0015
+SUMMARY link ex=B blk=1 channels=8 busy_mean=1.696 busy_max=4
+SUMMARY link ex=B blk=3 channels=8 busy_mean=1.859 busy_max=5
+SUMMARY unit ex=B floods=7 local=0 done=6 nogo=0 seized_in=23 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=0 n_nofwd=0 claims=9 att_take=6 att_refuse=3 refuse_unattributed=1 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=B F_REFUSE=3
+SUMMARY checks ex=B un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=C reg_occ=0.893 reg_maxrun_ms=861 dt_wait_mean=0.67 dt_wait_max=2 offhook_mean=2.76 origin_occ=0.575 hunting_occ=0.021 sweeps=30 mon_mean=0.292 mon_max=2 res_mean=0.000 res_max=0 busB_occ=0.0011
+SUMMARY link ex=C blk=1 channels=8 busy_mean=1.848 busy_max=5
+SUMMARY unit ex=C floods=14 local=0 done=13 nogo=0 seized_in=16 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=16 n_nofwd=16 claims=10 att_take=1 att_refuse=9 refuse_unattributed=3 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=C F_REFUSE=9
+SUMMARY checks ex=C un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY line A20 att=0 ok=0 rung=1 answered=1
+SUMMARY line A21 att=0 ok=0 rung=0 answered=0
+SUMMARY line A22 att=0 ok=0 rung=0 answered=0
+SUMMARY line A23 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line A24 att=2 ok=0 rung=0 answered=0 NOGO=2
+SUMMARY line A25 att=0 ok=0 rung=0 answered=0
+SUMMARY line A26 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line A27 att=0 ok=0 rung=0 answered=0
+SUMMARY line A30 att=1 ok=1 rung=0 answered=0
+SUMMARY line A31 att=0 ok=0 rung=1 answered=1
+SUMMARY line A32 att=0 ok=0 rung=0 answered=0
+SUMMARY line A33 att=0 ok=0 rung=1 answered=1
+SUMMARY line A34 att=1 ok=1 rung=0 answered=0
+SUMMARY line A35 att=0 ok=0 rung=0 answered=0
+SUMMARY line A36 att=0 ok=0 rung=0 answered=0
+SUMMARY line A37 att=1 ok=1 rung=0 answered=0
+SUMMARY line A40 att=0 ok=0 rung=0 answered=0
+SUMMARY line A41 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line A42 att=0 ok=0 rung=0 answered=0
+SUMMARY line A43 att=0 ok=0 rung=0 answered=0
+SUMMARY line A44 att=0 ok=0 rung=0 answered=0
+SUMMARY line A45 att=0 ok=0 rung=2 answered=2
+SUMMARY line A46 att=0 ok=0 rung=1 answered=1
+SUMMARY line A47 att=0 ok=0 rung=0 answered=0
+SUMMARY line A50 att=0 ok=0 rung=0 answered=0
+SUMMARY line A51 att=2 ok=2 rung=0 answered=0
+SUMMARY line A52 att=0 ok=0 rung=1 answered=1
+SUMMARY line A53 att=0 ok=0 rung=0 answered=0
+SUMMARY line A54 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line A55 att=0 ok=0 rung=0 answered=0
+SUMMARY line A56 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line A57 att=0 ok=0 rung=0 answered=0
+SUMMARY line A60 att=0 ok=0 rung=1 answered=1
+SUMMARY line A61 att=0 ok=0 rung=0 answered=0
+SUMMARY line A62 att=1 ok=1 rung=0 answered=0
+SUMMARY line A63 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line A64 att=0 ok=0 rung=0 answered=0
+SUMMARY line A65 att=0 ok=0 rung=0 answered=0
+SUMMARY line A66 att=0 ok=0 rung=0 answered=0
+SUMMARY line A67 att=1 ok=1 rung=1 answered=1
+SUMMARY line A70 att=0 ok=0 rung=0 answered=0
+SUMMARY line A71 att=0 ok=0 rung=0 answered=0
+SUMMARY line A72 att=0 ok=0 rung=1 answered=1
+SUMMARY line A73 att=1 ok=1 rung=0 answered=0
+SUMMARY line A74 att=0 ok=0 rung=0 answered=0
+SUMMARY line A75 att=0 ok=0 rung=0 answered=0
+SUMMARY line A76 att=0 ok=0 rung=0 answered=0
+SUMMARY line A77 att=2 ok=0 rung=0 answered=0 NOGO=1 CUT=1
+SUMMARY line B20 att=1 ok=0 rung=1 answered=1 NOGO=1
+SUMMARY line B21 att=0 ok=0 rung=0 answered=0
+SUMMARY line B22 att=0 ok=0 rung=1 answered=1
+SUMMARY line B23 att=0 ok=0 rung=2 answered=2
+SUMMARY line B24 att=1 ok=1 rung=0 answered=0
+SUMMARY line B25 att=0 ok=0 rung=1 answered=1
+SUMMARY line B26 att=1 ok=0 rung=1 answered=1 NOGO=1
+SUMMARY line B27 att=0 ok=0 rung=0 answered=0
+SUMMARY line B40 att=0 ok=0 rung=0 answered=0
+SUMMARY line B41 att=0 ok=0 rung=0 answered=0
+SUMMARY line B42 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line B43 att=1 ok=1 rung=1 answered=1
+SUMMARY line B44 att=1 ok=1 rung=0 answered=0
+SUMMARY line B45 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B46 att=0 ok=0 rung=0 answered=0
+SUMMARY line B47 att=0 ok=0 rung=0 answered=0
+SUMMARY line B50 att=1 ok=1 rung=0 answered=0
+SUMMARY line B51 att=0 ok=0 rung=0 answered=0
+SUMMARY line B52 att=1 ok=0 rung=1 answered=1 CUT=1
+SUMMARY line B53 att=0 ok=0 rung=0 answered=0
+SUMMARY line B54 att=0 ok=0 rung=0 answered=0
+SUMMARY line B55 att=0 ok=0 rung=0 answered=0
+SUMMARY line B56 att=0 ok=0 rung=0 answered=0
+SUMMARY line B57 att=0 ok=0 rung=0 answered=0
+SUMMARY line B60 att=0 ok=0 rung=0 answered=0
+SUMMARY line B61 att=0 ok=0 rung=0 answered=0
+SUMMARY line B62 att=0 ok=0 rung=1 answered=1
+SUMMARY line B63 att=0 ok=0 rung=0 answered=0
+SUMMARY line B64 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line B65 att=0 ok=0 rung=0 answered=0
+SUMMARY line B66 att=2 ok=2 rung=0 answered=0
+SUMMARY line B67 att=0 ok=0 rung=0 answered=0
+SUMMARY line B70 att=0 ok=0 rung=1 answered=1
+SUMMARY line B71 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line B72 att=0 ok=0 rung=0 answered=0
+SUMMARY line B73 att=0 ok=0 rung=0 answered=0
+SUMMARY line B74 att=0 ok=0 rung=0 answered=0
+SUMMARY line B75 att=0 ok=0 rung=0 answered=0
+SUMMARY line B76 att=0 ok=0 rung=0 answered=0
+SUMMARY line B77 att=0 ok=0 rung=0 answered=0
+SUMMARY line C20 att=0 ok=0 rung=0 answered=0
+SUMMARY line C21 att=1 ok=1 rung=1 answered=1
+SUMMARY line C22 att=1 ok=1 rung=0 answered=0
+SUMMARY line C23 att=0 ok=0 rung=1 answered=1
+SUMMARY line C24 att=3 ok=3 rung=0 answered=0
+SUMMARY line C25 att=0 ok=0 rung=0 answered=0
+SUMMARY line C26 att=2 ok=1 rung=0 answered=0 NOGO=1
+SUMMARY line C27 att=0 ok=0 rung=0 answered=0
+SUMMARY line C30 att=1 ok=1 rung=1 answered=1
+SUMMARY line C31 att=1 ok=1 rung=0 answered=0
+SUMMARY line C32 att=0 ok=0 rung=0 answered=0
+SUMMARY line C33 att=2 ok=2 rung=0 answered=0
+SUMMARY line C34 att=1 ok=0 rung=0 answered=0 CUT=1
+SUMMARY line C35 att=1 ok=0 rung=1 answered=1 NOGO=1
+SUMMARY line C36 att=0 ok=0 rung=0 answered=0
+SUMMARY line C37 att=0 ok=0 rung=0 answered=0
+SUMMARY line C40 att=0 ok=0 rung=0 answered=0
+SUMMARY line C41 att=0 ok=0 rung=0 answered=0
+SUMMARY line C42 att=0 ok=0 rung=0 answered=0
+SUMMARY line C43 att=0 ok=0 rung=0 answered=0
+SUMMARY line C44 att=0 ok=0 rung=0 answered=0
+SUMMARY line C45 att=0 ok=0 rung=0 answered=0
+SUMMARY line C46 att=1 ok=1 rung=0 answered=0
+SUMMARY line C47 att=0 ok=0 rung=2 answered=2
+SUMMARY line C50 att=1 ok=0 rung=1 answered=1 CUT=1
+SUMMARY line C51 att=2 ok=1 rung=0 answered=0 NOGO=1
+SUMMARY line C52 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C53 att=1 ok=1 rung=0 answered=0
+SUMMARY line C54 att=0 ok=0 rung=0 answered=0
+SUMMARY line C55 att=0 ok=0 rung=0 answered=0
+SUMMARY line C56 att=0 ok=0 rung=0 answered=0
+SUMMARY line C57 att=1 ok=0 rung=0 answered=0 NOGO=1
+SUMMARY line C60 att=0 ok=0 rung=0 answered=0
+SUMMARY line C61 att=0 ok=0 rung=0 answered=0
+SUMMARY line C62 att=1 ok=1 rung=0 answered=0
+SUMMARY line C63 att=0 ok=0 rung=0 answered=0
+SUMMARY line C64 att=0 ok=0 rung=0 answered=0
+SUMMARY line C65 att=0 ok=0 rung=0 answered=0
+SUMMARY line C66 att=0 ok=0 rung=1 answered=1
+SUMMARY line C67 att=0 ok=0 rung=0 answered=0
+SUMMARY line C70 att=0 ok=0 rung=0 answered=0
+SUMMARY line C71 att=0 ok=0 rung=0 answered=0
+SUMMARY line C72 att=1 ok=0 rung=0 answered=0 NODT=1
+SUMMARY line C73 att=0 ok=0 rung=0 answered=0
+SUMMARY line C74 att=1 ok=0 rung=0 answered=0 BUSY=1
+SUMMARY line C75 att=0 ok=0 rung=1 answered=1
+SUMMARY line C76 att=1 ok=1 rung=0 answered=0
+SUMMARY line C77 att=0 ok=0 rung=0 answered=0
+END t=17521
+- work/load/transit/tr_harness.svh:1647: Verilog $finish
+TPSUM ex=A seize=21 seize_fwd=20 nofwd_fwdbusy=1 nofwd_resnone=0 nofwd_nomask=0 nofwd_empty=20 fwd=0 fwd_in_dead=0 fwd_fcancel=0 fwd_leg_taken=0 res_leg=0 res_gone=0 res_mine=0 res_leg_noclaim=0 unhold=0 unhold_fwd_inprog=0 claim=11 orig_flood=9 orig_seize_taken=0 nfb_want=0 nfb_hunt=1 nfb_write=0 nomon=0 orig_seize=9 orig_claim=9 orig_claim_inguard=0 orig_done=9 orig_nogo=0 orig_local=0 orig_gone=0 res_leg_glare=0 fwd_in_claimed=0 nfb_origsweep=0 seize_late_gt40ms=0 orig_claim_noclaim=0 res_held_at_end=0
+TPHIST ex=A what=hop n=21 mean=2.30 p50=2 p90=2 p99=2 max=2.96
+TPHIST ex=A what=seize_to_fwd n=0 mean=0.00 p50=-1 p90=-1 p99=-1 max=0.00
+TPHIST ex=A what=res_hold n=0 mean=0.00 p50=-1 p90=-1 p99=-1 max=0.00
+TPHIST ex=A what=orig_to_claim n=9 mean=289.70 p50=296 p90=297 p99=297 max=297.17
+TPSUM ex=B seize=23 seize_fwd=23 nofwd_fwdbusy=0 nofwd_resnone=0 nofwd_nomask=0 nofwd_empty=0 fwd=23 fwd_in_dead=0 fwd_fcancel=0 fwd_leg_taken=0 res_leg=14 res_gone=0 res_mine=9 res_leg_noclaim=0 unhold=0 unhold_fwd_inprog=0 claim=9 orig_flood=7 orig_seize_taken=0 nfb_want=0 nfb_hunt=0 nfb_write=0 nomon=0 orig_seize=7 orig_claim=7 orig_claim_inguard=0 orig_done=6 orig_nogo=0 orig_local=0 orig_gone=1 res_leg_glare=0 fwd_in_claimed=0 nfb_origsweep=0 seize_late_gt40ms=0 orig_claim_noclaim=0 res_held_at_end=0
+TPHIST ex=B what=hop n=23 mean=2.15 p50=2 p90=2 p99=2 max=2.94
+TPHIST ex=B what=seize_to_fwd n=23 mean=10.65 p50=10 p90=10 p99=13 max=13.40
+TPHIST ex=B what=res_hold n=23 mean=261.08 p50=261 p90=283 p99=284 max=284.38
+TPHIST ex=B what=orig_to_claim n=7 mean=278.16 p50=294 p90=295 p99=295 max=295.36
+TPSUM ex=C seize=16 seize_fwd=16 nofwd_fwdbusy=0 nofwd_resnone=0 nofwd_nomask=0 nofwd_empty=16 fwd=0 fwd_in_dead=0 fwd_fcancel=0 fwd_leg_taken=0 res_leg=0 res_gone=0 res_mine=0 res_leg_noclaim=0 unhold=0 unhold_fwd_inprog=0 claim=10 orig_flood=14 orig_seize_taken=0 nfb_want=0 nfb_hunt=0 nfb_write=0 nomon=0 orig_seize=14 orig_claim=14 orig_claim_inguard=0 orig_done=13 orig_nogo=0 orig_local=0 orig_gone=1 res_leg_glare=0 fwd_in_claimed=0 nfb_origsweep=0 seize_late_gt40ms=0 orig_claim_noclaim=0 res_held_at_end=0
+TPHIST ex=C what=hop n=16 mean=2.56 p50=2 p90=3 p99=3 max=3.10
+TPHIST ex=C what=seize_to_fwd n=0 mean=0.00 p50=-1 p90=-1 p99=-1 max=0.00
+TPHIST ex=C what=res_hold n=0 mean=0.00 p50=-1 p90=-1 p99=-1 max=0.00
+TPHIST ex=C what=orig_to_claim n=14 mean=264.77 p50=257 p90=276 p99=276 max=276.26
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 18s; walltime 1366.908 s; speed 12.817 ms/s
+- Verilator: cpu 1314.356 s on 1 threads; allocated 9 MB

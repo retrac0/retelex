@@ -1,0 +1,26 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000001000000000000 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  port T_REL: A 32  X 26  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+  F12 d=0.00: X seize +27.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=-1 k=5 act=0 d=0.00  hangA=189.999 hangB=560.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  REF pattern 5: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 -0.00 CLAIM -0.00 claimed -0.00 Xres0 216.16 att_ack -0.00 done -0.00 connect -0.00 rung -0.00 watch_end -0.00 answer -0.00
+  -- family 12: pattern 5 actor 0 anchor 0 d0 1.91 ms step 1.130 ms n 5
+  F12 d=1.91: X seize +28.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=0 act=0 d=1.91  hangA=189.999 hangB=561.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=3.04: X seize +30.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=1 act=0 d=3.04  hangA=189.999 hangB=563.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=4.17: X seize +31.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=2 act=0 d=4.17  hangA=189.999 hangB=564.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=5.30: X seize +32.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=3 act=0 d=5.30  hangA=189.999 hangB=565.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=6.43: X seize +33.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=4 act=0 d=6.43  hangA=189.999 hangB=566.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 216.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  6 trials: 0 LEAK, 0 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j2.v:660: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 4s; walltime 115.656 s; speed 33.643 ms/s
+- Verilator: cpu 115.063 s on 1 threads; allocated 8 MB
+rc=0 secs=116

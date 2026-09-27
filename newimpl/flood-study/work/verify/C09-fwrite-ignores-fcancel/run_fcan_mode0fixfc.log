@@ -1,0 +1,25 @@
+
+  tb_fcan -- UNHOLD vs the forward's F_WRITE, mode 0 k 16 (+fixfc)
+    ok    both looped links up
+    [53 ms] seizure on 77 begins
+    [56 ms] HOLD pushed for 77
+    [56 ms] V cableB UNIT   G1 dst 77 src 00 bsy 1 clm 0
+    [66 ms] seizure on 77 ends: it stood 12250 us, fM armed 0
+    [67 ms] sweep done (h_done), h_ok 0100, last CONFIRM visit port 77, fst 2
+    [67 ms] UNHOLD pushed for 77; fst 2 f_in 77
+    [67 ms] V cableB UNIT   G1 dst 77 src 00 bsy 0 clm 0
+    [85 ms] 77 latch addr 00 bsy 0; 13 latch addr 00 bsy 0; res 00 mon 01
+    [485 ms] 400 ms on: 77 addr 00 bsy 0 BUSY 0; 13 addr 00 bsy 0 BUSY 0; res 00 mon 00
+    ok    77, whose seizure died, is not BUSY
+    ok    13, the leg forwarded from it, is not BUSY
+    ok    no resolver held
+    ok    no monitor held
+    ok    no clash, no overflow
+
+  6 checks, 0 errors.  PASS
+
+- work/audit/cableb/tb_fcan.v:152: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 466ms; walltime 8.026 s; speed 58.060 ms/s
+- Verilator: cpu 5.785 s on 1 threads; allocated 8 MB
+rc=0

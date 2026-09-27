@@ -1,0 +1,1162 @@
+{
+ "clusters": [
+  {
+   "id": "C01-watch-late-refusal",
+   "weight": "heavy",
+   "title": "A claim waiting out S_WATCH is refused late on a stale r_busy; a long WATCH lets the claimed trunk release first, leaving a no-edge hold",
+   "findings": [
+    {
+     "id": "att-watch-late-refusal-stuck-clm",
+     "title": "A claim held through S_WATCH is refused on a stale r_busy when WATCH ends; if the far caller left meanwhile, the refusal re-busies a released trunk with CLAIM for good and the neighbour takes it as a new seizure",
+     "category": "stuck-state",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "mini_marker.v:282 exempts S_WATCH from att_refuse (comment 275-281: 'a claim waits that out'), so the unit's att stays up (net_unit.v:673-674, CL_ACK waits only for att_ack). WATCH ends with r_release and a move to S_IDLE (mini_marker.v:550-552) or S_DRAIN (542-548). pulse_reg clears busy one edge after release_it (pulse_reg.v:117-118), so on the first tick in S_IDLE/S_DRAIN r_busy is still 1. att_refuse (282) then fires, and att_take (273-274) never gets the tick the register is actually free. The marker writes trunk <- 03 with BSY and CLM (320-327). The design intent (the WATCH comment; newimpl/README.md 'A claim ... waits rather than being refused') is a take. If the far caller hung up during the wait, the trunk has already released itself on its fM fall (port.v:176-194). The refusal then latches 03/BSY/CLM on a port whose M is down and whose source (03) never rises: there is no edge, so it is BUSY for good. CLM drives backward A = 1 for good (port.v:153). The neighbour's port is free, so it shows M up with BUSY down and st clear, and its classifier holds it as an incoming seizure (net_unit.v:609-621): a HOLD, a monitor cell and a forward. The monitor never releases because M never breaks (its only release is d_clr, 256 ms of break).",
+     "trigger": "tb_attw: A=2 2, B=2 3, A11-B11 and A12-B12 (tb_net's plant, scale 8). B20 dials 2 1 and is connected; B's marker enters S_WATCH and B20's line chatters (1 ms break / 2 ms make, so it is never settled and never gone). A20 dials 1 2 3; B's monitor claims B11 and att waits. scen 1: A20 stays on and the chatter stops 20 ms later. scen 2: A20 hangs up the moment att rises and the chatter goes on 150 ms, past B11's own release.",
+     "consequence": "scen 1: a network call the design says should be served gets cannot-complete; A20 hears 03 and B22 never rings. scen 2: B11 stays BUSY with CLAIM listening to 03, and A11 is held by A as a phantom incoming seizure with a monitor cell (1 of 2) held for good, 800 ms after every phone is on-hook. A tried to forward the phantom (n_nofwd 1). At a transit the phantom would be forwarded, holding a trunk per link, a monitor per exchange and a resolver per hub for good (reasoned; A had no onward direction).",
+     "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_attw_scen1.log: '[569 ms] B's unit raises att for 11; B's marker is in state 7' / '[593 ms] B's marker REFUSED the claim on 11' / 'B cableB MARKER G1 dst 11 src 03 bsy 1 clm 1' / 'A20 hears 03'. run_attw_scen2.log: '[603 ms] A cableB UNIT dst 11 src 00 bsy 0' (A drops) / '[725 ms] REFUSED' / '[725 ms] B ... dst 11 src 03 bsy 1 clm 1' / '[727 ms] A cableB UNIT G1 dst 11 src 00 bsy 1' (A holds the phantom) / '[1540 ms] B11 addr 03 bsy 1 clm 1 BUSY 1; A11 BUSY 1, A monitors 01, A n_nofwd 1'. Knob runs, identical RTL otherwise: run_attw_scen{1,2}fixatt.log (one gate, !r_release: scen 1 TAKEN and B22 rings; scen 2 clean) and run_attw_scen{1,2}fixwatch.log (no S_WATCH exemption: refused at 569 ms while the trunk is up; scen 2 clean). run_attw_scen1_rebuilt_knobsoff.log is identical to run_attw_scen1.log.",
+     "fix": "Minimum and safe: delete '(state != S_WATCH)' from att_refuse (mini_marker.v:282), so every claim is answered at once while its trunk is still up (tested, +fixwatch). This costs the claims that arrive in a WATCH, which the RTL already refuses today, only later. To keep the take the comment intends, add '&& !r_release' (one gate; tested, +fixatt), but only together with a bound on the wait (see queued-claim-late-attach-wrong-number); on its own it moves the late-attach hazard onto the first claim. Also make the unit's refusal path safe on a dead trunk: gate w_claim and the refusal on the trunk's M still being up (the claiming cell's probe mp_m), a gate or two.",
+     "realistic": "At real timers every local connect opens a WATCH of the words plus SETTLE (2 x T_ARM = 32 ms). A claim arriving in it is refused, about the local-connect rate x 33 ms of claims (~0.1% at a busy exchange), and gracefully. WATCH stretches to CLR (256 ms) when the local caller abandons inside SETTLE, and to NODIG (10 s) on a chattering line (mini_marker.v:538-539 anticipates chatter). The permanent stuck state needs the wait to outlast the far trunk's own release (far caller gone + T_REL 256 ms): the chattering-line WATCH, or a local and a far abandon within ~30 ms of each other. Rare, but permanent, and it spreads to the neighbour.",
+     "audit": "cableb"
+    },
+    {
+     "id": "watch-exit-refusal",
+     "title": "A claim that waits out S_WATCH is refused on the tick WATCH ends, because r_busy lags r_release by a tick",
+     "category": "race",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "att_refuse (mini_marker.v:282) excludes S_WATCH so that a claim can wait for the connect to settle, as the comment at :275-281 intends. S_WATCH ends with r_release<=1 and state<=S_IDLE (:550-553), or S_DRAIN on gone. pulse_reg's busy is a register (pulse_reg.v release_it branch), so on the next tick the marker sees state IDLE or DRAIN with r_busy still 1. att_take needs !r_busy, and att_refuse's conditions are all true, so the waiting claim is refused one tick before the register is free.",
+     "trigger": "B20 dials 2 1 (local). A20's b completes 1.5-3 ms after B20's s, so B's monitor claims inside B's WATCH (tb_orig S1.0 and S1.1). S1.2, where the claim arrives just after WATCH, is the control.",
+     "consequence": "A caller who dialled a free line (B22) hears cannot-complete; the far register was free one tick later. The outcome is clean, and there is no stuck state unless the WATCH was long (see late-refusal-no-edge-hold).",
+     "evidence": "work/audit/origin/run_s1.log S1.0: [391.288] B wr dst 11 src 00 clm 1; [391.295] B att 1 (mk 7 reg_busy 1); [394.004] B mk 7->0 reg_busy 1; [394.005] B att_ack REFUSED; [394.132] B wr dst 11 src 03 bsy 1 clm 1; B22 ring hi 0. S1.1 is the same at [1763.291]/[1764.001]. S1.2 control: att after WATCH, TAKEN, B22 rings. Patched (run_fix.log, run_fix2.log): S1.0 and S1.1 TAKEN, B22 rings.",
+     "fix": "Add && !r_release to att_refuse, one gate input; the claim is then taken at t+2 in IDLE or DRAIN. It must be combined with the bounded wait from late-refusal-no-edge-hold. An unbounded wait through a long WATCH could attach the register after the far caller's h has begun, a short count and so a wrong number; the unpatched refusal currently masks that.",
+     "realistic": "Survives real timing: the mechanism is a one-tick lag. The window per connect is SETTLE+words, about 33 ms at real timing (8 times the 4 ms at scale). Roughly 0.1-0.3% of incoming claims at 150-400 connects an hour at the owner.",
+     "audit": "origin"
+    },
+    {
+     "id": "late-refusal-no-edge-hold",
+     "title": "A claim refused late, after its trunk port has released itself, leaves both trunk ends and an origin monitor held for good",
+     "category": "stuck-state",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "mini_marker.v:282 lets a claim wait while the marker is in S_WATCH. S_WATCH (mini_marker.v:541-553) ends only on r_settled, which needs a make of at least SETTLE with no break, or on gone/nodig. So a line pulsing with makes shorter than SETTLE keeps WATCH open for as long as it pulses. While the claim waits, its far caller may hang up. The claimed port then clears itself when its fM falls (port.v:178-193, T_REL). When WATCH ends, the refusal (mini_marker.v:320-327) writes trunk<-03 with BSY and CLAIM onto that released port. It has M=0, fm=0, fe=0 (03 has no hook), so no edge is left to clear it (port.v:147, :193): it stays BUSY and CLAIM for good. At the origin, the trunk was already dropped (N_DROP, net_unit.v:823-829), and its st bit was cleared while M was low (net_unit.v:566-567). The stuck CLAIM now raises M with BUSY clear and not mine, so cls_seen (net_unit.v:283) holds the port as a fresh seizure and gives it a monitor. That M never falls, so the monitor never sees CLR. At a transit the hold would also be forwarded, and each downstream hold would keep its monitor and resolver for the same reason.",
+     "trigger": "A 22 and B 32 on a baseband link. B20 dials 2 1 (a local call) and then chatters (3 ms breaks, 2 ms makes) for 150 ms. A20 dials 1 3 2, timed so that B's claim lands in B's WATCH, and hangs up 2 ms after the claim. This is tb_orig S6.",
+     "consequence": "On the exchange: A11 and B11 are BUSY for ever and one of A's two monitor cells is held for ever. At a transit, a phantom flood holds a trunk on every link it reaches plus a monitor and a resolver at every exchange on the path, permanently. Each occurrence removes half of a default NMON=2 or NRES=2 pool. After two, the exchanges on that path can no longer claim incoming calls. The subscriber who abandoned hears nothing wrong.",
+     "evidence": "work/audit/origin/run_s6.log (snapshot): [393.288] B wr dst 11 src 00 bsy 1 clm 1; [393.295] B att 1 (mk 7 = WATCH); A20 hangs up, [429.289] A drops A11; B11 releases itself about 428 ms; [544.004] B mk 7->0; [544.004] att_ack REFUSED; [544.132] B wr dst 11 src 03 bsy 1 clm 1; [546.279] A mon_held 01; [546.562] A wr dst 11 src 00 bsy 1 (the phantom hold). 1.5 s later: busy A11 1 B11 1, A mon 01, and idle check FAILED. With the patched copy (rtl_fix, run_fix2.log S6), the claim is refused at att+15.7 ms ([9505.981]) while B11 can still release, and nothing is left held.",
+     "fix": "Take the waiting claim when WATCH ends (see watch-exit-refusal). Bound the wait so that any refusal is written while the claimed port can still release: refuse once att has waited CLR/2 (128 ms) in WATCH (rtl_fix/mini_marker.v: a 9-bit att_wait counter; one '4040 tap or half a '161). 128 ms is also early enough that a take never misses the far caller's h, which is at least ~370 ms after the claim. The general rule this breaks: never write BSY or CLAIM onto a port whose M is already low. The unit could also withdraw att itself if it sees the claimed port's M low (it has the probe).",
+     "realistic": "Survives real timing; the mechanism does not depend on scale. It needs the owner's WATCH to outlast T_REL (256 ms) after the far caller hangs up. That means the local caller at the owner keeps pulsing with makes under 32 ms just after being connected (a 20 pps dial dialling on, or a chattering hook or jack), while a claim lands in that WATCH and its caller abandons right after b. This is rare, but the damage is permanent and spreads along the network.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C02-queued-claim-late-attach",
+   "weight": "heavy",
+   "title": "A claim queued behind another (or behind S_WATCH) attaches the far register mid-h: wrong number",
+   "findings": [
+    {
+     "id": "queued-claim-late-attach-wrong-number",
+     "title": "A second claim queued behind one held in S_WATCH is attached late, in the middle of the far caller's h: wrong number",
+     "category": "wrong-number",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "One claim handler: w_claim needs cl_st == CL_IDLE (net_unit.v:487), so while att 1 waits (CL_ACK, 674) a second monitor that has heard its own e b keeps m_want (641) with its CLAIM unwritten, and its cell stops counting (M_DONE, 'two digits and no more'). When the CLAIM finally goes, the cell is freed (666-668). Nothing watches that trunk between the monitor's b and the register's attach. When WATCH ends, att 1 is refused (previous finding), cl_st returns to idle, claim 2's CLAIM goes out and att 2 rises. The register is now free, so the marker takes it (mini_marker.v:273-274, 305-319) at whatever point the far caller has reached. pulse_rx counts only from the attach (pulse_rx.v:244-249; pulse_reg.v:106-107), so the pulses of h before it are lost and h is counted short. Nothing bounds the wait or checks for breaks during it.",
+     "trigger": "tb_att2 (tb_attw's plant, B phones 20 21 22 32). B20 is connected to B21 and chatters in WATCH. A20 dials 1 2 3 and B claims B11 (att waits); A20 finishes. A21 dials 1 2 3; B's monitor on B12 wants to claim and queues behind cl_st. A21 dials 3 2 (B32), and WATCH ends 8 ms into h.",
+     "consequence": "A21 dialled 1 2 3 3 2 (B32). B's register attached to B12 13 ms into h, counted 2 pulses, and B22 rang: a wrong number the caller cannot see. A queued claim also holds a monitor cell (NMON = 2) for the whole wait, so a further seizure arriving then may go unwatched.",
+     "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_att2_dstop8.log: 'ok claim 2 (B12) is wanted and queued behind claim 1 (cl_st busy)' / '[1297 ms] A21 begins h = 3' / '[1310 ms] B's marker REFUSED the claim on 11' / '[1310 ms] B cableB UNIT G1 dst 12 src 00 bsy 1 clm 1' / '[1310 ms] B's register ATTACHES to 12' / '[1368 ms] B's register counts a digit of 2 pulses (caller 12)' / '[1509 ms] B cableB MARKER G1 dst 22 src 12' / 'B32 (dialled) hi 0 lo 400' / 'B22 (not dialled) hi 128 lo 272'. run_att2_dstop8fixatt.log (one-gate fix): claim 1 is taken at the WATCH end, after all of A20's digits, and claim 2 refused, so no wrong number in this timing; but the same late attach miscounts claim 1 if its caller is mid-digit. run_att2_dstop8fixwatch.log: both claims refused at once (569 ms, 1206 ms), no wrong number.",
+     "fix": "Never let att wait an unbounded time. Simplest: answer claims at once in WATCH (drop the S_WATCH exemption, tested +fixwatch); then only S_READ with a free register delays att, by at most a pass plus 8 frames. If a wait is kept for capacity, bound it with a tick_1k count in CL_ACK (refuse after ~ID). Keep the claiming monitor cell on the trunk until att_ack, and turn the answer into a refusal if its brk_stb fires meanwhile: one cell held a few ticks longer, a flag and a ribbon bit or a unit-side refusal. Cost: a few gates.",
+     "realistic": "The wait must reach into h. With a compliant telephone (720 ms minimum between digits, network.md 4) h begins about 590 ms or more after the claim-want. A CLR-length WATCH (<= ~290 ms) ends before that, and the late attach then catches all of h s (delayed, but correct). Only a chattering-line WATCH (up to NODIG 10 s) or a fast, non-compliant dialler reaches it. Rare, and a wrong number when it happens.",
+     "audit": "cableb"
+    },
+    {
+     "id": "claim-attach-unbounded-in-watch",
+     "title": "Claim-to-attach has no bound tied to the far caller's pause: `att` waits out S_WATCH, which a chattering local line can stretch to NODIG",
+     "category": "race",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "att_refuse excludes S_WATCH (mini_marker.v:282), and att_take needs S_IDLE/TAKE/DRAIN (273-274). WATCH ends only on r_settled (SETTLE of make: 550), r_gone (CLR: 542) or r_nodig (NODIG: 542). The unit holds att with no timeout (net_unit.v:673-674). Normally the wait is at most 256 ms (a local caller who hangs up at the connect), inside the far caller's pause (at least 640 ms less ID). A local line whose makes stay under 32 ms and breaks under 256 ms holds WATCH up to NODIG (10 s). The register then attaches to the claimed trunk mid-h or mid-s: it misses pulses (pulse_rx arm semantics), so the wrong line rings or cannot-complete follows.",
+     "trigger": "A claim arriving just after a local connect, while that local caller's line chatters (a fault, or a hand jiggling the hook).",
+     "consequence": "A wrong number or cannot-complete for the far caller.",
+     "evidence": "Reasoning from the RTL. The normal path was measured: claim -> att -> register attached within the same ms (run_mc_all.log [1349 ms]).",
+     "fix": "Let the marker refuse in WATCH once WATCH has lasted a tap of its no-digit counter (say 128 ms), or have the unit withdraw att after a bound and have the marker refuse. A gate and a tap.",
+     "realistic": "Needs a faulty local line coinciding with a claim: rare.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C03-stale-monitor-cell",
+   "weight": "heavy",
+   "title": "A seizure written away inside T_ARM keeps its monitor cell; the cell miscounts the next call on that trunk and claims it: wrong number; and short seizures starve the two cells",
+   "findings": [
+    {
+     "id": "stale-cell-after-unhold",
+     "title": "A seizure written away inside T_ARM (C_UNHOLD) keeps its monitor cell. The cell then counts the next call on that trunk one digit out of step and claims it: a wrong number",
+     "category": "wrong-number",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "net_unit.v:611-615 gives the first free cell to a seizure at w_cls. 584-588 watches the hold for T_ARM, and when M falls, 590-594 writes the hold away and sets f_cancel, but never touches m_held/m_st/m_armed. A cell is freed only by a digit mismatch (635-639), a claim (666-668) or d_clr, which is CLR = 256 ms of break (647-649). The port is now free: BUSY is clear and st was cleared by the M-low sample at 566-567. A new seizure within CLR is therefore classified again (283-284, 570) and gets a SECOND cell (612): two cells watch one port. In the stale cell, pulse_rx (pulse_rx.v:84-90) counted the short seizure's death as a pulse (a break >= HIT). It then takes the re-seizure's make as the end of a digit (pulse_rx.v:96-99, ID), so it hears a digit 1 that nobody dialled, then the new call's e as its b. If the new call's first break comes before ID of the rise, the cell instead hears (1+e) as e and b as b. Either pair matching OWN_E/OWN_B goes M_DONE, then CLAIM (656-671), then att. The mini marker attaches its register (mini_marker.v:305-319), and the register reads the call's (b h) or (h s) as the local number.",
+     "trigger": "(1) An incoming trunk seizure that dies inside T_ARM (16 ms). Causes: the far origin's guard abandoning on a break inside 16 ms of its seizure (tb_net scenario 7's case); a far origin taking glare on one direction as its claim and dropping its other directions via dmo within a few ms; a far resolver doing the same on a glared leg. (2) The same channel seized again within CLR (256 ms). Causes: a far transit's forwarder re-using the lowest free channel for the next flood (~15 ms), or the far origin's next caller keying 1 at once. (3) A code match. Variant (1,e): any exchange whose e is 1 (by convention the backbone, 10-17) claims every such call whose e equals its b, at e's ID, before b is dialled. Variant (e+1,b): any exchange claims when the caller's first break falls inside ID of the re-seizure, which a fast caller the 128 ms guard still admits can do.",
+     "consequence": "The far caller is connected, both ways, to a line on the wrong exchange, and nothing anywhere notices. In the (1,e) variant the origin even accepts the claim before b is dialled (see origin-accepts-early-claim). The true destination, if it claims, loses the race or is dropped. Side effect: each short seizure also holds a cell for 256 ms (stale-cell-starves-monitors).",
+     "evidence": "work/audit/monclaim/run_mc_all.log, scenario 1, scale 8, exchange 13. [1193 ms] cell 0 given to the 0.9 ms blip on T11. [1194] busy1x->0: hold written away, cell still held. [1213] 'port=11/11': a second cell on T11. [1229] stale cell st=2: it took '1' as e. [1349] stale cell want -> CLAIM on T11 (bkA=...1), leg T16 dropped, att@11, reg=1 on 11. Register dig=0022; [1629-1630] connect. 'FAIL SAFETY: X (13) did not claim a call dialled to 3x' and 'FAIL ... no phone at X rings' (X22 rang). Real timers: run_real13_sc1.log shows the same 3 FAILs, ringing=...40000 (X22). The (e+1,b) variant is in run_mc42_sc5.log (scale 8) and run_real42_sc5.log (real timers): exchange 42 claims a call dialled 1 3 2 2 1 and X21 rings. End to end, two exchanges at real timers, work/audit/monclaim/run_mc2.log: A seizes A11 at 450 ms; X holds it and gives a cell at 453, writes the hold away at 456; A's guard drops A11 at 464. A21 gets the register at 467 and keys 1; A re-seizes A11 at 704 ms (240 ms later). X gives a second cell at 707; the stale cell goes st=2 at 835 ('1'). A21 dials 3 and X claims at 1894 ms; A shows claimed=1 at 1895 while in origin state 4 (N_NET, b not yet dialled). A21 dials 2 2 1, X connects X22 at 3894, and A21 hears X22's tx go 1 then 0. Both exchanges were idle afterwards.",
+     "fix": "(a) The classifier keeps the cell it gave (cls_cell, one flip-flop a cell) and frees that cell in the C_UNHOLD write. (b) A cell lets go on a break no dial makes: its own timer's ID tap (monitor.md 6: Q7, 128 ms) ANDed with M low, one gate a cell; this also closes rc-tolerance-reseize. Total cost is about one package. Both are implemented in work/audit/monclaim/rtl_fix/{net_unit.v,pulse_rx.v} (diff in work/audit/monclaim/fix.patch). With the fix, scenarios 1, 3 and 5 are safe at scale 8 and at real timers (run_fix13_all.log, run_fix42_sc5.log, run_realfix13_all.log, run_realfix42_sc5.log) and the end-to-end bench is safe (run_fix_mc2.log: no claim, X22 not rung, A21 does not follow X22). The control and burst scenarios are unchanged, and the tree's tb_net passes on the fixed RTL (run_fix_tbnet.log: 88 checks, 0 errors). Defence in depth: origin-accepts-early-claim.",
+     "realistic": "Survives real timing: reproduced end to end at the board's timers. It is rare. It needs a short seizure (a guard abandon inside T_ARM, or glare taken as a claim by an origin or resolver), then that channel re-seized within 256 ms, then a code match: 1 in 8 re-seized floods for an e=1 exchange, about 1 in 64 otherwise. The origin route in tb_mc2 needed A21 to key within about 45 ms of dial tone (6 ms of margin to CLR), which is unlikely by hand but easy for a data card pulsing DTR. The transit-forwarder route is the likely one under load, because the sweep re-picks the lowest free channel. At scale 8 the origin route cannot happen: one key costs 12 + 16 ms plus an unscaled ~11 ms sweep, more than CLR = 32 ms. That is why no tree bench met it.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "stale-cell-starves-monitors",
+     "title": "Every seizure shorter than T_ARM holds a monitor cell for 256 ms. With NMON = 2, two of them make the exchange deaf to its own calls",
+     "category": "starvation",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "Same root as stale-cell-after-unhold: C_UNHOLD (net_unit.v:590-594) writes the hold away at once, but the cell given at 612-615 stays until CLR (647-649). A seizure classified meanwhile finds m_free1 empty and gets no cell, so it is 'unwatched here, for good' (monitor.md 4).",
+     "trigger": "Two short seizures (glare or guard abandons on two links), then within 256 ms a flood that dials this exchange.",
+     "consequence": "No claim. The origin waits T_CLAIM (2 s after b) and gives cannot-complete, holding a trunk on every link and its only register throughout.",
+     "evidence": "run_mc_all.log and run_real13_all.log, scenario 3: 'ok OBSERVE: both cells held by the blips', 'ok T15 held', 'FAIL LIVENESS: X claims a call dialled to it (1 3) on T15', 'FAIL X25 rings'. Passes with the fix (run_fix13_all.log, run_realfix13_all.log).",
+     "fix": "Fix (a) of stale-cell-after-unhold.",
+     "realistic": "Real timing (reproduced at real timers). Any short seizure costs a cell for a quarter second; in bursts of glare it adds to monitor-pool blocking.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "rc-tolerance-reseize",
+     "title": "The release detector is an RC while the monitor's CLR is a counter. A far port released early can be re-seized before this port and its cell have let go",
+     "category": "wrong-number",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "In the RTL both are exactly 256 ticks, so the far port's fE (port.v:183-187) and this port's fM fall within about 1 ms of each other and the cell's CLR (pulse_rx.v:93). fabric.md 3.5 makes them RC networks. With the far RC short and ours long, the far exchange can re-seize while this port still holds the old hold (BUSY, st set, so it is not re-classified or forwarded) and the old cell still counts. The gap is counted as a pulse (cnt = partial+1), then the new call's digits follow, giving the same shifted-digit claim as stale-cell-after-unhold.",
+     "trigger": "An abandoned flood seizure, re-seized by the far end within the RC spread.",
+     "consequence": "A possible wrong number; the new call is not held or forwarded here.",
+     "evidence": "Reasoning (RTL timers are exact).",
+     "fix": "Fix (b) of stale-cell-after-unhold (a cell drops on a break >= ID).",
+     "realistic": "Hardware tolerance only.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C04-hold-watch-dial-break",
+   "weight": "heavy",
+   "title": "The C_HOLD watch writes a hold away on a dial break; the make is re-classified as a fresh seizure and a second monitor claims on a truncated count",
+   "findings": [
+    {
+     "id": "hold-watch-unholds-on-dial-break",
+     "title": "The C_HOLD watch writes the hold away on a dial break, the make is taken as a fresh seizure, and a second monitor attached after pulse 1 of e claims a wrong code",
+     "category": "wrong-number",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "C_HOLD (net_unit.v:584-588) goes to C_UNHOLD on any sample of M low within T_ARM+2 ms of the hold, a dial break as much as a death, and writes the port free (590-594). The M-low visit clears st[port] (566-567). After the unhold bsy is 0, and at the make M is up with BUSY down (port.v:147: fm && !m holds BUSY only during the break), so cls_seen (283-284) re-classifies it. The result is a second HOLD and a second monitor cell (612-615) attached after pulse 1 of e. The first cell counts e correctly; the second counts e-1 and claims if (e-1, b) is this exchange's code. The known T_ARM hold-watch fix therefore turns a live seizure's break into a new rise, which breaks the monitor rule 'counts only a seizure whose rise it saw'.",
+     "trigger": "tb_brk: tb_chain's A 2 2 = B 2 3 = C 2 4, scale 8. A20 dials 1, then 3 4 2 1, with the first break of e at A's tmr = 16..18 ms, just past A's guard, so A does not abandon. C, two hops on, held its trunk at tmr 17 and is still watching it.",
+     "consequence": "A caller dialling 1 3 4 2 1 (code 3 4, nobody) is claimed by C and C21 rings. Wrong number in 3 of the 4 offsets inside C's watch; the offset past the watch and the +60 ms control are clean.",
+     "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_brk.log: '[116 ms] C HOLD 11 (tmr at A 17)' / '[117 ms] C UNHOLD 11 (tmr at A 18)' / '[130 ms] C HOLD 11 (tmr at A 31)' / '[130 ms] C attaches a monitor cell (held 11)' / '[366 ms] C CLAIMS 11' / 'C21 hi 96 lo 204' / 'wrong-number attempts 3 of 5; C unholds 3'. This run used the plain snapshot RTL (work/RTL.list).",
+     "fix": "Treat M low in C_HOLD as a death only if it outlasts a dial break. Go to a C_LOW state and write nothing; M high again means C_IDLE (the port arms during the make, which stands >= T_ARM; BUSY stays set, so st is set again and the make is not re-classified); M low for >= ID means UNHOLD. Cost: one state and a compare on cls_ms. In that rare case the classifier is held up to ~128 ms.",
+     "realistic": "At real timers the exposed exchange is the one whose seizure arrived 2-20 ms before the caller's first break (hold at +2..3 ms, watch to T_ARM+2 = 18 ms after it). The guard puts the first break at >= 128 ms after the origin's seizure, so at the RTL's ~13 ms a hop that is hop ~10, just beyond network.md 3.2's 8-hop rule. It moves nearer when hops slow under load: +10 ms waiting for a sweep in progress, and the classifier taking one seizure per ~18 ms. In effect the guard's reach shrinks by 18 ms (14% of the 128 ms tap). With a compliant dial the first break comes ~590 ms after the seizure, so only a fast dialler near the guard is exposed. It is reproduced at scale 8 because there the sweep is 8x longer relative to the guard.",
+     "audit": "cableb"
+    }
+   ]
+  },
+  {
+   "id": "C05-late-flood-guard-reach",
+   "weight": "heavy",
+   "title": "Nothing bounds how old a flood is at arrival: a late flood (slow hops, serialised classifier) meets the first break of e, the monitor counts e short and claims: wrong number; the guard covers fewer hops than documented",
+   "findings": [
+    {
+     "id": "late-flood-truncated-count",
+     "title": "A flood that arrives late meets the caller's first dial break inside the destination's T_ARM watch, or while the classifier is still busy. The port is re-seized mid-digit and a monitor claims a wrong number.",
+     "category": "wrong-number",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "Nothing in the RTL bounds how old a flood is when it reaches an exchange.\n\nPer hop, the forwarder adds 12.1-13.9 ms (measured, far M in to far M out). That is:\n- a classifier read, ~1.5 ms;\n- a sweep of 64 reads on the stride of 9, 9 ms (net_unit.v:750-777);\n- the CONFIRM pass, 1 ms (:779-785);\n- the cable-B write, 0.3-0.7 ms;\n- the incoming's next turn.\n\nThe hop grows to 30-31 ms when the seizure waits behind another seizure's T_ARM watch: the classifier takes nothing outside C_IDLE (:283-284), and C_HOLD lasts T_ARM+1..2 ms (:584-588). It grows to 18-25 ms when the forward waits for an origin sweep: F_WANT yields to N_WANT (:714-719, :847-852).\n\nAt the destination:\n- The watch treats ANY M-low sample within T_ARM+1..2 ms of the hold write as the seizure dying (:586), and C_UNHOLD writes the hold away (:590-594).\n- If that low was the caller's first break, the port's own (fm && !m) term (port.v:147) keeps it BUSY through the break. The M-low samples clear st (:566-567).\n- When M returns with BUSY=0, cls_seen re-classifies the port as a FRESH seizure (:283-284). A second monitor is attached mid-digit (:612-615); it counts e short (:635-642) and claims (:656-671).\n- R_GONE drops the first forward's legs (:688-689, :694-698), and a new forward goes out from mid-digit (:616-621). Every exchange downstream is therefore also re-seized mid-digit.\n\nThe variant with a busy classifier (another seizure's watch in progress) ends the same way: the port is first seen at the end of the first break.",
+     "trigger": "tb_fx sc6, real timers. B = 2 3.\n- A flood arrives on E30 112 ms after its origin seized: about 9 nominal hops, or about 8 with one transit behind a watch.\n- The far caller dialled 1 3 3 2 1. The first break of e starts 129 ms after the origin's seizure, which is past the 128 ms guard and so legal. That is 17 ms after the flood reached B.\n- (a) No other traffic.\n- (b) Another flood arrives on S41 1 ms earlier.",
+     "consequence": "B claims a call dialled to exchange 3 3 and rings B21: a wrong number the caller cannot see. The first, correct monitor lets go at e=3 while the re-attached one claims. Downstream exchanges also receive a mid-digit re-flood.",
+     "realistic": "Survives real timing: the runs used real timers. The upstream latency is modelled as a delay before the far M rises; it is the sum of measured per-hop latencies.\n\nIt needs a fast dialer: the first break of e must come within ~0-20 ms after the origin's guard expires. The origin's r_brk comes HIT = 8 ms into a break, so a break may start ~120 ms after the seizure. That is an inter-digit pause of ~0.27 s: rare for people, plausible for an autodialer or a data card pulsing DTR.\n\nThe destination must be reached at least ~100 ms after the origin seized:\n- about 9 hops at the measured 13 ms a hop with no other traffic;\n- about 7-8 hops with any one load event: a coincident seizure at the destination (measured margin under 1 ms at 92 ms), a transit behind a watch (+18 ms), or behind an origin sweep (+6-12 ms).\n\nnetwork.md 3.2 allows 'about eight hops' on the 128 ms tap, and the net_unit.v header says ten at 9 ms a hop. At that envelope the margin is ~8 ms nominal and negative with one load event.",
+     "evidence": "All logs are under work/audit/fwd/.\n\nrun_fx_sc6load0dly112.log (no load):\n- :26: held 1.8 ms after the rise.\n- :46 '47.680 ms port 30 latch -> src 00 bsy 0 clm 0': the watch unholds at the first break.\n- :50 '107.396 rs_busy 01 -> 00': the first forward's legs are dropped.\n- :62 '108.514 mon_held 01 -> 11': re-seized as fresh.\n- :70: a second forward.\n- :93 '436.004 mon_held 11 -> 10': the correct monitor lets go.\n- :115 '1436.286 port 30 latch -> src 00 bsy 1 clm 1': CLAIM.\n- :128 'port 21 latch -> src 30': B21 rung; FAIL at :125 and :129.\n\nrun_fx_sc6_l1_d112.log (busy classifier):\n- :43-44: 30 BUSY through the break via (fm && !m).\n- :46: monitor attached at 109.5 ms.\n- :98: CLAIM.\n- :108-109: B21.\n\nControl run_fx_sc6load1dly92.log: PASS, by under 1 ms.\n\nHop latency, run_fx_sc5.log:\n- :45, :82, :119, :156: 12.1-13.9 ms.\n- :213: 30.4-31.4 ms behind a watch.\n- :323, :400: 18.4-23.4 ms behind an origin sweep.\n- :481: 24.5-25.5 ms.",
+     "fix": "1. Never re-seize a trunk the watch has just written away. On C_UNHOLD, keep its number in a '174 with a 256 ms timer, or keep a second per-port bit cleared only by CLR of M low. A late flood then becomes a cannot-complete at the origin (T_CLAIM), not a truncated count. About 3 packages.\n2. Time the watch from the rise (cls_seen) and end it at rise + T_ARM, not hold write + T_ARM + 1..2. No extra parts.\n3. Shorten the hop. Give F_WANT precedence over N_WANT, which costs nothing: an origin's own wait never eats the guard, a transit's does. Add a second watch register so the classifier is not blocked ~18 ms per trunk seizure (about 3 packages).\n4. Re-budget the guard in network.md 3.2 and monitor.md 3.5: 13-14 ms a hop nominal, 25-31 ms loaded, plus the destination's ~20 ms watch. On that budget the 128 ms tap covers about 6 hops with one load event; jumper 256 ms beyond that.\n\nThis overlaps the cls slice's classifier-latency burst bench.",
+     "audit": "forwarder"
+    },
+    {
+     "id": "classifier-hold-serialises",
+     "title": "The T_ARM hold watch (C_HOLD) serialises the classifier. Each seizure's cell and forward start about 19 ms later per seizure ahead of it, and monitor rule 1 (a cell only for a rise seen within a scan) is not implemented",
+     "category": "spec-mismatch",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "cls_seen needs cst == C_IDLE (net_unit.v:283), and C_HOLD lasts until cls_ms > T_ARM+1 (584-588), 18 ticks at real timers. A seizure that rises meanwhile keeps st clear and is taken at a later pass; its cell (612-615) and forward (616-621) start then, however old it is. The comment at 604-608 assumes 'a millisecond or two after the rise'. monitor.md 3 rule 1 and 4 require a cell within one scan of the rise or none at all. pulse_rx's arm semantics (pulse_rx.v:72-90): a break already in progress at arm is counted only if >= HIT of it remains, and an earlier break is lost. So a late cell counts e short.",
+     "trigger": "k trunk seizures reaching one exchange within about 20 ms: floods from several neighbours, a flood arriving on more than one link, or a hub.",
+     "consequence": "Measured rise-to-hold for five simultaneous seizures: 2, 21, 40, 59, 78 ms at real timers (2, 7, 12, 17, 23 at scale 8). Rise to the onward leg carrying M: 14 ms for the first seizure and 33 ms for the second, against the 12 ms a hop the 128 ms guard is sized on (monitor.md 3.5, network.md 3.2). That eats the guard's hop budget. A cell for the k-th seizure arms about 19(k-1) ms late. With NMON >= 3-5 (monitor.md 4's sizing for larger networks), or at a deep hop where the guard's slack is small, the cell or the downstream exchange misses the first pulse of e: a partial count, and a false claim wherever the short code matches. With NMON = 2 at hop 1 the late cell still catches the tail of a 60 ms first break, so a miscount was not reproduced.",
+     "evidence": "run_real13_all.log scenario 2 ('T11: BUSY 2 ms after its rise' ... 'T15: BUSY 78 ms'). Trace at 16904-16937 ms: leg T16 carrying T11's M at 16918, leg T17 carrying T12's at 16937. run_mc_all.log for the scale-8 figures.",
+     "fix": "Take the T_ARM watch off the classifier. Each cell already probes its trunk with a timer, so let the cell write the hold away if M falls before T_ARM; for a seizure with no cell, use a one-entry hold-watch beside the classifier. The classifier is then busy only for a read (~1.2 ms). Then implement rule 1 as monitor.md 4 draws it: keep 'M low at the last visit' per port (a second 64-stage delay line beside st, about 8 x '164) and give a cell only to a rise at most one pass old; older seizures are held and forwarded but not watched.",
+     "realistic": "Latency is real-timer measured. A wrong number from it needs a deep hop or a larger NMON plus a fast caller: likely rare, not reproduced.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "guard-reach",
+     "title": "The 128 ms guard covers about 9 hops uncontended and 4 when transits are busy, not 'ten'; the RTL's hop is 12-14 ms, not 7",
+     "category": "spec-mismatch",
+     "severity": "medium",
+     "confidence": "likely",
+     "mechanism": "Per transit hop (all unscaled wiring timing): the classifier samples the rise at the port's turn, 0-1 ms (net_unit.v:283). The word read waits for the port's next turn plus 8 frames, about 1.1 ms (550-552, word_rx.v). The forward's sweep waits for port 1's turn, 0-1 ms, then makes 64 reads on a stride of 9 frames, 9 ms (453-454, 750-777). The confirm pass is 1 ms (779-785). The leg is written after the queue's WAIT of 156 us plus 133 us a word (225-232). The leg's E is captured at the incoming port's turn, 0-1 ms (port.v:173). The fwd slice measured this at real timers: 12.1-12.9 ms to the first leg's far M, 13.4-13.9 ms to the last of three (work/audit/fwd/run_fx_sc5.log). The origin's usable guard is t_guard - HIT from the push: the guard abandons on r_brk (net_unit.v:862), which comes HIT (8 ms) into a break (pulse_rx.v:84), and tmr starts at the seizure push (815). So a first break starting 120 ms after the push passes. Hop 1 (the push, the write and the caller's E capture) is 0.3-1.8 ms. A leg written during the caller's break presents its rise only at the break's end, and the far monitor then loses the first pulse. Load adds to a hop: a T_ARM watch on a previous seizure (net_unit.v:584-588 holds the classifier for T_ARM + 2 = 18 ms; measured 30.4 ms), the origin's sweep ahead of the forward (715; measured 18.4-25.5 ms), and about 1 ms per classifier or marker read that pre-empts a sweep read (292, 453).",
+     "trigger": "A caller whose pause after the key is just above the abandon threshold (ID 128 + origin sweep ~11 + guard 128, about 267 ms), calling across K hops. Floods from two origins within about 20 ms meet at every shared transit, and the second waits out the first's T_ARM watch.",
+     "consequence": "128 ms tap: 10 hops at the best uncontended hop (12.1 ms), 9 at the worst (13.9), 6 with every transit behind an origin sweep, 4 with every transit behind a T_ARM watch. 256 ms tap: 18-21 / 11 / 9. network.md 3.2's planning rule of 'no more than about eight hops' holds only while at most one transit on the path is busy: 8 hops take 99 ms with none busy, 116 ms with one, 132 ms with two (over the 120 ms). Beyond the reach, the far monitor counts e short, and a code one pulse lower is claimed: a wrong number. The doc's '7 ms a hop' and 'a hub counts as a hop and a third' do not match either: a hub's extra legs cost about 1 ms, a twelfth of a hop.",
+     "realistic": "Real timing (the hop is wiring timing, measured at real timers by the fwd slice). It matters only for fast diallers (pause 267 ms up to roughly 267 ms + the depth excess). A conforming 720 ms pause leaves 40+ hops of room. The scale-8 benches cannot see any of this: their 16 ms guard covers less than one hop (tb_net.v header).",
+     "evidence": "Arithmetic on the fwd slice's measured hop latencies (run_fx_sc5.log: 'HOP 5a nominal: ... first 12.127-12.877 ms, last 13.150-13.900 ms', 'HOP 5b behind a T_ARM watch: ... 30.384 ms', 'HOP 5c behind an origin sweep: ... 18.383 / 22.383 ms', 'HOP 5d ... 24.524 ms'), and the RTL lines above. Table: K = 1 + floor((120 - first)/hop).",
+     "fix": "Plan on about 14 ms a hop plus about 17 ms per busy transit, and make the 256 ms tap the default for anything deeper than 4-5 hops. Cheapest RTL relief: take the T_ARM watch out of the classifier's critical path (a 2-entry watch list, so a second seizure is read at once rather than 18 ms later), and start the forward's sweep at the port after the incoming one rather than at port 1. Update monitor.md 3.5's table and network.md 3.2's timing row.",
+     "audit": "protocol"
+    }
+   ]
+  },
+  {
+   "id": "C06-pre-seizure-break",
+   "weight": "heavy",
+   "title": "A break between the key being recognised and the origin seizure write is invisible to the guard; far monitors count shifted digits",
+   "findings": [
+    {
+     "id": "pre-seizure-break-unguarded",
+     "title": "A break between the key's recognition and the seizure write is invisible to the guard, and the far monitors count the next digits as e and b",
+     "category": "wrong-number",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "r_brk is a one-tick pulse. The origin looks at it only in N_NET and N_WAITCL (net_unit.v:862), and tmr is reset at the seizure push (net_unit.v:815). N_WANT, N_HUNT and N_SEIZE (net_unit.v:847-857, :808-817) ignore it, and the sweep takes about 10 ms plus any wait for a forwarder sweep. If e's first break begins inside that window, the trunk is seized onto a caller who is already on-hook. The far port's M then rises only at the make that ends the pulse, so every far monitor sees the rise after that pulse, which satisfies monitor rule 1. If e is a single pulse, no break follows inside the guard. The far monitors then read b as e and h as b, and the exchange whose code is (b, h) claims. The origin takes that as a genuine claim and connects at o_last.",
+     "trigger": "A 22, B 32. A20 dials the key with only a 20 ms make (ID is 16 ms at scale 8), so e=1's break straddles the seizure write, then dials 3 2 2 (meaning exchange 13, line 22), then one more digit, 1 (tb_orig S3b). The control (S3a) is the same number with 100 ms pauses.",
+     "consequence": "Exchange 32 claims a call dialled to 13. The origin connects its caller to 32's register, which reads the caller's s as h. With one more digit, B21 rings and A20 is connected to a line never dialled: a wrong number. With exactly five digits, 32's register waits for NODIG (10 s, holding 32's only register) and then gives NOGO. A class-marker exchange would complete a one-key 0 or 9 there, which is also a wrong number.",
+     "evidence": "work/audit/origin/run_s2_5.log S3b: [2678.999] A nst 0->1 (flood_go); [2689.283] A wr dst 11 src 20 (seizure, 10.3 ms later, during e's break); [2695.155] B cls 0->1 port 11 (the rise seen at the end of e's pulse); [3012.282] B wr dst 11 clm 1 (B claims at A's third digit); [3150.997] A N_DONE; OBS: B21 ring hi 101, A20 follows B21 4/4; FAIL x2. S3a control: nobody claims. Patched (run_fix2.log S3b): A claimed 0, B21 does not ring.",
+     "fix": "Add a sticky o_brk, set by r_brk in N_WANT, N_HUNT and N_SEIZE and cleared at flood_go. Abandon at h_done if it is set, without seizing, and treat it as a guard break in N_NET's first ticks (rtl_fix/net_unit.v). Cost: one flip-flop and two gates.",
+     "realistic": "At real timing the window is the key-to-e pause in roughly [128, 140-160] ms: ID plus the hunt, plus up to about 10 ms waiting for a forward sweep, plus queue time. e must also be a single pulse (codes 1x), or its whole train must end before the seizure. Conforming rotary dials pause much longer, so this needs a fast electronic pulse source, such as a DTR-pulsing data card or a pulse-out adaptor. The register itself accepts any pause of ID or more, so the protocol's never-a-wrong-number promise has a hole exactly there. At scale 8 the window is 8 times wider relative to dialling.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C07-link-outage-pulse",
+   "weight": "heavy",
+   "title": "A link outage of 8-256 ms is a dial pulse to every monitor and register beyond; a longer outage that ends mid-dial is a fresh seizure counted from mid-number",
+   "findings": [
+    {
+     "id": "link-outage-dial-pulse",
+     "title": "A link outage of 8-256 ms is a dial pulse to every monitor and register beyond it: a wrong number",
+     "category": "wrong-number",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "A trunk card drops A the instant its link-up detector falls and raises it again when the link returns: baseband_card.v:109 (link_up = quiet < DEAD, 192 master ticks = 47 us of silence on the fifth conductor) and :154 (a_tx = a_s2 && link_up && settled); local_trunk.v:127/170/188 do the same for all eight channels (a_tx = live ? x_a : 0). The far port's release detector rides an outage shorter than T_REL (port.v:176-188), but every pulse counter reading that M counts it: a break of HIT (8 ms) or more is a pulse (pulse_rx.v:84). Before the claim those are the monitor cells (net_unit.v:316-320 pulse_rx on the cell's probe; 633-645 decide e and b on the count). After the claim it is the owner's register, which the marker attaches to the claimed trunk (mini_marker.v:305-319), and which reads the trunk's M. The origin's register reads its own caller, never the trunk, and nothing compares the two counts. An outage inside a digit adds a pulse; one in a pause adds a digit 1. network.md 1.1 (lines 71, 79) tells a carrier to 'let A fall' on link down, and bounds only lengthened makes and breaks, never an inserted one. monitor.md's two rules act only on the first digit heard.",
+     "trigger": "work/audit/proto/tb_pflap.v at REAL timers (HIT 8, ID 128, CLR 256, T_REL 256, guard 128, T_CLAIM 2000; dial 10 pps 60/40, 600 ms pauses). A = 2 1, B = 2 3, two baseband channels A11-B11, A12-B12. sc1: A20 dials 1 2 2 2 1 (exchange 22 exists nowhere); the cable (all five conductors, both channels) is out for 40 ms, starting 30 ms into the make after b's second pulse. sc2: A20 dials 1 2 3 2 1; B claims; the cable is out for 40 ms in the make after s's one pulse.",
+     "consequence": "sc1: B's monitor counts b = 3, B claims a call dialled to 22, A's origin takes the claim, and B's register reads 2 1 and connects B21. A20 dialled 22-21 and talks to 23-21. sc2: B's register counts s = 2 and B22 rings instead of B21. The caller gets no sign either way. Any link on the path counts, not only the origin's. An outage in the pause between the key and e makes every monitor beyond it read (1, e) as the code, i.e. the 10-17 range the numbering plan gives the backbone and hubs. On a local trunk one outage hits all eight channels' calls at once.",
+     "realistic": "Survives real timing: reproduced at real timers. It needs an outage of 8-256 ms on any link of the path while the caller is dialling e b (before the claim) or h s (after it), about 4-5 s per call. On copper in one room that is a disturbed connector or a clock-conductor glitch (DEAD is only 47 us). On MF8 (not in this RTL) it is a loss of frame lock that MUTEs A while the link re-syncs (network.md 1: 'MUTE clears the A hold'). Rare per call, but it is the one path to a wrong number that the guard and rule 1 do not address, and every link of every path is exposed.",
+     "evidence": "work/audit/proto/run_pflap.log. Control sc0 green ('control: nobody claims a call to exchange 22', 'control: A20 hears cannot-complete after the claim wait'). sc1: 'OBS 1990.0 ms cable cut for 40 ms' / 'OBS 2159.4 ms B raises att: a claim on B11' / 'OBS 2160.2 ms A's origin has its claim' / 'OBS 2600.0 ms b is in (A's register: 2 digits, 0022)' / 'OBS B21 rang 1, B22 rang 0; A claimed 1' / 'FAIL outage in b: nobody claims a call dialled to exchange 22' / 'FAIL outage in b: B21 (23-21, never dialled) does not ring'. sc2: 'OBS 3590.0 ms cable cut for 40 ms' / 'OBS B21 rang 0, B22 rang 1' / 'FAIL outage in s: B22 (never dialled) does not ring'. ('rang' = B's marker wrote the line BUSY, i.e. connected it.)",
+     "fix": "Make an outage a RELEASE, never a pulse. The trunk card POISONS itself on an outage of RIDE = 4 ms or more; RIDE is below HIT, so anything shorter can never count. While poisoned it holds A at 0 both ways, into its port and out to the far card, until the link is up AND its own port's A_RX has been idle for 300 ms (past T_REL and CLR). Both ends then release and their monitors and registers clear. An origin that still holds the trunk keeps its card poisoned, so the far end never sees a fresh seizure (finding link-return-fresh-seizure) and the origin times out at T_CLAIM. Cost: about half a '4040, a '74 and two gates per baseband card. For the local trunk, a poison bit per channel plus one shared timer, about 2 packages. The price is that an established call dies on any outage of 4 ms or more instead of clicking. TESTED in a copy, work/audit/proto/rtl_fix/baseband_card.v (RTL_fix.list), with the same bench: sc1 no claim, 'ok outage in b: nobody claims'. sc2 the claimed call is dropped: neither B21 nor B22 rings, so a failed call replaces the wrong line. sc3 no false claim. Both exchanges idle after each (work/audit/proto/run_pflap_fix.log). Not run against the tree's benches. Also add to network.md 1.1's carrier table: 'A must never show a break the caller did not make'.",
+     "audit": "protocol"
+    },
+    {
+     "id": "link-return-fresh-seizure",
+     "title": "A link that returns while the caller is still dialling is a fresh seizure at the far end, counted from mid-number: a false claim",
+     "category": "wrong-number",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "An outage of T_REL or more releases the far hold (port.v:176-194: the fM detector falls, rel clears the latch). Its monitor clears at CLR (net_unit.v:647-649), and st[] for the port is cleared by the M-down sample (net_unit.v:566-567). The origin sees no event: its trunk's M was 0 before any claim. It keeps the trunk listening to its caller (net_unit.v:811-815) and waits for T_CLAIM. When the link returns, the far port shows M with BUSY clear and st clear. cls_seen (net_unit.v:283-284) takes it as a new seizure: a hold, a new monitor and a new forward. The rise is real, so monitor.md rule 1 is met, and the origin's guard expired long ago. The new monitor counts the caller's remaining digits as e b.",
+     "trigger": "tb_pflap.v sc3, real timers: A (2 1) and B (2 3). A20 dials 1 2 2 3 1 (exchange 22: nobody). The cable is out for 500 ms starting 200 ms after e's first break, so e's two pulses are through, and it returns in the pause after e.",
+     "consequence": "B's new monitor reads b = 2 as e and h = 3 as b, and B (2 3) claims a call dialled to 22. A's origin takes that claim. B's register then gets s = 1 as its first digit, reads it as a key from a claimed trunk and refuses (mini_marker.v:423, NOGO with CLM), so A20 hears cannot-complete. With s = 2..7 instead, B's only register would sit on the call for NODIG (10 s) waiting for a digit that never comes, refusing every other claim and local caller meanwhile. The real owner, had it existed beyond B, never gets the call, because the flood beyond the outage was released.",
+     "realistic": "Reproduced at real timers. Needs an outage of 256 ms or more that ends while the caller is still dialling: a cable re-seated, or an MF8 link re-locking. Rarer than link-outage-dial-pulse; same family, same fix.",
+     "evidence": "work/audit/proto/run_pflap.log sc3: 'OBS 1200.0 ms cable cut for 500 ms' / 'OBS 1700.0 ms cable back' / 'OBS 2989.7 ms B raises att: a claim on B11' (= end of h's third pulse + ID 128) / 'OBS 2990.1 ms A's origin has its claim' / 'FAIL link back mid-dial: nobody claims a call dialled to exchange 22'. With the fixed card: 'OBS 4500.0 ms all dialled; B mon 00 reg 0; A claimed 0' / 'ok link back mid-dial: nobody claims' (run_pflap_fix.log).",
+     "fix": "Same card fix as link-outage-dial-pulse: the origin side's card stays poisoned while its port's A_RX is up, i.e. while the origin still has the caller on it. Tested: no false claim. A unit-side alternative is weaker: the classifier cannot tell a returning link from a new seizure, because the word read (net_unit.v:572-573) looks the same.",
+     "audit": "protocol"
+    },
+    {
+     "id": "link-hit-extra-pulse",
+     "title": "A link drop shorter than CLR during the flood adds a pulse at every downstream cell but not at the origin",
+     "category": "other",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "baseband_card.v:154 and local_trunk.v:188 force A to 0 while link_up is false (about 47 us without the far clock). For a held trunk that is a break the cells count (pulse_rx.v:84-90), while the origin's register never sees it.",
+     "trigger": "A cable hit or clock glitch during e or b.",
+     "consequence": "A partial or extra count, and a possible false claim.",
+     "evidence": "Reasoning.",
+     "fix": "A cell could drop on its block's MUTE, which is not visible to the unit today, or the card could hold A through short hits.",
+     "realistic": "Carrier-dependent.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C08-phantom-seizure",
+   "weight": "heavy",
+   "title": "A seizure with no origin behind it (a stuck A) holds a monitor, a resolver and a channel on every link for good: no timeout anywhere on the unit",
+   "findings": [
+    {
+     "id": "phantom-seizure-no-timeout",
+     "title": "A seizure with no origin behind it (one stuck A conductor) holds a monitor, a resolver and a channel on every link it floods, for good; the near end keeps seizing the dead channel",
+     "category": "stuck-state",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "Nothing on the unit times out a monitor cell or a resolver. A cell is freed only by a decided digit or a 256 ms break (net_unit.v:633-649). A resolver is freed only by M on one of its legs (R_LEG) or by the incoming port's BUSY falling (R_GONE, net_unit.v:681-708). The only timers are the origin's (T_KEY, T_CLAIM, net_unit.v:876-882) and the classifier's T_ARM watch (584-588). A seizure whose M neither falls nor pulses has no origin to time it out. The link-up detector watches only the clock conductor (baseband_card.v:109; local_trunk.v:127/170), so an A conductor stuck at 1 reads as a live seizure: an open conductor into a fail-safe-high receiver (tb_lnet.v:57 models a cut exactly so), or a driver stuck on. At the other end the channel looks FREE, because the far hold sends no backward A. So the near origin's sweep, which keeps the lowest free trunk (or the highest with g; net_unit.v:759-766), picks that channel on every call, into a far port that is already BUSY with M up, where the new seizure is invisible.",
+     "trigger": "work/audit/proto/tb_pchain.v sc1 (scale 8; no timer is involved). A 2 2 is linked to B 2 3 on three baseband channels (A faces E, B faces W with g); B is linked to C 2 4 on one. The A conductor from A11 into B11 sticks at 1.",
+     "consequence": "B holds B11, a monitor and a resolver, and forwards over the only B-C channel; C holds C11 and a monitor. All of it is unchanged 1.1 s later (8.8 s real) and would stay so for ever. C is cut off from the network: its key finds no trunk and it gets cannot-complete at once. Every network call from A fails: A's key takes A11 (free at A, BUSY at B), so A20 cannot even reach its neighbour B, and it hears cannot-complete after T_CLAIM. B's calls to A still work, because B hunts W from the top. With NMON = NRES = 2, two such seizures reaching an exchange take both its monitors, and it can never claim again. A local trunk carries all eight channels' A on one conductor. One open conductor there is eight phantom seizures: at real timers the classifier's 18 ms T_ARM watch serialises them, so the forwarder is free for each until the two resolvers are gone. That takes both of B's monitors and resolvers, plus a channel, a monitor and a resolver at every exchange downstream of each of two phantom floods. No event word is sent and nothing alarms. Everything clears when the conductor is mended.",
+     "realistic": "Triggered by a single-conductor fault, which is plausible in a rack or on a cable. It does not depend on timer scaling. The effect is permanent and silent until repaired. The same missing timeout is reached from a local-trunk cut: MUTE_BLK keeps the incoming port BUSY, so R_GONE never comes (fwd slice, work/audit/fwd/run_fx_sc2var0.log 'FAIL the resolver let go of a forward whose incoming is dead'). A conductor stuck at 0 (fail-safe-low baseband receivers, baseband.md 3.3) does not leak, but gives the same black hole at the near origin.",
+     "evidence": "work/audit/proto/run_pchain.log sc1: 'OBS 100 ms after: ... B mon 01 res 01 ... B11->14 ... B14->11 bsy 1 | C ... mon 01' / 'OBS 1.1 s after (8.8 s real): (identical)' / 'FAIL a seizure nobody dials on does not hold a monitor or a resolver for good' / 'FAIL nor the B-C channel' / 'OBS C20 keys 1: C dirs 0000, hears s1 0 s0 1' / 'FAIL C can still reach the network' / 'OBS A20 keys 1: A dirs 0100, A11 busy 1 A12 busy 0' / 'OBS A20 dialled B: A claimed 0, hears s1 0 s0 1, B reg 0' / 'FAIL A20 can still reach its neighbour B' / 'ok B20 reaches A (B's glare order takes B13...)' / 'ok sc1: mended -- everything released' / 'ok after the mend A20 reaches C again'.",
+     "fix": "(a) A monitor timeout: a cell that has not decided e within about T_KEY (5 s) of its attach frees itself. The hold stays; the port is still up. Cost: a bit or two per cell on a shared slow counter, about half a package a cell. (b) A resolver timeout at about T_KEY + T_CLAIM (7-8 s) that drops the legs and frees itself, about half a package a resolver. (c) An event word for both, naming the port, so a stuck conductor alarms (counters.md). (d) At the origin, an EV_NOCLAIM event naming the trunk when T_CLAIM expires. Optionally a 6-bit 'failed last time' register the sweep skips, so one dead channel cannot take every call (the sweep already compares h_idx with candidates).",
+     "audit": "protocol"
+    }
+   ]
+  },
+  {
+   "id": "C09-fwrite-ignores-fcancel",
+   "weight": "light",
+   "title": "F_WRITE ignores f_cancel: a seizure dying at the sweep end leaves port and leg BUSY for good and a resolver held",
+   "findings": [
+    {
+     "id": "fwrite-ignores-fcancel",
+     "title": "F_WRITE ignores f_cancel: an UNHOLD pushed on the sweep's last tick is followed by the forward's leg and way back, and the dead seizure's port, its leg and a resolver are held for good",
+     "category": "race",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "C_UNHOLD pushes the unhold and sets f_cancel (net_unit.v:590-594, 593). F_WANT (714) and F_HUNT (720-724) honour f_cancel; F_WRITE (725-743) does not. F_HUNT reads the old f_cancel on the tick the UNHOLD sets it. The sweep's last read is port 70 (h_idx = 1 + 9 x 63 mod 64, 769-770), whose word ends in port 00's bit-time, so CONFIRM counts ports 00..77 and h_done is always raised at port 77's visit (779-785). A seizure on 77 whose first low sample is that visit therefore gets C_UNHOLD and h_done on one tick. The UNHOLD (77 <- 00, b 0) is pushed, F_HUNT goes to F_WRITE, and the next tick pushes the leg (13 <- 77, B) and, because there is one leg, the way back (77 <- 13, B) (732-736). The order on cable B is unhold, leg, way back. At the real T_ARM the ~12 ms seizure never armed 77's fM; 77 listens to a leg whose M is 0 and the leg listens to dead 77, so no detector will ever fall (port.v:176-194). The resolver (rs_two) waits for R_LEG or R_GONE (688-689), and 77's BUSY never drops.",
+     "trigger": "tb_fcan: one exchange, trunks looped to themselves, 77 facing W (blip on its incoming A) and 13 facing E. T_ARM 16 ms (real), other timers scale 8. The seizure on 77 ends at scan 16 during CONFIRM (it stood 12.25 ms).",
+     "consequence": "77 and 13 stay BUSY and a resolver (1 of 2) stays held 400 ms after the seizure died and for good. A second occurrence exhausts NRES = 2 and the exchange stops forwarding. The trunk group loses two channels.",
+     "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_fcan_mode0.log: '[66 ms] seizure on 77 ends: it stood 12250 us, fM armed 0' / '[67 ms] sweep done (h_done) ... last CONFIRM visit port 77' / '[67 ms] UNHOLD pushed for 77; fst 2' / '[67 ms] FORWARD pushed: f_in 77 f_ok 0100 f_cancel 1' / cable B in order: 'dst 77 src 00 bsy 0', 'dst 13 src 77 bsy 1', 'dst 77 src 13 bsy 1' / '[485 ms] 77 addr 13 bsy 1 BUSY 1; 13 addr 77 bsy 1 BUSY 1; res 01'. Control run_fcan_mode1.log (the same seizure dying one pass earlier): the UNHOLD comes before h_done, F_HUNT cancels, clean. run_fcan_mode0fixfc.log (F_WRITE honours f_cancel): clean.",
+     "fix": "In F_WRITE, 'if (f_cancel) fst <= F_IDLE' ahead of w_fwd, and gate w_fwd with !f_cancel (tested, +fixfc; one gate). Alternatively F_HUNT takes the cancel combinationally from (w_cls && cst == C_UNHOLD && cls_port == f_in).",
+     "realistic": "It needs a seizure that dies in the millisecond before the forwarder's sweep ends, about 11-13 ms after it arrived (a far origin's guard abandoning, glare, a blip), on the trunk in socket 77. Other ports are exposed only if the UNHOLD lands in the 1-3 ticks while w_fwd waits behind a claim, hold or origin write. The permanent state needs a one-leg forward (a chain); with 2-3 legs, R_GONE sees 77 free and drops them. Rare but permanent. The benches' scale-8 T_ARM of 2 ms hides it, because the port arms within the sweep and releases itself.",
+     "audit": "cableb"
+    },
+    {
+     "id": "fwrite-ignores-fcancel",
+     "title": "F_WRITE ignores f_cancel. A seizure on port 77 that dies in the last CONFIRM sample leaves 77 and its one leg BUSY for good and a resolver held.",
+     "category": "stuck-state",
+     "severity": "low",
+     "confidence": "reproduced",
+     "mechanism": "C_UNHOLD sets f_cancel (net_unit.v:593), but only F_WANT (:714) and F_HUNT at h_done (:722) read it. F_WRITE (:725-743) and w_fwd (:492-493) do not.\n\nThe sweep's last read is always port 70, and it ends in port 00's bit-time. So CONFIRM always visits exactly 00..77, and h_done falls on 77's sample.\n\nA seizure on 77 whose first M-low sample is that one gets its unhold queued first, because w_cls outranks w_fwd (:488). The forward follows it. For a one-leg forward, the way back (:732-736) then re-holds 77 BUSY, listening to the leg.\n\nAt real timers the watch (17-18 ms) outlasts a forward (~11-12 ms), so the window exists. At scale 8 (watch ~4 ms) it does not.",
+     "trigger": "Real timers. A flood on port 77 dies (a bounce, a break inside the far origin's guard, a link glitch) 11-13 ms after it rose, in the pass that ends the forward's CONFIRM. Exactly one other direction has a free trunk.",
+     "consequence": "Neither port can ever release itself: 77 gets no fM edge and its leg no fE edge, so both stay BUSY with bsy=1. The resolver waits for an R_GONE that cannot come.\n\nIt heals only when the leg's far exchange seizes that channel. R_LEG then frees the resolver, and that neighbour's call is patched straight through B to the N neighbour; B's classifier never sees it, because the leg is BUSY. The pair clears when that call ends.",
+     "realistic": "Rare: one port in 64, one pass in ~18, and only seizures that die within T_ARM. It only happens at real timers.",
+     "evidence": "Reproduced by the cableb slice, not by me: work/audit/cableb/run_fcan_mode0.log.\n- '[67 ms] FORWARD pushed: f_in 77 f_ok 0100 f_cancel 1'.\n- '[485 ms] 400 ms on: 77 addr 13 bsy 1 BUSY 1; 13 addr 77 bsy 1 BUSY 1; res 01': FAIL.\n- Control run_fcan_mode1.log and fixed run_fcan_mode0fixfc.log both pass.\n\nMy own analysis adds the resolver-level consequence and the misroute when the leg's far end reuses the channel.",
+     "fix": "In F_WRITE: if (f_cancel) fst <= F_IDLE; and add !f_cancel to w_fwd. One gate. Included in work/audit/fwd/rtl_fix/net_unit.v, where tb_chain and tb_lchain are green.",
+     "audit": "forwarder"
+    }
+   ]
+  },
+  {
+   "id": "C10-resolver-muted-incoming",
+   "weight": "light",
+   "title": "A resolver whose incoming link goes down (MUTE_BLK keeps BUSY) outlives its call; stale legs later cut or re-point live calls",
+   "findings": [
+    {
+     "id": "resolver-outlives-muted-incoming",
+     "title": "A resolver whose incoming trunk's link goes down (LTU/MF8 MUTE_BLK) outlives its call. Its stale legs are later cut, re-pointed or re-seized.",
+     "category": "stuck-state",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "When a local trunk's link dies, local_trunk.v:188-189 drops A and raises MUTE_BLK, and port.v:147 makes MUTE_BLK part of every port's BUSY.\n\nR_GONE fires only when the incoming reads BUSY=0 (net_unit.v:688-689), so it cannot fire for the whole outage. Meanwhile the incoming's latch released itself T_REL after its A fell, and every leg released itself (their E fell).\n\nThe resolver keeps rs_busy, rs_held and rs_leg:\n- Its old legs stay `mine` (:435-436).\n- R_LEG still fires on ANY M on an old leg (:684-687). w_res then drops the other old legs and writes the way back onto the dead incoming (:691-705).\n- At the mend, R_GONE drops every old leg (:694-698).\n\nAll of these writes land on ports that other calls now use.",
+     "trigger": "tb_fx sc2, real timers. A W neighbour's seizure on LTU channel B10 is forwarded into E30 and S40. Then the LTU cable is cut for longer than 256 ms.\n- var0: during the outage B20 keys 1; its flood takes E30 and S40, the free old legs. The cable is mended while B20 is dialling.\n- var1: during the outage the E neighbour seizes E30 to call B21. The cable is mended during that call.",
+     "consequence": "The resolver is lost for the whole outage; with NRES=2 that is half of a transit's forwarding.\n\nvar0: at the mend the stale R_GONE re-points B20's two live trunks to 00, cutting its flood mid-dial. When the E party claims anyway, B20 hears it but the E party hears nothing. B's classifier then takes the E party's claim level on the now non-BUSY E30 as a fresh incoming seizure, monitors it and floods it W and S: a phantom flood.\n\nvar1: the stale R_LEG re-points the dead B10 at E30. After the mend the W neighbour sees a seizure on its channel 0 carrying the E caller's hook and voice for the whole E-B21 call. A real W neighbour would hold it, monitor it and forward it through its own network for the call's duration; nothing times out a steady M at a monitor or a resolver.\n\nEverything heals only when the unrelated call ends.",
+     "realistic": "Real timers, as run. It needs any LTU or MF8 outage longer than T_REL (256 ms) that starts while a forward from that link is held. That probability is roughly the link's forward occupancy at the transit: ~5-25% of such outages at a busy hub. var1 is the likely outcome once the old legs are reused before the mend. A baseband cut has no MUTE and is not affected.",
+     "evidence": "All logs are under work/audit/fwd/.\n\nrun_fx_sc2var0.log:\n- :31: the forward.\n- :41: link down at 90 ms.\n- :54-57: B10 and the legs release at 346 ms.\n- :59: FAIL, the resolver is still held.\n- :75-77: B20 takes 30 and 40.\n- :97: mended at 2050 ms.\n- :106-108 '2050.141 rs_busy 01 -> 00 / 2050.425 port 40 latch -> src 00 bsy 0 / 2050.559 port 30 latch -> src 00': the stale drops.\n- :114-115: FAIL.\n- :124-139: E30 re-classified and forwarded; '4742.399 far LTU ch 0: M seen by W neighbour -> 1'.\n- :145-147: FAIL.\n\nrun_fx_sc2var1.log:\n- :64-65 '500.395 rs_busy 01 -> 00 / 500.813 port 10 latch -> src 30 bsy 1': the stale R_LEG and way back.\n- :115 '4630.009 far LTU ch 0: M seen by W neighbour -> 1'.\n- :117-119: FAIL for the phantom M and the voice leak.\n- :120, :124: it clears only when the E call ends.\n\nWith the fix:\n- runfix_fx_sc2var0.log: 18/18 pass; '346.520 rs_busy 01 -> 00'.\n- runfix_fx_sc2var1.log: all pass except one bench-check artefact. The check expected E30 to listen to 00, but B's one-leg forward correctly re-points E30 at S40.\n- Regressions on the fix: runfix_fx_sc4.log PASS, runfix_chain.log 32/32 PASS, runfix_lchain.log 48/48 PASS.",
+     "fix": "Implemented in work/audit/fwd/rtl_fix/net_unit.v:\n- Two flip-flops per leg: rs_lb (seen BUSY) and rs_lf (then seen free, meaning it released itself).\n- A resolver whose held legs are all rs_lf dissolves without writing anything.\n- rs_lf legs are excluded from R_LEG, from the w_res and w_claim drops, and from `mine`.\n\nCost: about 8 flip-flops and a few gates per resolver, roughly 2 packages. It also removes the normally redundant R_GONE writes to legs that have already released.",
+     "audit": "forwarder"
+    }
+   ]
+  },
+  {
+   "id": "C11-claimed-trunk-loss",
+   "weight": "heavy",
+   "title": "The claimed trunk dying before N_DONE is never noticed: the caller is latched to a dead channel and later overhears another call",
+   "findings": [
+    {
+     "id": "claimed-trunk-loss-listen-in",
+     "title": "The claimed trunk dying before N_DONE is never noticed: the caller is latched to a dead channel and later hears someone else's call on it",
+     "category": "race",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "`claimed` is set on the first M sample (net_unit.v:795-804) and never re-examined. N_WAITCL waits only for o_last (net_unit.v:881), and N_DONE then writes caller<-trunk with BSY (net_unit.v:818-822). If the claim's M falls in between, the trunk port releases itself and becomes free for hunting, but the origin still connects the caller to it. The caller's latch then has no edge to clear it while the caller stays off-hook, because its E is 0. The next call on that channel, from this exchange's own origin or forwarder or from the far end, is heard by the stranded caller.",
+     "trigger": "A20 dials 1 3 2 and B claims. Link 11 is cut for 80 ms (more than T_REL and CLR at scale). A20 dials 2 1, and A connects A20<-A11. A22 then dials 1 3 2 2 0, A's sweep takes the now-free A11, B20 rings and answers (tb_orig S4). Other triggers: glare whose far origin then abandons (its own code, 8 or 9, or a hang-up), or a far reset.",
+     "consequence": "A20 hears nothing, and no NOGO, until it hangs up. Meanwhile it overhears B20 talking to A22, a one-way listen-in by a caller who dialled someone else (safety property 1). The far register it was claimed by has abandoned.",
+     "evidence": "run_s2_5.log S4: [4368.150] A CLAIMED on 11; cut; [4490.122] B wr dst 11 src 00 bsy 0 (B abandons); A still nst 5; [4786.277] A wr dst 20 src 11 bsy 1 (N_DONE onto the dead trunk); [4856.277] A wr dst 11 src 22 (A22's seizure of the same channel); OBS: A20 follows B20 4/4, FAIL. Patched (run_fix2.log S4): A abandons at the loss, A20 follows 2/4 (chance level for NOGO), ok.",
+     "fix": "While claimed and before N_DONE, count consecutive probe samples of `trunk` with M low. At 4, abandon with O_NOGO through N_DROP. This needs a 3-bit counter and the existing claim comparator (rtl_fix/net_unit.v `lost`). The persistence is required. A one-sample version was tried (run_fix_s6.log): when the caller's own hang-up is what dropped the claim, it fired about 1 ms before the register's gone and wrote NOGO with BSY onto the caller's already-released port, leaving A20 BUSY ([428.160] nst 5->7, [428.578] A wr dst 20 src 03 bsy 1; IDLE? busy_a bit 16). A side effect for Joel to decide on: a glare 'claim' is the far caller's dial pulses, so it breaks within about 60 ms and this fix turns documented residual glare (tb_lfull 5, 'joins two callers') into two clean cannot-completes.",
+     "realistic": "Survives real timing. It needs the claim's M to be lost for at least T_REL (256 ms) during the 1.5-3 s from the claim to the last digit (a link flap, far reset or glare followed by far abandon), and then a new call on that channel while the caller waits in silence. Rare, but a privacy failure and a silent dead call.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C12-origin-claim-acceptance",
+   "weight": "light",
+   "title": "The origin accepts any single M sample on any held trunk as the claim, even long before b",
+   "findings": [
+    {
+     "id": "origin-accepts-early-claim",
+     "title": "The origin takes an M rise on a held trunk as the claim even before b is dialled",
+     "category": "other",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "net_unit.v:795-804 detects the claim in o_net, which is N_NET or N_WAITCL; only `guarding` tells glare apart. A legitimate claim is made at the far end at b's ID, a relay delay after the origin's own b ID, so it can only arrive around or after the origin's f2 (net_unit.v:867-875). A rise well before b, outside the guard, is never a real claim.",
+     "trigger": "The (1,e) variant of stale-cell-after-unhold, or any cell that claims on a wrong count before b.",
+     "consequence": "The origin accepts it, drops its other directions (dmo) and connects at o_last: the wrong number goes through instead of becoming a cannot-complete.",
+     "evidence": "run_mc2.log [1895 ms]: 'origin=4 claimed=1' (N_NET) about 1 s before A21 dials b; origin=5 only at 2893.",
+     "fix": "In N_NET outside the guard, hold a rise as pending and accept it only if b arrives within a few ms (tick-phase slack between the origin's register and the far monitor, about 2 ms plus the hop); otherwise nogo. One flip-flop and a tap on tmr. It does not stop the (e+1,b) variant, which claims at b's ID.",
+     "realistic": "Real timing; it matters only as the second line of defence.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "claim-on-one-sample",
+     "title": "A claim is accepted on a single 1 ms sample of M on any held trunk",
+     "category": "spec-mismatch",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "net_unit.v:795-804 accepts the first sp_m sample on any d_held trunk as the claim. It drops every other direction at once (dmo) and at o_last connects the caller to that trunk.",
+     "trigger": "A single false A=1 sample on any held trunk during the 2-4 s flood, from a carrier whose A can glitch (MF8 S-bit errors, a radio link).",
+     "consequence": "The true owner's direction is dropped, and the caller is connected into a far hold listening to 00. It hears silence, not NOGO, until it hangs up. Not a wrong number unless the owner sat behind the kept trunk.",
+     "evidence": "Reasoning. channel-cards.md 5 measures 0 spurious A transitions on MF8 at 1e-1, so the risk depends on the carrier.",
+     "fix": "Require the claim M to stand for 2-4 samples. This shares the `lost` counter of claimed-trunk-loss-listen-in.",
+     "realistic": "Not on baseband or local trunks. Possible on carriers not yet designed.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C13-leg-glare",
+   "weight": "heavy",
+   "title": "Glare on a forward leg is taken by the transit resolver as the claim, joining two strangers, uncounted; residual glare rate",
+   "findings": [
+    {
+     "id": "leg-glare-joins-uncounted",
+     "title": "Glare on a forward's leg: R_LEG takes the far exchange's own seizure as the claim and joins two callers, and the transit counts nothing",
+     "category": "race",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "The resolver watch sets R_LEG on any M on a held leg (net_unit.v:684-687), and w_res then re-points the incoming at that leg and drops the others (:691-705).\n\nThere is a window of ~1-3.5 ms between the forwarder's CONFIRM sample of a leg (:779-785) and the leg's write landing plus one turn. In that window the far exchange can seize the same channel for its own origin call or forward. It hunts from the other end, so this needs the link's last free channel.\n\nThe far M is then indistinguishable from a claim. Only the origin counts glare (:803); a transit has no n_glare or EV_GLARE path.",
+     "trigger": "tb_fx sc3: a flood arrives on E30. B's forward confirms S40 free (hst=CONFIRM, h_n=40). The S neighbour seizes S40 for its own call before B's leg write lands.",
+     "consequence": "The E flood's caller and the S neighbour's caller are joined both ways (E30 <-> S40), and the flood's other legs, W10 and N74, are dropped. n_glare stays 0 and no EV_GLARE is sent.\n\nThe S origin takes our caller's M as its own claim; it is counted there only if inside its guard. Each origin then connects its caller. Neither dialled the other.",
+     "realistic": "Yes, at real timers. The per-link condition is the same as the documented residual glare: the last free channel, both ends within a few ms. But a flood seizes a channel on every link of the tree, so the exposure per call is multiplied by the number of links it crosses. Order of magnitude: 1e-4 per call in a loaded network (arithmetic).",
+     "evidence": "run_fx_sc3.log (work/audit/fwd/):\n- :29 '41.630 ms the S neighbour seizes S40'.\n- :32: the forward.\n- :39 '42.521 rs_busy 01 -> 00': R_LEG.\n- :46 '42.959 port 30 latch -> src 40'.\n- :54-59: FAIL x4 (joined, hears, backward A follows the S hook, not counted).\n- :60 'n_glare 0 -> 0, EV_GLARE 0 -> 0'.\n\nUnchanged with the resolver fix (runfix_fx_sc3.log).",
+     "fix": "A real claim can rise only after the leg has been seen BUSY with M low: the far end first holds it to 00, and needs two digits before it can claim. So allow R_LEG only on a leg so armed; that is one flip-flop per leg and can share rs_lb.\n\nAn M on an unarmed leg is glare. Count it (n_glare, and EV_GLARE naming the leg). Then either drop that leg and keep the others, which turns the join into a failed branch, or keep the documented 'residual glare joins' but counted. Cost: at most one package.",
+     "audit": "forwarder"
+    },
+    {
+     "id": "forward-glare-collapse",
+     "title": "Glare between a transit's forward and an origin makes the upstream call hostage to a stranger; the owner's own claim then releases the path under both callers",
+     "category": "race",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "The forwarder hunts with the same sweep and the same per-candidate g compare as an origin (net_unit.v:759-766), so g protects it equally, and residual glare remains on the last free channel. At the transit the glared leg's M (the far origin's caller) is taken as a claim (R_LEG, net_unit.v:683-686). With one leg (rs_two) the incoming port already listens to the leg (the way back, net_unit.v:732-736), so the upstream origin also sees M rise on its trunk and 'claims' on the stranger's hook (net_unit.v:795-800). From then on it never times out. The resolver frees itself (net_unit.v:701-706). The upstream path is now held up by the stranger's hook through the transit's way back. (i) If the stranger's side drops (hangs up, own code, reserved digit, or its guard), the transit's in-port and the upstream trunk release themselves T_REL later on the fall of their fE/fM. (ii) Otherwise, when the transit's own monitor later claims the upstream call, the CLAIM write re-points the in-port from the glared leg (E up) to 00 (net_unit.v:656-658). Its fE falls, and T_REL later the port releases itself and clears CLM (port.v:183-186, 193). That generalises: any unit write that re-points a port whose E is up becomes a release T_REL later. The release runs back to the upstream trunk. In both cases both origins are 'claimed' and at the last digit connect their callers to trunks that have already released (net_unit.v:818-821).",
+     "trigger": "tb_pchain.v sc0 (scale 8): chain A 2 2 - B 2 3 - C 2 4, where the B-C link has one channel. A20 dials 1 2 3 2 1 (B21). C20 keys 1 timed so that C's origin and B's forward take B14-C11 unseen. Calibrated from two single keys (B14 written 41.3 ms after A's key, C11 27.3 ms after C's); glare on the first try with C's key 14.0 ms after A's (B14 and C11 both written at 2128.284 ms). Pass 0: the callers dial on 40 ms after C's key. Pass 1: 80 ms after.",
+     "consequence": "Pass 0: C20's first break fell inside C's 16 ms guard, so C abandoned. C11, B14, B11 and A11 then released one after another while A20 was still dialling. B's monitor cleared, and A's 'claimed' origin connected A20 to the released A11. Pass 1: B's monitor claimed A20's call correctly at b, and the CLAIM write re-pointed B11 off B14 (E up, C20's hook). B11 released 33 ms later, taking CLM, then A11, B14 and C11 followed. A20, who dialled B21 correctly, never reaches it. C20's call went nowhere. Both finish latched onto idle trunks (A20 -> A11, C20 -> C11, both released): silence, and whatever next seizes those channels is heard (the origin slice's S4 listen-in, work/audit/origin/run_s2_5.log). The hypothesised listen-in of C20 on A20's call did NOT happen, because the orphan leg released with the rest. At a hub the resolver would also drop the real legs on the glare leg's M, losing the call in every other branch. At real timers the stranger's M reaches the upstream origin about 15 ms after its seizure, inside the 128 ms guard, so the upstream origin counts EV_GLARE naming its own trunk, a link that never glared (at scale 8 it arrived just outside the 16 ms guard, so this run shows glare 0 at A).",
+     "realistic": "Residual glare only (see residual-glare-rate): the last free channel must be taken from both ends within about 1.3 ms. The mechanism uses no scaled timer except the guard that triggered pass 0. At real timers the release delays are 256 ms instead of 32, the stranger's departure is a hang-up, own code or reserved digit, and pass 1's self-release happens regardless.",
+     "evidence": "work/audit/proto/run_pchain.log and run_pchain_trace.log (+trace). Pass 1: 'T 2128.284 B14 -> 11' / 'T 2128.284 C11 -> 20' / 'T 2128.418 B11 -> 14 clm 0' / 'T 2130.203 B rs busy 01 act 1' then '00' / 'T 2389.999 B cl_st 0 -> 1' / 'T 2390.284 B11 -> 0 clm 1' / 'T 2422.999 B11 -> 0 clm 0' / 'T 2454.999 A11 -> 0' / 'T 2486.999 B14 -> 0' / 'T 2486.999 C11 -> 0' / 'T 2628.283 C20 -> 11' / 'T 2649.283 A20 -> 11' / 'OBS after dialling: A20 -> 11, A11 -> 0 busy 0, B21 -> 0' / 'FAIL A20 reached B21, as dialled'. Pass 0: 'T 801.003 C nst 4 -> 7 (after 1, claimed 1)' / 'T 801.288 C11 -> 0' / 'T 831.003 B14 -> 0' / 'T 832.003 A11 -> 0' / 'T 832.003 B11 -> 0 clm 0' / 'T 1268.287 A20 -> 11'. (The 'ok B21 hears A20' lines are false passes: B21 went off-hook and heard dial tone, 'T 1381.411 B21 -> 1'.)",
+     "fix": "(a) The origin re-checks its claim: after the claim it watches the claimed trunk's M, and if M falls before N_DONE it abandons with NOGO. It already compares the probe's port with d_trunk (net_unit.v:795-797), so this is one more term, and it also closes the origin slice's S4. (b) A resolver treats M on a leg within about 100 ms of writing it as glare, not a claim. A real claim needs two digits, so it cannot come that soon. It then writes that leg away instead of freeing itself; with (a) in place the far origin abandons cleanly. Cost: a small per-resolver age counter, about half a package each. (c) w_claim should also write the one-leg way back away. The general rule: never re-point a port whose E is up unless a release is intended.",
+     "audit": "protocol"
+    },
+    {
+     "id": "residual-glare-rate",
+     "title": "Residual glare: window about 1.35 ms per end, and rate against load for 2- and 8-channel groups",
+     "category": "race",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "Glare needs both ends to take the same channel after each end's confirm visit (net_unit.v:779-785) and before the other end's M arrives. The per-end window D runs from the confirm visit to the far port's M: the rest of the 1 ms confirm pass (mean 0.5 ms), plus WAIT 156 us and a 133 us word, plus the E capture (mean 0.5 ms), plus the card's 31 us. That is about 1.35 ms mean and 2.7 ms worst. g makes the two ends start from opposite ends of the group, so it needs the last free channel. Forwards count as seizures at each end too, so a central link sees every network flood from both sides.",
+     "trigger": "Opposite-end seizures within about +/-1.35 ms while exactly one channel is free.",
+     "consequence": "Estimated glare rate = 2 x P(one free) x lambda_X x lambda_Y x 2D (holding about 8 s mixed floods/calls). 2-channel link: 0.2 E -> 1 per 2000 h; 0.5 E -> 1 per 170 h; 1.0 E (20 % blocked) -> 1 per 33 h. 8-channel link: 2 E -> 1 per 960 h; 4 E -> 1 per 14 h; 6 E -> 1 per 2 h; 8 E offered -> about 1 an hour. Negligible at design loads, but daily-to-hourly under overload on a busy central link. Each event is two joined callers, or forward-glare-collapse. On the counters it shows as EV_GLARE on an origin's trunk even when the glare was hops away.",
+     "realistic": "Real timing. The window is wiring timing, identical at both scales. tb_lfull and tb_pchain both glared on their first try with synchronised keys.",
+     "evidence": "Arithmetic on the RTL's confirm-to-write path. tb_pchain glare at try 0 (run_pchain.log); tb_lfull glare at try 0 (work/base-lfull.log 'glare at try 0, B's key 0 us after A's').",
+     "fix": "None needed at design load. If it matters under overload, keep one channel per group as glare reserve (seize the last free channel only from the g end), about one gate on the sweep's g compare.",
+     "audit": "protocol"
+    }
+   ]
+  },
+  {
+   "id": "C14-forward-resources",
+   "weight": "light",
+   "title": "Every forward needs an idle forwarder and a free resolver at classification, even a one-leg chain patch; otherwise silently not forwarded; doomed floods hold longest; NMON exhaustion",
+   "findings": [
+    {
+     "id": "forward-needs-resolver-and-idle-forwarder",
+     "title": "Every forward, even a chain's one-leg patch, needs a free resolver and an idle forwarder at the moment of classification. Otherwise the flood silently stops here.",
+     "category": "capacity",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "A seizure is forwarded only if fst == F_IDLE && rs_free_any at C_ACT (net_unit.v:616-617). There is no retry: the seizure is held (:609-611) and counted in n_nofwd (:506-507, :545).\n\nF_WRITE allocates a resolver for one-leg forwards too (:737-741, rs_two). A resolver is freed only by:\n- R_LEG, a claim coming back through this exchange;\n- rs_mine, a claim here;\n- R_GONE, the incoming reading free T_REL after its origin let go.\n\nSo each resolver is held for the flood's e b dialling (2.0-3.8 s, mean 2.7 s) plus 0.26 s when the claim is made elsewhere.\n\nThis contradicts network.md 3.2 on two points: 'no resolver free: patch into the first direction found, as a chain would', and 'a transit on a chain ... holds nothing'.",
+     "trigger": "tb_fx sc4: floods on E30, S41, W12 and N77, 40 ms apart, at a four-direction transit with NRES=2 and NMON=2.\n\ntb_fx sc5d: B20 keys 1, then floods arrive on S41 and E30 1 ms apart while B's origin sweep runs.",
+     "consequence": "In sc4 the third and fourth floods are held BUSY but never passed on, and not watched either (both monitors are taken). Their callers hear cannot-complete only T_CLAIM (2 s) after b, about 5 s after the key, and every channel and resolver upstream stays held until then.\n\nIn sc5d the second flood is lost even though a resolver is free: the forwarder was still sweeping after waiting 10.5 ms for the origin.\n\nArithmetic (Erlang B, 2.9 s holds, 48 lines an exchange, 3 calls a line an hour; every flood passes every transit):\n- 8 exchanges, 30% leaving: 0.24 E, 2.3% of floods not forwarded.\n- 8 exchanges, 50% leaving: 5.6%.\n- 20 exchanges: 0.66 E, 11.6% with NRES=2, 2.5% with 3, 0.4% with 4.\n\nBehaviour at the limit is graceful: nothing stays stuck, a freed resolver is reused at once, and everything is idle after release. It is slow, though, and doomed floods hold resources upstream.",
+     "realistic": "Yes, at real timers.\n\nThe forwarder-busy loss needs an origin sweep ahead of a pair of floods arriving within ~20 ms. At real timers the ~19 ms T_ARM watch otherwise keeps classifications apart. At scale 8 the watch is only ~4 ms, so scale-8 load studies overstate this loss.",
+     "evidence": "All logs are under work/audit/fwd/.\n\nrun_fx_sc4.log:\n- :43: both monitors held.\n- :62 '111.295 n_nofwd 0 -> 1' and :65 '152.123 n_nofwd 1 -> 2'.\n- :70-71: 12 and 77 held with src 00 bsy 1.\n- :92: the freed resolver is reused.\n- PASS on idle afterwards.\n\nrun_fx_sc5.log:\n- :460 '7708.495 n_nofwd 0 -> 1'.\n- :482-483: the second flood was not forwarded.",
+     "fix": "- Stuff NRES = 3 at a hub and 4 at a large centre, as network.md asks: about 4.5 packages each.\n- Implement the documented fallback: with no resolver free, write a one-leg patch (two latches) into the first direction found, and keep that leg's number in the monitor cell (one '574 per cell) so a local claim can still drop it.\n- Keep a seizure the busy forwarder missed pending (cls_port already holds it) and forward it when the forwarder frees, if it is still under ~40 ms old.\n- Optionally, claim-to-refuse at a chain transit that could not forward.",
+     "audit": "forwarder"
+    },
+    {
+     "id": "chain-forward-holds-resolver",
+     "title": "Every forward, even a chain transit's one leg, holds a resolver for the whole flood, and with none free the seizure is not forwarded at all",
+     "category": "capacity",
+     "severity": "medium",
+     "confidence": "likely",
+     "mechanism": "A forward starts only if a resolver is free (net_unit.v:616-621, nf_busy 506-507). Every forward, one leg included (rs_two), takes a resolver (737-741). The resolver is held until the claim comes back through its leg (R_LEG) or the incoming port's BUSY falls (R_GONE), i.e. until the origin drops the trunk plus T_REL (681-708). The docs promise otherwise: network.md:176 'One found: patch it, two latches, and forget', :241-243 and :267-268 'a transit on a chain ... holds nothing', and :286 'no resolver free: patch into the first direction found'. The RTL has no such fallback.",
+     "trigger": "Any transit, chain or hub, while NRES = 2 floods are already in progress through it.",
+     "consequence": "The third concurrent flood through a transit is held but not passed on (n_nofwd). Every exchange beyond misses the call, and if the owner is beyond, the caller gets cannot-complete only at T_CLAIM (about 2 s after b, 4-5 s after the key). At real timers the resolver hold is about 2.5-5.5 s: to the claim, or to the drop plus 0.26 s, or to T_CLAIM for a failed call. A central transit sees every network flood. For the doc's 8-exchange network (348 lines, 30 % leaving, 0.087 floods/s): A = 0.26 E, 2.6 % of floods not forwarded per central transit (0.2 % with 3 resolvers). For 20 exchanges of 48 lines: 0.72 E, 13 % (3.0 % with 3, 0.55 % with 4). At 50 % leaving: 25 %. A call crossing k such transits is lost with 1-(1-B)^k. Graceful in kind (a clean cannot-complete, nothing stuck, never a wrong number) but slow.",
+     "realistic": "Real timers. The hold times are protocol digit times, not scaled wiring.",
+     "evidence": "RTL lines above. Erlang B on hold times read from the RTL. The fwd slice reproduced the pool running out ('sc4: resolver pool exhausted: floods held and not passed on', work/audit/fwd/run_fx_sc4.log).",
+     "fix": "The one-leg forward does need its leg remembered: for a local claim's drop (659-665) and as the safety net for a leg written on a seizure that dies inside T_ARM, whose leg then has no fE edge. So either (a) the docs change to 'a resolver at every transit, sized on all network floods: 3 at 8 exchanges, 4 at 20', or (b) keep a one-leg forward's leg in the monitor cell holding the incoming port (a '174 a cell) with a T_ARM watch on the leg, and reserve resolvers for fan-outs. Implement the doc's fallback only together with (b).",
+     "audit": "protocol"
+    },
+    {
+     "id": "leaf-sweeps-for-nothing",
+     "title": "A leaf (one direction) runs a full 10 ms forward sweep for every incoming flood and counts it as 'not forwarded'",
+     "category": "other",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "fwd_mask excludes only the incoming direction and the strapped ones (net_unit.v:505, 618). The unit has no record of which directions exist, so at a leaf fwd_mask is non-zero, F_WANT starts a sweep (714-719), it finds nothing (h_ok = 0, 722), and nf_empty increments n_nofwd (508, 545).",
+     "trigger": "Every incoming flood at an end-of-chain or leaf exchange.",
+     "consequence": "The leaf's own origin can wait up to 10 ms more for the sweep (net_unit.v:848), and a sweep in progress delays classifier and marker reads by about 1 ms each. n_nofwd counts normal events, so it cannot serve as a loss counter or alarm.",
+     "realistic": "Every incoming call at every leaf; cheap but constant.",
+     "evidence": "RTL reading.",
+     "fix": "A 4-bit 'directions present' register, set by every sweep for every trunk word read, free or not (at 759), and cleared by a sweep that reads none. Skip the forward when fwd_mask & present == 0. One '175 and gates.",
+     "audit": "protocol"
+    },
+    {
+     "id": "doomed-floods-hold-longest",
+     "title": "Under overload a call that will fail holds its flood about 2 s longer than one that succeeds: positive feedback on links and resolvers",
+     "category": "overload",
+     "severity": "medium",
+     "confidence": "likely",
+     "mechanism": "A successful call's losing legs are dropped at the claim (net_unit.v:800, 831-837), about 2.2-3.2 s after the key at real dialling, then T_REL. A call whose flood could not reach its owner is dropped only at T_CLAIM, 2 s after b (net_unit.v:882), i.e. 4.4-5.4 s after the key. That includes the trunk no forward could take, the resolver no transit had and the monitor no owner had. Nothing can end it sooner. A transit that cannot forward only counts it (nf_empty/nf_busy, 506-508). The doc's 'transit may claim to refuse' (network.md:203-206) is not built, and would be unsafe: a transit cannot know whether the owner is reachable through another direction of the origin, and its refusal claim would win the race against the real owner's. T_CLAIM's 2 s is sized for a 0.9 s carrier round trip (network.md:75). In this RTL the claim returns in milliseconds: the owner decides b at the same instant as the origin, the CLAIM write is about 0.3 ms, and the way back is about 1-2 ms a hop.",
+     "trigger": "A network near its link or resolver capacity: floods that fail hold every link they reached for T_CLAIM more.",
+     "consequence": "Flood occupancy grows by about 0.75 x the blocking fraction. Example: 20 exchanges of 48 lines, 30 % leaving, 2 central transits with NRES = 2. Blocking alone is 24 %; with the feedback the fixed point is about 32 %. Retries amplify it. It is not a livelock or a collapse (every hold is bounded), but it is ungraceful: resources are held longest by calls that will fail. The caller hears cannot-complete about 2 s after b.",
+     "realistic": "Real timers. The magnitude depends on the carrier mix: with copper and MF8 only, T_CLAIM could be much shorter.",
+     "evidence": "RTL lines above; arithmetic (fixed point of A = lambda (3 s (1-p) + 5 s p), p = 1-(1-B(2,A))^2).",
+     "fix": "Make T_CLAIM a jumpered tap like the guard: about 500 ms for copper and MF8 networks (covers the owner's b + ID + CLAIM write + a S_WATCH SETTLE wait + the path), 2 s only where a slow carrier needs it. No parts, one tap. Do not build the transit refusal.",
+     "audit": "protocol"
+    },
+    {
+     "id": "monitor-pool-exhaustion",
+     "title": "NMON = 2: a third concurrent seizure is unwatched for good. A call to the exchange then fails slowly, and the whole flood is held 2 s longer",
+     "category": "capacity",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "When m_free1 is empty at w_cls (net_unit.v:612), no cell is given. The hold and the forward still go ahead. Nobody here can claim.",
+     "trigger": "Three or more floods overlapping at one exchange within the 1.5-2.7 s a cell is held per flood (released at e's ID if e is not ours, at b's ID otherwise).",
+     "consequence": "The call is lost: cannot-complete 2 s after b. The unwatched trunk, every link's flood trunk and the origin's register are held that long, then released cleanly. Erlang B for cells held 1.5-2.7 s per flood: at 0.26 E, 2 cells lose 2.6% (3 cells 0.2%); 0.5 E: 7.7% (1.3%); 0.93 E (monitor.md 4's 47 exchanges): 18% (3 cells 5.4%, 5 cells 0.2%). Stale cells (stale-cell-starves-monitors) lower the effective NMON.",
+     "evidence": "run_mc_all.log and run_real13_all.log scenario 2: 'backward A after b: 00011', and 'T13/T14/T15 unwatched: backward A=0, still held=1'; then '2: every trunk, cell, resolver and the register released' after the far ends drop.",
+     "fix": "Fit NMON per monitor.md 4 (3 up to 20 exchanges, 4-5 beyond); it is a parameter already. Graceful: no stuck state, but slow.",
+     "realistic": "A documented limit; the consequence here is quantified and it degrades gracefully.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C15-one-register",
+   "weight": "light",
+   "title": "The one register refuses every claim that finds it busy; two exchanges calling each other refuse each other; the refusal is heard only after h s",
+   "findings": [
+    {
+     "id": "one-register-claim-refusal",
+     "title": "The one register refuses incoming network calls at a rate equal to its occupancy (about 22% at 48 lines), and crossing calls refuse each other",
+     "category": "capacity",
+     "severity": "high",
+     "confidence": "reproduced",
+     "mechanism": "mini_marker.v:282 refuses any claim at once whenever r_busy is set, outside WATCH. The register is held from a local caller's lift to its connect. It is held from an origin caller's lift to N_DONE, which comes only at o_last, the caller's last digit (net_unit.v:410, :881, :818-822), even though the claim has already fixed the path. It is also held from a claimed trunk's attach to its connect. So a claim is refused whenever the far exchange's own callers are dialling. Two floods crossing between the same pair of exchanges, each registering while the other's b arrives, are both refused (S_YIELD, mk 6), although both called lines are free.",
+     "trigger": "A20 dials 1 3 2 2 1 while B20 dials 1 2 2 2 1 (tb_orig S2). More generally, any claim that arrives while the far register holds a caller.",
+     "consequence": "Both callers dial all five digits and then hear cannot-complete. Neither called line rings. Model (work/audit/origin/model/reg1.py, reg1.out: 10 pps, 0.8 s pauses, 1-4 s reaction time, two exchanges), share of claims refused: 16 lines, 3 calls/h, 30% leaving: 7.7%. 32 lines: 14.5%. 48 lines: 21.8% (25.2% at 50% leaving, 41.5% at 5 calls/h). That is 20 to 40 times the 1% trunk blocking the network is sized for, so the register, not the trunks, is the network's bottleneck. Under overload, network completion falls towards 0 while local calls still queue. A refused origin still holds its register for the whole 1 e b h s (about 9 s), so failed attempts cost as much as successful ones. There is no livelock or stuck state; recovery is immediate when load falls.",
+     "evidence": "work/audit/origin/run_s2_5.log S2: [352.295] A att 1 port 12 (mk 6 reg_busy 1), A att_ack REFUSED, [352.423] A wr dst 12 src 03 bsy 1 clm 1; [370.295] B att 1 port 11 (mk 6 reg_busy 1), REFUSED, [370.423] B wr dst 11 src 03 clm 1; OBS S2: A21 ring-hi 0, B21 ring-hi 0, refusals A 1 B 1. Also tb_net scenario 8 (a local caller).",
+     "fix": "(1) Connect at the claim: go to N_DONE on claimed && dmo==0 and drop o_last and its one-key special case. This saves gates. It frees the origin register about 2.6 s sooner. The refused caller hears NOGO at b and not after s. It breaks the symmetry: of a crossing pair at most one fails, because the first origin's register is free before the second claim arrives. The model gives 21.8% to 19.2% at 48 lines; the gain is modest because local callers dominate occupancy. (2) A bounded claim wait of 100-300 ms, less than the far caller's pause, helps only when the register is about to free. (3) Beyond about 16 lines, a network exchange needs a register pool (the maximal build), or the monitor cell must collect h s itself. Record the figure in mini-marker.md section 8 and common-control.md section 4, which currently present the mini marker as a full pulse-flood exchange.",
+     "realistic": "Survives real timing: it is holding-time arithmetic at real dial timing. It is systematic at busy hour, not a corner case.",
+     "audit": "origin"
+    },
+    {
+     "id": "one-register-refuses-claims",
+     "title": "One register: every claim that finds it busy with anything, even a local caller who has not dialled yet, is cannot-complete",
+     "category": "capacity",
+     "severity": "medium",
+     "confidence": "reproduced",
+     "mechanism": "mini_marker.v:282 refuses whenever r_busy (outside S_WATCH) and writes trunk -> 03 with BUSY and CLAIM (320-327). The claim handler takes claims one at a time, lowest cell first (net_unit.v:331-340, 656-676).",
+     "trigger": "A call to the exchange while its register serves a local dialler, its own origin call (key to b plus up to T_CLAIM), or another terminating call (h s).",
+     "consequence": "Refusal probability equals register occupancy: about 17% at 0.2 E, 23% at 0.3 E. Graceful and immediate at X. The far caller hears it only after dialling h s (refusal-heard-after-hs).",
+     "evidence": "run_mc_all.log and run_real13_all.log scenario 2: two claims in the same tick; T11 took the register and X21 rang; 'the second claim was refused: T12 claimed and listening to 03'.",
+     "fix": "A register pool (the maximal build). Meanwhile it is graceful.",
+     "realistic": "A documented limit; quantified.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "one-register-refuses-claims",
+     "title": "With the mini marker's one register, the owner refuses roughly 1 incoming network call in 6, and two exchanges calling each other both fail",
+     "category": "capacity",
+     "severity": "medium",
+     "confidence": "likely",
+     "mechanism": "A claim is taken only if the owner's register is free (mini_marker.v:273-274). Otherwise it is refused to 03 with CLM (320-327). The register is held by any caller from lift to connect, and by an outgoing network caller until N_DONE, i.e. through all five digits (net_unit.v:881, mini_marker S_YIELD). The refusal is heard only after the origin's N_DONE, because the caller sits on SILENCE until then (net_unit.v:818-821), so monitor.md:64's 'hears it at once' does not hold.",
+     "trigger": "Any incoming network call while the owner's register is busy. Deterministically, A calls B while B calls A with keys within about two digit-times.",
+     "consequence": "Register occupancy at a 48-line exchange (3 calls a line an hour; local ~3 s, outgoing network ~7 s, incoming claim ~2 s) is about 0.19-0.23 E, so 16-19 % of incoming network calls get cannot-complete. Crossing calls between two exchanges: both refused (the origin slice reproduced it: work/audit/origin/run_s2_5.log 'OBS S2: ... refusals A 1 B 1'). Graceful (clean cannot-complete, nothing held), but it dominates every other loss in this build.",
+     "realistic": "Real dialling times. This is the known 'one register' limit, quantified.",
+     "evidence": "RTL lines above; Erlang with one server, B = A/(1+A); origin slice S2.",
+     "fix": "A register pool (the class-marker build), or at least a second register on the mini marker reserved for claims. Correct monitor.md 2's 'at once'.",
+     "audit": "protocol"
+    },
+    {
+     "id": "refusal-heard-after-hs",
+     "title": "'Claimed, cannot complete' is not heard at once: the origin connects its caller to the trunk only after h s",
+     "category": "spec-mismatch",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "The refusal points the trunk at 03 (mini_marker.v:320-327), but the origin writes caller <-> trunk only at N_DONE, and N_DONE needs claimed && o_last (net_unit.v:881, 818-822). Until then the caller listens to SILENCE, written at the key (mini_marker.v:428). monitor.md 2 and common-control.md 2.3 say 'the caller hears it at once'; network.md 3's 'when the last digit is in, point the caller' matches the RTL.",
+     "trigger": "Any refused claim.",
+     "consequence": "The caller dials h s into silence and hears cannot-complete about 2 s later.",
+     "evidence": "RTL. tb_net scenario 8 checks the tone only after h s.",
+     "fix": "At the claim, also write caller -> trunk (the C path); the origin's register still counts from the caller's own M. One write. Mind the corner where the claim falls before o_last. Alternatively, correct monitor.md.",
+     "realistic": "Every refused call.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C16-marker-reread",
+   "weight": "light",
+   "title": "The mini marker re-reads an unheld trunk every pass, blinding it to the eight ports after it and slowing the unit",
+   "findings": [
+    {
+     "id": "marker-rereads-unheld-trunks",
+     "title": "The mini marker re-reads the word of every M-and-not-BUSY trunk each time it comes round",
+     "category": "overload",
+     "severity": "low",
+     "confidence": "reproduced",
+     "mechanism": "mini_marker.v:337-354 reads any M and not-BUSY port while idle; 358-365 returns a trunk to S_IDLE with nothing remembered (the unit has st, the marker has no equivalent). While a trunk waits to be held (a classifier backlog), or for about T_REL after a called party hangs up first under a standing far M, the marker selects it every pass. Each read holds /WS and /HW for 8 frames, pushing the unit's sweep and classifier selects to the next pass, and a line within 8 scan positions after that trunk is passed over every pass.",
+     "trigger": "A burst of seizures; or a terminating call where the called party hangs up first.",
+     "consequence": "Slower classification and sweeps; line callers delayed up to about 256 ms.",
+     "evidence": "Burst traces in run_mc_all.log and run_real13_all.log: mk=4 (S_READ) alternating with mk=0 while T12-T15 await their holds; cls=5 (C_WAIT) entries.",
+     "fix": "Give the marker a read-once bit per port (the unit's st delay line, shared on the tap).",
+     "realistic": "Transient and bounded.",
+     "audit": "monclaim"
+    },
+    {
+     "id": "marker-reread-loop",
+     "title": "The mini marker re-reads a trunk port showing M with BUSY clear every other pass, and cannot see the eight ports after it meanwhile",
+     "category": "starvation",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "S_IDLE (mini_marker.v:337-345) sends any fresh M.!BUSY port to S_READ, and a trunk's word sends it straight back to S_IDLE (:365). The marker keeps no per-port 'already read' bit like the unit's st. The read waits a pass for its select, then collects for 8 frames. The marker is therefore in S_READ at the turns of ports T+1..T+8 in every pass, and never sees a caller there. Each select also blocks the unit's /WS reads for 8 frames, costing its sweep about one pass per collision.",
+     "trigger": "Any trunk with M up and BUSY down. Normally this lasts at most about 2xT_REL: after a claimed trunk is dropped, or when the called party hangs up first (tb_net 2). It would last for ever if such a state were ever permanent.",
+     "consequence": "Lines numbered T+1 to T+8 get no dial tone while it lasts, typically up to about 0.5 s real. The unit's sweeps stretch by about 30-50% during it.",
+     "evidence": "Reasoning from the code. It was not triggered while the marker was idle in these runs: in S5 the marker was in YIELD throughout.",
+     "fix": "Add a per-port 'word said trunk, M has stood since' bit in the marker, like st in net_unit.v:277, or skip a port whose last read was a trunk until its M is seen low. About one package (a 64-stage delay line).",
+     "realistic": "Frequent but short: every call whose called party hangs up first.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C17-nogo-after-release",
+   "weight": "light",
+   "title": "A unit nogo landing after the caller port released leaves the line BUSY until next lifted",
+   "findings": [
+    {
+     "id": "nogo-write-after-caller-release",
+     "title": "A unit nogo that lands between the caller port's own release and the register's gone leaves the line BUSY until it is next lifted",
+     "category": "race",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "CLR (register) equals T_REL (port) in top_net: 256 and 256, or 32 and 32 at scale. The port sees M directly (port.v:178), but pulse_reg sees it through its 1 ms probe (pulse_rx.v:93, pulse_reg.v:139), so gone rises 0-1 ms after the port has already cleared its latch. In S_YIELD a u_nogo is acted on before gone exists: the marker writes caller<-NOGO with BSY (mini_marker.v:515-523). If that word lands after the port's release, the port is BUSY with no edge to come. The unit's timers can issue that nogo independently of the hang-up: T_KEY (net_unit.v:876), T_CLAIM (:882), or 8 or 9 in the code.",
+     "trigger": "A caller whose flood reaches nobody hangs up about 1.74 s after b, so that the CLR moment of the hang-up coincides within about 1 ms with T_CLAIM expiry. Demonstrated in correlated form by the one-sample claim-loss fix (run_fix_s6.log, A20 left BUSY).",
+     "consequence": "The line is BUSY listening to 03. It is unreachable (callers hear busy) until its subscriber next lifts and hangs up, which clears it.",
+     "evidence": "Reasoning plus the correlated reproduction in work/audit/origin/run_fix_s6.log: [428.160] A nst 5->7 before r_gone at 429, [428.578] A wr dst 20 src 03 bsy 1, and at the end IDLE? busy_a 0000000000010000 (A20).",
+     "fix": "Make the register's gone lead the port's release: CLR a few ms shorter than T_REL (the register's taps are separate from the port RC). Alternatively, in S_YIELD's nogo branch, write BSY only while the register's `hook` reads off-hook. That is one gate, but it changes what a caller in mid-break hears after a guard abandon (tb_net 7).",
+     "realistic": "About 1 in 1000 of calls that time out while their caller is hanging up. The effect is temporary, until the next off-hook.",
+     "audit": "origin"
+    }
+   ]
+  },
+  {
+   "id": "C18-late-claims",
+   "weight": "light",
+   "title": "A claim arriving after the origin dropped that trunk, or after a resolver resolved, is taken as a fresh seizure / re-points a trunk",
+   "findings": [
+    {
+     "id": "late-claim-on-dropped-origin-trunk",
+     "title": "A claim arriving on an origin trunk after dmo or N_DROP has let it go is classified as a fresh incoming seizure",
+     "category": "race",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "dmo (net_unit.v:800, :831-837) and N_DROP (:823-829) write the dropped trunk free and remove it from d_held, so `mine` no longer covers it. st[port] is set only if M was seen while the port was BUSY (:566-570). A second copy's claim, from a ring's long way or a claim that crosses the T_CLAIM drop, that lands after the drop therefore meets M up, BUSY clear, not mine and st clear. cls_seen (:283) holds it listening to 00, gives it a monitor, and forwards it if the link is not strapped.",
+     "trigger": "A ring or mesh where the same owner hears the flood on two paths whose A delays differ by more than about 1.5 ms (MF8 at 0.5 ms a hop: 3 or more extra hops), or a claim reaching the origin just after its 2 s T_CLAIM.",
+     "consequence": "A phantom seizure: the trunk plus a monitor are held, and at a transit a steady-M flood runs onward, until the owner's refused copy releases about T_REL to 2xT_REL later. No wrong number, because the phantom's M never pulses; it wastes trunks and monitors at busy hour.",
+     "evidence": "tb_orig S5, with two direct links A-B (E and jumpered N), 3 phases (run_s2_5.log S5.0-S5.2): the second CLAIM ([6738.563]) reaches A before A's drop ([6739.428]), so st is set and there is no phantom. The race is therefore lost only when the second path is slower, which is the ring case this design documents in network.md 3.3.",
+     "fix": "Keep a dropped origin trunk masked from the classifier (as `mine`) until its M has been seen low and then for T_REL, or have the owner not raise CLAIM on a trunk whose forward M has fallen. The cost is about one counter per direction on the unit.",
+     "realistic": "Only in rings or meshes with unequal path delay, and at the T_CLAIM boundary. Low frequency and temporary.",
+     "audit": "origin"
+    },
+    {
+     "id": "late-claim-after-resolve",
+     "title": "A cell that claims a trunk whose resolver has already resolved re-points the trunk off the winning leg and leaves the leg and the far register up",
+     "category": "race",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "rs_mine (net_unit.v:366) finds only busy resolvers. After w_res at R_LEG (691-708) the resolver is free. A later w_claim for the same incoming trunk writes it to 00 with CLAIM (656-658), and nothing drops the leg, which still listens to f_in.",
+     "trigger": "This exchange's cell still wanting (waiting on cl_st) or counting late, while a downstream exchange claims first: only with a false or duplicate claim somewhere.",
+     "consequence": "Two exchanges ring for one caller, and one of them hears the caller.",
+     "evidence": "Reasoning.",
+     "fix": "At w_res, free any cell whose m_port is rs_in: a comparator per cell.",
+     "realistic": "Needs a prior false claim.",
+     "audit": "monclaim"
+    }
+   ]
+  },
+  {
+   "id": "C19-rings",
+   "weight": "light",
+   "title": "Rings: an unstrapped ring is bounded only by resources; a one-end jumper does not stop double delivery",
+   "findings": [
+    {
+     "id": "unstrapped-ring-bounded-only-by-resources",
+     "title": "An unjumpered ring is bounded only by resources, and its lap copies are late floods",
+     "category": "other",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "STRAP_N is the only loop breaker (net_unit.v:505, :616-618). It matches network.md 3.3.\n\nNothing recognises a flood returning to its own origin exchange: it arrives on a different trunk, which is not `mine`. There is no hop limit either. A seizure keeps circling until one of these stops it:\n- at each exchange the forwarder is busy or both resolvers are held (so at most NRES laps);\n- a link runs out of channels.\n\nEach lap copy holds a channel per link and a resolver and a monitor per exchange until the claim plus T_REL. Each lap arrives ~N x 13 ms later. In rings of about 8 or more exchanges a lap copy reaches an exchange after the caller's first break, which is the late-flood mechanism above.",
+     "trigger": "A ring of N exchanges with no STRAP_N jumper anywhere.",
+     "consequence": "Every call burns roughly NRES laps x N channels and all resolvers. There are double claims (a cannot-complete race), and in large rings late copies can be counted short, which could give a wrong-number claim.",
+     "realistic": "Only when the ring is misconfigured. The late-copy wrong number rests on the reproduced late-flood mechanism, but was not simulated as a ring.",
+     "evidence": "Reasoning from the code and from the reproduced late-flood mechanism. Not simulated.",
+     "fix": "The jumper is the design; add a commissioning check (one test call per ring). A cheap in-RTL guard would be to refuse to forward a seizure that arrives more than ~100 ms after the exchange's own origin seized with the same caller. That is not free, so documentation plus a bench is the recommendation.",
+     "audit": "forwarder"
+    },
+    {
+     "id": "ring-single-end-jumper",
+     "title": "Jumpering only one end of a ring link does not stop double delivery: the unjumpered end forwards the other end's own floods round the ring",
+     "category": "spec-mismatch",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "The ring strap is per direction at each unit. A seizure is not forwarded onward if it arrived on a strapped direction (net_unit.v:616), and never forwarded into one (fwd_mask, 505, 618). An origin seizes every direction, strapped or not (h_mask 1111, 849). With the strap only at X's end of link L = X-Y, X's own origin seizures into L arrive at Y on an UNSTRAPPED port and Y forwards them onward round the ring. Every ring member then receives X's calls from both sides. network.md:352-355 says 'One end alone breaks the cycle just as well ... but ... wastes a channel', which is true of the cycle but not of double delivery.",
+     "trigger": "A ring with the jumper fitted at one end of the chosen link only; any call originated at the jumpered end.",
+     "consequence": "Every call from X reaches every ring member twice, which is network.md 3.3's own 'race no caller should be in': two monitors per call, and a double claim at the owner. One copy takes the register and the other is refused to 03 with CLM. The origin keeps whichever claim M rises first, and the refused copy can win by a millisecond, giving cannot-complete (see sound: double claim). It also uses twice the monitors and channels. Never a wrong number.",
+     "realistic": "Planning or configuration error; the doc currently permits it.",
+     "evidence": "RTL reading, lines above. The double-claim mechanics at the jumpered link's ends were reproduced by the origin slice (work/audit/origin/run_s2_5.log S5: 'B refusals 1').",
+     "fix": "Doc: 'both ends MUST be jumpered'. Optionally a strap mismatch check: an EV word when a seizure arrives on a direction whose word says the far end is strapped. That needs a bit in the trunk word; not worth it.",
+     "audit": "protocol"
+    }
+   ]
+  },
+  {
+   "id": "C20-misc",
+   "weight": "light",
+   "title": "Misc: claim-leg slot collision with two resolvers; WAIT margin; port 00 must be unfitted; thin release margin for future carriers",
+   "findings": [
+    {
+     "id": "claim-legs-slot-collision-two-resolvers",
+     "title": "w_claim maps every matching resolver's legs onto the same five slots; two would overwrite each other silently",
+     "category": "other",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "w_claim pushes the CLAIM on slot 0 and each rs_mine resolver's legs on slots j2+1 (net_unit.v:659-663), and cnt_claim reserves room for all of them (474). If two resolvers share rs_in, the later loop iteration overwrites the earlier one's slots. Leg drops are then lost without ovf, and those legs stay up, listening to the claimed trunk, until the call ends.",
+     "trigger": "Two resolvers holding forwards of one port: a stale resolver whose R_GONE has not been acted on when the port is re-seized, forwarded and claimed. That needs w_res starved for seconds, which the one-pusher-a-tick scheme never does.",
+     "consequence": "Downstream trunks held for the length of the call; no wrong number.",
+     "evidence": "Reasoning only; not reachable in any realistic sequence found.",
+     "fix": "Act on one rs_mine resolver per claim tick, or assert popc(rs_mine) <= 1 in the benches. A gate.",
+     "audit": "cableb"
+    },
+    {
+     "id": "wait-constant-doc-stale",
+     "title": "The unit's WAIT is a hand constant with a 93-tick margin, not derived from the serialiser, and mini-marker.md still gives the old figure",
+     "category": "spec-mismatch",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "net_unit.v:104 has WAIT = 640. The marker's longest transaction, from the edge it samples go (/UREQ) to its '244 releasing, is 547 ticks (ctl_queue.v:169-181, ctl_write.v:253-297: one tick to load, 16 x 32 shift, 32 strobe, 2 to hand back), so the margin is 93 ticks (23 us). exchange/mini-marker.md:313 still says 1152 ticks 'a word read'. WAIT is not tied to ctl_write's DIV or to the word length; ctl_write.v's jumper note about SCLK free-running off HCLK/4, or a 17th bit, would change the word time and silently remove the margin, and then b_clash.",
+     "trigger": "Any change to DIV or CWW without a matching edit to WAIT.",
+     "consequence": "Two '244s on cable B, a corrupted write and a runt WR; today none (b_clash 0 in every baseline and every audit run).",
+     "evidence": "Arithmetic above. tb_net 17 exercises the same-edge case and stays clash-free (work/base-net.log PASS).",
+     "fix": "localparam WAIT = (`CWW + 1) * DIV + margin, shared from exch.vh; update mini-marker.md:313. No hardware cost.",
+     "audit": "cableb"
+    },
+    {
+     "id": "port00-must-be-unfitted",
+     "title": "The whole idle/hold convention assumes port 00 is never fitted; nothing enforces it",
+     "category": "other",
+     "severity": "low",
+     "confidence": "likely",
+     "mechanism": "Holds, drops, releases and 'silence' all point a port at 00 (net_unit.v:592, 610, 662, 697, 826, 834; port.v:193; mini_marker SILENCE = 00). The resulting E, and the backward A before a claim, is 0 only because 00 is empty: /HA at bit-time 0 idles high (port.v:88, 173). site_net.v:97-99 fits block 0 if LTU[0] is set, and PHONES bit 0 would fit 00. exch.v/block.v accept any PORT_FITTED. The classifier skips 00 (net_unit.v:284), which suggests it is known.",
+     "trigger": "A card fitted at 00, e.g. a local trunk unit on block 0 (forbidden for MF8 by mf8-unit.md:58, not for the local trunk).",
+     "consequence": "Every hold would send 00's M as backward A, so every origin takes it as a claim: wrong numbers everywhere. Every idle phone (listening to 00) would ring whenever 00's M is up.",
+     "realistic": "Assembly or configuration error only.",
+     "evidence": "RTL reading.",
+     "fix": "Mask PORT_FITTED[0] to 0 in exch.v, or put a lint check in site_net/top. On the board, do not stuff position 0 of block 0 (no socket).",
+     "audit": "protocol"
+    },
+    {
+     "id": "release-margin-thin",
+     "title": "Drop-then-reseize is closed only by 0.1-0.3 ms on baseband and local trunks; a carrier with a slower-falling A reopens it",
+     "category": "race",
+     "severity": "low",
+     "confidence": "speculative",
+     "mechanism": "When one end drops a trunk, it stays BUSY for T_REL through its fE (port.v:147). The far port releases on its fM fall T_REL after the same edge. The two ends free within +/-1 tick plus the A path's fall delay: independent 1 ms ticks give up to 1.03 ms apart. A re-seizure from the end that freed first reaches the far port no sooner than about 1.32 ms later: the read, a full 1 ms confirm pass, WAIT plus a word, the card. With /UREQ already held the WAIT is skipped. Margin 0.13-0.29 ms. If the carrier's A falls about 1-2 ms slower than it rises, as with network.md's MF8 figures of 1.5 ms up and 2 ms down, the new seizure's M rises while the far port is still BUSY. Its fM never falls, the old hold stays (st set, never classified), and the new flood dies there. If the old monitor cell had not yet reached CLR, it counts on (the monclaim slice's stale cell).",
+     "trigger": "A link whose A falls slower than it rises; a channel dropped at one end and re-seized from the same end in the next sweep.",
+     "consequence": "Lost calls; at worst the stale-cell miscount.",
+     "realistic": "Not reachable with the RTL's baseband or local-trunk cards. It is a latent constraint on any future carrier (MF8, the pots trunk).",
+     "evidence": "Reasoning from port.v and net_unit.v:750-785 timing.",
+     "fix": "Record in network.md 1.1: a carrier's A fall and rise delays must match within about 0.1 ms, or the sweep must skip a port for about 2 ms after it frees.",
+     "audit": "protocol"
+    }
+   ]
+  }
+ ],
+ "passthrough": [
+  {
+   "id": "bench-gap-claim-watch-and-hold-windows",
+   "title": "No network bench reaches the windows where the defects above live",
+   "category": "bench-gap",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "newimpl/README.md says 'A claim arriving while the mini marker watches a connect waits rather than being refused (att_refuse). No bench provokes that coincidence.' In fact it is refused, late. Every bench's first digit comes ~90 ms after the seizure, so no break ever lands in a downstream hold watch. No bench puts an incoming trunk in socket 77 or kills a seizure at the sweep's end. Claims never queue behind cl_st. The five baselines (work/base-*.log) all pass with these four defects present.",
+   "trigger": "Run the snapshot's net, chain, lnet, lfull and lchain benches: green.",
+   "consequence": "Stuck-state and wrong-number paths ship untested; faults.py has no fault for any of them.",
+   "evidence": "work/base-{net,chain,lnet,lfull,lchain}.log all PASS. The directed benches /home/joel/telco/newimpl/build/flood/work/audit/cableb/tb_attw.v, tb_att2.v, tb_fcan.v and tb_brk.v go red on the snapshot.",
+   "fix": "Add tb_attw scenarios 1-2 and tb_att2 to net, tb_brk's timed first break to chain, and tb_fcan as a small bench. Add faults for the fixed versions: WATCH exemption restored, F_WRITE without the cancel, C_HOLD unholding on a break. Cost: about 1-2 min of sim each at scale 8.",
+   "audit": "cableb"
+  },
+  {
+   "id": "bench-gap-short-seizure",
+   "title": "No bench covers the monitor cell of a seizure that dies young. The scale-8 benches cannot even reach the origin route of the window",
+   "category": "bench-gap",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "tb/tb_net.v:425-438 (scenario 14) checks that the hold on a 0.9 ms blip is written away (busy_b) and that a cell was given (mb_seen > 0). It never checks that the cell is let go, or what happens if the channel is seized again. At scale 8 an origin cannot re-seize within CLR = 32 ms: key 12 + ID 16 + ~11 ms unscaled sweep.",
+   "trigger": "-",
+   "consequence": "stale-cell-after-unhold passed every tree bench (all five network baselines green).",
+   "evidence": "work/base-*.log all PASS; work/audit/monclaim/tb_mc.v scenarios 1, 3 and 5 go red on the snapshot and green with the fix.",
+   "fix": "Adopt tb_mc scenarios 1, 3 and 5 (single exchange, far ends driven by the bench: cheap, about 45 s wall for all scenarios at scale 8) and tb_mc2 (end to end at real timers, about 3 min). Add a faults.py entry that removes fix (a).",
+   "realistic": "-",
+   "audit": "monclaim"
+  },
+  {
+   "id": "origin-bench-gaps",
+   "title": "No network bench exercises the origin and marker races found here",
+   "category": "bench-gap",
+   "severity": "low",
+   "confidence": "reproduced",
+   "mechanism": "tb_net, tb_chain, tb_lnet, tb_lfull and tb_lchain never place a claim inside S_WATCH, never run two floods crossing in opposite directions, never break between the key and the seizure, never lose a claimed trunk before N_DONE, and never delay a refusal past the claimed port's release.",
+   "trigger": "Not applicable (a coverage gap, not a runtime scenario).",
+   "consequence": "Five of the defects above pass the committed sequence.",
+   "evidence": "work/audit/origin/tb_orig.v scenarios S1-S6 are red on the snapshot (run_s1.log, run_s2_5.log, run_s6.log) and green with the three fixes except S2, which is the register limit (run_fix2.log: 19 checks, 0 errors).",
+   "fix": "Adopt tb_orig's S1, S3b, S4 and S6 (about 3.5 s simulated, about 3 minutes at 20-40 ms/s), and add faults: drop !r_release, drop o_brk, drop lost, drop the WATCH bound. S2 should become a documented-limit check.",
+   "realistic": "Not applicable.",
+   "audit": "origin"
+  },
+  {
+   "id": "scale8-hides-forwarder-timing",
+   "title": "Scale-8 benches cannot judge the forwarder: the unscaled sweep is set against T_ARM, T_REL and a guard 8x shorter",
+   "category": "bench-gap",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "At scale 8 the benches get the forwarder's timing wrong in four ways:\n- The classifier's T_ARM watch (C_HOLD, net_unit.v:584-588) is ~4 ms, shorter than a forward (10.5-12 ms). F_WRITE therefore never lands inside it, and the port-77 race cannot appear.\n- Any two seizures ~5-11 ms apart lose the second to a busy forwarder (:616). At real timers the ~19 ms watch spaces them, and only an origin sweep brings the loss back.\n- T_REL (32 ms) is shorter than a loaded hop (up to ~31 ms, measured 5b), so a forward can be written after its incoming has released.\n- The guard (16 ms) is shorter than one hop (12-14 ms plus detection), so the late-flood wrong number cannot be judged. The benches rely on the 100 ms digit pause instead.",
+   "trigger": "tb_net, tb_chain, tb_lnet, tb_lfull, tb_lchain and any scale-8 load study.",
+   "consequence": "Scale-8 runs overstate n_nofwd (forwarder busy), cannot show the port-77 stuck state, and cannot show the guard-budget wrong number.",
+   "realistic": "This is a property of the benches, not of the RTL.",
+   "evidence": "run_fx_sc5.log hop latencies (12.1-13.9 / 30.4-31.4 / 18.4-25.5 ms) against the scale-8 timers T_ARM 2, T_REL 32, guard 16. The late-flood and outage findings above only appear at real timers.",
+   "fix": "Study the forwarder at real timers. tb_fx is one exchange with its far ends driven by the bench and runs ~30 ms of simulated time per wall-clock second. Alternatively, give the benches a knob that scales the sweep's step with the timers.",
+   "audit": "forwarder"
+  },
+  {
+   "id": "scale8-bench-gap",
+   "title": "The scale-8 network benches cannot test the guard's reach, and they overstate the single forwarder's losses",
+   "category": "bench-gap",
+   "severity": "info",
+   "confidence": "likely",
+   "mechanism": "At scale 8 the guard is 16 ms against a 12-14 ms unscaled hop, so it covers about one hop (tb_net.v:49-55 says so). The classifier's T_ARM watch is 4 ms instead of 18, so a second seizure within about 5 ms reaches w_cls while the forwarder is still sweeping and is not forwarded. At real timers the 18 ms watch serialises it until the forwarder is free, unless an origin sweep delayed the forwarder (the fwd slice's 5d). Link-outage and glare timings also shift.",
+   "trigger": "n/a",
+   "consequence": "The green scale-8 benches say nothing about multi-hop wrong-number safety. Crossing-flood losses seen at scale 8 are mostly absent at real timers. Conversely, the real-timer 18 ms serialisation (guard-reach) is invisible at scale 8.",
+   "realistic": "n/a",
+   "evidence": "Parameters in tb_net.v/tb_chain.v; work/audit/fwd/run_fx_sc5.log 5b/5d.",
+   "fix": "Keep at least one real-timer multi-hop bench, with a 3-4 hop chain and a first break at 129 ms, in the sequence (tb_pflap here runs 2 exchanges at real timers in about 15 min).",
+   "audit": "protocol"
+  },
+  {
+   "id": "doc-drift",
+   "title": "Smaller places where the documents and the RTL disagree",
+   "category": "spec-mismatch",
+   "severity": "info",
+   "confidence": "likely",
+   "mechanism": "(1) monitor.md:197 says the marker reads M rising inside the guard 'as glare and not as a claim'. net_unit.v:795-804 takes it as the claim and counts glare, as network.md 1 ('residual glare joins two callers') and tb_lfull expect. (2) monitor.md 3 rule 1 says a monitor gets a seizure 'within one scan of its rise ... or not at all'. The RTL attaches it whenever the classifier gets to it (net_unit.v:262-273, 283-284): 1-3 ms normally, 18-20 ms behind a T_ARM watch, more in a burst, and relies on the guard instead (counted in guard-reach). (3) network.md:53 says a released trunk is held busy for about 0.6 s. The RTL's settle is each port's own T_REL (256 ms, port.v:147). (4) network.md 3.1/4's 7 ms hop and 3.2's 'hub counts as a hop and a third' do not match: 12-14 ms, and about +1 ms. (5) network.md 3.3 'the direct copy always claims first': both copies carry the same live pulses and complete within a millisecond or so of each other; the tie is broken by monitor cell order (net_unit.v:335-337).",
+   "trigger": "n/a",
+   "consequence": "Planning figures in the docs are optimistic, and one statement (1) is internally contradictory.",
+   "realistic": "n/a",
+   "evidence": "Lines cited.",
+   "fix": "Edit the docs to the RTL's figures.",
+   "audit": "protocol"
+  }
+ ],
+ "sound": {
+  "cableb": [
+   {
+    "claim": "No two pushers write push_v in one tick, and no push is lost to a later non-blocking assignment",
+    "why": "w_claim, w_cls, w_orig, w_fwd, w_res and w_ev are mutually exclusive by construction (net_unit.v:487-497). Each pusher's slot map fits in 5: the claim uses slot 0 plus legs 1..4; origin, forwarder and resolver use slots 0..3 plus slot 4 for the way back. The later push_v[k] assignments inside one pusher's block are to distinct bits. The only exception is the latent two-resolver case reported separately."
+   },
+   {
+    "claim": "The unit's queue can never overflow and a pusher that must write (UNHOLD, drops) never waits for ever",
+    "why": "room counts this tick's arrivals (ctl_queue.v:129). Only one pusher decides a tick, and its words land the next tick, when free space is >= the room it checked, so ovf cannot light. The queue drains at 1 word per 547 ticks once granted, and the grant depends only on the unit's own /UREQ (net_unit.v:225-232). The marker can delay the grant by at most one word. Pushers are event-driven with no self-sustaining loop, so room always returns. A lower pusher that needs less room may go ahead of a higher one waiting for more, and the higher one gets room within a few words."
+   },
+   {
+    "claim": "Event words cannot write a port and cannot delay a call",
+    "why": "G = 0 is gated into WR at every block (block.v:113). ctl_queue drops an event when fewer than 6 entries are free (ctl_queue.v:107), without ovf. w_ev is the lowest pusher. Merging two events of one kind needs two origin hunts or glares inside the few ticks w_ev can be deferred, which cannot happen."
+   },
+   {
+    "claim": "Cable B has no clash between the two masters",
+    "why": "The marker starts only with /UREQ high (go = ureq_n); a word it starts on the very edge /UREQ falls ends its '244 547 ticks later, and the unit drives at 641, a 93-tick margin. Unit to marker: the unit's oe falls on the edge q_empty rises and the marker starts one tick (244 ns) later. A unit that re-requests after emptying waits WAIT again, because granted clears. b_clash was 0 in all five baselines and in every audit run (tb_net 17 provokes the same-edge case)."
+   },
+   {
+    "claim": "The marker is not starved by the unit, and the unit is never starved by the marker",
+    "why": "/UREQ is low only while the unit's queue is non-empty. The worst burst is 16 words: 640 + 16 x 547 ticks = 2.3 ms, typically one pusher's <= 5 words in 0.8 ms. While it waits the marker's words sit in its 8-deep queue: dial tone off, a connect or a refusal comes up to ~2 ms late. S_WATCH holds its no-digit timer while its words are queued (mini_marker.v:541), and nothing times out. The marker never has more than one word in flight when the unit wants the bus."
+   },
+   {
+    "claim": "CLAIM reaches the port before the marker's refusal, and the refusal lands after it",
+    "why": "att rises only when the unit's queue is empty, all words out including the CLAIM (net_unit.v:673, q_empty includes t == IDLE). The marker's refusal is pushed only after att. att_take writes nothing, and every later marker write to that trunk carries CLM (ctx_clm). tb_net 8 confirms."
+   },
+   {
+    "claim": "FIFO order is enough for every same-port pair inside the unit",
+    "why": "Seize then drop (N_SEIZE, then N_DROP or dmo), hold then unhold, CLAIM then leg drops (slot 0 first), and leg then way back (slot 4 last) all go through the one queue in decision order. The one bad pair (UNHOLD before a forward that should have been cancelled) is a decision defect in F_WRITE, not an ordering one."
+   },
+   {
+    "claim": "The marker's and the unit's words to the same port do not interleave harmfully",
+    "why": "The marker writes a trunk port only as a claimed caller, after the CLAIM. The unit writes a line port only at N_DONE (caller <- trunk). The one overlap is N_DONE against the marker's r_gone write to the same caller (net_unit.v:818-822 does not re-check o_gone). The unit's word normally lands first and the marker's frees the caller. In the reverse order, needing the marker already mid-word inside a 1-tick window, the caller port stays BUSY on the trunk only until the trunk's backward A falls (fE), which is transient."
+   },
+   {
+    "claim": "A word landing mid-turn never shows a half-written state",
+    "why": "The '273 takes addr, bsy and clm on one WR edge (port.v:193-194), and M and BUSY are sampled at one instant (probe.v a_stb), so a reader sees before or after, never a mix. A write between the sweep's select and its use is caught by the CONFIRM pass. Between the unit's own decision and its word landing, `mine` keeps the classifier off the port."
+   },
+   {
+    "claim": "The flood_go / YIELD / done-nogo-local handshake cannot desynchronise",
+    "why": "flood_go is ignored unless the origin bank is N_IDLE, and the bank returns there within ms of done, nogo or local, while the next key 1 is at least ID (128 ms) away. o_gone cannot be missed inside N_HUNT, because the register cannot be released and re-attached within a sweep (r_gone needs 256 ms of break after the key's 128 ms make)."
+   },
+   {
+    "claim": "f_cancel works where it is read",
+    "why": "F_WANT (714) and F_HUNT at h_done (720-724) honour it. The control run run_fcan_mode1.log (a death a pass before the sweep's end) cancels cleanly. Only F_WRITE is exposed (reported)."
+   },
+   {
+    "claim": "Cable B capacity is not a bottleneck",
+    "why": "A word is 17 bit-times at 128 kHz, 133 us; the unit's first word after idle costs 290 us with WAIT, so about 7,500 words/s. A flood costs each exchange HOLD + L legs (+1 way back) + L-1 drops + 1 way back, about 2L+2 <= 8 words; an origin 2k+2; a local call 4 marker words. At 1 flood/s network-wide, a busy network, cable B is ~0.2% occupied. The limits are the single origin bank and forwarder, the one register, the classifier (one seizure per ~18 ms) and the 10 ms sweep, all 2-3 orders of magnitude tighter."
+   },
+   {
+    "claim": "Release-beats-write on the same tick (port.v:193) is benign",
+    "why": "A WR edge coinciding with a detector fall on the same port loses the write. The window is one 244 ns tick in a millisecond, and in every case found the release is the right outcome."
+   }
+  ],
+  "monclaim": [
+   {
+    "claim": "pulse_rx arming when a cell is reused cannot fabricate or double-count an edge",
+    "why": "probe.v publishes a sample only with port_q; net_unit.v:630-632 arms only on a sample of the new port. While disarmed, pulse_rx.v:72-77 keeps cnt, t and done at 0 and m_d = m, so at arm m_d already holds the new port's M: no edge at arm. A break in progress at arm counts only if >= HIT of it remains; a break that ended before arm is lost. Arm latency is 1-4 ms after the rise when the classifier is idle (trace: w_cls 1193 ms, armed 1194)."
+   },
+   {
+    "claim": "The att/att_ack handshake cannot be acked for the wrong port, acked twice, or raised before the CLAIM word is on the wire",
+    "why": "att_port is written only at w_claim, which needs CL_IDLE (net_unit.v:487, 669). att rises in CL_WAIT only when the whole unit queue is empty (673); ctl_queue.v:146-147 counts pushes arriving this tick. The marker's !att_ack guard (mini_marker.v:273, 282) plus att falling the tick after att_ack (674) prevent a double take. Seen in every run: CLAIM, att and the register attach all in the same ms."
+   },
+   {
+    "claim": "att cannot be left high for ever, and q_empty cannot be starved",
+    "why": "Every marker state reaches take or refuse: S_READ with a caller candidate (r_busy=0) within ~1.2 ms; refuse skips only the single rd_done tick; S_PROBE, S_COLLECT and S_YIELD refuse at once; S_WATCH waits at most settled/CLR/NODIG (claim-attach-unbounded-in-watch). The unit's queue drains about 7500 words/s after a 156 us WAIT, and its pushes are event-driven, so nothing keeps it non-empty."
+   },
+   {
+    "claim": "Two claims in one tick: one wins, one is refused cleanly",
+    "why": "m_want1 picks the lowest cell, and the second waits in m_want until CL_IDLE, then is refused (register busy) with CLAIM + 03. Reproduced at scale 8 and real timers (burst: X21 rings, T12 hears 03 with backward A up)."
+   },
+   {
+    "claim": "A claim cannot overtake a forward of the same trunk still in F_WANT/F_HUNT/F_WRITE",
+    "why": "The forward starts at the same w_cls as the cell and finishes within about 11-35 ms (measured 13-14 ms, 33 ms with one seizure ahead). The earliest claim, even the stale cell's (1,e) one, is at least ID plus a digit after the rise. Once a forward is in a resolver, rs_mine drops its legs in the claim tick (trace 1349 ms: res->00, T16 released)."
+   },
+   {
+    "claim": "Unwatched seizures and refused claims leave nothing held",
+    "why": "Burst runs (both scales): three unwatched trunks, one refused claim, two resolvers. All are released when the far ends drop (idle check: every port, cell, resolver, cl_st, att, forwarder, classifier and register clear)."
+   },
+   {
+    "claim": "The origin bank cannot have the register re-attached under it during N_WANT/N_HUNT",
+    "why": "The marker leaves YIELD only on r_gone, r_nodig, u_local, u_done or u_nogo. None can occur within ~20 ms of flood_go (the key's ID needs 128 ms of make), and o_gone in N_NET/N_WAITCL sees the same signals in the same tick."
+   },
+   {
+    "claim": "A CLAIM or refusal written onto an already-released trunk (a no-edge hold)",
+    "why": "It needs m_want pending for at least T_CLAIM + T_REL, and then a 0-1 ms window between the port's rel and the cell's d_clr (both 256 ticks). If such a claim is taken, the register's gone path writes the port free (mini_marker.v S_COLLECT r_gone -> SILENCE, BSY 0). Practically unreachable."
+   },
+   {
+    "claim": "The digit compare agrees with the origin",
+    "why": "isvc/oct in net_unit.v are the same rule as the origin's (ten pulses = 0; 8, 9, 11-15 reserved). Own-code drops and hook flashes reach the cells as breaks counted by the same HIT/CLR windows as the origin's register, so the two cannot disagree."
+   },
+   {
+    "claim": "Classifier st and `mine` keep cells off the unit's own trunks and off claims coming back",
+    "why": "`mine` (net_unit.v:429-438) and BUSY at the sample keep outgoing trunks and legs out of cls_seen; st keeps a trunk whose BUSY fell under a standing M from being re-read as a seizure (tb_net scenario 2 is green)."
+   }
+  ],
+  "origin": [
+   {
+    "claim": "flood_go is never raised while the origin bank is busy, so it is never lost",
+    "why": "The marker leaves S_YIELD on its own only on r_gone or r_nodig, which are o_gone to the unit (net_unit.v:413). o_gone is checked every tick in N_WANT, N_NET and N_WAITCL. In N_HUNT, N_SEIZE and N_DONE the unit is blind for at most one sweep (about 10-20 ms). r_gone cannot occur until CLR (256 ms real, 32 ms at scale) after the key's digit ended, and a new flood_go needs a new attach plus a whole digit. So a stale origin cannot meet a new caller. The margin is 1.6x or more at scale 8 and over 10x at real timing."
+   },
+   {
+    "claim": "restart, local_go, done and nogo reach the marker in S_YIELD",
+    "why": "att_refuse excludes the ticks on which they arrive (mini_marker.v:320-321). att_take cannot occur in S_YIELD because r_busy is set. y_nogo holds nogo across ticks with no queue room (:515-517). The unit decides O_LOCAL or O_NOGO only while !o_gone, and reaches N_END within a few ticks. A lost `done` (only possible if the caller has left) is benign: the far release clears the caller's latch through fE."
+   },
+   {
+    "claim": "The own-code restart cannot erase or split the caller's h",
+    "why": "restart lands 2-3 ticks after N_END, about ID after b's digit, so the caller's h cannot complete in that window. pulse_reg's restart clears ndig and digits but not pulse_rx's cnt (pulse_reg.v restart branch), so a partly counted h survives. hold=3 (mini_marker.v:509) covers the two-register path of u_restart."
+   },
+   {
+    "claim": "The att/att_ack handshake cannot double-take or be lost",
+    "why": "att is a level held until the one-tick att_ack. The marker masks a re-take with !att_ack. w_claim is serialised by cl_st (net_unit.v:487, :672-676). att is raised only once the unit's queue is empty (CL_WAIT q_empty), so a refusal always follows the CLAIM word. The one flaw is the tick after a release (watch-exit-refusal)."
+   },
+   {
+    "claim": "The classifier never holds the origin's own trunk as an incoming seizure",
+    "why": "The confirm pass visits each candidate exactly once, and its next visit comes after h_done. From that point `mine` covers o_cand in N_SEIZE and then d_held (net_unit.v:432-433). A far seizure seen at or before the confirm visit clears h_ok instead (:779-785)."
+   },
+   {
+    "claim": "The origin's hunt cannot take a trunk the forwarder is about to write, or the reverse",
+    "why": "The forwarder's F_WRITE cannot stall: a resolver free at classification stays free, because only F_WRITE allocates resolvers, so its words land within about 1 ms. The next sweep's confirm pass is at least 9 ms later and sees BUSY. The same holds for the origin's N_SEIZE write against a following forward sweep."
+   },
+   {
+    "claim": "Every origin exit leaves no trunk held",
+    "why": "Every exit from N_NET and N_WAITCL (hang-up, nodig, guard, 8 or 9, own code, T_KEY, T_CLAIM) goes through N_DROP, which drops every d_held trunk (net_unit.v:823-829). A caller who leaves during N_HUNT gets no seizure. During N_SEIZE the seizure is written onto an on-hook caller (forward A=0, so the far end sees nothing) and dropped on the next tick. tb_net 3-7 and 11, and tb_orig S3a, end idle."
+   },
+   {
+    "claim": "A claim and o_gone, or a claim and the dmo drop, on the same tick are consistent",
+    "why": "N_DROP pushes d_held, including trunks not yet dropped by dmo, and clears dmo. The default w_orig branch drops only dmo. N_DONE requires dmo==0, so the others' drops are always pushed first (net_unit.v:806-839, :881)."
+   },
+   {
+    "claim": "A genuine claim arriving before the origin's own b is recognised is handled",
+    "why": "The far exchange's tick phase can lead by up to 1 ms. claimed is then set in N_NET, and it is not counted as glare because tmr is far past the guard. f2 follows at b, and N_WAITCL connects at o_last."
+   },
+   {
+    "claim": "The far hold's backward A is 0 until a claim, including through one-leg transit patches",
+    "why": "Holds listen to port 00, which is never fitted, so E=0. A one-leg patch carries the next hop's backward A, which is recursively 0 until that hop claims. Only a claim or glare on some downstream link raises it. Downstream glare returns inside the origin's guard for about 10 hops and is counted: the documented residual glare."
+   },
+   {
+    "claim": "Duplicate claims over two direct links do not create a phantom",
+    "why": "In tb_orig S5, at three phases, the owner's second CLAIM reached the origin about 0.3 ms after the first and about 1 ms before the origin's dmo drop. The origin therefore saw M under BUSY, st was set, and the dropped copy was left alone. The call completed (B21 rang), and the second copy was refused and released cleanly."
+   },
+   {
+    "claim": "The guard is not measurably weakened by queue delay after the seizure push",
+    "why": "tmr is reset at the push itself (net_unit.v:815). Queue priority (w_claim, w_cls) delays the push, which falls under pre-seizure-break-unguarded, not the guard timer. After the push, the word and the caller's-turn capture add at most about 3 ms: about 2% of the real 128 ms guard (about 20% of the scaled 16 ms)."
+   },
+   {
+    "claim": "Timer ordering at the origin",
+    "why": "T_KEY (5 s) and T_CLAIM (2 s after b) both expire before the register's NODIG (10 s from the last digit), so the unit decides first. The mini marker's key test takes a count of 1 only (mini_marker.v:414). keyed and ctx_clm stop a second flood from an own-code call or from a claimed trunk (tb_net 15)."
+   },
+   {
+    "claim": "A 10 pps extra digit after a connect does not prolong WATCH",
+    "why": "r_settled fires on the first make of at least SETTLE: observed in the first S1 attempt, where WATCH ended 4 ms into the first make. Only makes shorter than SETTLE (20 pps, or chatter) prolong WATCH, which is the precondition for late-refusal-no-edge-hold."
+   },
+   {
+    "claim": "Glare is rare",
+    "why": "The window is roughly confirm-to-latch plus link plus one scan, about 3 ms per end. With the g bit it needs the last free channel. At about 0.1 floods/s each way that is on the order of 1e-5 per flood per link."
+   }
+  ],
+  "forwarder": [
+   {
+    "claim": "The origin and the forwarder never pick the same trunk, so neither hijacks the other's latch.",
+    "why": "There is one sweep engine and it is strictly sequential (h_owner). A hunter's writes land 0.3-0.7 ms after its h_done: in sc5c the origin's four writes landed at +0.28 to +0.69 ms. The other hunter's CONFIRM visits every candidate at least 9 ms later and drops any that are BUSY. `mine` covers o_cand and f_cand from h_done until the write, and d_held and rs_held after it (net_unit.v:429-438). In sc5c, back to back, the origin took 74, 40, 31 and 10 and the forward took 75, 41 and 11 (run_fx_sc5.log:282-320)."
+   },
+   {
+    "claim": "There is no gap between CONFIRM and `mine`, so a candidate is never classified as an incoming seizure.",
+    "why": "The sweep's last read is always port 70, and its word ends in 00's bit-time. CONFIRM therefore visits exactly 00..77, and h_done falls on 77's sample. N_SEIZE's and F_WRITE's `mine` terms are live two ticks later, about 62 ticks before the next sample of any port. A far M that rises after a candidate's CONFIRM visit can only be glare (see leg-glare-joins-uncounted)."
+   },
+   {
+    "claim": "The mini marker never takes a free trunk out from under a hunt.",
+    "why": "It reads the word of every M and not-BUSY port and leaves a flood trunk alone (mini_marker S_READ: rd_trunk -> S_IDLE). It refuses a dialled trunk (S_READ -> NOGO). It writes a trunk only through att, which means a claimed trunk."
+   },
+   {
+    "claim": "No deadlock or starvation between the origin and the forwarder over the sweep.",
+    "why": "F_WANT yields only to an origin in N_WANT, which happens once per call because there is one register. An origin waits at most one forward sweep (about 12 ms, measured). N_WANT waits only on hst, and F_WANT only on hst and nst, so there is no circular wait. Measured back to back in sc5c and sc5d."
+   },
+   {
+    "claim": "w_res and w_claim push slots never collide, and room is always sufficient.",
+    "why": "There is at most one leg per direction, and at most 3 legs (the incoming's direction is excluded). w_res uses slots 0-3 for legs and slot 4 for the way back; w_claim uses slot 0 for CLAIM and slots 1-4 for legs. cnt_res = 4 covers at most 3 writes, and cnt_claim is at most 4. Two resolvers never share rs_in: R_GONE frees the old one at the incoming's first BUSY=0 sample, which comes before any re-classified forward, since that needs a read and a sweep."
+   },
+   {
+    "claim": "Several resolvers acting at once are serialised correctly.",
+    "why": "rs_act1 takes one resolver per tick and the others wait. w_res is outranked only by single-tick pushes. In sc4 the claim on one resolver freed it while the other held on."
+   },
+   {
+    "claim": "A forward of a trunk already claimed here cannot happen.",
+    "why": "A claim needs e and b to be counted: at least ~0.5 s after the seizure at real timers, ~90 ms scaled. A forward is written within ~12-25 ms (at most ~45 ms worst case). When the claim comes, rs_mine drops the forward's legs and frees its resolver."
+   },
+   {
+    "claim": "In normal operation R_GONE is not masked by a re-seizure of the incoming.",
+    "why": "The resolver sees the incoming's first BUSY=0 sample after release; that is the same sample the classifier would act on, and any re-hold needs a read (at least 9 frames) first. R_GONE is masked only under MUTE (resolver-outlives-muted-incoming) and in the port-77 case."
+   },
+   {
+    "claim": "In normal release, R_GONE's drop writes do not land on reused legs.",
+    "why": "Legs release within about 1 ms of the incoming, and the drops are queued within about 1 ms after that. A sweep needs its 1 ms CONFIRM after reading a port free before it can queue a write, so the window is at most ~0.1 ms and needs w_res delayed. It was not seen. My fix closes it anyway, since gone legs are never written."
+   },
+   {
+    "claim": "STRAP_N implements network.md 3.3 exactly.",
+    "why": "A seizure is never forwarded onward from a jumpered link (:616) nor into one (fwd_mask, :505 and :618). An origin may still seize a jumpered link (h_mask 1111, :849). nf_busy excludes jumpered arrivals."
+   },
+   {
+    "claim": "Fan-out resolution at a hub works.",
+    "why": "In sc4, three-leg forwards were written. The S40 leg's claim re-pointed E30 at it and dropped W10 and N74. The freed resolver was immediately reused by a fifth flood, and everything was idle after release. The run is PASS, identical with my fix."
+   },
+   {
+    "claim": "Overload in this slice is graceful: no livelock, no thrash, no stuck state.",
+    "why": "Floods beyond NRES, or arriving while the forwarder is busy, are held but not forwarded, and nothing retries. They release with their origin (T_CLAIM + T_REL). sc4's idle check passed."
+   },
+   {
+    "claim": "Keeping one candidate per direction at CONFIRM costs little.",
+    "why": "With the g ordering, a candidate lost at CONFIRM is almost always the link's last free channel, because the far end hunts from the other end. A fallback candidate would rarely find another."
+   },
+   {
+    "claim": "Every sweep terminates.",
+    "why": "There are 64 steps, and the 00 step waits for 00's turn (:772-776), followed by 64 CONFIRM samples. A read cannot wait for ever: win counts down on every a_stb, and another reader's select delays it by at most a pass."
+   },
+   {
+    "claim": "The unit's cable-B master behaves under forwarder traffic.",
+    "why": "Across all tb_fx runs, including the fix runs: no clash (nclash 0), no queue refusal (un_ovf 0), and fan-out writes of up to 4 words in one tick."
+   },
+   {
+    "claim": "The one-leg forward (rs_two) is correct.",
+    "why": "Both latches are written at once, so a claim's backward A reaches the origin with no resolver action. The resolver it keeps is what lets a local claim drop the onward leg (rs_mine), as tb_chain exercises. The only cost is capacity, covered in forward-needs-resolver-and-idle-forwarder."
+   }
+  ],
+  "protocol": [
+   {
+    "claim": "g protects a forwarder exactly as it protects an origin.",
+    "why": "Both use the one sweep, with the same per-candidate g compare on the word read (net_unit.v:759-766) and the same confirm pass (779-785). Residual glare needs the last free channel whoever hunts."
+   },
+   {
+    "claim": "Crossing floods (A->C with C->A through B, A->B with B->A) cannot take each other's claim.",
+    "why": "The origin watches only its own d_trunk ports (net_unit.v:795-797), resolvers only their own legs (683-686), and 'mine' keeps the classifier off every port the unit seized (429-438). The only cross-coupling is glare on a shared link (forward-glare-collapse). The calls do contend for the one forwarder and the one register (one-register-refuses-claims)."
+   },
+   {
+    "claim": "Backward A is 0 before any claim on every top_net build with port 00 unfitted.",
+    "why": "Holds listen to 00 with CLM 0 (net_unit.v:610); a one-leg way back carries the next hop's hold (also 0); drops and releases point at 00 (592, 662, 697, 826, 834; port.v:193). The only pre-claim sources are glare, a stuck-1 conductor (phantom-seizure-no-timeout) and a fitted 00 (port00-must-be-unfitted)."
+   },
+   {
+    "claim": "The claim is a level carried through every patch.",
+    "why": "A claimed port's a_rx = E || CLM (port.v:153). The one-leg way back is written with the forward (net_unit.v:732-736); a hub's way back is written at R_LEG (701-705); the marker keeps CLM on every write to a claimed trunk (mini_marker ctx_clm). tb_chain and tb_lchain end-to-end calls pass. The exception is a re-point of a port whose E is up (forward-glare-collapse)."
+   },
+   {
+    "claim": "Release propagates hop by hop without false seizures, including when the called party hangs up first at a transit.",
+    "why": "Each port clears on its own fall, and a released port with standing M is protected by st (net_unit.v:262-277, 566-570; set by M under BUSY). Release proceeds in T_REL steps back along the chain; tb_net scenario 2 covers one hop and the same argument applies per hop."
+   },
+   {
+    "claim": "A dropped trunk cannot be re-seized while the far end still holds it (baseband and local trunk).",
+    "why": "The dropping end stays BUSY through its fE for T_REL (port.v:147), and the far end releases on the same edge within about 1 tick; a re-seizure needs about 1.32 ms or more (confirm pass plus write). Margin 0.13-0.29 ms; see release-margin-thin for carriers where it fails."
+   },
+   {
+    "claim": "A claim cannot race a forward still in progress at the same transit.",
+    "why": "A claim needs two digits after the seizure (1.5 s or more at real dialling, 240 ms or more at scale 8); the forward takes 12-30 ms and starts only at w_cls (net_unit.v:616-621)."
+   },
+   {
+    "claim": "A claim racing the caller's hang-up, or arriving after T_CLAIM, is released cleanly.",
+    "why": "The origin drops every held trunk (net_unit.v:823-829); the owner's register sees CLR on the trunk and writes it free (mini_marker S_COLLECT r_gone); a refused trunk releases on its fM fall. Nothing is left BUSY, apart from the 1-tick window noted in the monclaim/cableb slices."
+   },
+   {
+    "claim": "Double claim at the ends of a jumpered link: the losing copy is released.",
+    "why": "The first claim takes the register and the second is refused to 03 with CLM (mini_marker.v:320-327); the origin keeps the first M rise and drops the other at once (net_unit.v:800, 831-837); the refused port releases on its fM fall (origin slice S5). Caveat: which copy wins at the owner is the monitor cell order on a same-tick tie, and the refused copy's backward A can reach the origin first, giving cannot-complete, never a wrong number (doc-drift item 5)."
+   },
+   {
+    "claim": "Plesiochronous links cannot make or lose a pulse.",
+    "why": "A crosses a baseband card through two flip-flops on the local frame edge (baseband_card.v:139-140), and a local trunk through a cell register and a frame-edge crossing (local_trunk.v:164-176); a slip is a one-frame (15.6 us) level glitch. The ports and counters sample once per ms and HIT is 8 samples. Word reads are local to the card. tb_lnet/tb_lchain run at 100 ppm."
+   },
+   {
+    "claim": "The claim's round trip fits inside T_CLAIM with a large margin.",
+    "why": "The owner decides b at the same tick-quantised instant as the origin; CLAIM is written at once, before att (net_unit.v:656-673); the way back is about 1-2 ms a hop. Only a second claim waiting behind the att handshake can be late (S_WATCH, cableb slice)."
+   },
+   {
+    "claim": "A long outage releases cleanly, and the dead trunk leaves the hunt.",
+    "why": "The card forces A to 0 and floats the word (baseband_card.v:154,157; local_trunk.v:188-192); the ports release after T_REL; the sweep keeps only trunk words (net_unit.v:759). A hunt that read the word just before the fall seizes a dead trunk: no claim, cannot-complete at T_CLAIM. The exception is a link that returns while the caller still dials (link-return-fresh-seizure)."
+   },
+   {
+    "claim": "The T_ARM hold watch covers the whole arming window of the incoming port.",
+    "why": "The hold is written 1.4 ms or more after the rise; C_HOLD watches until T_ARM + 2 ticks after the write (net_unit.v:584-588); the port's fM rises exactly T_ARM after the rise (port.v:178-181). A fall inside the window is always sampled (once a ms). The hole it opens for dial breaks is the cableb slice's tb_brk."
+   },
+   {
+    "claim": "The one-leg transit's leg cannot be left with no edge.",
+    "why": "If the incoming seizure dies before the leg's fE arms, R_GONE fires when the incoming port's BUSY falls (by its own fM, or by C_UNHOLD) and writes the leg away (net_unit.v:688-698). This is also why a chain forward needs a resolver (chain-forward-holds-resolver)."
+   }
+  ]
+ },
+ "notes": {
+  "cableb": "I found seven defects on cable B, the unit's writes and the claim handshake: two wrong numbers, two permanent stuck states and three minor. Four are reproduced on the snapshot RTL; the queue and the bus themselves are sound.\n\n**How the benches were run**\n- The four directed benches and their logs are in /home/joel/telco/newimpl/build/flood/work/audit/cableb/.\n- tb_brk ran on the plain snapshot (work/RTL.list).\n- tb_attw, tb_att2 and tb_fcan ran on copies of mini_marker.v and net_unit.v (mini_marker_k.v, net_unit_k.v, RTL_k.list) that differ from the snapshot only by three plusarg knobs, all off by default: +fixatt, +fixwatch and +fixfc.\n- With the knobs off the copies behave as the snapshot: run_attw_scen1_rebuilt_knobsoff.log is identical to run_attw_scen1.log, and the patch is 3 lines per file (diff shown in the session).\n- The five baselines are green, and b_clash / ovf were 0 in every run.\n\n**Findings, in order of consequence**\n1. **Wrong number from a queued second claim.** It is attached late, mid-digit, after the first claim was held through S_WATCH (tb_att2: 1 2 3 3 2 rang B22).\n2. **Late refusal re-busies a released trunk.** A claim held through S_WATCH is refused on a stale r_busy. If the far caller left during the wait, the refusal lands on a trunk that has already released: permanent BUSY+CLM, and the neighbour holds a phantom seizure with a monitor for good (tb_attw scen 2). This is also a spec mismatch: the code comment and the README say the claim waits and is taken.\n3. **F_WRITE ignores f_cancel.** Port 77, its leg and a resolver are held for good at the real T_ARM (tb_fcan).\n4. **The C_HOLD watch unholds on a dial break**, and a re-attached monitor mis-hears e (tb_brk). This is cross-slice, but it is the hold/unhold pair.\n\n**Fixes to use**\n- The safe att fix is +fixwatch: answer every claim at once, and never let att wait through S_WATCH.\n- The one-gate +fixatt (skip the r_release tick) serves the claim as the comment intends. It fixes scenarios 1 and 2 but moves the late-attach hazard onto the first claim, so pair it with a bounded wait if you keep it.\n- Also harden the claim itself: gate w_claim and the refusal on the trunk's M still being up.\n\n**Real timers.** None of the four needs scale-8 slack to exist, but each needs a rare coincidence at real timers:\n- The late-claim wrong number and the late refusal need a long S_WATCH (a chattering local line, or an abandon inside SETTLE) and a far caller hanging up or dialling at the wrong moment.\n- tb_fcan ran at the real T_ARM, because scale 8 hides the stuck state there.\n- The hold-watch wrong number is reproduced only at scale 8. At real timers it exposes the hop whose seizure arrives 2-20 ms before the first break: hop ~10 at the RTL's ~13 ms a hop, nearer under load. It shortens the guard's reach by about 18 ms.\n\n**Architectural caveat.** The 16-deep, 5-wide queue is a model part (README says the unit's sequencer is not drawn). The ordering arguments here \u2014 one pusher a tick, FIFO, q_empty before att \u2014 would need re-checking against a word-at-a-time 74HC sequencer.\n\n**Housekeeping.** Build dirs are deleted (the audit dir is 280 KB) and nothing was written outside the audit directory.",
+  "monclaim": "Slice: monitors and claim. One wrong-number path found and reproduced; no stuck state found. Every run ended with all ports, cells, resolvers, cl_st, att, the forwarder, the classifier and the register idle.\n\nHeadline: a monitor cell given to a seizure that the classifier itself writes away (C_UNHOLD, a seizure shorter than T_ARM) is never freed. If the same channel is seized again within CLR, the stale cell counts the gap as a digit '1' (or adds 1 to e when the first break comes early) and can claim the new call for the wrong exchange.\n- Reproduced at scale 8 and at real timers with bench-driven far ends: tb_mc scenario 1 at exchange 13, and scenario 5 at exchange 42 for the e+1 variant.\n- Reproduced end to end between two exchanges at real timers (tb_mc2): the origin's guard abandons, and the next caller keys 1 at once. A21 dialled 1 3 2 2 1 and talked to exchange 13's line 22.\n- The same stale cell also starves the 2-cell pool (scenario 3).\n- A 1-package fix, in work/audit/monclaim/rtl_fix and fix.patch, closes every variant at both scales; tb_net stays green with it (88/0). The fix is: free the cell at C_UNHOLD, and drop a cell on a break >= ID.\n\nCapacity (real timers):\n- The classifier handles one trunk seizure per ~19 ms (C_HOLD = T_ARM+2 blocks it): rise-to-hold of 2/21/40/59/78 ms for 5 simultaneous seizures.\n- Rise to onward leg is 14 ms idle and 33 ms with one seizure ahead (the guard budgets 12 ms a hop).\n- Both resolvers filled after two forwards, so the other three were not forwarded (n_nofwd).\n- The claim handler is never the bottleneck: claim -> CLAIM on the wire -> att -> register attached within 1 ms. The one register and NMON = 2 are, and both fail gracefully (immediate refusal to 03; unwatched seizure = cannot-complete after T_CLAIM). Quantified with Erlang B in the findings.\n\nScale: the stale-cell origin route is unreachable at scale 8 (one key 12+16 ms plus the unscaled ~11 ms sweep > CLR 32 ms), which is partly why the tree benches never met it. The origin route at real timers needed a key within ~45 ms of dial tone (6 ms margin); the transit-forwarder route is the realistic trigger.\n\nCaveats:\n- run_real13_all.log's ring checks used an early, broken REAL-mode ring test: its X24/X21/'no phone rings' lines are not evidence. run_real13_sc1.log is the corrected re-run.\n- In run_fix_mc2.log the check 'A21 is not talking to X22' fails as a bench artifact: X22 lifting gets its own dial tone and so shows BUSY. The printed tx/rx lines (0/0) show A21 does not hear X22.\n- Object dirs are deleted; logs, benches, fixed RTL copies and the patch are kept under /home/joel/telco/newimpl/build/flood/work/audit/monclaim/. Nothing outside work/ was touched.",
+  "origin": "SLICE: the origin bank and the mini marker's network half, on the frozen snapshot only. Everything written is under /home/joel/telco/newimpl/build/flood/work/audit/origin/:\n- tb_orig.v: two exchanges (A 22, B 32) on three baseband links, the N-S link jumpered; scenarios selected with +scen=mask, S1-S6.\n- Logs on the snapshot RTL: run_s1.log, run_s2_5.log, run_s6.log.\n- Patched copies: rtl_fix/net_unit.v, rtl_fix/mini_marker.v, RTL_fix.list. Fixes: a' is !r_release on att_refuse plus a CLR/2 bound on the WATCH wait; b is o_brk; c' is the 4-sample `lost` counter.\n- run_fix.log and run_fix_s6.log: an earlier fix set. Its one-sample claim-loss check reproduced a no-edge hold on the caller, which is why c' needs its persistence.\n- run_fix2.log: the refined fixes on S1, S3, S4 and S6: 19 checks, 0 errors.\n- model/reg1.py and model/reg1.out: a register-occupancy model, not RTL.\nThe build dirs are deleted. Seven runs in total: two builds of about 40 s each, 25-40 ms simulated per wall second.\n\nCAPACITY AND OVERLOAD (this slice): the network capacity of a mini-marker exchange is set by its one register, not by trunks, origin banks or the forwarder.\n- Incoming claims are lost at a rate equal to the far register's occupancy: about 8% at 16 lines, 15% at 32 and 22% at 48, at 3 calls/h and 30% leaving.\n- Crossing calls fail in pairs.\n- Every network attempt holds its origin register for all of 1 e b h s, whether or not it is refused.\n- Degradation is graceful in form: clean cannot-completes, no livelock, and recovery as soon as load falls. There are two exceptions where a failure becomes a stuck state: late-refusal-no-edge-hold (permanent) and nogo-write-after-caller-release (until the line is next lifted).\n- Connecting at the claim instead of at o_last is the cheapest structural improvement.\n\nSCALE CAVEATS: every finding was re-argued at real timing (see each finding's 'realistic').\n- watch-exit-refusal is 8 times more likely at real timing, because SETTLE is 32 ms against 4 ms at scale.\n- pre-seizure-break's window is 8 times narrower relative to dialling at real timing.\n\nCROSS-SLICE OBSERVATIONS (not investigated here):\n- In S5 the second of two simultaneous seizures was classified 6 ms after its rise, because the classifier sits in C_HOLD for T_ARM+2 per earlier seizure. At real timing that is about 18 ms per queued seizure. Each such delay is spent from the origin's guard budget (monitor rule 1 assumes attachment within 1 ms), so at a busy hub it eats into the '12 ms a hop' figure.\n- A sub-HIT dip in forward A inside the far C_HOLD window makes the far unit un-hold and re-hold the port with a second monitor on the same call. That would give a duplicate claim, and a refusal overwriting a taken call. This is speculative and belongs to the classifier slice.\n- tb_lfull 5 would turn red under fix c', which is intended: residual glare would become two cannot-completes instead of joining two callers. Joel's decision.\n\nAnother agent's jobs (work/audit/cableb, 'attw +fixwatch') appear to be probing the same WATCH handshake independently.",
+  "forwarder": "What I did: I read the snapshot only and never edited it. I studied the forwarder, the resolvers and the sweep with one new real-timer bench, work/audit/fwd/tb_fx.v. It is one exchange (B = 2 3, top_net, NRES 2, NMON 2):\n- Its W direction is an LTU whose far unit is a bench-side local_trunk.\n- Its E, S and N directions are baseband cards whose far ends are wires the bench drives (a_in, c_in, far clock) and reads (a_out, c_out).\n- site_fx.v is site_net.v plus four clock outputs.\n- B's internals are read hierarchically only for reporting.\n- It runs at ~30 ms of simulated time per wall-clock second. Scenarios are selected with +sc, +var, +dly and +load.\n\nHeadline numbers, real timers:\n- Hop latency, far M in to leg far M out: 12.1-13.9 ms nominal. The sweep is 9 ms of that, CONFIRM 1 ms, the classifier read ~1.5 ms.\n- 30.4-31.4 ms behind another seizure's T_ARM watch.\n- 18.4-25.5 ms behind an origin sweep.\n- An origin sweep plus two floods 1 ms apart loses the second flood.\n\nCapacity:\n- The resolver pool (2) is the binding limit at a transit: roughly 2.3% of floods not forwarded at 8 exchanges and 30% leaving, 11.6% at 20 exchanges.\n- The forwarder and the sweep are not bottlenecks at real timers. The sweep is ~10.5 ms per use; the forwarder is lost only behind an origin sweep.\n- Behaviour at every limit I drove is graceful but slow: cannot-complete about T_CLAIM after b. There was no stuck state, except the link-outage and port-77 defects.\n\nSafety:\n- Reproduced a wrong number at real timers. A flood reaching an exchange ~110 ms after its origin seized, with the first dial break legally at 129 ms, is re-seized mid-digit by the T_ARM watch or a busy classifier. B then claimed a call dialled to 3 3 and rang B21. It sits at the documented 'about eight hops' envelope. The upstream path latency is modelled as a delay, using the measured per-hop latency.\n- Reproduced glare on a forward's leg joining two callers, uncounted.\n\nLiveness:\n- Reproduced that a resolver whose incoming goes MUTE outlives its call, and that its stale writes cut, one-way or phantom-seize later calls.\n- A fix copy (work/audit/fwd/rtl_fix/net_unit.v: rs_lb and rs_lf per leg, dissolve when every leg is gone, and F_WRITE honours f_cancel) passes the outage scenarios and regresses green on tb_fx sc4, tb_chain (32/32) and tb_lchain (48/48).\n\nOverlaps with other slices:\n- The port-77 f_cancel race was found and reproduced independently by the cableb slice (work/audit/cableb/tb_fcan.v); I cite its log.\n- The classifier-latency part of the late-flood finding overlaps the cls slice's burst bench.\n- The destination-watch re-seizure (C_UNHOLD, then re-classify mid-digit) is classifier territory, but it is what turns forwarder latency into a wrong number, so I report it here.\n- The sc2 var1 FAIL 'B holds E30 as an incoming seizure' is a bench-check artefact (a one-leg forward re-points E30 at S40), not a defect.\n- Monitors hold a steady-M seizure for ever: there is no timeout, so a phantom from a stale latch ties one up at every exchange it reaches. That belongs to the monitor slice.\n\nThe build directories were deleted; the logs and sources are kept. Rebuild with:\n\n./sim.sh bash -c 'verilator --binary --timing -j 2 -Irtl -Wno-fatal --top-module tb_fx --Mdir work/audit/fwd/obj_fx -o tb_fx $(cat work/RTL.list) work/audit/fwd/site_fx.v work/audit/fwd/tb_fx.v'\n\nFor the fix build, use work/audit/fwd/RTL_fix.list and add -Iwork/audit/fwd/rtl_fix.",
+  "protocol": "Protocol slice (between exchanges). Everything read and simulated from the frozen snapshot /home/joel/telco/newimpl/build/flood; nothing outside work/audit/proto/ was touched. Benches and logs are in /home/joel/telco/newimpl/build/flood/work/audit/proto/:\n- tb_pflap.v: 2 exchanges, REAL timers, link outages. run_pflap.log: 17 checks, 5 FAIL = reproductions; the control is green. run_pflap_fix.log: the same bench on the poisoned card; the single FAIL is the intended cost.\n- tb_pchain.v: 3-exchange chain, scale 8, forward-vs-origin glare (2 passes) and a stuck A conductor. run_pchain.log is the first run; run_pchain_trace.log is the two-pass run with +trace.\n- rtl_fix/baseband_card.v with RTL_fix.list: the tested card fix. It was not run against the tree's own benches (tb_net scenario 10 cuts links and should still pass, since its idle_all waits 400 ms, longer than the 300 ms clear).\nObject directories are deleted.\n\nFour runs through sim.sh, one at a time: flap 941 s, chain 916 s, chain trace 798 s, fix 1290 s, each including the build.\n\nThe glare bench did NOT confirm my listen-in hypothesis: the orphan leg releases with the rest. Its real outcome (the path collapses under both callers, who are left latched to idle trunks) is what forward-glare-collapse reports. It rests on a general hazard: any write that re-points a port whose E is up becomes a release T_REL later.\n\nOverlap with other slices, cited rather than repeated: fwd (hop latency at real timers, resolver exhaustion, the resolver outliving a MUTE), origin (S2 crossing calls both refused, S4 claimed trunk dies before N_DONE and the caller listens in, S5 double claim), monclaim (stale monitor cell), cableb (C_HOLD takes a dial break for a death; the claim waits in S_WATCH). Quantities marked likely are Erlang or arithmetic on RTL hold times and the fwd slice's measured hops, not load runs; the load slice owns the measured capacity.\n\nPriority order for Joel:\n1. The link-outage pair (two wrong-number and false-claim paths, reproduced at real timers; card fix tested, about 1 package a card).\n2. No timeout on monitors and resolvers (one stuck conductor partitions the network silently).\n3. The origin must re-check its claim before N_DONE; that closes forward-glare-collapse and the origin slice's S4.\n4. Resolvers at chain transits and T_CLAIM as a tap (capacity and overload).\n5. Guard reach: plan on about 14 ms a hop plus 17 ms per busy transit, or use the 256 ms tap."
+ }
+}

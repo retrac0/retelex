@@ -1,0 +1,144 @@
+
+  tb_c17f -- far-end form: CLR 32, T_REL 32, NODIG 1250
+
+  point 0: f = 0.000 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [ 1761.000] +   0.000  A20 hangs up (B nd_t 1216; A mk 6, A nst 5)
+  [ 1761.282] +   0.281  B11 M -> 0
+  [ 1793.000] +  32.000  A20 port REL
+  [ 1793.000] +  32.000  A11 port REL
+  [ 1793.000] +  32.000  B11 port REL
+  [ 1793.032] +  32.031  A11 M -> 0 (busy 1)
+  [ 1793.157] +  32.157  A unit st[11] cleared (saw A11 M low)
+  [ 1794.000] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [ 1794.001] +  33.000  A r_gone (mk 3)
+  [ 1794.285] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [ 1794.419] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [ 1795.000] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [ 1795.001] +  34.000  B r_gone (mk 3)
+  [ 1795.129] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [ 1795.157] +  34.156  A11 M -> 1 (busy 0)
+  [ 1797.559] +  36.559  A wr dst 11 src 00 bsy 1 clm 0
+  RESULT f= 0.000  B11 busy 1 latch 03 bsy 1 clm 1 | A11 M 1 busy 1 latch 00, A mon 01 res 00 nofwd 1 st11 1 | A20 busy 1 latch 03 | B reg 0 mk 0, A reg 0 mk 0  B11-STUCK A20-STUCK
+
+  point 1: f = 0.500 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [ 4130.499] +   0.500  A20 hangs up (B nd_t 1216; A mk 6, A nst 5)
+  [ 4131.280] +   1.281  B11 M -> 0
+  [ 4161.999] +  32.000  A20 port REL
+  [ 4162.999] +  33.000  A11 port REL
+  [ 4162.999] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [ 4162.999] +  33.000  B11 port REL
+  [ 4163.030] +  33.031  A11 M -> 0 (busy 1)
+  [ 4163.155] +  33.157  A unit st[11] cleared (saw A11 M low)
+  [ 4163.283] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [ 4163.417] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [ 4163.999] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [ 4164.127] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [ 4164.155] +  34.156  A11 M -> 1 (busy 0)
+  [ 4166.558] +  36.559  A wr dst 11 src 00 bsy 1 clm 0
+  RESULT f= 0.500  B11 busy 1 latch 03 bsy 1 clm 1 | A11 M 1 busy 1 latch 00, A mon 01 res 00 nofwd 1 st11 1 | A20 busy 1 latch 03 | B reg 0 mk 0, A reg 0 mk 0  B11-STUCK A20-STUCK
+
+  point 2: f = 1.000 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [ 6499.997] +   1.000  A20 hangs up (B nd_t 1217; A mk 6, A nst 5)
+  [ 6500.279] +   1.281  B11 M -> 0
+  [ 6531.998] +  33.000  A20 port REL
+  [ 6531.998] +  33.000  A11 port REL
+  [ 6531.998] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [ 6531.998] +  33.000  B11 port REL
+  [ 6532.029] +  33.031  A11 M -> 0 (busy 1)
+  [ 6532.154] +  33.157  A unit st[11] cleared (saw A11 M low)
+  [ 6532.282] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [ 6532.416] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [ 6532.998] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [ 6533.126] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [ 6533.154] +  34.156  A11 M -> 1 (busy 0)
+  [ 6535.556] +  36.559  A wr dst 11 src 00 bsy 1 clm 0
+  RESULT f= 1.000  B11 busy 1 latch 03 bsy 1 clm 1 | A11 M 1 busy 1 latch 00, A mon 01 res 00 nofwd 1 st11 1 | A20 busy 1 latch 03 | B reg 0 mk 0, A reg 0 mk 0  B11-STUCK A20-STUCK
+
+  point 3: f = 1.500 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [ 8870.496] +   1.500  A20 hangs up (B nd_t 1217; A mk 6, A nst 5)
+  [ 8871.278] +   2.281  B11 M -> 0
+  [ 8901.996] +  33.000  A20 port REL
+  [ 8901.996] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [ 8902.281] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [ 8902.414] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [ 8902.996] +  34.000  A11 port REL
+  [ 8902.996] +  34.000  B11 port REL
+  [ 8902.996] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [ 8903.027] +  34.031  A11 M -> 0 (busy 1)
+  [ 8903.124] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [ 8903.152] +  34.156  A11 M -> 1 (busy 0)
+  [ 8903.153] +  34.157  A unit st[11] cleared (saw A11 M low)
+  [ 8905.555] +  36.559  A wr dst 11 src 00 bsy 1 clm 0
+  RESULT f= 1.500  B11 busy 1 latch 03 bsy 1 clm 1 | A11 M 1 busy 1 latch 00, A mon 01 res 00 nofwd 1 st11 1 | A20 busy 1 latch 03 | B reg 0 mk 0, A reg 0 mk 0  B11-STUCK A20-STUCK
+
+  point 4: f = 2.000 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [11240.995] +   2.000  A20 hangs up (B nd_t 1218; A mk 6, A nst 5)
+  [11241.276] +   2.281  B11 M -> 0
+  [11271.995] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [11272.279] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [11272.413] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [11272.995] +  34.000  A20 port REL
+  [11272.995] +  34.000  A11 port REL
+  [11272.995] +  34.000  B11 port REL
+  [11272.995] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [11273.026] +  34.031  A11 M -> 0 (busy 1)
+  [11273.123] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [11273.151] +  34.156  A11 M -> 1 (busy 0)
+  [11273.151] +  34.157  A unit st[11] cleared (saw A11 M low)
+  [11275.554] +  36.559  A wr dst 11 src 00 bsy 1 clm 0
+  RESULT f= 2.000  B11 busy 1 latch 03 bsy 1 clm 1 | A11 M 1 busy 1 latch 00, A mon 01 res 00 nofwd 1 st11 1 | A20 busy 0 latch 00 | B reg 0 mk 0, A reg 0 mk 0  B11-STUCK          
+
+  point 5: f = 2.500 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [13612.493] +   2.500  A20 hangs up (B nd_t 1218; A mk 6, A nst 5)
+  [13613.275] +   3.281  B11 M -> 0
+  [13642.993] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [13643.278] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [13643.411] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [13643.993] +  34.000  A20 port REL
+  [13643.993] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [13644.121] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [13644.993] +  35.000  A11 port REL
+  [13644.993] +  35.000  B11 port REL
+  [13645.025] +  35.031  A11 M -> 0 (busy 1)
+  [13645.150] +  35.157  A unit st[11] cleared (saw A11 M low)
+  [13676.993] +  67.000  A11 port REL
+  RESULT f= 2.500  B11 busy 0 latch 00 bsy 0 clm 0 | A11 M 0 busy 0 latch 00, A mon 00 res 00 nofwd 0 st11 0 | A20 busy 0 latch 00 | B reg 0 mk 0, A reg 0 mk 0                     
+
+  point 6: f = 3.000 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [15983.992] +   3.000  A20 hangs up (B nd_t 1219; A mk 6, A nst 5)
+  [15984.273] +   3.281  B11 M -> 0
+  [16013.992] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [16014.276] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [16014.410] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [16014.992] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [16015.120] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [16015.992] +  35.000  A20 port REL
+  [16015.992] +  35.000  A11 port REL
+  [16015.992] +  35.000  B11 port REL
+  [16016.023] +  35.031  A11 M -> 0 (busy 1)
+  [16016.148] +  35.157  A unit st[11] cleared (saw A11 M low)
+  [16047.992] +  67.000  A11 port REL
+  RESULT f= 3.000  B11 busy 0 latch 00 bsy 0 clm 0 | A11 M 0 busy 0 latch 00, A mon 00 res 00 nofwd 0 st11 0 | A20 busy 0 latch 00 | B reg 0 mk 0, A reg 0 mk 0                     
+
+  point 7: f = 3.500 ms.  claimed 1, B reg busy 1 port 11 ctx_clm 1 ndig 0, mk 1
+  [18356.490] +   3.500  A20 hangs up (B nd_t 1219; A mk 6, A nst 5)
+  [18357.272] +   4.281  B11 M -> 0
+  [18385.990] +  33.000  A r_nodig (mk 6, r_gone 0)
+  [18386.275] +  33.285  A wr dst 11 src 00 bsy 0 clm 0
+  [18386.409] +  33.418  A wr dst 20 src 03 bsy 1 clm 0
+  [18386.990] +  34.000  B r_nodig (mk 1, r_gone 0)
+  [18387.119] +  34.128  B wr dst 11 src 03 bsy 1 clm 1
+  [18387.990] +  35.000  A20 port REL
+  [18388.990] +  36.000  A11 port REL
+  [18388.990] +  36.000  B11 port REL
+  [18389.022] +  36.031  A11 M -> 0 (busy 1)
+  [18389.147] +  36.157  A unit st[11] cleared (saw A11 M low)
+  [18420.990] +  68.000  A11 port REL
+  RESULT f= 3.500  B11 busy 0 latch 00 bsy 0 clm 0 | A11 M 0 busy 0 latch 00, A mon 00 res 00 nofwd 0 st11 0 | A20 busy 0 latch 00 | B reg 0 mk 0, A reg 0 mk 0                     
+
+  SUMMARY far-end: B11 stuck 5 of 8, A holds a phantom (monitor held) 5, A20 stuck 4
+- /home/joel/telco/newimpl/build/flood/work/verify/C17-skeptic/tb_c17f.v:190: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 19s; walltime 243.935 s; speed 77.742 ms/s
+- Verilator: cpu 243.137 s on 1 threads; allocated 8 MB
+rc=0

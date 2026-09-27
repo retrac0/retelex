@@ -1,0 +1,80 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 32
+    ok    links 11, 12 up; 13 cut
+
+  S6. claim pending in a long WATCH, its caller gone before the refusal
+  [   30.271] A mk  0 -> 4  reg_busy 0
+  [   30.271] A cls 0 -> 1 port 20
+  [   30.271] B mk  0 -> 4  reg_busy 0
+  [   30.271] B cls 0 -> 1 port 20
+  [   31.389] A mk  4 -> 5  reg_busy 0
+  [   31.389] A cls 1 -> 0 port 20
+  [   31.389] B mk  4 -> 5  reg_busy 0
+  [   31.389] B cls 1 -> 0 port 20
+  [   32.271] A mk  5 -> 1  reg_busy 0
+  [   32.271] B mk  5 -> 1  reg_busy 0
+  [   32.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   32.399] B wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   32.399] C17 A20 latch addr 01 bsy 1  (m 1 fm 1)
+  [   69.005] A mk  1 -> 6  reg_busy 1
+  [   69.006] A nst 0 -> 1  (ndig 0)
+  [   69.006] A nst 1 -> 2  (ndig 0)
+  [   69.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [   69.133] C17 A20 latch addr 00 bsy 1  (m 1 fm 1)
+  [   79.005] A nst 2 -> 3  (ndig 0)
+  [   79.006] A nst 3 -> 4  (ndig 0)
+  [   79.289] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [   81.161] B cls 0 -> 1 port 11
+  [   82.279] B cls 1 -> 2 port 11
+  [   82.280] B mon_held 01
+  [   82.280] B cls 2 -> 3 port 11
+  [   82.564] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [   86.005] B cls 3 -> 0 port 11
+  [   88.133] B wr  g1 dst 20 src 00 bsy 1 clm 0
+  [  389.005] B mk  1 -> 4  reg_busy 1
+  [  389.404] B mk  4 -> 2  reg_busy 1
+  [  390.286] B mk  2 -> 7  reg_busy 1
+  [  390.413] B wr  g1 dst 20 src 21 bsy 1 clm 0
+  [  390.547] B wr  g1 dst 21 src 20 bsy 1 clm 0
+  [  392.004] A nst 4 -> 5  (ndig 2)
+  [  393.005] B mon_held 00
+  [  393.288] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  393.289] C17 B11 clm -> 1
+  [  393.295] B att 1 port 11 (mk 7 reg_busy 1)
+  [  393.316] C17 A11 M (backward A) -> 1
+  [  394.160] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [  396.285] C17 B11 M (flood) -> 0
+  [  409.004] B att_ack: REFUSED  (mk 7 reg_busy 1)
+  [  409.004] B att 0 port 11 (mk 7 reg_busy 1)
+  [  409.132] B wr  g1 dst 11 src 03 bsy 1 clm 1
+  [  421.004] C17 A20 port REL (fM 0 fE 0 m 0)
+  [  421.004] C17 A20 latch addr 00 bsy 0  (m 0 fm 0)
+  [  422.004] C17 A11 port REL
+  [  422.004] C17 B11 port REL
+  [  422.004] C17 B11 clm -> 0
+  [  422.035] C17 A11 M (backward A) -> 0
+  [  425.161] A nst 5 -> 7  (ndig 2)
+  [  425.161] A nst 7 -> 8  (ndig 2)
+  [  425.161] C17 A unit nogo pulse (mk 6)
+  [  425.161] A nst 8 -> 0  (ndig 2)
+  [  425.161] A mk  6 -> 3  reg_busy 1
+  [  425.445] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [  425.579] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [  425.579] C17 A20 latch addr 03 bsy 1  (m 0 fm 0)
+  [  425.585] A mk  3 -> 0  reg_busy 0
+  [  544.004] B mk  7 -> 0  reg_busy 1
+  OBS S6: att pending in WATCH 64347 ticks; B refusals 1; busy A11 0 B11 0; A mon 00; A cst 0
+  OBS S6: 1.5 s later: busy A11 0 B11 0; A mon 00; A cst 0
+    ok    intent: nothing is left held once every phone is on-hook and the timers have run
+  IDLE? busy_a 0000000000010000 busy_b 0000000000000000 reg 00 mk 00 dirs 00 res 0000 mon 0000
+    FAIL  S6: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  5 checks, 1 errors, idle-bad 1.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C17-nogo-after-release/tb_orig_c17r.v:503: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 3s; walltime 113.084 s; speed 24.239 ms/s
+- Verilator: cpu 108.601 s on 1 threads; allocated 8 MB
+rc=0

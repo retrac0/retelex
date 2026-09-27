@@ -1,0 +1,72 @@
+
+  tb_c17 -- mode 2, CLR 32, T_REL 32, BRK/MK/PAUSE 12/8/100
+  links: A11 1 A12 1 B11 1 B12 1 A13 0
+
+  N: A21 lifts, dials nothing; hangs up X ms after the register attached (NODIG from there)
+  [ 1258.286] +1216.000  A21 hangs up (X = 1216.000 ms; mk 1, reg port 21)
+  [ 1290.002] +1247.715  A21 port REL
+  [ 1292.002] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 1292.002] +1249.716  A r_gone rises (mk 3)
+  [ 1292.130] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1216.000 ms  rel +1247.715 gone +1249.716 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 2860.782] +1216.500  A21 hangs up (X = 1216.500 ms; mk 1, reg port 21)
+  [ 2891.998] +1247.715  A21 port REL
+  [ 2893.998] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 2893.998] +1249.716  A r_gone rises (mk 3)
+  [ 2894.126] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1216.500 ms  rel +1247.715 gone +1249.716 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 4463.278] +1217.000  A21 hangs up (X = 1217.000 ms; mk 1, reg port 21)
+  [ 4494.993] +1248.715  A21 port REL
+  [ 4495.993] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 4496.122] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1217.000 ms  rel +1248.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 6066.774] +1217.500  A21 hangs up (X = 1217.500 ms; mk 1, reg port 21)
+  [ 6097.989] +1248.715  A21 port REL
+  [ 6098.989] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 6099.118] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1217.500 ms  rel +1248.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 7670.270] +1218.000  A21 hangs up (X = 1218.000 ms; mk 1, reg port 21)
+  [ 7701.985] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 7701.985] +1249.715  A21 port REL
+  [ 7702.113] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1218.000 ms  rel +1249.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 9274.766] +1218.500  A21 hangs up (X = 1218.500 ms; mk 1, reg port 21)
+  [ 9305.981] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [ 9305.981] +1249.715  A21 port REL
+  [ 9306.109] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  RESULT X= 1218.500 ms  rel +1249.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [10879.262] +1219.000  A21 hangs up (X = 1219.000 ms; mk 1, reg port 21)
+  [10909.977] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [10910.105] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  [10910.977] +1250.715  A21 port REL
+  RESULT X= 1219.000 ms  rel +1250.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 0 latch 00 bsy 0        free
+  [12324.758] +1219.500  A21 hangs up (X = 1219.500 ms; mk 1, reg port 21)
+  [12354.973] +1249.715  A r_nodig rises (mk 1, r_gone 0)
+  [12355.102] +1249.843  A wr dst 21 src 03 bsy 1 clm 0
+  [12355.973] +1250.715  A21 port REL
+  RESULT X= 1219.500 ms  rel +1250.715 gone +  -1.000 nogo +  -1.000 nodig +1249.715 w03 +1249.843  -> port 21 busy 0 latch 00 bsy 0        free
+
+  SUMMARY mode 2 CLR 32: 6 stuck of 8, idle-bad 0, clash 0, ovf 00
+- /home/joel/telco/newimpl/build/flood/work/verify/C17-nogo-after-release/tb_c17.v:258: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 13s; walltime 313.011 s; speed 40.088 ms/s
+- Verilator: cpu 310.604 s on 1 threads; allocated 8 MB
+rc=0

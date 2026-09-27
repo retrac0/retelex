@@ -1,0 +1,20 @@
+[sim.sh] slot 5: bash -c 
+cd /home/joel/telco/newimpl/build/flood; D=work/verify/C16-marker-reread; W=work/audit/monclaim
+verilator --binary --timing -j 2 -Irtl -Wno-fatal --top-module tb_c16 --Mdir $D/obj_s8 -o tb_c16 $(cat work/RTL.list) tb/site_net.v $D/tb_c16.v > $D/vl_s8.log 2>&1; echo b=$?
+timeout 1500 $D/obj_s8/tb_c16 +case=1 > $D/run_s8_c1.log 2>&1; echo r1=$?
+timeout 1500 $D/obj_s8/tb_c16 +case=2 > $D/run_s8_c2.log 2>&1; echo r2=$?
+rm -rf $D/obj_s8
+verilator --binary --timing -j 2 -Irtl -Wno-fatal --top-module tb_mc --Mdir $D/obj_mc -o tb_mc $(cat work/RTL.list) tb/site_net.v $W/tb_mc.v > $D/vl_mc.log 2>&1; echo bm=$?
+timeout 1200 $D/obj_mc/tb_mc +sc=2 > $D/run_mc_sc2.log 2>&1; echo rm=$?
+rm -rf $D/obj_mc
+verilator --binary --timing -j 2 -Irtl -Wno-fatal -DREAL --top-module tb_c16 --Mdir $D/obj_sr -o tb_c16 $(cat work/RTL.list) tb/site_net.v $D/tb_c16.v > $D/vl_sr.log 2>&1; echo br=$?
+timeout 2400 $D/obj_sr/tb_c16 +case=1 > $D/run_sr_c1.log 2>&1; echo rr=$?
+rm -rf $D/obj_sr
+
+b=0
+r1=0
+r2=0
+bm=0
+rm=0
+br=0
+rr=0

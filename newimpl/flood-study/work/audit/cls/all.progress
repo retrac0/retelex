@@ -1,0 +1,28 @@
+start 13:34:42
+built obj_c3 126s 13:36:48
+c3_sc7 done 107s 13:38:35   4 checks, 2 errors.  FAIL
+c3_sc8 done 41s 13:39:16   4 checks, 2 errors.  FAIL
+c3_sc9 done 51s 13:40:07   3 checks, 1 errors.  FAIL
+c3_sc11 done 105s 13:41:52   4 checks, 2 errors.  FAIL
+built obj_f4a 73s 13:43:05
+f4_c2_sc2 done 118s 13:45:03   4 checks, 0 errors.  PASS
+f4_c2_sc3 done 126s 13:47:09   5 checks, 0 errors.  PASS
+f4_c2_sc4 done 112s 13:49:01   5 checks, 0 errors.  PASS
+f4_c2_sc5 done 103s 13:50:44   5 checks, 0 errors.  PASS
+f4_c2_sc6 done 167s 13:53:31   5 checks, 0 errors.  PASS
+f4_c2_sc1K8 done 124s 13:55:35   3 checks, 0 errors.  PASS
+built obj_f4b 120s 13:57:35
+f4_c3_sc7 done 123s 13:59:38   4 checks, 0 errors.  PASS
+f4_c3_sc8 done 36s 14:00:14   4 checks, 0 errors.  PASS
+f4_c3_sc9 done 45s 14:00:59   3 checks, 1 errors.  FAIL
+f4_c3_sc11 done 105s 14:02:44   4 checks, 2 errors.  FAIL
+c3_ovl done 481s 14:10:45   4 checks, 0 errors.  PASS
+built obj_f4_net 53s 14:11:38
+f4_tree_net done 703s 14:23:21   88 checks, 1 errors.  FAIL
+built obj_f4_lfull 53s 14:24:14
+f4_tree_lfull done 971s 14:40:25   40 checks, 0 errors.  PASS
+built obj_f4_chain 52s 14:41:17
+f4_tree_chain done 179s 14:44:16   32 checks, 0 errors.  PASS
+c3_r1 done 840s 14:58:16   4 checks, 1 errors.  FAIL
+f4_c3_ovl done 437s 15:05:33   4 checks, 0 errors.  PASS
+ALLDONE 15:05:33

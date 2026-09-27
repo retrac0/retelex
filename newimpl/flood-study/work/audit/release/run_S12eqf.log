@@ -1,0 +1,40 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000001000000000000 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  port T_REL: A 32  X 32  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+  F12 d=0.00: X seize +27.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=-1 k=5 act=0 d=0.00  hangA=189.999 hangB=560.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  REF pattern 5: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 -0.00 CLAIM -0.00 claimed -0.00 Xres0 222.16 att_ack -0.00 done -0.00 connect -0.00 rung -0.00 watch_end -0.00 answer -0.00
+  -- family 12: pattern 5 actor 0 anchor 0 d0 7.00 ms step 0.370 ms n 12
+  F12 d=7.00: X seize +34.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=0 act=0 d=7.00  hangA=189.999 hangB=567.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=7.37: X seize +34.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=1 act=0 d=7.37  hangA=189.999 hangB=567.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=7.74: X seize +34.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=2 act=0 d=7.74  hangA=189.999 hangB=567.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=8.11: X seize +35.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=3 act=0 d=8.11  hangA=189.999 hangB=568.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=8.48: X seize +35.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=4 act=0 d=8.48  hangA=189.999 hangB=568.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=8.85: X seize +35.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=5 act=0 d=8.85  hangA=189.999 hangB=568.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=9.22: X seize +36.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=6 act=0 d=9.22  hangA=189.999 hangB=569.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=9.59: X seize +36.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=7 act=0 d=9.59  hangA=189.999 hangB=569.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=9.96: X seize +36.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=8 act=0 d=9.96  hangA=189.999 hangB=569.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=10.33: X seize +37.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=9 act=0 d=10.33  hangA=189.999 hangB=570.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=10.70: X seize +37.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=10 act=0 d=10.70  hangA=189.999 hangB=570.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=11.07: X seize +38.00 (E leg 13); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=11 act=0 d=11.07  hangA=189.999 hangB=571.998  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 -0.00 -0.00 -0.00 222.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  13 trials: 0 LEAK, 0 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j1.v:663: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 8s; walltime 601.256 s; speed 14.085 ms/s
+- Verilator: cpu 540.228 s on 1 threads; allocated 8 MB
+rc=0 secs=601

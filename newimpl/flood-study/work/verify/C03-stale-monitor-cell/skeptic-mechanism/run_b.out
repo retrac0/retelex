@@ -1,0 +1,3 @@
+[sim.sh] slot 2: bash work/verify/C03-stale-monitor-cell/skeptic-mechanism/run_b.sh
+b=0
+r=0

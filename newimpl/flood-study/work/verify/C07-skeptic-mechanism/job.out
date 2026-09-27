@@ -1,0 +1,2 @@
+[sim.sh] slot 2: bash work/verify/C07-skeptic-mechanism/job.sh
+exit 0

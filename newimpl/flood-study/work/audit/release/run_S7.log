@@ -1,0 +1,37 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000000000010000000 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  port T_REL: A 32  X 32  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+  REF talk path A20 <-> B21: ok
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 37407  (blips only)
+T fam=-1 k=0 act=0 d=0.00  hangA=510.998 hangB=560.998  OK    idle+33ms  ev:39.00 49.00 52.28 63.00 66.28 239.00 241.00 244.16 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  
+  REF pattern 0: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 239.00 CLAIM 241.00 claimed 244.16 Xres0 242.19 att_ack 241.29 done 419.00 connect 422.28 rung 423.15 watch_end 426.00 answer 432.28
+  -- family 7: pattern 0 actor 3 anchor 12 d0 -2.00 ms step 1.130 ms n 10
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 0  (blips only)
+T fam=7 k=0 act=3 d=-2.00  hangA=420.281 hangB=420.281  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 -0.00 456.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 4096  (blips only)
+T fam=7 k=1 act=3 d=-0.87  hangA=421.411 hangB=421.411  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 457.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 8192  (blips only)
+T fam=7 k=2 act=3 d=0.26  hangA=422.541 hangB=422.541  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 458.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 12288  (blips only)
+T fam=7 k=3 act=3 d=1.39  hangA=423.671 hangB=423.671  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 16384  (blips only)
+T fam=7 k=4 act=3 d=2.52  hangA=424.801 hangB=424.801  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 20480  (blips only)
+T fam=7 k=5 act=3 d=3.65  hangA=425.931 hangB=425.931  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 24576  (blips only)
+T fam=7 k=6 act=3 d=4.78  hangA=427.061 hangB=427.061  OK    idle+13ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 28672  (blips only)
+T fam=7 k=7 act=3 d=5.91  hangA=428.191 hangB=428.191  OK    idle+13ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 36864  (blips only)
+T fam=7 k=8 act=3 d=7.04  hangA=429.321 hangB=429.321  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+    rb ticks: A20 36 A21 0 X20 0 X21 0 B20 0 B21 40960  (blips only)
+T fam=7 k=9 act=3 d=8.17  hangA=430.451 hangB=430.451  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 -0.00  glare+0  
+
+  11 trials: 0 LEAK, 0 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j1.v:663: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 418.799 s; speed 15.310 ms/s
+- Verilator: cpu 403.887 s on 1 threads; allocated 8 MB
+rc=0 secs=419

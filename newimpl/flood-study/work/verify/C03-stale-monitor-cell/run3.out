@@ -1,0 +1,7 @@
+[sim.sh] slot 3: bash work/verify/C03-stale-monitor-cell/run3.sh
+b_snap200=0
+r_snap200=0
+b_fix200=0
+r_fix200=0
+b_snap256=0
+r_snap256=0

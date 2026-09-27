@@ -1,0 +1,2 @@
+[sim.sh] slot 3: work/verify/C07-link-outage-pulse/job.sh orig work/RTL.list 15:600 62:680
+jobA rc=0

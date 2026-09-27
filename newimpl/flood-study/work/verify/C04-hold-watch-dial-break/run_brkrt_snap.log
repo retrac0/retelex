@@ -1,0 +1,56 @@
+
+  tb_brk_rt -- REAL timers (guard lowered to 16 ms so C is the hop at its edge): a dial break inside the T_ARM watch
+    ok    links up
+  -- attempt: first break of e at A's tmr = 16 + 2 ms
+    [568 ms] C HOLD 11 (tmr at A 17)
+    [568 ms] C attaches a monitor cell (held 01)
+    [570 ms] B UNHOLD 11
+    [571 ms] C UNHOLD 11 (tmr at A 20)
+    [645 ms] C HOLD 11 (tmr at A 94)
+    [645 ms] C attaches a monitor cell (held 11)
+    [960 ms] C cell 0 counts 3 (state 1)
+    [960 ms] C cell 1 counts 2 (state 1)
+    [2160 ms] C cell 1 counts 4 (state 2)
+    [2160 ms] C CLAIMS 11
+     C holds 2, C claims 1, A claimed 1, C21 hi 182 lo 418
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 10 ms
+    [6586 ms] C HOLD 11 (tmr at A 17)
+    [6586 ms] C attaches a monitor cell (held 01)
+    [6597 ms] C UNHOLD 11 (tmr at A 28)
+    [6658 ms] C HOLD 11 (tmr at A 89)
+    [6658 ms] C attaches a monitor cell (held 11)
+    [6986 ms] C cell 0 counts 3 (state 1)
+    [6986 ms] C cell 1 counts 2 (state 1)
+    [8186 ms] C cell 1 counts 4 (state 2)
+    [8186 ms] C CLAIMS 11
+     C holds 2, C claims 1, A claimed 1, C21 hi 142 lo 458
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 17 ms
+    [12612 ms] C HOLD 11 (tmr at A 17)
+    [12612 ms] C attaches a monitor cell (held 01)
+    [13019 ms] C cell 0 counts 3 (state 1)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 600
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 26 ms
+    [18645 ms] C HOLD 11 (tmr at A 17)
+    [18645 ms] C attaches a monitor cell (held 01)
+    [19061 ms] C cell 0 counts 3 (state 1)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 600
+    ok    idle again after the attempt
+  -- attempt: first break of e at A's tmr = 16 + 60 ms
+    [24687 ms] C HOLD 11 (tmr at A 17)
+    [24687 ms] C attaches a monitor cell (held 01)
+    [25137 ms] C cell 0 counts 3 (state 1)
+     C holds 1, C claims 0, A claimed 0, C21 hi 0 lo 600
+    ok    idle again after the attempt
+    FAIL  1 3 4 2 1 dials nobody: no exchange claims, no phone rings
+    wrong-number attempts 2 of 5; C unholds 2, B unholds 1, C monitor cells attached 7
+
+  7 checks, 1 errors.  FAIL
+
+- work/verify/C04-hold-watch-dial-break/tb_brk_rt.v:200: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 30s; walltime 1298.040 s; speed 23.285 ms/s
+- Verilator: cpu 1117.190 s on 1 threads; allocated 8 MB
+rc=0 secs=1298

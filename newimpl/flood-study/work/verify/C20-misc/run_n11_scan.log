@@ -1,0 +1,67 @@
+
+  tb_c20r -- drop then re-seize, real timers: TA=11 A T_REL=256 fd=0 us hu=50 rs=258 scan=1
+    ok    the links are up
+    ok    A20 has A's register
+    A seized TA/A12 at 630 ms
+  [  630 ms] A's TA seized
+  [  631 ms] X11 M rises (X11 busy=0)
+  [  633 ms] X holds X11 as a fresh seizure (hold #1)
+    A20 hung up at 679 ms (49 ms after the seizure)
+  [  680 ms] X11 M falls
+  [  936 ms] A's TA free at A
+  [  936 ms] X11 free at X
+  SCAN rs=254: TA free 935 ms after the break; NOT re-seized (read while busy)
+    ok    A20 has A's register
+    A seized TA/A12 at 2442 ms
+  [ 2442 ms] A's TA seized
+  [ 2443 ms] X11 M rises (X11 busy=0)
+  [ 2445 ms] X holds X11 as a fresh seizure (hold #2)
+    A20 hung up at 2491 ms (49 ms after the seizure)
+  [ 2492 ms] X11 M falls
+  [ 2748 ms] A's TA free at A
+  [ 2748 ms] X11 free at X
+  SCAN rs=255: TA free 2746 ms after the break; NOT re-seized (read while busy)
+    ok    A20 has A's register
+    A seized TA/A12 at 4255 ms
+  [ 4255 ms] A's TA seized
+  [ 4256 ms] X11 M rises (X11 busy=0)
+  [ 4257 ms] X holds X11 as a fresh seizure (hold #3)
+    A20 hung up at 4304 ms (49 ms after the seizure)
+  [ 4305 ms] X11 M falls
+  [ 4561 ms] A's TA free at A
+  [ 4561 ms] X11 free at X
+  SCAN rs=256: TA free 4559 ms after the break; NOT re-seized (read while busy)
+    ok    A20 has A's register
+    A seized TA/A12 at 6069 ms
+  [ 6069 ms] A's TA seized
+  [ 6070 ms] X11 M rises (X11 busy=0)
+  [ 6071 ms] X holds X11 as a fresh seizure (hold #4)
+    A20 hung up at 6118 ms (49 ms after the seizure)
+  [ 6119 ms] X11 M falls
+  [ 6374 ms] X11 free at X
+  [ 6375 ms] A's TA free at A
+  SCAN rs=257: TA free 6373 ms after the break; NOT re-seized (read while busy)
+    ok    A20 has A's register
+    A seized TA/A12 at 7884 ms
+  [ 7884 ms] A's TA seized
+  [ 7885 ms] X11 M rises (X11 busy=0)
+  [ 7886 ms] X holds X11 as a fresh seizure (hold #5)
+    A20 hung up at 7933 ms (49 ms after the seizure)
+  [ 7934 ms] X11 M falls
+  [ 8189 ms] X11 free at X
+  [ 8190 ms] A's TA free at A
+  [ 8203 ms] A's TA seized
+  [ 8204 ms] X11 M rises (X11 busy=0)
+  [ 8205 ms] X holds X11 as a fresh seizure (hold #6)
+  SCAN rs=258: safe, margin 14.797 ms (X11 free -> re-seizure M at X11); A free->seize 13.285 ms; X free - A free -0.597 ms
+  [ 8214 ms] X11 M falls
+  [ 8214 ms] X11 free at X
+  [ 8470 ms] A's TA free at A
+    ok    no bus clash, no queue refusal (last sample)
+
+  7 checks, 0 errors.  PASS
+
+- work/verify/C20-misc/tb_c20r.v:254: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 9s; walltime 212.556 s; speed 42.873 ms/s
+- Verilator: cpu 204.445 s on 1 threads; allocated 8 MB

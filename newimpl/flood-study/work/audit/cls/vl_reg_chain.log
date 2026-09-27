@@ -1,0 +1,192 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_c_out'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:67:19: ... Location of port declaration
+   67 |     output [7:0]  lt_c_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_a_out'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:68:19: ... Location of port declaration
+   68 |     output [7:0]  lt_a_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_h_out'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:69:19: ... Location of port declaration
+   69 |     output [7:0]  lt_h_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_k_out'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:70:19: ... Location of port declaration
+   70 |     output [7:0]  lt_k_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_c_in'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:71:19: ... Location of port declaration
+   71 |     input  [7:0]  lt_c_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_a_in'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:72:19: ... Location of port declaration
+   72 |     input  [7:0]  lt_a_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_h_in'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:73:19: ... Location of port declaration
+   73 |     input  [7:0]  lt_h_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_k_in'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:74:19: ... Location of port declaration
+   74 |     input  [7:0]  lt_k_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:73:44: Instance has missing pin: 'lt_up'
+   73 |                .OWN_E(3'd2), .OWN_B(3'd2)) A (
+      |                                            ^
+                     tb/site_net.v:75:19: ... Location of port declaration
+   75 |     output [7:0]  lt_up,
+      |                   ^~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_c_out'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:67:19: ... Location of port declaration
+   67 |     output [7:0]  lt_c_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_a_out'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:68:19: ... Location of port declaration
+   68 |     output [7:0]  lt_a_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_h_out'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:69:19: ... Location of port declaration
+   69 |     output [7:0]  lt_h_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_k_out'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:70:19: ... Location of port declaration
+   70 |     output [7:0]  lt_k_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_c_in'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:71:19: ... Location of port declaration
+   71 |     input  [7:0]  lt_c_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_a_in'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:72:19: ... Location of port declaration
+   72 |     input  [7:0]  lt_a_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_h_in'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:73:19: ... Location of port declaration
+   73 |     input  [7:0]  lt_h_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_k_in'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:74:19: ... Location of port declaration
+   74 |     input  [7:0]  lt_k_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:84:58: Instance has missing pin: 'lt_up'
+   84 |                .TWORD(TW_B), .OWN_E(3'd2), .OWN_B(3'd3)) B (
+      |                                                          ^
+                     tb/site_net.v:75:19: ... Location of port declaration
+   75 |     output [7:0]  lt_up,
+      |                   ^~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_c_out'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:67:19: ... Location of port declaration
+   67 |     output [7:0]  lt_c_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_a_out'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:68:19: ... Location of port declaration
+   68 |     output [7:0]  lt_a_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_h_out'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:69:19: ... Location of port declaration
+   69 |     output [7:0]  lt_h_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_k_out'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:70:19: ... Location of port declaration
+   70 |     output [7:0]  lt_k_out,
+      |                   ^~~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_c_in'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:71:19: ... Location of port declaration
+   71 |     input  [7:0]  lt_c_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_a_in'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:72:19: ... Location of port declaration
+   72 |     input  [7:0]  lt_a_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_h_in'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:73:19: ... Location of port declaration
+   73 |     input  [7:0]  lt_h_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_k_in'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:74:19: ... Location of port declaration
+   74 |     input  [7:0]  lt_k_in,
+      |                   ^~~~~~~
+%Warning-PINMISSING: tb/tb_chain.v:94:44: Instance has missing pin: 'lt_up'
+   94 |                .OWN_E(3'd2), .OWN_B(3'd4)) C (
+      |                                            ^
+                     tb/site_net.v:75:19: ... Location of port declaration
+   75 |     output [7:0]  lt_up,
+      |                   ^~~~~
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:28: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_chain.C.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                            ^
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:54: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_chain.C.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                                                      ^
+%Warning-WIDTHTRUNC: work/audit/cls/fix/net_unit.v:635:81: Bit extraction of array[3:0] requires 2 bit index, not 3 bits.
+                                                         : ... note: In instance 'tb_chain.C.u_x.u_net'
+  635 |                     pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
+      |                                                                                 ^
+%Warning-WIDTHTRUNC: tb/tb_chain.v:246:9: Logical operator IF expects 1 bit on the If, but If's VARREF 'errs' generates 32 bits.
+                                        : ... note: In instance 'tb_chain'
+  246 |         if (errs) $fatal(1);
+      |         ^~
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/audit/cls/obj_reg_chain'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+make: *** [/usr/share/verilator/include/verilated.mk:299: verilated.o] Terminated

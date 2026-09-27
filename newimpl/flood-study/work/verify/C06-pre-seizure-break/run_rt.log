@@ -1,0 +1,144 @@
+
+  tb_c06rt -- a break before the seizure, at real timers
+  links up: A 11 B 11
+
+  TRIAL 0: key make 128 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [  349.004] A r_brk (nst 0, guarding 1, tmr 0)
+  [  537.004] A r_brk (nst 0, guarding 1, tmr 0)
+  [ 1357.002] A r_brk (nst 0, guarding 1, tmr 0)
+  [ 1457.001] A r_brk (nst 0, guarding 1, tmr 0)
+  [ 1557.001] A r_brk (nst 0, guarding 1, tmr 0)
+  RESULT key-make 128 ms: flood_go->push 0.000 ms; flood_go->e's r_brk 537.004 ms; e's r_brk  after the push; B saw the rise 0.000 ms after the push; origin           still waiting; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 1: key make 129 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [ 4776.993] A r_brk (nst 0, guarding 1, tmr 0)
+  [ 4956.993] A nst 0 -> 1  (ndig 0)
+  [ 4956.993] A nst 1 -> 2  (ndig 0)
+  [ 4965.992] A r_brk (nst 2, guarding 1, tmr 0)
+  [ 4966.993] A nst 2 -> 3  (ndig 0)
+  [ 4966.993] A nst 3 -> 4  (ndig 0)
+  [ 5019.267] B mon_held 01
+  [ 5785.990] A r_brk (nst 4, guarding 0, tmr 819)
+  [ 5885.990] A r_brk (nst 4, guarding 0, tmr 919)
+  [ 5985.990] A r_brk (nst 4, guarding 0, tmr 1019)
+  [ 6165.990] A nst 4 -> 5  (ndig 2)
+  [ 6805.988] A r_brk (nst 5, guarding 0, tmr 640)
+  [ 6905.987] A r_brk (nst 5, guarding 0, tmr 740)
+  [ 7086.987] B mon_held 00
+  [ 7087.278] B att port 11: B CLAIMS
+  [ 7088.143] A CLAIMED on 11 (guarding 0)
+  RESULT key-make 129 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 8.999 ms; e's r_brk BEFORE the push; B saw the rise 51.156 ms after the push; origin CLAIMED (connects at s); B claimed 1
+  [ 7405.986] A r_brk (nst 5, guarding 0, tmr 1240)
+  [ 7653.986] A nst 5 -> 7  (ndig 3)
+  [ 7653.986] A nst 7 -> 8  (ndig 0)
+  [ 7653.986] A nst 8 -> 0  (ndig 0)
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 2: key make 130 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [ 9205.981] A r_brk (nst 0, guarding 0, tmr 1488)
+  [ 9385.982] A nst 0 -> 1  (ndig 0)
+  [ 9385.982] A nst 1 -> 2  (ndig 0)
+  [ 9395.981] A r_brk (nst 2, guarding 1, tmr 0)
+  [ 9395.981] A nst 2 -> 3  (ndig 0)
+  [ 9395.982] A nst 3 -> 4  (ndig 0)
+  [ 9449.256] B mon_held 01
+  [10215.979] A r_brk (nst 4, guarding 0, tmr 820)
+  [10315.979] A r_brk (nst 4, guarding 0, tmr 920)
+  [10415.978] A r_brk (nst 4, guarding 0, tmr 1020)
+  [10595.978] A nst 4 -> 5  (ndig 2)
+  [11235.976] A r_brk (nst 5, guarding 0, tmr 640)
+  [11335.976] A r_brk (nst 5, guarding 0, tmr 740)
+  [11516.976] B mon_held 00
+  [11517.266] B att port 11: B CLAIMS
+  [11518.132] A CLAIMED on 11 (guarding 0)
+  RESULT key-make 130 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 9.999 ms; e's r_brk BEFORE the push; B saw the rise 52.156 ms after the push; origin CLAIMED (connects at s); B claimed 1
+  [11835.975] A r_brk (nst 5, guarding 0, tmr 1240)
+  [12083.975] A nst 5 -> 7  (ndig 3)
+  [12083.975] A nst 7 -> 8  (ndig 0)
+  [12083.975] A nst 8 -> 0  (ndig 0)
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 3: key make 131 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [13635.970] A r_brk (nst 0, guarding 0, tmr 1488)
+  [13815.970] A nst 0 -> 1  (ndig 0)
+  [13815.971] A nst 1 -> 2  (ndig 0)
+  [13825.970] A nst 2 -> 3  (ndig 0)
+  [13825.970] A nst 3 -> 4  (ndig 0)
+  [13826.970] A r_brk (nst 4, guarding 1, tmr 1)
+  [13826.970] A nst 4 -> 7  (ndig 0)
+  [13826.970] A nst 7 -> 8  (ndig 0)
+  [13826.970] A nst 8 -> 0  (ndig 0)
+  [13826.970] A nogo
+  RESULT key-make 131 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 10.999 ms; e's r_brk  after the push; B saw the rise -13825.970 ms after the push; origin                    NOGO; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 4: key make 132 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [18066.959] A r_brk (nst 0, guarding 1, tmr 1)
+  [18246.959] A nst 0 -> 1  (ndig 0)
+  [18246.959] A nst 1 -> 2  (ndig 0)
+  [18256.959] A nst 2 -> 3  (ndig 0)
+  [18256.959] A nst 3 -> 4  (ndig 0)
+  [18258.958] A r_brk (nst 4, guarding 1, tmr 2)
+  [18258.959] A nst 4 -> 7  (ndig 0)
+  [18258.959] A nst 7 -> 8  (ndig 0)
+  [18258.959] A nst 8 -> 0  (ndig 0)
+  [18258.959] A nogo
+  RESULT key-make 132 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 11.999 ms; e's r_brk  after the push; B saw the rise -18256.959 ms after the push; origin                    NOGO; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 5: key make 134 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [22498.947] A r_brk (nst 0, guarding 1, tmr 2)
+  [22678.948] A nst 0 -> 1  (ndig 0)
+  [22678.948] A nst 1 -> 2  (ndig 0)
+  [22688.947] A nst 2 -> 3  (ndig 0)
+  [22688.948] A nst 3 -> 4  (ndig 0)
+  [22692.947] A r_brk (nst 4, guarding 1, tmr 4)
+  [22692.947] A nst 4 -> 7  (ndig 0)
+  [22692.947] A nst 7 -> 8  (ndig 0)
+  [22692.948] A nst 8 -> 0  (ndig 0)
+  [22692.948] A nogo
+  RESULT key-make 134 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 13.999 ms; e's r_brk  after the push; B saw the rise -22688.947 ms after the push; origin                    NOGO; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 6: key make 138 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [26932.936] A r_brk (nst 0, guarding 1, tmr 4)
+  [27112.936] A nst 0 -> 1  (ndig 0)
+  [27112.937] A nst 1 -> 2  (ndig 0)
+  [27122.936] A nst 2 -> 3  (ndig 0)
+  [27122.936] A nst 3 -> 4  (ndig 0)
+  [27130.936] A r_brk (nst 4, guarding 1, tmr 8)
+  [27130.936] A nst 4 -> 7  (ndig 0)
+  [27130.936] A nst 7 -> 8  (ndig 0)
+  [27130.936] A nst 8 -> 0  (ndig 0)
+  [27130.936] A nogo
+  RESULT key-make 138 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 17.999 ms; e's r_brk  after the push; B saw the rise -27122.936 ms after the push; origin                    NOGO; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  TRIAL 7: key make 720 ms before e=1; A20 dials 1 1 3 2 (means 13)
+  [31370.925] A r_brk (nst 0, guarding 1, tmr 8)
+  [31550.925] A nst 0 -> 1  (ndig 0)
+  [31550.925] A nst 1 -> 2  (ndig 0)
+  [31560.925] A nst 2 -> 3  (ndig 0)
+  [31560.925] A nst 3 -> 4  (ndig 0)
+  [31564.199] B mon_held 01
+  [32150.923] A r_brk (nst 4, guarding 0, tmr 590)
+  [32331.923] B mon_held 00
+  [32970.921] A r_brk (nst 4, guarding 0, tmr 1410)
+  [33070.920] A r_brk (nst 4, guarding 0, tmr 1510)
+  [33170.920] A r_brk (nst 4, guarding 0, tmr 1610)
+  [33350.920] A nst 4 -> 5  (ndig 2)
+  [33990.918] A r_brk (nst 5, guarding 0, tmr 640)
+  [34090.918] A r_brk (nst 5, guarding 0, tmr 740)
+  [35350.915] A nst 5 -> 7  (ndig 3)
+  [35350.915] A nst 7 -> 8  (ndig 3)
+  [35350.915] A nst 8 -> 0  (ndig 3)
+  [35350.915] A nogo
+  RESULT key-make 720 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 599.998 ms; e's r_brk  after the push; B saw the rise 2.156 ms after the push; origin                    NOGO; B claimed 0
+  idle? busy_a 0000000000000000 busy_b 0000000000000000 reg 00 nst 00 mon 0000
+
+  SUMMARY: 8 trials: 2 claimed by 32 (wrong number), 5 abandoned (nogo), 1 other
+- work/verify/C06-pre-seizure-break/tb_c06rt.v:163: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 37s; walltime 505.449 s; speed 73.562 ms/s
+- Verilator: cpu 499.222 s on 1 threads; allocated 8 MB

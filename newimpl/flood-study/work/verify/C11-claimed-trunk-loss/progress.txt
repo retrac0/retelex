@@ -1,0 +1,27 @@
+net_alt start 19:25:55
+net_alt build rc=0 19:28:15
+net_alt run   88 checks, 0 errors.  PASS rc=0 secs=1100 19:46:35
+c11_snap start 19:46:36
+c11_snap build rc=0 19:48:37
+c11_snap run   19 checks, 1 errors, idle-bad 0.  FAIL rc=0 secs=1033 20:05:50
+c11_fix start 20:05:50
+c11_fix build rc=0 20:07:42
+c11_fix run   19 checks, 0 errors, idle-bad 0.  PASS rc=0 secs=967 20:23:49
+lfull_alt start 20:23:50
+lfull_alt build rc=0 20:25:59
+lfull_alt run   40 checks, 0 errors.  PASS rc=0 secs=1562 20:52:01
+c11_fix_trel26 start 20:52:01
+c11_fix_trel26 build rc=0 20:53:54
+net_c11 start 20:57:58
+net_c11 build rc=0 21:00:10
+c11_fix_trel26 run   16 checks, 1 errors, idle-bad 0.  FAIL rc=0 secs=938 21:09:32
+c11_alt_trel26 start 21:09:33
+c11_alt_trel26 build rc=0 21:11:31
+net_c11 run   88 checks, 0 errors.  PASS rc=0 secs=1138 21:19:08
+lfull_c11 start 21:19:09
+lfull_c11 build rc=0 21:21:17
+c11_alt_trel26 run   16 checks, 0 errors, idle-bad 0.  PASS rc=0 secs=820 21:25:11
+c11_alt start 21:25:11
+c11_alt build rc=0 21:27:03
+c11_alt run   19 checks, 0 errors, idle-bad 0.  PASS rc=0 secs=816 21:40:39
+lfull_c11 run   40 checks, 2 errors.  FAIL rc=1 secs=1439 21:45:16

@@ -1,0 +1,10 @@
+run_rt_fixb.log:   RESULT key-make 128 ms: flood_go->push 0.000 ms; flood_go->e's r_brk 537.004 ms; e's r_brk  after the push; B saw the rise 0.000 ms after the push; origin           still waiting; B claimed 0
+run_rt_fixb.log:   RESULT key-make 129 ms: flood_go->push -4956.993 ms; flood_go->e's r_brk 8.999 ms; e's r_brk  after the push; B saw the rise 0.000 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 130 ms: flood_go->push -9385.981 ms; flood_go->e's r_brk 9.999 ms; e's r_brk  after the push; B saw the rise 0.000 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 131 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 10.999 ms; e's r_brk  after the push; B saw the rise -13825.970 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 132 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 11.999 ms; e's r_brk  after the push; B saw the rise -18256.959 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 134 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 13.999 ms; e's r_brk  after the push; B saw the rise -22688.947 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 138 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 17.999 ms; e's r_brk  after the push; B saw the rise -27122.936 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   RESULT key-make 720 ms: flood_go->push 10.000 ms; flood_go->e's r_brk 599.998 ms; e's r_brk  after the push; B saw the rise 2.156 ms after the push; origin                    NOGO; B claimed 0
+run_rt_fixb.log:   SUMMARY: 8 trials: 0 claimed by 32 (wrong number), 7 abandoned (nogo), 1 other
+run_orig_s3.log:   8 checks, 2 errors, idle-bad 0.  FAIL

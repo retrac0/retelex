@@ -1,0 +1,24 @@
+
+  tb_c16 -- B's marker and an unheld trunk (case 3, SC 1)
+    ok    links up
+    CONTROL: B20 (B11+7) dial-tone delay 2.27 ms
+    CONTROL: B21 (B11+8) dial-tone delay 2.28 ms
+    ok    control: idle
+    ok    B holds the seizure on 11
+    ok    claimed, B's register on B11
+    ok    the called B port rings
+    ok    call up: B11 BUSY, A20's M on it
+    B11 BUSY fell 32.00 ms after the called B20 hung up; far M (A20 via A11) still 1
+    B11 showed M, BUSY clear, for 32.01 ms
+    B21 (B11+8) lifted 2 ms into it: dial-tone delay 3.28 ms
+    from B21's hang-up to 20 ms after: B marker reads of B11 = 2, other reads = 1; B unit reads of B11 = 0
+    B marker in S_READ 13740 of 344064 ticks (4.0%)
+    ok    idle again
+    ok    no queue refused a write
+
+  8 checks, 0 errors.  PASS
+
+- work/verify/C16-marker-reread/tb_c16.v:281: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 3s; walltime 49.391 s; speed 51.001 ms/s
+- Verilator: cpu 48.468 s on 1 threads; allocated 8 MB

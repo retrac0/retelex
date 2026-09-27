@@ -1,0 +1,63 @@
+400a401,410
+>     // C12 FIX: a claim is M STANDING on a held trunk, N_CL samples running --
+>     // one sample was enough before, and a glitch on A dropped every other
+>     // direction -- and it must come after b: M standing on a held trunk
+>     // outside the guard before this register has counted b is no monitor's
+>     // claim (a claim needs e and b), so nogo, never a wrong number.
+>     localparam [2:0] N_CL = 3'd4;
+>     reg [2:0]       cl_n;      // samples the candidate has stood
+>     reg [1:0]       cl_j;      // the candidate: which held trunk
+>     reg             early;     // a claim stood before b, outside the guard
+>     reg             cl_g;      // the candidate rose inside the guard: glare
+531a542
+>             cl_n <= 3'd0; cl_j <= 2'd0; early <= 1'b0; cl_g <= 1'b0;
+794,795c805,806
+<             // a claim comes back: M rising on a trunk this call holds
+<             if (o_net && sp_fresh && sp_m && !claimed)
+---
+>             // a claim comes back: M STANDING N_CL samples on a trunk this call holds
+>             if (o_net && sp_fresh && !claimed)
+797,803c808,832
+<                     if (d_held[j2] && (sp_port == d_trunk[j2*`PW +: `PW])) begin
+<                         claimed <= 1'b1; trunk <= sp_port;
+<                         // release the others AT THE CLAIM (network.md 3)
+<                         dmo <= d_held & ~(4'd1 << j2);
+<                         // inside the guard it was the far end seizing the same
+<                         // channel: glare, taken as the claim, and counted
+<                         if (guarding) begin ev_glare <= 1'b1; n_glare <= n_glare + 8'd1; end
+---
+>                     if (d_held[j2] && (sp_port == d_trunk[j2*`PW +: `PW]) &&
+>                         ((cl_n == 3'd0) || (cl_j == j2[1:0]))) begin
+>                         if (!sp_m) cl_n <= 3'd0;
+>                         else if (cl_n != N_CL - 3'd1) begin
+>                             cl_n <= cl_n + 3'd1; cl_j <= j2[1:0];
+>                             if (cl_n == 3'd0) cl_g <= guarding;
+> `ifdef C12_TRACE
+>                             if (cl_n == 3'd0) $display("C12T %0d%0d rise port=%o t=%0t f2=%b guard=%b tmr=%0d nst=%0d",
+>                                                        OWN_E, OWN_B, sp_port, $time, f2, guarding, tmr, nst);
+> `endif
+>                         end else begin
+>                             cl_n <= 3'd0;
+>                             if (cl_g || guarding || f2) begin
+>                                 claimed <= 1'b1; trunk <= sp_port;
+>                                 // release the others AT THE CLAIM (network.md 3)
+>                                 dmo <= d_held & ~(4'd1 << j2);
+>                                 // inside the guard it was the far end seizing the same
+>                                 // channel: glare, taken as the claim, and counted
+>                                 if (cl_g || guarding) begin ev_glare <= 1'b1; n_glare <= n_glare + 8'd1; end
+>                             end else early <= 1'b1;
+> `ifdef C12_TRACE
+>                             $display("C12T %0d%0d %s port=%o t=%0t f2=%b guard=%b tmr=%0d nst=%0d",
+>                                      OWN_E, OWN_B, (cl_g || guarding || f2) ? "ACCEPT" : "EARLY", sp_port, $time, f2, guarding, tmr, nst);
+> `endif
+>                         end
+843a873
+>                 cl_n <= 3'd0; early <= 1'b0;
+862a893,894
+>                 // C12 FIX: a claim stood before b, outside the guard
+>                 else if (early && (nst == N_NET)) begin o_after <= O_NOGO; nst <= N_DROP; end
+874a907,910
+>                             early <= 1'b0;    // C12 FIX: stood as b came in -- counted again from 0
+> `ifdef C12_TRACE
+>                             $display("C12T %0d%0d f2 t=%0t cl_n=%0d claimed=%b", OWN_E, OWN_B, $time, cl_n, claimed);
+> `endif

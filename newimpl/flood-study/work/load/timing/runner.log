@@ -1,0 +1,72 @@
+[runner] 13:14:14 got the slot
+[runner] 13:14:14 start 010_build_tim5.sh
+build tim5 rc=0
+[runner] 13:20:23 end 010_build_tim5.sh rc=0 secs=369
+[runner] 13:20:23 start 015_lint_timn.sh
+lint timn rc=0
+[runner] 13:20:40 end 015_lint_timn.sh rc=0 secs=17
+[runner] 13:20:40 start 020_speed.sh
+Terminated                 timeout 7200 work/load/timing/obj_tim5/tb_tim5 +seed=1 +dest_mode=4 +pairs=A20E20 +pair_gap_ms=1 +burst_ms=100000 +dur_ms=1000 +max_ms=4000 +prog_ms=500 > work/load/timing/run_speed.log 2>&1
+speed rc=143 wall=415
+[runner] 13:27:35 end 020_speed.sh rc=0 secs=415
+[runner] 13:27:36 start 025_build_timn.sh
+build timn rc=0
+[runner] 13:35:34 end 025_build_timn.sh rc=0 secs=478
+[runner] 13:35:34 start 026_rebuild_tim5.sh
+rebuild tim5 rc=0
+[runner] 13:40:24 end 026_rebuild_tim5.sh rc=0 secs=290
+[runner] 13:40:24 start 035_build_timn4.sh
+build timn4 rc=0
+[runner] 13:45:20 end 035_build_timn4.sh rc=0 secs=296
+[runner] 13:45:20 start 040_clean_objs.sh
+211M	obj_tim5
+217M	obj_timn
+217M	obj_timn4
+clean done
+[runner] 13:45:20 end 040_clean_objs.sh rc=0 secs=0
+[runner] 13:45:20 start 100_cv8.sh
+Terminated                 timeout 20000 work/load/timing/obj_timn/tb_timn +seed=1 +pairs=A20Z21,B20Z21 +pair_off=0,1 +bad_e=4 +bad_b=3 +dur_ms=30000 +dest_mode=4 +burst_ms=5000 +pre_ms=200 +idg_ms=300 +idg0_ms=255 +idg0_jit_ms=50 +pd_ms=700 +hup_ms=200 +rest_ms=300 +grace_ms=0 +drain_ms=3000 +prog_ms=5000 > $T/run_cv8.log 2>&1
+cv8 rc=143 wall=2825
+[runner] 14:32:25 end 100_cv8.sh rc=0 secs=2826
+[runner] 14:32:26 start 110_cvd8.sh
+cvd8 rc=0 wall=6357
+[runner] 16:18:23 end 110_cvd8.sh rc=0 secs=6357
+[runner] 16:18:23 start 115_wave8x4.sh
+wave8x4 rc=0 wall=3952
+[runner] 17:24:15 end 115_wave8x4.sh rc=0 secs=3952
+[runner] 17:24:15 start 116_wave2n.sh
+wave2n rc=0 wall=2146
+[runner] 18:00:01 end 116_wave2n.sh rc=0 secs=2146
+[runner] 18:00:01 start 120_wave8x4ppm.sh
+wave8x4ppm rc=0 wall=5677
+[runner] 19:34:38 end 120_wave8x4ppm.sh rc=0 secs=5677
+[runner] 19:34:38 start 122_fix_build.sh
+build timn4fix rc=0
+0
+[runner] 19:43:36 end 122_fix_build.sh rc=0 secs=538
+[runner] 19:43:36 start 123_wave8x4fix.sh
+wave8x4fix rc=0 wall=6609
+[runner] 21:33:45 end 123_wave8x4fix.sh rc=0 secs=6609
+[runner] 21:33:45 start 126_fix_regress.sh
+fix-regress net build=0 rc=0 fails=0 secs=1050 
+fix-regress chain build=0 rc=0 fails=0 secs=357 
+fix-regress lnet build=0 rc=0 fails=0 secs=303 
+fix-regress lchain build=0 rc=0 fails=0 secs=395 
+fix-regress lfull build=0 rc=0 fails=0 secs=1161 
+[runner] 22:28:11 end 126_fix_regress.sh rc=0 secs=3266
+[runner] 22:28:11 start 130_load5.sh
+load5 rc=0 wall=5896
+[runner] 00:06:27 end 130_load5.sh rc=0 secs=5896
+[runner] 00:06:27 start 133_burst5.sh
+burst5 rc=0 wall=2252
+[runner] 00:43:59 end 133_burst5.sh rc=0 secs=2252
+[runner] 00:43:59 start 135_wave8.sh
+wave8 rc=0 wall=2700
+[runner] 01:28:59 end 135_wave8.sh rc=0 secs=2700
+[runner] 01:28:59 start 140_wave2x4.sh
+wave2x4 rc=0 wall=1671
+[runner] 01:56:50 end 140_wave2x4.sh rc=0 secs=1671
+[runner] 01:56:50 start 145_wave2x4fix.sh
+wave2x4fix rc=0 wall=915
+[runner] 02:12:05 end 145_wave2x4fix.sh rc=0 secs=915
+[runner] 02:12:35 exit

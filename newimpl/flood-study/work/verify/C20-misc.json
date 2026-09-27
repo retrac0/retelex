@@ -1,0 +1,60 @@
+{
+ "id": "C20-misc",
+ "title": "Misc: claim-leg slot collision with two resolvers; WAIT margin; port 00 must be unfitted; thin release margin for future carriers",
+ "findings": [
+  {
+   "id": "claim-legs-slot-collision-two-resolvers",
+   "title": "w_claim maps every matching resolver's legs onto the same five slots; two would overwrite each other silently",
+   "category": "other",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "w_claim pushes the CLAIM on slot 0 and each rs_mine resolver's legs on slots j2+1 (net_unit.v:659-663), and cnt_claim reserves room for all of them (474). If two resolvers share rs_in, the later loop iteration overwrites the earlier one's slots. Leg drops are then lost without ovf, and those legs stay up, listening to the claimed trunk, until the call ends.",
+   "trigger": "Two resolvers holding forwards of one port: a stale resolver whose R_GONE has not been acted on when the port is re-seized, forwarded and claimed. That needs w_res starved for seconds, which the one-pusher-a-tick scheme never does.",
+   "consequence": "Downstream trunks held for the length of the call; no wrong number.",
+   "evidence": "Reasoning only; not reachable in any realistic sequence found.",
+   "fix": "Act on one rs_mine resolver per claim tick, or assert popc(rs_mine) <= 1 in the benches. A gate.",
+   "audit": "cableb"
+  },
+  {
+   "id": "wait-constant-doc-stale",
+   "title": "The unit's WAIT is a hand constant with a 93-tick margin, not derived from the serialiser, and mini-marker.md still gives the old figure",
+   "category": "spec-mismatch",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "net_unit.v:104 has WAIT = 640. The marker's longest transaction, from the edge it samples go (/UREQ) to its '244 releasing, is 547 ticks (ctl_queue.v:169-181, ctl_write.v:253-297: one tick to load, 16 x 32 shift, 32 strobe, 2 to hand back), so the margin is 93 ticks (23 us). exchange/mini-marker.md:313 still says 1152 ticks 'a word read'. WAIT is not tied to ctl_write's DIV or to the word length; ctl_write.v's jumper note about SCLK free-running off HCLK/4, or a 17th bit, would change the word time and silently remove the margin, and then b_clash.",
+   "trigger": "Any change to DIV or CWW without a matching edit to WAIT.",
+   "consequence": "Two '244s on cable B, a corrupted write and a runt WR; today none (b_clash 0 in every baseline and every audit run).",
+   "evidence": "Arithmetic above. tb_net 17 exercises the same-edge case and stays clash-free (work/base-net.log PASS).",
+   "fix": "localparam WAIT = (`CWW + 1) * DIV + margin, shared from exch.vh; update mini-marker.md:313. No hardware cost.",
+   "audit": "cableb"
+  },
+  {
+   "id": "port00-must-be-unfitted",
+   "title": "The whole idle/hold convention assumes port 00 is never fitted; nothing enforces it",
+   "category": "other",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "Holds, drops, releases and 'silence' all point a port at 00 (net_unit.v:592, 610, 662, 697, 826, 834; port.v:193; mini_marker SILENCE = 00). The resulting E, and the backward A before a claim, is 0 only because 00 is empty: /HA at bit-time 0 idles high (port.v:88, 173). site_net.v:97-99 fits block 0 if LTU[0] is set, and PHONES bit 0 would fit 00. exch.v/block.v accept any PORT_FITTED. The classifier skips 00 (net_unit.v:284), which suggests it is known.",
+   "trigger": "A card fitted at 00, e.g. a local trunk unit on block 0 (forbidden for MF8 by mf8-unit.md:58, not for the local trunk).",
+   "consequence": "Every hold would send 00's M as backward A, so every origin takes it as a claim: wrong numbers everywhere. Every idle phone (listening to 00) would ring whenever 00's M is up.",
+   "realistic": "Assembly or configuration error only.",
+   "evidence": "RTL reading.",
+   "fix": "Mask PORT_FITTED[0] to 0 in exch.v, or put a lint check in site_net/top. On the board, do not stuff position 0 of block 0 (no socket).",
+   "audit": "protocol"
+  },
+  {
+   "id": "release-margin-thin",
+   "title": "Drop-then-reseize is closed only by 0.1-0.3 ms on baseband and local trunks; a carrier with a slower-falling A reopens it",
+   "category": "race",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "When one end drops a trunk, it stays BUSY for T_REL through its fE (port.v:147). The far port releases on its fM fall T_REL after the same edge. The two ends free within +/-1 tick plus the A path's fall delay: independent 1 ms ticks give up to 1.03 ms apart. A re-seizure from the end that freed first reaches the far port no sooner than about 1.32 ms later: the read, a full 1 ms confirm pass, WAIT plus a word, the card. With /UREQ already held the WAIT is skipped. Margin 0.13-0.29 ms. If the carrier's A falls about 1-2 ms slower than it rises, as with network.md's MF8 figures of 1.5 ms up and 2 ms down, the new seizure's M rises while the far port is still BUSY. Its fM never falls, the old hold stays (st set, never classified), and the new flood dies there. If the old monitor cell had not yet reached CLR, it counts on (the monclaim slice's stale cell).",
+   "trigger": "A link whose A falls slower than it rises; a channel dropped at one end and re-seized from the same end in the next sweep.",
+   "consequence": "Lost calls; at worst the stale-cell miscount.",
+   "realistic": "Not reachable with the RTL's baseband or local-trunk cards. It is a latent constraint on any future carrier (MF8, the pots trunk).",
+   "evidence": "Reasoning from port.v and net_unit.v:750-785 timing.",
+   "fix": "Record in network.md 1.1: a carrier's A fall and rise delays must match within about 0.1 ms, or the sweep must skip a port for about 2 ms after it frees.",
+   "audit": "protocol"
+  }
+ ]
+}

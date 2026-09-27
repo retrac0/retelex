@@ -1,0 +1,47 @@
+
+  tb_pflap -- a link outage is a dial pulse.  sc=15, real timers
+    ok    the links are up
+  --- sc0: CONTROL, A20 dials 1 2 2 2 1, no outage
+  OBS 2600.0 ms  b is in
+    ok    control: nobody claims a call to exchange 22
+    ok    control: A20 hears cannot-complete after the claim wait
+    ok    control: nothing rings at B
+    ok    control: both exchanges idle again
+  --- sc1: A20 dials 1 2 2 2 1; 40 ms outage in b's last make
+  OBS 1990.0 ms  cable cut for 40 ms
+  OBS 2159.4 ms  B raises att: a claim on B11
+  OBS 2160.2 ms  A's origin has its claim
+  OBS 2600.0 ms  b is in (A's register: 2 digits, 0022)
+  OBS B21 rang 1, B22 rang 0; A claimed 1
+    FAIL  outage in b: nobody claims a call dialled to exchange 22
+    FAIL  outage in b: B21 (23-21, never dialled) does not ring
+    ok    outage in b: both exchanges idle again
+  --- sc2: A20 dials 1 2 3 2 1; 40 ms outage in s's make
+  OBS 2189.5 ms  B raises att: a claim on B11
+  OBS 2190.2 ms  A's origin has its claim
+    ok    B claimed the call to 23
+  OBS 3590.0 ms  cable cut for 40 ms
+  OBS B's register: digits 0000
+  OBS B21 rang 0, B22 rang 1
+    FAIL  outage in s: B21, the line dialled, rings
+    FAIL  outage in s: B22 (never dialled) does not ring
+    ok    outage in s: both exchanges idle again
+  --- sc3: A20 dials 1 2 2 3 1; the cable out 500 ms around e
+  OBS 1200.0 ms  cable cut for 500 ms
+  OBS 1700.0 ms  cable back
+  OBS 2989.7 ms  B raises att: a claim on B11
+  OBS 2990.1 ms  A's origin has its claim
+  OBS 4500.0 ms  all dialled; B mon 00 reg 0; A claimed 1
+    FAIL  link back mid-dial: nobody claims a call dialled to exchange 22
+    ok    link back mid-dial: B does not give a register to a call it does not own
+    ok    link back mid-dial: both exchanges idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  17 checks, 5 errors.  FAIL
+
+- work/audit/proto/tb_pflap.v:297: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 27s; walltime 826.657 s; speed 32.807 ms/s
+- Verilator: cpu 615.139 s on 1 threads; allocated 8 MB
+rc=0 secs=941

@@ -1,0 +1,78 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=3 var=0 dly=112 load=0
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc3: glare on a forward's leg
+     31.514 ms  fst 0 -> 1
+     31.514 ms  mon_held 00 -> 01
+     31.514 ms  fst 1 -> 2
+     31.514 ms  hst 0 -> 1 (owner 1)
+     31.798 ms  port 30 BUSY -> 1
+     31.798 ms  port 30 latch -> src 00 bsy 1 clm 0
+     41.014 ms  hst 1 -> 2 (owner 1)
+     41.630 ms  the S neighbour seizes S40 (its own call)
+     42.005 ms  hst 2 -> 0 (owner 1)
+     42.005 ms  fst 2 -> 3
+     42.006 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     42.006 ms  fst 3 -> 0
+     42.290 ms  port 74 BUSY -> 1
+     42.290 ms  port 74 latch -> src 30 bsy 1 clm 0
+     42.389 ms  port 74 a_out (far M) -> 1
+     42.424 ms  port 40 BUSY -> 1
+     42.424 ms  port 40 latch -> src 30 bsy 1 clm 0
+     42.521 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     42.557 ms  port 10 BUSY -> 1
+     42.557 ms  port 10 latch -> src 30 bsy 1 clm 0
+     42.691 ms  port 74 BUSY -> 0
+     42.691 ms  port 74 latch -> src 00 bsy 0 clm 0
+     42.825 ms  port 10 BUSY -> 0
+     42.825 ms  port 10 latch -> src 00 bsy 0 clm 0
+     42.959 ms  port 30 latch -> src 40 bsy 1 clm 0
+     43.014 ms  port 74 a_out (far M) -> 0
+     43.389 ms  port 40 a_out (far M) -> 1
+     43.514 ms  port 30 a_out (far M) -> 1
+     71.004 ms  latch 30: src 40 bsy 1 clm 0   BUSY 1  a_out 1
+     71.004 ms  latch 40: src 30 bsy 1 clm 0   BUSY 1  a_out 1
+     71.004 ms  latch 10: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+     71.004 ms  latch 74: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    FAIL  the E flood's incoming is not re-pointed at S40
+    FAIL  the E caller does not hear the S caller
+     77.514 ms  port 30 a_out (far M) -> 0
+     97.514 ms  port 30 a_out (far M) -> 1
+    FAIL  the E origin's backward A does not follow the S caller's hook
+    FAIL  the glare is counted (n_glare or EV_GLARE)
+  n_glare 0 -> 0, EV_GLARE 0 -> 0
+    117.388 ms  port 40 a_out (far M) -> 0
+    117.513 ms  port 30 a_out (far M) -> 0
+    373.004 ms  port 30 BUSY -> 0
+    373.004 ms  port 30 latch -> src 00 bsy 0 clm 0
+    373.004 ms  port 40 BUSY -> 0
+    373.004 ms  port 40 latch -> src 00 bsy 0 clm 0
+    374.004 ms  mon_held 01 -> 00
+    ok    sc3: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  8 checks, 4 errors.  FAIL
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 1s; walltime 38.648 s; speed 26.314 ms/s
+- Verilator: cpu 29.417 s on 1 threads; allocated 8 MB
+rc=0 secs=39

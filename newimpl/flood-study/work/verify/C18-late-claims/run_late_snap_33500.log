@@ -1,0 +1,1102 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 64
+    ok    links 11, 12 up; 13 cut
+    ok    S7: the N/S link is up
+
+  S7 DLY 33500 us: A20 dials 1 3 2 2 1 with the N/S link up; B's marker blind to att for DLY
+  [   60.271] A mk  0 -> 4  reg_busy 0
+  [   60.271] A cls 0 -> 1 port 20
+  [   61.389] A mk  4 -> 5  reg_busy 0
+  [   61.389] A cls 1 -> 0 port 20
+  [   62.271] A mk  5 -> 1  reg_busy 0
+  [   62.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   99.005] A mk  1 -> 6  reg_busy 1
+  [   99.005] A nst 0 -> 1  (ndig 0)
+  [   99.006] A nst 1 -> 2  (ndig 0)
+  [   99.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [  109.005] A nst 2 -> 3  (ndig 0)
+  [  109.005] A nst 3 -> 4  (ndig 0)
+  [  109.289] A wr  g1 dst 13 src 20 bsy 1 clm 0
+  [  109.290] A13 port: src 20 bsy 1 clm 0 fE 0 fM 0 M 0 | BUSY 1
+  [  109.423] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [  110.286] B13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 1 | BUSY 0
+  [  111.161] B mk  0 -> 4  reg_busy 0
+  [  111.161] B cls 0 -> 1 port 11
+  [  112.005] A13 port: src 20 bsy 1 clm 0 fE 1 fM 0 M 0 | BUSY 1
+  [  112.005] B13 port: src 00 bsy 0 clm 0 fE 0 fM 1 M 1 | BUSY 0
+  [  112.279] B mk  4 -> 0  reg_busy 0
+  [  112.279] B cls 1 -> 2 port 11
+  [  112.280] B mon_held 01
+  [  112.280] B cls 2 -> 3 port 11
+  [  112.564] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [  113.192] B mk  0 -> 4  reg_busy 0
+  [  116.005] B cls 3 -> 0 port 11
+  [  116.192] B cls 0 -> 5 port 13
+  [  116.248] B cls 5 -> 1 port 13
+  [  117.311] B mk  4 -> 0  reg_busy 0
+  [  117.311] B cls 1 -> 2 port 13
+  [  117.311] B mon_held 11
+  [  117.311] B cls 2 -> 3 port 13
+  [  117.595] B wr  g1 dst 13 src 00 bsy 1 clm 0
+  [  117.595] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  121.005] B cls 3 -> 0 port 13
+    ok    S7: the key seized one trunk E and one N
+  [  190.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  202.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  210.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  222.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  230.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  242.286] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  350.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  362.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  370.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  382.285] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  399.004] A nst 4 -> 5  (ndig 2)
+  [  400.004] B m_want 11
+  [  400.005] B m_want 10
+  [  400.005] B mon_held 10
+  [  400.288] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  400.295] BENCH: B's marker blind to att for 33500 us
+  [  400.295] B att 1 port 11 (mk 0 reg_busy 0)
+  [  401.160] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [  401.445] A wr  g1 dst 13 src 00 bsy 0 clm 0
+  [  401.445] A13 port: src 00 bsy 0 clm 0 fE 1 fM 0 M 0 | BUSY 1
+  [  402.035] B13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 0 | BUSY 1
+  [  433.795] BENCH: released
+  [  433.795] B mk  0 -> 1  reg_busy 0
+  [  433.795] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [  433.795] B att 0 port 11 (mk 1 reg_busy 1)
+  [  433.796] B m_want 00
+  [  433.796] B mon_held 00
+  [  434.004] A13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 0 | BUSY 0
+  [  434.004] B13 port: src 00 bsy 1 clm 0 fE 0 fM 0 M 0 | BUSY 1
+  [  434.004] B13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 0 | BUSY 0
+  [  434.080] B wr  g1 dst 13 src 00 bsy 1 clm 1
+  [  434.080] B13 port: src 00 bsy 1 clm 1 fE 0 fM 0 M 0 | BUSY 1
+  [  434.086] B att 1 port 13 (mk 1 reg_busy 1)
+  [  434.086] B att_ack: REFUSED  (mk 1 reg_busy 1)
+  [  434.086] B att 0 port 13 (mk 1 reg_busy 1)
+  [  434.098] A13 port: src 00 bsy 0 clm 0 fE 0 fM 0 M 1 | BUSY 0
+  [  434.191] A probe 13: M 1 BUSY 0 st 0 mine 0 cst 0
+  [  434.192] A cls 0 -> 1 port 13
+  [  434.214] B wr  g1 dst 13 src 03 bsy 1 clm 1
+  [  434.214] B13 port: src 03 bsy 1 clm 1 fE 0 fM 0 M 0 | BUSY 1
+  [  435.191] A probe 13: M 1 BUSY 0 st 1 mine 0 cst 1
+  [  435.310] A cls 1 -> 2 port 13
+  [  435.310] A mon_held 01
+  [  435.310] A cls 2 -> 3 port 13
+  [  435.594] A wr  g1 dst 13 src 00 bsy 1 clm 0
+  [  435.594] A13 port: src 00 bsy 1 clm 0 fE 0 fM 0 M 1 | BUSY 1
+  [  436.004] A13 port: src 00 bsy 1 clm 0 fE 0 fM 1 M 1 | BUSY 1
+  [  436.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 3
+  [  437.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 3
+  [  438.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 3
+  [  439.004] A cls 3 -> 0 port 13
+  [  439.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  440.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  441.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  442.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  443.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  444.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  445.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  446.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  447.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  448.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  449.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  450.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  451.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  452.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  453.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  454.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  455.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  456.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  457.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  458.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  459.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  460.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  461.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  462.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  463.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  464.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  465.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  466.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  467.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  468.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  469.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  470.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  471.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  472.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  473.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  474.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  475.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  476.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  477.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  478.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  479.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  480.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  481.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  482.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  483.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  484.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  485.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  486.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  487.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  488.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  489.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  490.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  491.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  492.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  493.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  494.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  495.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  496.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  497.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  498.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  499.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  500.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  501.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  502.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  503.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  504.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  505.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  506.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  507.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  508.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  509.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  510.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  511.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  512.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  513.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  514.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  515.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  516.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  517.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  518.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  519.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  520.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  521.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  522.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  523.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  524.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  525.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  526.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  527.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  528.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  529.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  530.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  531.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  532.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  533.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  534.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  535.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  536.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  537.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  538.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  539.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  540.132] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  540.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  541.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  542.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  543.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  544.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  545.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  546.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  547.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  548.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  549.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  550.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  551.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  552.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  553.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  554.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  555.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  556.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  557.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  558.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  559.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  560.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  561.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  562.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  563.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  564.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  565.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  566.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  567.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  568.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  569.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  570.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  571.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  572.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  573.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  574.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  575.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  576.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  577.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  578.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  579.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  580.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  581.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  582.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  583.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  584.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  585.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  586.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  587.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  588.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  589.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  590.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  591.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  592.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  593.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  594.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  595.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  596.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  597.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  598.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  599.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  600.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  601.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  602.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  603.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  604.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  605.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  606.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  607.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  608.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  609.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  610.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  611.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  612.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  613.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  614.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  615.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  616.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  617.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  618.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  619.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  620.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  621.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  622.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  623.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  624.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  625.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  626.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  627.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  628.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  629.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  630.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  631.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  632.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  633.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  634.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  635.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  636.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  637.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  638.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  639.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  640.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  641.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  642.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  643.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  644.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  645.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  646.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  647.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  648.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  649.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  650.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  651.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  652.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  653.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  654.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  655.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  656.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  657.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  658.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  659.004] A nst 5 -> 6  (ndig 4)
+  [  659.004] A nst 6 -> 0  (ndig 4)
+  [  659.004] A mk  6 -> 3  reg_busy 1
+  [  659.005] A mk  3 -> 0  reg_busy 0
+  [  659.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  659.288] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [  660.004] B mk  1 -> 4  reg_busy 1
+  [  660.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  660.403] B mk  4 -> 2  reg_busy 1
+  [  661.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  661.285] B mk  2 -> 7  reg_busy 1
+  [  661.413] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [  661.547] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [  662.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  663.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  664.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  665.004] B mk  7 -> 0  reg_busy 1
+  [  665.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  666.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  667.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  668.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  669.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  670.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  671.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  672.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  673.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  674.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  675.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  676.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  677.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  678.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  679.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  680.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  681.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  682.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  683.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  684.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  685.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  686.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  687.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  688.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  689.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  690.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  691.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  692.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  693.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  694.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  695.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  696.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  697.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  698.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  699.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  700.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  701.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  702.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  703.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  704.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  705.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  706.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  707.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  708.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  709.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  710.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  711.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  712.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  713.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  714.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  715.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  716.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  717.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  718.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  719.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  720.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  721.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  722.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  723.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  724.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  725.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  726.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  727.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  728.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  729.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  730.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  731.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  732.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  733.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  734.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  735.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  736.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  737.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  738.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  739.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  740.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  741.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  742.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  743.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  744.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  745.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  746.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  747.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  748.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  749.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  750.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  751.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  752.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  753.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  754.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  755.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  756.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  757.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  758.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  759.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  760.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  761.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  762.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  763.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  764.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  765.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  766.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  767.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  768.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  769.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  770.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  771.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  772.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  773.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  774.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  775.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  776.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  777.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  778.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  779.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  780.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  781.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  782.191] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  783.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  784.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  785.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  786.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  787.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  788.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  789.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  790.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  791.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  792.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  793.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  794.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  795.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  796.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  797.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  798.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  799.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  800.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  801.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  802.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  803.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  804.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  805.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  806.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  807.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  808.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  809.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  810.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  811.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  812.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  813.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  814.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  815.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  816.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  817.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  818.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  819.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  820.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  821.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  822.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  823.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  824.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  825.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  826.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  827.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  828.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  829.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  830.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  831.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  832.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  833.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  834.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  835.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  836.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  837.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  838.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  839.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  840.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  841.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  842.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  843.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  844.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  845.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  846.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  847.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  848.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  849.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  850.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  851.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  852.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  853.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  854.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  855.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  856.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  857.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  858.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  859.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  860.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  861.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  862.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  863.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  864.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  865.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  866.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  867.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  868.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  869.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  870.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  871.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  872.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  873.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  874.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  875.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  876.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  877.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  878.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  879.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  880.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  881.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  882.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  883.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  884.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  885.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  886.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  887.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  888.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  889.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  890.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  891.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  892.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  893.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  894.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  895.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  896.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  897.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  898.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  899.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  900.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  901.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  902.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  903.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  904.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  905.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  906.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  907.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  908.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  909.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  910.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  911.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  912.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  913.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  914.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  915.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  916.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  917.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  918.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  919.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  920.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  921.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  922.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  923.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  924.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  925.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  926.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  927.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  928.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  929.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  930.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  931.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  932.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  933.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  934.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  935.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  936.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  937.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  938.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  939.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  940.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  941.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  942.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  943.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  944.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  945.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  946.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  947.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  948.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  949.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  950.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  951.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  952.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  953.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  954.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  955.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  956.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  957.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  958.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  959.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  960.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  961.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  962.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  963.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  964.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  965.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  966.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  967.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  968.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  969.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  970.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  971.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  972.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  973.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  974.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  975.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  976.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  977.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  978.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  979.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  980.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  981.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  982.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  983.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  984.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  985.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  986.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  987.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  988.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  989.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  990.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  991.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  992.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  993.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  994.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  995.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  996.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  997.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  998.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [  999.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1000.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1001.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1002.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1003.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1004.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1005.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1006.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1007.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1008.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1009.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1010.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1011.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1012.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1013.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1014.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1015.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1016.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1017.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1018.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  OBS S7 DLY 33500: B21 ring hi 123; A monitor after claim 1; A cls busy on 13 for 5 ms; busy A13 1 B13 1
+  [ 1019.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1020.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1021.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1022.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1023.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1024.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1025.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1026.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1027.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1028.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1029.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1030.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1031.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1032.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1033.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1034.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1035.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1036.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1037.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1038.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1039.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1040.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1041.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1042.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1043.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1044.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1045.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1046.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1047.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1048.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1049.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1050.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1051.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1052.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1053.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1054.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1055.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1056.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1057.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1058.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1059.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1060.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1061.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1062.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1063.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1064.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1065.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1066.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1067.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1068.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1069.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1070.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1071.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1072.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1073.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1074.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1075.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1076.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1077.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1078.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1079.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1080.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1081.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1082.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1083.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1084.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1085.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1086.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1087.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1088.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1089.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1090.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1091.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1092.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1093.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1094.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1095.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1096.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1097.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1098.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1099.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1100.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1101.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1102.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1103.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1104.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1105.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1106.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1107.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1108.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1109.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1110.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1111.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1112.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1113.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1114.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1115.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1116.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1117.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1118.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1119.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1120.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1121.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1122.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1123.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1124.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1125.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1126.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1127.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1128.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1129.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1130.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1131.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1132.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1133.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1134.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1135.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1136.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1137.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1138.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1139.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1140.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1141.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1142.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1143.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1144.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1145.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1146.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1147.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1148.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1149.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1150.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1151.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1152.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1153.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1154.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1155.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1156.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1157.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1158.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1159.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1160.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1161.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1162.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1163.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1164.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1165.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1166.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1167.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1168.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1169.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1170.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1171.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1172.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1173.190] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1174.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1175.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1176.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1177.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1178.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1179.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1180.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1181.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1182.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1183.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1184.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1185.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1186.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1187.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1188.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1189.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1190.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1191.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1192.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1193.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1194.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1195.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1196.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1197.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1198.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1199.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1200.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1201.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1202.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1203.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1204.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1205.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1206.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1207.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1208.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1209.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1210.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1211.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1212.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1213.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1214.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1215.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1216.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1217.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1218.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1219.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1220.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1221.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1222.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1223.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1224.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1225.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1226.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1227.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1228.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1229.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1230.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1231.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1232.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1233.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1234.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1235.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1236.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1237.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1238.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1239.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1240.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1241.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1242.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1243.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1244.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1245.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1246.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1247.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1248.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1249.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1250.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1251.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1252.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1253.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1254.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1255.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1256.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1257.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1258.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1259.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1260.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1261.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1262.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1263.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1264.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1265.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1266.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1267.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1268.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1269.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1270.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1271.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1272.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1273.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1274.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1275.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1276.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1277.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1278.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1279.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1280.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1281.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1282.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1283.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1284.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1285.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1286.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1287.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1288.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1289.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1290.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1291.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1292.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1293.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1294.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1295.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1296.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1297.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1298.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1299.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1300.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1301.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1302.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1303.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1304.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1305.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1306.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1307.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1308.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1309.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1310.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1311.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1312.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1313.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1314.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1315.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1316.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1317.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1318.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1319.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1320.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1321.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1322.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1323.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1324.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1325.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1326.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1327.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1328.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1329.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1330.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1331.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1332.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1333.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1334.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1335.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1336.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1337.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1338.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1339.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1340.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1341.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1342.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1343.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1344.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1345.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1346.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1347.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1348.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1349.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1350.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1351.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1352.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1353.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1354.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1355.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1356.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1357.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1358.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1359.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1360.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1361.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1362.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1363.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1364.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1365.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1366.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1367.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1368.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1369.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1370.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1371.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1372.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1373.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1374.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1375.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1376.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1377.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1378.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1379.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1380.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1381.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1382.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1383.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1384.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1385.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1386.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1387.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1388.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1389.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1390.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1391.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1392.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1393.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1394.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1395.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1396.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1397.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1398.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1399.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1400.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1401.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1402.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1403.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1404.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1405.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1406.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1407.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1408.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1409.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1410.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1411.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1412.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1413.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1414.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1415.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1416.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1417.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  [ 1418.189] A probe 13: M 1 BUSY 1 st 1 mine 0 cst 0
+  OBS S7 DLY 33500, 400 ms after A20 hung up: busy A13 1 B13 1; A mon 01 res 00; B mon 00; A13 src 00 bsy 1; B13 src 03 bsy 1 clm 1
+    FAIL  S7 intent: claim 2 is not taken at A as a fresh seizure
+    FAIL  S7: A13/B13 free and A's cells free after the call
+  IDLE? busy_a 0000000000000800 busy_b 0000000000000800 reg 00 mk 00 dirs 00 res 0000 mon 0100
+    FAIL  S7: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  8 checks, 3 errors, idle-bad 1.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C18-late-claims/tb_late.v:568: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 88.090 s; speed 20.649 ms/s
+- Verilator: cpu 79.594 s on 1 threads; allocated 8 MB
+rc=0 secs=88

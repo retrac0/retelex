@@ -1,0 +1,34 @@
+{
+ "id": "C19-rings",
+ "title": "Rings: an unstrapped ring is bounded only by resources; a one-end jumper does not stop double delivery",
+ "findings": [
+  {
+   "id": "unstrapped-ring-bounded-only-by-resources",
+   "title": "An unjumpered ring is bounded only by resources, and its lap copies are late floods",
+   "category": "other",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "STRAP_N is the only loop breaker (net_unit.v:505, :616-618). It matches network.md 3.3.\n\nNothing recognises a flood returning to its own origin exchange: it arrives on a different trunk, which is not `mine`. There is no hop limit either. A seizure keeps circling until one of these stops it:\n- at each exchange the forwarder is busy or both resolvers are held (so at most NRES laps);\n- a link runs out of channels.\n\nEach lap copy holds a channel per link and a resolver and a monitor per exchange until the claim plus T_REL. Each lap arrives ~N x 13 ms later. In rings of about 8 or more exchanges a lap copy reaches an exchange after the caller's first break, which is the late-flood mechanism above.",
+   "trigger": "A ring of N exchanges with no STRAP_N jumper anywhere.",
+   "consequence": "Every call burns roughly NRES laps x N channels and all resolvers. There are double claims (a cannot-complete race), and in large rings late copies can be counted short, which could give a wrong-number claim.",
+   "realistic": "Only when the ring is misconfigured. The late-copy wrong number rests on the reproduced late-flood mechanism, but was not simulated as a ring.",
+   "evidence": "Reasoning from the code and from the reproduced late-flood mechanism. Not simulated.",
+   "fix": "The jumper is the design; add a commissioning check (one test call per ring). A cheap in-RTL guard would be to refuse to forward a seizure that arrives more than ~100 ms after the exchange's own origin seized with the same caller. That is not free, so documentation plus a bench is the recommendation.",
+   "audit": "forwarder"
+  },
+  {
+   "id": "ring-single-end-jumper",
+   "title": "Jumpering only one end of a ring link does not stop double delivery: the unjumpered end forwards the other end's own floods round the ring",
+   "category": "spec-mismatch",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "The ring strap is per direction at each unit. A seizure is not forwarded onward if it arrived on a strapped direction (net_unit.v:616), and never forwarded into one (fwd_mask, 505, 618). An origin seizes every direction, strapped or not (h_mask 1111, 849). With the strap only at X's end of link L = X-Y, X's own origin seizures into L arrive at Y on an UNSTRAPPED port and Y forwards them onward round the ring. Every ring member then receives X's calls from both sides. network.md:352-355 says 'One end alone breaks the cycle just as well ... but ... wastes a channel', which is true of the cycle but not of double delivery.",
+   "trigger": "A ring with the jumper fitted at one end of the chosen link only; any call originated at the jumpered end.",
+   "consequence": "Every call from X reaches every ring member twice, which is network.md 3.3's own 'race no caller should be in': two monitors per call, and a double claim at the owner. One copy takes the register and the other is refused to 03 with CLM. The origin keeps whichever claim M rises first, and the refused copy can win by a millisecond, giving cannot-complete (see sound: double claim). It also uses twice the monitors and channels. Never a wrong number.",
+   "realistic": "Planning or configuration error; the doc currently permits it.",
+   "evidence": "RTL reading, lines above. The double-claim mechanics at the jumpered link's ends were reproduced by the origin slice (work/audit/origin/run_s2_5.log S5: 'B refusals 1').",
+   "fix": "Doc: 'both ends MUST be jumpered'. Optionally a strap mismatch check: an EV word when a seizure arrives on a direction whose word says the far end is strapped. That needs a bit in the trunk word; not worth it.",
+   "audit": "protocol"
+  }
+ ]
+}

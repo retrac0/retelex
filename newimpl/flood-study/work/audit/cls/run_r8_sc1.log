@@ -1,0 +1,101 @@
+
+  tb_cls sc=1 K=8 D=128 E=3 B=2 pause=400  NMON=8 NRES=8  T_ARM=16 guard=128
+    ok    every trunk's link is up
+     21.029  8 far seizures on W trunks
+     21.146  cls_seen  10  (cst 0, rd_free 1)
+     22.264  cls read  10  word 11001011  trunk 1
+     22.264  MK read    10  word 11001011  (caller?)
+     22.264  HOLD      10  dir 3  mine 0  nst 0
+     23.146  mon0 arm  10
+     24.279  MK read    11  word 11001011  (caller?)
+     32.436  MK read    23  word 11111111  (caller?)
+     33.005  FWD       10 -> ok 0111 cand 71 30 40 00
+     33.318  MK register -> 23
+     33.691  23 BUSY (dial tone) 9.662 ms after its lift
+     40.161  cls_seen  11  (cst 0, rd_free 1)
+     41.279  cls read  11  word 11001011  trunk 1
+     41.280  HOLD      11  dir 3  mine 0  nst 0
+     42.161  mon1 arm  11
+     52.005  FWD       11 -> ok 0100 cand 71 30 41 00
+     59.177  cls_seen  12  (cst 0, rd_free 1)
+     60.295  cls read  12  word 11001011  trunk 1
+     60.295  HOLD      12  dir 3  mine 0  nst 0
+     61.177  mon2 arm  12
+     71.005  FWD       12 -> ok 0100 cand 71 30 42 00
+     78.192  cls_seen  13  (cst 0, rd_free 1)
+     79.310  cls read  13  word 11001011  trunk 1
+     79.311  HOLD      13  dir 3  mine 0  nst 0
+     80.193  mon3 arm  13
+     90.005  FWD       13 -> ok 0100 cand 71 30 43 00
+     97.208  cls_seen  14  (cst 0, rd_free 1)
+     98.326  cls read  14  word 11001011  trunk 1
+     98.326  HOLD      14  dir 3  mine 0  nst 0
+     99.208  mon4 arm  14
+    109.005  FWD       14 -> ok 0100 cand 71 30 44 00
+    116.223  cls_seen  15  (cst 0, rd_free 1)
+    117.342  cls read  15  word 11001011  trunk 1
+    117.342  HOLD      15  dir 3  mine 0  nst 0
+    118.224  mon5 arm  15
+    128.005  FWD       15 -> ok 0100 cand 71 30 45 00
+    135.239  cls_seen  16  (cst 0, rd_free 1)
+    136.357  cls read  16  word 11001011  trunk 1
+    136.357  HOLD      16  dir 3  mine 0  nst 0
+    137.239  mon6 arm  16
+    147.005  FWD       16 -> ok 0100 cand 71 30 46 00
+    149.239  UNHOLD    16  nst 0 d_held 0000
+    209.239  cls_seen  16  (cst 0, rd_free 1)
+    210.357  cls read  16  word 11001011  trunk 1
+    210.357  HOLD      16  dir 3  mine 0  nst 0
+    211.239  mon7 arm  16
+    221.005  FWD       16 -> ok 0100 cand 71 30 46 00
+    228.254  cls_seen  17  (cst 0, rd_free 1)
+    229.373  cls read  17  word 11001011  trunk 1
+    229.373  HOLD      17  dir 3  mine 0  nst 0
+    240.005  FWD       17 -> ok 0100 cand 71 30 47 00
+    538.004  mon0 10 digit 3 (as e)
+    538.004  mon1 11 digit 3 (as e)
+    538.004  mon2 12 digit 3 (as e)
+    538.004  mon3 13 digit 3 (as e)
+    538.004  mon4 14 digit 3 (as e)
+    538.004  mon5 15 digit 3 (as e)
+    538.004  mon6 16 digit 3 (as e)
+    538.004  mon7 16 digit 2 (as e)
+   1138.002  mon7 16 digit 2 (as b)
+   1138.002  CLAIM     16
+   1138.427  MK register -> 16
+   2238.399  MK read    21  word 11111111  ( called)
+   2239.281  MK CONNECT caller 16 called 21
+  21 ringing: hi 600 lo 0
+
+  port  seen    hold    arm     fwd     e-cnt  claims  nseen nhold nunhold   (ms after the seizure; first break at +128.0)
+  10       0.1     1.2     2.1    12.0    3    0       1     1     0
+  11      19.1    20.3    21.1    31.0    3    0       1     1     0
+  12      38.1    39.3    40.1    50.0    3    0       1     1     0
+  13      57.2    58.3    59.2    69.0    3    0       1     1     0
+  14      76.2    77.3    78.2    88.0    3    0       1     1     0
+  15      95.2    96.3    97.2   107.0    3    0       1     1     0
+  16     114.2   115.3   116.2   126.0    2    1       2     2     1
+  17     207.2   208.3    -1.0   219.0   -1    0       1     1     0
+  leg 30 carried 10: its far end saw M rise at +  13.1 (before the first break)
+  leg 40 carried 10: its far end saw M rise at +  13.1 (before the first break)
+  leg 41 carried 11: its far end saw M rise at +  32.1 (before the first break)
+  leg 42 carried 12: its far end saw M rise at +  51.1 (before the first break)
+  leg 43 carried 13: its far end saw M rise at +  70.2 (before the first break)
+  leg 44 carried 14: its far end saw M rise at +  89.2 (before the first break)
+  leg 45 carried 15: its far end saw M rise at + 108.2 (before the first break)
+  leg 46 carried 16: its far end saw M rise at + 127.2 (before the first break)
+  leg 47 carried 17: its far end saw M rise at + 220.2 ( AFTER the first break)
+  leg 71 carried 10: its far end saw M rise at +  13.1 (before the first break)
+  n_nofwd 0, monitors armed after the first break 0, trunks that claimed 1 (dialled 3 2, own 2 2)
+    ok    sc1: every far caller gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00000000 mon 00000000 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  3 checks, 0 errors.  PASS
+
+- work/audit/cls/tb_cls.v:410: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 5s; walltime 124.968 s; speed 37.121 ms/s
+- Verilator: cpu 108.839 s on 1 threads; allocated 8 MB
+rc=0

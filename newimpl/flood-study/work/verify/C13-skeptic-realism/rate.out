@@ -1,0 +1,18 @@
+
+=== load x1: 857 network calls/h, flood 0.65 E on every link
+  tandem-tandem  x 2  N=12 A= 5.81E block=  0.93%  P(1 free)=0.0193  seizures/h    857  glare 1 per       434 busy h  per seizure 2.7e-06
+  tandem-subhub  x 6  N=12 A= 3.75E block=  0.04%  P(1 free)=0.0012  seizures/h    857  glare 1 per     11423 busy h  per seizure 1.0e-07
+  subhub-mid     x18  N=12 A= 1.70E block=  0.00%  P(1 free)=0.0000  seizures/h    857  glare 1 per  25671260 busy h  per seizure 4.5e-11
+  subhub-mid     x18  N= 6 A= 1.70E block=  0.62%  P(1 free)=0.0218  seizures/h    857  glare 1 per      1879 busy h  per seizure 6.2e-07
+  mid-leaf       x36  N=12 A= 1.01E block=  0.00%  P(1 free)=0.0000  seizures/h    857  glare 1 per 11374893925 busy h  per seizure 1.0e-13
+  mid-leaf       x36  N= 6 A= 1.01E block=  0.05%  P(1 free)=0.0032  seizures/h    857  glare 1 per     36870 busy h  per seizure 3.2e-08
+  network (all links 12 ch): 0.0051 glare/busy h = 1 per 195 busy h; per exchange per busy h 8.2e-05; per network call 6.0e-06
+
+=== load x2: 1714 network calls/h, flood 1.30 E on every link
+  tandem-tandem  x 2  N=12 A=11.62E block= 18.36%  P(1 free)=0.1895  seizures/h   1714  glare 1 per        11 busy h  per seizure 5.3e-05
+  tandem-subhub  x 6  N=12 A= 7.50E block=  3.82%  P(1 free)=0.0612  seizures/h   1714  glare 1 per        57 busy h  per seizure 1.0e-05
+  subhub-mid     x18  N=12 A= 3.41E block=  0.02%  P(1 free)=0.0006  seizures/h   1714  glare 1 per     17205 busy h  per seizure 3.4e-08
+  subhub-mid     x18  N= 6 A= 3.41E block=  7.64%  P(1 free)=0.1346  seizures/h   1714  glare 1 per        76 busy h  per seizure 7.7e-06
+  mid-leaf       x36  N=12 A= 2.03E block=  0.00%  P(1 free)=0.0000  seizures/h   1714  glare 1 per   3822457 busy h  per seizure 1.5e-10
+  mid-leaf       x36  N= 6 A= 2.03E block=  1.27%  P(1 free)=0.0377  seizures/h   1714  glare 1 per       789 busy h  per seizure 7.4e-07
+  network (all links 12 ch): 0.2882 glare/busy h = 1 per 3 busy h; per exchange per busy h 4.6e-03; per network call 1.7e-04

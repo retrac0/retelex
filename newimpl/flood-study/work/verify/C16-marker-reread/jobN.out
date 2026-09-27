@@ -1,0 +1,8 @@
+[sim.sh] slot 2: bash -c 
+cd /home/joel/telco/newimpl/build/flood; D=work/verify/C16-marker-reread
+verilator --binary --timing -j 2 -I$D/rtl_fix -Irtl -Wno-fatal --top-module tb_net --Mdir $D/obj_fnet -o tb_net $(cat $D/RTL_fix.list) tb/site_net.v tb/tb_net.v > $D/vl_fnet.log 2>&1; echo b=$?
+timeout 3000 $D/obj_fnet/tb_net > $D/run_fix_tbnet.log 2>&1; echo r=$?
+rm -rf $D/obj_fnet
+
+b=0
+r=0

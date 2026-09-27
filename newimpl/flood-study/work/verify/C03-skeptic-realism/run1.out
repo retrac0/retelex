@@ -1,0 +1,3 @@
+[sim.sh] slot 2: bash work/verify/C03-skeptic-realism/run1.sh
+build=0
+run=0

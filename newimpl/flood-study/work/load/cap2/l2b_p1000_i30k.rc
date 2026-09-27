@@ -1,0 +1,1 @@
+rc=0 wall_s=565 bin=work/load/obj_load2b/tb_load2b args=+seed=11 +dur_ms=12000 +idle_ms=30000 +pnet=1000

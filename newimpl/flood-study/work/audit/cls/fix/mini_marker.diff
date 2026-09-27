@@ -1,0 +1,26 @@
+--- rtl/mini_marker.v	2026-09-26 00:42:05.693071020 -0400
++++ work/audit/cls/fix/mini_marker.v	2026-09-26 02:01:18.583940880 -0400
+@@ -251,6 +251,12 @@
+     // caller, not a number".  A tone trunk is member 1 and IS a caller at a
+     // leaf's central (leaf-uplink.md), so it does not match.
+     wire rd_trunk = (rd_word[4:0] == 5'b01011);
++    // AUDIT FIX: take only what positively says it may call or be called --
++    // the line family (tt = 11, aa = 11, and the plain line's FF), and as a
++    // caller also the tone trunk (11 01 1).  NONE, a mixed read, a reserved
++    // or unequipped class, and every port form are not callers here.
++    wire rd_line   = (rd_word[3:0] == 4'b1111);
++    wire rd_caller_ok = rd_line || (rd_word[4:0] == 5'b11011);
+ 
+     function [14:0] ent(input [`PW-1:0] d, input [`PW-1:0] s, input b, input c);
+         ent = {1'b1, c, b, s, d};
+@@ -362,8 +368,8 @@
+                     // service, or a trunk whose link is down.  A line's word
+                     // is all ones.  Anything else is taken if it is still
+                     // asking when it comes round.
+-                    state <= (rd_trunk || (rd_word == 8'd0)) ? S_IDLE : S_TAKE;
+-                end else if (rd_trunk) begin
++                    state <= rd_caller_ok ? S_TAKE : S_IDLE;
++                end else if (!rd_line) begin
+                     // a trunk is never dialled: marker.md 2
+                     if (room >= 5'd1) begin
+                         push_v    <= 2'b01;

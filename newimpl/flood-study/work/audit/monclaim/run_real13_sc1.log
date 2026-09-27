@@ -1,0 +1,66 @@
+
+  tb_mc -- monitors and the claim, exchange 13, far ends driven by the bench (sc=1)
+    ok    every trunk's link is up
+
+  1. STALE CELL: 0.9 ms blip on T11, re-seized 20 ms later, far dials 3 2 2 1
+  [   22 ms] busy1x=0000000 bkA=0000000 | cells held=00 armed=00 want=00 port=00/00 st=0/0 cnt=0/0 | cl=0 att=0@00 | fwd=0 in=00 res=00 in=00/00 | reg=0 mk=4 on=00 nd=0 dig=0000 | cls=1 dirs=0000 nofwd=0 ring2x=00000000
+  [   23 ms] busy1x=0000000 bkA=0000000 | cells held=00 armed=00 want=00 port=00/00 st=0/0 cnt=0/0 | cl=0 att=0@00 | fwd=0 in=00 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=2 dirs=0000 nofwd=0 ring2x=00000000
+  [   23 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=00 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=1 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [   23 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=00 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [   23 ms] busy1x=0000001 bkA=0000000 | cells held=01 armed=00 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [   24 ms] busy1x=0000001 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=4 dirs=0000 nofwd=0 ring2x=00000000
+  [   24 ms] busy1x=0000001 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [   24 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/0 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [   34 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+    ok    the blip's hold was written away (C_UNHOLD)
+    ok    but a cell given to the blip is still held on T11
+  [  122 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=00 in=00/00 | reg=0 mk=4 on=00 nd=0 dig=0000 | cls=1 dirs=0000 nofwd=0 ring2x=00000000
+  [  123 ms] busy1x=0000000 bkA=0000000 | cells held=01 armed=01 want=00 port=00/11 st=0/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=2 dirs=0000 nofwd=0 ring2x=00000000
+  [  123 ms] busy1x=0000000 bkA=0000000 | cells held=11 armed=01 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=1 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  123 ms] busy1x=0000000 bkA=0000000 | cells held=11 armed=01 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  123 ms] busy1x=0000001 bkA=0000000 | cells held=11 armed=01 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  124 ms] busy1x=0000001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=2 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+    ok    OBSERVE: two cells now watch T11
+  [  134 ms] busy1x=0000001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=3 in=11 res=00 in=00/00 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  134 ms] busy1x=0000001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  134 ms] busy1x=0100001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  135 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=3 dirs=0000 nofwd=0 ring2x=00000000
+  [  141 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/1 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  251 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  522 ms] busy1x=0100001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=0/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  582 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=1/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  622 ms] busy1x=0100001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=1/1 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  682 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=2/2 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  722 ms] busy1x=0100001 bkA=0000000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=2/2 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  782 ms] busy1x=0100001 bkA=0100000 | cells held=11 armed=11 want=00 port=11/11 st=1/2 cnt=3/3 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100000 | cells held=01 armed=01 want=01 port=11/11 st=1/3 cnt=3/3 | cl=0 att=0@00 | fwd=0 in=11 res=01 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100000 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/3 | cl=1 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=1 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=2 att=1@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=0 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=2 att=1@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=1 on=00 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  911 ms] busy1x=0100001 bkA=0100001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=1 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [  912 ms] busy1x=0100001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=1 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 1168 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=1 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+    FAIL  SAFETY: X (13) did not claim a call dialled to 3x
+    FAIL  SAFETY: X's register was not attached to T11
+  [ 1911 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=1 on=11 nd=1 dig=0002 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2911 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=1 on=11 nd=2 dig=0022 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2911 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=4 on=11 nd=2 dig=0022 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2911 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=2 on=11 nd=2 dig=0022 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2912 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=7 on=11 nd=2 dig=0022 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2912 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=7 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2944 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=1 mk=0 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+  [ 2944 ms] busy1x=0000001 bkA=0000001 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=0 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+    FAIL  SAFETY: no phone at X rings for a call to exchange 32
+    ringing = 0000000000040000 (X22 is bit 18)
+  [ 5088 ms] busy1x=0000000 bkA=0000000 | cells held=00 armed=00 want=00 port=11/11 st=1/3 cnt=0/0 | cl=0 att=0@11 | fwd=0 in=11 res=00 in=00/11 | reg=0 mk=0 on=11 nd=0 dig=0000 | cls=0 dirs=0000 nofwd=0 ring2x=00000000
+    ok    1: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  10 checks, 3 errors.  FAIL
+
+- work/audit/monclaim/tb_mc.v:347: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 75.614 s; speed 73.148 ms/s
+- Verilator: cpu 66.760 s on 1 threads; allocated 8 MB

@@ -1,0 +1,39 @@
+
+  tb_c01r -- REAL timers, scen 1 offs 1200 lag 9 xa 2 xb 10                  
+    ok    links up
+    [52 ms] A cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [539 ms] A cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [549 ms] A cableB UNIT   G1 dst 11 src 20 bsy 1 clm 0
+    [552 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 0
+    [1252 ms] B cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [1839 ms] B cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [2279 ms] A20 starts b
+    [2660 ms] B's marker enters S_WATCH
+    [2660 ms] B cableB MARKER G1 dst 20 src 21 bsy 1 clm 0
+    [2660 ms] B cableB MARKER G1 dst 21 src 20 bsy 1 clm 0
+    [2670 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 1
+    ok    B's monitor claimed and B's unit raised att
+    ok    and B's marker is in S_WATCH at that moment (the case under test)
+    [2670 ms] B's unit raises att for 11; B's marker is in state 7
+    [2692 ms] B's marker leaves S_WATCH -> 0
+    [2692 ms] B's marker REFUSED the claim on 11
+    [2692 ms] B cableB MARKER G1 dst 11 src 03 bsy 1 clm 1
+    [3269 ms] B11 latch: addr 03 bsy 1 clm 1; B reg busy 0 caller 20
+    FAIL  the claim that waited out WATCH is TAKEN (the design's stated intent)
+    [4479 ms] A cableB UNIT   G1 dst 20 src 11 bsy 1 clm 0
+    [4789 ms] B22 busy 0, B22 latch addr 00
+    FAIL  B22 connected: A20's call completed through B
+    A20 hears steady 0 (03 cannot-complete or silence)
+    [5046 ms] B11 releases itself (fM/fE fall)
+    ok    both exchanges idle 3 s after everyone hung up
+    ok    no clash on cable B
+    ok    no queue overflow
+    takes 0 refusals 1
+
+  8 checks, 2 errors.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C01-watch-late-refusal/tb_c01r.v:265: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 8s; walltime 251.732 s; speed 30.866 ms/s
+- Verilator: cpu 195.981 s on 1 threads; allocated 8 MB
+rc=0 secs=252

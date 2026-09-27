@@ -1,0 +1,4 @@
+[sim.sh] slot 3: bash -c SECONDS=0; verilator --lint-only --timing -Irtl -Iwork/load -Wno-fatal +define+SCALE1 --top-module tb_load3 $(cat work/RTL.list) tb/site_net.v work/load/tb_load3.sv > work/load/lint_load3_scale1.log 2>&1; echo lint_scale1 rc=$?; for t in load3 load2b; do verilator --binary --timing -j 2 -Irtl -Iwork/load -Wno-fatal --top-module tb_$t --Mdir work/load/obj_$t -o tb_$t $(cat work/RTL.list) tb/site_net.v work/load/tb_$t.sv > work/load/vl_$t.log 2>&1; echo $t rc=$? secs=$SECONDS; done
+lint_scale1 rc=0
+load3 rc=0 secs=704
+load2b rc=0 secs=1101

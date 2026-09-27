@@ -1,0 +1,264 @@
+
+  tb_pchain -- three exchanges; glare on a forward, and a seizure with no origin.  sc=1
+    ok    all links up
+  --- sc0: a forward and an origin glare on B14-C11
+  T    20.271  A mk 0 -> 4
+  T    21.389  A mk 4 -> 5
+  T    22.271  A mk 5 -> 1
+  T    22.399  A20 -> 1
+  T    59.005  A reg ndig 1
+  T    59.005  A mk 1 -> 6
+  T    59.006  A nst 0 -> 1 (after 0)
+  T    59.006  A reg ndig 0
+  T    59.006  A nst 1 -> 2 (after 0)
+  T    59.134  A20 -> 0
+  T    69.005  A nst 2 -> 3 (after 0)
+  T    69.006  A nst 3 -> 4 (after 0)
+  T    69.290  A11 -> 20
+  T    70.264  M at B11 1
+  T    71.161  B mk 0 -> 4
+  T    72.279  B mk 4 -> 0
+  T    72.280  B mon held 01 want 00 st 1
+  T    83.006  B rs busy 01 act 0
+  T    83.290  B14 -> 11
+  T    83.423  B11 -> 14 clm 0
+  T    84.154  M at C11 1
+  T    85.161  C mk 0 -> 4
+  T    86.279  C mk 4 -> 0
+  OBS calibration: B14 written 41.285 ms after A's key
+  T   122.263  M at B11 0
+  T   123.154  M at C11 0
+  T   154.005  A11 -> 0
+  T   154.005  B11 -> 0 clm 0
+  T   154.161  B rs busy 01 act 2
+  T   154.161  B rs busy 00 act 0
+  T   154.446  B14 -> 0
+  T   155.005  A nst 4 -> 7 (after 0)
+  T   155.005  A mk 6 -> 3
+  T   155.005  A nst 7 -> 8 (after 0)
+  T   155.006  A nst 8 -> 0 (after 0)
+  T   155.429  A mk 3 -> 0
+  T   156.005  B mon held 00 want 00 st 1
+  T   372.270  C mk 0 -> 4
+  T   373.388  C mk 4 -> 5
+  T   374.270  C mk 5 -> 1
+  T   374.398  C20 -> 1
+  T   411.004  C reg ndig 1
+  T   411.004  C mk 1 -> 6
+  T   411.005  C nst 0 -> 1 (after 0, claimed 0)
+  T   411.005  C reg ndig 0
+  T   411.005  C nst 1 -> 2 (after 0, claimed 0)
+  T   411.133  C20 -> 0
+  T   421.004  C nst 2 -> 3 (after 0, claimed 0)
+  T   421.005  C nst 3 -> 4 (after 0, claimed 0)
+  T   421.289  C11 -> 20
+  T   422.263  M at B14 1
+  T   423.207  B mk 0 -> 4
+  T   424.325  B mk 4 -> 0
+  T   424.326  B mon held 01 want 00 st 1
+  T   435.005  B rs busy 01 act 0
+  T   435.423  B14 -> 13
+  T   437.192  A mk 0 -> 4
+  T   438.310  A mk 4 -> 0
+  OBS calibration: C11 written 27.285 ms after C's key
+  T   474.263  M at B14 0
+  T   506.004  B14 -> 0
+  T   506.004  C11 -> 0
+  T   506.207  B rs busy 01 act 2
+  T   506.207  B rs busy 00 act 0
+  T   507.004  C nst 4 -> 7 (after 0, claimed 0)
+  T   507.004  C mk 6 -> 3
+  T   507.004  C nst 7 -> 8 (after 0, claimed 0)
+  T   507.005  C nst 8 -> 0 (after 0, claimed 0)
+  T   507.429  C mk 3 -> 0
+  T   508.004  B mon held 00 want 00 st 1
+    ok    calibration: idle again
+  --- sc0 pass 0: the callers dial on 40 ms after C's key
+  T   724.269  A mk 0 -> 4
+  T   724.269  C mk 0 -> 4
+  T   725.387  A mk 4 -> 5
+  T   725.387  C mk 4 -> 5
+  T   726.269  A mk 5 -> 1
+  T   726.269  C mk 5 -> 1
+  T   726.397  A20 -> 1
+  T   726.397  C20 -> 1
+  T   763.003  A reg ndig 1
+  T   763.004  A mk 1 -> 6
+  T   763.004  A nst 0 -> 1 (after 0)
+  T   763.004  A reg ndig 0
+  T   763.004  A nst 1 -> 2 (after 0)
+  T   763.132  A20 -> 0
+  T   773.004  A nst 2 -> 3 (after 0)
+  T   773.004  A nst 3 -> 4 (after 0)
+  T   773.288  A11 -> 20
+  T   774.262  M at B11 1
+  T   775.160  B mk 0 -> 4
+  T   776.278  B mk 4 -> 0
+  T   776.278  B mon held 01 want 00 st 1
+  T   777.003  C reg ndig 1
+  T   777.004  C mk 1 -> 6
+  T   777.004  C nst 0 -> 1 (after 0, claimed 0)
+  T   777.004  C reg ndig 0
+  T   777.004  C nst 1 -> 2 (after 0, claimed 0)
+  T   777.132  C20 -> 0
+  T   787.003  C nst 2 -> 3 (after 0, claimed 0)
+  T   787.004  C nst 3 -> 4 (after 0, claimed 0)
+  T   787.004  B rs busy 01 act 0
+  T   787.288  B14 -> 11
+  T   787.288  C11 -> 20
+  T   787.422  B11 -> 14 clm 0
+  T   788.152  M at C11 1
+  T   788.262  M at B14 1
+  T   789.206  B rs busy 01 act 1
+  T   789.207  B rs busy 00 act 0
+  OBS glare at try 0: C's key 14.000 ms after A's
+  OBS at the glare: A dirs 0100 cla 1 glare 0 reg 1 | B mon 01 res 00 reg 0 nofwd 0 glare 0 B11->14 clm 0 B14->11 bsy 1 | C dirs 1000 cla 1 mon 00 reg 1 glare 1 C11->20 C20->0
+  OBS glare between B's forward and C's origin on the one channel (documented residual glare)
+    ok    A counts no glare: A11 was never seized from both ends
+  T   799.262  M at B11 0
+  T   799.262  M at B14 0
+  T   800.152  M at C11 0
+  T   801.003  C nst 4 -> 7 (after 1, claimed 1)
+  T   801.003  C nst 7 -> 8 (after 1, claimed 1)
+  T   801.004  C nst 8 -> 0 (after 1, claimed 1)
+  T   801.004  C mk 6 -> 3
+  T   801.288  C11 -> 0
+  T   801.421  C20 -> 3
+  T   801.428  C mk 3 -> 0
+  T   811.262  M at B11 1
+  T   812.152  M at C11 1
+  T   819.262  M at B11 0
+  T   820.152  M at C11 0
+  T   831.003  B14 -> 0
+  T   831.262  M at B11 1
+  T   832.003  A11 -> 0
+  T   832.003  B11 -> 0 clm 0
+  T   832.012  M at B11 0
+  T   848.003  A reg ndig 1
+  T   853.003  B mon held 00 want 00 st 1
+  T  1008.003  A reg ndig 2
+  T  1008.003  A nst 4 -> 5 (after 0)
+  T  1148.002  A reg ndig 3
+  T  1268.002  A reg ndig 4
+  T  1268.002  A nst 5 -> 6 (after 0)
+  T  1268.002  A nst 6 -> 0 (after 0)
+  T  1268.003  A mk 6 -> 3
+  T  1268.003  A mk 3 -> 0
+  T  1268.003  A reg ndig 0
+  T  1268.287  A20 -> 11
+  OBS after dialling: A dirs 0000 cla 1 glare 0 reg 0 | B mon 00 res 00 reg 0 nofwd 0 glare 0 B11->0 clm 0 B14->0 bsy 0 | C dirs 0000 cla 1 mon 00 reg 0 glare 1 C11->0 C20->3
+  OBS after dialling: A20 -> 11, A11 -> 0 busy 0, B21 -> 0
+    FAIL  A20 reached B21, as dialled
+    ok    A21 (C20's number) is not rung: C20's call went nowhere
+  T  1379.283  B mk 0 -> 4
+  T  1380.401  B mk 4 -> 5
+  T  1381.283  B mk 5 -> 1
+  T  1381.411  B21 -> 1
+  OBS A20 sends 1: B21 hears 1, C20 hears 0
+    ok    B21 hears A20
+    ok    C20 does NOT hear A20 (no listen-in on a stranger's call)
+  OBS A20 sends 0: C20 hears 01 (s1 s0)
+    FAIL  A20 hears B21
+  T  1446.002  A20 -> 0
+  T  1446.002  B21 -> 0
+  T  1446.002  C20 -> 0
+  T  1448.002  B mk 1 -> 3
+  T  1448.136  B mk 3 -> 0
+    ok    sc0: all three idle again
+  --- sc0 pass 1: the callers dial on 80 ms after C's key
+  T  2065.266  A mk 0 -> 4
+  T  2065.266  C mk 0 -> 4
+  T  2066.384  A mk 4 -> 5
+  T  2066.384  C mk 4 -> 5
+  T  2067.266  A mk 5 -> 1
+  T  2067.266  C mk 5 -> 1
+  T  2067.394  A20 -> 1
+  T  2067.394  C20 -> 1
+  T  2104.000  A reg ndig 1
+  T  2104.000  A mk 1 -> 6
+  T  2104.000  A nst 0 -> 1 (after 0)
+  T  2104.000  A reg ndig 0
+  T  2104.001  A nst 1 -> 2 (after 0)
+  T  2104.128  A20 -> 0
+  T  2114.000  A nst 2 -> 3 (after 0)
+  T  2114.000  A nst 3 -> 4 (after 0)
+  T  2114.285  A11 -> 20
+  T  2115.258  M at B11 1
+  T  2116.156  B mk 0 -> 4
+  T  2117.274  B mk 4 -> 0
+  T  2117.274  B mon held 01 want 00 st 1
+  T  2118.000  C reg ndig 1
+  T  2118.000  C mk 1 -> 6
+  T  2118.000  C nst 0 -> 1 (after 0, claimed 0)
+  T  2118.000  C reg ndig 0
+  T  2118.001  C nst 1 -> 2 (after 0, claimed 0)
+  T  2118.128  C20 -> 0
+  T  2128.000  C nst 2 -> 3 (after 0, claimed 0)
+  T  2128.000  C nst 3 -> 4 (after 0, claimed 0)
+  T  2128.000  B rs busy 01 act 0
+  T  2128.284  B14 -> 11
+  T  2128.284  C11 -> 20
+  T  2128.418  B11 -> 14 clm 0
+  T  2129.149  M at C11 1
+  T  2129.258  M at B14 1
+  T  2130.203  B rs busy 01 act 1
+  T  2130.203  B rs busy 00 act 0
+  OBS glare at try 0: C's key 14.000 ms after A's
+  OBS at the glare: A dirs 0100 cla 1 glare 0 reg 1 | B mon 01 res 00 reg 0 nofwd 0 glare 0 B11->14 clm 0 B14->11 bsy 1 | C dirs 1000 cla 1 mon 00 reg 1 glare 2 C11->20 C20->0
+  OBS glare between B's forward and C's origin on the one channel (documented residual glare)
+    ok    A counts no glare: A11 was never seized from both ends
+  T  2180.258  M at B11 0
+  T  2180.258  M at B14 0
+  T  2181.149  M at C11 0
+  T  2191.258  M at B14 1
+  T  2192.258  M at B11 1
+  T  2193.149  M at C11 1
+  T  2193.156  A nst 4 -> 7 (after 1)
+  T  2193.156  A nst 7 -> 8 (after 1)
+  T  2193.156  A nst 8 -> 0 (after 1)
+  T  2193.157  A mk 6 -> 3
+  T  2193.440  A11 -> 0
+  T  2193.574  A20 -> 3
+  T  2193.580  A mk 3 -> 0
+  T  2194.008  M at B11 0
+  T  2194.149  M at C11 0
+  T  2194.156  C nst 4 -> 7 (after 1, claimed 1)
+  T  2194.156  C nst 7 -> 8 (after 1, claimed 1)
+  T  2194.156  C nst 8 -> 0 (after 1, claimed 1)
+  T  2194.157  C mk 6 -> 3
+  T  2194.440  C11 -> 0
+  T  2194.574  C20 -> 3
+  T  2194.580  C mk 3 -> 0
+  T  2195.008  M at B14 0
+  T  2226.000  B11 -> 0 clm 0
+  T  2226.000  B14 -> 0
+  T  2227.000  B mon held 00 want 00 st 1
+  OBS after dialling: A dirs 0000 cla 1 glare 0 reg 0 | B mon 00 res 00 reg 0 nofwd 0 glare 0 B11->0 clm 0 B14->0 bsy 0 | C dirs 0000 cla 1 mon 00 reg 0 glare 2 C11->0 C20->3
+  OBS after dialling: A20 -> 3, A11 -> 0 busy 0, B21 -> 0
+    FAIL  A20 reached B21, as dialled
+    ok    A21 (C20's number) is not rung: C20's call went nowhere
+  T  2760.279  B mk 0 -> 4
+  T  2761.398  B mk 4 -> 5
+  T  2762.279  B mk 5 -> 1
+  T  2762.408  B21 -> 1
+  OBS A20 sends 1: B21 hears 1, C20 hears 0
+    ok    B21 hears A20
+    ok    C20 does NOT hear A20 (no listen-in on a stranger's call)
+  OBS A20 sends 0: C20 hears 01 (s1 s0)
+    FAIL  A20 hears B21
+  T  2826.998  A20 -> 0
+  T  2826.998  B21 -> 0
+  T  2826.998  C20 -> 0
+  T  2828.998  B mk 1 -> 3
+  T  2829.133  B mk 3 -> 0
+    ok    sc0: all three idle again
+    ok    no cable B had two masters driving at once
+    ok    no queue refused a write
+
+  18 checks, 4 errors.  FAIL
+
+- work/verify/C13-leg-glare/tb_pchain.v:409: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 3s; walltime 361.137 s; speed 9.542 ms/s
+- Verilator: cpu 231.845 s on 1 threads; allocated 8 MB
+rc=0 secs=361

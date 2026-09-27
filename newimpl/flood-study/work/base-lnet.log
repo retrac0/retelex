@@ -1,0 +1,15 @@
+[sim.sh] slot 3: make -s lnet
+
+  tb_lnet -- two exchanges, a local eight-channel trunk, calls that are dialled
+  1. A20 dials 1 2 3 2 1
+  2. A20 up on B21 through A10; then A22 dials 1 2 3 2 0
+  3. B21 dials 1 2 2 2 1
+  4. the cable pulled
+
+  37 checks, 0 errors.  PASS
+
+- tb/tb_lnet.v:261: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 219.112 s; speed 28.675 ms/s
+- Verilator: cpu 175.150 s on 1 threads; allocated 8 MB
+rc=0 secs=322

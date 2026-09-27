@@ -1,0 +1,15 @@
+
+  tb_lchain -- three exchanges, two local trunks, transits across both units
+  1. A20 dials 1 2 4 2 1
+  2. A21 dials 1 2 4 2 0, the first call standing
+  3. B20 dials 2 2, B21 2 3, B24 2 6, with both transits up
+  4. C21 dials 1 2 2 2 1
+  5. B20 dials 1 2 4 2 0
+
+  48 checks, 0 errors.  PASS
+
+- tb/tb_lchain.v:299: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 7s; walltime 800.620 s; speed 9.368 ms/s
+- Verilator: cpu 332.096 s on 1 threads; allocated 8 MB
+rc=0 secs=1042

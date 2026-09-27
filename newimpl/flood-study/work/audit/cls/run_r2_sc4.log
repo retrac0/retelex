@@ -1,0 +1,38 @@
+
+  tb_cls sc=4 K=8 D=128 E=3 B=2 pause=400  NMON=2 NRES=2  T_ARM=16 guard=128
+    ok    every trunk's link is up
+     20.271  cls_seen  20  (cst 0, rd_free 1)
+     21.389  cls read  20  word 11111111  trunk 0
+     21.389  MK read    20  word 11111111  (caller?)
+     22.271  MK register -> 20
+    227.873  sweep's last read in flight (h_idx 70, scan 67): far blip on 71
+    227.911  cls_seen  71  (cst 0, rd_free 0)
+    228.645  blip over
+    229.029  cls read  71  word 00001011  trunk 1
+    229.029  HOLD      71  dir 0  mine 0  nst 4
+    229.911  UNHOLD    71  nst 4 d_held 1111
+    229.911  mon0 arm  71
+    535.003  origin: nst 4 dirs_held 1111 d_trunk 71 30 40 10; 71 latch -> 00 bsy 0
+    FAIL  sc4: a trunk the origin holds listens to its caller
+    735.003  71 looks free from the far end: it seizes it (a flood of its own), talking 1s
+    755.003  origin claimed 1 trunk 71 glare 0
+   3344.903  cls_seen  71  (cst 0, rd_free 1)
+   3346.021  cls read  71  word 00001011  trunk 1
+   3346.021  MK read    71  word 00001011  (caller?)
+   3346.021  HOLD      71  dir 0  mine 0  nst 0
+   3346.903  mon0 arm  71
+   3356.997  FWD       71 -> ok 1110 cand 71 30 40 10
+   3705.120  20 hears ones 1 zeros 0; 20's latch -> 71
+    FAIL  sc4: 20, who dialled 1 5 5 2 1, is not connected to a stranger's seizure on 71
+    ok    sc4: everyone gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00 mon 00 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  5 checks, 2 errors.  FAIL
+
+- work/audit/cls/tb_cls.v:410: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 5s; walltime 142.973 s; speed 36.965 ms/s
+- Verilator: cpu 117.084 s on 1 threads; allocated 8 MB
+rc=0

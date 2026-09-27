@@ -1,0 +1,96 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 4
+    ok    links 11, 12 up; 13 cut
+
+  S3a. control: A20 dials 1 1 3 2 2 with 100 ms pauses (no exchange 13)
+  [   30.271] A mk  0 -> 4  reg_busy 0
+  [   30.271] A cls 0 -> 1 port 20
+  [   31.389] A mk  4 -> 5  reg_busy 0
+  [   31.389] A cls 1 -> 0 port 20
+  [   32.271] A mk  5 -> 1  reg_busy 0
+  [   32.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   69.005] A mk  1 -> 6  reg_busy 1
+  [   69.006] A nst 0 -> 1  (ndig 0)
+  [   69.006] A nst 1 -> 2  (ndig 0)
+  [   69.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [   79.005] A nst 2 -> 3  (ndig 0)
+  [   79.006] A nst 3 -> 4  (ndig 0)
+  [   79.289] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [   81.161] B mk  0 -> 4  reg_busy 0
+  [   81.161] B cls 0 -> 1 port 11
+  [   82.279] B mk  4 -> 0  reg_busy 0
+  [   82.279] B cls 1 -> 2 port 11
+  [   82.280] B mon_held 01
+  [   82.280] B cls 2 -> 3 port 11
+  [   82.564] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [   86.005] B cls 3 -> 0 port 11
+  [  190.005] B mon_held 00
+  [  349.005] A nst 4 -> 5  (ndig 2)
+  [  599.004] A nst 5 -> 7  (ndig 3)
+  [  599.004] A nst 7 -> 8  (ndig 3)
+  [  599.004] A nst 8 -> 0  (ndig 3)
+  [  599.004] A mk  6 -> 3  reg_busy 1
+  [  599.288] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [  599.422] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [  599.428] A mk  3 -> 0  reg_busy 0
+  OBS S3a: B reg_busy 0, A claimed 0
+    ok    S3a: nobody claims a call to 13
+    ok    S3a: idle again
+
+  S3b. A20 keys 1 with a 20 ms make, so e's break begins before the seizure
+  [ 1320.267] A mk  0 -> 4  reg_busy 0
+  [ 1320.267] A cls 0 -> 1 port 20
+  [ 1321.386] A mk  4 -> 5  reg_busy 0
+  [ 1321.386] A cls 1 -> 0 port 20
+  [ 1322.267] A mk  5 -> 1  reg_busy 0
+  [ 1322.395] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 1359.002] A mk  1 -> 6  reg_busy 1
+  [ 1359.002] A nst 0 -> 1  (ndig 0)
+  [ 1359.003] A nst 1 -> 2  (ndig 0)
+  [ 1359.130] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 1369.002] A nst 2 -> 3  (ndig 0)
+  [ 1369.002] A nst 3 -> 4  (ndig 0)
+  [ 1369.286] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 1375.158] B mk  0 -> 4  reg_busy 0
+  [ 1375.158] B cls 0 -> 1 port 11
+  [ 1376.276] B mk  4 -> 0  reg_busy 0
+  [ 1376.276] B cls 1 -> 2 port 11
+  [ 1376.276] B mon_held 01
+  [ 1376.276] B cls 2 -> 3 port 11
+  [ 1376.560] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 1380.002] B cls 3 -> 0 port 11
+  [ 1551.002] A nst 4 -> 5  (ndig 2)
+  [ 1692.001] B mon_held 00
+  [ 1692.285] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 1692.291] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 1692.292] B mk  0 -> 1  reg_busy 0
+  [ 1692.292] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 1692.292] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 1693.157] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 1831.001] A nst 5 -> 6  (ndig 4)
+  [ 1831.001] A nst 6 -> 0  (ndig 4)
+  [ 1831.001] A mk  6 -> 3  reg_busy 1
+  [ 1831.002] A mk  3 -> 0  reg_busy 0
+  [ 1831.285] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 1832.129] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  OBS S3b: after 1 1 3 2 2: A claimed 1 on 11, B reg_busy 1, B caller 11
+    FAIL  S3b intent: a call dialled to 13 is never claimed by 32
+  [ 1952.001] B mk  1 -> 4  reg_busy 1
+  [ 1952.400] B mk  4 -> 2  reg_busy 1
+  [ 1953.282] B mk  2 -> 7  reg_busy 1
+  [ 1953.409] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 1953.543] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 1957.000] B mk  7 -> 0  reg_busy 1
+  OBS S3b: B21 ring hi 77 lo 223
+    FAIL  S3b intent: B21 (never dialled) does not ring
+  OBS S3b: A20 follows B21 4/4
+    ok    S3b: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  8 checks, 2 errors, idle-bad 0.  FAIL
+
+- work/audit/origin/tb_orig.v:461: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 3s; walltime 144.811 s; speed 18.693 ms/s
+- Verilator: cpu 99.354 s on 1 threads; allocated 8 MB

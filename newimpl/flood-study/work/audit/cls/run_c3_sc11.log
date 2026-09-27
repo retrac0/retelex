@@ -1,0 +1,31 @@
+
+  tb_cls3 sc=11 NMON=8 NRES=8 T_ARM=16 guard=128  lam=4000/1000s dur=20000 t1=60..700 pexp=500 pown=100 loc=8000 pnet=300 seed=1 mode=0
+    ok    every trunk's link is up
+     21.029  far seizure on 10
+     22.264  cls read  10  word 11001011  trunk 1
+     22.264  HOLD      10  dir 3  mine 0  nst 0  word-dir
+     23.146  mon0 arm  10                       
+     29.146  UNHOLD    10  far alive 1  nst 0 d_held 0000
+     32.004  3 ms dip over
+     32.146  RECLASS  10 (held 1 times already; far alive 1)
+     33.264  cls read  10  word 11001011  trunk 1
+     33.264  HOLD      10  dir 3  mine 0  nst 0  word-dir
+     34.146  mon1 arm  10                       
+     44.005  FWD       10 -> ok 0111 cand 71 30 40 00
+   1038.003  CLAIM     10
+   1038.695  MARKER TAKES TRUNK 10 AS A CALLER
+   1038.695  MK register -> 10        
+   1038.695  CLAIM     10
+   1038.985  MK refuses the claim on 10
+   2748.997  10: held 2 times, unheld 1, cells 2, claims 2; refusals 1; 10 latch -> 21; 21 rung 1
+    FAIL  sc11: one call, one claim
+    FAIL  sc11: the owner does not refuse the call it took
+    ok    no cable-B clash, no queue refused a write
+
+  4 checks, 2 errors.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:588: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 4s; walltime 105.620 s; speed 40.987 ms/s
+- Verilator: cpu 93.291 s on 1 threads; allocated 8 MB
+rc=0 wall=105

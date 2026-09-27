@@ -1,0 +1,26 @@
+
+  tb_cls sc=5 K=8 D=128 E=3 B=2 pause=400  NMON=2 NRES=2  T_ARM=16 guard=128
+    ok    every trunk's link is up
+    ok    sc5: 30's link is down
+     25.302  cls_seen  22  (cst 0, rd_free 1)
+     26.420  cls read  22  word 11111111  trunk 0
+     26.420  MK read    22  word 11111111  (caller?)
+     27.302  MK register -> 22
+   1824.509  MK read    30  word 00000000  ( called)
+   2154.999  30 busy 0 latch -> 00; 22 latch -> 03
+  22 hears ones 0 zeros 1
+    ok    sc5: a trunk port is never connected to a dialling line
+   2159.999  link up 1: a_out of 30 = 0 (the far end sees M)
+  breaks sent on 30's link while 22 dialled 2 1: 0
+    ok    sc5: 22 gone: nothing held
+      reg 0 mk 0 dirs 0000 res 00 mon 00 hunt 0 cst 0 fst 0 nst 0
+    ok    no cable-B clash, no queue refused a write
+  readers selecting different ports in one bit-time: 0
+
+  5 checks, 0 errors.  PASS
+
+- work/audit/cls/tb_cls.v:410: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 5s; walltime 148.854 s; speed 32.515 ms/s
+- Verilator: cpu 106.722 s on 1 threads; allocated 8 MB
+rc=0

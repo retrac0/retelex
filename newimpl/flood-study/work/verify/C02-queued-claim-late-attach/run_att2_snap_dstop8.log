@@ -1,0 +1,53 @@
+
+  tb_att2 -- a second claim queued behind one that waits out S_WATCH, dstop 8          
+    ok    links up
+    [52 ms] B's register ATTACHES to 20
+    [52 ms] B cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [108 ms] B's register counts a digit of 2 pulses (caller 20)
+    [108 ms] B cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [228 ms] B's register counts a digit of 1 pulses (caller 20)
+    [229 ms] B's marker in S_WATCH: B20 connected to B21; B20 chatters
+    [229 ms] B cableB MARKER G1 dst 20 src 21 bsy 1 clm 0
+    [229 ms] B cableB MARKER G1 dst 21 src 20 bsy 1 clm 0
+    [232 ms] A cableB MARKER G1 dst 20 src 01 bsy 1 clm 0
+    [268 ms] A cableB MARKER G1 dst 20 src 00 bsy 1 clm 0
+    [278 ms] A cableB UNIT   G1 dst 11 src 20 bsy 1 clm 0
+    [281 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 0
+    [569 ms] B cableB UNIT   G1 dst 11 src 00 bsy 1 clm 1
+    [569 ms] claim 1 (B11) waiting on B's WATCH
+    [569 ms] B's unit raises att for 11; B's marker is in state 7
+    [775 ms] A cableB UNIT   G1 dst 20 src 11 bsy 1 clm 0
+    [865 ms] A's register free again: A20's call is put through to B11
+    [868 ms] A cableB MARKER G1 dst 21 src 01 bsy 1 clm 0
+    [905 ms] A cableB MARKER G1 dst 21 src 00 bsy 1 clm 0
+    [915 ms] A cableB UNIT   G1 dst 12 src 21 bsy 1 clm 0
+    [918 ms] B cableB UNIT   G1 dst 12 src 00 bsy 1 clm 0
+    ok    claim 2 (B12) is wanted and queued behind claim 1 (cl_st busy)
+    [1297 ms] A21 begins h = 3; B's WATCH is ended 8 ms into it
+    [1310 ms] B's marker REFUSED the claim on 11 (state was 0, r_busy 0)
+    [1310 ms] B cableB MARKER G1 dst 11 src 03 bsy 1 clm 1
+    [1310 ms] B cableB UNIT   G1 dst 12 src 00 bsy 1 clm 1
+    [1310 ms] B's unit raises att for 12; B's marker is in state 0
+    [1310 ms] B's register ATTACHES to 12
+    [1310 ms] B's marker TOOK the claim on 12
+    [1368 ms] B's register counts a digit of 2 pulses (caller 12)
+    [1368 ms] B cableB MARKER G1 dst 12 src 00 bsy 1 clm 1
+    [1507 ms] A cableB UNIT   G1 dst 21 src 12 bsy 1 clm 0
+    [1508 ms] B's register counts a digit of 2 pulses (caller 12)
+    [1509 ms] B cableB MARKER G1 dst 12 src 22 bsy 1 clm 1
+    [1509 ms] B cableB MARKER G1 dst 22 src 12 bsy 1 clm 0
+    B32 (dialled) hi 0 lo 400
+    FAIL  B32, the number A21 dialled, rings
+    B22 (not dialled) hi 128 lo 272
+    FAIL  B22, a number nobody dialled, does NOT ring
+    ok    no clash on cable B
+    ok    no queue overflow
+    takes 1 refusals 1
+
+  6 checks, 2 errors.  FAIL
+
+- work/audit/cableb/tb_att2.v:267: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 3s; walltime 77.002 s; speed 37.493 ms/s
+- Verilator: cpu 74.739 s on 1 threads; allocated 8 MB
+rc=0 secs=77

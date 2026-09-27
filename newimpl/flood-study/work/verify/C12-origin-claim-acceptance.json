@@ -1,0 +1,34 @@
+{
+ "id": "C12-origin-claim-acceptance",
+ "title": "The origin accepts any single M sample on any held trunk as the claim, even long before b",
+ "findings": [
+  {
+   "id": "origin-accepts-early-claim",
+   "title": "The origin takes an M rise on a held trunk as the claim even before b is dialled",
+   "category": "other",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "net_unit.v:795-804 detects the claim in o_net, which is N_NET or N_WAITCL; only `guarding` tells glare apart. A legitimate claim is made at the far end at b's ID, a relay delay after the origin's own b ID, so it can only arrive around or after the origin's f2 (net_unit.v:867-875). A rise well before b, outside the guard, is never a real claim.",
+   "trigger": "The (1,e) variant of stale-cell-after-unhold, or any cell that claims on a wrong count before b.",
+   "consequence": "The origin accepts it, drops its other directions (dmo) and connects at o_last: the wrong number goes through instead of becoming a cannot-complete.",
+   "evidence": "run_mc2.log [1895 ms]: 'origin=4 claimed=1' (N_NET) about 1 s before A21 dials b; origin=5 only at 2893.",
+   "fix": "In N_NET outside the guard, hold a rise as pending and accept it only if b arrives within a few ms (tick-phase slack between the origin's register and the far monitor, about 2 ms plus the hop); otherwise nogo. One flip-flop and a tap on tmr. It does not stop the (e+1,b) variant, which claims at b's ID.",
+   "realistic": "Real timing; it matters only as the second line of defence.",
+   "audit": "monclaim"
+  },
+  {
+   "id": "claim-on-one-sample",
+   "title": "A claim is accepted on a single 1 ms sample of M on any held trunk",
+   "category": "spec-mismatch",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "net_unit.v:795-804 accepts the first sp_m sample on any d_held trunk as the claim. It drops every other direction at once (dmo) and at o_last connects the caller to that trunk.",
+   "trigger": "A single false A=1 sample on any held trunk during the 2-4 s flood, from a carrier whose A can glitch (MF8 S-bit errors, a radio link).",
+   "consequence": "The true owner's direction is dropped, and the caller is connected into a far hold listening to 00. It hears silence, not NOGO, until it hangs up. Not a wrong number unless the owner sat behind the kept trunk.",
+   "evidence": "Reasoning. channel-cards.md 5 measures 0 spurious A transitions on MF8 at 1e-1, so the risk depends on the carrier.",
+   "fix": "Require the claim M to stand for 2-4 samples. This shares the `lost` counter of claimed-trunk-loss-listen-in.",
+   "realistic": "Not on baseband or local trunks. Possible on carriers not yet designed.",
+   "audit": "origin"
+  }
+ ]
+}

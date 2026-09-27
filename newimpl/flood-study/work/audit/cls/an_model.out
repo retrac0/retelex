@@ -1,0 +1,8 @@
+classifier capacity: 53 trunk seizures/s
+   N    L leave   c  floods/s   seiz/s    rho_cls  P(wait>=2S)
+   8   48   0.3   2     0.096    0.192     0.0036     1.33e-05
+  20   48   0.3   2     0.240    0.480     0.0091     8.32e-05
+  20   48   0.3   4     0.240    0.960     0.0182     3.33e-04
+  47   48   0.3   4     0.564    2.256     0.0429     1.84e-03
+  47   48   0.5   4     0.940    3.760     0.0714     5.10e-03
+16 channels at 2 s a copy: <= 8.0 seizures/s -> rho_cls <= 0.15

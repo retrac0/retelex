@@ -1,0 +1,503 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/load/timing/tb_timn.sv:89:46: Operator COND expects 72 bits on the Conditional True, but Conditional True's REPLICATE generates 64 bits.
+                                                       : ... note: In instance 'tb_timn'
+   89 |                                    HAS3      ? {32'd0, WE, 8'd0, WW, 8'd0} : {56'd0, WW, 8'd0};
+      |                                              ^
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: work/load/timing/tb_timn.sv:88:27: Operator VAR 'LTW_X' expects 64 bits on the Initial value, but Initial value's COND generates 72 bits.
+                                                      : ... note: In instance 'tb_timn'
+   88 |         localparam [63:0] LTW_X  = (gx == 0) ? {56'd0, WE, 8'd0} :
+      |                           ^~~~~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:681:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                             : ... note: In instance 'tb_timn'
+  681 |             ph_dg[g*5 + 1] = LD_CODE_E[y*3 +: 3];
+      |                            ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:682:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                             : ... note: In instance 'tb_timn'
+  682 |             ph_dg[g*5 + 2] = LD_CODE_B[y*3 +: 3];
+      |                            ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:731:33: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  731 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:731:33: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  731 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:736:38: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  736 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:736:38: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  736 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:742:63: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  742 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:742:63: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  742 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:746:67: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  746 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:746:67: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+  746 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:760:5: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                           : ... note: In instance 'tb_timn'
+  760 |     if (k_trace) $display("TR t=%0d %s -> %s", now_ms, pn(g), sname(st));
+      |     ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:824:22: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'k_holdfix' generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  824 |     hold = k_holdfix ? k_hold : erand(g, k_hold);
+      |                      ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:831:26: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  831 |     if (y >= 0 && y < NG && c_live[y] && ph_role[y] == 0 &&
+      |                          ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:842:30: Logical operator LOGAND expects 1 bit on the RHS, but RHS's AND generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  842 |         (rs_why[g] == W_NONE && (c_cb[g] & 1))) return O_BUSY;
+      |                              ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:848:33: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  848 |     return (y >= 0) && (y < NG) && c_live[y] && ph_role[y] == 0 &&
+      |                                 ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:857:42: Logical operator LOGOR expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  857 |         if (c_dest[y] == g && (c_live[y] || (now_ms - c_lastend[y] <= k_phgrace))) return 1;
+      |                                          ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:871:19: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  871 |     if (c_live[g] && ph_role[g] == 0 && c_abt[g] >= 0 && now_ms >= c_abt[g] &&
+      |                   ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:932:13: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_quit' generates 32 bits.
+                                                            : ... note: In instance 'tb_timn'
+  932 |             if (k_quit) begin
+      |             ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1043:28: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1043 |                 if (z >= 0 && c_live[z]) begin
+      |                            ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1074:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1074 |         if (c_live[g] && ph_role[g] == 0) call_print(g);
+      |                       ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1067:71: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1067 |     P_REST: if (h >= 0 && calling(h) && c_dest[h] == g && !(c_live[g] && ph_role[g] == 0)) begin
+      |                                                                       ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1097:17: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1097 |                 if (k_trace) $display("TR t=%0d %s rings, dialled, caller not heard", now_ms, pn(g));
+      |                 ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1088:33: Logical operator LOGNOT expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1088 |         if (ph_bellt[g] >= 0 && !ph_phj[g] && now_ms >= ph_bellt[g] + 8) begin
+      |                                 ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1134:19: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1134 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1134:19: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h41' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1134 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1135:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1135 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1135:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1135 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1136:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1136 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1136:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1136 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1204:46: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1204 |             end else a = a * 10 + (s.getc(i) - 8'd48);
+      |                                              ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1204:46: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1204 |             end else a = a * 10 + (s.getc(i) - 8'd48);
+      |                                              ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1260:38: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1260 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1260:38: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1260 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1260:74: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1260 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1260:74: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1260 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1333:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1333 |             code = bsh[7:2];
+      |                  ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1335:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h4' generates 6 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1335 |             else if (code == 6'o04) ev_gl[ldx]++;
+      |                           ^~
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1334:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h8' generates 6 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1334 |             if      (code == 6'o10) ev_nt[ldx]++;
+      |                           ^~
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1360:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1360 |         k = ld_p_nst[ldx*4 +: 4];
+      |           ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1371:61: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1371 |         pn_f1 = ld_p_f1[ldx]; pn_f2 = ld_p_f2[ldx]; pn_ndig = ld_p_rndig[ldx*3 +: 3];
+      |                                                             ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1377:21: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1377 |                 dst = ld_p_mpd[ldx*30 + w*15 +: 6];
+      |                     ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1398:39: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1398 |                         if (c_live[y] && ph_role[y] == 0 && c_kind[y] == K_NET &&
+      |                                       ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1390:35: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1390 |                 if (LD_PHONES[gd] && c_live[gd] && rs_why[gd] == W_NONE) rs_why[gd] = why;
+      |                                   ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1409:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1409 |         pm_state = ld_mks[ldx*3 +: 3]; pm_ref = ld_p_mref[ldx] && !ld_p_mtake[ldx];
+      |                  ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1411:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1411 |         pm_called = ld_p_mcalled[ldx*6 +: 6];
+      |                   ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_harness.svh:1424:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 8 bits.
+                                                              : ... note: In instance 'tb_timn'
+ 1424 |         k = ld_gl[x*8 +: 8];
+      |           ^
+                      work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1491:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1491 |         if (c_live[g] && ph_role[g] == 0) begin
+      |                       ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1567:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1567 |         for (o = 1; o < NO; o++) if (n_cls_k[b*NO + o]) $write(" %s=%0d", oname(o), n_cls_k[b*NO + o]);
+      |                                  ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1573:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1573 |         for (o = 1; o < NO; o++) if (n_cls_x[x*NO + o]) $write(" %s=%0d", oname(o), n_cls_x[x*NO + o]);
+      |                                  ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1577:30: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1577 |     for (w = 1; w < NW; w++) if (n_why[w]) $write(" %s=%0d", wname(w), n_why[w]);
+      |                              ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1584:25: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_dt' generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1584 |              n_dt, n_dt ? real'(s_dt) / n_dt : 0.0, pctl(0, n_dt, 50), pctl(0, n_dt, 99), mx_dt);
+      |                         ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1586:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdd' generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1586 |              n_pdd, n_pdd ? real'(s_pdd) / n_pdd : 0.0, pctl(1, n_pdd, 50), pctl(1, n_pdd, 99), mx_pdd);
+      |                           ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1588:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdn' generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1588 |              n_pdn, n_pdn ? real'(s_pdn) / n_pdn : 0.0, pctl(2, n_pdn, 50), pctl(2, n_pdn, 99), mx_pdn, n_middial);
+      |                           ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1602:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1602 |         for (w = 1; w < NW; w++) if (x_why[x*NW + w]) $write(" %s=%0d", wname(w), x_why[x*NW + w]);
+      |                                  ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1609:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1609 |         for (o = 2; o < NO; o++) if (ln_cls[g*NO + o]) $write(" %s=%0d", oname(o), ln_cls[g*NO + o]);
+      |                                  ^~
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_harness.svh:1647:49: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'iv_ms' generates 32 bits.
+                                                             : ... note: In instance 'tb_timn'
+ 1647 |                 $write(" %s=%.2f", xn(x), iv_ms ? real'(iv_reg[x]) / iv_ms : 0.0);
+      |                                                 ^
+                     work/load/timing/tb_timn.sv:42:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:164:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  164 |             p = tp_spp[x*6 +: 6]; g = x*64 + p;
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:179:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  179 |             p = tp_rport[x*6 +: 6]; g = x*64 + p;
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:185:21: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  185 |         c = tg[x*64 + tp_caller[x*6 +: 6]];
+      |                     ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:187:65: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  187 |             $display("TE %.3f %s OSWEEP %s %0d", tnow(), xn(x), po(tp_caller[x*6 +: 6]), c);
+      |                                                                 ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:190:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  190 |                 p = tp_ocand[x*24 + j*6 +: 6]; g = x*64 + p;
+      |                   ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:192:88: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  192 |                 $display("TE %.3f %s SEIZE %s %0d caller=%s", tnow(), xn(x), po(p), c, po(tp_caller[x*6 +: 6]));
+      |                                                                                        ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:196:83: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  196 |             $display("TE %.3f %s OCLAIM %s %0d glare=%0d tmr=%0d", tnow(), xn(x), po(tp_trunk[x*6 +: 6]), c,
+      |                                                                                   ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:200:22: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  200 |                      po(tp_caller[x*6 +: 6]), c, tp_oafter[x*2 +: 2], guard_d, rbrk_d, tp_tmr[x*16 +: 16], nst_d);
+      |                      ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:203:22: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  203 |                      po(tp_caller[x*6 +: 6]), c, tp_oafter[x*2 +: 2], nst_d);
+      |                      ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:205:73: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  205 |             $display("TE %.3f %s ODONE %s %0d trunk=%s", tnow(), xn(x), po(tp_caller[x*6 +: 6]), c,
+      |                                                                         ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:206:22: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  206 |                      po(tp_trunk[x*6 +: 6]));
+      |                      ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:209:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  209 |             p = tp_clsrp[x*6 +: 6];
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:213:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  213 |             p = tp_spp[x*6 +: 6];
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:218:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  218 |             p = tp_clsport[x*6 +: 6]; g = x*64 + p;
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:230:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  230 |             p = tp_mport[x*6*LD_NMON + i*6 +: 6]; g = x*64 + p;
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:238:74: Operator EQ expects 32 bits on the RHS, but RHS's VARREF 'mwp_d' generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  238 |             if (!tp_mheld[x*LD_NMON + i] && held_d[i] && !(wclaim_d && p == mwp_d))
+      |                                                                          ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:242:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  242 |             p = tp_mwp[x*6 +: 6];
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:247:65: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  247 |             $display("TE %.3f %s FSWEEP %s %0d", tnow(), xn(x), po(tp_fin[x*6 +: 6]), tg[x*64 + tp_fin[x*6 +: 6]]);
+      |                                                                 ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:247:95: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  247 |             $display("TE %.3f %s FSWEEP %s %0d", tnow(), xn(x), po(tp_fin[x*6 +: 6]), tg[x*64 + tp_fin[x*6 +: 6]]);
+      |                                                                                               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:249:85: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  249 |             $display("TE %.3f %s FNONE %s %0d cancel=%0d nosweep=1", tnow(), xn(x), po(tp_fin[x*6 +: 6]),
+      |                                                                                     ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:250:30: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  250 |                      tg[x*64 + tp_fin[x*6 +: 6]], tp_fcancel[x]);
+      |                              ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:252:84: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  252 |             $display("TE %.3f %s FNONE %s %0d cancel=%0d legs=%0d", tnow(), xn(x), po(tp_fin[x*6 +: 6]),
+      |                                                                                    ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:253:30: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  253 |                      tg[x*64 + tp_fin[x*6 +: 6]], tp_fcancel[x], tp_fok[x*4 +: 4]);
+      |                              ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:255:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  255 |             p = tp_fin[x*6 +: 6]; c = tg[x*64 + p]; s = "";
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:257:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  257 |                 q = tp_fcand[x*24 + j*6 +: 6]; g = x*64 + q;
+      |                   ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:265:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  265 |                 p = tp_rin[x*6*LD_NRES + i*6 +: 6];
+      |                   ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:272:62: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  272 |             $display("TE %.3f %s ATT %s %0d", tnow(), xn(x), po(tp_attp[x*6 +: 6]), tg[x*64 + tp_attp[x*6 +: 6]]);
+      |                                                              ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:272:93: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  272 |             $display("TE %.3f %s ATT %s %0d", tnow(), xn(x), po(tp_attp[x*6 +: 6]), tg[x*64 + tp_attp[x*6 +: 6]]);
+      |                                                                                             ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:274:63: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  274 |             $display("TE %.3f %s TAKE %s %0d", tnow(), xn(x), po(tp_kattp[x*6 +: 6]), tg[x*64 + tp_kattp[x*6 +: 6]]);
+      |                                                               ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:274:95: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  274 |             $display("TE %.3f %s TAKE %s %0d", tnow(), xn(x), po(tp_kattp[x*6 +: 6]), tg[x*64 + tp_kattp[x*6 +: 6]]);
+      |                                                                                               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:276:65: Operator FUNCREF 'po' expects 32 bits on the Function Argument, but Function Argument's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  276 |             $display("TE %.3f %s REFUSE %s %0d", tnow(), xn(x), po(tp_kattp[x*6 +: 6]), tg[x*64 + tp_kattp[x*6 +: 6]]);
+      |                                                                 ^~
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:276:97: Operator ADD expects 32 bits on the RHS, but RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  276 |             $display("TE %.3f %s REFUSE %s %0d", tnow(), xn(x), po(tp_kattp[x*6 +: 6]), tg[x*64 + tp_kattp[x*6 +: 6]]);
+      |                                                                                                 ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:278:15: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                           : ... note: In instance 'tb_timn'
+  278 |             p = tp_kcaller[x*6 +: 6]; j = tp_rnd[x*3 +: 3] - 1;
+      |               ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHEXPAND: work/load/timing/tim_probe.svh:278:60: Operator SUB expects 32 bits on the LHS, but LHS's SEL generates 3 bits.
+                                                           : ... note: In instance 'tb_timn'
+  278 |             p = tp_kcaller[x*6 +: 6]; j = tp_rnd[x*3 +: 3] - 1;
+      |                                                            ^
+                      work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tim_probe.svh:158:46: Logical operator LOGAND expects 1 bit on the LHS, but LHS's VARREF 'tim_on' generates 32 bits.
+                                                          : ... note: In instance 'tb_timn'
+  158 |     always @(posedge ld_clk[tpx]) if (tim_on && ld_rst_n) begin : tev
+      |                                              ^~
+                     work/load/timing/tb_timn.sv:53:1: ... note: In file included from 'tb_timn.sv'
+%Warning-WIDTHTRUNC: work/load/timing/tb_timn.sv:76:45: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's MODDIVS generates 32 or 2 bits.
+                                                      : ... note: In instance 'tb_timn'
+   76 |             ppm = (gx == 0) ? 0 : ((gx % 2) ? ppm_amp : -ppm_amp);
+      |                                             ^
+%Warning-WIDTHTRUNC: work/load/timing/tb_timn.sv:76:45: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's MODDIVS generates 32 or 3 bits.
+                                                      : ... note: In instance 'tb_timn'
+   76 |             ppm = (gx == 0) ? 0 : ((gx % 2) ? ppm_amp : -ppm_amp);
+      |                                             ^
+make: Entering directory '/home/joel/telco/newimpl/build/flood/work/load/timing/obj_timn4'
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated.o /usr/share/verilator/include/verilated.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_timing.o /usr/share/verilator/include/verilated_timing.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -c -o verilated_threads.o /usr/share/verilator/include/verilated_threads.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_timn__pch.h -o Vtb_timn__pch.h.fast.gch
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -x c++-header Vtb_timn__pch.h -o Vtb_timn__pch.h.slow.gch
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.fast -c Vtb_timn_vm_classes_0.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.fast -c Vtb_timn___024root__1.cpp
+g++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.fast -c Vtb_timn_vm_classes_1.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.slow -c Vtb_timn__ConstPool__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.slow -c Vtb_timn___024root__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.slow -c Vtb_timn___024root__0__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.slow -c Vtb_timn___024root__1__Slow.cpp
+g++   -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -fcoroutines -include Vtb_timn__pch.h.slow -c Vtb_timn__Syms__Slow.cpp
+g++    verilated.o verilated_timing.o verilated_threads.o Vtb_timn__ALL.a    -pthread -lpthread -latomic   -o tb_timn
+rm Vtb_timn__ALL.verilator_deplist.tmp
+make: Leaving directory '/home/joel/telco/newimpl/build/flood/work/load/timing/obj_timn4'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.281 MB sources in 27 modules, into 25.038 MB in 22 C++ files needing 0.015 MB
+- Verilator: Walltime 295.722 s (elab=0.921, cvt=13.831, bld=277.896); cpu 16.296 s on 2 threads; allocated 448.297 MB

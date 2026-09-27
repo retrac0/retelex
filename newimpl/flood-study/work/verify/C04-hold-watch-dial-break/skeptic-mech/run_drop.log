@@ -1,0 +1,47 @@
+
+  tb_drop -- REAL timers, 128 ms guard, 800 ms pauses: one 0.9 ms A dropout into transit B inside its hold watch
+    ok    links up
+  -- attempt 0: A20 dials 1 1 4
+    [554 ms] B HOLD 11 (tmr at A 3, fst 0)
+    [565 ms] B FORWARDS 11 (tmr at A 14)
+    [568 ms] C HOLD 11 (tmr at A 17)
+    [568 ms] C attaches a monitor cell (held 01)
+    [1403 ms] C cell 0 counts 1 (state 1)
+    [2603 ms] C cell 0 counts 4 (state 2)
+    [2603 ms] C CLAIMS 11
+    [2604 ms] B RESOLVER acts (tmr at A 3)
+     C holds 1, C claims 1, B forwards 1, B n_nofwd +0, A claimed 1
+    ok    control: 1 1 4 is C's code and C claims it
+    ok    idle again
+  -- attempt 1: A20 dials 1 1 4
+    [5016 ms] B HOLD 11 (tmr at A 3, fst 0)
+    [5018 ms] DROPOUT into B (B cst 3, cls_ms 2, fst 2, rs_busy 00)
+    [5019 ms] B UNHOLD 11 (tmr at A 6, fst 2)
+    [5021 ms] B HOLD 11 (tmr at A 8, fst 2)
+     C holds 0, C claims 0, B forwards 0, B n_nofwd +1, A claimed 0
+    FAIL  early dropout at B: C still claims its own code 1 4
+    ok    idle again
+  -- attempt 3: A20 dials 1 4 3
+    [9478 ms] B HOLD 11 (tmr at A 3, fst 0)
+    [9489 ms] B FORWARDS 11 (tmr at A 14)
+    [9489 ms] DROPOUT into B (B cst 3, cls_ms 11, fst 0, rs_busy 01)
+    [9490 ms] B UNHOLD 11 (tmr at A 15, fst 0)
+    [9491 ms] B RESOLVER acts (tmr at A 16)
+    [9492 ms] B HOLD 11 (tmr at A 17, fst 0)
+    [9503 ms] B FORWARDS 11 (tmr at A 28)
+    [9506 ms] C HOLD 11 (tmr at A 31)
+    [9506 ms] C attaches a monitor cell (held 01)
+    [10627 ms] C cell 0 counts 4 (state 1)
+     C holds 1, C claims 0, B forwards 2, B n_nofwd +0, A claimed 0
+    ok    late dropout at B: 1 4 3 is nobody's code and C does not claim
+    [12392 ms] B RESOLVER acts (tmr at A 667)
+    ok    idle again
+    totals: B holds/unholds 5/2, C holds/unholds 2/0
+
+  7 checks, 1 errors.  FAIL
+
+- work/verify/C04-hold-watch-dial-break/skeptic-mech/tb_drop.v:225: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 14s; walltime 362.573 s; speed 37.554 ms/s
+- Verilator: cpu 359.461 s on 1 threads; allocated 8 MB
+rc=0 secs=363

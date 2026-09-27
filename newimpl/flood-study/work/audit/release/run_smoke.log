@@ -1,0 +1,17 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000000000000000100 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  stub link UP (X fans out: two legs)
+  REF talk path A20 <-> B21: ok
+T fam=-1 k=0 act=0 d=0.00  hangA=510.998 hangB=560.998  OK    idle+33ms  ev:39.00 49.00 52.28 63.00 66.28 239.00 241.00 244.16 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  REF pattern 0: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 239.00 CLAIM 241.00 claimed 244.16 Xres0 242.19 att_ack 241.29 done 419.00 connect 422.28 rung 423.15 watch_end 426.00 answer 432.28
+  -- family 2: pattern 0 actor 0 anchor 4 d0 -1.00 ms step 0.500 ms n 21
+T fam=2 k=0 act=0 d=-1.00  hangA=62.001 hangB=113.999  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 -0.00 0.00 -0.00 0.00 94.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=2 k=1 act=0 d=-0.50  hangA=62.501 hangB=113.999  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 -0.00 -0.00 -0.00 -0.00 95.16 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  3 trials: 0 LEAK, 1 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_rel.v:525: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 1s; walltime 138.359 s; speed 7.842 ms/s
+- Verilator: cpu 58.118 s on 1 threads; allocated 8 MB
+rc=0 secs=138

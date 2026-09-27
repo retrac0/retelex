@@ -1,0 +1,135 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=2 var=0 dly=112 load=0
+      0.005 ms  B's LTU link_up -> 1
+    ok    every link is up
+  sc2: a forward whose incoming link goes down; the resolver outlives it
+     51.264 ms  fst 0 -> 1
+     51.264 ms  mon_held 00 -> 01
+     51.264 ms  fst 1 -> 2
+     51.264 ms  hst 0 -> 1 (owner 1)
+     51.548 ms  port 10 BUSY -> 1
+     51.548 ms  port 10 latch -> src 00 bsy 1 clm 0
+     61.014 ms  hst 1 -> 2 (owner 1)
+     62.005 ms  hst 2 -> 0 (owner 1)
+     62.005 ms  fst 2 -> 3
+     62.006 ms  rs_busy 00 -> 01   in 10 00  held 0110 0000  legs0 00 40 30 00  legs1 00 00 00 00
+     62.006 ms  fst 3 -> 0
+     62.290 ms  port 40 BUSY -> 1
+     62.290 ms  port 40 latch -> src 10 bsy 1 clm 0
+     62.424 ms  port 30 BUSY -> 1
+     62.424 ms  port 30 latch -> src 10 bsy 1 clm 0
+     63.139 ms  port 30 a_out (far M) -> 1
+     63.139 ms  port 40 a_out (far M) -> 1
+    ok    B10 held and forwarded into E30 and S40; one resolver holds the forward
+    ok    both legs carry the W caller's M onward
+     90.051 ms  B's LTU link_up -> 0
+     90.139 ms  port 30 a_out (far M) -> 0
+     90.139 ms  port 40 a_out (far M) -> 0
+    FAIL  MUTE_BLK: all eight LTU ports read BUSY
+    346.004 ms  port 10 BUSY -> 0
+    346.004 ms  port 10 latch -> src 00 bsy 0 clm 0
+    346.004 ms  port 30 BUSY -> 0
+    346.004 ms  port 30 latch -> src 00 bsy 0 clm 0
+    346.004 ms  port 40 BUSY -> 0
+    346.004 ms  port 40 latch -> src 00 bsy 0 clm 0
+    346.145 ms  rs_busy 01 -> 00   in 10 00  held 0000 0000  legs0 00 40 30 00  legs1 00 00 00 00
+    347.004 ms  mon_held 01 -> 00
+    ok    the legs released themselves: their E fell
+    ok    the resolver let go of a forward whose incoming is dead
+    500.003 ms  latch 10: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    500.003 ms  latch 30: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    500.003 ms  latch 40: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+  sc2 var0: B20 floods on the old legs; the cable is mended mid-dial
+    502.398 ms  port 20 BUSY -> 1
+    502.398 ms  port 20 latch -> src 01 bsy 1 clm 0
+    989.003 ms  nst 0 -> 1  d_held 0000
+    989.003 ms  hst 0 -> 1 (owner 0)
+    989.003 ms  nst 1 -> 2  d_held 0000
+    989.131 ms  port 20 latch -> src 00 bsy 1 clm 0
+    998.011 ms  hst 1 -> 2 (owner 0)
+    999.003 ms  hst 2 -> 0 (owner 0)
+    999.003 ms  nst 2 -> 3  d_held 0000
+    999.003 ms  nst 3 -> 4  d_held 0110
+    999.287 ms  port 40 BUSY -> 1
+    999.287 ms  port 40 latch -> src 20 bsy 1 clm 0
+    999.421 ms  port 30 BUSY -> 1
+    999.421 ms  port 30 latch -> src 20 bsy 1 clm 0
+   1000.261 ms  port 30 a_out (far M) -> 1
+   1000.261 ms  port 40 a_out (far M) -> 1
+    ok    B20's key seized E30 and S40 -- the dead forward's old legs
+   1650.260 ms  port 30 a_out (far M) -> 0
+   1650.260 ms  port 40 a_out (far M) -> 0
+   1710.259 ms  port 30 a_out (far M) -> 1
+   1710.259 ms  port 40 a_out (far M) -> 1
+   1750.259 ms  port 30 a_out (far M) -> 0
+   1750.259 ms  port 40 a_out (far M) -> 0
+   1810.259 ms  port 30 a_out (far M) -> 1
+   1810.259 ms  port 40 a_out (far M) -> 1
+   1850.259 ms  port 30 a_out (far M) -> 0
+   1850.259 ms  port 40 a_out (far M) -> 0
+   1910.259 ms  port 30 a_out (far M) -> 1
+   1910.259 ms  port 40 a_out (far M) -> 1
+   1950.259 ms  port 30 a_out (far M) -> 0
+   1950.259 ms  port 40 a_out (far M) -> 0
+   2010.259 ms  port 30 a_out (far M) -> 1
+   2010.259 ms  port 40 a_out (far M) -> 1
+   2050.000 ms  B's LTU link_up -> 1
+   2089.999 ms  latch 10: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+   2089.999 ms  latch 30: src 20 bsy 1 clm 0   BUSY 1  a_out 1
+   2089.999 ms  latch 40: src 20 bsy 1 clm 0   BUSY 1  a_out 1
+    ok    after the mend B20's two trunks still listen to B20
+    ok    and the E and S neighbours still see B20's M
+    ok    and no resolver is left over
+   2690.257 ms  port 30 a_out (far M) -> 0
+   2690.257 ms  port 40 a_out (far M) -> 0
+   2750.257 ms  port 30 a_out (far M) -> 1
+   2750.257 ms  port 40 a_out (far M) -> 1
+   2790.257 ms  port 30 a_out (far M) -> 0
+   2790.257 ms  port 40 a_out (far M) -> 0
+   2850.256 ms  port 30 a_out (far M) -> 1
+   2850.256 ms  port 40 a_out (far M) -> 1
+   2890.256 ms  port 30 a_out (far M) -> 0
+   2890.256 ms  port 40 a_out (far M) -> 0
+   2950.256 ms  port 30 a_out (far M) -> 1
+   2950.256 ms  port 40 a_out (far M) -> 1
+   2990.256 ms  port 30 a_out (far M) -> 0
+   2990.256 ms  port 40 a_out (far M) -> 0
+   3050.256 ms  port 30 a_out (far M) -> 1
+   3050.256 ms  port 40 a_out (far M) -> 1
+   3178.997 ms  nst 4 -> 5  d_held 0110
+   3240.672 ms  port 40 latch -> src 00 bsy 0 clm 0
+   3241.005 ms  port 40 a_out (far M) -> 0
+   3496.996 ms  port 40 BUSY -> 0
+   3740.254 ms  port 30 a_out (far M) -> 0
+   3800.254 ms  port 30 a_out (far M) -> 1
+   3840.254 ms  port 30 a_out (far M) -> 0
+   3900.254 ms  port 30 a_out (far M) -> 1
+   4540.252 ms  port 30 a_out (far M) -> 0
+   4600.252 ms  port 30 a_out (far M) -> 1
+   4728.993 ms  nst 5 -> 6  d_held 0100
+   4728.994 ms  nst 6 -> 0  d_held 0000
+   4729.278 ms  port 20 latch -> src 30 bsy 1 clm 0
+   4939.992 ms  latch 20: src 30 bsy 1 clm 0   BUSY 1  a_out 0
+   4939.992 ms  latch 30: src 20 bsy 1 clm 0   BUSY 1  a_out 1
+   4939.992 ms  latch 40: src 00 bsy 0 clm 0   BUSY 0  a_out 0
+    ok    B20 hears the E party (1)
+    ok    B20 hears the E party (0)
+    ok    the E party hears B20 (1)
+    ok    the E party hears B20 (0)
+    ok    no monitor or resolver took the E party's claim as a seizure
+   4952.251 ms  port 30 a_out (far M) -> 0
+   5207.992 ms  port 20 BUSY -> 0
+   5207.992 ms  port 20 latch -> src 00 bsy 0 clm 0
+   5207.992 ms  port 30 BUSY -> 0
+   5207.992 ms  port 30 latch -> src 00 bsy 0 clm 0
+    ok    sc2: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  18 checks, 1 errors.  FAIL
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 6s; walltime 172.991 s; speed 33.828 ms/s
+- Verilator: cpu 166.284 s on 1 threads; allocated 8 MB
+rc=0 secs=173

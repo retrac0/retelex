@@ -1,0 +1,89 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000000100000000000 stub=1 lim=800 bph=0 xph=0 port T_REL=26
+
+  port T_REL: A 26  X 32  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+  F11 x=0.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +27.00 on 12; holds X 2 B 2; B20 rung 273754  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8869 B21 37407 
+T fam=-1 k=4 act=0 d=0.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 239.00 241.00 244.16 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  REF pattern 4: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 239.00 CLAIM 241.00 claimed 244.16 Xres0 242.19 att_ack 241.29 done 419.00 connect 422.28 rung 423.15 watch_end 426.00 answer 432.28
+  -- family 11: pattern 4 actor 0 anchor 0 d0 24.00 ms step 0.750 ms n 24
+  F11 x=24.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +51.00 on 12; holds X 2 B 2; B20 rung 273754  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8869 B21 37407 
+T fam=11 k=0 act=0 d=24.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=24.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +51.00 on 12; holds X 2 B 2; B20 rung 273754  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8869 B21 37407 
+T fam=11 k=1 act=0 d=24.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=25.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +52.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=2 act=0 d=25.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=26.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +53.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=3 act=0 d=26.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=27.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +54.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=4 act=0 d=27.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=27.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +54.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=5 act=0 d=27.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=28.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +55.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=6 act=0 d=28.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=29.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +56.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=7 act=0 d=29.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=30.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +57.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=8 act=0 d=30.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=30.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +57.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=9 act=0 d=30.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=31.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +58.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=10 act=0 d=31.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=32.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +59.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=11 act=0 d=32.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=33.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +60.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=12 act=0 d=33.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=33.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +60.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=13 act=0 d=33.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=34.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +61.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=14 act=0 d=34.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=35.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +62.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=15 act=0 d=35.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=36.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +63.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=16 act=0 d=36.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=36.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +63.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=17 act=0 d=36.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=37.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +64.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=18 act=0 d=37.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=38.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +65.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=19 act=0 d=38.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=39.00: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +66.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=20 act=0 d=39.00  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=39.75: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +66.00 on 12; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=21 act=0 d=39.75  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=40.50: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +67.00 on 11; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=22 act=0 d=40.50  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+  F11 x=41.25: after A20 hung up: A11 free +26.00, X11 free +64.00; A21's seizure +68.00 on 11; holds X 2 B 2; B20 rung 273818  REACHED
+    rb ticks: A20 36 A21 36 X20 0 X21 0 B20 8805 B21 37407 
+T fam=11 k=23 act=0 d=41.25  hangA=529.998 hangB=529.998  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 419.00 422.28 423.15 426.00 432.28  glare+0  PHANTOM 
+
+  25 trials: 0 LEAK, 25 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j2.v:660: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 34s; walltime 940.737 s; speed 35.817 ms/s
+- Verilator: cpu 935.506 s on 1 threads; allocated 8 MB
+rc=0 secs=941

@@ -1,0 +1,4 @@
+[sim.sh] slot 4: work/verify/C01-watch-late-refusal/jobA.sh
+build rc=0
+build rc=0
+jobA done

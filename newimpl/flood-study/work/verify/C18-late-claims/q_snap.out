@@ -1,0 +1,13 @@
+[sim.sh] slot 4: /home/joel/telco/newimpl/build/flood/work/verify/C18-late-claims/job_late.sh snap /home/joel/telco/newimpl/build/flood/work/RTL.list 10000 31000 31500 32000 32500 33000 33500 34000 35000 36000
+[snap] build start 23:46:41
+[snap] build done 23:48:10
+[snap] DLY 10000 rc=0 23:49:48 0 FAIL
+[snap] DLY 31000 rc=0 23:51:30 0 FAIL
+[snap] DLY 31500 rc=0 23:52:57 0 FAIL
+[snap] DLY 32000 rc=0 23:54:20 0 FAIL
+[snap] DLY 32500 rc=0 23:55:43 0 FAIL
+[snap] DLY 33000 rc=0 23:57:15 0 FAIL
+[snap] DLY 33500 rc=0 23:58:43 4 FAIL
+[snap] DLY 34000 rc=0 00:00:03 4 FAIL
+[snap] DLY 35000 rc=0 00:01:25 0 FAIL
+[snap] DLY 36000 rc=0 00:02:43 0 FAIL

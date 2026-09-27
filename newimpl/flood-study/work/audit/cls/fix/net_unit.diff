@@ -1,0 +1,269 @@
+--- rtl/net_unit.v	2026-09-26 00:42:05.680752092 -0400
++++ work/audit/cls/fix/net_unit.v	2026-09-26 02:26:35.289666917 -0400
+@@ -258,6 +258,23 @@
+     reg [`PW-1:0]  cls_port;
+     reg [1:0]      cls_dir;
+     reg [8:0]      cls_ms;          // ms since the hold was written
++    // AUDIT FIX: a free-running ms count ('4040), M at the last visit (a second
++    // delay line), a four-deep queue of rises seen while busy, each with its
++    // rise time, and whether a pickup is LATE (M already up at the last visit)
++    reg [8:0]      now9;
++    reg [63:0]     ml;
++    localparam integer NPQ = 4;
++    reg [`PW-1:0]  pq_port [0:NPQ-1];
++    reg            pq_late [0:NPQ-1];
++    reg [8:0]      pq_t    [0:NPQ-1];
++    reg [2:0]      pn;
++    reg            cls_late, cls_retry;
++    reg [8:0]      cls_t;
++    // hold watchers: the T_ARM watch, timed from the RISE, off the classifier
++    localparam integer NW = 4;
++    reg [NW-1:0]      hw_v, hw_un, hw_lo;   // hw_lo: in a low streak since hw_t
++    reg [NW*`PW-1:0]  hw_port;
++    reg [NW*9-1:0]    hw_t;
+ 
+     // DEALT WITH, AND M HAS STOOD SINCE: a bit a port.  Set when this card
+     // takes the port for a read -- at once, or kept until the reader is free
+@@ -280,8 +297,11 @@
+     // knows which.  Port 00 is never fitted.  A port this card has seized for
+     // its own call is neither, whatever its BUSY says yet (`mine`, below).
+     reg  mine;
+-    wire cls_seen  = (cst == C_IDLE) && sp_fresh && sp_m && !sp_busy &&
++    wire cls_cand  = sp_fresh && sp_m && !sp_busy &&
+                      !mine && (sp_port != P00) && !st[sp_port];
++    wire cls_seen  = cls_cand && (cst == C_IDLE) && (pn == 3'd0);
++    wire cls_queue = cls_cand && !cls_seen && (pn < NPQ[2:0]);
++    wire cls_pop   = (cst == C_IDLE) && (pn != 3'd0);
+ 
+     // THE CLASSIFIER'S BEFORE THE SWEEP'S.  A sweep keeps the reader busy from
+     // one select to the next, a select every nine frames, so a seizure seen
+@@ -437,6 +457,36 @@
+         end
+     end
+ 
++    function mine_of(input [`PW-1:0] p);
++        integer a, b;
++        begin mine_of = 1'b0;
++            for (a = 0; a < 4; a = a + 1) begin
++                if ((nst == N_SEIZE) && o_ok[a] && (p == o_cand[a*`PW +: `PW])) mine_of = 1'b1;
++                if (d_held[a] && (p == d_trunk[a*`PW +: `PW]))                  mine_of = 1'b1;
++                if ((fst == F_WRITE) && f_ok[a] && (p == f_cand[a*`PW +: `PW])) mine_of = 1'b1;
++                for (b = 0; b < NRES; b = b + 1)
++                    if (rs_held[b*4 + a] && (p == rs_leg[(b*4 + a)*`PW +: `PW])) mine_of = 1'b1;
++            end
++        end
++    endfunction
++    wire mine_c = mine_of(cls_port);
++
++    // the first watcher wanting an unhold, and the first free one
++    integer hwk;
++    reg          hw_any, hw_free_any;
++    reg [NW-1:0] hw_sel, hw_free1;
++    reg [`PW-1:0] hw_sel_port;
++    always @* begin
++        hw_any = 1'b0; hw_free_any = 1'b0; hw_sel = {NW{1'b0}}; hw_free1 = {NW{1'b0}};
++        hw_sel_port = P00;
++        for (hwk = 0; hwk < NW; hwk = hwk + 1) begin
++            if (hw_v[hwk] && hw_un[hwk] && !hw_any) begin
++                hw_any = 1'b1; hw_sel[hwk] = 1'b1; hw_sel_port = hw_port[hwk*`PW +: `PW];
++            end
++            if (!hw_v[hwk] && !hw_free_any) begin hw_free_any = 1'b1; hw_free1[hwk] = 1'b1; end
++        end
++    end
++
+     // ======================================================================
+     // THE SWEEP
+     // ======================================================================
+@@ -465,7 +515,7 @@
+     // of them is waiting on a level, not a strobe.
+     // ======================================================================
+     reg [2:0] cnt_claim, cnt_orig, cnt_fwd, cnt_res;
+-    reg       w_claim, w_cls, w_orig, w_fwd, w_res, w_ev;
++    reg       w_claim, w_cls, w_uh, w_orig, w_fwd, w_res, w_ev;
+     integer   wu;
+     always @* begin
+         // the claim: CLAIM, and every leg of a forward of the same trunk
+@@ -486,14 +536,15 @@
+ 
+         w_claim = (m_want_any && (cl_st == CL_IDLE)) && (room >= {2'd0, cnt_claim});
+         w_cls   = !w_claim && ((cst == C_ACT) || (cst == C_UNHOLD)) && (room >= 5'd1);
+-        w_orig  = !w_claim && !w_cls &&
++        w_uh    = !w_claim && !w_cls && hw_any && (room >= 5'd1);
++        w_orig  = !w_claim && !w_cls && !w_uh &&
+                   ((nst == N_SEIZE) || (nst == N_DONE) || (nst == N_DROP) ||
+                    (o_net && (dmo != 4'd0))) && (room >= {2'd0, cnt_orig});
+-        w_fwd   = !w_claim && !w_cls && !w_orig && (fst == F_WRITE) &&
++        w_fwd   = !w_claim && !w_cls && !w_uh && !w_orig && (fst == F_WRITE) &&
+                   rs_free_any && (room >= {2'd0, cnt_fwd});
+-        w_res   = !w_claim && !w_cls && !w_orig && !w_fwd && rs_act_any &&
++        w_res   = !w_claim && !w_cls && !w_uh && !w_orig && !w_fwd && rs_act_any &&
+                   (room >= {2'd0, cnt_res});
+-        w_ev    = !w_claim && !w_cls && !w_orig && !w_fwd && !w_res &&
++        w_ev    = !w_claim && !w_cls && !w_uh && !w_orig && !w_fwd && !w_res &&
+                   (ev_glare || ev_notrunk);
+     end
+ 
+@@ -503,7 +554,7 @@
+     // "held but not passed on": a seizure the forwarder could not take, and a
+     // forward that found no trunk.  They can fall on one tick, so they sum.
+     wire [3:0] fwd_mask = ~STRAP_N & ~(4'd1 << cls_dir);
+-    wire nf_busy  = w_cls && (cst == C_ACT) && !STRAP_N[cls_dir] && (fwd_mask != 4'd0) &&
++    wire nf_busy  = w_cls && (cst == C_ACT) && !cls_late && !mine_c && !STRAP_N[cls_dir] && (fwd_mask != 4'd0) &&
+                     !((fst == F_IDLE) && rs_free_any);
+     wire nf_empty = (fst == F_HUNT) && h_done && h_owner && !f_cancel && (h_ok == 4'd0);
+ 
+@@ -519,7 +570,10 @@
+             restart <= 1'b0; local_go <= 1'b0; done <= 1'b0; nogo <= 1'b0;
+             att <= 1'b0; att_port <= P00; cl_st <= CL_IDLE;
+             cst <= C_IDLE; cls_port <= P00; cls_dir <= 2'd0; cls_ms <= 9'd0;
+-            st <= 64'd0; f_cancel <= 1'b0; o_ok <= 4'd0; o_cand <= {4*`PW{1'b0}};
++            st <= 64'd0; f_cancel <= 1'b0;
++            now9 <= 9'd0; ml <= 64'd0; pn <= 3'd0; cls_late <= 1'b0; cls_retry <= 1'b0; cls_t <= 9'd0;
++            hw_v <= {NW{1'b0}}; hw_un <= {NW{1'b0}}; hw_lo <= {NW{1'b0}}; hw_port <= {NW*`PW{1'b0}}; hw_t <= {NW*9{1'b0}};
++            for (i = 0; i < NPQ; i = i + 1) begin pq_port[i] <= P00; pq_late[i] <= 1'b0; pq_t[i] <= 9'd0; end o_ok <= 4'd0; o_cand <= {4*`PW{1'b0}};
+             m_held <= {NMON{1'b0}}; m_armed <= {NMON{1'b0}}; m_want <= {NMON{1'b0}};
+             m_port <= {NMON*`PW{1'b0}}; m_st <= {NMON*2{1'b0}};
+             rs_busy <= {NRES{1'b0}}; rs_two <= {NRES{1'b0}};
+@@ -547,12 +601,18 @@
+             // ==================================================================
+             // the reads: issue, and route the answer
+             // ==================================================================
++            if (tick_1k) now9 <= now9 + 9'd1;
++            if (cls_seen) begin cls_late <= ml[sp_port]; cls_t <= now9; cls_retry <= 1'b0; end
+             if (cls_issue) begin
+                 rd_req <= 1'b1; rd_port <= cls_rport; rd_own <= 1'b0;
+                 cls_port <= cls_rport; cst <= C_READ;
+             end else if (cls_seen) begin
+                 // the reader is the sweep's just now: keep the seizure
+                 cls_port <= sp_port; cst <= C_WAIT;
++            end else if (cls_pop) begin
++                // a rise kept while busy: next, ahead of the sweep
++                cls_port <= pq_port[0]; cls_late <= pq_late[0]; cls_t <= pq_t[0];
++                cls_retry <= 1'b0; cst <= C_WAIT;
+             end else if (h_issue) begin
+                 rd_req <= 1'b1; rd_port <= h_idx; rd_own <= 1'b1;
+                 h_reading <= 1'b1;
+@@ -561,16 +621,37 @@
+             // ==================================================================
+             // the classifier
+             // ==================================================================
++            begin : pq_upd
++                integer a;
++                reg [2:0] base;
++                base = pn;
++                if (cls_pop && !cls_issue && !cls_seen) begin
++                    for (a = 0; a < NPQ - 1; a = a + 1) begin
++                        pq_port[a] <= pq_port[a + 1]; pq_late[a] <= pq_late[a + 1]; pq_t[a] <= pq_t[a + 1];
++                    end
++                    base = pn - 3'd1;
++                end
++                if (cls_queue) begin
++                    pq_port[base] <= sp_port; pq_late[base] <= ml[sp_port]; pq_t[base] <= now9;
++                    st[sp_port] <= 1'b1;
++                    base = base + 3'd1;
++                end
++                pn <= base;
++            end
+             // the bit a port: cleared by M down, set by M up under BUSY, and
+             // set by the read below.  A read's set is the later assignment.
+             if (sp_fresh) begin
+-                if (!sp_m)        st[sp_port] <= 1'b0;
+-                else if (sp_busy) st[sp_port] <= 1'b1;
++                // AUDIT FIX: a dial break of an armed port shows BUSY (fM . /M),
++                // so only M down with BUSY down is the end of a seizure
++                if (!sp_m && !sp_busy) st[sp_port] <= 1'b0;
++                else if (sp_m && sp_busy) st[sp_port] <= 1'b1;
++                ml[sp_port] <= sp_m;
+             end
+             if (cls_seen) st[sp_port] <= 1'b1;
+ 
+             if (cst == C_READ && rd_done && !rd_own) begin
+                 if (is_trunk(rd_word[4:0])) begin cls_dir <= rd_word[7:6]; cst <= C_ACT; end
++                else if ((rd_word[3:0] != 4'b1111) && !cls_retry) begin cls_retry <= 1'b1; cst <= C_WAIT; end
+                 else cst <= C_IDLE;
+             end
+ 
+@@ -581,16 +662,49 @@
+             // leaves a hold with no edge to clear it, and the trunk BUSY for
+             // good.  So for T_ARM this card watches, and if M falls it writes
+             // the hold away itself, and calls off the forward.
+-            if (cst == C_HOLD) begin
+-                if (tick_1k) cls_ms <= cls_ms + 9'd1;
+-                if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= C_UNHOLD;
+-                else if (cls_ms > T_ARM + 9'd1)                   cst <= C_IDLE;
++            if ((cst == C_HOLD) && sp_fresh && (sp_port == cls_port)) begin
++                if (sp_m) begin
++                    if (cls_retry) begin cls_retry <= 1'b0; cls_t <= now9; end
++                    else if ((now9 - cls_t) > T_ARM + 9'd1) cst <= C_IDLE;
++                end else begin
++                    if (!cls_retry) begin cls_retry <= 1'b1; cls_t <= now9; end
++                    else if ((now9 - cls_t) >= CLR) cst <= C_UNHOLD;
++                end
++            end
++            // the watchers
++            // A watcher is the port's own fM detector, copied: the watch ends
++            // when M has stood T_ARM + 1 (the port has armed and will clear
++            // itself), and the hold is written away only when M has been
++            // down longer than any dial break (CLR) with the port unarmed --
++            // a dial break inside the arming time is not a death.
++            for (i = 0; i < NW; i = i + 1)
++                if (hw_v[i] && !hw_un[i] && sp_fresh && (sp_port == hw_port[i*`PW +: `PW])) begin
++                    if (sp_m) begin
++                        if (hw_lo[i]) begin hw_lo[i] <= 1'b0; hw_t[i*9 +: 9] <= now9; end
++                        else if ((now9 - hw_t[i*9 +: 9]) > T_ARM + 9'd1) hw_v[i] <= 1'b0;
++                    end else begin
++                        if (!hw_lo[i]) begin hw_lo[i] <= 1'b1; hw_t[i*9 +: 9] <= now9; end
++                        else if ((now9 - hw_t[i*9 +: 9]) >= CLR) hw_un[i] <= 1'b1;
++                    end
++                end
++            if (w_uh) begin
++                if (!mine_of(hw_sel_port)) begin
++                    push_v <= 5'b00001;
++                    push_d <= {60'd0, ent(hw_sel_port, P00, 1'b0, 1'b0)};
++                    if ((fst != F_IDLE) && (f_in == hw_sel_port)) f_cancel <= 1'b1;
++                end
++                for (i = 0; i < NW; i = i + 1) if (hw_sel[i]) begin hw_v[i] <= 1'b0; hw_un[i] <= 1'b0; end
+             end
+ 
+             if (w_cls && (cst == C_UNHOLD)) begin
+-                push_v <= 5'b00001;
+-                push_d <= {60'd0, ent(cls_port, P00, 1'b0, 1'b0)};
+-                if ((fst != F_IDLE) && (f_in == cls_port)) f_cancel <= 1'b1;
++                if (!mine_c) begin
++                    push_v <= 5'b00001;
++                    push_d <= {60'd0, ent(cls_port, P00, 1'b0, 1'b0)};
++                    if ((fst != F_IDLE) && (f_in == cls_port)) f_cancel <= 1'b1;
++                end
++                cst <= C_IDLE;
++            end else if (w_cls && mine_c) begin
++                // AUDIT FIX: the port became this card's own while it was read
+                 cst <= C_IDLE;
+             end else if (w_cls) begin
+                 // ---- an incoming seizure ----------------------------------
+@@ -608,12 +722,24 @@
+                 // card (monitor.md 3): nothing has gone by.
+                 push_v <= 5'b00001;
+                 push_d <= {60'd0, ent(cls_port, P00, 1'b1, 1'b0)};
+-                cst    <= C_HOLD; cls_ms <= 9'd0;
++                cls_ms <= 9'd0;
++                // the T_ARM watch goes to a watcher, from the rise; the
++                // classifier waits it out itself only when none is free
++                if (hw_free_any) begin
++                    cst <= C_IDLE;
++                    for (i = 0; i < NW; i = i + 1) if (hw_free1[i]) begin
++                        hw_v[i] <= 1'b1; hw_un[i] <= 1'b0; hw_lo[i] <= 1'b0;
++                        hw_port[i*`PW +: `PW] <= cls_port; hw_t[i*9 +: 9] <= cls_t;
++                    end
++                end else begin cst <= C_HOLD; cls_retry <= 1'b0; end
++                // a LATE pickup -- its rise went by unseen -- is held and
++                // nothing more: no monitor (rule 1), no forward
++                if (!cls_late)
+                 for (i = 0; i < NMON; i = i + 1) if (m_free1[i]) begin
+                     m_held[i] <= 1'b1; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
+                     m_port[i*`PW +: `PW] <= cls_port; m_st[i*2 +: 2] <= M_WANT_E;
+                 end
+-                if (!STRAP_N[cls_dir] && (fst == F_IDLE) && rs_free_any &&
++                if (!cls_late && !STRAP_N[cls_dir] && (fst == F_IDLE) && rs_free_any &&
+                     ((~STRAP_N & ~(4'd1 << cls_dir)) != 4'd0)) begin
+                     f_in <= cls_port; f_mask <= ~STRAP_N & ~(4'd1 << cls_dir);
+                     f_cancel <= 1'b0;

@@ -1,0 +1,20 @@
+{
+ "id": "C04-hold-watch-dial-break",
+ "title": "The C_HOLD watch writes a hold away on a dial break; the make is re-classified as a fresh seizure and a second monitor claims on a truncated count",
+ "findings": [
+  {
+   "id": "hold-watch-unholds-on-dial-break",
+   "title": "The C_HOLD watch writes the hold away on a dial break, the make is taken as a fresh seizure, and a second monitor attached after pulse 1 of e claims a wrong code",
+   "category": "wrong-number",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "C_HOLD (net_unit.v:584-588) goes to C_UNHOLD on any sample of M low within T_ARM+2 ms of the hold, a dial break as much as a death, and writes the port free (590-594). The M-low visit clears st[port] (566-567). After the unhold bsy is 0, and at the make M is up with BUSY down (port.v:147: fm && !m holds BUSY only during the break), so cls_seen (283-284) re-classifies it. The result is a second HOLD and a second monitor cell (612-615) attached after pulse 1 of e. The first cell counts e correctly; the second counts e-1 and claims if (e-1, b) is this exchange's code. The known T_ARM hold-watch fix therefore turns a live seizure's break into a new rise, which breaks the monitor rule 'counts only a seizure whose rise it saw'.",
+   "trigger": "tb_brk: tb_chain's A 2 2 = B 2 3 = C 2 4, scale 8. A20 dials 1, then 3 4 2 1, with the first break of e at A's tmr = 16..18 ms, just past A's guard, so A does not abandon. C, two hops on, held its trunk at tmr 17 and is still watching it.",
+   "consequence": "A caller dialling 1 3 4 2 1 (code 3 4, nobody) is claimed by C and C21 rings. Wrong number in 3 of the 4 offsets inside C's watch; the offset past the watch and the +60 ms control are clean.",
+   "evidence": "/home/joel/telco/newimpl/build/flood/work/audit/cableb/run_brk.log: '[116 ms] C HOLD 11 (tmr at A 17)' / '[117 ms] C UNHOLD 11 (tmr at A 18)' / '[130 ms] C HOLD 11 (tmr at A 31)' / '[130 ms] C attaches a monitor cell (held 11)' / '[366 ms] C CLAIMS 11' / 'C21 hi 96 lo 204' / 'wrong-number attempts 3 of 5; C unholds 3'. This run used the plain snapshot RTL (work/RTL.list).",
+   "fix": "Treat M low in C_HOLD as a death only if it outlasts a dial break. Go to a C_LOW state and write nothing; M high again means C_IDLE (the port arms during the make, which stands >= T_ARM; BUSY stays set, so st is set again and the make is not re-classified); M low for >= ID means UNHOLD. Cost: one state and a compare on cls_ms. In that rare case the classifier is held up to ~128 ms.",
+   "realistic": "At real timers the exposed exchange is the one whose seizure arrived 2-20 ms before the caller's first break (hold at +2..3 ms, watch to T_ARM+2 = 18 ms after it). The guard puts the first break at >= 128 ms after the origin's seizure, so at the RTL's ~13 ms a hop that is hop ~10, just beyond network.md 3.2's 8-hop rule. It moves nearer when hops slow under load: +10 ms waiting for a sweep in progress, and the classifier taking one seizure per ~18 ms. In effect the guard's reach shrinks by 18 ms (14% of the 128 ms tap). With a compliant dial the first break comes ~590 ms after the seizure, so only a fast dialler near the guard is exposed. It is reproduced at scale 8 because there the sweep is 8x longer relative to the guard.",
+   "audit": "cableb"
+  }
+ ]
+}

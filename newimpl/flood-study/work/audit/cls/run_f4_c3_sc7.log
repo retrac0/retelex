@@ -1,0 +1,44 @@
+
+  tb_cls3 sc=7 NMON=8 NRES=8 T_ARM=16 guard=128  lam=4000/1000s dur=20000 t1=60..700 pexp=500 pown=100 loc=8000 pnet=300 seed=1 mode=0
+    ok    every trunk's link is up
+     21.029  far seizure on 10
+     22.264  cls read  10  word 11001011  trunk 1
+     23.264  HOLD      10  dir 3  mine 0  nst 0  word-dir
+     26.004  far seizure on 47 (dials 3 2 2 1, first break +128)
+     31.004  far seizure on 11
+     35.005  FWD       10 -> ok 0111 cand 71 30 40 00
+     42.279  cls read  11  word 11001011  trunk 1
+     43.280  HOLD      11  dir 3  mine 0  nst 0  word-dir
+     46.004  far seizure on 12
+     54.005  FWD       11 -> ok 0100 cand 71 30 41 00
+     62.295  cls read  12  word 11001011  trunk 1
+     63.295  HOLD      12  dir 3  mine 0  nst 0  word-dir
+     66.004  far seizure on 13
+     74.005  FWD       12 -> ok 0100 cand 71 30 42 00
+     82.310  cls read  13  word 11001011  trunk 1
+     83.311  HOLD      13  dir 3  mine 0  nst 0  word-dir
+     86.004  far seizure on 14
+     94.005  FWD       13 -> ok 0100 cand 71 30 43 00
+    102.326  cls read  14  word 11001011  trunk 1
+    103.326  HOLD      14  dir 3  mine 0  nst 0  word-dir
+    106.004  far seizure on 15
+    114.005  FWD       14 -> ok 0100 cand 71 30 44 00
+    122.342  cls read  15  word 11001011  trunk 1
+    123.342  HOLD      15  dir 3  mine 0  nst 0  word-dir
+    126.004  far seizure on 16
+    134.005  FWD       15 -> ok 0100 cand 71 30 45 00
+    142.357  cls read  16  word 11001011  trunk 1
+    143.357  HOLD      16  dir 3  mine 0  nst 0  word-dir
+    154.005  FWD       16 -> ok 0100 cand 71 30 46 00
+  47: rise 26.0  seen +-27.0  hold +-27.0  cell +-1.0 (first break at +128.0)  e counted -1  claims 0
+    ok    sc7: 47, seized second, is held within two watches of its rise
+    ok    sc7: a far caller dialling 3 2 2 1 is not claimed by exchange 2 2
+    ok    no cable-B clash, no queue refused a write
+
+  4 checks, 0 errors.  PASS
+
+- /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:589: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 4s; walltime 123.770 s; speed 35.016 ms/s
+- Verilator: cpu 97.983 s on 1 threads; allocated 8 MB
+rc=0 wall=123

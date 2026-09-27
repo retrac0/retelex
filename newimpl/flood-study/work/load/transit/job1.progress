@@ -1,0 +1,36 @@
+14:00:59 JOB1 begin saturn load 12.06 14.00 13.90
+14:00:59 START build_s8
+14:04:25 END build_s8 rc=0 wall_s=206
+14:04:25 START t1_unif_heavy
+14:27:12 END t1_unif_heavy rc=0 wall_s=1367
+14:27:12 START t3_e2e_heavy
+14:57:30 END t3_e2e_heavy rc=0 wall_s=1818
+14:57:30 START t4_cross_s8
+15:26:06 END t4_cross_s8 rc=0 wall_s=1716
+15:26:06 START build_s1
+15:30:16 END build_s1 rc=0 wall_s=250
+15:30:16 START t9_cross_s1
+16:56:29 END t9_cross_s1 rc=0 wall_s=5173
+16:56:29 START build_n1
+16:58:57 END build_n1 rc=0 wall_s=148
+16:58:57 START t8_e2e_heavy_nres1
+17:18:35 END t8_e2e_heavy_nres1 rc=0 wall_s=1178
+17:18:35 START t2_e2e_med
+17:51:32 END t2_e2e_med rc=0 wall_s=1977
+17:51:32 START t5_borig
+18:24:13 END t5_borig rc=0 wall_s=1961
+18:24:13 START t6_links
+19:11:15 END t6_links rc=0 wall_s=2822
+19:11:15 START t7_step
+20:04:59 END t7_step rc=0 wall_s=3224
+20:04:59 JOB1 end
+20:04:59 JOB1b begin
+20:04:59 START build_fx
+20:12:35 END build_fx rc=0 wall_s=456
+20:12:35 START t4_cross_s8_fix
+21:03:55 END t4_cross_s8_fix rc=0 wall_s=3080
+21:03:55 START t3_e2e_heavy_fix
+21:47:38 END t3_e2e_heavy_fix rc=0 wall_s=2623
+21:47:38 START t10_e2e_heavy_s1
+23:32:44 END t10_e2e_heavy_s1 rc=0 wall_s=6306
+23:32:44 JOB1b end

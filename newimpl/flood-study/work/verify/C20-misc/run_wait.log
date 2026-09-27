@@ -1,0 +1,10 @@
+  WAIT=640: clash ticks over all offsets 0; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min 94 (off 2) max 692 ticks
+  WAIT=549: clash ticks over all offsets 0; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min 3 (off 2) max 601 ticks
+  WAIT=548: clash ticks over all offsets 0; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min 2 (off 2) max 600 ticks
+  WAIT=547: clash ticks over all offsets 0; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min 1 (off 2) max 599 ticks
+  WAIT=546: clash ticks over all offsets 0; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min 0 (off 2) max 598 ticks
+  WAIT=500: clash ticks over all offsets 1081; marker first in 599 trials, its oe 547 ticks; unit oe after marker oe fell: min -46 (off 2) max 552 ticks
+- work/verify/C20-misc/tb_wait.v:96: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 10.120 s; speed 175.225 ms/s
+- Verilator: cpu 9.703 s on 1 threads; allocated 7 MB

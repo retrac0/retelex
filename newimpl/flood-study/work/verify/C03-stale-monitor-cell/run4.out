@@ -1,0 +1,4 @@
+[sim.sh] slot 3: bash work/verify/C03-stale-monitor-cell/run4.sh
+bgm=0
+rgm=0
+rgml=0

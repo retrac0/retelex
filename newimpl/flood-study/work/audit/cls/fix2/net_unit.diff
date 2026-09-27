@@ -1,0 +1,105 @@
+--- ../../../rtl/net_unit.v	2026-09-26 00:42:05.680752092 -0400
++++ fix2/net_unit.v	2026-09-26 12:57:21.506599458 -0400
+@@ -253,7 +253,14 @@
+     // THE CLASSIFIER
+     // ======================================================================
+     localparam [2:0] C_IDLE = 3'd0, C_READ = 3'd1, C_ACT = 3'd2, C_HOLD = 3'd3,
+-                     C_UNHOLD = 3'd4, C_WAIT = 3'd5;
++                     C_UNHOLD = 3'd4, C_WAIT = 3'd5, C_WAIT2 = 3'd6, C_READ2 = 3'd7;
++    // AUDIT FIX2 (cls): the word is read TWICE, a pass apart, and the hold is
++    // written only if the two agree and, at the second select's turn, the
++    // port still shows M, not BUSY, and is not this card's own.  A '574 for
++    // the first word, a '688 to compare, two gates.
++    reg [7:0]      cls_w1;
++    reg            cls_look, cls_ok;
++    reg            cls_rt;          // this port has had its one re-read
+     reg [2:0]      cst;
+     reg [`PW-1:0]  cls_port;
+     reg [1:0]      cls_dir;
+@@ -289,8 +296,8 @@
+     // the whole sweep.  So it is KEPT (C_WAIT: its port in cls_port) and read
+     // the moment the reader is free, ahead of the sweep's next step -- which
+     // then waits a pass for its port to come round again.
+-    wire           cls_issue = rd_free && (cls_seen || (cst == C_WAIT));
+-    wire [`PW-1:0] cls_rport = (cst == C_WAIT) ? cls_port : sp_port;
++    wire           cls_issue = rd_free && (cls_seen || (cst == C_WAIT) || (cst == C_WAIT2));
++    wire [`PW-1:0] cls_rport = ((cst == C_WAIT) || (cst == C_WAIT2)) ? cls_port : sp_port;
+ 
+     // ======================================================================
+     // THE MONITORS
+@@ -519,6 +526,7 @@
+             restart <= 1'b0; local_go <= 1'b0; done <= 1'b0; nogo <= 1'b0;
+             att <= 1'b0; att_port <= P00; cl_st <= CL_IDLE;
+             cst <= C_IDLE; cls_port <= P00; cls_dir <= 2'd0; cls_ms <= 9'd0;
++            cls_w1 <= 8'd0; cls_look <= 1'b0; cls_ok <= 1'b0; cls_rt <= 1'b0;
+             st <= 64'd0; f_cancel <= 1'b0; o_ok <= 4'd0; o_cand <= {4*`PW{1'b0}};
+             m_held <= {NMON{1'b0}}; m_armed <= {NMON{1'b0}}; m_want <= {NMON{1'b0}};
+             m_port <= {NMON*`PW{1'b0}}; m_st <= {NMON*2{1'b0}};
+@@ -549,7 +557,8 @@
+             // ==================================================================
+             if (cls_issue) begin
+                 rd_req <= 1'b1; rd_port <= cls_rport; rd_own <= 1'b0;
+-                cls_port <= cls_rport; cst <= C_READ;
++                cls_port <= cls_rport; cst <= (cst == C_WAIT2) ? C_READ2 : C_READ;
++                cls_look <= 1'b0;
+             end else if (cls_seen) begin
+                 // the reader is the sweep's just now: keep the seizure
+                 cls_port <= sp_port; cst <= C_WAIT;
+@@ -563,15 +572,42 @@
+             // ==================================================================
+             // the bit a port: cleared by M down, set by M up under BUSY, and
+             // set by the read below.  A read's set is the later assignment.
++            // AUDIT FIX2 (cls): BUSY first.  A port seen BUSY is dealt with,
++            // M up or down: a dial break of an armed port shows BUSY (fM . /M,
++            // port.v), so the bit survives the break and the make after it is
++            // never read as a fresh seizure -- neither a released trunk under
++            // a standing far M nor a seizure the classifier had not reached
++            // before its first break.  Clear only on M down with BUSY down.
+             if (sp_fresh) begin
+-                if (!sp_m)        st[sp_port] <= 1'b0;
+-                else if (sp_busy) st[sp_port] <= 1'b1;
++                if (sp_busy)   st[sp_port] <= 1'b1;
++                else if (!sp_m) st[sp_port] <= 1'b0;
+             end
+             if (cls_seen) st[sp_port] <= 1'b1;
+ 
++            // the look again: the last sample of the port before the second
++            // word is in is the one at the second select's turn
++            if ((cst == C_READ2) && sp_fresh && (sp_port == cls_port)) begin
++                cls_look <= 1'b1;
++                cls_ok   <= sp_m && !sp_busy && !mine;
++            end
++
++            // a port that says neither trunk nor caller (a line, xxxx1111, or a
++            // tone trunk, 11011) cannot be showing M unless its word was read
++            // across a link hit: read it once more at its next turn.  Once.
++            if (cls_seen) cls_rt <= 1'b0;
+             if (cst == C_READ && rd_done && !rd_own) begin
+-                if (is_trunk(rd_word[4:0])) begin cls_dir <= rd_word[7:6]; cst <= C_ACT; end
+-                else cst <= C_IDLE;
++                if (is_trunk(rd_word[4:0])) begin cls_w1 <= rd_word; cst <= C_WAIT2; end
++                else if ((rd_word[3:0] == 4'b1111) || (rd_word[4:0] == 5'b11011) || cls_rt) begin
++                    cls_rt <= 1'b0; cst <= C_IDLE;
++                end else begin cls_rt <= 1'b1; cst <= C_WAIT; end
++            end
++            if (cst == C_READ2 && rd_done && !rd_own) begin
++                if (!cls_look || (rd_word != cls_w1)) begin
++                    // the two reads disagree: the pair again, once
++                    if (cls_rt) begin cls_rt <= 1'b0; cst <= C_IDLE; end
++                    else begin cls_rt <= 1'b1; cst <= C_WAIT; end
++                end else if (cls_ok) begin cls_rt <= 1'b0; cls_dir <= rd_word[7:6]; cst <= C_ACT; end
++                else begin cls_rt <= 1'b0; cst <= C_IDLE; end
+             end
+ 
+             // WATCH THE HOLD THROUGH THE PORT'S ARMING TIME.  The port clears
+@@ -583,7 +619,9 @@
+             // the hold away itself, and calls off the forward.
+             if (cst == C_HOLD) begin
+                 if (tick_1k) cls_ms <= cls_ms + 9'd1;
+-                if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= C_UNHOLD;
++                // AUDIT FIX2 (cls): never write away a port this card has
++                // since seized for its own call
++                if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= mine ? C_IDLE : C_UNHOLD;
+                 else if (cls_ms > T_ARM + 9'd1)                   cst <= C_IDLE;
+             end
+ 

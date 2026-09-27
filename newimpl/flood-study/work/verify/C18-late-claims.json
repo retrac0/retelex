@@ -1,0 +1,34 @@
+{
+ "id": "C18-late-claims",
+ "title": "A claim arriving after the origin dropped that trunk, or after a resolver resolved, is taken as a fresh seizure / re-points a trunk",
+ "findings": [
+  {
+   "id": "late-claim-on-dropped-origin-trunk",
+   "title": "A claim arriving on an origin trunk after dmo or N_DROP has let it go is classified as a fresh incoming seizure",
+   "category": "race",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "dmo (net_unit.v:800, :831-837) and N_DROP (:823-829) write the dropped trunk free and remove it from d_held, so `mine` no longer covers it. st[port] is set only if M was seen while the port was BUSY (:566-570). A second copy's claim, from a ring's long way or a claim that crosses the T_CLAIM drop, that lands after the drop therefore meets M up, BUSY clear, not mine and st clear. cls_seen (:283) holds it listening to 00, gives it a monitor, and forwards it if the link is not strapped.",
+   "trigger": "A ring or mesh where the same owner hears the flood on two paths whose A delays differ by more than about 1.5 ms (MF8 at 0.5 ms a hop: 3 or more extra hops), or a claim reaching the origin just after its 2 s T_CLAIM.",
+   "consequence": "A phantom seizure: the trunk plus a monitor are held, and at a transit a steady-M flood runs onward, until the owner's refused copy releases about T_REL to 2xT_REL later. No wrong number, because the phantom's M never pulses; it wastes trunks and monitors at busy hour.",
+   "evidence": "tb_orig S5, with two direct links A-B (E and jumpered N), 3 phases (run_s2_5.log S5.0-S5.2): the second CLAIM ([6738.563]) reaches A before A's drop ([6739.428]), so st is set and there is no phantom. The race is therefore lost only when the second path is slower, which is the ring case this design documents in network.md 3.3.",
+   "fix": "Keep a dropped origin trunk masked from the classifier (as `mine`) until its M has been seen low and then for T_REL, or have the owner not raise CLAIM on a trunk whose forward M has fallen. The cost is about one counter per direction on the unit.",
+   "realistic": "Only in rings or meshes with unequal path delay, and at the T_CLAIM boundary. Low frequency and temporary.",
+   "audit": "origin"
+  },
+  {
+   "id": "late-claim-after-resolve",
+   "title": "A cell that claims a trunk whose resolver has already resolved re-points the trunk off the winning leg and leaves the leg and the far register up",
+   "category": "race",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "rs_mine (net_unit.v:366) finds only busy resolvers. After w_res at R_LEG (691-708) the resolver is free. A later w_claim for the same incoming trunk writes it to 00 with CLAIM (656-658), and nothing drops the leg, which still listens to f_in.",
+   "trigger": "This exchange's cell still wanting (waiting on cl_st) or counting late, while a downstream exchange claims first: only with a false or duplicate claim somewhere.",
+   "consequence": "Two exchanges ring for one caller, and one of them hears the caller.",
+   "evidence": "Reasoning.",
+   "fix": "At w_res, free any cell whose m_port is rs_in: a comparator per cell.",
+   "realistic": "Needs a prior false claim.",
+   "audit": "monclaim"
+  }
+ ]
+}

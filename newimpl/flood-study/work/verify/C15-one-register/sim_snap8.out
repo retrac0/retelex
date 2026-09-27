@@ -1,0 +1,1 @@
+[sim.sh] slot 2: work/verify/C15-one-register/run.sh snap8 work/RTL.list  +scen=2 3000

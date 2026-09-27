@@ -1,0 +1,23 @@
+r1_l2_always|every line always trying (idle 50 ms): 15.5-18.9 att/s/exch measured, ~19x the knee
+r2_l2_i20k|idle 20 s: 1.78 att/s/exch (~1.6x knee)
+r3_l2_i6k_step|idle 6 s for 8 s (5.6-6.2 att/s/exch, ~4x knee), then 60 s (0.75/s, 0.7x)
+r5_l2_step|idle 1.5 s for 6 s (10.7-12.8 att/s/exch, ~10x knee), then 60 s (0.7x)
+r7_l2_abdt|idle 6 s (~4x) with 70% of attempts abandoning at a uniform moment after dial tone
+r8a_l2_ab_dt|idle 15 s (~2x) with 90% abandoning after dial tone
+r8b_l2_ab_lift|idle 15 s (~2x) with 60% abandoning after lift
+r9_l2_hot|idle 6 s (~4x), every caller dials B20
+r10_l2_bad|idle 6 s (~4x), network half dials 1 2 7 h s (no such code)
+r12_l2_patho|idle 6 s (~4x), pnet 70%: 30% key-only (dial 1, stop), 25% own-code floods
+r13a_l2_key_e|idle 6 s (~4x), network half dials 1 e and stops (T_KEY)
+r13b_l2_key_eb|idle 6 s (~4x), network half dials 1 e b (real code) and stops (NODIG)
+r13c_l2_owncode|idle 20 s (~1.6x), network half dials 1 + own code + h s
+r14_l2_resv8|idle 6 s (~4x), network half dials 1 8 3 h s (reserved digit)
+r16a_l2_jam_net|24 lines/exch (20-47) always trying network calls; 24 (50-77) local only at idle 20 s
+r16b_l2_jam_bad|as r16a, network lines dial a nonexistent code
+r16c_l2_jam_none|baseline: 24 lines (50-77) local only at idle 20 s, lines 20-47 idle
+r16e_l2_jam_net_hi|as r16a with the classes swapped: network lines 50-77, local-only 20-47
+r6_l2_burst|two bursts: all 96 phones lift in one ms (t 0.5 s and 8.5 s), otherwise idle
+r20_l3_i6k|chain, idle 6 s (8.2 att/s/exch, ~4x)
+r30_l2s1_step|REAL TIMERS: idle 60 s for 30 s (0.55 att/s/exch, ~3-4x the real knee), then 400 s
+r21_l3_i1500_step|chain, idle 1.5 s for 6 s (14.6 att/s/exch, ~10x), then 60 s
+r22_l3_always|chain, every line always trying (idle 50 ms): 17.7 att/s/exch

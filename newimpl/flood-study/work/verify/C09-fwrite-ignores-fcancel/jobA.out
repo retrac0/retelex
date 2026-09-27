@@ -1,0 +1,7 @@
+[sim.sh] slot 5: bash work/verify/C09-fwrite-ignores-fcancel/jobA.sh
+jobA start 19:44:38
+fcan done 19:46:15
+c09 base done 19:54:26
+c09 fix done 20:03:05
+jobA end 20:03:05
+jobA exit=0

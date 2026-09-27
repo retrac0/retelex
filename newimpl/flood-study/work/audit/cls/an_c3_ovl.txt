@@ -1,0 +1,25 @@
+====================================================================================================
+run_c3_ovl.log  seizures 165  lifts 5
+  rise->hold all n= 163  p50    1.7  p90   13.7  p99   30.7  max   38.7  >19ms    6  >40ms    0  >100ms    0
+  rise->hold W   n=  81  p50    1.3  p90   12.3  p99   17.4  max   18.3  >19ms    0  >40ms    0  >100ms    0
+  rise->hold E   n=  82  p50    1.7  p90   17.7  p99   32.7  max   38.7  >19ms    6  >40ms    0  >100ms    0
+  never held 2 (of which dialled: 0)
+  held after the first break: 0   cells armed after the first break: 0
+  re-held (nhold>1): 0   unholds of live seizures: 0   claims 0   WRONG 0
+  3 2 callers t1  100-150   n=  2  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  150-200   n=  6  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  200-300   n=  9  held-late  0  emin<3  0  wrong  0
+  3 2 callers t1  300-500   n= 13  held-late  0  emin<3  0  wrong  0
+  backlog at rise -> mean hold delay: 0:3.8(n150)  1:13.2(n12)  2:18.7(n1)
+  by port mean hold delay: 10.0:3.6  11.0:2.3  12.0:3.9  13.0:1.7  14.0:4.0  15.0:3.9  16.0:3.4  17.0:6.8  40.0:2.9  41.0:9.9  42.0:3.9  43.0:4.0  44.0:6.7  45.0:10.3  46.0:4.3  47.0:5.4
+  dial tone n=5  p50 165.0  p90 1758.0  p99 1758.0  max 1758.0  none 0
+  |     672.238  RESOLVER 4 takes M on leg 3 as a claim (in 41)
+  |   13140.206  RESOLVER 3 takes M on leg 3 as a claim (in 42)
+  | SUMMARY floods=165 blocked=266 wrong_claims=0 ok_claims=0 late_cells=0 hold_after_first_break=0 unhold_live=0 reclass=0 trunk_as_caller=0 refusals=0 origin_claims=0 resolver_leg_claims=2 seizures_without_cell=4 n_nofwd=28
+  | SUMMARY cls_busy=3102/22446 ms backlog_mean=0.066 backlog_max=2 mk_reads trunk=99 line=5
+  | SUMMARY sweeps=164 mean=10.49 max=11.74 ms; marker read req->select n=104 mean=1.64 max=7.99 ms; cls read req->select n=168 mean=0.99 max=0.99 ms
+  | SUMMARY lifts=5 nodt=0
+  | HIST rise->hold  <2 <5 <20 <40 <60 <100 <150 <250 <500 more: all 123 5 30 5 0 0 0 0 0 0
+  | HIST rise->hold W(low ports)  61 3 17 0 0 0 0 0 0 0
+  | HIST rise->hold E(high ports) 62 2 13 5 0 0 0 0 0 0
+  | HIST dialtone <5 <10 <20 <50 <100 <250 <500 <1000 <3000 none: 2 0 0 0 0 1 0 0 2 0

@@ -1,0 +1,25 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000000010000000000 stub=1 lim=800 bph=0 xph=0 port T_REL=32
+
+  port T_REL: A 32  X 32  B 32 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+T fam=-1 k=3 act=0 d=0.00  hangA=1550.996 hangB=1600.996  OK    idle+0ms  ev:39.00 49.00 52.28 63.00 66.28 239.00 241.00 244.16 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  REF pattern 3: flood_go 39.00 seize 49.00 Xhold 52.28 Xfwd 63.00 Bhold 66.28 f2 239.00 CLAIM 241.00 claimed 244.16 Xres0 242.19 att_ack 241.29 done -0.00 connect -0.00 rung -0.00 watch_end -0.00 answer -0.00
+  -- family 10: pattern 3 actor 0 anchor 10 d0 1213.79 ms step 0.430 ms n 10
+T fam=10 k=0 act=0 d=1213.79  hangA=1455.081 hangB=1506.996  OK    idle+13ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=1 act=0 d=1214.22  hangA=1455.511 hangB=1506.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=2 act=0 d=1214.65  hangA=1455.941 hangB=1506.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=3 act=0 d=1215.08  hangA=1456.371 hangB=1507.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=4 act=0 d=1215.51  hangA=1456.801 hangB=1507.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=5 act=0 d=1215.94  hangA=1457.231 hangB=1508.996  OK    idle+13ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=6 act=0 d=1216.37  hangA=1457.661 hangB=1508.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=7 act=0 d=1216.80  hangA=1458.091 hangB=1509.996  OK    idle+13ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=8 act=0 d=1217.23  hangA=1458.521 hangB=1509.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+T fam=10 k=9 act=0 d=1217.66  hangA=1458.951 hangB=1509.996  OK    idle+14ms  ev:39.00 49.00 52.28 63.00 66.28 0.00 241.00 0.00 242.19 241.29 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  11 trials: 0 LEAK, 0 PHANTOM, 0 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j2.v:660: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 18s; walltime 434.001 s; speed 40.862 ms/s
+- Verilator: cpu 432.256 s on 1 threads; allocated 8 MB
+rc=0 secs=434

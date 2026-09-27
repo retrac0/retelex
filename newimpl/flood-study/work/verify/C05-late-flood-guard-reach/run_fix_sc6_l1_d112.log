@@ -1,0 +1,143 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=6 var=0 dly=112 load=1
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc6: a flood that reached B 112 ms after its origin seized; first break at 129 ms; load 1
+     31.655 ms  fst 0 -> 1
+     31.655 ms  mon_held 00 -> 01
+     31.655 ms  fst 1 -> 2
+     31.655 ms  hst 0 -> 1 (owner 1)
+     31.939 ms  port 41 BUSY -> 1
+     31.939 ms  port 41 latch -> src 00 bsy 1 clm 0
+     41.014 ms  hst 1 -> 2 (owner 1)
+     42.005 ms  hst 2 -> 0 (owner 1)
+     42.005 ms  fst 2 -> 3
+     42.006 ms  rs_busy 00 -> 01   in 41 00  held 1101 0000  legs0 74 00 31 10  legs1 00 00 00 00
+     42.006 ms  fst 3 -> 0
+     42.290 ms  port 74 BUSY -> 1
+     42.290 ms  port 74 latch -> src 41 bsy 1 clm 0
+     42.424 ms  port 31 BUSY -> 1
+     42.424 ms  port 31 latch -> src 41 bsy 1 clm 0
+     42.529 ms  port 31 a_out (far M) -> 1
+     42.529 ms  port 74 a_out (far M) -> 1
+     42.557 ms  port 10 BUSY -> 1
+     42.557 ms  port 10 latch -> src 41 bsy 1 clm 0
+     43.552 ms  far LTU ch 0: M seen by W neighbour -> 1
+     48.020 ms  B holds E30, 17.016 ms after its M rose
+     48.021 ms  port 30 BUSY -> 1
+    108.020 ms  port 30 BUSY -> 0
+    109.514 ms  fst 0 -> 1
+    109.514 ms  mon_held 01 -> 11
+    109.514 ms  fst 1 -> 2
+    109.514 ms  hst 0 -> 1 (owner 1)
+    109.798 ms  port 30 BUSY -> 1
+    109.798 ms  port 30 latch -> src 00 bsy 1 clm 0
+    119.014 ms  hst 1 -> 2 (owner 1)
+    120.005 ms  hst 2 -> 0 (owner 1)
+    120.005 ms  fst 2 -> 3
+    120.005 ms  rs_busy 01 -> 11   in 41 30  held 1101 1011  legs0 74 00 31 10  legs1 75 40 31 11
+    120.005 ms  fst 3 -> 0
+    120.290 ms  port 75 BUSY -> 1
+    120.290 ms  port 75 latch -> src 30 bsy 1 clm 0
+    120.388 ms  port 75 a_out (far M) -> 1
+    120.423 ms  port 40 BUSY -> 1
+    120.423 ms  port 40 latch -> src 30 bsy 1 clm 0
+    120.557 ms  port 11 BUSY -> 1
+    120.557 ms  port 11 latch -> src 30 bsy 1 clm 0
+    121.388 ms  port 40 a_out (far M) -> 1
+    121.411 ms  far LTU ch 1: M seen by W neighbour -> 1
+    148.388 ms  port 40 a_out (far M) -> 0
+    148.388 ms  port 75 a_out (far M) -> 0
+    148.411 ms  far LTU ch 1: M seen by W neighbour -> 0
+    208.388 ms  port 40 a_out (far M) -> 1
+    208.388 ms  port 75 a_out (far M) -> 1
+    208.411 ms  far LTU ch 1: M seen by W neighbour -> 1
+    248.388 ms  port 40 a_out (far M) -> 0
+    248.388 ms  port 75 a_out (far M) -> 0
+    248.411 ms  far LTU ch 1: M seen by W neighbour -> 0
+    308.388 ms  port 40 a_out (far M) -> 1
+    308.388 ms  port 75 a_out (far M) -> 1
+    308.410 ms  far LTU ch 1: M seen by W neighbour -> 1
+   1048.386 ms  port 40 a_out (far M) -> 0
+   1048.386 ms  port 75 a_out (far M) -> 0
+   1048.409 ms  far LTU ch 1: M seen by W neighbour -> 0
+   1108.386 ms  port 40 a_out (far M) -> 1
+   1108.386 ms  port 75 a_out (far M) -> 1
+   1108.408 ms  far LTU ch 1: M seen by W neighbour -> 1
+   1148.386 ms  port 40 a_out (far M) -> 0
+   1148.386 ms  port 75 a_out (far M) -> 0
+   1148.408 ms  far LTU ch 1: M seen by W neighbour -> 0
+   1208.386 ms  port 40 a_out (far M) -> 1
+   1208.386 ms  port 75 a_out (far M) -> 1
+   1208.408 ms  far LTU ch 1: M seen by W neighbour -> 1
+   1248.386 ms  port 40 a_out (far M) -> 0
+   1248.386 ms  port 75 a_out (far M) -> 0
+   1248.408 ms  far LTU ch 1: M seen by W neighbour -> 0
+   1308.385 ms  port 40 a_out (far M) -> 1
+   1308.385 ms  port 75 a_out (far M) -> 1
+   1308.408 ms  far LTU ch 1: M seen by W neighbour -> 1
+   1437.002 ms  rs_busy 11 -> 01   in 41 30  held 1101 0000  legs0 74 00 31 10  legs1 75 40 31 11
+   1437.002 ms  mon_held 11 -> 01
+   1437.286 ms  port 30 a_out (far M) -> 1
+   1437.286 ms  port 30 latch -> src 00 bsy 1 clm 1
+   1437.420 ms  port 75 latch -> src 00 bsy 0 clm 0
+   1437.554 ms  port 40 latch -> src 00 bsy 0 clm 0
+   1437.687 ms  port 11 latch -> src 00 bsy 0 clm 0
+   1438.010 ms  port 40 a_out (far M) -> 0
+   1438.010 ms  port 75 a_out (far M) -> 0
+   1438.033 ms  far LTU ch 1: M seen by W neighbour -> 0
+   1694.001 ms  port 11 BUSY -> 0
+   1694.001 ms  port 40 BUSY -> 0
+   1694.001 ms  port 75 BUSY -> 0
+    FAIL  B did not claim a call dialled to exchange 3 3
+   3138.407 ms  port 30 latch -> src 21 bsy 1 clm 1
+   3138.540 ms  port 21 BUSY -> 1
+   3138.540 ms  port 21 latch -> src 30 bsy 1 clm 0
+    FAIL  and B21 was not rung
+   3447.996 ms  latch 30: src 21 bsy 1 clm 1   BUSY 1  a_out 1
+   3447.996 ms  latch 21: src 30 bsy 1 clm 0   BUSY 1  a_out 0
+   3448.521 ms  port 31 a_out (far M) -> 0
+   3448.521 ms  port 74 a_out (far M) -> 0
+   3448.543 ms  far LTU ch 0: M seen by W neighbour -> 0
+   3703.996 ms  port 10 BUSY -> 0
+   3703.996 ms  port 10 latch -> src 00 bsy 0 clm 0
+   3703.996 ms  port 21 BUSY -> 0
+   3703.996 ms  port 21 latch -> src 00 bsy 0 clm 0
+   3703.996 ms  port 30 BUSY -> 0
+   3703.996 ms  port 30 a_out (far M) -> 0
+   3703.996 ms  port 30 latch -> src 00 bsy 0 clm 0
+   3703.996 ms  port 31 BUSY -> 0
+   3703.996 ms  port 31 latch -> src 00 bsy 0 clm 0
+   3703.996 ms  port 41 BUSY -> 0
+   3703.996 ms  port 41 latch -> src 00 bsy 0 clm 0
+   3703.996 ms  port 74 BUSY -> 0
+   3703.996 ms  port 74 latch -> src 00 bsy 0 clm 0
+   3704.527 ms  rs_busy 01 -> 00   in 41 30  held 0000 0000  legs0 74 00 31 10  legs1 75 40 31 11
+   3704.996 ms  mon_held 01 -> 00
+    ok    sc6: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  6 checks, 2 errors.  FAIL
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 4s; walltime 171.377 s; speed 25.371 ms/s
+- Verilator: cpu 114.813 s on 1 threads; allocated 8 MB
+rc=0 secs=171

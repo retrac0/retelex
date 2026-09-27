@@ -1,0 +1,51 @@
+
+  tb_c07 -- a link outage is a dial pulse.  sc=62 pause=680, real timers
+    ok    the links are up
+  --- sc1: A20 dials 1 2 2 2 1; 40 ms outage in b's last make
+  OBS 2150.0 ms  cable cut for 40 ms
+  OBS 2840.0 ms  b is in (A's register: 2 digits, 0022)
+  OBS B21 rang 0, B22 rang 0; A claimed 0
+    ok    outage in b: nobody claims a call dialled to exchange 22
+    ok    outage in b: B21 (23-21, never dialled) does not ring
+    ok    outage in b: both exchanges idle again
+  --- sc2: A20 dials 1 2 3 2 1; 40 ms outage in s's make
+  OBS 2349.5 ms  B raises att: a claim on B11
+  OBS 2350.2 ms  A's origin has its claim
+    ok    B claimed the call to 23
+  OBS 3910.0 ms  cable cut for 40 ms
+  OBS B's register: digits 0000
+  OBS B21 rang 0, B22 rang 0
+    FAIL  outage in s: B21, the line dialled, rings
+    ok    outage in s: B22 (never dialled) does not ring
+    ok    outage in s: both exchanges idle again
+  --- sc3: A20 dials 1 2 2 3 1; the cable out 500 ms around e
+  OBS 1280.0 ms  cable cut for 500 ms
+  OBS 1780.0 ms  cable back
+  OBS 4900.0 ms  all dialled; B mon 00 reg 0; A claimed 0
+    ok    link back mid-dial: nobody claims a call dialled to exchange 22
+    ok    link back mid-dial: B does not give a register to a call it does not own
+    ok    link back mid-dial: both exchanges idle again
+  --- sc4: A20 dials 1 4 3 2 1; cable out from the key's pause to mid-e
+  OBS 700.0 ms  cable cut
+  OBS 1285.0 ms  cable back (5 ms into e's 2nd make)
+  OBS B21 rang 0, B22 rang 0; A claimed 0
+    ok    link back mid-e: nobody claims a call dialled to exchange 43
+    ok    link back mid-e: B21 (23-21, never dialled) does not ring
+    ok    link back mid-e: both exchanges idle again
+  --- sc5: A20 dials 1 2 2 2 3; 40 ms ONE-WAY (A->B) outage in b's last make
+  OBS 2150.0 ms  A->B cut for 40 ms
+  OBS 4109.9 ms  B raises att: a claim on B11
+  OBS 4110.1 ms  A's origin has its claim
+  OBS B mon 00 reg 1; A claimed 1
+    FAIL  one-way outage in b: nobody claims a call dialled to exchange 22
+    ok    one-way outage in b: both exchanges idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  18 checks, 2 errors.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C07-link-outage-pulse/tb_c07.v:365: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 40s; walltime 851.263 s; speed 47.012 ms/s
+- Verilator: cpu 820.991 s on 1 threads; allocated 8 MB
+rc=0 secs=852

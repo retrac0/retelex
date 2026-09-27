@@ -1,0 +1,40 @@
+
+== scale 8, CH=8, pnet 30%  (idle ms: att/s/ex -> OK/min/ex [net], net ok%, refuse%, reg, trunk E, notrunk%, NODT%)
+  240000: 0.20 ->  11.3 [ 3.3]  N  90%  ref   8%  reg 0.11  trk 0.27  notrunk   0%  NODT   0%
+  120000: 0.39 ->  21.3 [ 5.4]  N  77%  ref  21%  reg 0.22  trk 0.46  notrunk   0%  NODT   0%
+   60000: 0.75 ->  38.2 [ 8.4]  N  62%  ref  35%  reg 0.41  trk 0.81  notrunk   0%  NODT   0%
+   40000: 1.12 ->  52.3 [ 8.8]  N  45%  ref  52%  reg 0.58  trk 0.99  notrunk   0%  NODT   0%
+   30000: 1.45 ->  62.2 [ 8.4]  N  32%  ref  66%  reg 0.73  trk 1.11  notrunk   0%  NODT   1%
+   20000: 2.06 ->  71.7 [ 3.8]  N  10%  ref  87%  reg 0.90  trk 1.08  notrunk   0%  NODT   9%
+   15000: 2.57 ->  73.2 [ 1.2]  N   3%  ref  96%  reg 0.97  trk 1.00  notrunk   0%  NODT  20%
+    6000: 5.16 ->  60.7 [ 0.0]  N   0%  ref 100%  reg 1.00  trk 0.97  notrunk   0%  NODT  58%
+
+== scale 8, CH=8, pnet 100%  (idle ms: att/s/ex -> OK/min/ex [net], net ok%, refuse%, reg, trunk E, notrunk%, NODT%)
+  240000: 0.20 ->   9.8 [ 9.8]  N  83%  ref  16%  reg 0.21  trk 0.81  notrunk   0%  NODT   0%
+  120000: 0.40 ->  16.4 [16.4]  N  68%  ref  31%  reg 0.40  trk 1.49  notrunk   0%  NODT   0%
+   60000: 0.75 ->  19.7 [19.7]  N  44%  ref  55%  reg 0.67  trk 2.19  notrunk   0%  NODT   1%
+   40000: 1.13 ->  13.0 [13.0]  N  19%  ref  79%  reg 0.86  trk 2.32  notrunk   0%  NODT   7%
+   30000: 1.49 ->   6.0 [ 6.0]  N   7%  ref  92%  reg 0.95  trk 2.24  notrunk   0%  NODT  17%
+   20000: 2.09 ->   0.9 [ 0.9]  N   1%  ref  99%  reg 0.99  trk 2.10  notrunk   0%  NODT  36%
+   15000: 2.71 ->   0.0 [ 0.0]  N   0%  ref 100%  reg 1.00  trk 2.08  notrunk   0%  NODT  50%
+    6000: 5.40 ->   0.0 [ 0.0]  N   0%  ref 100%  reg 1.00  trk 2.08  notrunk   0%  NODT  75%
+
+== scale 8, CH=2, pnet 30%  (idle ms: att/s/ex -> OK/min/ex [net], net ok%, refuse%, reg, trunk E, notrunk%, NODT%)
+  240000: 0.19 ->  11.0 [ 3.0]  N  88%  ref   8%  reg 0.11  trk 0.23  notrunk   1%  NODT   0%
+  120000: 0.39 ->  21.4 [ 5.5]  N  77%  ref  15%  reg 0.22  trk 0.48  notrunk   5%  NODT   0%
+   60000: 0.75 ->  37.6 [ 7.8]  N  56%  ref  31%  reg 0.39  trk 0.71  notrunk  14%  NODT   0%
+   40000: 1.09 ->  50.7 [ 9.0]  N  44%  ref  41%  reg 0.53  trk 0.91  notrunk  21%  NODT   0%
+   30000: 1.43 ->  62.1 [ 7.9]  N  30%  ref  56%  reg 0.66  trk 0.99  notrunk  23%  NODT   1%
+   20000: 2.06 ->  75.0 [ 4.5]  N  12%  ref  83%  reg 0.87  trk 0.96  notrunk  18%  NODT   6%
+   15000: 2.60 ->  76.4 [ 1.6]  N   3%  ref  95%  reg 0.96  trk 0.93  notrunk  11%  NODT  17%
+    6000: 5.13 ->  61.5 [ 0.0]  N   0%  ref 100%  reg 1.00  trk 0.93  notrunk   5%  NODT  57%
+
+== scale 8, CH=2, pnet 100%  (idle ms: att/s/ex -> OK/min/ex [net], net ok%, refuse%, reg, trunk E, notrunk%, NODT%)
+  240000: 0.20 ->   9.1 [ 9.1]  N  76%  ref   9%  reg 0.18  trk 0.74  notrunk  16%  NODT   0%
+  120000: 0.39 ->  13.6 [13.6]  N  58%  ref  12%  reg 0.29  trk 1.13  notrunk  33%  NODT   0%
+   60000: 0.76 ->  16.7 [16.7]  N  37%  ref  20%  reg 0.41  trk 1.46  notrunk  53%  NODT   0%
+   40000: 1.16 ->  17.2 [17.2]  N  25%  ref  32%  reg 0.50  trk 1.60  notrunk  63%  NODT   0%
+   30000: 1.54 ->  17.4 [17.4]  N  19%  ref  39%  reg 0.57  trk 1.67  notrunk  68%  NODT   1%
+   20000: 2.24 ->  13.4 [13.4]  N  10%  ref  67%  reg 0.75  trk 1.77  notrunk  65%  NODT   4%
+   15000: 2.88 ->   4.3 [ 4.3]  N   2%  ref  93%  reg 0.94  trk 1.81  notrunk  47%  NODT  17%
+    6000: 5.53 ->   0.0 [ 0.0]  N   0%  ref 100%  reg 1.00  trk 1.83  notrunk  21%  NODT  58%

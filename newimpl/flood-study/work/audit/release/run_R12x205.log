@@ -1,0 +1,38 @@
+
+  tb_rel -- hang-up sweep: fams=00000000000000000001000000000000 stub=1 lim=2000 bph=0 xph=0 port T_REL=256
+
+  port T_REL: A 256  X 205  B 256 (register and monitor CLR 32)
+  stub link UP (X fans out: two legs)
+  F12 d=0.00: X seize +139.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=-1 k=5 act=0 d=0.00  hangA=1399.997 hangB=4180.989  OK    idle+0ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 -0.00 -0.00 1605.15 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  REF pattern 5: flood_go 269.00 seize 279.00 Xhold 282.27 Xfwd 293.00 Bhold 296.27 f2 -0.00 CLAIM -0.00 claimed -0.00 Xres0 1605.15 att_ack -0.00 done -0.00 connect -0.00 rung -0.00 watch_end -0.00 answer -0.00
+  -- family 12: pattern 5 actor 0 anchor 0 d0 60.00 ms step 9.130 ms n 8
+  F12 d=60.00: X seize +199.00 (E leg 15); X claimed +-1.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=0 act=0 d=60.00  hangA=1399.997 hangB=4240.989  OK    idle+0ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 -0.00 -0.00 1605.15 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+  F12 d=69.13: X seize +208.00 (E leg 13); X claimed +340.19; B claim 339.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=1 act=0 d=69.13  hangA=1399.997 hangB=4249.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1739.00 -0.00 1605.15 1739.29 -0.00 3140.27 3141.14 3171.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=78.26: X seize +217.00 (E leg 13); X claimed +-320.00; B claim 348.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=2 act=0 d=78.26  hangA=1399.997 hangB=4258.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1748.00 -0.00 1605.15 1748.29 -0.00 3149.27 3150.14 3180.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=87.39: X seize +226.00 (E leg 13); X claimed +-320.00; B claim 357.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=3 act=0 d=87.39  hangA=1399.997 hangB=4267.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1757.00 -0.00 1605.15 1757.29 -0.00 3158.27 3159.14 3189.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=96.52: X seize +235.00 (E leg 13); X claimed +-320.00; B claim 366.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=4 act=0 d=96.52  hangA=1399.997 hangB=4276.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1766.00 -0.00 1605.15 1766.29 -0.00 3167.27 3168.14 3198.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=105.65: X seize +244.00 (E leg 13); X claimed +-320.00; B claim 375.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=5 act=0 d=105.65  hangA=1399.997 hangB=4285.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1775.00 -0.00 1605.15 1775.29 -0.00 3176.27 3177.14 3207.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=114.78: X seize +253.00 (E leg 13); X claimed +-320.00; B claim 384.00; X20 addr 00; B21 rung 2899355  WRONG-NUMBER
+    rb ticks: A20 0 A21 0 X20 0 X21 0 B20 0 B21 2904064 
+T fam=12 k=6 act=0 d=114.78  hangA=1399.997 hangB=4294.989  OK    idle+60ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 1784.00 -0.00 1605.15 1784.29 -0.00 3185.27 3186.14 3216.99 -0.00  glare+0  PHANTOM  LATE
+  F12 d=123.91: X seize +262.00 (E leg 13); X claimed +-320.00; B claim -1.00; X20 addr 00; B21 rung 0   
+T fam=12 k=7 act=0 d=123.91  hangA=1399.997 hangB=4303.989  OK    idle+0ms  ev:269.00 279.00 282.27 293.00 296.27 -0.00 -0.00 -0.00 1605.15 -0.00 -0.00 -0.00 -0.00 -0.00 -0.00  glare+0  
+
+  9 trials: 0 LEAK, 6 PHANTOM, 6 LATE; cable-B clashes 0; ovf 000 000
+- work/audit/release/tb_j3.v:660: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 42s; walltime 912.456 s; speed 45.624 ms/s
+- Verilator: cpu 909.634 s on 1 threads; allocated 8 MB
+rc=0 secs=912

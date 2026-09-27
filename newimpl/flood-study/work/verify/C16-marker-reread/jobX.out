@@ -1,0 +1,17 @@
+[sim.sh] slot 2: bash -c 
+cd /home/joel/telco/newimpl/build/flood; D=work/verify/C16-marker-reread
+verilator --binary --timing -j 2 -Irtl -Wno-fatal --top-module tb_c16 --Mdir $D/obj_s3 -o tb_c16 $(cat work/RTL.list) tb/site_net.v $D/tb_c16.v > $D/vl_s3.log 2>&1; echo b=$?
+timeout 1500 $D/obj_s3/tb_c16 +case=3 > $D/run_s8_c3.log 2>&1; echo r3=$?
+timeout 1500 $D/obj_s3/tb_c16 +case=4 > $D/run_s8_c4.log 2>&1; echo r4=$?
+rm -rf $D/obj_s3
+verilator --binary --timing -j 2 -I$D/rtl_fix -Irtl -Wno-fatal --top-module tb_c16 --Mdir $D/obj_f3 -o tb_c16 $(cat $D/RTL_fix.list) tb/site_net.v $D/tb_c16.v > $D/vl_f3.log 2>&1; echo bf=$?
+timeout 1500 $D/obj_f3/tb_c16 +case=3 > $D/run_f8_c3.log 2>&1; echo rf3=$?
+timeout 1500 $D/obj_f3/tb_c16 +case=4 > $D/run_f8_c4.log 2>&1; echo rf4=$?
+rm -rf $D/obj_f3
+
+b=0
+r3=0
+r4=0
+bf=0
+rf3=0
+rf4=0

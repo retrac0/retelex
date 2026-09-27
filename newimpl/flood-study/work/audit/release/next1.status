@@ -1,0 +1,19 @@
+start 23:50
+S12eqf done 00:00 0 leaks 0 wrong
+S0 done 00:30 0 leaks 0 wrong
+S4f done 00:51 0 leaks 0 wrong
+S2f done 00:58 0 leaks 0 wrong
+S1f done 01:04 0 leaks 0 wrong
+S7f done 01:13 0 leaks 0 wrong
+S3f done 01:22 0 leaks 0 wrong
+build a26 rc=0
+S11a26 done 01:38 0 leaks 0 wrong
+build mcx26 rc=0
+S12x26mc done 01:41 0 leaks 0 wrong
+build fix rc=0
+FIX10 done 01:49 0 leaks 0 wrong
+FIX8 done 01:52 0 leaks 0 wrong
+fix tb_net rc=0 secs=286   88 checks, 0 errors.  PASS
+fix tb_chain rc=0 secs=83   32 checks, 0 errors.  PASS
+ALLDONE 01:58
+next2 01:58

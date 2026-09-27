@@ -1,0 +1,3 @@
+[sim.sh] slot 4: bash work/verify/C20-misc/run_z.sh
+build_z=0
+run_z=0

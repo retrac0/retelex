@@ -1,0 +1,20 @@
+
+  tb_cls3 sc=9 NMON=8 NRES=8 T_ARM=16 guard=128  lam=4000/1000s dur=20000 t1=60..700 pexp=500 pown=100 loc=8000 pnet=300 seed=1 mode=0
+    ok    every trunk's link is up
+     21.389  cls read  20  word 11111111  trunk 0
+     22.271  MK register -> 20        
+    221.263  the sweep has read W 10 free: the far end seizes 10 (h_n 16)
+    223.263  cls read  10  word 11001011  trunk 1
+    225.263  HOLD      10  dir 3  mine 0  nst 2  word-dir
+    242.005  FWD       10 -> ok 0100 cand 71 30 41 10
+    550.003  origin nst 4 holds dirs 0111 trunks N 71 S 30 E 40 W 10; W 11-17 busy 0000000
+    FAIL  sc9: the origin seizes a W trunk while 7 of 8 are free
+    ok    no cable-B clash, no queue refused a write
+
+  3 checks, 1 errors.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/audit/cls/tb_cls3.v:589: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 2s; walltime 45.406 s; speed 46.910 ms/s
+- Verilator: cpu 43.742 s on 1 threads; allocated 8 MB
+rc=0 wall=45

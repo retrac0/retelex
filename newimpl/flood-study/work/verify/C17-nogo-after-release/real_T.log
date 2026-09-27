@@ -1,0 +1,39 @@
+
+  tb_c17 -- mode 1, CLR 256, T_REL 256, BRK/MK/PAUSE 60/40/720
+  links: A11 1 A12 1 B11 1 B12 1 A13 0
+
+  T: A20 dials 1 3 3; hangs up X ms after f2 (T_CLAIM from f2)
+  [ 4201.499] +1742.500  A20 hangs up (X = 1742.500 ms; unit nst 5, claimed 0)
+  [ 4456.994] +1997.995  A20 port REL
+  [ 4458.994] +1999.995  A r_gone rises (mk 6)
+  [ 4458.994] +1999.995  A unit nogo pulse (mk 3, r_gone 0)
+  [ 4459.412] +2000.413  A wr dst 20 src 00 bsy 0 clm 0
+  RESULT X= 1742.500 ms  rel +1997.995 gone +1999.995 nogo +1999.995 nodig +  -1.000 w03 +  -1.000  -> port 20 busy 0 latch 00 bsy 0        free
+  [10155.484] +1743.500  A20 hangs up (X = 1743.500 ms; unit nst 5, claimed 0)
+  [10410.978] +1998.995  A20 port REL
+  [10411.979] +1999.995  A unit nogo pulse (mk 6, r_gone 0)
+  [10412.397] +2000.413  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X= 1743.500 ms  rel +1998.995 gone +  -1.000 nogo +1999.995 nodig +  -1.000 w03 +2000.413  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [17390.465] +1744.500  A20 hangs up (X = 1744.500 ms; unit nst 5, claimed 0)
+  [17645.960] +1999.995  A20 port REL
+  [17645.961] +1999.995  A unit nogo pulse (mk 6, r_gone 0)
+  [17646.378] +2000.413  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X= 1744.500 ms  rel +1999.995 gone +  -1.000 nogo +1999.995 nodig +  -1.000 w03 +2000.413  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [24626.447] +1745.500  A20 hangs up (X = 1745.500 ms; unit nst 5, claimed 0)
+  [24880.942] +1999.995  A unit nogo pulse (mk 6, r_gone 0)
+  [24881.360] +2000.413  A wr dst 20 src 03 bsy 1 clm 0
+  [24881.941] +2000.995  A20 port REL
+  RESULT X= 1745.500 ms  rel +2000.995 gone +  -1.000 nogo +1999.995 nodig +  -1.000 w03 +2000.413  -> port 20 busy 0 latch 00 bsy 0        free
+
+  SUMMARY mode 1 CLR 256: 2 stuck of 4, idle-bad 0, clash 0, ovf 00
+- /home/joel/telco/newimpl/build/flood/work/verify/C17-nogo-after-release/tb_c17.v:258: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 26s; walltime 674.741 s; speed 39.153 ms/s
+- Verilator: cpu 665.963 s on 1 threads; allocated 8 MB
+rc=0

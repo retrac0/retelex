@@ -1,0 +1,553 @@
+
+  tb_fx -- one exchange, its links driven by the bench.  sc=5 var=0 dly=112 load=0
+      0.005 ms  port 10 BUSY -> 1
+      0.005 ms  port 11 BUSY -> 1
+      0.005 ms  port 12 BUSY -> 1
+      0.005 ms  port 13 BUSY -> 1
+      0.005 ms  port 14 BUSY -> 1
+      0.005 ms  port 15 BUSY -> 1
+      0.005 ms  port 16 BUSY -> 1
+      0.005 ms  port 17 BUSY -> 1
+      0.005 ms  B's LTU link_up -> 1
+      0.989 ms  port 10 BUSY -> 0
+      0.989 ms  port 11 BUSY -> 0
+      0.989 ms  port 12 BUSY -> 0
+      0.989 ms  port 13 BUSY -> 0
+      0.989 ms  port 14 BUSY -> 0
+      0.989 ms  port 15 BUSY -> 0
+      0.989 ms  port 16 BUSY -> 0
+      0.989 ms  port 17 BUSY -> 0
+    ok    every link is up
+  sc5: hop latency at real timers
+     32.514 ms  fst 0 -> 1
+     32.514 ms  mon_held 00 -> 01
+     32.514 ms  fst 1 -> 2
+     32.514 ms  hst 0 -> 1 (owner 1)
+     32.798 ms  port 30 BUSY -> 1
+     32.798 ms  port 30 latch -> src 00 bsy 1 clm 0
+     42.014 ms  hst 1 -> 2 (owner 1)
+     43.005 ms  hst 2 -> 0 (owner 1)
+     43.005 ms  fst 2 -> 3
+     43.006 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+     43.006 ms  fst 3 -> 0
+     43.290 ms  port 74 BUSY -> 1
+     43.290 ms  port 74 latch -> src 30 bsy 1 clm 0
+     43.389 ms  port 74 a_out (far M) -> 1
+     43.424 ms  port 40 BUSY -> 1
+     43.424 ms  port 40 latch -> src 30 bsy 1 clm 0
+     43.557 ms  port 10 BUSY -> 1
+     43.557 ms  port 10 latch -> src 30 bsy 1 clm 0
+     44.389 ms  port 40 a_out (far M) -> 1
+     44.411 ms  far LTU ch 0: M seen by W neighbour -> 1
+  HOP 5a nominal: in 30 -> leg 74 : 12.377 ms
+  HOP 5a nominal: in 30 -> leg 40 : 13.377 ms
+  HOP 5a nominal: in 30 -> leg 10 : 13.400 ms
+  HOP 5a nominal: 3 legs, first 12.377 ms, last 13.400 ms
+     49.389 ms  port 40 a_out (far M) -> 0
+     49.389 ms  port 74 a_out (far M) -> 0
+     49.411 ms  far LTU ch 0: M seen by W neighbour -> 0
+     49.680 ms  port 30 latch -> src 00 bsy 0 clm 0
+    305.004 ms  port 30 BUSY -> 0
+    305.395 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+    305.680 ms  port 74 BUSY -> 0
+    305.680 ms  port 74 latch -> src 00 bsy 0 clm 0
+    305.813 ms  port 40 BUSY -> 0
+    305.813 ms  port 40 latch -> src 00 bsy 0 clm 0
+    305.947 ms  port 10 BUSY -> 0
+    305.947 ms  port 10 latch -> src 00 bsy 0 clm 0
+    306.004 ms  mon_held 01 -> 00
+    751.512 ms  fst 0 -> 1
+    751.512 ms  mon_held 00 -> 01
+    751.513 ms  fst 1 -> 2
+    751.513 ms  hst 0 -> 1 (owner 1)
+    751.797 ms  port 30 BUSY -> 1
+    751.797 ms  port 30 latch -> src 00 bsy 1 clm 0
+    761.012 ms  hst 1 -> 2 (owner 1)
+    762.003 ms  hst 2 -> 0 (owner 1)
+    762.004 ms  fst 2 -> 3
+    762.004 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+    762.004 ms  fst 3 -> 0
+    762.288 ms  port 74 BUSY -> 1
+    762.288 ms  port 74 latch -> src 30 bsy 1 clm 0
+    762.387 ms  port 74 a_out (far M) -> 1
+    762.422 ms  port 40 BUSY -> 1
+    762.422 ms  port 40 latch -> src 30 bsy 1 clm 0
+    762.556 ms  port 10 BUSY -> 1
+    762.556 ms  port 10 latch -> src 30 bsy 1 clm 0
+    763.387 ms  port 40 a_out (far M) -> 1
+    763.409 ms  far LTU ch 0: M seen by W neighbour -> 1
+  HOP 5a nominal: in 30 -> leg 74 : 12.127 ms
+  HOP 5a nominal: in 30 -> leg 40 : 13.127 ms
+  HOP 5a nominal: in 30 -> leg 10 : 13.150 ms
+  HOP 5a nominal: 3 legs, first 12.127 ms, last 13.150 ms
+    768.387 ms  port 40 a_out (far M) -> 0
+    768.387 ms  port 74 a_out (far M) -> 0
+    768.409 ms  far LTU ch 0: M seen by W neighbour -> 0
+    768.678 ms  port 30 latch -> src 00 bsy 0 clm 0
+   1024.002 ms  port 30 BUSY -> 0
+   1024.393 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+   1024.678 ms  port 74 BUSY -> 0
+   1024.678 ms  port 74 latch -> src 00 bsy 0 clm 0
+   1024.811 ms  port 40 BUSY -> 0
+   1024.811 ms  port 40 latch -> src 00 bsy 0 clm 0
+   1024.945 ms  port 10 BUSY -> 0
+   1024.945 ms  port 10 latch -> src 00 bsy 0 clm 0
+   1025.003 ms  mon_held 01 -> 00
+   1471.511 ms  fst 0 -> 1
+   1471.511 ms  mon_held 00 -> 01
+   1471.511 ms  fst 1 -> 2
+   1471.511 ms  hst 0 -> 1 (owner 1)
+   1471.795 ms  port 30 BUSY -> 1
+   1471.795 ms  port 30 latch -> src 00 bsy 1 clm 0
+   1481.010 ms  hst 1 -> 2 (owner 1)
+   1482.001 ms  hst 2 -> 0 (owner 1)
+   1482.002 ms  fst 2 -> 3
+   1482.002 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+   1482.002 ms  fst 3 -> 0
+   1482.286 ms  port 74 BUSY -> 1
+   1482.286 ms  port 74 latch -> src 30 bsy 1 clm 0
+   1482.385 ms  port 74 a_out (far M) -> 1
+   1482.420 ms  port 40 BUSY -> 1
+   1482.420 ms  port 40 latch -> src 30 bsy 1 clm 0
+   1482.554 ms  port 10 BUSY -> 1
+   1482.554 ms  port 10 latch -> src 30 bsy 1 clm 0
+   1483.385 ms  port 40 a_out (far M) -> 1
+   1483.407 ms  far LTU ch 0: M seen by W neighbour -> 1
+  HOP 5a nominal: in 30 -> leg 74 : 12.877 ms
+  HOP 5a nominal: in 30 -> leg 40 : 13.877 ms
+  HOP 5a nominal: in 30 -> leg 10 : 13.900 ms
+  HOP 5a nominal: 3 legs, first 12.877 ms, last 13.900 ms
+   1488.385 ms  port 40 a_out (far M) -> 0
+   1488.385 ms  port 74 a_out (far M) -> 0
+   1488.407 ms  far LTU ch 0: M seen by W neighbour -> 0
+   1488.676 ms  port 30 latch -> src 00 bsy 0 clm 0
+   1744.001 ms  port 30 BUSY -> 0
+   1744.392 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+   1744.676 ms  port 74 BUSY -> 0
+   1744.676 ms  port 74 latch -> src 00 bsy 0 clm 0
+   1744.810 ms  port 40 BUSY -> 0
+   1744.810 ms  port 40 latch -> src 00 bsy 0 clm 0
+   1744.943 ms  port 10 BUSY -> 0
+   1744.943 ms  port 10 latch -> src 00 bsy 0 clm 0
+   1745.001 ms  mon_held 01 -> 00
+   2191.509 ms  fst 0 -> 1
+   2191.509 ms  mon_held 00 -> 01
+   2191.509 ms  fst 1 -> 2
+   2191.509 ms  hst 0 -> 1 (owner 1)
+   2191.793 ms  port 30 BUSY -> 1
+   2191.793 ms  port 30 latch -> src 00 bsy 1 clm 0
+   2201.008 ms  hst 1 -> 2 (owner 1)
+   2202.000 ms  hst 2 -> 0 (owner 1)
+   2202.000 ms  fst 2 -> 3
+   2202.000 ms  rs_busy 00 -> 01   in 30 00  held 1011 0000  legs0 74 40 00 10  legs1 00 00 00 00
+   2202.000 ms  fst 3 -> 0
+   2202.284 ms  port 74 BUSY -> 1
+   2202.284 ms  port 74 latch -> src 30 bsy 1 clm 0
+   2202.383 ms  port 74 a_out (far M) -> 1
+   2202.418 ms  port 40 BUSY -> 1
+   2202.418 ms  port 40 latch -> src 30 bsy 1 clm 0
+   2202.552 ms  port 10 BUSY -> 1
+   2202.552 ms  port 10 latch -> src 30 bsy 1 clm 0
+   2203.383 ms  port 40 a_out (far M) -> 1
+   2203.406 ms  far LTU ch 0: M seen by W neighbour -> 1
+  HOP 5a nominal: in 30 -> leg 74 : 12.627 ms
+  HOP 5a nominal: in 30 -> leg 40 : 13.627 ms
+  HOP 5a nominal: in 30 -> leg 10 : 13.650 ms
+  HOP 5a nominal: 3 legs, first 12.627 ms, last 13.650 ms
+   2208.383 ms  port 40 a_out (far M) -> 0
+   2208.383 ms  port 74 a_out (far M) -> 0
+   2208.406 ms  far LTU ch 0: M seen by W neighbour -> 0
+   2208.675 ms  port 30 latch -> src 00 bsy 0 clm 0
+   2463.999 ms  port 30 BUSY -> 0
+   2464.390 ms  rs_busy 01 -> 00   in 30 00  held 0000 0000  legs0 74 40 00 10  legs1 00 00 00 00
+   2464.674 ms  port 74 BUSY -> 0
+   2464.674 ms  port 74 latch -> src 00 bsy 0 clm 0
+   2464.808 ms  port 40 BUSY -> 0
+   2464.808 ms  port 40 latch -> src 00 bsy 0 clm 0
+   2464.942 ms  port 10 BUSY -> 0
+   2464.942 ms  port 10 latch -> src 00 bsy 0 clm 0
+   2464.999 ms  mon_held 01 -> 00
+   2910.647 ms  fst 0 -> 1
+   2910.647 ms  mon_held 00 -> 01
+   2910.648 ms  fst 1 -> 2
+   2910.648 ms  hst 0 -> 1 (owner 1)
+   2910.932 ms  port 41 BUSY -> 1
+   2910.932 ms  port 41 latch -> src 00 bsy 1 clm 0
+   2920.007 ms  hst 1 -> 2 (owner 1)
+   2920.998 ms  hst 2 -> 0 (owner 1)
+   2920.998 ms  fst 2 -> 3
+   2920.998 ms  rs_busy 00 -> 01   in 41 00  held 1101 0000  legs0 74 40 31 10  legs1 00 00 00 00
+   2920.998 ms  fst 3 -> 0
+   2921.282 ms  port 74 BUSY -> 1
+   2921.282 ms  port 74 latch -> src 41 bsy 1 clm 0
+   2921.416 ms  port 31 BUSY -> 1
+   2921.416 ms  port 31 latch -> src 41 bsy 1 clm 0
+   2921.522 ms  port 31 a_out (far M) -> 1
+   2921.522 ms  port 74 a_out (far M) -> 1
+   2921.550 ms  port 10 BUSY -> 1
+   2921.550 ms  port 10 latch -> src 41 bsy 1 clm 0
+   2922.544 ms  far LTU ch 0: M seen by W neighbour -> 1
+   2929.507 ms  fst 0 -> 1
+   2929.507 ms  mon_held 01 -> 11
+   2929.507 ms  fst 1 -> 2
+   2929.507 ms  hst 0 -> 1 (owner 1)
+   2929.791 ms  port 30 BUSY -> 1
+   2929.791 ms  port 30 latch -> src 00 bsy 1 clm 0
+   2939.007 ms  hst 1 -> 2 (owner 1)
+   2939.998 ms  hst 2 -> 0 (owner 1)
+   2939.998 ms  fst 2 -> 3
+   2939.998 ms  rs_busy 01 -> 11   in 41 30  held 1101 1011  legs0 74 40 31 10  legs1 75 40 31 11
+   2939.998 ms  fst 3 -> 0
+   2940.282 ms  port 75 BUSY -> 1
+   2940.282 ms  port 75 latch -> src 30 bsy 1 clm 0
+   2940.381 ms  port 75 a_out (far M) -> 1
+   2940.416 ms  port 40 BUSY -> 1
+   2940.416 ms  port 40 latch -> src 30 bsy 1 clm 0
+   2940.550 ms  port 11 BUSY -> 1
+   2940.550 ms  port 11 latch -> src 30 bsy 1 clm 0
+   2941.381 ms  port 40 a_out (far M) -> 1
+   2941.404 ms  far LTU ch 1: M seen by W neighbour -> 1
+  HOP 5b behind a T_ARM watch: in 30 -> leg 75 : 30.384 ms
+  HOP 5b behind a T_ARM watch: in 30 -> leg 40 : 31.384 ms
+  HOP 5b behind a T_ARM watch: in 30 -> leg 11 : 31.407 ms
+  HOP 5b behind a T_ARM watch: 3 legs, first 30.384 ms, last 31.407 ms
+   2946.381 ms  port 40 a_out (far M) -> 0
+   2946.381 ms  port 75 a_out (far M) -> 0
+   2946.404 ms  far LTU ch 1: M seen by W neighbour -> 0
+   2946.522 ms  port 31 a_out (far M) -> 0
+   2946.522 ms  port 74 a_out (far M) -> 0
+   2946.544 ms  far LTU ch 0: M seen by W neighbour -> 0
+   2946.673 ms  port 30 latch -> src 00 bsy 0 clm 0
+   3201.997 ms  port 30 BUSY -> 0
+   3201.997 ms  port 10 BUSY -> 0
+   3201.997 ms  port 10 latch -> src 00 bsy 0 clm 0
+   3201.997 ms  port 31 BUSY -> 0
+   3201.997 ms  port 31 latch -> src 00 bsy 0 clm 0
+   3201.997 ms  port 41 BUSY -> 0
+   3201.997 ms  port 41 latch -> src 00 bsy 0 clm 0
+   3201.997 ms  port 74 BUSY -> 0
+   3201.997 ms  port 74 latch -> src 00 bsy 0 clm 0
+   3202.388 ms  rs_busy 11 -> 01   in 41 30  held 1101 0000  legs0 74 40 31 10  legs1 75 40 31 11
+   3202.529 ms  rs_busy 01 -> 00   in 41 30  held 0000 0000  legs0 74 40 31 10  legs1 75 40 31 11
+   3202.672 ms  port 75 BUSY -> 0
+   3202.672 ms  port 75 latch -> src 00 bsy 0 clm 0
+   3202.806 ms  port 40 BUSY -> 0
+   3202.806 ms  port 40 latch -> src 00 bsy 0 clm 0
+   3202.940 ms  port 11 BUSY -> 0
+   3202.940 ms  port 11 latch -> src 00 bsy 0 clm 0
+   3202.997 ms  mon_held 11 -> 00
+   3649.505 ms  fst 0 -> 1
+   3649.505 ms  mon_held 00 -> 01
+   3649.505 ms  fst 1 -> 2
+   3649.505 ms  hst 0 -> 1 (owner 1)
+   3649.789 ms  port 30 BUSY -> 1
+   3649.789 ms  port 30 latch -> src 00 bsy 1 clm 0
+   3659.005 ms  hst 1 -> 2 (owner 1)
+   3659.996 ms  hst 2 -> 0 (owner 1)
+   3659.996 ms  fst 2 -> 3
+   3659.996 ms  rs_busy 00 -> 01   in 30 30  held 1011 0000  legs0 74 40 31 10  legs1 75 40 31 11
+   3659.996 ms  fst 3 -> 0
+   3660.281 ms  port 74 BUSY -> 1
+   3660.281 ms  port 74 latch -> src 30 bsy 1 clm 0
+   3660.379 ms  port 74 a_out (far M) -> 1
+   3660.414 ms  port 40 BUSY -> 1
+   3660.414 ms  port 40 latch -> src 30 bsy 1 clm 0
+   3660.548 ms  port 10 BUSY -> 1
+   3660.548 ms  port 10 latch -> src 30 bsy 1 clm 0
+   3661.379 ms  port 40 a_out (far M) -> 1
+   3661.402 ms  far LTU ch 0: M seen by W neighbour -> 1
+  HOP 5b behind a T_ARM watch: in 30 -> leg 74 : 12.384 ms
+  HOP 5b behind a T_ARM watch: in 30 -> leg 40 : 13.384 ms
+  HOP 5b behind a T_ARM watch: in 30 -> leg 10 : 13.407 ms
+  HOP 5b behind a T_ARM watch: 3 legs, first 12.384 ms, last 13.407 ms
+   3666.011 ms  port 41 BUSY -> 1
+   3666.379 ms  port 40 a_out (far M) -> 0
+   3666.379 ms  port 74 a_out (far M) -> 0
+   3666.402 ms  far LTU ch 0: M seen by W neighbour -> 0
+   3666.671 ms  port 30 latch -> src 00 bsy 0 clm 0
+   3921.995 ms  port 30 BUSY -> 0
+   3921.995 ms  port 41 BUSY -> 0
+   3922.386 ms  rs_busy 01 -> 00   in 30 30  held 0000 0000  legs0 74 40 31 10  legs1 75 40 31 11
+   3922.670 ms  port 74 BUSY -> 0
+   3922.670 ms  port 74 latch -> src 00 bsy 0 clm 0
+   3922.804 ms  port 40 BUSY -> 0
+   3922.804 ms  port 40 latch -> src 00 bsy 0 clm 0
+   3922.938 ms  port 10 BUSY -> 0
+   3922.938 ms  port 10 latch -> src 00 bsy 0 clm 0
+   3922.995 ms  mon_held 01 -> 00
+   4368.388 ms  port 20 BUSY -> 1
+   4368.388 ms  port 20 latch -> src 01 bsy 1 clm 0
+   4854.993 ms  nst 0 -> 1  d_held 0000
+   4854.994 ms  hst 0 -> 1 (owner 0)
+   4854.994 ms  nst 1 -> 2  d_held 0000
+   4855.121 ms  port 20 latch -> src 00 bsy 1 clm 0
+   4856.502 ms  fst 0 -> 1
+   4856.502 ms  mon_held 00 -> 01
+   4856.786 ms  port 30 BUSY -> 1
+   4856.786 ms  port 30 latch -> src 00 bsy 1 clm 0
+   4866.002 ms  hst 1 -> 2 (owner 0)
+   4866.993 ms  hst 2 -> 0 (owner 0)
+   4866.993 ms  fst 1 -> 2
+   4866.993 ms  hst 0 -> 1 (owner 1)
+   4866.993 ms  nst 2 -> 3  d_held 0000
+   4866.993 ms  nst 3 -> 4  d_held 1111
+   4867.277 ms  port 74 BUSY -> 1
+   4867.277 ms  port 74 latch -> src 20 bsy 1 clm 0
+   4867.411 ms  port 40 BUSY -> 1
+   4867.411 ms  port 40 latch -> src 20 bsy 1 clm 0
+   4867.545 ms  port 31 BUSY -> 1
+   4867.545 ms  port 31 latch -> src 20 bsy 1 clm 0
+   4867.679 ms  port 10 BUSY -> 1
+   4867.679 ms  port 10 latch -> src 20 bsy 1 clm 0
+   4868.251 ms  port 31 a_out (far M) -> 1
+   4868.251 ms  port 40 a_out (far M) -> 1
+   4868.251 ms  port 74 a_out (far M) -> 1
+   4868.274 ms  far LTU ch 0: M seen by W neighbour -> 1
+   4876.002 ms  hst 1 -> 2 (owner 1)
+   4876.993 ms  hst 2 -> 0 (owner 1)
+   4876.993 ms  fst 2 -> 3
+   4876.993 ms  rs_busy 00 -> 01   in 30 30  held 1011 0000  legs0 75 41 31 11  legs1 75 40 31 11
+   4876.993 ms  fst 3 -> 0
+   4877.277 ms  port 75 BUSY -> 1
+   4877.277 ms  port 75 latch -> src 30 bsy 1 clm 0
+   4877.376 ms  port 75 a_out (far M) -> 1
+   4877.411 ms  port 41 BUSY -> 1
+   4877.411 ms  port 41 latch -> src 30 bsy 1 clm 0
+   4877.545 ms  port 11 BUSY -> 1
+   4877.545 ms  port 11 latch -> src 30 bsy 1 clm 0
+   4878.376 ms  port 41 a_out (far M) -> 1
+   4878.399 ms  far LTU ch 1: M seen by W neighbour -> 1
+  HOP 5c behind an origin sweep: in 30 -> leg 75 : 22.383 ms
+  HOP 5c behind an origin sweep: in 30 -> leg 41 : 23.383 ms
+  HOP 5c behind an origin sweep: in 30 -> leg 11 : 23.405 ms
+  HOP 5c behind an origin sweep: 3 legs, first 22.383 ms, last 23.405 ms
+   4883.251 ms  port 31 a_out (far M) -> 0
+   4883.251 ms  port 40 a_out (far M) -> 0
+   4883.251 ms  port 74 a_out (far M) -> 0
+   4883.274 ms  far LTU ch 0: M seen by W neighbour -> 0
+   4883.376 ms  port 41 a_out (far M) -> 0
+   4883.376 ms  port 75 a_out (far M) -> 0
+   4883.399 ms  far LTU ch 1: M seen by W neighbour -> 0
+   4891.993 ms  nst 4 -> 7  d_held 1111
+   4891.993 ms  nst 7 -> 8  d_held 0000
+   4891.993 ms  nst 8 -> 0  d_held 0000
+   4892.277 ms  port 74 BUSY -> 0
+   4892.277 ms  port 74 latch -> src 00 bsy 0 clm 0
+   4892.411 ms  port 40 BUSY -> 0
+   4892.411 ms  port 40 latch -> src 00 bsy 0 clm 0
+   4892.545 ms  port 31 BUSY -> 0
+   4892.545 ms  port 31 latch -> src 00 bsy 0 clm 0
+   4892.679 ms  port 10 BUSY -> 0
+   4892.679 ms  port 10 latch -> src 00 bsy 0 clm 0
+   4892.812 ms  port 20 latch -> src 03 bsy 1 clm 0
+   5137.992 ms  port 20 BUSY -> 0
+   5137.992 ms  port 20 latch -> src 00 bsy 0 clm 0
+   5138.992 ms  port 30 BUSY -> 0
+   5138.992 ms  port 30 latch -> src 00 bsy 0 clm 0
+   5139.383 ms  rs_busy 01 -> 00   in 30 30  held 0000 0000  legs0 75 41 31 11  legs1 75 40 31 11
+   5139.667 ms  port 75 BUSY -> 0
+   5139.667 ms  port 75 latch -> src 00 bsy 0 clm 0
+   5139.801 ms  port 41 BUSY -> 0
+   5139.801 ms  port 41 latch -> src 00 bsy 0 clm 0
+   5139.935 ms  port 11 BUSY -> 0
+   5139.935 ms  port 11 latch -> src 00 bsy 0 clm 0
+   5139.992 ms  mon_held 01 -> 00
+   5785.384 ms  port 20 BUSY -> 1
+   5785.384 ms  port 20 latch -> src 01 bsy 1 clm 0
+   6271.990 ms  nst 0 -> 1  d_held 0000
+   6271.990 ms  hst 0 -> 1 (owner 0)
+   6271.990 ms  nst 1 -> 2  d_held 0000
+   6272.118 ms  port 20 latch -> src 00 bsy 1 clm 0
+   6276.498 ms  fst 0 -> 1
+   6276.498 ms  mon_held 00 -> 01
+   6276.782 ms  port 30 BUSY -> 1
+   6276.782 ms  port 30 latch -> src 00 bsy 1 clm 0
+   6281.998 ms  hst 1 -> 2 (owner 0)
+   6282.989 ms  hst 2 -> 0 (owner 0)
+   6282.989 ms  fst 1 -> 2
+   6282.989 ms  hst 0 -> 1 (owner 1)
+   6282.989 ms  nst 2 -> 3  d_held 0000
+   6282.990 ms  nst 3 -> 4  d_held 1111
+   6283.274 ms  port 74 BUSY -> 1
+   6283.274 ms  port 74 latch -> src 20 bsy 1 clm 0
+   6283.408 ms  port 40 BUSY -> 1
+   6283.408 ms  port 40 latch -> src 20 bsy 1 clm 0
+   6283.541 ms  port 31 BUSY -> 1
+   6283.541 ms  port 31 latch -> src 20 bsy 1 clm 0
+   6283.675 ms  port 10 BUSY -> 1
+   6283.675 ms  port 10 latch -> src 20 bsy 1 clm 0
+   6284.248 ms  port 31 a_out (far M) -> 1
+   6284.248 ms  port 40 a_out (far M) -> 1
+   6284.248 ms  port 74 a_out (far M) -> 1
+   6284.270 ms  far LTU ch 0: M seen by W neighbour -> 1
+   6291.998 ms  hst 1 -> 2 (owner 1)
+   6292.989 ms  hst 2 -> 0 (owner 1)
+   6292.989 ms  fst 2 -> 3
+   6292.990 ms  rs_busy 00 -> 01   in 30 30  held 1011 0000  legs0 75 41 31 11  legs1 75 40 31 11
+   6292.990 ms  fst 3 -> 0
+   6293.274 ms  port 75 BUSY -> 1
+   6293.274 ms  port 75 latch -> src 30 bsy 1 clm 0
+   6293.373 ms  port 75 a_out (far M) -> 1
+   6293.408 ms  port 41 BUSY -> 1
+   6293.408 ms  port 41 latch -> src 30 bsy 1 clm 0
+   6293.541 ms  port 11 BUSY -> 1
+   6293.541 ms  port 11 latch -> src 30 bsy 1 clm 0
+   6294.373 ms  port 41 a_out (far M) -> 1
+   6294.395 ms  far LTU ch 1: M seen by W neighbour -> 1
+  HOP 5c behind an origin sweep: in 30 -> leg 75 : 18.383 ms
+  HOP 5c behind an origin sweep: in 30 -> leg 41 : 19.383 ms
+  HOP 5c behind an origin sweep: in 30 -> leg 11 : 19.405 ms
+  HOP 5c behind an origin sweep: 3 legs, first 18.383 ms, last 19.405 ms
+   6299.248 ms  port 31 a_out (far M) -> 0
+   6299.248 ms  port 40 a_out (far M) -> 0
+   6299.248 ms  port 74 a_out (far M) -> 0
+   6299.270 ms  far LTU ch 0: M seen by W neighbour -> 0
+   6299.373 ms  port 41 a_out (far M) -> 0
+   6299.373 ms  port 75 a_out (far M) -> 0
+   6299.395 ms  far LTU ch 1: M seen by W neighbour -> 0
+   6307.989 ms  nst 4 -> 7  d_held 1111
+   6307.989 ms  nst 7 -> 8  d_held 0000
+   6307.990 ms  nst 8 -> 0  d_held 0000
+   6308.274 ms  port 74 BUSY -> 0
+   6308.274 ms  port 74 latch -> src 00 bsy 0 clm 0
+   6308.407 ms  port 40 BUSY -> 0
+   6308.407 ms  port 40 latch -> src 00 bsy 0 clm 0
+   6308.541 ms  port 31 BUSY -> 0
+   6308.541 ms  port 31 latch -> src 00 bsy 0 clm 0
+   6308.675 ms  port 10 BUSY -> 0
+   6308.675 ms  port 10 latch -> src 00 bsy 0 clm 0
+   6308.809 ms  port 20 latch -> src 03 bsy 1 clm 0
+   6553.988 ms  port 20 BUSY -> 0
+   6553.988 ms  port 20 latch -> src 00 bsy 0 clm 0
+   6554.988 ms  port 30 BUSY -> 0
+   6554.988 ms  port 30 latch -> src 00 bsy 0 clm 0
+   6555.379 ms  rs_busy 01 -> 00   in 30 30  held 0000 0000  legs0 75 41 31 11  legs1 75 40 31 11
+   6555.664 ms  port 75 BUSY -> 0
+   6555.664 ms  port 75 latch -> src 00 bsy 0 clm 0
+   6555.797 ms  port 41 BUSY -> 0
+   6555.797 ms  port 41 latch -> src 00 bsy 0 clm 0
+   6555.931 ms  port 11 BUSY -> 0
+   6555.931 ms  port 11 latch -> src 00 bsy 0 clm 0
+   6555.988 ms  mon_held 01 -> 00
+   7201.381 ms  port 20 BUSY -> 1
+   7201.381 ms  port 20 latch -> src 01 bsy 1 clm 0
+   7687.986 ms  nst 0 -> 1  d_held 0000
+   7687.986 ms  hst 0 -> 1 (owner 0)
+   7687.986 ms  nst 1 -> 2  d_held 0000
+   7688.114 ms  port 20 latch -> src 00 bsy 1 clm 0
+   7689.635 ms  fst 0 -> 1
+   7689.635 ms  mon_held 00 -> 01
+   7689.919 ms  port 41 BUSY -> 1
+   7689.919 ms  port 41 latch -> src 00 bsy 1 clm 0
+   7698.994 ms  hst 1 -> 2 (owner 0)
+   7699.986 ms  hst 2 -> 0 (owner 0)
+   7699.986 ms  fst 1 -> 2
+   7699.986 ms  hst 0 -> 1 (owner 1)
+   7699.986 ms  nst 2 -> 3  d_held 0000
+   7699.986 ms  nst 3 -> 4  d_held 1111
+   7700.270 ms  port 74 BUSY -> 1
+   7700.270 ms  port 74 latch -> src 20 bsy 1 clm 0
+   7700.404 ms  port 40 BUSY -> 1
+   7700.404 ms  port 40 latch -> src 20 bsy 1 clm 0
+   7700.538 ms  port 31 BUSY -> 1
+   7700.538 ms  port 31 latch -> src 20 bsy 1 clm 0
+   7700.672 ms  port 10 BUSY -> 1
+   7700.672 ms  port 10 latch -> src 20 bsy 1 clm 0
+   7701.244 ms  port 31 a_out (far M) -> 1
+   7701.244 ms  port 40 a_out (far M) -> 1
+   7701.244 ms  port 74 a_out (far M) -> 1
+   7701.267 ms  far LTU ch 0: M seen by W neighbour -> 1
+   7708.495 ms  n_nofwd 0 -> 1
+   7708.495 ms  mon_held 01 -> 11
+   7708.779 ms  port 30 BUSY -> 1
+   7708.779 ms  port 30 latch -> src 00 bsy 1 clm 0
+   7710.994 ms  hst 1 -> 2 (owner 1)
+   7711.986 ms  hst 2 -> 0 (owner 1)
+   7711.986 ms  fst 2 -> 3
+   7711.986 ms  rs_busy 00 -> 01   in 41 30  held 1101 0000  legs0 75 40 32 11  legs1 75 40 31 11
+   7711.986 ms  fst 3 -> 0
+   7711.986 ms  fst 0 -> 1
+   7711.986 ms  fst 1 -> 2
+   7711.986 ms  hst 0 -> 1 (owner 1)
+   7712.270 ms  port 75 BUSY -> 1
+   7712.270 ms  port 75 latch -> src 41 bsy 1 clm 0
+   7712.404 ms  port 32 BUSY -> 1
+   7712.404 ms  port 32 latch -> src 41 bsy 1 clm 0
+   7712.510 ms  port 32 a_out (far M) -> 1
+   7712.510 ms  port 75 a_out (far M) -> 1
+   7712.538 ms  port 11 BUSY -> 1
+   7712.538 ms  port 11 latch -> src 41 bsy 1 clm 0
+   7713.532 ms  far LTU ch 1: M seen by W neighbour -> 1
+  HOP 5d first flood, behind an origin sweep: in 41 -> leg 75 : 24.524 ms
+  HOP 5d first flood, behind an origin sweep: in 41 -> leg 32 : 24.524 ms
+  HOP 5d first flood, behind an origin sweep: in 41 -> leg 11 : 25.546 ms
+  HOP 5d first flood, behind an origin sweep: 3 legs, first 24.524 ms, last 25.546 ms
+   7720.994 ms  hst 1 -> 2 (owner 1)
+   7721.985 ms  hst 2 -> 0 (owner 1)
+   7721.986 ms  fst 2 -> 3
+   7721.986 ms  rs_busy 01 -> 11   in 41 30  held 1101 1011  legs0 75 40 32 11  legs1 76 42 32 12
+   7721.986 ms  fst 3 -> 0
+   7722.270 ms  port 76 BUSY -> 1
+   7722.270 ms  port 76 latch -> src 30 bsy 1 clm 0
+   7722.369 ms  port 76 a_out (far M) -> 1
+   7722.404 ms  port 42 BUSY -> 1
+   7722.404 ms  port 42 latch -> src 30 bsy 1 clm 0
+   7722.538 ms  port 12 BUSY -> 1
+   7722.538 ms  port 12 latch -> src 30 bsy 1 clm 0
+   7723.369 ms  port 42 a_out (far M) -> 1
+   7723.391 ms  far LTU ch 2: M seen by W neighbour -> 1
+  5d: second flood (1 ms after the first) forwarded? rs_in 41 30  n_nofwd +1
+    FAIL  5d: a second flood 1 ms behind the first, behind an origin sweep, is still forwarded
+   7778.244 ms  port 31 a_out (far M) -> 0
+   7778.244 ms  port 40 a_out (far M) -> 0
+   7778.244 ms  port 74 a_out (far M) -> 0
+   7778.266 ms  far LTU ch 0: M seen by W neighbour -> 0
+   7778.369 ms  port 42 a_out (far M) -> 0
+   7778.369 ms  port 76 a_out (far M) -> 0
+   7778.391 ms  far LTU ch 2: M seen by W neighbour -> 0
+   7778.510 ms  port 32 a_out (far M) -> 0
+   7778.510 ms  port 75 a_out (far M) -> 0
+   7778.532 ms  far LTU ch 1: M seen by W neighbour -> 0
+   7786.985 ms  nst 4 -> 7  d_held 1111
+   7786.986 ms  nst 7 -> 8  d_held 0000
+   7786.986 ms  nst 8 -> 0  d_held 0000
+   7787.270 ms  port 74 latch -> src 00 bsy 0 clm 0
+   7787.404 ms  port 40 latch -> src 00 bsy 0 clm 0
+   7787.537 ms  port 31 latch -> src 00 bsy 0 clm 0
+   7787.671 ms  port 10 latch -> src 00 bsy 0 clm 0
+   7787.805 ms  port 20 latch -> src 03 bsy 1 clm 0
+   8032.985 ms  port 20 BUSY -> 0
+   8032.985 ms  port 20 latch -> src 00 bsy 0 clm 0
+   8033.984 ms  port 10 BUSY -> 0
+   8033.984 ms  port 31 BUSY -> 0
+   8033.984 ms  port 40 BUSY -> 0
+   8033.984 ms  port 74 BUSY -> 0
+   8033.985 ms  port 11 BUSY -> 0
+   8033.985 ms  port 11 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 12 BUSY -> 0
+   8033.985 ms  port 12 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 30 BUSY -> 0
+   8033.985 ms  port 30 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 32 BUSY -> 0
+   8033.985 ms  port 32 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 41 BUSY -> 0
+   8033.985 ms  port 41 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 42 BUSY -> 0
+   8033.985 ms  port 42 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 75 BUSY -> 0
+   8033.985 ms  port 75 latch -> src 00 bsy 0 clm 0
+   8033.985 ms  port 76 BUSY -> 0
+   8033.985 ms  port 76 latch -> src 00 bsy 0 clm 0
+   8034.376 ms  rs_busy 11 -> 01   in 41 30  held 1101 0000  legs0 75 40 32 11  legs1 76 42 32 12
+   8034.516 ms  rs_busy 01 -> 00   in 41 30  held 0000 0000  legs0 75 40 32 11  legs1 76 42 32 12
+   8034.985 ms  mon_held 11 -> 00
+    ok    sc5: all idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  5 checks, 1 errors.  FAIL
+
+- work/audit/fwd/tb_fx.v:505: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 9s; walltime 329.353 s; speed 26.349 ms/s
+- Verilator: cpu 239.194 s on 1 threads; allocated 8 MB

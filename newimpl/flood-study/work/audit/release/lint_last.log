@@ -1,0 +1,61 @@
+%Warning-ZERODLY: work/audit/release/tb_rc.v:490:22: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  490 |                      #((t_h + d_us * 1000.0 - 12.0e6) - $realtime);
+      |                      ^
+                  ... For warning description see https://verilator.org/warn/ZERODLY?v=5.050
+                  ... Use "/* verilator lint_off ZERODLY */" and lint_on around source to disable this message.
+%Warning-ZERODLY: work/audit/release/tb_rc.v:493:26: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  493 |                          #((t_h + d_us * 1000.0) - $realtime); hook_a[P21] = 1'b1;
+      |                          ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:494:26: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  494 |                          #(t_h - $realtime); hang_a; hang_b;
+      |                          ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:496:26: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  496 |                          #(t_h - $realtime); hang_a; hang_b;
+      |                          ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:497:42: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  497 |                          if (d_us > 0.0) #((t_h + d_us * 1000.0) - $realtime);
+      |                                          ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:519:32: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  519 |                          begin #(t_h - $realtime); hang_a; end
+      |                                ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:520:32: Value of # delay control statically unknown. Assuming it can be #0.
+                                                   : ... If all # delays are non-zero at runtime,
+                                                   : ... use '--no-sched-zero-delay' for improved performance.
+                                                   : ... If a real #0 is expected at runtime,
+                                                   : ... use '--sched-zero-delay' to suppress this warning.
+  520 |                          begin #((t_h + d_us * 1000.0 - BRK * 1.0e6) - $realtime);
+      |                                ^
+%Warning-ZERODLY: work/audit/release/tb_rc.v:670:9: Value of # delay control statically unknown. Assuming it can be #0.
+                                                  : ... If all # delays are non-zero at runtime,
+                                                  : ... use '--no-sched-zero-delay' for improved performance.
+                                                  : ... If a real #0 is expected at runtime,
+                                                  : ... use '--sched-zero-delay' to suppress this warning.
+  670 |         #(wd_s * 1.0e9);
+      |         ^
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.233 MB sources in 27 modules, into 2.515 MB in 8 C++ files needing 0.000 MB
+- Verilator: Walltime 4.902 s (elab=0.465, cvt=3.876, bld=0.000); cpu 3.457 s on 1 threads; allocated 79.414 MB

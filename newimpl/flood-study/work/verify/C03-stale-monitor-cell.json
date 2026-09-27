@@ -1,0 +1,48 @@
+{
+ "id": "C03-stale-monitor-cell",
+ "title": "A seizure written away inside T_ARM keeps its monitor cell; the cell miscounts the next call on that trunk and claims it: wrong number; and short seizures starve the two cells",
+ "findings": [
+  {
+   "id": "stale-cell-after-unhold",
+   "title": "A seizure written away inside T_ARM (C_UNHOLD) keeps its monitor cell. The cell then counts the next call on that trunk one digit out of step and claims it: a wrong number",
+   "category": "wrong-number",
+   "severity": "high",
+   "confidence": "reproduced",
+   "mechanism": "net_unit.v:611-615 gives the first free cell to a seizure at w_cls. 584-588 watches the hold for T_ARM, and when M falls, 590-594 writes the hold away and sets f_cancel, but never touches m_held/m_st/m_armed. A cell is freed only by a digit mismatch (635-639), a claim (666-668) or d_clr, which is CLR = 256 ms of break (647-649). The port is now free: BUSY is clear and st was cleared by the M-low sample at 566-567. A new seizure within CLR is therefore classified again (283-284, 570) and gets a SECOND cell (612): two cells watch one port. In the stale cell, pulse_rx (pulse_rx.v:84-90) counted the short seizure's death as a pulse (a break >= HIT). It then takes the re-seizure's make as the end of a digit (pulse_rx.v:96-99, ID), so it hears a digit 1 that nobody dialled, then the new call's e as its b. If the new call's first break comes before ID of the rise, the cell instead hears (1+e) as e and b as b. Either pair matching OWN_E/OWN_B goes M_DONE, then CLAIM (656-671), then att. The mini marker attaches its register (mini_marker.v:305-319), and the register reads the call's (b h) or (h s) as the local number.",
+   "trigger": "(1) An incoming trunk seizure that dies inside T_ARM (16 ms). Causes: the far origin's guard abandoning on a break inside 16 ms of its seizure (tb_net scenario 7's case); a far origin taking glare on one direction as its claim and dropping its other directions via dmo within a few ms; a far resolver doing the same on a glared leg. (2) The same channel seized again within CLR (256 ms). Causes: a far transit's forwarder re-using the lowest free channel for the next flood (~15 ms), or the far origin's next caller keying 1 at once. (3) A code match. Variant (1,e): any exchange whose e is 1 (by convention the backbone, 10-17) claims every such call whose e equals its b, at e's ID, before b is dialled. Variant (e+1,b): any exchange claims when the caller's first break falls inside ID of the re-seizure, which a fast caller the 128 ms guard still admits can do.",
+   "consequence": "The far caller is connected, both ways, to a line on the wrong exchange, and nothing anywhere notices. In the (1,e) variant the origin even accepts the claim before b is dialled (see origin-accepts-early-claim). The true destination, if it claims, loses the race or is dropped. Side effect: each short seizure also holds a cell for 256 ms (stale-cell-starves-monitors).",
+   "evidence": "work/audit/monclaim/run_mc_all.log, scenario 1, scale 8, exchange 13. [1193 ms] cell 0 given to the 0.9 ms blip on T11. [1194] busy1x->0: hold written away, cell still held. [1213] 'port=11/11': a second cell on T11. [1229] stale cell st=2: it took '1' as e. [1349] stale cell want -> CLAIM on T11 (bkA=...1), leg T16 dropped, att@11, reg=1 on 11. Register dig=0022; [1629-1630] connect. 'FAIL SAFETY: X (13) did not claim a call dialled to 3x' and 'FAIL ... no phone at X rings' (X22 rang). Real timers: run_real13_sc1.log shows the same 3 FAILs, ringing=...40000 (X22). The (e+1,b) variant is in run_mc42_sc5.log (scale 8) and run_real42_sc5.log (real timers): exchange 42 claims a call dialled 1 3 2 2 1 and X21 rings. End to end, two exchanges at real timers, work/audit/monclaim/run_mc2.log: A seizes A11 at 450 ms; X holds it and gives a cell at 453, writes the hold away at 456; A's guard drops A11 at 464. A21 gets the register at 467 and keys 1; A re-seizes A11 at 704 ms (240 ms later). X gives a second cell at 707; the stale cell goes st=2 at 835 ('1'). A21 dials 3 and X claims at 1894 ms; A shows claimed=1 at 1895 while in origin state 4 (N_NET, b not yet dialled). A21 dials 2 2 1, X connects X22 at 3894, and A21 hears X22's tx go 1 then 0. Both exchanges were idle afterwards.",
+   "fix": "(a) The classifier keeps the cell it gave (cls_cell, one flip-flop a cell) and frees that cell in the C_UNHOLD write. (b) A cell lets go on a break no dial makes: its own timer's ID tap (monitor.md 6: Q7, 128 ms) ANDed with M low, one gate a cell; this also closes rc-tolerance-reseize. Total cost is about one package. Both are implemented in work/audit/monclaim/rtl_fix/{net_unit.v,pulse_rx.v} (diff in work/audit/monclaim/fix.patch). With the fix, scenarios 1, 3 and 5 are safe at scale 8 and at real timers (run_fix13_all.log, run_fix42_sc5.log, run_realfix13_all.log, run_realfix42_sc5.log) and the end-to-end bench is safe (run_fix_mc2.log: no claim, X22 not rung, A21 does not follow X22). The control and burst scenarios are unchanged, and the tree's tb_net passes on the fixed RTL (run_fix_tbnet.log: 88 checks, 0 errors). Defence in depth: origin-accepts-early-claim.",
+   "realistic": "Survives real timing: reproduced end to end at the board's timers. It is rare. It needs a short seizure (a guard abandon inside T_ARM, or glare taken as a claim by an origin or resolver), then that channel re-seized within 256 ms, then a code match: 1 in 8 re-seized floods for an e=1 exchange, about 1 in 64 otherwise. The origin route in tb_mc2 needed A21 to key within about 45 ms of dial tone (6 ms of margin to CLR), which is unlikely by hand but easy for a data card pulsing DTR. The transit-forwarder route is the likely one under load, because the sweep re-picks the lowest free channel. At scale 8 the origin route cannot happen: one key costs 12 + 16 ms plus an unscaled ~11 ms sweep, more than CLR = 32 ms. That is why no tree bench met it.",
+   "audit": "monclaim"
+  },
+  {
+   "id": "stale-cell-starves-monitors",
+   "title": "Every seizure shorter than T_ARM holds a monitor cell for 256 ms. With NMON = 2, two of them make the exchange deaf to its own calls",
+   "category": "starvation",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "Same root as stale-cell-after-unhold: C_UNHOLD (net_unit.v:590-594) writes the hold away at once, but the cell given at 612-615 stays until CLR (647-649). A seizure classified meanwhile finds m_free1 empty and gets no cell, so it is 'unwatched here, for good' (monitor.md 4).",
+   "trigger": "Two short seizures (glare or guard abandons on two links), then within 256 ms a flood that dials this exchange.",
+   "consequence": "No claim. The origin waits T_CLAIM (2 s after b) and gives cannot-complete, holding a trunk on every link and its only register throughout.",
+   "evidence": "run_mc_all.log and run_real13_all.log, scenario 3: 'ok OBSERVE: both cells held by the blips', 'ok T15 held', 'FAIL LIVENESS: X claims a call dialled to it (1 3) on T15', 'FAIL X25 rings'. Passes with the fix (run_fix13_all.log, run_realfix13_all.log).",
+   "fix": "Fix (a) of stale-cell-after-unhold.",
+   "realistic": "Real timing (reproduced at real timers). Any short seizure costs a cell for a quarter second; in bursts of glare it adds to monitor-pool blocking.",
+   "audit": "monclaim"
+  },
+  {
+   "id": "rc-tolerance-reseize",
+   "title": "The release detector is an RC while the monitor's CLR is a counter. A far port released early can be re-seized before this port and its cell have let go",
+   "category": "wrong-number",
+   "severity": "low",
+   "confidence": "speculative",
+   "mechanism": "In the RTL both are exactly 256 ticks, so the far port's fE (port.v:183-187) and this port's fM fall within about 1 ms of each other and the cell's CLR (pulse_rx.v:93). fabric.md 3.5 makes them RC networks. With the far RC short and ours long, the far exchange can re-seize while this port still holds the old hold (BUSY, st set, so it is not re-classified or forwarded) and the old cell still counts. The gap is counted as a pulse (cnt = partial+1), then the new call's digits follow, giving the same shifted-digit claim as stale-cell-after-unhold.",
+   "trigger": "An abandoned flood seizure, re-seized by the far end within the RC spread.",
+   "consequence": "A possible wrong number; the new call is not held or forwarded here.",
+   "evidence": "Reasoning (RTL timers are exact).",
+   "fix": "Fix (b) of stale-cell-after-unhold (a cell drops on a break >= ID).",
+   "realistic": "Hardware tolerance only.",
+   "audit": "monclaim"
+  }
+ ]
+}

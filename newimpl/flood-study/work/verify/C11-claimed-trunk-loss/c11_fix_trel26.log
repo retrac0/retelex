@@ -1,0 +1,519 @@
+
+  tb_c11 -- scen 2, B 100 ppm, B offset 0 ns, 12 trials, port T_REL 26, CLR 32
+    ok    links 11, 12 up; 13 cut
+  [   30.271] A mk  0 -> 4  reg_busy 0
+  [   30.271] A cls 0 -> 1 port 20
+  [   31.389] A mk  4 -> 5  reg_busy 0
+  [   31.389] A cls 1 -> 0 port 20
+  [   32.271] A mk  5 -> 1  reg_busy 0
+  [   32.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   69.005] A mk  1 -> 6  reg_busy 1
+  [   69.006] A nst 0 -> 1  (ndig 0)
+  [   69.006] A nst 1 -> 2  (ndig 0)
+  [   69.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [   79.005] A nst 2 -> 3  (ndig 0)
+  [   79.006] A nst 3 -> 4  (ndig 0)
+  [   79.289] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [   81.169] B mk  0 -> 4  reg_busy 0
+  [   81.169] B cls 0 -> 1 port 11
+  [   82.288] B mk  4 -> 0  reg_busy 0
+  [   82.288] B cls 1 -> 2 port 11
+  [   82.288] B mon_held 01
+  [   82.288] B cls 2 -> 3 port 11
+  [   82.572] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [   86.014] B cls 3 -> 0 port 11
+  [  369.005] A nst 4 -> 5  (ndig 2)
+  [  370.041] B mon_held 00
+  [  370.325] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [  370.331] B att 1 port 11 (mk 0 reg_busy 0)
+  [  370.332] B mk  0 -> 1  reg_busy 0
+  [  370.332] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [  370.332] B att 0 port 11 (mk 1 reg_busy 1)
+  [  371.161] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [  420.161] A nst 5 -> 7  (ndig 2)
+  [  420.161] A nst 7 -> 8  (ndig 2)
+  [  420.161] A nst 8 -> 0  (ndig 2)
+  [  420.161] A mk  6 -> 3  reg_busy 1
+  [  420.445] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [  420.579] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [  420.585] A mk  3 -> 0  reg_busy 0
+  [  425.046] B mk  1 -> 3  reg_busy 1
+  [  425.174] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [  425.181] B mk  3 -> 0  reg_busy 0
+  OBS S7.0: phase 0 us; gone +-391.004 ms, claim low +26.157 ms (gone - low -417.160); N_DROP     +29.157; NOGO->A20     +29.575; A20 busy 1
+  OBS S7.0: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 1331.267] A mk  0 -> 4  reg_busy 0
+  [ 1331.267] A cls 0 -> 1 port 20
+  [ 1332.386] A mk  4 -> 5  reg_busy 0
+  [ 1332.386] A cls 1 -> 0 port 20
+  [ 1333.267] A mk  5 -> 1  reg_busy 0
+  [ 1333.395] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 1370.002] A mk  1 -> 6  reg_busy 1
+  [ 1370.002] A nst 0 -> 1  (ndig 0)
+  [ 1370.002] A nst 1 -> 2  (ndig 0)
+  [ 1370.130] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 1380.002] A nst 2 -> 3  (ndig 0)
+  [ 1380.002] A nst 3 -> 4  (ndig 0)
+  [ 1380.286] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 1381.294] B mk  0 -> 4  reg_busy 0
+  [ 1381.294] B cls 0 -> 1 port 11
+  [ 1382.412] B mk  4 -> 0  reg_busy 0
+  [ 1382.412] B cls 1 -> 2 port 11
+  [ 1382.412] B mon_held 01
+  [ 1382.412] B cls 2 -> 3 port 11
+  [ 1382.696] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 1386.138] B cls 3 -> 0 port 11
+  [ 1670.001] A nst 4 -> 5  (ndig 2)
+  [ 1670.165] B mon_held 00
+  [ 1670.449] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 1670.456] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 1670.456] B mk  0 -> 1  reg_busy 0
+  [ 1670.456] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 1670.456] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 1671.157] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 1722.157] A nst 5 -> 7  (ndig 2)
+  [ 1722.158] A nst 7 -> 8  (ndig 2)
+  [ 1722.158] A nst 8 -> 0  (ndig 2)
+  [ 1722.158] A mk  6 -> 3  reg_busy 1
+  [ 1722.442] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 1722.575] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 1722.582] A mk  3 -> 0  reg_busy 0
+  [ 1725.171] B mk  1 -> 3  reg_busy 1
+  [ 1725.299] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 1725.305] B mk  3 -> 0  reg_busy 0
+  OBS S7.1: phase 415 us; gone +-1691.415 ms, claim low +27.742 ms (gone - low -1719.157); N_DROP     +30.742; NOGO->A20     +31.160; A20 busy 1
+  OBS S7.1: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 2631.264] A mk  0 -> 4  reg_busy 0
+  [ 2631.264] A cls 0 -> 1 port 20
+  [ 2632.382] A mk  4 -> 5  reg_busy 0
+  [ 2632.382] A cls 1 -> 0 port 20
+  [ 2633.264] A mk  5 -> 1  reg_busy 0
+  [ 2633.392] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 2669.999] A mk  1 -> 6  reg_busy 1
+  [ 2669.999] A nst 0 -> 1  (ndig 0)
+  [ 2669.999] A nst 1 -> 2  (ndig 0)
+  [ 2670.127] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 2679.999] A nst 2 -> 3  (ndig 0)
+  [ 2679.999] A nst 3 -> 4  (ndig 0)
+  [ 2680.283] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 2681.418] B mk  0 -> 4  reg_busy 0
+  [ 2681.418] B cls 0 -> 1 port 11
+  [ 2682.537] B mk  4 -> 0  reg_busy 0
+  [ 2682.537] B cls 1 -> 2 port 11
+  [ 2682.537] B mon_held 01
+  [ 2682.537] B cls 2 -> 3 port 11
+  [ 2682.821] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 2686.262] B cls 3 -> 0 port 11
+  [ 2969.998] A nst 4 -> 5  (ndig 2)
+  [ 2970.290] B mon_held 00
+  [ 2970.574] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 2970.580] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 2970.580] B mk  0 -> 1  reg_busy 0
+  [ 2970.580] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 2970.581] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 2971.154] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 3021.154] A nst 5 -> 7  (ndig 2)
+  [ 3021.154] A nst 7 -> 8  (ndig 2)
+  [ 3021.154] A nst 8 -> 0  (ndig 2)
+  [ 3021.155] A mk  6 -> 3  reg_busy 1
+  [ 3021.438] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 3021.572] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 3021.578] A mk  3 -> 0  reg_busy 0
+  [ 3025.295] B mk  1 -> 3  reg_busy 1
+  [ 3025.423] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 3025.429] B mk  3 -> 0  reg_busy 0
+  OBS S7.2: phase 830 us; gone +-2991.827 ms, claim low +26.327 ms (gone - low -3018.154); N_DROP     +29.327; NOGO->A20     +29.745; A20 busy 1
+  OBS S7.2: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 3931.261] A mk  0 -> 4  reg_busy 0
+  [ 3931.261] A cls 0 -> 1 port 20
+  [ 3932.379] A mk  4 -> 5  reg_busy 0
+  [ 3932.379] A cls 1 -> 0 port 20
+  [ 3933.261] A mk  5 -> 1  reg_busy 0
+  [ 3933.389] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 3969.995] A mk  1 -> 6  reg_busy 1
+  [ 3969.996] A nst 0 -> 1  (ndig 0)
+  [ 3969.996] A nst 1 -> 2  (ndig 0)
+  [ 3970.123] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 3979.995] A nst 2 -> 3  (ndig 0)
+  [ 3979.996] A nst 3 -> 4  (ndig 0)
+  [ 3980.279] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 3981.543] B mk  0 -> 4  reg_busy 0
+  [ 3981.543] B cls 0 -> 1 port 11
+  [ 3982.661] B mk  4 -> 0  reg_busy 0
+  [ 3982.661] B cls 1 -> 2 port 11
+  [ 3982.661] B mon_held 01
+  [ 3982.661] B cls 2 -> 3 port 11
+  [ 3982.945] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 3986.387] B cls 3 -> 0 port 11
+  [ 4269.995] A nst 4 -> 5  (ndig 2)
+  [ 4270.414] B mon_held 00
+  [ 4270.698] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 4270.705] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 4270.705] B mk  0 -> 1  reg_busy 0
+  [ 4270.705] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 4270.705] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 4271.151] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 4320.151] A nst 5 -> 7  (ndig 2)
+  [ 4320.151] A nst 7 -> 8  (ndig 2)
+  [ 4320.151] A nst 8 -> 0  (ndig 2)
+  [ 4320.151] A mk  6 -> 3  reg_busy 1
+  [ 4320.435] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 4320.569] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 4320.575] A mk  3 -> 0  reg_busy 0
+  [ 4324.420] B mk  1 -> 3  reg_busy 1
+  [ 4324.547] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 4324.554] B mk  3 -> 0  reg_busy 0
+  OBS S7.3: phase 245 us; gone +-4291.239 ms, claim low +25.912 ms (gone - low -4317.150); N_DROP     +28.912; NOGO->A20     +29.330; A20 busy 1
+  OBS S7.3: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 5231.257] A mk  0 -> 4  reg_busy 0
+  [ 5231.257] A cls 0 -> 1 port 20
+  [ 5232.376] A mk  4 -> 5  reg_busy 0
+  [ 5232.376] A cls 1 -> 0 port 20
+  [ 5233.257] A mk  5 -> 1  reg_busy 0
+  [ 5233.385] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 5269.992] A mk  1 -> 6  reg_busy 1
+  [ 5269.992] A nst 0 -> 1  (ndig 0)
+  [ 5269.992] A nst 1 -> 2  (ndig 0)
+  [ 5270.120] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 5279.992] A nst 2 -> 3  (ndig 0)
+  [ 5279.992] A nst 3 -> 4  (ndig 0)
+  [ 5280.276] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 5281.667] B mk  0 -> 4  reg_busy 0
+  [ 5281.667] B cls 0 -> 1 port 11
+  [ 5282.785] B mk  4 -> 0  reg_busy 0
+  [ 5282.785] B cls 1 -> 2 port 11
+  [ 5282.786] B mon_held 01
+  [ 5282.786] B cls 2 -> 3 port 11
+  [ 5283.070] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 5286.511] B cls 3 -> 0 port 11
+  [ 5569.991] A nst 4 -> 5  (ndig 2)
+  [ 5570.539] B mon_held 00
+  [ 5570.823] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 5570.829] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 5570.829] B mk  0 -> 1  reg_busy 0
+  [ 5570.829] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 5570.830] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 5571.147] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 5621.147] A nst 5 -> 7  (ndig 2)
+  [ 5621.148] A nst 7 -> 8  (ndig 2)
+  [ 5621.148] A nst 8 -> 0  (ndig 2)
+  [ 5621.148] A mk  6 -> 3  reg_busy 1
+  [ 5621.432] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 5621.565] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 5621.572] A mk  3 -> 0  reg_busy 0
+  [ 5625.544] B mk  1 -> 3  reg_busy 1
+  [ 5625.672] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 5625.678] B mk  3 -> 0  reg_busy 0
+  OBS S7.4: phase 660 us; gone +-5591.650 ms, claim low +26.497 ms (gone - low -5618.147); N_DROP     +29.497; NOGO->A20     +29.915; A20 busy 1
+  OBS S7.4: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 6531.254] A mk  0 -> 4  reg_busy 0
+  [ 6531.254] A cls 0 -> 1 port 20
+  [ 6532.372] A mk  4 -> 5  reg_busy 0
+  [ 6532.372] A cls 1 -> 0 port 20
+  [ 6533.254] A mk  5 -> 1  reg_busy 0
+  [ 6533.382] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 6569.989] A mk  1 -> 6  reg_busy 1
+  [ 6569.989] A nst 0 -> 1  (ndig 0)
+  [ 6569.989] A nst 1 -> 2  (ndig 0)
+  [ 6570.117] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 6579.989] A nst 2 -> 3  (ndig 0)
+  [ 6579.989] A nst 3 -> 4  (ndig 0)
+  [ 6580.273] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 6581.792] B mk  0 -> 4  reg_busy 0
+  [ 6581.792] B cls 0 -> 1 port 11
+  [ 6582.910] B mk  4 -> 0  reg_busy 0
+  [ 6582.910] B cls 1 -> 2 port 11
+  [ 6582.910] B mon_held 01
+  [ 6582.910] B cls 2 -> 3 port 11
+  [ 6583.194] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 6586.636] B cls 3 -> 0 port 11
+  [ 6869.988] A nst 4 -> 5  (ndig 2)
+  [ 6870.663] B mon_held 00
+  [ 6870.947] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 6870.954] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 6870.954] B mk  0 -> 1  reg_busy 0
+  [ 6870.954] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 6870.954] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 6871.144] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 6920.144] A nst 5 -> 7  (ndig 2)
+  [ 6920.144] A nst 7 -> 8  (ndig 2)
+  [ 6920.145] A nst 8 -> 0  (ndig 2)
+  [ 6920.145] A mk  6 -> 3  reg_busy 1
+  [ 6920.428] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 6920.562] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 6920.568] A mk  3 -> 0  reg_busy 0
+  [ 6924.668] B mk  1 -> 3  reg_busy 1
+  [ 6924.796] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 6924.803] B mk  3 -> 0  reg_busy 0
+  OBS S7.5: phase 75 us; gone +-6891.062 ms, claim low +26.082 ms (gone - low -6917.144); N_DROP     +29.082; NOGO->A20     +29.500; A20 busy 1
+  OBS S7.5: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 7831.251] A mk  0 -> 4  reg_busy 0
+  [ 7831.251] A cls 0 -> 1 port 20
+  [ 7832.369] A mk  4 -> 5  reg_busy 0
+  [ 7832.369] A cls 1 -> 0 port 20
+  [ 7833.251] A mk  5 -> 1  reg_busy 0
+  [ 7833.379] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 7869.985] A mk  1 -> 6  reg_busy 1
+  [ 7869.986] A nst 0 -> 1  (ndig 0)
+  [ 7869.986] A nst 1 -> 2  (ndig 0)
+  [ 7870.113] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 7879.985] A nst 2 -> 3  (ndig 0)
+  [ 7879.986] A nst 3 -> 4  (ndig 0)
+  [ 7880.269] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 7881.916] B mk  0 -> 4  reg_busy 0
+  [ 7881.916] B cls 0 -> 1 port 11
+  [ 7883.034] B mk  4 -> 0  reg_busy 0
+  [ 7883.034] B cls 1 -> 2 port 11
+  [ 7883.035] B mon_held 01
+  [ 7883.035] B cls 2 -> 3 port 11
+  [ 7883.319] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 7886.760] B cls 3 -> 0 port 11
+  [ 8169.985] A nst 4 -> 5  (ndig 2)
+  [ 8170.788] B mon_held 00
+  [ 8171.072] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 8171.078] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 8171.078] B mk  0 -> 1  reg_busy 0
+  [ 8171.078] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 8171.079] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 8171.141] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 8221.141] A nst 5 -> 7  (ndig 2)
+  [ 8221.141] A nst 7 -> 8  (ndig 2)
+  [ 8221.141] A nst 8 -> 0  (ndig 2)
+  [ 8221.141] A mk  6 -> 3  reg_busy 1
+  [ 8221.425] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 8221.559] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 8221.565] A mk  3 -> 0  reg_busy 0
+  [ 8225.793] B mk  1 -> 3  reg_busy 1
+  [ 8225.921] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 8225.927] B mk  3 -> 0  reg_busy 0
+  OBS S7.6: phase 490 us; gone +-8191.474 ms, claim low +26.667 ms (gone - low -8218.140); N_DROP     +29.667; NOGO->A20     +30.085; A20 busy 1
+  OBS S7.6: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [ 9131.247] A mk  0 -> 4  reg_busy 0
+  [ 9131.247] A cls 0 -> 1 port 20
+  [ 9132.366] A mk  4 -> 5  reg_busy 0
+  [ 9132.366] A cls 1 -> 0 port 20
+  [ 9133.247] A mk  5 -> 1  reg_busy 0
+  [ 9133.375] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [ 9169.982] A mk  1 -> 6  reg_busy 1
+  [ 9169.982] A nst 0 -> 1  (ndig 0)
+  [ 9169.983] A nst 1 -> 2  (ndig 0)
+  [ 9170.110] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [ 9179.982] A nst 2 -> 3  (ndig 0)
+  [ 9179.982] A nst 3 -> 4  (ndig 0)
+  [ 9180.266] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [ 9182.041] B mk  0 -> 4  reg_busy 0
+  [ 9182.041] B cls 0 -> 1 port 11
+  [ 9183.159] B mk  4 -> 0  reg_busy 0
+  [ 9183.159] B cls 1 -> 2 port 11
+  [ 9183.159] B mon_held 01
+  [ 9183.159] B cls 2 -> 3 port 11
+  [ 9183.443] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [ 9186.885] B cls 3 -> 0 port 11
+  [ 9469.981] A nst 4 -> 5  (ndig 2)
+  [ 9470.912] B mon_held 00
+  [ 9471.196] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 9471.203] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 9471.203] B mk  0 -> 1  reg_busy 0
+  [ 9471.203] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 9471.203] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 9472.137] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 9522.137] A nst 5 -> 7  (ndig 2)
+  [ 9522.138] A nst 7 -> 8  (ndig 2)
+  [ 9522.138] A nst 8 -> 0  (ndig 2)
+  [ 9522.138] A mk  6 -> 3  reg_busy 1
+  [ 9522.422] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 9522.555] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [ 9522.562] A mk  3 -> 0  reg_busy 0
+  [ 9526.918] B mk  1 -> 3  reg_busy 1
+  [ 9527.046] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [ 9527.052] B mk  3 -> 0  reg_busy 0
+  OBS S7.7: phase 905 us; gone +-9492.885 ms, claim low +26.252 ms (gone - low -9519.137); N_DROP     +29.252; NOGO->A20     +29.670; A20 busy 1
+  OBS S7.7: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [10432.244] A mk  0 -> 4  reg_busy 0
+  [10432.244] A cls 0 -> 1 port 20
+  [10433.362] A mk  4 -> 5  reg_busy 0
+  [10433.362] A cls 1 -> 0 port 20
+  [10434.244] A mk  5 -> 1  reg_busy 0
+  [10434.372] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [10470.979] A mk  1 -> 6  reg_busy 1
+  [10470.979] A nst 0 -> 1  (ndig 0)
+  [10470.979] A nst 1 -> 2  (ndig 0)
+  [10471.107] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [10480.979] A nst 2 -> 3  (ndig 0)
+  [10480.979] A nst 3 -> 4  (ndig 0)
+  [10481.263] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [10483.165] B mk  0 -> 4  reg_busy 0
+  [10483.165] B cls 0 -> 1 port 11
+  [10484.283] B mk  4 -> 0  reg_busy 0
+  [10484.283] B cls 1 -> 2 port 11
+  [10484.284] B mon_held 01
+  [10484.284] B cls 2 -> 3 port 11
+  [10484.568] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [10488.009] B cls 3 -> 0 port 11
+  [10770.978] A nst 4 -> 5  (ndig 2)
+  [10772.037] B mon_held 00
+  [10772.321] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [10772.327] B att 1 port 11 (mk 0 reg_busy 0)
+  [10772.327] B mk  0 -> 1  reg_busy 0
+  [10772.327] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [10772.328] B att 0 port 11 (mk 1 reg_busy 1)
+  [10773.134] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [10823.134] A nst 5 -> 7  (ndig 2)
+  [10823.134] A nst 7 -> 8  (ndig 2)
+  [10823.135] A nst 8 -> 0  (ndig 2)
+  [10823.135] A mk  6 -> 3  reg_busy 1
+  [10823.418] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [10823.552] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [10823.558] A mk  3 -> 0  reg_busy 0
+  [10828.042] B mk  1 -> 3  reg_busy 1
+  [10828.170] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [10828.176] B mk  3 -> 0  reg_busy 0
+  OBS S7.8: phase 320 us; gone +-10793.297 ms, claim low +26.837 ms (gone - low -10820.134); N_DROP     +29.837; NOGO->A20     +30.255; A20 busy 1
+  OBS S7.8: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [11733.241] A mk  0 -> 4  reg_busy 0
+  [11733.241] A cls 0 -> 1 port 20
+  [11734.359] A mk  4 -> 5  reg_busy 0
+  [11734.359] A cls 1 -> 0 port 20
+  [11735.241] A mk  5 -> 1  reg_busy 0
+  [11735.369] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [11771.975] A mk  1 -> 6  reg_busy 1
+  [11771.976] A nst 0 -> 1  (ndig 0)
+  [11771.976] A nst 1 -> 2  (ndig 0)
+  [11772.103] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [11781.975] A nst 2 -> 3  (ndig 0)
+  [11781.976] A nst 3 -> 4  (ndig 0)
+  [11782.260] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [11783.290] B mk  0 -> 4  reg_busy 0
+  [11783.290] B cls 0 -> 1 port 11
+  [11784.408] B mk  4 -> 0  reg_busy 0
+  [11784.408] B cls 1 -> 2 port 11
+  [11784.408] B mon_held 01
+  [11784.408] B cls 2 -> 3 port 11
+  [11784.692] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [11788.134] B cls 3 -> 0 port 11
+  [12071.975] A nst 4 -> 5  (ndig 2)
+  [12072.161] B mon_held 00
+  [12072.445] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [12072.452] B att 1 port 11 (mk 0 reg_busy 0)
+  [12072.452] B mk  0 -> 1  reg_busy 0
+  [12072.452] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [12072.452] B att 0 port 11 (mk 1 reg_busy 1)
+  [12073.131] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [12124.131] A nst 5 -> 7  (ndig 2)
+  [12124.131] A nst 7 -> 8  (ndig 2)
+  [12124.131] A nst 8 -> 0  (ndig 2)
+  [12124.131] A mk  6 -> 3  reg_busy 1
+  [12124.415] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [12124.549] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [12124.555] A mk  3 -> 0  reg_busy 0
+  [12127.167] B mk  1 -> 3  reg_busy 1
+  [12127.294] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [12127.301] B mk  3 -> 0  reg_busy 0
+  OBS S7.9: phase 735 us; gone +-12093.709 ms, claim low +27.422 ms (gone - low -12121.130); N_DROP     +30.422; NOGO->A20     +30.840; A20 busy 1
+  OBS S7.9: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [13033.238] A mk  0 -> 4  reg_busy 0
+  [13033.238] A cls 0 -> 1 port 20
+  [13034.356] A mk  4 -> 5  reg_busy 0
+  [13034.356] A cls 1 -> 0 port 20
+  [13035.238] A mk  5 -> 1  reg_busy 0
+  [13035.365] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [13071.972] A mk  1 -> 6  reg_busy 1
+  [13071.972] A nst 0 -> 1  (ndig 0)
+  [13071.973] A nst 1 -> 2  (ndig 0)
+  [13072.100] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [13081.972] A nst 2 -> 3  (ndig 0)
+  [13081.972] A nst 3 -> 4  (ndig 0)
+  [13082.256] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [13083.414] B mk  0 -> 4  reg_busy 0
+  [13083.414] B cls 0 -> 1 port 11
+  [13084.532] B mk  4 -> 0  reg_busy 0
+  [13084.532] B cls 1 -> 2 port 11
+  [13084.533] B mon_held 01
+  [13084.533] B cls 2 -> 3 port 11
+  [13084.817] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [13088.258] B cls 3 -> 0 port 11
+  [13371.971] A nst 4 -> 5  (ndig 2)
+  [13372.286] B mon_held 00
+  [13372.570] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [13372.576] B att 1 port 11 (mk 0 reg_busy 0)
+  [13372.576] B mk  0 -> 1  reg_busy 0
+  [13372.576] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [13372.577] B att 0 port 11 (mk 1 reg_busy 1)
+  [13373.127] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [13422.127] A nst 5 -> 7  (ndig 2)
+  [13422.128] A nst 7 -> 8  (ndig 2)
+  [13422.128] A nst 8 -> 0  (ndig 2)
+  [13422.128] A mk  6 -> 3  reg_busy 1
+  [13422.412] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [13422.545] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [13422.552] A mk  3 -> 0  reg_busy 0
+  [13426.291] B mk  1 -> 3  reg_busy 1
+  [13426.419] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [13426.425] B mk  3 -> 0  reg_busy 0
+  OBS S7.10: phase 150 us; gone +-13393.120 ms, claim low +26.007 ms (gone - low -13419.127); N_DROP     +29.007; NOGO->A20     +29.425; A20 busy 1
+  OBS S7.10: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  [14333.234] A mk  0 -> 4  reg_busy 0
+  [14333.234] A cls 0 -> 1 port 20
+  [14334.352] A mk  4 -> 5  reg_busy 0
+  [14334.352] A cls 1 -> 0 port 20
+  [14335.234] A mk  5 -> 1  reg_busy 0
+  [14335.362] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [14371.969] A mk  1 -> 6  reg_busy 1
+  [14371.969] A nst 0 -> 1  (ndig 0)
+  [14371.969] A nst 1 -> 2  (ndig 0)
+  [14372.097] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [14381.969] A nst 2 -> 3  (ndig 0)
+  [14381.969] A nst 3 -> 4  (ndig 0)
+  [14382.253] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [14383.539] B mk  0 -> 4  reg_busy 0
+  [14383.539] B cls 0 -> 1 port 11
+  [14384.657] B mk  4 -> 0  reg_busy 0
+  [14384.657] B cls 1 -> 2 port 11
+  [14384.657] B mon_held 01
+  [14384.657] B cls 2 -> 3 port 11
+  [14384.941] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [14388.383] B cls 3 -> 0 port 11
+  [14671.968] A nst 4 -> 5  (ndig 2)
+  [14672.410] B mon_held 00
+  [14672.694] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [14672.701] B att 1 port 11 (mk 0 reg_busy 0)
+  [14672.701] B mk  0 -> 1  reg_busy 0
+  [14672.701] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [14672.701] B att 0 port 11 (mk 1 reg_busy 1)
+  [14673.124] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [14723.124] A nst 5 -> 7  (ndig 2)
+  [14723.124] A nst 7 -> 8  (ndig 2)
+  [14723.125] A nst 8 -> 0  (ndig 2)
+  [14723.125] A mk  6 -> 3  reg_busy 1
+  [14723.408] A wr  g1 dst 11 src 00 bsy 0 clm 0
+  [14723.542] A wr  g1 dst 20 src 03 bsy 1 clm 0
+  [14723.548] A mk  3 -> 0  reg_busy 0
+  [14727.415] B mk  1 -> 3  reg_busy 1
+  [14727.543] B wr  g1 dst 11 src 00 bsy 0 clm 0
+  [14727.550] B mk  3 -> 0  reg_busy 0
+  OBS S7.11: phase 565 us; gone +-14693.532 ms, claim low +26.592 ms (gone - low -14720.124); N_DROP     +29.592; NOGO->A20     +30.010; A20 busy 1
+  OBS S7.11: A20 LEFT BUSY on-hook; the subscriber lifts and replaces to clear it
+    ok    S7: idle again
+  OBS S7: 12 trials; fix fired 12; NOGO onto A20 after hang-up 12; A20 left busy 12
+    FAIL  S7: a caller who hangs up after the claim is never left BUSY
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  16 checks, 1 errors, idle-bad 0.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C11-claimed-trunk-loss/tb_c11.v:353: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 16s; walltime 938.364 s; speed 16.660 ms/s
+- Verilator: cpu 666.945 s on 1 threads; allocated 8 MB
+rc=0 secs=938

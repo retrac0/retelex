@@ -1,0 +1,92 @@
+
+  tb_orig -- origin bank / mini marker network half, scen mask 2
+    ok    links 11, 12 up; 13 cut
+
+  S2. A20 dials 1 3 2 2 1 while B20 dials 1 2 2 2 1
+  [   30.271] A mk  0 -> 4  reg_busy 0
+  [   30.271] A cls 0 -> 1 port 20
+  [   31.389] A mk  4 -> 5  reg_busy 0
+  [   31.389] A cls 1 -> 0 port 20
+  [   32.271] A mk  5 -> 1  reg_busy 0
+  [   32.399] A wr  g1 dst 20 src 01 bsy 1 clm 0
+  [   53.271] B mk  0 -> 4  reg_busy 0
+  [   53.271] B cls 0 -> 1 port 20
+  [   54.389] B mk  4 -> 5  reg_busy 0
+  [   54.389] B cls 1 -> 0 port 20
+  [   55.271] B mk  5 -> 1  reg_busy 0
+  [   55.399] B wr  g1 dst 20 src 01 bsy 1 clm 0
+  [  299.005] A mk  1 -> 6  reg_busy 1
+  [  299.005] A nst 0 -> 1  (ndig 0)
+  [  299.005] A nst 1 -> 2  (ndig 0)
+  [  299.133] A wr  g1 dst 20 src 00 bsy 1 clm 0
+  [  309.005] A nst 2 -> 3  (ndig 0)
+  [  309.005] A nst 3 -> 4  (ndig 0)
+  [  309.289] A wr  g1 dst 11 src 20 bsy 1 clm 0
+  [  311.161] B cls 0 -> 1 port 11
+  [  312.279] B cls 1 -> 2 port 11
+  [  312.279] B mon_held 01
+  [  312.279] B cls 2 -> 3 port 11
+  [  312.563] B wr  g1 dst 11 src 00 bsy 1 clm 0
+  [  322.005] B mk  1 -> 6  reg_busy 1
+  [  322.005] B nst 0 -> 1  (ndig 0)
+  [  322.133] B wr  g1 dst 20 src 00 bsy 1 clm 0
+  [  323.005] B nst 1 -> 2  (ndig 0)
+  [  330.004] B cls 3 -> 0 port 11
+  [  333.005] B nst 2 -> 3  (ndig 0)
+  [  333.005] B nst 3 -> 4  (ndig 0)
+  [  333.289] B wr  g1 dst 12 src 20 bsy 1 clm 0
+  [  335.176] A cls 0 -> 1 port 12
+  [  336.294] A cls 1 -> 2 port 12
+  [  336.295] A mon_held 01
+  [  336.295] A cls 2 -> 3 port 12
+  [  336.579] A wr  g1 dst 12 src 00 bsy 1 clm 0
+  [  354.004] A cls 3 -> 0 port 12
+  [ 2242.000] B nst 4 -> 5  (ndig 2)
+  [ 2243.000] A mon_held 00
+  [ 2243.284] A wr  g1 dst 12 src 00 bsy 1 clm 1
+  [ 2243.290] A att 1 port 12 (mk 6 reg_busy 1)
+  [ 2243.290] A att_ack: REFUSED  (mk 6 reg_busy 1)
+  [ 2243.291] A att 0 port 12 (mk 6 reg_busy 1)
+  [ 2243.418] A wr  g1 dst 12 src 03 bsy 1 clm 1
+  [ 2244.171] B CLAIMED on 12  (guarding 0, n_glare 0)
+  [ 2244.172] B nst 5 -> 6  (ndig 2)
+  [ 2244.172] B nst 6 -> 0  (ndig 2)
+  [ 2244.172] B mk  6 -> 3  reg_busy 1
+  [ 2244.172] B mk  3 -> 0  reg_busy 0
+  [ 2244.456] B wr  g1 dst 20 src 12 bsy 1 clm 0
+  [ 2244.562] B20 HEARS 03 (cannot-complete)
+  [ 2319.000] A nst 4 -> 5  (ndig 2)
+  [ 2320.000] B mon_held 00
+  [ 2320.284] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 2320.290] B att 1 port 11 (mk 0 reg_busy 0)
+  [ 2320.290] B mk  0 -> 1  reg_busy 0
+  [ 2320.290] B att_ack:   TAKEN  (mk 1 reg_busy 0)
+  [ 2320.290] B att 0 port 11 (mk 1 reg_busy 1)
+  [ 2321.156] A CLAIMED on 11  (guarding 0, n_glare 0)
+  [ 2321.156] A nst 5 -> 6  (ndig 2)
+  [ 2321.156] A nst 6 -> 0  (ndig 2)
+  [ 2321.156] A mk  6 -> 3  reg_busy 1
+  [ 2321.157] A mk  3 -> 0  reg_busy 0
+  [ 2321.440] A wr  g1 dst 20 src 11 bsy 1 clm 0
+  [ 3280.125] B wr  g1 dst 11 src 00 bsy 1 clm 1
+  [ 4049.994] both callers have dialled their last digit
+  [ 4139.995] B mk  1 -> 4  reg_busy 1
+  [ 4140.394] B mk  4 -> 2  reg_busy 1
+  [ 4141.276] B mk  2 -> 7  reg_busy 1
+  [ 4141.404] B wr  g1 dst 11 src 21 bsy 1 clm 1
+  [ 4141.538] B wr  g1 dst 21 src 11 bsy 1 clm 0
+  [ 4141.541] A20 HEARS 03 (cannot-complete)
+  [ 4172.995] B mk  7 -> 0  reg_busy 1
+  OBS S2: A21 ring-hi 0, B21 ring-hi 1024; refusals A 1 B 0; claimed A 1 B 1
+    FAIL  S2 intent: neither claim is refused (both called lines are free)
+    ok    S2: idle again
+    ok    cable B never had two masters at once
+    ok    no queue refused a write
+
+  5 checks, 1 errors, idle-bad 0.  FAIL
+
+- /home/joel/telco/newimpl/build/flood/work/verify/C15-one-register/tb_c15.v:498: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 10s; walltime 335.798 s; speed 29.452 ms/s
+- Verilator: cpu 326.900 s on 1 threads; allocated 8 MB
+rc=0 secs=384

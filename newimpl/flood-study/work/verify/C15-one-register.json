@@ -1,0 +1,62 @@
+{
+ "id": "C15-one-register",
+ "title": "The one register refuses every claim that finds it busy; two exchanges calling each other refuse each other; the refusal is heard only after h s",
+ "findings": [
+  {
+   "id": "one-register-claim-refusal",
+   "title": "The one register refuses incoming network calls at a rate equal to its occupancy (about 22% at 48 lines), and crossing calls refuse each other",
+   "category": "capacity",
+   "severity": "high",
+   "confidence": "reproduced",
+   "mechanism": "mini_marker.v:282 refuses any claim at once whenever r_busy is set, outside WATCH. The register is held from a local caller's lift to its connect. It is held from an origin caller's lift to N_DONE, which comes only at o_last, the caller's last digit (net_unit.v:410, :881, :818-822), even though the claim has already fixed the path. It is also held from a claimed trunk's attach to its connect. So a claim is refused whenever the far exchange's own callers are dialling. Two floods crossing between the same pair of exchanges, each registering while the other's b arrives, are both refused (S_YIELD, mk 6), although both called lines are free.",
+   "trigger": "A20 dials 1 3 2 2 1 while B20 dials 1 2 2 2 1 (tb_orig S2). More generally, any claim that arrives while the far register holds a caller.",
+   "consequence": "Both callers dial all five digits and then hear cannot-complete. Neither called line rings. Model (work/audit/origin/model/reg1.py, reg1.out: 10 pps, 0.8 s pauses, 1-4 s reaction time, two exchanges), share of claims refused: 16 lines, 3 calls/h, 30% leaving: 7.7%. 32 lines: 14.5%. 48 lines: 21.8% (25.2% at 50% leaving, 41.5% at 5 calls/h). That is 20 to 40 times the 1% trunk blocking the network is sized for, so the register, not the trunks, is the network's bottleneck. Under overload, network completion falls towards 0 while local calls still queue. A refused origin still holds its register for the whole 1 e b h s (about 9 s), so failed attempts cost as much as successful ones. There is no livelock or stuck state; recovery is immediate when load falls.",
+   "evidence": "work/audit/origin/run_s2_5.log S2: [352.295] A att 1 port 12 (mk 6 reg_busy 1), A att_ack REFUSED, [352.423] A wr dst 12 src 03 bsy 1 clm 1; [370.295] B att 1 port 11 (mk 6 reg_busy 1), REFUSED, [370.423] B wr dst 11 src 03 clm 1; OBS S2: A21 ring-hi 0, B21 ring-hi 0, refusals A 1 B 1. Also tb_net scenario 8 (a local caller).",
+   "fix": "(1) Connect at the claim: go to N_DONE on claimed && dmo==0 and drop o_last and its one-key special case. This saves gates. It frees the origin register about 2.6 s sooner. The refused caller hears NOGO at b and not after s. It breaks the symmetry: of a crossing pair at most one fails, because the first origin's register is free before the second claim arrives. The model gives 21.8% to 19.2% at 48 lines; the gain is modest because local callers dominate occupancy. (2) A bounded claim wait of 100-300 ms, less than the far caller's pause, helps only when the register is about to free. (3) Beyond about 16 lines, a network exchange needs a register pool (the maximal build), or the monitor cell must collect h s itself. Record the figure in mini-marker.md section 8 and common-control.md section 4, which currently present the mini marker as a full pulse-flood exchange.",
+   "realistic": "Survives real timing: it is holding-time arithmetic at real dial timing. It is systematic at busy hour, not a corner case.",
+   "audit": "origin"
+  },
+  {
+   "id": "one-register-refuses-claims",
+   "title": "One register: every claim that finds it busy with anything, even a local caller who has not dialled yet, is cannot-complete",
+   "category": "capacity",
+   "severity": "medium",
+   "confidence": "reproduced",
+   "mechanism": "mini_marker.v:282 refuses whenever r_busy (outside S_WATCH) and writes trunk -> 03 with BUSY and CLAIM (320-327). The claim handler takes claims one at a time, lowest cell first (net_unit.v:331-340, 656-676).",
+   "trigger": "A call to the exchange while its register serves a local dialler, its own origin call (key to b plus up to T_CLAIM), or another terminating call (h s).",
+   "consequence": "Refusal probability equals register occupancy: about 17% at 0.2 E, 23% at 0.3 E. Graceful and immediate at X. The far caller hears it only after dialling h s (refusal-heard-after-hs).",
+   "evidence": "run_mc_all.log and run_real13_all.log scenario 2: two claims in the same tick; T11 took the register and X21 rang; 'the second claim was refused: T12 claimed and listening to 03'.",
+   "fix": "A register pool (the maximal build). Meanwhile it is graceful.",
+   "realistic": "A documented limit; quantified.",
+   "audit": "monclaim"
+  },
+  {
+   "id": "one-register-refuses-claims",
+   "title": "With the mini marker's one register, the owner refuses roughly 1 incoming network call in 6, and two exchanges calling each other both fail",
+   "category": "capacity",
+   "severity": "medium",
+   "confidence": "likely",
+   "mechanism": "A claim is taken only if the owner's register is free (mini_marker.v:273-274). Otherwise it is refused to 03 with CLM (320-327). The register is held by any caller from lift to connect, and by an outgoing network caller until N_DONE, i.e. through all five digits (net_unit.v:881, mini_marker S_YIELD). The refusal is heard only after the origin's N_DONE, because the caller sits on SILENCE until then (net_unit.v:818-821), so monitor.md:64's 'hears it at once' does not hold.",
+   "trigger": "Any incoming network call while the owner's register is busy. Deterministically, A calls B while B calls A with keys within about two digit-times.",
+   "consequence": "Register occupancy at a 48-line exchange (3 calls a line an hour; local ~3 s, outgoing network ~7 s, incoming claim ~2 s) is about 0.19-0.23 E, so 16-19 % of incoming network calls get cannot-complete. Crossing calls between two exchanges: both refused (the origin slice reproduced it: work/audit/origin/run_s2_5.log 'OBS S2: ... refusals A 1 B 1'). Graceful (clean cannot-complete, nothing held), but it dominates every other loss in this build.",
+   "realistic": "Real dialling times. This is the known 'one register' limit, quantified.",
+   "evidence": "RTL lines above; Erlang with one server, B = A/(1+A); origin slice S2.",
+   "fix": "A register pool (the class-marker build), or at least a second register on the mini marker reserved for claims. Correct monitor.md 2's 'at once'.",
+   "audit": "protocol"
+  },
+  {
+   "id": "refusal-heard-after-hs",
+   "title": "'Claimed, cannot complete' is not heard at once: the origin connects its caller to the trunk only after h s",
+   "category": "spec-mismatch",
+   "severity": "low",
+   "confidence": "likely",
+   "mechanism": "The refusal points the trunk at 03 (mini_marker.v:320-327), but the origin writes caller <-> trunk only at N_DONE, and N_DONE needs claimed && o_last (net_unit.v:881, 818-822). Until then the caller listens to SILENCE, written at the key (mini_marker.v:428). monitor.md 2 and common-control.md 2.3 say 'the caller hears it at once'; network.md 3's 'when the last digit is in, point the caller' matches the RTL.",
+   "trigger": "Any refused claim.",
+   "consequence": "The caller dials h s into silence and hears cannot-complete about 2 s later.",
+   "evidence": "RTL. tb_net scenario 8 checks the tone only after h s.",
+   "fix": "At the claim, also write caller -> trunk (the C path); the origin's register still counts from the caller's own M. One write. Mind the corner where the claim falls before o_last. Alternatively, correct monitor.md.",
+   "realistic": "Every refused call.",
+   "audit": "monclaim"
+  }
+ ]
+}

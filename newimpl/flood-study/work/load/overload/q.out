@@ -1,0 +1,56 @@
+q: 13:34:47 waiting for a slot: /home/joel/telco/newimpl/build/flood/work/load/overload/batch_133446.sh
+[sim.sh] slot 5: bash /home/joel/telco/newimpl/build/flood/work/load/overload/batch_133446.sh
+q: 15:16:39 start build_l2
+q: 15:18:35 end build_l2 rc=0 secs=116
+q: 15:18:35 start r3_l2_i6k_step
+q: 15:32:21 end r3_l2_i6k_step rc=0 secs=826
+q: 15:32:21 start r5_l2_step
+q: 15:50:18 end r5_l2_step rc=0 secs=1077
+q: 15:50:18 start r7_l2_abdt
+q: 16:01:34 end r7_l2_abdt rc=0 secs=676
+q: 16:01:34 start r10_l2_bad
+q: 16:09:50 end r10_l2_bad rc=0 secs=496
+q: 16:09:50 start r16a_l2_jam_net
+q: 16:16:39 end r16a_l2_jam_net rc=0 secs=409
+q: 16:16:39 start r16c_l2_jam_none
+q: 16:22:31 end r16c_l2_jam_none rc=0 secs=351
+q: 16:22:31 start build_l2s1
+q: 16:23:48 end build_l2s1 rc=0 secs=77
+q: 16:23:48 start r30_l2s1_step
+q: 17:01:26 end r30_l2s1_step rc=0 secs=2258
+q: 17:01:26 start r20_l3_i6k
+q: 17:10:13 end r20_l3_i6k rc=0 secs=527
+q: 17:10:13 start r12_l2_patho
+q: 17:15:12 end r12_l2_patho rc=0 secs=299
+q: 17:15:12 start r6_l2_burst
+q: 17:25:46 end r6_l2_burst rc=0 secs=634
+q: 17:25:46 start r9_l2_hot
+q: 17:31:52 end r9_l2_hot rc=0 secs=366
+q: 17:31:52 start r16b_l2_jam_bad
+q: 17:38:54 end r16b_l2_jam_bad rc=0 secs=422
+q: 17:38:54 start r14_l2_resv8
+q: 17:43:49 end r14_l2_resv8 rc=0 secs=295
+q: 17:43:49 start r8a_l2_ab_dt
+q: 17:57:13 end r8a_l2_ab_dt rc=0 secs=804
+q: 17:57:13 start r8b_l2_ab_lift
+q: 18:06:55 end r8b_l2_ab_lift rc=0 secs=582
+q: 18:06:55 start build_l2b
+q: 18:09:22 end build_l2b rc=0 secs=147
+q: 18:09:22 start r16e_l2_jam_net_hi
+q: 18:18:38 end r16e_l2_jam_net_hi rc=0 secs=556
+q: 18:18:38 start r13a_l2_key_e
+q: 18:25:46 end r13a_l2_key_e rc=0 secs=428
+q: 18:25:46 start r13b_l2_key_eb
+q: 18:31:54 end r13b_l2_key_eb rc=0 secs=368
+q: 18:31:54 start r13c_l2_owncode
+q: 18:42:33 end r13c_l2_owncode rc=0 secs=639
+q: inner budget used (12354 s): releasing the slot
+q2: queue empty
+q2: 18:43:38 waiting for a slot (1 queue lines)
+[sim.sh] slot 5: bash /home/joel/telco/newimpl/build/flood/work/load/overload/inner.sh
+q: 18:50:58 start r21_l3_i1500_step
+q: 19:28:10 end r21_l3_i1500_step rc=0 secs=2232
+q: 19:28:10 start r22_l3_always
+q: 19:44:38 end r22_l3_always rc=0 secs=988
+q: inner queue empty
+q2: queue empty

@@ -1,0 +1,240 @@
+KNOB seed=3
+KNOB dur_ms=16000
+KNOB idle_ms=60000
+KNOB dt_ms=3000
+KNOB pnet=500
+KNOB dest_mode=4
+KNOB brk_ms=12
+KNOB mk_ms=8
+KNOB idg_ms=100
+KNOB idg_jit_ms=0
+KNOB pre_ms=60
+KNOB abandon=0
+KNOB pd_ms=1000
+KNOB ans_ms=200
+KNOB noans=0
+KNOB hold_ms=1500
+KNOB lag_ms=50
+KNOB rest_ms=120
+KNOB ringmax_ms=1500
+KNOB hup_ms=100
+KNOB grace_ms=0
+KNOB drain_ms=2500
+KNOB nlines=64
+KNOB orig_x=255
+KNOB from_x=0
+KNOB to_x=1
+KNOB bad_e=2
+KNOB bad_b=7
+KNOB sig_k=3
+KNOB verify_ms=20
+KNOB trace=0
+KNOB prog_ms=2000
+KNOB wd_port_ms=448
+KNOB wd_reg_ms=7500
+KNOB wd_org_ms=4625
+KNOB wd_mon_ms=1378
+KNOB wd_res_ms=1878
+KNOB wd_hunt_ms=200
+KNOB wd_att_ms=1350
+KNOB phantom_grace_ms=384
+KNOB max_ms=0
+KNOB quit_on_tone=1
+KNOB pair_gap_ms=1000
+KNOB hold_fixed=1
+KNOB pairs=A20B20,B21A30,A21A22,B24A26,A23Z20,B23B25,A27A32,A24A27
+KNOB hot=-
+KNOB dbg_misdial=B21
+KNOB dbg_sig=A26:B55
+KNOB scale=8 NX=2 NMON=2 NRES=2 T_ARM=2 T_REL=32 RING=64/128 HIT=1 ID=16 CLR=32 NODIG=1250 T_GUARD0=16 T_KEY=625 T_CLAIM=250
+TOPO ex=A code=22 lines=48
+TOPO ex=B code=23 lines=48
+TOPO pair A20 -> B20
+TOPO pair B21 -> A30
+TOPO pair A21 -> A22
+TOPO pair B24 -> A26
+TOPO pair A23 -> code 27, then 20
+TOPO pair B23 -> B25
+TOPO pair A27 -> A32
+TOPO pair A24 -> A27
+SELFTEST sig PASS  ok=292 fail=0  (every phone at a random phase: clean, a bit lost, a bit doubled; tones and FILL)
+START t=21 traffic until 16021
+WRONGRING t=1738 at=A31 caller=B21 dialled=A30                            
+CALL id=1 from=B21 to=A30 kind=N dial=12231 lift=1021 dt=1026 key=1098 last=1626 tone=- alert=- bell=- ans=- end=1747 rel=1747 out=WRONG why=- heard=- rang=A31 cb=0 xv=-1 cv=0 ab=- mid=-
+PROG t=2000 calls=1 ok=0 busy=0 nogo=0 nodt=0 wrong=1 joined=0 stuck=0
+PROG t=4000 calls=3 ok=0 busy=0 nogo=0 nodt=0 wrong=1 joined=0 stuck=0
+CALL id=2 from=A21 to=A22 kind=L dial=22 lift=2021 dt=2026 key=2118 last=2250 tone=- alert=2271 bell=2306 ans=2356 end=3856 rel=3891 out=OK why=- heard=- rang=A22 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=4 from=A23 to=27?? kind=BAD dial=12720 lift=4021 dt=4026 key=4098 last=- tone=4732 alert=- bell=- ans=- end=4832 rel=4832 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=3 from=B24 to=A26 kind=N dial=12226 lift=3021 dt=3026 key=3098 last=3706 tone=- alert=3728 bell=3842 ans=3923 end=5423 rel=5468 out=WRONG why=- heard=B55 rang=A26 cb=0 xv=0 cv=1 ab=- mid=-
+PROG t=6000 calls=5 ok=1 busy=0 nogo=1 nodt=0 wrong=2 joined=0 stuck=0
+CALL id=5 from=B23 to=B25 kind=L dial=25 lift=5021 dt=5026 key=5118 last=5310 tone=- alert=5332 bell=5378 ans=5571 end=7071 rel=7071 out=OK why=- heard=- rang=B25 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=7 from=A24 to=A27 kind=L dial=27 lift=7021 dt=7026 key=7118 last=7350 tone=7371 alert=- bell=- ans=- end=7471 rel=7471 out=BUSY why=L_BUSY heard=- rang=- cb=1 xv=-1 cv=-1 ab=- mid=-
+PROG t=8000 calls=7 ok=2 busy=1 nogo=1 nodt=0 wrong=2 joined=0 stuck=0
+CALL id=6 from=A27 to=A32 kind=L dial=32 lift=6021 dt=6026 key=6138 last=6270 tone=- alert=6292 bell=6338 ans=6469 end=7969 rel=8000 out=OK why=- heard=- rang=A32 cb=0 xv=1 cv=1 ab=- mid=-
+WRONGRING t=9655 at=A31 caller=B21 dialled=A30                            
+CALL id=9 from=B21 to=A30 kind=N dial=12231 lift=9021 dt=9026 key=9098 last=9626 tone=- alert=- bell=- ans=- end=9749 rel=9749 out=WRONG why=- heard=- rang=A31 cb=0 xv=-1 cv=0 ab=- mid=-
+PROG t=10000 calls=9 ok=3 busy=1 nogo=1 nodt=0 wrong=3 joined=0 stuck=0
+CALL id=8 from=A20 to=B20 kind=N dial=12320 lift=8021 dt=8026 key=8098 last=8806 tone=- alert=8828 bell=8834 ans=9008 end=10508 rel=10514 out=OK why=- heard=- rang=B20 cb=0 xv=1 cv=1 ab=- mid=-
+PROG t=12000 calls=11 ok=4 busy=1 nogo=1 nodt=0 wrong=3 joined=0 stuck=0
+CALL id=10 from=A21 to=A22 kind=L dial=22 lift=10021 dt=10026 key=10118 last=10250 tone=- alert=10270 bell=10370 ans=10399 end=11899 rel=11899 out=OK why=- heard=- rang=A22 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=12 from=A23 to=27?? kind=BAD dial=12720 lift=12021 dt=12026 key=12098 last=- tone=12732 alert=- bell=- ans=- end=12832 rel=12832 out=NOGO why=N_TCLAIM heard=- rang=- cb=0 xv=-1 cv=-1 ab=- mid=-
+CALL id=11 from=B24 to=A26 kind=N dial=12226 lift=11021 dt=11026 key=11098 last=11706 tone=- alert=11726 bell=11726 ans=11822 end=13322 rel=13322 out=WRONG why=- heard=B55 rang=A26 cb=0 xv=0 cv=1 ab=- mid=-
+PROG t=14000 calls=13 ok=5 busy=1 nogo=2 nodt=0 wrong=4 joined=0 stuck=0
+CALL id=13 from=B23 to=B25 kind=L dial=25 lift=13021 dt=13026 key=13118 last=13310 tone=- alert=13332 bell=13441 ans=13486 end=14986 rel=15031 out=OK why=- heard=- rang=B25 cb=0 xv=1 cv=1 ab=- mid=-
+CALL id=15 from=A24 to=A27 kind=L dial=27 lift=15021 dt=15026 key=15118 last=15350 tone=15371 alert=- bell=- ans=- end=15471 rel=15471 out=BUSY why=L_BUSY heard=- rang=- cb=1 xv=-1 cv=-1 ab=- mid=-
+PROG t=16000 calls=15 ok=6 busy=2 nogo=2 nodt=0 wrong=4 joined=0 stuck=0
+STOP t=16021 no new calls
+CALL id=14 from=A27 to=A32 kind=L dial=32 lift=14021 dt=14026 key=14138 last=14270 tone=- alert=14292 bell=14402 ans=14435 end=15935 rel=15973 out=OK why=- heard=- rang=A32 cb=0 xv=1 cv=1 ab=- mid=-
+HANGUP t=16021 every phone on hook; drain 2500 ms
+PROG t=18000 calls=15 ok=7 busy=2 nogo=2 nodt=0 wrong=4 joined=0 stuck=0
+INVARIANT PASS ports_idle ex=A busy=0
+INVARIANT PASS register_free ex=A
+INVARIANT PASS marker_idle ex=A state=0
+INVARIANT PASS origin_free ex=A dirs_held=0000
+INVARIANT PASS monitors_free ex=A mon_held=00
+INVARIANT PASS resolvers_free ex=A res_busy=00
+INVARIANT PASS sweep_idle ex=A
+INVARIANT PASS unit_idle ex=A origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=A
+INVARIANT PASS no_b_clash ex=A clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=A un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=A
+INVARIANT PASS ports_idle ex=B busy=0
+INVARIANT PASS register_free ex=B
+INVARIANT PASS marker_idle ex=B state=0
+INVARIANT PASS origin_free ex=B dirs_held=0000
+INVARIANT PASS monitors_free ex=B mon_held=00
+INVARIANT PASS resolvers_free ex=B res_busy=00
+INVARIANT PASS sweep_idle ex=B
+INVARIANT PASS unit_idle ex=B origin=0 classifier=0 forwarder=0 claim=0 att=0
+INVARIANT PASS queues_empty ex=B
+INVARIANT PASS no_b_clash ex=B clash_ticks=0
+INVARIANT PASS no_queue_overflow ex=B un_ovf=0 mk_ovf=0
+INVARIANT PASS links_up ex=B
+INVARIANT PASS phones_quiet (none ringing or off hook)
+INVARIANT PASS signature_selftest
+INVARIANT TOTAL pass=26 fail=0
+SUMMARY run scale=8 seed=3 traffic_ms=15999 sim_ms=18521 phones=96 calls=15
+SUMMARY outcome total=15 OK=7 BUSY=2 NOGO=2 NODT=0 ABANDON=0 NOANS=0 WRONG=4 JOINED=0 DTAGAIN=0 SILENT=0 XTALK=0 NOSPEECH=0 COLLIDE=0 CUT=0
+SUMMARY outcome kind=L total=8 OK=6 BUSY=2
+SUMMARY outcome kind=N total=5 OK=1 WRONG=4
+SUMMARY outcome kind=BAD total=2 NOGO=2
+SUMMARY attempts ex=A total=9 per_s=0.563 OK=5 BUSY=2 NOGO=2
+SUMMARY attempts ex=B total=6 per_s=0.375 OK=2 WRONG=4
+SUMMARY why L_BUSY=2 N_TCLAIM=2
+SUMMARY safety wrong=4 joined=0 xtalk=0 nospeech=0 dtagain=0 silent=0 phantom=0 wrongring=2 ring_anon=0 drainring=0 alert_nobell=0 stuck=0
+SUMMARY carried erlangs=0.844 talk_ms=13500 traffic_ms=15999
+SUMMARY dialtone_delay n=15 mean=5.0 p50=5 p99=5 max=5
+SUMMARY postdial_alert n=9 mean=21.4 p50=22 p99=22 max=22
+SUMMARY postdial_nogo n=2 mean=21.0 p50=21 p99=21 max=21 (and 2 heard before the last digit)
+SUMMARY exchange ex=A reg_occ=0.335 reg_maxrun_ms=800 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=1.30 origin_occ=0.119 hunting_occ=0.005 sweeps=7 mon_mean=0.063 mon_max=1 res_mean=0.000 res_max=0 busB_occ=0.0005
+SUMMARY link ex=A blk=1 channels=8 busy_mean=0.605 busy_max=2
+SUMMARY unit ex=A floods=3 local=0 done=1 nogo=2 seized_in=4 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=4 n_nofwd=4 claims=4 att_take=4 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=A L_BUSY=2 N_TCLAIM=2
+SUMMARY checks ex=A un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY exchange ex=B reg_occ=0.233 reg_maxrun_ms=700 dt_wait_mean=0.00 dt_wait_max=1 offhook_mean=0.88 origin_occ=0.140 hunting_occ=0.005 sweeps=7 mon_mean=0.061 mon_max=1 res_mean=0.000 res_max=0 busB_occ=0.0003
+SUMMARY link ex=B blk=1 channels=8 busy_mean=0.606 busy_max=2
+SUMMARY unit ex=B floods=4 local=0 done=4 nogo=0 seized_in=3 nomon=0 unhold=0 nofwd_busy=0 nofwd_empty=3 n_nofwd=3 claims=1 att_take=1 att_refuse=0 refuse_unattributed=0 n_glare=0 ev_glare_q=0 ev_notrunk_q=0 cableB_EV_GLARE=0 cableB_EV_NOTRUNK=0 cableB_other=0
+SUMMARY nogo_written ex=B
+SUMMARY checks ex=B un_ovf=0 mk_ovf=0 b_clash_ticks=0
+SUMMARY line A20 att=1 ok=1 rung=0 answered=0
+SUMMARY line A21 att=2 ok=2 rung=0 answered=0
+SUMMARY line A22 att=0 ok=0 rung=2 answered=2
+SUMMARY line A23 att=2 ok=0 rung=0 answered=0 NOGO=2
+SUMMARY line A24 att=2 ok=0 rung=0 answered=0 BUSY=2
+SUMMARY line A25 att=0 ok=0 rung=0 answered=0
+SUMMARY line A26 att=0 ok=0 rung=2 answered=2
+SUMMARY line A27 att=2 ok=2 rung=0 answered=0
+SUMMARY line A30 att=0 ok=0 rung=0 answered=0
+SUMMARY line A31 att=0 ok=0 rung=2 answered=2
+SUMMARY line A32 att=0 ok=0 rung=2 answered=2
+SUMMARY line A33 att=0 ok=0 rung=0 answered=0
+SUMMARY line A34 att=0 ok=0 rung=0 answered=0
+SUMMARY line A35 att=0 ok=0 rung=0 answered=0
+SUMMARY line A36 att=0 ok=0 rung=0 answered=0
+SUMMARY line A37 att=0 ok=0 rung=0 answered=0
+SUMMARY line A40 att=0 ok=0 rung=0 answered=0
+SUMMARY line A41 att=0 ok=0 rung=0 answered=0
+SUMMARY line A42 att=0 ok=0 rung=0 answered=0
+SUMMARY line A43 att=0 ok=0 rung=0 answered=0
+SUMMARY line A44 att=0 ok=0 rung=0 answered=0
+SUMMARY line A45 att=0 ok=0 rung=0 answered=0
+SUMMARY line A46 att=0 ok=0 rung=0 answered=0
+SUMMARY line A47 att=0 ok=0 rung=0 answered=0
+SUMMARY line A50 att=0 ok=0 rung=0 answered=0
+SUMMARY line A51 att=0 ok=0 rung=0 answered=0
+SUMMARY line A52 att=0 ok=0 rung=0 answered=0
+SUMMARY line A53 att=0 ok=0 rung=0 answered=0
+SUMMARY line A54 att=0 ok=0 rung=0 answered=0
+SUMMARY line A55 att=0 ok=0 rung=0 answered=0
+SUMMARY line A56 att=0 ok=0 rung=0 answered=0
+SUMMARY line A57 att=0 ok=0 rung=0 answered=0
+SUMMARY line A60 att=0 ok=0 rung=0 answered=0
+SUMMARY line A61 att=0 ok=0 rung=0 answered=0
+SUMMARY line A62 att=0 ok=0 rung=0 answered=0
+SUMMARY line A63 att=0 ok=0 rung=0 answered=0
+SUMMARY line A64 att=0 ok=0 rung=0 answered=0
+SUMMARY line A65 att=0 ok=0 rung=0 answered=0
+SUMMARY line A66 att=0 ok=0 rung=0 answered=0
+SUMMARY line A67 att=0 ok=0 rung=0 answered=0
+SUMMARY line A70 att=0 ok=0 rung=0 answered=0
+SUMMARY line A71 att=0 ok=0 rung=0 answered=0
+SUMMARY line A72 att=0 ok=0 rung=0 answered=0
+SUMMARY line A73 att=0 ok=0 rung=0 answered=0
+SUMMARY line A74 att=0 ok=0 rung=0 answered=0
+SUMMARY line A75 att=0 ok=0 rung=0 answered=0
+SUMMARY line A76 att=0 ok=0 rung=0 answered=0
+SUMMARY line A77 att=0 ok=0 rung=0 answered=0
+SUMMARY line B20 att=0 ok=0 rung=1 answered=1
+SUMMARY line B21 att=2 ok=0 rung=0 answered=0 WRONG=2
+SUMMARY line B22 att=0 ok=0 rung=0 answered=0
+SUMMARY line B23 att=2 ok=2 rung=0 answered=0
+SUMMARY line B24 att=2 ok=0 rung=0 answered=0 WRONG=2
+SUMMARY line B25 att=0 ok=0 rung=2 answered=2
+SUMMARY line B26 att=0 ok=0 rung=0 answered=0
+SUMMARY line B27 att=0 ok=0 rung=0 answered=0
+SUMMARY line B30 att=0 ok=0 rung=0 answered=0
+SUMMARY line B31 att=0 ok=0 rung=0 answered=0
+SUMMARY line B32 att=0 ok=0 rung=0 answered=0
+SUMMARY line B33 att=0 ok=0 rung=0 answered=0
+SUMMARY line B34 att=0 ok=0 rung=0 answered=0
+SUMMARY line B35 att=0 ok=0 rung=0 answered=0
+SUMMARY line B36 att=0 ok=0 rung=0 answered=0
+SUMMARY line B37 att=0 ok=0 rung=0 answered=0
+SUMMARY line B40 att=0 ok=0 rung=0 answered=0
+SUMMARY line B41 att=0 ok=0 rung=0 answered=0
+SUMMARY line B42 att=0 ok=0 rung=0 answered=0
+SUMMARY line B43 att=0 ok=0 rung=0 answered=0
+SUMMARY line B44 att=0 ok=0 rung=0 answered=0
+SUMMARY line B45 att=0 ok=0 rung=0 answered=0
+SUMMARY line B46 att=0 ok=0 rung=0 answered=0
+SUMMARY line B47 att=0 ok=0 rung=0 answered=0
+SUMMARY line B50 att=0 ok=0 rung=0 answered=0
+SUMMARY line B51 att=0 ok=0 rung=0 answered=0
+SUMMARY line B52 att=0 ok=0 rung=0 answered=0
+SUMMARY line B53 att=0 ok=0 rung=0 answered=0
+SUMMARY line B54 att=0 ok=0 rung=0 answered=0
+SUMMARY line B55 att=0 ok=0 rung=0 answered=0
+SUMMARY line B56 att=0 ok=0 rung=0 answered=0
+SUMMARY line B57 att=0 ok=0 rung=0 answered=0
+SUMMARY line B60 att=0 ok=0 rung=0 answered=0
+SUMMARY line B61 att=0 ok=0 rung=0 answered=0
+SUMMARY line B62 att=0 ok=0 rung=0 answered=0
+SUMMARY line B63 att=0 ok=0 rung=0 answered=0
+SUMMARY line B64 att=0 ok=0 rung=0 answered=0
+SUMMARY line B65 att=0 ok=0 rung=0 answered=0
+SUMMARY line B66 att=0 ok=0 rung=0 answered=0
+SUMMARY line B67 att=0 ok=0 rung=0 answered=0
+SUMMARY line B70 att=0 ok=0 rung=0 answered=0
+SUMMARY line B71 att=0 ok=0 rung=0 answered=0
+SUMMARY line B72 att=0 ok=0 rung=0 answered=0
+SUMMARY line B73 att=0 ok=0 rung=0 answered=0
+SUMMARY line B74 att=0 ok=0 rung=0 answered=0
+SUMMARY line B75 att=0 ok=0 rung=0 answered=0
+SUMMARY line B76 att=0 ok=0 rung=0 answered=0
+SUMMARY line B77 att=0 ok=0 rung=0 answered=0
+END t=18521
+- work/load/load_harness.svh:1514: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 19s; walltime 983.770 s; speed 18.825 ms/s
+- Verilator: cpu 858.759 s on 1 threads; allocated 9 MB

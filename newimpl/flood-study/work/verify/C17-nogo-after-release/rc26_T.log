@@ -1,0 +1,97 @@
+
+  tb_c17 -- mode 1, CLR 32, T_REL 26, BRK/MK/PAUSE 12/8/100
+  links: A11 1 A12 1 B11 1 B12 1 A13 0
+
+  T: A20 dials 1 3 3; hangs up X ms after f2 (T_CLAIM from f2)
+  [  639.504] + 215.500  A20 hangs up (X = 215.500 ms; unit nst 5, claimed 0)
+  [  665.003] + 240.999  A20 port REL
+  [  673.004] + 248.999  A r_gone rises (mk 6)
+  [  673.422] + 249.418  A wr dst 20 src 00 bsy 0 clm 0
+  RESULT X=  215.500 ms  rel + 240.999 gone + 248.999 nogo +  -1.000 nodig +  -1.000 w03 +  -1.000  -> port 20 busy 0 latch 00 bsy 0        free
+  [ 1463.502] + 216.500  A20 hangs up (X = 216.500 ms; unit nst 5, claimed 0)
+  [ 1489.001] + 241.999  A20 port REL
+  [ 1497.001] + 249.999  A r_gone rises (mk 6)
+  [ 1497.002] + 250.000  A unit nogo pulse (mk 3, r_gone 0)
+  [ 1497.419] + 250.417  A wr dst 20 src 00 bsy 0 clm 0
+  RESULT X=  216.500 ms  rel + 241.999 gone + 249.999 nogo + 250.000 nodig +  -1.000 w03 +  -1.000  -> port 20 busy 0 latch 00 bsy 0        free
+  [ 2288.500] + 217.500  A20 hangs up (X = 217.500 ms; unit nst 5, claimed 0)
+  [ 2313.999] + 242.999  A20 port REL
+  [ 2321.000] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 2321.417] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  217.500 ms  rel + 242.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 3274.497] + 218.500  A20 hangs up (X = 218.500 ms; unit nst 5, claimed 0)
+  [ 3299.997] + 243.999  A20 port REL
+  [ 3305.997] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 3306.415] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  218.500 ms  rel + 243.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 4261.495] + 219.500  A20 hangs up (X = 219.500 ms; unit nst 5, claimed 0)
+  [ 4286.994] + 244.999  A20 port REL
+  [ 4291.995] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 4292.412] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  219.500 ms  rel + 244.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 5249.492] + 220.500  A20 hangs up (X = 220.500 ms; unit nst 5, claimed 0)
+  [ 5274.992] + 245.999  A20 port REL
+  [ 5278.992] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 5279.410] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  220.500 ms  rel + 245.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 6238.490] + 221.500  A20 hangs up (X = 221.500 ms; unit nst 5, claimed 0)
+  [ 6263.989] + 246.999  A20 port REL
+  [ 6266.990] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 6267.407] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  221.500 ms  rel + 246.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 7228.487] + 222.500  A20 hangs up (X = 222.500 ms; unit nst 5, claimed 0)
+  [ 7253.986] + 247.999  A20 port REL
+  [ 7255.987] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 7256.405] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  222.500 ms  rel + 247.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 8219.485] + 223.500  A20 hangs up (X = 223.500 ms; unit nst 5, claimed 0)
+  [ 8244.984] + 248.999  A20 port REL
+  [ 8245.985] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 8246.402] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  223.500 ms  rel + 248.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [ 9211.482] + 224.500  A20 hangs up (X = 224.500 ms; unit nst 5, claimed 0)
+  [ 9236.981] + 249.999  A20 port REL
+  [ 9236.982] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [ 9237.400] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  RESULT X=  224.500 ms  rel + 249.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 1 latch 03 bsy 1  STUCK BUSY
+    still busy 1 after 2 CLR more; lifting
+    off-hook: busy 1, latch 03, register busy 0 (a stuck port is not taken as a caller)
+    hung up: busy 0
+  [10204.480] + 225.500  A20 hangs up (X = 225.500 ms; unit nst 5, claimed 0)
+  [10228.980] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [10229.397] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  [10229.979] + 250.999  A20 port REL
+  RESULT X=  225.500 ms  rel + 250.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 0 latch 00 bsy 0        free
+  [11038.478] + 226.500  A20 hangs up (X = 226.500 ms; unit nst 5, claimed 0)
+  [11061.977] + 250.000  A unit nogo pulse (mk 6, r_gone 0)
+  [11062.395] + 250.417  A wr dst 20 src 03 bsy 1 clm 0
+  [11063.977] + 251.999  A20 port REL
+  RESULT X=  226.500 ms  rel + 251.999 gone +  -1.000 nogo + 250.000 nodig +  -1.000 w03 + 250.417  -> port 20 busy 0 latch 00 bsy 0        free
+
+  SUMMARY mode 1 CLR 32: 8 stuck of 12, idle-bad 0, clash 0, ovf 00
+- /home/joel/telco/newimpl/build/flood/work/verify/C17-nogo-after-release/tb_c17.v:258: Verilog $finish
+- S i m u l a t i o n   R e p o r t: Verilator 5.050 2026-07-01
+- Verilator: $finish at 11s; walltime 348.169 s; speed 32.346 ms/s
+- Verilator: cpu 325.446 s on 1 threads; allocated 8 MB
+rc=0

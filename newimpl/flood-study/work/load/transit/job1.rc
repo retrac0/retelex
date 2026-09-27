@@ -1,0 +1,2 @@
+[sim.sh] slot 4: bash work/load/transit/job1.sh
+job1 exit=0

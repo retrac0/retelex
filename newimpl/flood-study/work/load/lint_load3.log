@@ -1,0 +1,271 @@
+%Warning-PINMISSING: tb/site_net.v:142:70: Instance has missing pin: 'ws_n'
+  142 |               .T_GUARD0(T_GUARD0), .T_KEY(T_KEY), .T_CLAIM(T_CLAIM)) u_x (
+      |                                                                      ^~~
+                     rtl/top_net.v:91:23: ... Location of port declaration
+   91 |     output            ws_n,
+      |                       ^~~~
+                     ... For warning description see https://verilator.org/warn/PINMISSING?v=5.050
+                     ... Use "/* verilator lint_off PINMISSING */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'h8b00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.050
+                     ... Use "/* verilator lint_off WIDTHTRUNC */" and lint_on around source to disable this message.
+%Warning-WIDTHTRUNC: tb/site_net.v:46:23: Operator VAR 'LTWORD' expects 64 bits on the Initial value, but Initial value's CONST '72'heb00' generates 72 bits.
+   46 |     parameter [63:0]  LTWORD   = {8{8'b10_0_010_11}}           
+      |                       ^~~~~~
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:593:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                       : ... note: In instance 'tb_load3'
+  593 |             ph_dg[g*5 + 1] = LD_CODE_E[y*3 +: 3];
+      |                            ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.050
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:594:28: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                       : ... note: In instance 'tb_load3'
+  594 |             ph_dg[g*5 + 2] = LD_CODE_B[y*3 +: 3];
+      |                            ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:634:33: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  634 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:634:33: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  634 |         n_dt++; s_dt += c_dt[g] - c_lift[g];
+      |                                 ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:639:38: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  639 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:639:38: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  639 |         n_pdd++; s_pdd += c_alert[g] - c_last[g];
+      |                                      ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:644:63: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  644 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:644:63: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  644 |         n_pdn++; s_pdn += (c_tone[g] > c_last[g]) ? c_tone[g] - c_last[g] : 0;
+      |                                                               ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:648:67: Operator SUB expects 64 bits on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  648 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:648:67: Operator SUB expects 64 bits on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+  648 |     if (c_ans[g] >= 0 && c_end[g] > c_ans[g]) talk_ms += c_end[g] - c_ans[g];
+      |                                                                   ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:662:5: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                     : ... note: In instance 'tb_load3'
+  662 |     if (k_trace) $display("TR t=%0d %s -> %s", now_ms, pn(g), sname(st));
+      |     ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:709:26: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  709 |     if (y >= 0 && y < NG && c_live[y] && ph_role[y] == 0 &&
+      |                          ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:718:33: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  718 |     return (y >= 0) && (y < NG) && c_live[y] && ph_role[y] == 0 &&
+      |                                 ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:727:42: Logical operator LOGOR expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  727 |         if (c_dest[y] == g && (c_live[y] || (now_ms - c_lastend[y] <= k_phgrace))) return 1;
+      |                                          ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:741:19: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  741 |     if (c_live[g] && ph_role[g] == 0 && c_abt[g] >= 0 && now_ms >= c_abt[g] &&
+      |                   ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:860:38: Logical operator LOGAND expects 1 bit on the RHS, but RHS's AND generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  860 |                 (rs_why[g] == W_NONE && (c_cb[g] & 1))) finish(g, O_BUSY, 1);
+      |                                      ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:893:28: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  893 |                 if (z >= 0 && c_live[z]) begin
+      |                            ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:916:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  916 |         if (c_live[g] && ph_role[g] == 0) call_print(g);
+      |                       ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:940:17: Logical operator IF expects 1 bit on the If, but If's VARREF 'k_trace' generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  940 |                 if (k_trace) $display("TR t=%0d %s rings, dialled, caller not heard", now_ms, pn(g));
+      |                 ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:930:33: Logical operator LOGNOT expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                      : ... note: In instance 'tb_load3'
+  930 |         if (ph_bellt[g] >= 0 && !ph_phj[g] && now_ms >= ph_bellt[g] + 8) begin
+      |                                 ^
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:977:19: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  977 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:977:19: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h41' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  977 |     x = s.getc(i) - 8'd65;
+      |                   ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:978:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  978 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:978:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  978 |     h = s.getc(i + 1) - 8'd48;
+      |                       ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:979:23: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  979 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:979:23: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                       : ... note: In instance 'tb_load3'
+  979 |     p = s.getc(i + 2) - 8'd48;
+      |                       ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1085:38: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1085 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1085:38: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1085 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                      ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1085:74: Operator SUB expects 32 bits on the LHS, but LHS's GETCN 'getc' generates 8 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1085 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1085:74: Operator SUB expects 32 bits on the RHS, but RHS's CONST '8'h30' generates 8 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1085 |             b = (k_pairs.getc(i + 4) - 8'd48) * 8 + (k_pairs.getc(i + 5) - 8'd48);
+      |                                                                          ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1158:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1158 |             code = bsh[7:2];
+      |                  ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1160:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h4' generates 6 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1160 |             else if (code == 6'o04) ev_gl[ldx]++;
+      |                           ^~
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1159:27: Operator EQ expects 32 bits on the RHS, but RHS's CONST '6'h8' generates 6 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1159 |             if      (code == 6'o10) ev_nt[ldx]++;
+      |                           ^~
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1185:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 4 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1185 |         k = ld_p_nst[ldx*4 +: 4];
+      |           ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1196:61: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1196 |         pn_f1 = ld_p_f1[ldx]; pn_f2 = ld_p_f2[ldx]; pn_ndig = ld_p_rndig[ldx*3 +: 3];
+      |                                                             ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1202:21: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1202 |                 dst = ld_p_mpd[ldx*30 + w*15 +: 6];
+      |                     ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1223:39: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1223 |                         if (c_live[y] && ph_role[y] == 0 && c_kind[y] == K_NET &&
+      |                                       ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1215:35: Logical operator LOGAND expects 1 bit on the RHS, but RHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1215 |                 if (LD_PHONES[gd] && c_live[gd] && rs_why[gd] == W_NONE) rs_why[gd] = why;
+      |                                   ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1234:18: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 3 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1234 |         pm_state = ld_mks[ldx*3 +: 3]; pm_ref = ld_p_mref[ldx] && !ld_p_mtake[ldx];
+      |                  ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1236:19: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 6 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1236 |         pm_called = ld_p_mcalled[ldx*6 +: 6];
+      |                   ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHEXPAND: work/load/load_harness.svh:1247:11: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 8 bits.
+                                                        : ... note: In instance 'tb_load3'
+ 1247 |         k = ld_gl[x*8 +: 8];
+      |           ^
+                      work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1314:23: Logical operator LOGAND expects 1 bit on the LHS, but LHS's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1314 |         if (c_live[g] && ph_role[g] == 0) begin
+      |                       ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1387:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1387 |         for (o = 1; o < NO; o++) if (n_cls_k[b*NO + o]) $write(" %s=%0d", oname(o), n_cls_k[b*NO + o]);
+      |                                  ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1393:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1393 |         for (o = 1; o < NO; o++) if (n_cls_x[x*NO + o]) $write(" %s=%0d", oname(o), n_cls_x[x*NO + o]);
+      |                                  ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1397:30: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1397 |     for (w = 1; w < NW; w++) if (n_why[w]) $write(" %s=%0d", wname(w), n_why[w]);
+      |                              ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1404:25: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_dt' generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1404 |              n_dt, n_dt ? real'(s_dt) / n_dt : 0.0, pctl(0, n_dt, 50), pctl(0, n_dt, 99), mx_dt);
+      |                         ^
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1406:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdd' generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1406 |              n_pdd, n_pdd ? real'(s_pdd) / n_pdd : 0.0, pctl(1, n_pdd, 50), pctl(1, n_pdd, 99), mx_pdd);
+      |                           ^
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1408:27: Logical operator COND expects 1 bit on the Conditional Test, but Conditional Test's VARREF 'n_pdn' generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1408 |              n_pdn, n_pdn ? real'(s_pdn) / n_pdn : 0.0, pctl(2, n_pdn, 50), pctl(2, n_pdn, 99), mx_pdn);
+      |                           ^
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1422:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1422 |         for (w = 1; w < NW; w++) if (x_why[x*NW + w]) $write(" %s=%0d", wname(w), x_why[x*NW + w]);
+      |                                  ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+%Warning-WIDTHTRUNC: work/load/load_harness.svh:1429:34: Logical operator IF expects 1 bit on the If, but If's ARRAYSEL generates 32 bits.
+                                                       : ... note: In instance 'tb_load3'
+ 1429 |         for (o = 2; o < NO; o++) if (ln_cls[g*NO + o]) $write(" %s=%0d", oname(o), ln_cls[g*NO + o]);
+      |                                  ^~
+                     work/load/tb_load3.sv:33:1: ... note: In file included from 'tb_load3.sv'
+- V e r i l a t i o n   R e p o r t: Verilator 5.050 2026-07-01 rev v5.050
+- Verilator: Built from 2.269 MB sources in 27 modules, into 15.532 MB in 10 C++ files needing 0.000 MB
+- Verilator: Walltime 9.614 s (elab=0.669, cvt=7.725, bld=0.000); cpu 7.828 s on 1 threads; allocated 155.406 MB
