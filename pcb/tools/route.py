@@ -27,6 +27,13 @@ JAR = os.environ.get("FREEROUTING_JAR",
 
 
 def gnd_pour(board, layer=pcbnew.B_Cu, margin=0.5, w=100.0, h=100.0):
+    # a board routed again keeps the pour it already has: one pour, not two
+    # overlapping (DRC zones_intersect)
+    gnd = board.FindNet("GND").GetNetCode()
+    for i in reversed(range(board.GetAreaCount())):
+        old = board.GetArea(i)
+        if old.GetNetCode() == gnd and old.GetLayer() == layer:
+            board.Delete(old)
     z = pcbnew.ZONE(board)
     z.SetLayer(layer)
     z.SetNetCode(board.FindNet("GND").GetNetCode())
