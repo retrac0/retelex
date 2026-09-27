@@ -10,7 +10,7 @@ beside it in lockstep (lockstep.v).  It holds:
 
     blkhdr_bus_RevA_net     block header A, the bus board
     blkhdr_logic_RevA_net   block header B, the logic board (and its lamps)
-    portcard_net   one at every PORT_FITTED slot k, every jumper at k
+    portcard_RevC_net       one at every PORT_FITTED slot k, every jumper at k
 
 and wires them the way the copper does: a stack net is ONE net through all of
 them (the three stacking headers join pin n of every board), a link net is one
@@ -36,8 +36,8 @@ PCB = HERE.parent
 GEN = PCB / 'out' / 'gen'
 SPEC = json.loads((PCB / 'lib' / 'block-stack.json').read_text())
 
-CA, CB = 'blkhdr_bus_RevA', 'blkhdr_logic_RevA'
-MODS = {m: json.loads((GEN / f"{m}_net.json").read_text()) for m in (CA, CB, 'portcard')}
+CA, CB, CP = 'blkhdr_bus_RevA', 'blkhdr_logic_RevA', 'portcard_RevC'
+MODS = {m: json.loads((GEN / f"{m}_net.json").read_text()) for m in (CA, CB, CP)}
 STACK = sorted({n for c in SPEC['stack_connectors'] for n in c['pins'].values()
                 if n not in ('+5V', 'GND', 'NC') and not n.startswith('SP')})
 LINK = sorted({n for c in SPEC['connectors'] if c['ref'] == 'J8' for n in c['pins'].values()
@@ -161,7 +161,7 @@ def main():
     for n, where in shared:
         if where != 'stack':
             continue
-        c = contribs('portcard', n)
+        c = contribs(CP, n)
         if c is None:
             continue
         card_kinds[n] = [k for k, _ in c[1]]
@@ -295,10 +295,10 @@ def main():
     w('    genvar k;')
     w('    for (k = 0; k < 8; k = k + 1) begin : pc')
     w('        if (PORT_FITTED[k]) begin : fitted')
-    for l in local_wires('portcard', 'c', '            '):
+    for l in local_wires(CP, 'c', '            '):
         w(l)
-    w('            portcard_net #(.T_ARM(T_ARM), .T_REL(T_REL), .POS(k[2:0]), .LANE(k)) u_card (')
-    cs = conn('portcard', 'u_card', 'c', '                ', per_card=True)
+    w(f'            {CP}_net #(.T_ARM(T_ARM), .T_REL(T_REL), .POS(k[2:0]), .LANE(k)) u_card (')
+    cs = conn(CP, 'u_card', 'c', '                ', per_card=True)
     for i, c in enumerate(cs):
         w(f"                {c}{',' if i < len(cs) - 1 else ''}")
     w('            );')

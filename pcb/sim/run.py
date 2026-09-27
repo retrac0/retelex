@@ -35,7 +35,7 @@ GEN = PCB / 'out' / 'gen'
 MODELS = PCB / 'models' / '74hc.v'
 TMP = REPO / 'newimpl' / 'build' / 'tmp'
 # the three boards' modules and the parts they are made of (sim/gen.sh makes them)
-BOARDS = [str(GEN / f) for f in ('blkhdr_bus_RevA_net.v', 'blkhdr_logic_RevA_net.v', 'portcard_net.v')] + [str(MODELS)]
+BOARDS = [str(GEN / f) for f in ('blkhdr_bus_RevA_net.v', 'blkhdr_logic_RevA_net.v', 'portcard_RevC_net.v')] + [str(MODELS)]
 
 
 def snapshot():

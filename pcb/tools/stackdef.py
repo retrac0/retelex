@@ -18,7 +18,9 @@ OUT_JSON = sys.argv[1] if len(sys.argv) > 1 else str(_PCB / "lib" / "block-stack
 OUT_MD = sys.argv[2] if len(sys.argv) > 2 else str(_PCB / "out" / "block-stack-tables.md")
 
 # the three cards (Joel, 2026-09-26: the header boards are blkhdr_bus_RevA and blkhdr_logic_RevA)
-CA, CB, CP = "blkhdr_bus_RevA", "blkhdr_logic_RevA", "portcard"
+# the port card is drawn by hand in pcb/portcard_RevC (Joel, 2026-09-26: pcb/portcard, the
+# generated copy, is gone); P below is the first draft it grew from, not a copy of it
+CA, CB, CP = "blkhdr_bus_RevA", "blkhdr_logic_RevA", "portcard_RevC"
 
 # ----------------------------------------------------------------------------
 # geometry helpers
@@ -225,12 +227,12 @@ for k in range(8):
     net(f"LAMP_B{k}", group="local", card="blockhdr", driver="blockhdr U22", drive="tri-state ('595, /OE = /FIT)",
         note=f"slot {k}'s BUSY lamp: low (lit) when card {k} pulled /HB_L in its turn last pass")
 net("P_WR_N", doc="/WR (this card's)", group="local", card=CP, drive="lane via JP2",
-    pull=dict(to="+5V", ohm=10000, at="portcard RN2"), rtl="wr (port.v:65)")
+    pull=dict(to="+5V", ohm=10000, at="port card RN2"), rtl="wr (port.v:65)")
 net("P_C_TX", doc="C_TX (this card's, after ringback)", group="local", card=CP,
     drive="totem-pole (U12)", rtl="c_mux[POS] (block.v:124-131)")
 for i in range(3):
     net(f"POS{i}", group="local", card=CP, drive="static, shunt to GND",
-        pull=dict(to="+5V", ohm=10000, at="portcard RN2"), rtl=f"POS[{i}] (port.v:28)")
+        pull=dict(to="+5V", ohm=10000, at="port card RN2"), rtl=f"POS[{i}] (port.v:28)")
 net("BUSY_N", doc="/BUSY", group="local", card=CP, drive="totem-pole (U10)",
     rtl="busy (port.v:147); port_busy[k] = !BUSY_N", note="test point JP-TP pin 2")
 
@@ -270,22 +272,23 @@ for name, J in (("J1", J1), ("J2", J2)):
 
 # Both front-aligned, pin 1 at the BACK end (Joel, 2026-09-26): a card turned
 # round cannot seat, and the back edge is left for lamps and test strips.
-# Pads y 29.0 - 89.96: the socket body ends 5.3 mm from the front holes' centres.
+# Pads y 27.0 - 87.96, 2 mm back from first drawn (Joel: "too close to the
+# holes"): the socket body ends 7.3 mm from the front holes' centres.
 SOCK = hdr2(25, even_dx=-2.54)   # PinSocket_2x25_P2.54mm_Vertical pattern
 STACK_FP = {CP: "telco:Stack_2x25_P2.54mm_LongTail",
             CB: "telco:Stack_2x25_P2.54mm_LongTail",
             CA: "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"}
 STACK = [
-    dict(ref="J1", role="stack, clocks (checkerboard) and commons", edge="left", rotation=0, pos=(5.08, 29.0),
+    dict(ref="J1", role="stack, clocks (checkerboard) and commons", edge="left", rotation=0, pos=(5.08, 27.0),
          pins=J1, pad1="back end, inner row", outer_row="even"),
-    dict(ref="J2", role="stack, data, planes and lanes", edge="right", rotation=0, pos=(97.46, 29.0),
+    dict(ref="J2", role="stack, data, planes and lanes", edge="right", rotation=0, pos=(97.46, 27.0),
          pins=J2, pad1="back end, outer row", outer_row="odd"),
 ]
 for c in STACK:
     c["pads"] = place(SOCK, c["pos"], c["rotation"])
 # check geometry
-assert STACK[0]["pads"][2] == [2.54, 29.0] and STACK[0]["pads"][49] == [5.08, 89.96]
-assert STACK[1]["pads"][2] == [94.92, 29.0] and STACK[1]["pads"][50] == [94.92, 89.96]
+assert STACK[0]["pads"][2] == [2.54, 27.0] and STACK[0]["pads"][49] == [5.08, 87.96]
+assert STACK[1]["pads"][2] == [94.92, 27.0] and STACK[1]["pads"][50] == [94.92, 87.96]
 
 # every stack net appears on exactly one stack pin (power many times)
 allpins = collections.Counter()
@@ -971,7 +974,7 @@ DOC = dict(
         stack_part="single-piece long-tail 2x25 stacking header, 2.54 mm, 8.5 mm body, >= 10 mm tail (RPi-HAT class; Samtec SSQ-125-03-G-D as the gold upgrade)",
         header_stack_part="plain 2x25 female socket, 8.5 mm body, same holes",
         max_part_height_top=9.0, max_lead_protrusion_bottom=1.5,
-        stack_columns="J1 at the left edge, J2 at the right, both pads y 29.0-89.96 (front-aligned), pin 1 at the back end",
+        stack_columns="J1 at the left edge, J2 at the right, both pads y 27.0-87.96 (front-aligned, 7.3 mm clear of the front holes), pin 1 at the back end",
         front_edge="the port card's edge IDC, header A's bus IDC, header B's test strip; each right-angle IDC shroud is ~9 mm tall under the card above, whose leads over it are trimmed to 1 mm",
         back_edge="lamps (header B, the port card) and test strips (header A, the port card); header A's adapter commons",
         jumpers="vertical, in the interior beside the logic each sets, low-profile shunts; set with the boards above lifted off"),
@@ -1001,7 +1004,7 @@ DOC = dict(
                  note="block header B, the logic board: on A like a port card, J8 underneath into A; the lamps",
                  parts=HB),
         CP: dict(project=f"pcb/{CP}/{CP}.kicad_pro", layers=2,
-                 note="the generated port card the netlist check runs; the board is pcb/portcard_RevC, by hand",
+                 note="the port card, drawn by hand from this first draft (parts: the draft's; the board adds port-state LEDs)",
                  parts=P)},
     fanout=FAN,
     netlist_check=NC,

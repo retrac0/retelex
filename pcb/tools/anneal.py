@@ -2,7 +2,7 @@
 """anneal.py -- a first placement for a block-stack board by simulated annealing,
 for place.py apply to write and Freerouting to route.
 
-    anneal.py CARD PINS.json OUT.json [--seed N] [--iters N] [--from PLACEMENT.json]
+    anneal.py CARD PINS.json OUT.json [--seed N] [--iters N] [--T0 T] [--channel K] [--from PLACEMENT.json]
 
 PINS.json holds the parts a person places: {ref: [x, y, rot] or [x, y, rot, "edge"]}
 (the edge connectors, the lamps), and "_keepout": [[x0, y0, x1, y1], ...], areas no
@@ -59,6 +59,10 @@ def main(argv):
     iters = int(argv[argv.index('--iters') + 1]) if '--iters' in argv else 60000
     start = json.loads(Path(argv[argv.index('--from') + 1]).read_text()) if '--from' in argv else {}
     rng = random.Random(seed)
+    if '--channel' in argv:             # scale the routing channels, for a crowded board
+        k = float(argv[argv.index('--channel') + 1])
+        for key in CHANNEL:
+            CHANNEL[key] *= k
     pinned = json.loads(Path(pins_path).read_text())
     keepout = [tuple(k) for k in pinned.pop('_keepout', [])]
     T0 = float(argv[argv.index('--T0') + 1]) if '--T0' in argv else 40.0

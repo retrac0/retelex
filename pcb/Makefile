@@ -2,16 +2,15 @@
 #
 #   make list            boards found
 #   make check           ERC + DRC on every board (make -k to see all failures)
-#   make erc-portcard    one board's ERC; also drc-, pdf-, fab-
+#   make erc-portcard_RevC    one board's ERC; also drc-, pdf-, fab-
 #   make pdf             schematic PDFs for every board
-#   make fab-portcard    gerbers, drill, BOM and a zip for the fab house
+#   make fab-portcard_RevC    gerbers, drill, BOM and a zip for the fab house
 #   make models          the 74HC model library's own benches (models/)
 #   make netcheck        the block stack's schematics -> Verilog -> newimpl benches
 #                        on the boards; BENCH="dial ctl" picks benches
 #   make lockstep        the same benches with block.v driving and the boards
 #                        compared against it at every mid-cell
-#   make place-portcard  first placement from the netlist (overwrites the board)
-#   make route-portcard  Freerouting, then a GND pour (needs the jar: tools/route.py)
+#   make route-CARD      Freerouting, then a GND pour (needs the jar: tools/route.py)
 #   make clean
 #
 # Every board is a directory holding <name>.kicad_pro; the name is the board.

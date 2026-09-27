@@ -3,7 +3,7 @@
 pcb/lib/block-stack.json, with pcbnew (KiCad 10).
 
     python3 pcb.py CARD ...                 -> pcb/<card>/<card>.kicad_pcb (placed, unrouted);
-                                            CARD: blkhdr_bus_RevA, blkhdr_logic_RevA, portcard
+                                            CARD: blkhdr_bus_RevA, blkhdr_logic_RevA, portcard_RevC
     python3 pcb.py relink [card ...]        re-point footprints at their symbols after a regeneration
 
 The netlist is pcb/out/gen/<card>.xml (sim/gen.sh makes it).  Footprints come
@@ -36,14 +36,14 @@ FPDIRS = {'telco': PCB / 'lib' / 'telco.pretty'}
 STOCK = Path('/usr/share/kicad/footprints')
 W = H = 100.0
 CA, CB = 'blkhdr_bus_RevA', 'blkhdr_logic_RevA'
-CARDS = [CA, CB, 'portcard']
-LAYERS = {'portcard': 2, CA: 2, CB: 2}    # Joel: no 4-layer cards
+CARDS = [CA, CB, 'portcard_RevC']
+LAYERS = {'portcard_RevC': 2, CA: 2, CB: 2}    # Joel: no 4-layer cards
 
 # Package slots, in order: pin 1 at (x, y), rotation.  Six columns 0.55 in apart,
 # rows far enough apart for a row of 100 nF between them.
 COLS = [9.53 + 13.97 * i for i in range(6)]
 SLOTS = {
-    'portcard': [(x, 11.43, 0) for x in COLS] + [(x, 43.18, 0) for x in COLS],
+    'portcard_RevC': [(x, 11.43, 0) for x in COLS] + [(x, 43.18, 0) for x in COLS],
     # A and B: a first draft only; the boards are placed by hand (place.py apply)
     CA: [(12.07 + 16.0 * i, y, 0) for y in (16.0, 45.0) for i in range(5)],
     CB: [(12.07 + 16.0 * i, y, 0) for y in (16.0, 45.0) for i in range(6)],
@@ -51,7 +51,7 @@ SLOTS = {
 
 # where packages and the rest may go: (x0, y0, x1, y1) in mm, tried in order
 FREE = {
-    'portcard': [(8.5, 66.0, 53.5, 85.5), (8.5, 8.5, 92.0, 66.0), (53.5, 62.0, 92.0, 66.5),
+    'portcard_RevC': [(8.5, 66.0, 53.5, 85.5), (8.5, 8.5, 92.0, 66.0), (53.5, 62.0, 92.0, 66.5),
                  (85.8, 62.0, 92.5, 85.5)],
     CA: [(8.5, 8.5, 92.0, 85.0)],
     CB: [(8.5, 8.5, 92.0, 88.0)],

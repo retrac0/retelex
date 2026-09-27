@@ -6,7 +6,7 @@ and that turn any KiCad schematic here into structural Verilog.
 | Script | Does |
 |---|---|
 | `stackdef.py` | the block stack described part by part and pin by pin; writes `pcb/lib/block-stack.json` |
-| `gen_cards.py` | draws `blkhdr_bus_RevA` (header A), `blkhdr_logic_RevA` (header B) and, only with `--force-portcard`, the generated `portcard` from that JSON (first draft only; it overwrites). `--check` holds each schematic's connector pins to the JSON |
+| `gen_cards.py` | draws `blkhdr_bus_RevA` (header A) and `blkhdr_logic_RevA` (header B) from that JSON (first draft only; it overwrites). It never draws the port card, `portcard_RevC`, which is drawn by hand. `--check` holds all three schematics' connector pins to the JSON |
 | `sch.py` | writes KiCad 10 schematics: parts, labels on pin ends, hierarchical sheets, macro fields. UUIDs are keyed by sheet, reference and unit, so a regeneration is byte-identical and keeps the board linked |
 | `kisexp.py` | S-expressions, symbol libraries, pin geometry |
 | `netlist.py` | `kicad-cli` netlist export, plus the checks it skips: missing `lib_symbols`, duplicate references |

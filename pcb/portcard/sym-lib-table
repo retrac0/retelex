@@ -1,4 +1,0 @@
-(sym_lib_table
-	(version 7)
-	(lib (name "telco") (type "KiCad") (uri "${KIPRJMOD}/../lib/telco.kicad_sym") (options "") (descr "Shared telco symbols, pcb/lib/"))
-)

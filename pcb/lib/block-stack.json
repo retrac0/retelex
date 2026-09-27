@@ -60,7 +60,7 @@
   "header_stack_part": "plain 2x25 female socket, 8.5 mm body, same holes",
   "max_part_height_top": 9.0,
   "max_lead_protrusion_bottom": 1.5,
-  "stack_columns": "J1 at the left edge, J2 at the right, both pads y 29.0-89.96 (front-aligned), pin 1 at the back end",
+  "stack_columns": "J1 at the left edge, J2 at the right, both pads y 27.0-87.96 (front-aligned, 7.3 mm clear of the front holes), pin 1 at the back end",
   "front_edge": "the port card's edge IDC, header A's bus IDC, header B's test strip; each right-angle IDC shroud is ~9 mm tall under the card above, whose leads over it are trimmed to 1 mm",
   "back_edge": "lamps (header B, the port card) and test strips (header A, the port card); header A's adapter commons",
   "jumpers": "vertical, in the interior beside the logic each sets, low-profile shunts; set with the boards above lifted off"
@@ -2102,7 +2102,7 @@
    "name": "E_TX_CLK",
    "doc": "a1 TX_CLK",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2110,7 +2110,7 @@
    "name": "E_LOOP_HB",
    "doc": "a2 LOOP_HB",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2118,7 +2118,7 @@
    "name": "E_TX_OCT",
    "doc": "a3 TX_OCT",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2126,7 +2126,7 @@
    "name": "E_FILL",
    "doc": "a4 FILL",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2134,7 +2134,7 @@
    "name": "E_C_TX",
    "doc": "a5 C_TX",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole (subscriber card)",
    "note": "in: 4.7k to E_FILL (R5); -> U12 '157 A"
   },
@@ -2142,7 +2142,7 @@
    "name": "E_A_TX",
    "doc": "a6 A_TX (M)",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole (subscriber card)",
    "note": "in: 10k pull-down (R1); M"
   },
@@ -2150,7 +2150,7 @@
    "name": "E_RX_CLK",
    "doc": "a7 RX_CLK = TX_CLK",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2158,7 +2158,7 @@
    "name": "E_RX_OCT",
    "doc": "a8 RX_OCT",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U13 via RN1 33R"
   },
@@ -2166,7 +2166,7 @@
    "name": "E_C_RX",
    "doc": "a9 C_RX",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U6 1Q through U13, RN1 33R"
   },
@@ -2174,7 +2174,7 @@
    "name": "E_A_RX",
    "doc": "a10 A_RX",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole",
    "note": "out: U11 through U13, RN1 33R"
   },
@@ -2182,7 +2182,7 @@
    "name": "E_WORD",
    "doc": "a12 card word",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "open-drain (subscriber card)",
    "note": "in, open drain: 680R pull-up (R2); to lane via JP4"
   },
@@ -2190,7 +2190,7 @@
    "name": "E_ANS_N",
    "doc": "a13 /ANS",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "open-drain (subscriber card)",
    "note": "in, open drain: 680R pull-up (R3); -> U8 ON"
   },
@@ -2198,7 +2198,7 @@
    "name": "E_RAI_N",
    "doc": "a14 RAI (spare)",
    "group": "edge",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "open-drain (subscriber card)",
    "note": "in, open drain: 680R pull-up (R4); unused"
   },
@@ -2471,12 +2471,12 @@
    "name": "P_WR_N",
    "doc": "/WR (this card's)",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "lane via JP2",
    "pull": {
     "to": "+5V",
     "ohm": 10000,
-    "at": "portcard RN2"
+    "at": "port card RN2"
    },
    "rtl": "wr (port.v:65)"
   },
@@ -2484,7 +2484,7 @@
    "name": "P_C_TX",
    "doc": "C_TX (this card's, after ringback)",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole (U12)",
    "rtl": "c_mux[POS] (block.v:124-131)"
   },
@@ -2492,12 +2492,12 @@
    "name": "POS0",
    "doc": "POS0",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "static, shunt to GND",
    "pull": {
     "to": "+5V",
     "ohm": 10000,
-    "at": "portcard RN2"
+    "at": "port card RN2"
    },
    "rtl": "POS[0] (port.v:28)"
   },
@@ -2505,12 +2505,12 @@
    "name": "POS1",
    "doc": "POS1",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "static, shunt to GND",
    "pull": {
     "to": "+5V",
     "ohm": 10000,
-    "at": "portcard RN2"
+    "at": "port card RN2"
    },
    "rtl": "POS[1] (port.v:28)"
   },
@@ -2518,12 +2518,12 @@
    "name": "POS2",
    "doc": "POS2",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "static, shunt to GND",
    "pull": {
     "to": "+5V",
     "ohm": 10000,
-    "at": "portcard RN2"
+    "at": "port card RN2"
    },
    "rtl": "POS[2] (port.v:28)"
   },
@@ -2531,7 +2531,7 @@
    "name": "BUSY_N",
    "doc": "/BUSY",
    "group": "local",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "drive": "totem-pole (U10)",
    "rtl": "busy (port.v:147); port_busy[k] = !BUSY_N",
    "note": "test point JP-TP pin 2"
@@ -2545,11 +2545,11 @@
    "cards": [
     "blkhdr_bus_RevA",
     "blkhdr_logic_RevA",
-    "portcard"
+    "portcard_RevC"
    ],
    "fixed": true,
    "footprint": {
-    "portcard": "telco:Stack_2x25_P2.54mm_LongTail",
+    "portcard_RevC": "telco:Stack_2x25_P2.54mm_LongTail",
     "blkhdr_logic_RevA": "telco:Stack_2x25_P2.54mm_LongTail",
     "blkhdr_bus_RevA": "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"
    },
@@ -2557,7 +2557,7 @@
    "rotation": 0,
    "pos": [
     5.08,
-    29.0
+    27.0
    ],
    "pad1": "back end, inner row",
    "outer_row": "even",
@@ -2616,203 +2616,203 @@
    "pads": {
     "1": [
      5.08,
-     29.0
+     27.0
     ],
     "2": [
      2.54,
-     29.0
+     27.0
     ],
     "3": [
      5.08,
-     31.54
+     29.54
     ],
     "4": [
      2.54,
-     31.54
+     29.54
     ],
     "5": [
      5.08,
-     34.08
+     32.08
     ],
     "6": [
      2.54,
-     34.08
+     32.08
     ],
     "7": [
      5.08,
-     36.62
+     34.62
     ],
     "8": [
      2.54,
-     36.62
+     34.62
     ],
     "9": [
      5.08,
-     39.16
+     37.16
     ],
     "10": [
      2.54,
-     39.16
+     37.16
     ],
     "11": [
      5.08,
-     41.7
+     39.7
     ],
     "12": [
      2.54,
-     41.7
+     39.7
     ],
     "13": [
      5.08,
-     44.24
+     42.24
     ],
     "14": [
      2.54,
-     44.24
+     42.24
     ],
     "15": [
      5.08,
-     46.78
+     44.78
     ],
     "16": [
      2.54,
-     46.78
+     44.78
     ],
     "17": [
      5.08,
-     49.32
+     47.32
     ],
     "18": [
      2.54,
-     49.32
+     47.32
     ],
     "19": [
      5.08,
-     51.86
+     49.86
     ],
     "20": [
      2.54,
-     51.86
+     49.86
     ],
     "21": [
      5.08,
-     54.4
+     52.4
     ],
     "22": [
      2.54,
-     54.4
+     52.4
     ],
     "23": [
      5.08,
-     56.94
+     54.94
     ],
     "24": [
      2.54,
-     56.94
+     54.94
     ],
     "25": [
      5.08,
-     59.48
+     57.48
     ],
     "26": [
      2.54,
-     59.48
+     57.48
     ],
     "27": [
      5.08,
-     62.02
+     60.02
     ],
     "28": [
      2.54,
-     62.02
+     60.02
     ],
     "29": [
      5.08,
-     64.56
+     62.56
     ],
     "30": [
      2.54,
-     64.56
+     62.56
     ],
     "31": [
      5.08,
-     67.1
+     65.1
     ],
     "32": [
      2.54,
-     67.1
+     65.1
     ],
     "33": [
      5.08,
-     69.64
+     67.64
     ],
     "34": [
      2.54,
-     69.64
+     67.64
     ],
     "35": [
      5.08,
-     72.18
+     70.18
     ],
     "36": [
      2.54,
-     72.18
+     70.18
     ],
     "37": [
      5.08,
-     74.72
+     72.72
     ],
     "38": [
      2.54,
-     74.72
+     72.72
     ],
     "39": [
      5.08,
-     77.26
+     75.26
     ],
     "40": [
      2.54,
-     77.26
+     75.26
     ],
     "41": [
      5.08,
-     79.8
+     77.8
     ],
     "42": [
      2.54,
-     79.8
+     77.8
     ],
     "43": [
      5.08,
-     82.34
+     80.34
     ],
     "44": [
      2.54,
-     82.34
+     80.34
     ],
     "45": [
      5.08,
-     84.88
+     82.88
     ],
     "46": [
      2.54,
-     84.88
+     82.88
     ],
     "47": [
      5.08,
-     87.42
+     85.42
     ],
     "48": [
      2.54,
-     87.42
+     85.42
     ],
     "49": [
      5.08,
-     89.96
+     87.96
     ],
     "50": [
      2.54,
-     89.96
+     87.96
     ]
    }
   },
@@ -2823,11 +2823,11 @@
    "cards": [
     "blkhdr_bus_RevA",
     "blkhdr_logic_RevA",
-    "portcard"
+    "portcard_RevC"
    ],
    "fixed": true,
    "footprint": {
-    "portcard": "telco:Stack_2x25_P2.54mm_LongTail",
+    "portcard_RevC": "telco:Stack_2x25_P2.54mm_LongTail",
     "blkhdr_logic_RevA": "telco:Stack_2x25_P2.54mm_LongTail",
     "blkhdr_bus_RevA": "Connector_PinSocket_2.54mm:PinSocket_2x25_P2.54mm_Vertical"
    },
@@ -2835,7 +2835,7 @@
    "rotation": 0,
    "pos": [
     97.46,
-    29.0
+    27.0
    ],
    "pad1": "back end, outer row",
    "outer_row": "odd",
@@ -2894,203 +2894,203 @@
    "pads": {
     "1": [
      97.46,
-     29.0
+     27.0
     ],
     "2": [
      94.92,
-     29.0
+     27.0
     ],
     "3": [
      97.46,
-     31.54
+     29.54
     ],
     "4": [
      94.92,
-     31.54
+     29.54
     ],
     "5": [
      97.46,
-     34.08
+     32.08
     ],
     "6": [
      94.92,
-     34.08
+     32.08
     ],
     "7": [
      97.46,
-     36.62
+     34.62
     ],
     "8": [
      94.92,
-     36.62
+     34.62
     ],
     "9": [
      97.46,
-     39.16
+     37.16
     ],
     "10": [
      94.92,
-     39.16
+     37.16
     ],
     "11": [
      97.46,
-     41.7
+     39.7
     ],
     "12": [
      94.92,
-     41.7
+     39.7
     ],
     "13": [
      97.46,
-     44.24
+     42.24
     ],
     "14": [
      94.92,
-     44.24
+     42.24
     ],
     "15": [
      97.46,
-     46.78
+     44.78
     ],
     "16": [
      94.92,
-     46.78
+     44.78
     ],
     "17": [
      97.46,
-     49.32
+     47.32
     ],
     "18": [
      94.92,
-     49.32
+     47.32
     ],
     "19": [
      97.46,
-     51.86
+     49.86
     ],
     "20": [
      94.92,
-     51.86
+     49.86
     ],
     "21": [
      97.46,
-     54.4
+     52.4
     ],
     "22": [
      94.92,
-     54.4
+     52.4
     ],
     "23": [
      97.46,
-     56.94
+     54.94
     ],
     "24": [
      94.92,
-     56.94
+     54.94
     ],
     "25": [
      97.46,
-     59.48
+     57.48
     ],
     "26": [
      94.92,
-     59.48
+     57.48
     ],
     "27": [
      97.46,
-     62.02
+     60.02
     ],
     "28": [
      94.92,
-     62.02
+     60.02
     ],
     "29": [
      97.46,
-     64.56
+     62.56
     ],
     "30": [
      94.92,
-     64.56
+     62.56
     ],
     "31": [
      97.46,
-     67.1
+     65.1
     ],
     "32": [
      94.92,
-     67.1
+     65.1
     ],
     "33": [
      97.46,
-     69.64
+     67.64
     ],
     "34": [
      94.92,
-     69.64
+     67.64
     ],
     "35": [
      97.46,
-     72.18
+     70.18
     ],
     "36": [
      94.92,
-     72.18
+     70.18
     ],
     "37": [
      97.46,
-     74.72
+     72.72
     ],
     "38": [
      94.92,
-     74.72
+     72.72
     ],
     "39": [
      97.46,
-     77.26
+     75.26
     ],
     "40": [
      94.92,
-     77.26
+     75.26
     ],
     "41": [
      97.46,
-     79.8
+     77.8
     ],
     "42": [
      94.92,
-     79.8
+     77.8
     ],
     "43": [
      97.46,
-     82.34
+     80.34
     ],
     "44": [
      94.92,
-     82.34
+     80.34
     ],
     "45": [
      97.46,
-     84.88
+     82.88
     ],
     "46": [
      94.92,
-     84.88
+     82.88
     ],
     "47": [
      97.46,
-     87.42
+     85.42
     ],
     "48": [
      94.92,
-     87.42
+     85.42
     ],
     "49": [
      97.46,
-     89.96
+     87.96
     ],
     "50": [
      94.92,
-     89.96
+     87.96
     ]
    }
   }
@@ -3098,7 +3098,7 @@
  "connectors": [
   {
    "ref": "J4",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "role": "edge header to the subscriber card",
    "footprint": "Connector_IDC:IDC-Header_2x17_P2.54mm_Horizontal",
    "side": "top",
@@ -3287,7 +3287,7 @@
   },
   {
    "ref": "J5",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "role": "test strip (probe hooks at the back edge, beside the lamps)",
    "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x12_P2.54mm_Horizontal",
    "side": "top",
@@ -3982,7 +3982,7 @@
  "jumpers": [
   {
    "ref": "JP1",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "label": "POS",
    "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical",
    "side": "top",
@@ -4052,7 +4052,7 @@
   },
   {
    "ref": "JP2",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "label": "WR",
    "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
    "side": "top",
@@ -4207,7 +4207,7 @@
   },
   {
    "ref": "JP3",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "label": "C_TX",
    "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
    "side": "top",
@@ -4362,7 +4362,7 @@
   },
   {
    "ref": "JP4",
-   "card": "portcard",
+   "card": "portcard_RevC",
    "label": "WORD",
    "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical",
    "side": "top",
@@ -6753,10 +6753,10 @@
     }
    ]
   },
-  "portcard": {
-   "project": "pcb/portcard/portcard.kicad_pro",
+  "portcard_RevC": {
+   "project": "pcb/portcard_RevC/portcard_RevC.kicad_pro",
    "layers": 2,
-   "note": "the generated port card the netlist check runs; the board is pcb/portcard_RevC, by hand",
+   "note": "the port card, drawn by hand from this first draft (parts: the draft's; the board adds port-state LEDs)",
    "parts": [
     {
      "ref": "U1",
@@ -8480,7 +8480,7 @@
    "WSCLK",
    "WS_C_N"
   ],
-  "portcard": [
+  "portcard_RevC": [
    "ADDR0",
    "ADDR1",
    "ADDR2",

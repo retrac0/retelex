@@ -17,7 +17,8 @@ Joel decided the form on 2026-09-25:
 - **The port drains are ORed on the block**: a block-local `/HA_L` and `/HB_L`,
   with one drain per plane onto the bus.
 - **The header has two jumpers**: the HC route and the number.
-- The new port card **replaces `pcb/portcard` in place**.
+- The new port card **replaces `pcb/portcard` in place** (since 2026-09-26 it is
+  `pcb/portcard_RevC`, drawn by hand; the generated `pcb/portcard` is gone).
 - **The header is two boards, stacked like the port cards** (later the same
   day, when 19 DIPs and their connectors would not fit one 100 × 100 board).
 
@@ -48,8 +49,8 @@ service; this is the better form for a first breadboard.
 | | |
 |---|---|
 | Pin and part description | `pcb/tools/stackdef.py` → `pcb/lib/block-stack.json` (the tables below are generated from it) |
-| Schematics | `pcb/blkhdr_bus_RevA/` (header A), `pcb/blkhdr_logic_RevA/` (header B), `pcb/portcard/` (the port card the check runs) — first draft by `pcb/tools/gen_cards.py`; **the schematics are the design from here on** |
-| Boards | header A and B in the same directories: placed by `pcb/tools/anneal.py` and `place.py`, routed by `pcb/tools/route.py` (Freerouting). The port card's board is `pcb/portcard_RevC`, maintained by hand |
+| Schematics | `pcb/blkhdr_bus_RevA/` (header A), `pcb/blkhdr_logic_RevA/` (header B), `pcb/portcard_RevC/` (the port card, drawn by hand) — the headers' first draft by `pcb/tools/gen_cards.py`; **the schematics are the design from here on** |
+| Boards | the same directories: placed by `pcb/tools/anneal.py` and `place.py`, routed by `pcb/tools/route.py` (Freerouting). Each carries a `.kicad_dru` letting a footprint's own pads sit 0.2 mm apart (the stock TO-92's 0.22 mm, under the 0.25 mm track clearance) |
 | Check | `make -C pcb netcheck` / `make -C pcb lockstep`: netlist → Verilog → the newimpl benches, `block.v` swapped for the boards, or run beside them |
 | Reference | `newimpl/rtl/block.v`, `port.v`, `frame_decode.v`. A difference means a schematic is wrong until shown otherwise |
 
@@ -82,8 +83,8 @@ service; this is the better form for a first breadboard.
   H2 sits 3 mm off its corner, so a card turned round does not line up with
   the stack. The stack headers key it too: both sit toward the front.
 - **Connectors by edge.**
-  - **Stack:** J1 at the left edge, J2 at the right, pads y 29.0–89.96 mm
-    (front-aligned), pin 1 at the back end.
+  - **Stack:** J1 at the left edge, J2 at the right, pads y 27.0–87.96 mm
+    (front-aligned, 7.3 mm clear of the front holes), pin 1 at the back end.
   - **Front edge:** the port card's edge header J4; header A's bus IDC J4;
     header B's test strip J9. Each right-angle IDC shroud stands about 9 mm,
     so the card above keeps its leads over it trimmed to 1 mm.
@@ -138,7 +139,7 @@ block's header.
 | U18 | B | '151 | lane `WORD[sel]` | `block.v:272-273` |
 | U20 | B | '02 | `hw_pd` (to A's Q3 on J8); the latch clock; the match, inverted into the latch; LAMP_CK = NOR(`/STB4`, `/SELM`), the lamps' shift clock | `block.v:273`, `:259-267` |
 | U21, U22 | B | '595 ×2 | **the lamps**: slot k's `/HA_L` (U21, M) and `/HB_L` (U22, BUSY) in its turn | none: a display |
-| D1–D16 | B | 3 mm LED, right-angle | M and BUSY for slots 0–7 in one row at the back edge, 5 mm pitch; RN10, RN11 1 k | — |
+| D1–D16 | B | 3 mm LED, right-angle | M and BUSY for slots 0–7 in one row at the back edge, 5 mm pitch, the lenses over the edge by about 4 mm; RN10, RN11 1 k | — |
 | D17–D19 | B | 3 mm LED, standing | FIT, RESET, RING_CAD, a column at the back right behind the lamp row; each 1.5 k from +5 V to `/FIT`, `/RST`, `/RING_CAD` | — |
 
 **The lamps.** In each of the block's eight frames `/STB4` falls mid-frame
@@ -231,8 +232,9 @@ because a digital simulator has no capacitor (§8).
 Two 2×25, identical on every card. The port cards and header B carry a
 long-tail stacking header (`telco:Stack_2x25_P2.54mm_LongTail`, the stock
 2×25 socket's pads); header A carries a plain 2×25 socket in the same holes.
-Pin *n* of every card is one net. Both sit toward the front, pads y 29.0 to
-89.96 mm, with pin 1 at the back end, so a card turned round cannot seat.
+Pin *n* of every card is one net. Both sit toward the front, pads y 27.0 to
+87.96 mm, with pin 1 at the back end, so a card turned round cannot seat. They
+sit 2 mm further back than first drawn, clear of the front holes (Joel).
 
 **69 signals** (43 commons, 24 lanes, and the two plane lines), **6 × +5 V,
 18 × GND**, and 7 spares that pass through and connect to nothing.
@@ -334,7 +336,8 @@ Each port card carries **four jumper blocks**, and all must say the same slot k:
 
 On the port card they sit by what they set: POS by U5 (the eq_own '688), WR by
 J1's `/WR` pins and U10, C_TX by J2's C_TX pins and the '157, WORD by the
-WORD pins and the edge's pull-up. Where exactly is `portcard_RevC`'s.
+WORD pins and the edge's pull-up: on `portcard_RevC`, WR stands against J1's `/WR`
+pins row for row, C_TX against J2's C_TX pins, WORD in the front-right corner.
 
 Header A has three:
 
@@ -441,7 +444,7 @@ then `pcb/sim/run.py`. The steps:
    the three schematics to `block-stack.json`.
 2. `kicad-cli sch export netlist`, then `netlist.py`'s own checks: missing
    `lib_symbols`, duplicate references. kicad-cli exits 0 on both.
-3. `net2v.py` writes `blkhdr_bus_RevA_net`, `blkhdr_logic_RevA_net` and `portcard_net`:
+3. `net2v.py` writes `blkhdr_bus_RevA_net`, `blkhdr_logic_RevA_net` and `portcard_RevC_net`:
    - one instance per package of `pcb/models/74hc.v`, keyed by pin number;
    - every multi-driver net resolved with no z;
    - the jumpers as module parameters (`POS`, `LANE`, `BLOCK`, `JUMPERED`).
@@ -596,12 +599,13 @@ A runaway netlist bench once reached 18 GB and took other sessions down with it.
     placement is a first pass for a human to improve.
 - **Keying.** A card turned round meets the offset hole and finds its stack
   headers at the back, not the front.
-- **`portcard_RevC` is on the old stack.** Its board still has the three 2×20
-  headers (0 of 50 pads on each new connector, and a J3), and so does the
-  generated `pcb/portcard` schematic the check runs, which fails the pin
-  contract on 83 pins. The check still runs it, joined to the headers by net
-  name, so the logic is checked; the pins are not, until both are redrawn on
-  the two 2×25.
+- **`portcard_RevC` moved onto the two 2×25** (2026-09-26). In its schematic J3
+  went and J1, J2 were redrawn from `block-stack.json`, keeping their symbol
+  UUIDs; on its board J1 and J2 sit on the contract pads, J5 and the ten
+  port-state LEDs moved to the back edge, the lane jumpers beside their lanes,
+  and the rest was re-placed around them (`anneal.py`, pinned parts). The pin
+  contract holds on all three cards and the board's schematic parity is 0. The
+  placement is a first pass; RevC is a hand board, and Joel's to improve.
 - **Heights** are from catalogue figures, not a mock-up. Build a bare three-layer
   mock-up with spacers before stuffing anything. The tightest places are the
   right-angle IDC shrouds, about 9 mm under an 11 mm gap: header A's bus J4

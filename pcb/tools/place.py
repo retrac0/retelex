@@ -100,6 +100,8 @@ def apply(card, placement, out):
     for f in src.glob('*.kicad_sch'):
         shutil.copy(f, d / f.name)
     shutil.copy(src / f"{card}.kicad_pro", d / f"{card}.kicad_pro")
+    if (src / f"{card}.kicad_dru").exists():          # the board's own DRC rules
+        shutil.copy(src / f"{card}.kicad_dru", d / f"{card}.kicad_dru")
     (d / 'fp-lib-table').write_text(
         f'(fp_lib_table\n\t(version 7)\n\t(lib (name "telco") (type "KiCad") '
         f'(uri "{PCB / "lib" / "telco.pretty"}") (options "") (descr ""))\n)\n')

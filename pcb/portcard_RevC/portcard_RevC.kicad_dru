@@ -1,0 +1,7 @@
+(version 1)
+# A footprint's own pads are the footprint's business: the stock TO-92_Inline
+# (the 2N7000s) has 0.22 mm between neighbouring pads, under the boards' 0.25 mm
+# track clearance.  0.2 mm is ordinary for any fab.
+(rule "pads within one footprint"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Parent == B.Parent")
+  (constraint clearance (min 0.2mm)))

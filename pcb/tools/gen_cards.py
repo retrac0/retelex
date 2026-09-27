@@ -3,9 +3,9 @@
 pcb/lib/block-stack.json (stackdef.py), drawn with sch.py.
 
     python3 gen_cards.py [CARD ...]              write pcb/<card>/<card>.kicad_sch (+ sheets); the
-                                                 cards are blkhdr_bus_RevA and blkhdr_logic_RevA
-                                                 (and portcard, only with --force-portcard: the
-                                                 port card's BOARD is pcb/portcard_RevC, by hand)
+                                                 cards are blkhdr_bus_RevA and blkhdr_logic_RevA.
+                                                 The port card, pcb/portcard_RevC, is drawn by
+                                                 hand: this never draws it, only --check holds it
     python3 gen_cards.py --check                     hold the schematics' connectors to the JSON
 
 THE SCHEMATICS ARE THE DESIGN once they exist.  Running this again OVERWRITES
@@ -48,7 +48,7 @@ DATE = '2026-09-25'
 
 # refs that live on a macro sheet, per card: sheet file -> [(instance, {role: ref}, {pin: net})]
 MACROS = {
-    'portcard': {
+    'portcard_RevC': {
         'det': [('DETM', dict(D='D1', RF='R6', RS='R7', C='C1'), dict(IN='E_A_TX', OUT='RC_M')),
                 ('DETE', dict(D='D2', RF='R8', RS='R9', C='C2'), dict(IN='E', OUT='RC_E'))],
         'cr': [('CRM', dict(C='C3', R='R10', D='D3'), dict(IN='FM_N', OUT='CR_M')),
@@ -67,7 +67,7 @@ MACRO_FIELDS = {
 TITLES = {
     'blkhdr_bus_RevA': 'Block header A, the bus board -- the bottom card of a block stack',
     'blkhdr_logic_RevA': 'Block header B, the logic board -- on A, under the port cards; the lamps',
-    'portcard': 'Port card -- one port circuit, eight to a block stack',
+    'portcard_RevC': 'Port card -- one port circuit, eight to a block stack',
 }
 
 
@@ -151,14 +151,14 @@ def connectors_of(card):
 # FILL_R comes off a '244 (a tri-state part) and the lanes from outside the card.
 SIM_FIELDS = {
     ('blkhdr_bus_RevA', 'RN1'): {'Sim.R': 'from:1'},
-    ('portcard', 'R5'): {'Sim.R': 'from:2'},      # E_FILL -> a pulled card's C_TX
+    ('portcard_RevC', 'R5'): {'Sim.R': 'from:2'},      # E_FILL -> a pulled card's C_TX
 }
 
 JUMPER_SIM = {
-    ('portcard', 'POS'): 'nbits:POS',
-    ('portcard', 'WR'): 'one:LANE',
-    ('portcard', 'C_TX'): 'one:LANE',
-    ('portcard', 'WORD'): 'one:LANE',
+    ('portcard_RevC', 'POS'): 'nbits:POS',
+    ('portcard_RevC', 'WR'): 'one:LANE',
+    ('portcard_RevC', 'C_TX'): 'one:LANE',
+    ('portcard_RevC', 'WORD'): 'one:LANE',
     ('blkhdr_bus_RevA', 'NUMBER'): 'bits:JUMPERED@0 nbits:BLOCK@1-3',
 }
 
@@ -290,7 +290,7 @@ def check(card):
 
 def main(argv):
     if '--check' in argv:
-        cards = [a for a in argv if not a.startswith('-')] or ['blkhdr_bus_RevA', 'blkhdr_logic_RevA', 'portcard']
+        cards = [a for a in argv if not a.startswith('-')] or ['blkhdr_bus_RevA', 'blkhdr_logic_RevA', 'portcard_RevC']
         fail = 0
         for card in cards:
             (PCB / 'out' / card).mkdir(parents=True, exist_ok=True)
@@ -301,14 +301,12 @@ def main(argv):
             fail |= bool(bad)
         return fail
     cards = [a for a in argv if not a.startswith('-')] or ['blkhdr_bus_RevA', 'blkhdr_logic_RevA']
-    # The port card's board is maintained by hand in KiCad (pcb/portcard_RevC,
-    # with the port-state LEDs, Joel 2026-09-26); pcb/portcard is the generated
-    # schematic the netlist check runs.  Never draw it unless asked for by name
-    # AND with --force-portcard.
-    if 'portcard' in cards and '--force-portcard' not in argv:
-        print("refusing to regenerate the port card: its board is hand-maintained "
-              "(pcb/portcard_RevC); pass --force-portcard to draw pcb/portcard afresh")
-        cards = [c for c in cards if c != 'portcard']
+    # The port card is drawn by hand in KiCad (pcb/portcard_RevC, with its
+    # port-state LEDs; Joel 2026-09-26): never draw over it.
+    if any(c.startswith('portcard') for c in cards):
+        print("refusing to draw the port card: pcb/portcard_RevC is drawn by hand "
+              "(--check still holds its connectors to the contract)")
+        cards = [c for c in cards if not c.startswith('portcard')]
     rc = 0
     for card in cards:
         path = build(card)
