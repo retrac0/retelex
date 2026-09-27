@@ -696,9 +696,15 @@ for what, rn, first in (("M", "RN10", 0), ("B", "RN11", 1)):
              f"the {'M' if what == 'M' else 'BUSY'} lamps' current, ~2.9 mA each")
     d["sim"] = False
     H.append(d)
+# Two groups in the row, each beside its '595 (Joel, 2026-09-26): hook D1-D8 on the
+# left, BUSY D9-D16 on the right, slot 0 first in each, all at an even 5.0 mm, told
+# apart by colour (hook green, BUSY orange, as on the hookbusy lamp card)
 for k in range(8):
-    H.append(led(f"D{2 * k + 1}", f"LAMP_M{k}_A", f"LAMP_M{k}", f"slot {k} M (hook): lit = off-hook", LAMP_FP))
-    H.append(led(f"D{2 * k + 2}", f"LAMP_B{k}_A", f"LAMP_B{k}", f"slot {k} BUSY: lit = busy", LAMP_FP))
+    H.append(led(f"D{k + 1}", f"LAMP_M{k}_A", f"LAMP_M{k}", f"slot {k} M (hook): lit = off-hook", LAMP_FP,
+                 value="LED green"))
+for k in range(8):
+    H.append(led(f"D{k + 9}", f"LAMP_B{k}_A", f"LAMP_B{k}", f"slot {k} BUSY: lit = busy", LAMP_FP,
+                 value="LED orange"))
 for ref, r, line, what in (("D17", "R13", "FIT_N", "FIT: the NUMBER jumper's FIT shunt is in"),
                            ("D18", "R14", "RST_N", "RESET: /RST low"),
                            ("D19", "R15", "RING_CAD_N", "RING_CAD: the ringing cadence, lit while ringing may sound")):

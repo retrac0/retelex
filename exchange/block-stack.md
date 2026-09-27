@@ -139,7 +139,7 @@ block's header.
 | U18 | B | '151 | lane `WORD[sel]` | `block.v:272-273` |
 | U20 | B | '02 | `hw_pd` (to A's Q3 on J8); the latch clock; the match, inverted into the latch; LAMP_CK = NOR(`/STB4`, `/SELM`), the lamps' shift clock | `block.v:273`, `:259-267` |
 | U21, U22 | B | '595 ×2 | **the lamps**: slot k's `/HA_L` (U21, M) and `/HB_L` (U22, BUSY) in its turn | none: a display |
-| D1–D16 | B | 3 mm LED, right-angle | M and BUSY for slots 0–7 in one row at the back edge, 5 mm pitch, the lenses over the edge by about 4 mm; RN10, RN11 1 k | — |
+| D1–D16 | B | 3 mm LED, right-angle | one row at the back edge, 5 mm pitch, the lenses over the edge by about 4 mm: hook (M) for slots 0–7 on D1–D8, green, beside U21; BUSY on D9–D16, orange, beside U22; RN10, RN11 1 k behind them | — |
 | D17–D19 | B | 3 mm LED, standing | FIT, RESET, RING_CAD, a column at the back right behind the lamp row; each 1.5 k from +5 V to `/FIT`, `/RST`, `/RING_CAD` | — |
 
 **The lamps.** In each of the block's eight frames `/STB4` falls mid-frame

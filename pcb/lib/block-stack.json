@@ -6276,7 +6276,7 @@
     },
     {
      "ref": "D1",
-     "value": "LED",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6290,21 +6290,7 @@
     },
     {
      "ref": "D2",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 0 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B0",
-      "2": "LAMP_B0_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D3",
-     "value": "LED",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6317,22 +6303,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D4",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 1 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B1",
-      "2": "LAMP_B1_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D5",
-     "value": "LED",
+     "ref": "D3",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6345,22 +6317,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D6",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 2 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B2",
-      "2": "LAMP_B2_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D7",
-     "value": "LED",
+     "ref": "D4",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6373,22 +6331,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D8",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 3 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B3",
-      "2": "LAMP_B3_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D9",
-     "value": "LED",
+     "ref": "D5",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6401,22 +6345,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D10",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 4 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B4",
-      "2": "LAMP_B4_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D11",
-     "value": "LED",
+     "ref": "D6",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6429,22 +6359,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D12",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 5 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B5",
-      "2": "LAMP_B5_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D13",
-     "value": "LED",
+     "ref": "D7",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6457,22 +6373,8 @@
      "card": "blkhdr_logic_RevA"
     },
     {
-     "ref": "D14",
-     "value": "LED",
-     "lib_id": "Device:LED",
-     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
-     "rtl": "-",
-     "function": "slot 6 BUSY: lit = busy",
-     "pins": {
-      "1": "LAMP_B6",
-      "2": "LAMP_B6_A"
-     },
-     "sim": false,
-     "card": "blkhdr_logic_RevA"
-    },
-    {
-     "ref": "D15",
-     "value": "LED",
+     "ref": "D8",
+     "value": "LED green",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
@@ -6485,8 +6387,106 @@
      "card": "blkhdr_logic_RevA"
     },
     {
+     "ref": "D9",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 0 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B0",
+      "2": "LAMP_B0_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D10",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 1 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B1",
+      "2": "LAMP_B1_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D11",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 2 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B2",
+      "2": "LAMP_B2_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D12",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 3 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B3",
+      "2": "LAMP_B3_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D13",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 4 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B4",
+      "2": "LAMP_B4_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D14",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 5 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B5",
+      "2": "LAMP_B5_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
+     "ref": "D15",
+     "value": "LED orange",
+     "lib_id": "Device:LED",
+     "footprint": "telco:LED_D3.0mm_Horizontal_Row",
+     "rtl": "-",
+     "function": "slot 6 BUSY: lit = busy",
+     "pins": {
+      "1": "LAMP_B6",
+      "2": "LAMP_B6_A"
+     },
+     "sim": false,
+     "card": "blkhdr_logic_RevA"
+    },
+    {
      "ref": "D16",
-     "value": "LED",
+     "value": "LED orange",
      "lib_id": "Device:LED",
      "footprint": "telco:LED_D3.0mm_Horizontal_Row",
      "rtl": "-",
