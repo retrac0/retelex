@@ -77,7 +77,8 @@ module top_min #(
     wire m_sdata, m_sclk, m_wr, m_oe;
     // the network half's lines, with nothing on the other end of the ribbon
     wire nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk, nc_ovf;
-    wire [`PW-1:0] nc_rport;
+    wire [`PW-1:0] nc_rport, nc_cport;
+    wire nc_catt, nc_crel, nc_crst;
 
     // ONE MASTER.  The marker's '244s are the only drivers on cable B, so the
     // bus is what they drive while enabled and the blocks' pull-downs when
@@ -127,6 +128,11 @@ module top_min #(
         .net_n(1'b1), .flood_go(nc_flood),
         .u_restart(1'b0), .u_local(1'b0), .u_done(1'b0), .u_nogo(1'b0),
         .u_att(1'b0), .u_att_port({`PW{1'b0}}), .att_ack(nc_ack),
+        // no claim register: no claim can come without a unit
+        .c_attach(nc_catt), .c_attach_port(nc_cport), .c_release(nc_crel),
+        .c_restart(nc_crst), .c_busy(1'b0), .c_port({`PW{1'b0}}), .c_ndig(3'd0),
+        .c_digits(16'd0), .c_gone(1'b0), .c_nodig(1'b0), .c_hook(1'b0),
+        .c_settled(1'b0),
         .probe_port(probe_port), .probe_m(probe_m), .probe_busy(probe_busy),
         .probe_fresh(probe_fresh),
         .reg_busy(reg_busy), .reg_ndig(reg_ndig), .reg_digits(reg_digits),
@@ -138,5 +144,5 @@ module top_min #(
     // logic: the captures run off SLOTQ and the detectors off TICK.
     wire _unused = &{1'b0, tick, hclk, tx_clk, clk_8k, rx_oct,
                      oct_stb, slot, nc_flood, nc_ack, nc_gone, nc_nodig, nc_brk,
-                     nc_ovf, nc_rport, 1'b0};
+                     nc_ovf, nc_rport, nc_catt, nc_cport, nc_crel, nc_crst, 1'b0};
 endmodule

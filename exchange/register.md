@@ -119,8 +119,25 @@ card beside the class marker, on these wires.
 
 ## 4. How many
 
-**One is built**: inside the mini marker, or one register card in `top_max`.
-A caller who finds no register free is not refused: dial tone is late.
+**One is built for callers**: inside the mini marker, or one register card in
+`top_max`. A caller who finds no register free is not refused: dial tone is
+late. **With a network unit, `top_net` fits a second, the claim register**: a
+stock register card on this ribbon that only a claimed trunk is given
+(`marker.md` §4.8). A busy register delays a local caller; it *loses* a claim,
+whose far caller is already dialling. Sharing one, 9–16 % of incoming network
+calls were refused at design load (48 lines, 3 calls a line an hour, 30 %
+leaving), and past about one attempt a second two exchanges refused each
+other's claims until neither carried a call (`newimpl/flood-study/REPORT.md` §2–§3). The claim register
+is refused only while it is on another claim. Measured at 8× on two exchanges
+of 48 lines, every call leaving (`tb_fl_load`'s harness, against the study's
+runs on the old tree): claims refused 50 % → 14 % at 0.5 attempts a second an
+exchange, 93 % → 28 % at 1.8, 97 % → 26 % at 3.2, where carried calls went from
+none to 72 a minute an exchange and the eight trunks became the limit. Every
+refusal traced was the same origin's next network caller: freed at the claim,
+it dials `1 e b` in about the time the previous caller dials `h s`, and its
+claim meets the claim register still collecting those. A claim cannot wait for
+it — attached late it misses the start of `h` and rings the wrong line
+(`F58`) — so the cure is a second claim register (§5).
 
 48 lines, 200 000 calls a cell, holding time from lift to last digit
 (`sim/exch.py calls` 18):
@@ -150,13 +167,21 @@ register 32 ms more for the watch; neither is in the table.
 ## 5. Open
 
 - **A pool is not built.** The marker follows one call and the unit has one
-  origin bank. A pool needs: a bank a register on the unit for the trunks an
-  origin seizes; a call's state kept with its register, not in the marker;
-  an owner and a queue for the one reader's hunt, released by a caller who
-  hangs up mid-hunt; the key consumed the moment it is read; and glare
-  between registers — two finishing on one number in the same instant must
-  not both write its latch: the first takes the line, the second is told
-  busy. Blocks sizing beyond one register.
+  origin bank. The claim register is the pool's first member with its hardest
+  parts left out: it never originates, so it needs no origin bank, and never
+  takes a local caller, so the two never race for a line; its call state is
+  its own sequencer's (`marker.md` §2). A pool of callers' registers still
+  needs: a bank a register on the unit for the trunks an origin seizes; a
+  call's state kept with its register, not in the marker; an owner and a
+  queue for the one reader's hunt, released by a caller who hangs up
+  mid-hunt; the key consumed the moment it is read; and glare between
+  registers — two finishing on one number in the same instant must not both
+  write its latch: the first takes the line, the second is told busy. With a
+  pool, a claim could take any free register and the claim register become
+  one of them. Blocks sizing beyond one register for callers.
+- **A second claim register.** One refuses the back-to-back claims of a busy
+  pair of exchanges (§4): 14–28 % at 8× with every call leaving. A second is
+  the same card and a second K_ sequencer, or the pool's first step.
 - **The no-digit timer as parts.** 10 s is not a binary tap of the 1 kHz
   tick: the nearest are 8.2 s and 16.4 s. A tap or a compare; not decided.
 - **The measured corner at 1 kHz.** `tb_dial` dials the nominal envelope's

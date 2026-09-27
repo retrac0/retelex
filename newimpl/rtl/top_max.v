@@ -159,7 +159,7 @@ module top_max #(
         .reg_attach(r_attach), .reg_port(r_attach_port), .reg_release(r_release),
         .reg_restart(r_restart),
         .r_busy(reg_busy), .r_ndig(r_ndig), .r_digits(r_digits),
-        .r_gone(r_gone), .r_nodig(r_nodig), .r_settled(r_settled),
+        .r_gone(r_gone), .r_nodig(r_nodig), .r_settled(r_settled), .r_hook(r_hook),
         .net_n(net_n), .flood_go(flood_go),
         .u_restart(u_restart), .u_local(u_local), .u_done(u_done), .u_nogo(u_nogo),
         .u_att(u_att), .u_att_port(u_att_port), .att_ack(att_ack),
@@ -213,7 +213,7 @@ module top_max #(
 
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.  The
-    // register's `counting` and `hook` are for a lamp field.
+    // register's `counting` is for a lamp field.
     wire _unused = &{1'b0, hc, tick, oct_stb, pass_stb, slot[2], slot[0],
-                     r_counting, r_hook, 1'b0};
+                     r_counting, 1'b0};
 endmodule

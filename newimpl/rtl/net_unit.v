@@ -259,7 +259,7 @@ module net_unit #(
     // THE CLASSIFIER
     // ======================================================================
     localparam [2:0] C_IDLE = 3'd0, C_READ = 3'd1, C_ACT = 3'd2, C_HOLD = 3'd3,
-                     C_UNHOLD = 3'd4, C_WAIT = 3'd5;
+                     C_UNHOLD = 3'd4, C_WAIT = 3'd5, C_LOW = 3'd6;
     reg [2:0]      cst;
     reg [`PW-1:0]  cls_port;
     reg [1:0]      cls_dir;
@@ -306,7 +306,18 @@ module net_unit #(
     reg  [NMON-1:0]      m_held, m_armed, m_want;
     reg  [NMON*`PW-1:0]  m_port;
     reg  [NMON*2-1:0]    m_st;
-    wire [NMON-1:0]      mp_m, mp_fresh, d_stb, d_clr;
+    // PERMANENT SIGNAL.  A seizure nobody dials on -- an A conductor stuck at
+    // 1, a failsafe-high receiver on an open line -- has no origin to time it
+    // out, and nothing else frees a cell or a resolver.  So each carries a
+    // 2-bit age, stepped by one shared strobe every T_KEY and cleared when it
+    // is taken; at 3 -- over 2 x T_KEY, never less -- it lets go.  Nothing
+    // legitimate lives that long: an origin drops its trunks T_KEY after its
+    // seizure with b not in, or T_CLAIM after b.  The HOLD stays: the stuck
+    // port is parked, BUSY, until the fault is mended.  Flood study C08.
+    reg  [NMON*2-1:0]    m_age;
+    reg  [15:0]          ag_cnt;
+    reg                  ag_stb;
+    wire [NMON-1:0]      mp_m, mp_fresh, d_stb, d_clr, d_lbrk;
     wire [NMON*`PW-1:0]  mp_port;
     wire [NMON*4-1:0]    d_cnt;
 
@@ -324,7 +335,7 @@ module net_unit #(
             .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
             .arm(m_armed[g]), .m(mp_m[g]),
             .cnt(d_cnt[g*4 +: 4]), .dig_stb(d_stb[g]), .clear(d_clr[g]),
-            .counting(cnt_u), .brk_stb(brk_u), .steady(stdy_u));
+            .counting(cnt_u), .brk_stb(brk_u), .steady(stdy_u), .longbrk(d_lbrk[g]));
         wire _unused_cell = &{1'b0, mp_busy_u, cnt_u, brk_u, stdy_u, 1'b0};
     end endgenerate
 
@@ -349,13 +360,22 @@ module net_unit #(
     // ======================================================================
     // THE RESOLVERS -- a forward held until a leg claims or the caller goes
     // ======================================================================
-    localparam [1:0] R_NONE = 2'd0, R_LEG = 2'd1, R_GONE = 2'd2;
+    localparam [1:0] R_NONE = 2'd0, R_LEG = 2'd1, R_GONE = 2'd2, R_AGE = 2'd3;
     reg  [NRES-1:0]      rs_busy, rs_two;
     reg  [NRES*`PW-1:0]  rs_in;
     reg  [NRES*4*`PW-1:0] rs_leg;
     reg  [NRES*4-1:0]    rs_held;
     reg  [NRES*2-1:0]    rs_act;
     reg  [NRES*2-1:0]    rs_cl;                // which leg claimed
+    reg  [NRES*2-1:0]    rs_age;               // as m_age
+    // A LEG SEEN BUSY AND THEN FREE HAS RELEASED ITSELF, and is no longer this
+    // forward's.  A resolver whose incoming link goes down keeps that trunk
+    // BUSY (the adapter's MUTE_BLK), so R_GONE never comes; its legs, their
+    // E gone, clear themselves T_REL later and are hunted afresh -- and the
+    // stale resolver cut or re-pointed the live calls on them.  A flip-flop
+    // pair a leg; a forward whose every leg is gone lets go, writing nothing.
+    // Flood study C10.
+    reg  [NRES*4-1:0]    rs_lb, rs_lf;
     assign res_busy = rs_busy;
 
     reg              rs_free_any, rs_act_any;
@@ -405,17 +425,27 @@ module net_unit #(
     reg [`PW-1:0]   trunk;
     reg             claimed, f1, f2;
     reg [15:0]      tmr;
+    // A BREAK BEFORE THE SEIZURE IS WRITTEN is the guard's too: the key is
+    // consumed, the sweep takes 10 ms, and a single-pulse e that breaks in
+    // that time is lost to every exchange (flood study C06).  One flip-flop.
+    reg             o_brk;
+    // A CLAIM IS M STANDING on a held trunk, N_CL samples running, and after b
+    // -- or inside the guard, where it is glare.  One sample was enough, and a
+    // glitch on A, or a stale cell's early claim (C03, C13), dropped every
+    // other direction and connected the caller to it; before b, outside the
+    // guard, no monitor can have claimed, so it is cannot-complete, never a
+    // wrong number (flood study C12).
+    localparam [2:0] N_CL = 3'd4;
+    reg [2:0]       cl_n;      // samples the candidate has stood
+    reg [1:0]       cl_j;      // the candidate: which held trunk
+    reg             early;     // a claim stood before b, outside the guard
+    reg             cl_g;      // the candidate rose inside the guard: glare
     reg             ev_glare, ev_notrunk;
     assign dirs_held = d_held;
     assign claimed_o = claimed;
 
     wire [3:0] dg0 = r_digits[3:0];
     wire [3:0] dg1 = r_digits[7:4];
-    wire [3:0] dg2 = r_digits[11:8];
-    // the number is in: h s, or a one-key number after the code -- 0, or 9
-    // (network.md §4.1: "h s, or a third digit of 8 pulses or more") -- which
-    // the far end answers at once
-    wire       o_last = (r_ndig >= 3'd4) || ((r_ndig == 3'd3) && (oct(dg2) == 3'd0));
     wire       guarding = !f2 && (tmr < t_guard);
     wire       o_net   = (nst == N_NET) || (nst == N_WAITCL);
     wire       o_gone  = r_gone || r_nodig || !r_busy;
@@ -456,6 +486,23 @@ module net_unit #(
     reg             h_reading;
     reg             h_m, h_b;                  // h_idx's M and BUSY at its select
     reg             h_done;
+    // THE HUNT HOLD-OFF: a trunk this card wrote free is no candidate for
+    // 256-384 ms.  A seizure dropped younger than T_ARM -- glare, a guard
+    // abandon, a forward whose incoming died -- frees at once at BOTH ends,
+    // since neither port's detector had armed; the far classifier is then
+    // waiting out a low M in C_LOW (a dial break or a death?), and this
+    // card's sweep, taking the lowest free channel again, re-seized the same
+    // one inside ID.  The far end kept its hold and its cell, which counted
+    // the gap as a pulse: a wrong number (flood study C03 against C05).  An
+    // older trunk's drop is guarded already: its port stays BUSY T_REL on its
+    // fE.  One slot a direction, the last trunk dropped that way: a '174 of
+    // port and a 2-bit age on a 128 ms tap, four of each, a '153 and a '688
+    // at the sweep.  Two drops one way inside the window keep only the later.
+    reg  [4*`PW-1:0] ho_port;
+    reg  [3:0]       ho_v;
+    reg  [7:0]       ho_age;             // 2 bits a direction
+    reg  [8:0]       ho_cnt;
+    reg              ho_stb;
     // Asked for the moment the last read is in, while h_idx's turn is still to
     // come; the reader selects at that turn.  That is the whole of the stride.
     wire            h_issue = (hst == H_SWEEP) && !h_reading && (h_idx != P00) &&
@@ -497,7 +544,7 @@ module net_unit #(
         w_orig  = !w_claim && !w_cls &&
                   ((nst == N_SEIZE) || (nst == N_DONE) || (nst == N_DROP) ||
                    (o_net && (dmo != 4'd0))) && (room >= {2'd0, cnt_orig});
-        w_fwd   = !w_claim && !w_cls && !w_orig && (fst == F_WRITE) &&
+        w_fwd   = !w_claim && !w_cls && !w_orig && (fst == F_WRITE) && !f_cancel &&
                   rs_free_any && (room >= {2'd0, cnt_fwd});
         w_res   = !w_claim && !w_cls && !w_orig && !w_fwd && rs_act_any &&
                   (room >= {2'd0, cnt_res});
@@ -520,6 +567,7 @@ module net_unit #(
     wire [1:0]     rdir  = rd_word[7:6];
     wire [4:0]     sbase = {1'b0, rdir, 2'b00} + {2'b00, rdir, 1'b0};    // 6 x rdir
     wire [`PW-1:0] sidx  = h_cand[sbase +: `PW];
+    wire [`PW-1:0] ho_here = ho_port[sbase +: `PW];      // the hold-off, that way
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             push_v <= 5'd0; push_d <= 75'd0;
@@ -542,6 +590,11 @@ module net_unit #(
             h_cand <= {4*`PW{1'b0}}; h_idx <= P00; h_n <= 7'd0; h_reading <= 1'b0;
             h_m <= 1'b0; h_b <= 1'b0;
             h_done <= 1'b0; n_glare <= 8'd0; n_nofwd <= 8'd0;
+            m_age <= {NMON*2{1'b0}}; rs_age <= {NRES*2{1'b0}}; ag_cnt <= 16'd0; ag_stb <= 1'b0;
+            rs_lb <= {NRES*4{1'b0}}; rs_lf <= {NRES*4{1'b0}};
+            ho_port <= {4*`PW{1'b0}}; ho_v <= 4'd0; ho_age <= 8'd0; ho_cnt <= 9'd0; ho_stb <= 1'b0;
+            o_brk <= 1'b0;
+            cl_n <= 3'd0; cl_j <= 2'd0; early <= 1'b0; cl_g <= 1'b0;
         end else begin
             push_v   <= 5'd0;
             rd_req   <= 1'b0;
@@ -551,6 +604,26 @@ module net_unit #(
             nogo     <= 1'b0;
             h_done   <= 1'b0;
             n_nofwd  <= n_nofwd + {7'd0, nf_busy} + {7'd0, nf_empty};
+
+            // the hold-off's 128 ms tap (CLR/2), and its ages: a slot goes on
+            // the third strobe after it was set, 256-384 ms
+            ho_stb <= 1'b0;
+            if (tick_1k) begin
+                if (ho_cnt >= {1'b0, CLR[8:1]} - 9'd1) begin ho_cnt <= 9'd0; ho_stb <= 1'b1; end
+                else                                        ho_cnt <= ho_cnt + 9'd1;
+            end
+            if (ho_stb)
+                for (j2 = 0; j2 < 4; j2 = j2 + 1) if (ho_v[j2]) begin
+                    if (ho_age[j2*2 +: 2] == 2'd2) ho_v[j2] <= 1'b0;
+                    ho_age[j2*2 +: 2] <= ho_age[j2*2 +: 2] + 2'd1;
+                end
+
+            // the ageing strobe, one tick every T_KEY
+            ag_stb <= 1'b0;
+            if (tick_1k) begin
+                if (ag_cnt >= T_KEY - 16'd1) begin ag_cnt <= 16'd0; ag_stb <= 1'b1; end
+                else                              ag_cnt <= ag_cnt + 16'd1;
+            end
 
             // ==================================================================
             // the reads: issue, and route the answer
@@ -589,16 +662,33 @@ module net_unit #(
             // leaves a hold with no edge to clear it, and the trunk BUSY for
             // good.  So for T_ARM this card watches, and if M falls it writes
             // the hold away itself, and calls off the forward.
+            //
+            // BUT M DOWN IS NOT YET A DEATH (C_LOW).  A flood that arrives late
+            // -- a deep network, a fast dialler, a classifier busy with an
+            // earlier hold -- can show its first dial break inside the watch.
+            // Written away there, the make after it was a fresh seizure, and a
+            // fresh cell counted e one pulse short: a wrong number.  So M down
+            // writes nothing: M up again inside ID was a dial break, the hold
+            // stands (BUSY stays, so the make is no rise) and the watch starts
+            // over from the make; M down for ID is no dial pulse, and the hold
+            // is written away.  network.md §6; flood study C05.
             if (cst == C_HOLD) begin
                 if (tick_1k) cls_ms <= cls_ms + 9'd1;
-                if (sp_fresh && (sp_port == cls_port) && !sp_m) cst <= C_UNHOLD;
+                if (sp_fresh && (sp_port == cls_port) && !sp_m) begin cst <= C_LOW; cls_ms <= 9'd0; end
                 else if (cls_ms > T_ARM + 9'd1)                   cst <= C_IDLE;
+            end
+            if (cst == C_LOW) begin
+                if (tick_1k) cls_ms <= cls_ms + 9'd1;
+                if (sp_fresh && (sp_port == cls_port) && sp_m) begin cst <= C_HOLD; cls_ms <= 9'd0; end
+                else if (cls_ms >= ID)                           cst <= C_UNHOLD;
             end
 
             if (w_cls && (cst == C_UNHOLD)) begin
                 push_v <= 5'b00001;
                 push_d <= {60'd0, ent(cls_port, P00, 1'b0, 1'b0)};
                 if ((fst != F_IDLE) && (f_in == cls_port)) f_cancel <= 1'b1;
+                // its cell goes too, on its own: the same ID of break is its
+                // long break, a tick later (the monitors, below)
                 cst <= C_IDLE;
             end else if (w_cls) begin
                 // ---- an incoming seizure ----------------------------------
@@ -620,6 +710,7 @@ module net_unit #(
                 for (i = 0; i < NMON; i = i + 1) if (m_free1[i]) begin
                     m_held[i] <= 1'b1; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
                     m_port[i*`PW +: `PW] <= cls_port; m_st[i*2 +: 2] <= M_WANT_E;
+                    m_age[i*2 +: 2] <= 2'd0;
                 end
                 if (!STRAP_N[cls_dir] && (fst == F_IDLE) && rs_free_any &&
                     ((~STRAP_N & ~(4'd1 << cls_dir)) != 4'd0)) begin
@@ -633,6 +724,13 @@ module net_unit #(
             // the monitors
             // ==================================================================
             for (i = 0; i < NMON; i = i + 1) begin
+                // a cell older than 2 x T_KEY lets go; the hold stays
+                if (m_held[i] && ag_stb) begin
+                    if (m_age[i*2 +: 2] == 2'd2) begin
+                        m_held[i] <= 1'b0; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
+                    end
+                    m_age[i*2 +: 2] <= m_age[i*2 +: 2] + 2'd1;
+                end
                 // arm the counter once the cell's probe has the new port:
                 // until then its M is the last port's, and a stale 0 is a break
                 if (m_held[i] && !m_armed[i] && mp_fresh[i] &&
@@ -651,8 +749,13 @@ module net_unit #(
                     default: ;
                     endcase
                 end
-                // the trunk released: 256 ms of break
-                if (m_held[i] && d_clr[i]) begin
+                // the trunk released: 256 ms of break -- or ID of it, which no
+                // dial pulse is.  A cell kept past its seizure's death -- the
+                // watch writing the hold away, or a far port clearing itself on
+                // a short RC (80 % of nominal T_REL is 205 ms) -- counted the
+                // death and a re-seizure's make as a pulse and claimed the new
+                // call a digit out of step (flood study C03)
+                if (m_held[i] && (d_clr[i] || d_lbrk[i])) begin
                     m_held[i] <= 1'b0; m_armed[i] <= 1'b0; m_want[i] <= 1'b0;
                 end
             end
@@ -665,9 +768,11 @@ module net_unit #(
                 push_v <= 5'b00001;
                 push_d <= {60'd0, ent(m_want_port, P00, 1'b1, 1'b1)};
                 for (u = 0; u < NRES; u = u + 1) if (rs_mine[u]) begin
-                    for (j2 = 0; j2 < 4; j2 = j2 + 1) if (rs_held[u*4 + j2]) begin
+                    for (j2 = 0; j2 < 4; j2 = j2 + 1) if (rs_held[u*4 + j2] && !rs_lf[u*4 + j2]) begin
                         push_v[j2 + 1] <= 1'b1;
                         push_d[(j2 + 1)*15 +: 15] <= ent(rs_leg[(u*4 + j2)*`PW +: `PW], P00, 1'b0, 1'b0);
+                        ho_port[j2*`PW +: `PW] <= rs_leg[(u*4 + j2)*`PW +: `PW];
+                        ho_v[j2] <= 1'b1; ho_age[j2*2 +: 2] <= 2'd0;
                     end
                     rs_busy[u] <= 1'b0; rs_held[u*4 +: 4] <= 4'd0; rs_act[u*2 +: 2] <= R_NONE;
                 end
@@ -686,24 +791,50 @@ module net_unit #(
             // ==================================================================
             // the resolvers: watch every leg and the caller, once a pass
             // ==================================================================
+            // a resolver older than 2 x T_KEY drops its legs (m_age)
+            for (v = 0; v < NRES; v = v + 1)
+                if (rs_busy[v] && ag_stb && (rs_act[v*2 +: 2] == R_NONE)) begin
+                    if (rs_age[v*2 +: 2] == 2'd2) rs_act[v*2 +: 2] <= R_AGE;
+                    rs_age[v*2 +: 2] <= rs_age[v*2 +: 2] + 2'd1;
+                end
             for (v = 0; v < NRES; v = v + 1)
                 if (rs_busy[v] && sp_fresh && (rs_act[v*2 +: 2] == R_NONE)) begin
                     for (j2 = 0; j2 < 4; j2 = j2 + 1)
-                        if (rs_held[v*4 + j2] && sp_m &&
-                            (sp_port == rs_leg[(v*4 + j2)*`PW +: `PW])) begin
-                            rs_act[v*2 +: 2] <= R_LEG; rs_cl[v*2 +: 2] <= j2[1:0];
+                        if (rs_held[v*4 + j2] && (sp_port == rs_leg[(v*4 + j2)*`PW +: `PW])) begin
+                            if (sp_busy)              rs_lb[v*4 + j2] <= 1'b1;
+                            else if (rs_lb[v*4 + j2]) rs_lf[v*4 + j2] <= 1'b1;
+                            // M on a leg that has released -- or is seen free
+                            // for the first time just now -- is no claim
+                            if (sp_m && !rs_lf[v*4 + j2] && (sp_busy || !rs_lb[v*4 + j2])) begin
+                                rs_act[v*2 +: 2] <= R_LEG; rs_cl[v*2 +: 2] <= j2[1:0];
+                            end
                         end
                     if ((sp_port == rs_in[v*`PW +: `PW]) && !sp_busy)
                         rs_act[v*2 +: 2] <= R_GONE;
                 end
+            // every leg gone: the forward released itself; let go, write nothing
+            for (v = 0; v < NRES; v = v + 1)
+                if (rs_busy[v] && (rs_act[v*2 +: 2] == R_NONE) && (rs_held[v*4 +: 4] != 4'd0) &&
+                    ((rs_held[v*4 +: 4] & ~rs_lf[v*4 +: 4]) == 4'd0)) begin
+                    rs_busy[v] <= 1'b0; rs_held[v*4 +: 4] <= 4'd0;
+                end
             if (w_res) begin
                 for (v = 0; v < NRES; v = v + 1) if (rs_act1[v]) begin
                     for (j2 = 0; j2 < 4; j2 = j2 + 1)
-                        if (rs_held[v*4 + j2] &&
-                            ((rs_act[v*2 +: 2] == R_GONE) || (rs_cl[v*2 +: 2] != j2[1:0]))) begin
+                        if (rs_held[v*4 + j2] && !rs_lf[v*4 + j2] &&
+                            ((rs_act[v*2 +: 2] != R_LEG) || (rs_cl[v*2 +: 2] != j2[1:0]))) begin
                             push_v[j2] <= 1'b1;
                             push_d[j2*15 +: 15] <= ent(rs_leg[(v*4 + j2)*`PW +: `PW], P00, 1'b0, 1'b0);
+                            ho_port[j2*`PW +: `PW] <= rs_leg[(v*4 + j2)*`PW +: `PW];
+                            ho_v[j2] <= 1'b1; ho_age[j2*2 +: 2] <= 2'd0;
                         end
+                    // aged, a one-leg forward had patched the incoming to its
+                    // leg: put it back on 00, still held, or the leg's next
+                    // seizure would come back out of the parked trunk
+                    if ((rs_act[v*2 +: 2] == R_AGE) && rs_two[v]) begin
+                        push_v[4] <= 1'b1;
+                        push_d[4*15 +: 15] <= ent(rs_in[v*`PW +: `PW], P00, 1'b1, 1'b0);
+                    end
                     // a leg claimed: the caller listens to it -- unless the
                     // forward was one leg and already both ways
                     if ((rs_act[v*2 +: 2] == R_LEG) && !rs_two[v]) begin
@@ -730,7 +861,11 @@ module net_unit #(
                 if (f_cancel || (h_ok == 4'd0)) fst <= F_IDLE;
                 else                            fst <= F_WRITE;
             end
-            F_WRITE: if (w_fwd) begin
+            // the seizure died while this waited for the queue: call it off
+            // here too, or its port and leg stay BUSY and a resolver held
+            // (flood study C09)
+            F_WRITE: if (f_cancel) fst <= F_IDLE;
+                     else if (w_fwd) begin
                 for (j2 = 0; j2 < 4; j2 = j2 + 1) if (f_ok[j2]) begin
                     push_v[j2] <= 1'b1;
                     push_d[j2*15 +: 15] <= ent(f_cand[j2*`PW +: `PW], f_in, 1'b1, 1'b0);
@@ -746,6 +881,8 @@ module net_unit #(
                     rs_busy[v] <= 1'b1; rs_two[v] <= (popc(f_ok) == 3'd1);
                     rs_in[v*`PW +: `PW] <= f_in; rs_leg[v*4*`PW +: 4*`PW] <= f_cand;
                     rs_held[v*4 +: 4] <= f_ok; rs_act[v*2 +: 2] <= R_NONE;
+                    rs_age[v*2 +: 2] <= 2'd0;
+                    rs_lb[v*4 +: 4] <= 4'd0; rs_lf[v*4 +: 4] <= 4'd0;
                 end
                 fst <= F_IDLE;
             end
@@ -764,7 +901,8 @@ module net_unit #(
                     if (sp_fresh && (sp_port == h_idx)) begin h_m <= sp_m; h_b <= sp_busy; end
                     if (rd_done && rd_own) begin
                         // the card says what it is; free at its select, or no candidate
-                        if (!h_m && !h_b && is_trunk(rd_word[4:0]) && h_mask[rdir]) begin
+                        if (!h_m && !h_b && is_trunk(rd_word[4:0]) && h_mask[rdir] &&
+                            !(ho_v[rdir] && (h_idx == ho_here))) begin
                             if (!h_ok[rdir] ||
                                 ( rd_word[5] && (h_idx > sidx)) ||
                                 (!rd_word[5] && (h_idx < sidx))) begin
@@ -799,16 +937,28 @@ module net_unit #(
             // ==================================================================
             if (o_net && tick_1k && (tmr != 16'hFFFF)) tmr <= tmr + 16'd1;
 
-            // a claim comes back: M rising on a trunk this call holds
-            if (o_net && sp_fresh && sp_m && !claimed)
+            if (((nst == N_WANT) || (nst == N_HUNT) || (nst == N_SEIZE)) && r_brk) o_brk <= 1'b1;
+
+            // a claim comes back: M standing N_CL samples on a trunk this call holds
+            if (o_net && sp_fresh && !claimed)
                 for (j2 = 0; j2 < 4; j2 = j2 + 1)
-                    if (d_held[j2] && (sp_port == d_trunk[j2*`PW +: `PW])) begin
-                        claimed <= 1'b1; trunk <= sp_port;
-                        // release the others AT THE CLAIM (network.md §1)
-                        dmo <= d_held & ~(4'd1 << j2);
-                        // inside the guard it was the far end seizing the same
-                        // channel: glare, taken as the claim, and counted
-                        if (guarding) begin ev_glare <= 1'b1; n_glare <= n_glare + 8'd1; end
+                    if (d_held[j2] && (sp_port == d_trunk[j2*`PW +: `PW]) &&
+                        ((cl_n == 3'd0) || (cl_j == j2[1:0]))) begin
+                        if (!sp_m) cl_n <= 3'd0;
+                        else if (cl_n != N_CL - 3'd1) begin
+                            cl_n <= cl_n + 3'd1; cl_j <= j2[1:0];
+                            if (cl_n == 3'd0) cl_g <= guarding;
+                        end else begin
+                            cl_n <= 3'd0;
+                            if (cl_g || guarding || f2) begin
+                                claimed <= 1'b1; trunk <= sp_port;
+                                // release the others AT THE CLAIM (network.md §1)
+                                dmo <= d_held & ~(4'd1 << j2);
+                                // inside the guard it was the far end seizing the
+                                // same channel: glare, taken as the claim, and counted
+                                if (cl_g || guarding) begin ev_glare <= 1'b1; n_glare <= n_glare + 8'd1; end
+                            end else early <= 1'b1;
+                        end
                     end
 
             if (w_orig) begin
@@ -832,6 +982,8 @@ module net_unit #(
                     for (j2 = 0; j2 < 4; j2 = j2 + 1) if (d_held[j2]) begin
                         push_v[j2] <= 1'b1;
                         push_d[j2*15 +: 15] <= ent(d_trunk[j2*`PW +: `PW], P00, 1'b0, 1'b0);
+                        ho_port[j2*`PW +: `PW] <= d_trunk[j2*`PW +: `PW];
+                        ho_v[j2] <= 1'b1; ho_age[j2*2 +: 2] <= 2'd0;
                     end
                     d_held <= 4'd0; dmo <= 4'd0;
                     nst <= N_END;
@@ -840,6 +992,8 @@ module net_unit #(
                     for (j2 = 0; j2 < 4; j2 = j2 + 1) if (dmo[j2]) begin
                         push_v[j2] <= 1'b1;
                         push_d[j2*15 +: 15] <= ent(d_trunk[j2*`PW +: `PW], P00, 1'b0, 1'b0);
+                        ho_port[j2*`PW +: `PW] <= d_trunk[j2*`PW +: `PW];
+                        ho_v[j2] <= 1'b1; ho_age[j2*2 +: 2] <= 2'd0;
                     end
                     d_held <= d_held & ~dmo; dmo <= 4'd0;
                 end
@@ -849,6 +1003,7 @@ module net_unit #(
             case (nst)
             N_IDLE: if (flood_go) begin
                 caller <= r_port; claimed <= 1'b0; f1 <= 1'b0; f2 <= 1'b0;
+                o_brk <= 1'b0; cl_n <= 3'd0; early <= 1'b0;
                 d_held <= 4'd0; dmo <= 4'd0; o_after <= O_NONE; tmr <= 16'd0;
                 nst <= N_WANT;
             end
@@ -861,13 +1016,16 @@ module net_unit #(
             N_HUNT: if (h_done && !h_owner) begin
                 if (o_gone)             begin o_after <= O_NONE; nst <= N_END; end
                 else if (h_ok == 4'd0)  begin ev_notrunk <= 1'b1; o_after <= O_NOGO; nst <= N_END; end
+                else if (o_brk || r_brk) begin o_after <= O_NOGO; nst <= N_END; end
                 else begin o_ok <= h_ok; o_cand <= h_cand; nst <= N_SEIZE; end
             end
             N_NET, N_WAITCL: begin
                 if (o_gone) begin o_after <= O_NONE; nst <= N_DROP; end
                 // the origin's guard: a break inside it and the far end may
                 // have lost a pulse -- abandon, never a wrong number
-                else if (guarding && r_brk) begin o_after <= O_NOGO; nst <= N_DROP; end
+                else if (guarding && (r_brk || o_brk)) begin o_after <= O_NOGO; nst <= N_DROP; end
+                // a claim stood before b, outside the guard
+                else if (early && (nst == N_NET)) begin o_after <= O_NOGO; nst <= N_DROP; end
                 else if (nst == N_NET) begin
                     if (!f1 && (r_ndig >= 3'd1)) begin
                         if (isvc(dg0)) begin o_after <= O_NOGO; nst <= N_DROP; end
@@ -880,13 +1038,19 @@ module net_unit #(
                         end else begin
                             // b is in: the 2 s claim wait starts now
                             f2 <= 1'b1; tmr <= 16'd0; nst <= N_WAITCL;
+                            early <= 1'b0;   // stood as b came in: counted again from 0
                         end
                     end else if (!f2 && (tmr >= T_KEY)) begin
                         // network.md §4.1: b not counted 5 s after the seizure
                         o_after <= O_NOGO; nst <= N_DROP;
                     end
                 end else begin
-                    if (claimed && o_last && (dmo == 4'd0)) nst <= N_DONE;
+                    // CONNECT AT THE CLAIM (network.md §4.1): h s are the
+                    // far register's, and go down the kept trunk live either
+                    // way.  Waiting for them held this register ~2 s more,
+                    // and that is when the far exchange's claim arrives:
+                    // the two registers refused each other.
+                    if (claimed && (dmo == 4'd0)) nst <= N_DONE;
                     else if (!claimed && (tmr >= T_CLAIM)) begin o_after <= O_NOGO; nst <= N_DROP; end
                 end
             end

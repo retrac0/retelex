@@ -22,6 +22,9 @@
 //   /WS                     the select, on what was one of the bus's two
 //                           spares (pin 47, bus.md §2.1): every reader's, the
 //                           marker's and the unit's
+//   the claim register      a second register card, on the register ribbon
+//                           (register.md §3), that only claims are given
+//                           (mini_marker.v, THE CLAIM REGISTER)
 //
 // CABLE B HAS TWO MASTERS HERE AND NO GRANT.  Each drives SDATA, SCLK and WR
 // through its own '244, enabled only while it holds the bus; with neither
@@ -102,6 +105,7 @@ module top_net #(
     output            b_clash,      // both masters' '244s on at once.  Must never light
 
     output            reg_busy,
+    output            creg_busy,    // NETWORK: the claim register
     output     [`PW-1:0] caller,
     output     [2:0]  mk_state,
     output            mk_ovf,
@@ -163,6 +167,12 @@ module top_net #(
     wire [2:0]     r_ndig;
     wire [15:0]    r_digits;
     wire [`PW-1:0] r_port;
+    // the claim register's ribbon
+    wire           c_attach, c_release, c_restart, c_gone, c_nodig, c_hook, c_settled;
+    wire           c_brk_u, c_cnt_u;
+    wire [`PW-1:0] c_attach_port, c_port;
+    wire [2:0]     c_ndig;
+    wire [15:0]    c_digits;
 
     // SETTLE, twice the ports' T_ARM: after a connect the marker holds the
     // register until the called port's E detector has surely risen (S_WATCH).
@@ -176,11 +186,28 @@ module top_net #(
         .net_n(net_n), .flood_go(flood_go),
         .u_restart(u_restart), .u_local(u_local), .u_done(u_done), .u_nogo(u_nogo),
         .u_att(u_att), .u_att_port(u_att_port), .att_ack(att_ack),
+        .c_attach(c_attach), .c_attach_port(c_attach_port), .c_release(c_release),
+        .c_restart(c_restart), .c_busy(creg_busy), .c_port(c_port), .c_ndig(c_ndig),
+        .c_digits(c_digits), .c_gone(c_gone), .c_nodig(c_nodig), .c_hook(c_hook),
+        .c_settled(c_settled),
         .probe_port(nc_pport), .probe_m(nc_pm), .probe_busy(nc_pb),
         .probe_fresh(nc_pf),
         .reg_busy(reg_busy), .reg_ndig(r_ndig), .reg_digits(r_digits),
         .reg_port(r_port), .reg_gone(r_gone), .reg_nodig(r_nodig), .reg_brk(r_brk),
         .caller_o(caller), .called_o(nc_called), .state(mk_state), .q_ovf(mk_ovf));
+
+    // NETWORK: the claim register -- the stock register card, a second one on
+    // the ribbon, which only a claimed trunk is given (mini_marker.v)
+    pulse_reg #(.HIT(HIT), .ID(ID), .CLR(CLR), .NODIG(NODIG),
+                .SETTLE(T_ARM + T_ARM)) u_creg (
+        .clk(clk), .rst_n(rst_n),
+        .slotq(slotq), .cap_stb(cap_stb), .frame_stb(frame_stb),
+        .scan(scan), .ha_n(ha_n), .hb_n(hb_n), .tick_1k(tick_1k),
+        .attach(c_attach), .attach_port(c_attach_port),
+        .release_it(c_release), .restart(c_restart),
+        .busy(creg_busy), .port(c_port), .ndig(c_ndig), .digits(c_digits),
+        .gone(c_gone), .nodig(c_nodig), .brk(c_brk_u), .counting(c_cnt_u),
+        .hook(c_hook), .settled(c_settled));
 
     net_unit #(.OWN_E(OWN_E), .OWN_B(OWN_B), .STRAP_N(STRAP_N), .GUARD(GUARD),
                .NMON(NMON), .NRES(NRES), .HIT(HIT), .ID(ID), .CLR(CLR),
@@ -203,5 +230,6 @@ module top_net #(
     // Carried for a channel card on the block ribbon, not used by the exchange
     // logic: the captures run off SLOTQ and the detectors off TICK.
     wire _unused = &{1'b0, hc, tick, oct_stb, pass_stb, slot[2],
-                     slot[0], nc_pport, nc_called, nc_pm, nc_pb, nc_pf, 1'b0};
+                     slot[0], nc_pport, nc_called, nc_pm, nc_pb, nc_pf,
+                     c_brk_u, c_cnt_u, 1'b0};
 endmodule

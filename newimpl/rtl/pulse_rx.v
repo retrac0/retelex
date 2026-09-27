@@ -42,7 +42,8 @@ module pulse_rx #(
     output reg       clear,      // one tick: 256 ms of break -- the caller went away
     output           counting,   // a digit is part-collected
     output reg       brk_stb,    // one tick: a break was just counted
-    output           steady      // a make has stood SETTLE, no break since
+    output           steady,     // a make has stood SETTLE, no break since
+    output           longbrk     // a break has stood ID: no dial pulse is that long
 );
     reg [8:0] t;      // milliseconds in the state m has been in
     reg       m_d;
@@ -61,6 +62,11 @@ module pulse_rx #(
     // reads it (mini_marker S_WATCH), to know that the called port's E detector,
     // counting the same samples of the same wire, has risen.
     assign steady = arm && m_d && (t >= SETTLE);
+
+    // LONG BREAK: the same timer at ID, on the break half.  No dial pulse is
+    // that long, so a monitor cell counting e or b lets go on it: the seizure
+    // it was counting is dead, or was never a dialled one.  network.md §3.4.
+    assign longbrk = arm && !m_d && (t >= ID);
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

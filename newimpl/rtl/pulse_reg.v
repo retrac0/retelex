@@ -80,12 +80,12 @@ module pulse_reg #(
     // the caller's own: half a '74 and a '688 output already on this card.
     reg seen;
     wire [3:0] cnt;
-    wire       dig_stb, clr_stb, steady;
+    wire       dig_stb, clr_stb, steady, longbrk;
     pulse_rx #(.HIT(HIT), .ID(ID), .CLR(CLR), .SETTLE(SETTLE)) u_rx (
         .clk(clk), .rst_n(rst_n), .tick_1k(tick_1k),
         .arm(busy && seen), .m(p_m),
         .cnt(cnt), .dig_stb(dig_stb), .clear(clr_stb),
-        .counting(counting), .brk_stb(brk), .steady(steady));
+        .counting(counting), .brk_stb(brk), .steady(steady), .longbrk(longbrk));
 
     reg [15:0] nd_t;      // the no-digit timer, in milliseconds
 
@@ -168,5 +168,5 @@ module pulse_reg #(
 
     // the probe's own BUSY is not this module's business; it watches one
     // port and wants its hook, and to know when the hook is that port's.
-    wire _unused = &{1'b0, p_busy, 1'b0};
+    wire _unused = &{1'b0, p_busy, longbrk, 1'b0};
 endmodule

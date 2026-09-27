@@ -79,7 +79,11 @@ a model part (`bus.md` §5).
 - **Hang up while dialling** and the register sees a break of 256 ms, CLR: the
   caller is written to 00 with `BUSY` clear, and the register is free.
 - **Off-hook, nothing dialled**: 03 after the 10 s no-digit timeout. The port
-  stays `BUSY`, listening to 03, until the phone is hung up.
+  stays `BUSY`, listening to 03, until the phone is hung up. **03 is written
+  only while the register reads the caller off-hook**: on-hook at the timeout,
+  the caller's port may already have released itself, and a `BUSY` written
+  then would hold it with no edge to clear it; the marker waits for `gone`, or
+  the make. The same holds for YIELD's cannot-complete and the watch's `nodig`.
 - **Wrong numbers**, and which get busy tone: `numbering.md` §4.
 
 ---
@@ -125,9 +129,28 @@ YIELD    local → COLLECT; done → DRAIN; nogo or the no-digit timeout → 03,
          in COLLECT, PROBE and YIELD a hang-up is looked at first: caller ← 00,
          BUSY and CLAIM clear, DRAIN
 DRAIN    queue empty → IDLE
-         from IDLE, TAKE or DRAIN, register free: the unit's claim → COLLECT,
-         with the trunk as the caller
 ```
+
+**A claim never takes this register** (mini marker, with a unit: §4.8). It is
+given the claim register at once, whatever state the sequencer is in, and a
+second, small sequencer finishes it:
+
+```
+K_COLLECT  the claim register collects h s off the trunk, beside this card's call.
+           With the sequencer parked (IDLE, COLLECT, YIELD, DRAIN):
+           1, 0, 8, 9 or a service second digit → trunk ← 03, K_DRAIN;
+           gone → trunk ← 00, BUSY and CLAIM clear; the no-digit timeout, off-hook → 03
+           h s → K_READ
+K_READ     the called port's word (the reader is free: the sequencer is parked);
+           trunk → 03, K_DRAIN; else → K_PROBE
+K_PROBE    the called port's turn, on the marker's probe: self, M or BUSY → 03;
+           else the two writes, CLAIM on the trunk's → K_WATCH
+K_WATCH    §5, on the claim register → K_IDLE, or K_DRAIN
+K_DRAIN    queue empty → K_IDLE
+```
+
+K_READ, K_PROBE and K_WATCH hold the sequencer where it is, about 35 ms; the
+unit's `local` and `done` are kept meanwhile, as its `nogo` always was.
 
 **The probe tap.** The probe's port, M, `BUSY` and `probe_fresh` are brought
 out for a watcher, which must use `probe_fresh`: the levels hold for a whole
@@ -250,8 +273,9 @@ connect; the port is written to 00, `BUSY`, meanwhile. A call nail to a busy
 dest is hunted like a dialled number and ends in busy tone. A CO line is
 routed as 0, so fit an operator before outside lines.
 
-A claimed trunk is a caller the network unit brings (§4.8): it is given the
-register with no dial tone, and dials `h s` or one key from the far end.
+A claimed trunk is a caller the network unit brings (§4.8): on the mini marker
+it is given the claim register, with no dial tone, and dials `h s` or one key
+from the far end; the class marker still gives it its one register.
 
 ### 4.7 Restricted, busy-out and data lines
 
@@ -265,10 +289,18 @@ another port only through a nail.
 
 Both markers take the same part in a network call; the interface is
 `network.md` §3.6. With `/NET` low, key 1 is consumed and the marker yields
-until the unit says local, done or nogo. A claimed trunk is given the
-register as a caller, with `CLAIM` on every later write to it, or written to
-03 when the register is someone else's — never during a watch (§5), which a
-claim waits out. The unit outranks the marker on the bus (`bus.md` §5).
+until the unit says local, done or nogo. **On the mini marker a claimed trunk
+is given the claim register** (`register.md` §4), a second register that no
+local caller ever takes, with `CLAIM` on every later write to it — at once,
+whatever this card's own call is doing, since the attach writes nothing — or
+written to 03 while that register is on another claim. Given the one register
+instead, a claim was refused whenever the owner's register was busy, which it
+is for its own caller through every digit and through `1 e b` of an outgoing
+call — exactly when the other exchange's claim arrives: two exchanges refused
+each other, 9–16 % of incoming calls at design load, and two-way traffic past
+the knee carried nothing (`newimpl/flood-study/REPORT.md` §2–§3). **The class marker still does that**,
+refusing at once, a watch included (§7). The unit outranks the marker on the
+bus (`bus.md` §5).
 
 ---
 
@@ -288,11 +320,11 @@ So **after every connect the marker keeps the register on the caller**:
 | while the connect's words are queued | the marker holds the register's `restart`, so the no-digit timer starts when they are out |
 | `settled` | the caller off-hook `SETTLE` with no break, and `SETTLE` since the restart: off-hook `SETTLE` counted from the connect. `SETTLE` = 2 × `T_ARM` = 32 ms. Two taps of timers the register already has (`register.md` §1) → the register is freed |
 | `gone` (the caller left first) | called ← 00 with `BUSY` clear: the called port written free. The caller's own port releases itself |
-| `nodig` (the line chattered for the whole no-digit time) | called ← 00, `BUSY` clear; caller ← 03, `BUSY` |
+| `nodig` (the line chattered for the whole no-digit time) | called ← 00, `BUSY` clear; caller ← 03, `BUSY` — the caller off-hook only; on-hook, wait for `gone` |
 
 Every connect is watched: dialled, hunted, a call nail, a CO line, a claimed
 trunk. A source's one write is not, nor a tied nail: neither has a called port
-waiting to release. A claim arriving during a watch waits for it to end. The
+waiting to release. A claim arriving during a watch is refused at once (§4.8). The
 network unit keeps a like watch on a trunk it holds (`network.md` §3.3). F37
 and F48 remove the watch from each marker, F38 and F39 half of `settled`.
 
@@ -332,9 +364,14 @@ ringing and ringback are gated by the filtered hook — are `fabric.md` §5's.
 - **The class marker on a network.** `top_max` fits the unit, but no bench
   runs a flood, a claim or a unit read beside the walk through `marker.v`.
   Blocks any claim that the maximal build is a network exchange.
-- **One caller at a time.** Both markers follow one call and fit one register.
-  A pool needs per-register call state and an owner for the one reader's hunt
+- **One caller at a time.** Both markers follow one call and fit one register
+  for callers; the mini marker adds the claim register for claims (§4.8). A
+  pool needs per-register call state and an owner for the one reader's hunt
   (`register.md` §5).
+- **The class marker's claims.** `marker.v` still gives a claim its one
+  register and refuses it when that is busy: the collapse the claim register
+  removes from `top_net`. It wants the same second register and sequencer, and
+  a flood run beside the walk first.
 - **Dial tone on the walk.** A lift waits up to a round, about 250 ms, on
   `top_max`, against 1 ms on the mini marker. Acceptable on a breadboard; a
   lamp or timer that assumes a pass is wrong there (`debugger.md` §7).

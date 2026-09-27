@@ -238,6 +238,24 @@ the other documents; nothing here is normative.
 
 ## Markers and the register
 
+- **A claim is given the exchange's one register, or refused** — the register
+  is held for its own caller through every digit and through `1 e b` of an
+  outgoing call, exactly when the other exchange's claim arrives: 9–16 % of
+  incoming network calls refused at design load, and two-way traffic past the
+  knee collapsed to no calls. `top_net` now gives a claim a second register,
+  the claim register, finished by its own sequencer in the mini marker. Joel,
+  2026-09-27, over the cell collecting `h s` itself (a store and timer a cell)
+  and a full pool (a bank a register), keeping the pool in view (`newimpl/flood-study/REPORT.md` §2–§3,
+  §6.2). Was: marker.md §4.8, register.md §4, network.md §4.2.
+- **A claim waits out the marker's watch** — it was refused a tick late on
+  a stale `r_busy` when the watch ended, and a long watch (a chattering line)
+  let the claimed trunk release first, so the refusal held a released port
+  `BUSY` for good at both ends; a claim is now refused at once (2026-09-27,
+  `newimpl/flood-study/REPORT.md` C01, C02). Was: marker.md §4.8, §5; network.md §3.6.
+- **Cannot-complete written at the no-digit timeout whatever the hook** — on
+  a caller already released it held the port `BUSY` for good; it is now
+  written only while the caller reads off-hook (2026-09-27, `newimpl/flood-study/REPORT.md` C17). Was:
+  marker.md §2.
 - **The marker's probe as two '151, a '74 and two '164 on `PB`, reading a
   16-bit word at 128 kHz over each visit** — `PB` is gone; the probe is a '688
   and half a '74 on `SCAN`, and the word is read on demand off `/HW`. Was:
@@ -337,6 +355,31 @@ the other documents; nothing here is normative.
 
 ## The network and SS0
 
+- **The classifier writes a hold away the moment M falls in its watch** — a
+  late flood's first dial break fell there, the make was a fresh seizure, and a
+  fresh cell counted `e` short: a wrong number. M must now stay down `ID`, and a
+  make restarts the watch (2026-09-27, `newimpl/flood-study/REPORT.md` C05). Was: network.md §3.3.
+- **A monitor cell freed only by 256 ms of break** — it outlived a seizure the
+  watch wrote away, or a far port whose RC ran short, and counted the death and
+  a re-seizure's make as a pulse; a cell now goes with its hold, on a break of
+  `ID`, and at an age of 2 × `T_KEY` (2026-09-27, `newimpl/flood-study/REPORT.md` C03, C08). Was:
+  network.md §3.4.
+- **The first M seen on a held trunk is the claim** — one sample, at any time,
+  so a glitch or a stale cell's early claim connected the caller to it; now M
+  standing four samples after `b`, or glare inside the guard (2026-09-27, `newimpl/flood-study/REPORT.md`
+  C12). Was: network.md §4.1.
+- **A resolver lives until a leg claims or the incoming `BUSY` falls** — an
+  incoming link held `BUSY` by `MUTE_BLK` kept it alive past its legs'
+  release, and a seizure nobody dialled on kept it for ever; legs seen to
+  release are dropped from it, and it ages out at 2 × `T_KEY` (2026-09-27,
+  `newimpl/flood-study/REPORT.md` C08, C10). Was: network.md §3.5.
+- **The origin connects at the last digit** (`h s`, or a third digit of 8
+  pulses or more), the caller hearing silence until then — it held the origin's
+  register about 2 s past the claim, exactly when the other exchange's claim
+  arrives, so two exchanges' registers refused each other and two-way traffic
+  collapsed under overload; the origin now connects at the claim, which also
+  lets the owner's refusal be heard at once (2026-09-27, flood study §6.1:
+  `newimpl/flood-study/REPORT.md` §3). Was: network.md §4.1.
 - **The costs behind network.md §9's set-aside list** — the register-sender
   (repeating the number at 20 pps, ≈ 6–7 packages); serial characters on A
   (it needs a sender); `e` as the key (at six exchanges); one channel through
@@ -445,6 +488,11 @@ the other documents; nothing here is normative.
 
 ## Trunks and carriers
 
+- **A link outage is A falling for as long as the link is down** — an outage
+  of 8–256 ms was a dial pulse to every monitor and register beyond, and a
+  longer one ending mid-dial a fresh seizure counted from mid-number; the card
+  now holds A down both ways until the channel has been idle both ways 300 ms
+  (2026-09-27, `newimpl/flood-study/REPORT.md` C07). Was: trunks.md §1, §3; network.md §2.
 - **A dialled trunk port "unsettled", a reason to prefer seats 06–07** —
   cannot-complete. Was: baseband.md §4, §7.
 - **The baseband card on a slot of a block ribbon; "a port circuit is fitted

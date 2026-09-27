@@ -2,6 +2,13 @@
 
 Study of `newimpl`'s pulse-flood network RTL, 2026-09-26/27.
 
+> **§6 implemented, 2026-09-27.** In the live RTL: connect at the claim (§6.1); a claim register, Joel's choice for
+> §6.2 (`exchange/register.md` §4); every fix of §6.3–6.4 but `cls_cell`, which C_LOW and the long break made
+> redundant; a hunt hold-off, which C03 and C_LOW needed together; the leaf straps; the documents of §6.6. §6.7's
+> benches are `tb_fl_link`, `tb_fl_chain`, `tb_fl_fwd` (real timers) and `tb_fl_load` (this harness), with faults
+> F54–F73. Measured on `tb_fl_load`'s harness: at 3.2 attempts/s an exchange, carried calls 0 → 72 a minute, claims
+> refused 97 % → 26 %. Point by point in §6.8; what is still open is in `exchange/network.md` §10 and `register.md` §5.
+
 > Moved here from the gitignored `newimpl/build/flood/`. Scripts, notes and logs still name the old paths
 > (`newimpl/build/flood/work/...`, `.../build/flood/rtl`): read them as `newimpl/flood-study/work/...` and
 > `newimpl/flood-study/snapshot/rtl`. Build products (obj dirs) were left behind; rebuild with `sim.sh`.
@@ -341,6 +348,74 @@ the trigger needs a fault or non-conforming dialling.
      run of the load harness as a regression.
    - Harness artefacts to discount: the `marker_state` STUCK watchdog under saturation, and NOSPEECH on 14–18 ms
      talks.
+
+### 6.8 What was done, 2026-09-27
+
+Each point above, as it went into the live RTL (`newimpl/rtl`), its benches and the documents (`exchange/`). The
+fixes were ported by hand from the fix copies in `work/`, since `rtl/` had changed only in comments since the
+snapshot.
+
+1. **Done as written.** `net_unit.v` N_WAITCL connects at `claimed && dmo == 0`, and `o_last` is gone. `tb_net` 11,
+   `tb_chain` 3 and `tb_lchain` 5 encoded the last-digit connect; they now check the connect at the claim. Fault F54
+   puts the old rule back. network.md §4.1, decisions.md.
+2. **A claim register**, chosen by Joel over the cell collecting `h s` itself and over a full pool, with the pool
+   kept in view.
+   - `top_net` fits a second `pulse_reg` (`u_creg`) on its own ribbon, and only claims are given it.
+   - `mini_marker.v` finishes a claim with a small sequencer of its own (`K_*`: collect, read, probe, connect,
+     watch). It runs between the marker's own states while the marker is parked, and holds the marker about 35 ms.
+   - A claim is refused only while the claim register is on another claim. The class marker (`marker.v`) still
+     gives a claim its one register (marker.md §7).
+   - The "refuse a network key after back-to-back holds" guard was declined.
+   - `tb_net` 8 and 8b, faults F55, F56 and F58. register.md §4–§5, marker.md §2 and §4.8, network.md §3.6 and §4.2.
+3. **Done, with two changes and one addition.**
+   - C05/C04: C_LOW waits `ID`, not `CLR`, the same break as C03's long break.
+   - C03: only its long break (`pulse_rx.longbrk`) is kept. The cell-ownership flip-flop turned out redundant with
+     C_LOW plus the long break: removing it stays green (see `newimpl/tb/tb_fl_fwd.v`).
+   - **C03 and C_LOW conflict**, as `verify/C03` run4 found: a far unit that drops a young seizure and re-seizes
+     the channel inside `ID` looks like a dial break. Joel chose a **hunt hold-off** to close it: the sweep skips a
+     trunk this unit wrote free in the last 256–384 ms, with one slot a direction (network.md §3.2).
+   - C07 poisons on `local_trunk.v` as well as `baseband_card.v`, a channel at a time (trunks.md §1, §3). C12 and
+     C06 are as tested.
+4. **Done.**
+   - C08, C09 and C10 are as tested; C10 also takes the verifier's `(sp_busy || !rs_lb)` gate.
+   - C17's `r_hook` gate is on all three cannot-complete writes, in both markers. `top_max` now wires `r_hook`.
+   - C01/C02: the S_WATCH exemption is deleted in both markers. On the mini marker this is moot, since claims go to
+     the claim register.
+5. **The rules** are in network.md §3.7. `tb_chain` and `tb_lchain` strap their leaves on their absent directions
+   and check `n_nofwd` stays 0 (fault F57). No bench changes NMON or NRES.
+6. **Documents**, done here and not by telco-e3, who was not running.
+   - The Engset loss table and the one-forwarder finding are in network.md §10. The measured guard reach is in §6.
+   - The claim refusal rate and "a busy register loses a claim" are in register.md §4.
+   - What a wrong strap costs is in §7.
+   - "Patch into the first direction" was already gone in the a03a34c rewrite.
+7. **Four new benches** in the tree's `make`, directed at every fix in 1–5; each fix has a fault that turns its
+   bench red by a named check. Only `tb_fl_fwd` runs at real timers. `tb_fl_link` and `tb_fl_chain` run at scale 8,
+   with a real-length timer only where the defect needs one: C17's RC-short `T_REL`, and A's `T_ARM` 16 for C09.
+   - `tb_fl_link` covers C01/C02, C06, C07 (baseband, one way, and the local trunk), C15 crossing calls, and C17 at
+     every boundary with an RC-short `T_REL`.
+   - `tb_fl_chain` covers C04/C05, C08, C09 and C10.
+   - `tb_fl_fwd`, at real timers, covers C03 (glare plus a forward, and the RC-short case), C05 and C12.
+   - `tb_fl_load` is this study's harness, run as a regression with the claim register in its drain checks.
+   - The faults are F54–F73. F01 became unreachable once the origin connects at the claim; it is now GREEN by
+     design (`faults.py`'s header).
+   - **Final result:** 22 benches, 770 checks, lint clean, 69 of 71 faults RED and the other two GREEN by the
+     contract.
+
+**Measured afterwards** with the harness (scale 8, pnet 100 %, the §3 load points; the old numbers are this study's
+`cap2` runs):
+- 1.8 attempts/s an exchange: 2.5 → 57.5 OK calls a minute an exchange, claims refused 93 % → 28 %.
+- 3.2 attempts/s: 0 → 72.5 OK calls a minute, claims refused 97 % → 26 %.
+- Past about 2 attempts/s the eight trunks become the limit. Two-way overload no longer collapses.
+- The refusals that remain (14–28 %) come from the same origin's next caller meeting the claim register while it is
+  still on `h s`. A second claim register is the open cure (register.md §5).
+
+**Still open** (network.md §10):
+- A noise blip on an idle trunk, then a real seizure of that channel inside `ID`, still gives a wrong number at an
+  exchange whose `e` is 1.
+- The killer trunk after C08 parks a stuck conductor.
+- A transit resolver still takes a leg's claim on one sample.
+- A flood first picked up after its first dial break: the timing study's late-rise memory, not taken.
+- The class marker's claims.
 
 ---
 

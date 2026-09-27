@@ -5,7 +5,7 @@ the pulse flood, the network unit that runs it and its interface to the marker,
 glare, the guard, rings and clocking. A standalone exchange carries none of it.
 
 > **Built:** `newimpl/rtl/net_unit.v`, `word_rx.v`, beside the mini marker in `top_net.v`; benches `tb_net`, `tb_chain`, `tb_lnet`, `tb_lchain`, `tb_lfull`.
-> **Not run:** a hub's fan-out of two or more legs, a ring and its strap, a cut during a dialled call, the unit beside the class marker, a relayed pulse at real speed.
+> **Not run:** a hub's fan-out of two or more legs, a ring and its strap, the unit beside the class marker, a relayed pulse at real speed.
 > **Measured in:** `analysis/monitor-rules.md` (the monitor's rules); `analysis/topology.md`, `analysis/traffic.md` (sizes, on the model's hop, not the unit's; not re-run).
 
 ## 1. The pulse flood
@@ -55,7 +55,7 @@ the card matters in these ways only, and **not how long it is**:
 | **Round trip, signalling** | under 2 s over the whole path, less about a millisecond a hop each way: the owner's monitor counts `b` as the origin's register does, one forward delay later, and the origin gives up 2 s after its own count (§4.1) |
 | **Round trip, echo** | **20–30 ms, and this is the one that binds.** No echo canceller or suppressor exists anywhere. A CVSD subscriber is four-wire; an analog FXS or FXO card's 600 Ω hybrid returns 10–15 dB, and **one 15 ms hop is already 30 ms of round trip**. A carrier of tens of milliseconds is for a network of CVSD sets |
 | **One way, conversation** | with no hybrid at either end, G.114's 150 ms for transparency, 400 ms to be usable at all |
-| **Link down** | be seen by the card, which then reads none, so it is never hunted, and drops A, so a call in progress releases (`trunks.md` §1) |
+| **Link down** | be seen by the card, which then reads none, so it is never hunted, and drops A, so a call in progress releases — and keeps A down both ways until the channel has been idle both ways 300 ms, so an outage is a release, never a dial pulse or a fresh seizure (`trunks.md` §1) |
 
 ## 3. The network unit
 
@@ -88,6 +88,17 @@ pass, 1 ms, drops any candidate showing M or `BUSY` at its own turn. The origin
 and the forwarder share the sweep: a forward waits for one already running, and
 for the origin's.
 
+**The hunt hold-off.** A trunk the unit wrote free is no candidate for
+256–384 ms. A seizure dropped younger than `T_ARM` — glare, a guard abandon, a
+forward whose incoming died — frees at once at both ends, since neither port's
+detector had armed, while the far classifier is still timing the low M to tell
+a dial break from a death (§3.3). Re-seized inside that, the far end kept its
+hold and its cell, which counted the gap as a pulse: a wrong number
+(`newimpl/flood-study/REPORT.md` C03 against C05, and C20). An older trunk's
+drop needs no hold-off: its port stays `BUSY` `T_REL` on its detector. One slot
+a direction, the last trunk the unit dropped that way, aged on a 128 ms tap:
+about six packages (Joel, 2026-09-27).
+
 ### 3.3 The classifier
 
 A port showing M with `BUSY` clear is an incoming seizure or a caller, and only
@@ -108,15 +119,24 @@ read later.
 only after `T_ARM`, 16 ms, and a port clears itself only on a detector's fall
 (`fabric.md` §5.3), so a seizure that dies sooner — a far origin abandoning,
 glare, a bounce — would leave the hold `BUSY` for good. For `T_ARM` the
-classifier watches it, and if M falls writes the hold away and calls off the
-forward. It takes no other seizure meanwhile, so a burst is classified about one
-each 18 ms; one seen while a sweep has the reader is read ahead of its next step.
+classifier watches it. **M down in the watch is not yet a death**: a flood that
+arrives late may show its first dial break there. M back inside `ID`, 128 ms,
+was a dial break: the hold stands and the watch starts again from the make. M
+down for `ID` is no dial pulse: the classifier writes the hold away, calls off
+the forward, and frees the hold's monitor cell with it. Written away at the
+break, the make after it was a fresh seizure and a fresh cell counted `e` one
+short: a wrong number (`newimpl/flood-study/REPORT.md` §5.1, C05). The
+classifier takes no other seizure meanwhile, so a burst is classified about one
+each 18 ms, and a death holds it 128 ms; one seen while a sweep has the reader
+is read ahead of its next step.
 
 ### 3.4 The monitors
 
 A **monitor** decides whether a seizure is this exchange's call. It is not a
 register: every flood wants one at every exchange, and a busy monitor loses a
-call this exchange owned where a busy register only delays dial tone. **One pool,
+call this exchange owned where a busy register only delays a caller's dial
+tone. (A claim loses the call on a busy register too, so it has one of its
+own: §4.2.) **One pool,
 on the unit**: each cell is a probe on the held port, a `pulse_rx` with
 `register.md` §1's windows and a compare against the code straps, attached at the
 hold.
@@ -124,8 +144,15 @@ hold.
 A first digit that is not this exchange's `e` — or 8, 9 or more than ten pulses;
 ten count as 0 — lets the cell go at once; a second that is not its `b` likewise.
 Both ours: **the claim**, a request held as a level until the unit writes `CLAIM`
-(§4.2). Two digits and no more; 256 ms of break (the trunk released) frees the
-cell whatever it was doing. **With no cell free the seizure is still held and
+(§4.2). Two digits and no more. **A break of `ID`, 128 ms, frees the cell**
+whatever it was doing: no dial pulse is that long, so the trunk released —
+and a far port whose RC runs short (80 % of nominal `T_REL` is 205 ms) can
+clear and the channel be seized again inside 256 ms, when a cell still
+counting took the death and the make for a pulse. So does the classifier
+writing its hold away (§3.3). **A cell older than 2 × `T_KEY`** (an age of two
+bits a cell on a shared strobe every `T_KEY`: 10–15 s) lets go: a seizure
+nobody dials on, a stuck A conductor, would otherwise hold it for good. The
+hold stays, parking the port `BUSY` until the fault is mended. **With no cell free the seizure is still held and
 forwarded**, but this exchange cannot own the call. **Three rules** keep a
 monitor from claiming a wrong number (measured: `analysis/monitor-rules.md`):
 
@@ -158,7 +185,14 @@ incoming port and the legs once a pass. A leg's M rises — that branch claimed:
 patches the incoming trunk to that leg (done already with one leg), drops every
 other leg to 00 with `BUSY` clear, each then releasing itself, and frees itself.
 The incoming trunk's `BUSY` falls before any claim: it drops every leg and frees
-itself. This exchange claims: the claim's own write drops the legs (§4.2). A
+itself. **A leg seen `BUSY` and then free has released itself** and is no longer
+the forward's — M on it is no claim, and a claim or a drop leaves it alone — and
+a forward whose every leg has gone frees itself, writing nothing: an incoming
+trunk whose link is down stays `BUSY` (`MUTE_BLK`), so its `BUSY` never falls,
+and the stale resolver cut or re-pointed the live calls later hunted onto its
+legs (`newimpl/flood-study/REPORT.md` §5.2, C10). **A resolver older than 2 × `T_KEY`** drops its legs, as a cell
+lets go (§3.4); one that patched a single leg both ways puts the incoming trunk
+back on 00, still held. This exchange claims: the claim's own write drops the legs (§4.2). A
 chain transit needs one as much as a hub: a leg written after the caller's A has
 gone has no edge left to release on. A fan-out of two or more legs is **built,
 and not run.**
@@ -180,14 +214,37 @@ attaches a register.
 | `/NET` | unit → marker | grounded by the unit, pulled up at the marker. Low: `1` is the key, and the mini marker reads a port's word before it takes its M as a call or connects it (`marker.md` §3). High: `1` is highway 1 (`numbering.md` §3) |
 | `flood_go` | marker → unit, a tick | the key: the marker consumed a first digit `1` at once, restarted the register so `e b h s` land in its first four slots, took dial tone off, and waits in **YIELD** |
 | `local`, `done`, `nogo` | unit → marker, a tick each | the code is this exchange's: the store has restarted again, and `h s` follow as a local number · caller ↔ trunk is written: free the register · cannot-complete this origin call (§4.1) |
-| `att` + port | unit → marker, **a level** | a claimed trunk wants the register. Raised only once the unit's `CLAIM` word has left its queue; held until `att_ack` |
-| `att_ack` | marker → unit, a tick | the trunk has the register as a caller with no dial tone, `CLAIM` on every later write to it until release; **or** the register was busy and the marker wrote the trunk to cannot-complete with `BUSY` and `CLAIM` — after the unit's `CLAIM` word, since `att` waited for it |
+| `att` + port | unit → marker, **a level** | a claimed trunk wants a register. Raised only once the unit's `CLAIM` word has left its queue; held until `att_ack` |
+| `att_ack` | marker → unit, a tick | the trunk has the claim register (the class marker: its register) as a caller with no dial tone, `CLAIM` on every later write to it until release; **or** that register was busy and the marker wrote the trunk to cannot-complete with `BUSY` and `CLAIM` — after the unit's `CLAIM` word, since `att` waited for it |
 | register ribbon | tapped | the caller's port, the digits and their count, `brk`, `gone`, `nodig`, busy (`register.md` §3). The unit's `restart` is ORed with the marker's |
 | `/UREQ` | unit → bus | low while the unit has writes queued: the marker finishes its word and starts no other, and the unit drives after `WAIT`, 640 master ticks. No grant (`bus.md` §5) |
 
 In YIELD a hang-up is abandon and the no-digit timeout cannot-complete. One key
-a call (`numbering.md` §3). A claim waits out a watch after a connect
-(`marker.md` §5).
+a call (`numbering.md` §3). A claim that finds the register in a watch after a
+connect is refused at once, like any other (`marker.md` §4.8).
+
+### 3.7 Sizing
+
+Measured under random traffic (`newimpl/flood-study/REPORT.md` §2; two exchanges, a three-exchange chain,
+a hub of three leaves):
+
+- **Resolvers: `NRES` ≥ the number of source exchanges** whose floods reach this
+  one — every leaf behind a hub, both ends of a chain transit. An exchange's one
+  register lets it have one flood pending at a transit at a time, so the loss is
+  Engset in the sources, not Erlang B (§10). A hub with `NRES` 2 and three
+  leaves lost 1 flood in 30 at light load and 26 % at overload; with 3, none of 44.
+- **Monitor cells: `NMON` 3 at a hub, and at a leaf once the hub originates.**
+  Every flood in the network holds one of the hub's cells until its `e` is
+  decided, ≈ 0.9 s, so a call *to* the hub is lost when two others are in that
+  window.
+- **Channels on a spoke ≥ the calls talking on it + the number of leaves**: a
+  flood holds a channel on every spoke until its claim, and on 2-channel spokes
+  29 of 81 attempts found no trunk. A fan-out into a full spoke silently misses
+  the owner behind it.
+- **Strap a leaf's absent directions** (`STRAP_N`, §7; no parts). A leaf has
+  nowhere to forward, but without the strap every seizure it holds runs a 10 ms
+  sweep that finds nothing and counts in `n_nofwd`, which then cannot tell a
+  lost flood from a leaf (`tb_chain`, `tb_lchain`).
 
 ## 4. A call across the network
 
@@ -200,17 +257,25 @@ a call (`numbering.md` §3). A claim waits out a watch after a connect
            guard and the 5 s rule count from this write
  e, b      8, 9 or more than ten pulses → drop the trunks, nogo.  This
            exchange's own code → drop the trunks, restart, local
- claim     the FIRST M seen on a held trunk.  Keep it; drop the others at once.
-           Inside the guard it is glare, taken as the claim all the same (§5)
- connect   at the last digit — h s, or a third digit of 8 pulses or more: the
-           one-key numbers 0 and 9, with 8 and 11–15 folded in (the far marker
-           refuses those) — write the caller listening to the kept trunk; done
+ claim     M standing on a held trunk for four samples (4 ms), after b.  Keep
+           it; drop the others at once.  Inside the guard it is glare, taken
+           as the claim all the same (§5).  Standing before b outside the
+           guard, no monitor can have claimed: drop the trunks, nogo
+ connect   at the claim, once the others are dropped: write the caller
+           listening to the kept trunk; done, and the register is free.  h s,
+           or a one-key number, go down the trunk live as they did before it
  gone      the caller hangs up, or the register times out or frees: drop the trunks
- nogo      a break inside the guard (§6); b not counted 5 s after the seizure; no
-           claim 2 s after the origin's register counted b
+ nogo      a break inside the guard (§6), or between the key and the seizure
+           write; b not counted 5 s after the seizure; no claim 2 s after the
+           origin's register counted b
 ```
 
-The caller hears silence from the key to the connect. **The 5 s rule** keeps an
+The caller hears silence from the key to the claim, and the owner from then on:
+its refusal or busy tone the moment it decides, not after `h s`. **Connecting at
+the claim frees the register ≈ 2 s sooner**, and that is when the other
+exchange's claim would find it busy: waiting for `h s` made two exchanges'
+registers refuse each other's claims, and two-way traffic past about one attempt
+a second collapsed to no calls at all (`newimpl/flood-study/REPORT.md` §3). **The 5 s rule** keeps an
 accidental key from holding a channel on every link for the register's 10 s; a
 slow dial reaches the code 00 in 3.8 s. Event words: `proposed/counters.md` §5.
 
@@ -221,8 +286,11 @@ When a cell claims, the unit writes in one push the incoming trunk listening to
 trunk; the cell is free at that write. A port with `CLAIM` sends backward A = 1
 until release (`fabric.md` §5), so the claim crosses every patch to the origin.
 Once the word has left the queue the unit raises `att`, and the trunk becomes a
-caller like a line: the register reads `h s`, `0` or `9` off its A, the far
-caller's next digit at least ≈ 590 ms away (a 720 ms pause less `ID`). **Busy
+caller like a line: **the claim register** reads `h s`, `0` or `9` off its A,
+the far caller's next digit at least ≈ 590 ms away (a 720 ms pause less `ID`).
+It is a second register that no local caller takes (`register.md` §4), so a
+claim is refused only while it is on another claim — never because this
+exchange's own caller is dialling, or dialling out. **Busy
 is the owner's to say**: its marker gives the trunk a tone, heard through the
 path already up (`marker.md` §4.8, `numbering.md` §4). Release is A falling through
 every patch, each port clearing itself (`fabric.md` §5); a dead link drops its A
@@ -244,10 +312,10 @@ a bench run.**
    3308   23   "4" (ended 3180) is not 23's b, nor 25's: those monitors let go
    3308   24   "4" is 24's b: CLAIM on the trunk from 23; the leg toward 25 dropped
    3310   23   the resolver sees M on its leg and frees itself.  24: att
-   3311   22   backward A: the claim (the origin's 2 s wait began at 3308)
+   3311   22   backward A: the claim.  44 ↔ trunk, done, the register freed
    3565   25   its held port has released itself: link 24–25 is free
-   5828   22   the last 5 is in: 44 ↔ trunk, done, the register freed
-   5832   24   5 5: the trunk ↔ 55, CLAIM kept; 55 rings; 44 hears ringback at 5833
+   5832   24   5 5 in, down the connected path: the trunk ↔ 55, CLAIM kept;
+               55 rings; 44 hears ringback at 5833
 ```
 
 Until the claim the call holds a trunk on every link, a monitor at 23, 24 and 25
@@ -268,15 +336,16 @@ M on a trunk it holds — the other caller's hook — and takes it as the claim;
 inside the guard, where no real claim can come (§6), it also counts it
 (`n_glare`) and sends `EV_GLARE`, code 04 with `DST` the trunk
 (`proposed/counters.md` §5). Neither classifier takes the channel, which each end
-seized itself (§3.3); each origin connects at its caller's last digit, and the
+seized itself (§3.3); each origin connects at that claim, and the
 two callers talk with nobody rung (`tb_lfull`). At a transit a glared leg is its
 resolver's claim; not run.
 
 ## 6. The guard
 
 The origin drops its trunks and gives cannot-complete if the caller's next break
-comes inside **the guard** after its seizure write (rule 2, §3.4): a failed call
-in place of a chance of a wrong number. **The tap is a two-bit strap on the unit,
+comes inside **the guard** after its seizure write (rule 2, §3.4), or between
+the key and that write, where a single-pulse `e` can break while the origin
+sweeps: a failed call in place of a chance of a wrong number. **The tap is a two-bit strap on the unit,
 `GUARD`: 128 ms doubled by each step of the code, 128, 256, 512 or 1024 ms.**
 Code 3's 1024 ms is past the ceiling below and abandons conforming dials (§10).
 It is the one number in the protocol that says how big the network is, and the
@@ -294,8 +363,14 @@ classifier is still watching an earlier hold through `T_ARM` (≈ 17 ms more). S
 ≈ 42 and 17–23.
 
 **The guard must cover the slow case**: past it is a wrong number, not a failed
-call. Arithmetic, not run: the benches dial 8× fast and test the mechanism, not
-the reach (§10).
+call. **Measured at real timers** on an eight-exchange chain (`newimpl/flood-study/REPORT.md` §2.4): a hop
+is 13 ms (2.1–2.9 to classify, 10.6–10.8 to the forward write), 18.5–21 ms
+behind a flood still in the watch, ≈ 30 ms behind another sweep; the 128 ms tap
+reached 8 hops with no slow event, 7 with one, and **4–5 against three
+compounding slow events** in a burst of coincident keys. A conforming 720 ms
+pause leaves ≈ 590 ms of margin, so the reach matters for fast diallers (a data
+card pulsing DTR) and deep networks. The benches dial 8× fast and test the
+mechanism, not the reach.
 
 **Bounds.** Above: the caller's pause less ≈ 139 ms (the digit recognised,
 128 ms, then the origin's sweep and seizure); a telephone to ES 201 187 pauses at
@@ -322,7 +397,16 @@ the cycle, but the other floods into a link that goes nowhere. At the two ends a
 call arrives twice; the direct copy claims first and the origin drops the long
 way, which may claim too, gets a register or a refusal (§4.2) and releases
 unheard. **A ring is also a spare**: move the strap to a failed link and the ring
-is a chain again. **Built, and not run.**
+is a chain again.
+
+**What getting the strap wrong costs** (run at 8× and at real timers:
+`newimpl/flood-study/REPORT.md` §5.4, C19). **Unstrapped**, every call circulates, and only the pools
+bound it: channels, cells and resolvers burn at every member, and owners claim
+twice. **Strapped at one end only**, every call from *or to* the strapped end
+arrives twice at its owner and is claimed twice: one copy gets the register,
+the other a refusal, and when the refusal's claim reaches the origin first the
+call fails — seen at real timers with conforming dials. Strapped at both ends,
+each call is claimed once.
 
 ## 8. Clocking
 
@@ -356,24 +440,56 @@ so no alignment of the counters fixes both (measured, `trunks.md` §2).
 
 ## 10. Open
 
-- **Resolver sizing, and silent loss at a transit.** Every forwarding exchange
-  takes a resolver for every flood that reaches it: ≈ 0.19 E on
-  `analysis/topology.md` §3's reference network, where two resolvers leave
-  ≈ 1.4 % of floods unforwarded at each transit (Erlang B), and the one
-  forwarder loses about the flood rate × 11 ms more — **arithmetic, not a run**.
-  Both are silent: the caller times out 2 s after `b`, and nothing counts them
-  (`proposed/counters.md` §7). Options: more resolvers, a second forwarder, a
-  transit that claims a flood it cannot pass on, to refuse it at once. Blocks
-  sizing any network with transits, and a router.
-- **The guard's reach at the unit's hop.** At the slow hop the 128 ms tap covers
-  ≈ 4–5 hops (§6); the chain, tandem and "63 exchanges at 128 ms" limits of
-  `analysis/topology.md` and `analysis/traffic.md` need re-running, and nothing
-  measures reach at real speed. Options: plan on 256 ms; a forward that need not
-  wait for a running sweep; a classifier that watches more than one hold.
+- **Resolver loss at a transit is silent.** Every forward takes a resolver; with
+  none free the seizure is held but not forwarded, and the caller times out
+  2 s after `b` having held a channel and a trunk ≈ 4.5 s. With one register
+  an exchange, at most one flood per *source exchange* is pending at a transit,
+  so the loss is **Engset in the sources** — measured on the chain, `NRES` 1:
+  22.9 % against 22 % predicted; `NRES` 2: 0 of 293. With u the source
+  register's network occupancy (`newimpl/flood-study/REPORT.md` §2.2):
+
+  | `NRES` | sources | u = 0.25 | 0.5 | saturated |
+  |---|---|---|---|---|
+  | 2 | 3 | 1.2 % | 4.8 % | 19 % |
+  | 2 | 4 | 3.2 % | 11 % | 36 % |
+  | 2 | 8 | 15 % | 36 % | 67 % |
+  | 3 | 4 | 0.1 % | 1.1 % | 8.5 % |
+
+  The one forwarder loses nothing at real timers — the 18 ms watch spaces
+  classifications wider than its 10.6 ms forward (0 of 27, crossings
+  included); the 8× benches overstate it. Nothing counts the loss
+  (`proposed/counters.md` §7). Options: `NRES` by §3.7, a transit that claims
+  a flood it cannot pass on, to refuse it at once.
+- **The guard's reach, and a flood picked up late.** Measured (§6): 7–8 hops
+  typical, 4–5 compounding at 128 ms; the chain, tandem and "63 exchanges at
+  128 ms" limits of `analysis/topology.md` and `analysis/traffic.md` still need
+  re-running at that hop. Past the reach the watch's wait (§3.3) makes most
+  late floods a lost call, not a wrong number — but not a trunk the classifier
+  first takes *after* its first dial break: after every watch it restarts at
+  port 00, so a high-numbered trunk can wait behind others, and its make then
+  reads as the rise. The timing study's fix, a memory of a rise, a break and
+  a rise again a port (three bits a port: a RAM or 24 '164s), turned every such
+  wrong number into a lost call (`newimpl/flood-study/REPORT.md` §4, `work/load/timing/fix`); not taken.
+  Options: that memory; plan on 256 ms; a forward that need not wait for a
+  running sweep; a classifier that watches more than one hold.
 - **`GUARD` code 3.** The strap's fourth code gives 1024 ms, past §6's ≈ 580 ms
   ceiling: an exchange strapped 3 abandons every caller who pauses less than
   ≈ 1.16 s between digits, conforming dials included. Options: a jumper field
   that cannot make code 3, or another meaning for it. Not a bench question.
+- **Left open by the flood study's fixes** (`newimpl/tb/tb_fl_chain.v` headers,
+  2026-09-27). **A blip, then a real seizure inside `ID`**: a noise blip on an
+  idle trunk's A is held, and a genuine seizure of that channel within 128 ms
+  looks like a dial break to the watch's wait (§3.3), so the blip's cell counts
+  the gap as a `1` — a wrong number at an exchange whose `e` is 1, a lost call
+  elsewhere. The hunt hold-off (§3.2) covers only a far unit that itself wrote
+  the channel free. Options: two samples of M before the classifier takes a
+  port (a second bit a port). **The killer trunk**: a stuck A conductor is
+  parked `BUSY` at the far end once its cell and resolver age out (§3.4), but
+  the near end still reads the channel free and every call from it that way
+  takes it first and fails. Options: the far unit writing the parked port to a
+  tone so the near caller hears it; a word the far card can clear. **A
+  resolver's leg claim is one sample of M**; only the origin's claim stands
+  four (§4.1).
 - **The unit's writes want a sequencer.** The unit decides up to five writes in a
   tick (a `CLAIM` and four leg drops) and hands them to `ctl_queue`, a model
   part. A board needs a stepping sequencer, a word at a time, with the watches
@@ -385,7 +501,6 @@ so no alignment of the counters fixes both (measured, `trunks.md` §2).
 - **Relayed dial pulses.** Each exchange a pulse crosses re-samples it once a
   pass, at 1 kHz; nothing measures a relayed pulse, or the shortest break after
   many hops.
-- **Not run**: a hub's fan-out, a ring and its strap, glare at a transit, a cut
-  during a dialled call, how often an accidental `1` happens (a flood and a
+- **Not run**: a hub's fan-out, a ring and its strap, glare at a transit, how often an accidental `1` happens (a flood and a
   cannot-complete, never a wrong number), and how fast people dial between digits
   (under ≈ 267 ms the 128 ms guard abandons them).

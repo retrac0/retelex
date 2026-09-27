@@ -13,9 +13,9 @@ Everything else follows from that.
 > is block-steered any more, and `/BLK` survives only to gate a block's
 > writes.
 
-> **Status: measured in simulation — 18 benches, 585 checks under Verilator,
-> and 52 faults, each shown to turn its bench red by a named check but the one
-> held twice by design (`make faults`, §4).** Icarus is
+> **Status: measured in simulation — 22 benches, 770 checks under Verilator,
+> and 71 faults, each shown to turn its bench red by a named check but the two
+> held by design (`make faults`, §4).** Icarus is
 > retired from the test sequence (§4). Its last full run, on the RTL of commit
 > `63bafbb`, passed the eleven benches below `net` with the same counts. It was
 > stopped in `net` after an hour, and `chain` never ran. No gate delays, so
@@ -196,8 +196,11 @@ clock, which no bus line carries; `bus.md` §7 has that open.
                      2 x 3 slot jumper, and the supervision
 
  mini_marker       MINIMAL: the handoff, the sequencer, one register; and, tied
-                   off in top_min, the NETWORK half -- key 1, YIELD, the claim
-                   attach, sticky CLAIM, a word read before a caller or a connect
+                   off in top_min, the NETWORK half -- key 1, YIELD, a word read
+                   before a caller or a connect, and the CLAIM REGISTER's
+                   sequencer (K_): a claim attached to a second register at
+                   once, h s, the called port, the connect and its watch, run
+                   between this card's own states
    probe           the scanner-addressed listener -- ONE '688 and half a '74
    pulse_reg       register.md §2's collector, with a probe of its own on its caller
      pulse_rx      three windows off one timer: HIT 8, ID 128, CLR 256 ms
@@ -213,8 +216,11 @@ clock, which no bus line carries; `bus.md` §7 has that open.
                    (eight '164) saying which it has dealt with, and a watch on
                    each hold through the ports' arming time; the monitors, each
                    its own probe and pulse_rx; the origin bank for the one
-                   register; the forwarder and resolvers; one 9 ms sweep;
-                   its own word_rx
+                   register, connecting at the claim; the forwarder and
+                   resolvers, with ages on cells and resolvers; one 9 ms
+                   sweep with a hunt hold-off a direction; its own word_rx
+ pulse_reg         NETWORK: the claim register, a second register card on the
+                   ribbon that only claims are given (top_net)
 
  marker            MAXIMAL: the class marker.  The mini marker's sequencer, and
                    every decision it makes taken on the port's word as well as
@@ -345,20 +351,23 @@ function changed.
 | `ltu` | two exchanges on two crystals and a local eight-channel trunk, patched by hand: all sixteen channels read their unit's word; **a cut with no call busies all sixteen ports through `MUTE_BLK`**, reads NONE and sends `FILL`; eight hotlines carry eight patterns each way, in order, **no channel ever carrying another's**; A crosses channel by channel end to end, and a 40 ms make keeps its length to 0.05 ms; a cut in a call drops every A; and **1000 ppm apart every channel slips and still carries only its own bits**; beside them a bare pair of units, their headers driven with a random bit a frame on C and on A: **A slips in all sixteen directions, each slip one bit doubled or dropped, A and C together, and no A bit on another channel** |
 | `lnet` | two exchanges whose only link is a local eight-channel trunk, **calls dialled across it**, B's crystal 100 ppm fast: the key seizes the lowest channel, B claims, B21 rings, voice both ways; **two calls on two channels at once**, the busy channel passed by; from B the glare end **hunts from the top**, B17, and the call lands on A17; the cable pulled busies all sixteen channels and a key finds no trunk |
 | `lfull` | the same two exchanges with the local trunk **filled**: five local calls at A touch no channel; **eight calls across at once**, each key taking the lowest free channel and each channel carrying only its own pair; a ninth call from either end finds none, cannot-complete and `EV_NOTRUNK`; one channel freed, and B's key, hunting from the top, passes seven busy ones to take it; and **glare on the last free channel** — each origin counts it and takes the other's M as its claim, `EV_GLARE` names the channel on both cables B, neither end also takes its own seized channel as an incoming call, and the two callers are joined to each other with nobody rung |
-| `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its register, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B's register busy — the refusal lands after the CLAIM word**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, freed by `nodig`; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`, connected at three digits; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; no clash on either cable B, ever; and **no trunk ever given dial tone** |
-| `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction **at the claim**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
-| `lchain` | `chain`'s three exchanges with every link a local trunk, B 100 ppm fast and C 100 ppm slow: A to C **through B, across both of B's units**, B's monitor letting go at `b` and its resolver at the claim; **two transits through B at once**, each on its own channels; three local calls at B beside them, the transits untouched; C to A from the glare end, B forwarding from the top of its own glare group; and a call from the middle, flooded both ways, the west channel let go at the claim |
+| `net` | two exchanges on one link, **calls that are dialled**, in seventeen scenarios: a local call floods nothing; `1 2 3 2 1` seizes the lowest trunk facing E, B holds it and does **not** take its M as a call, B's monitor claims at `b`, B gives the trunk its **claim register**, A connects at the claim, 21 rings, voice both ways, release through every patch; own code; nobody (the 2 s from `b`); 8 and 9 in the code; the 5 s rule; a break inside the guard; **B20 holding B's line register, and A20's claim taken all the same by the claim register**; **the claim register busy with A20's call, and A22's claim refused after the CLAIM word, heard at once**; a dialled trunk refused; no trunk and `EV_NOTRUNK` on cable B; a caller who stops after `b`, connected at the claim and given cannot-complete by B's no-digit timer through the path; **the called party hanging up first, with no phantom seizure after**; **a hold on a seizure that died before the port could arm, cleared**; two lines waiting for the register while A floods, each read once; a one-key number after the code, `1 2 3 0`; a 0.9 ms blip on the link, read and held and then **written away** because B's port could never arm; `1 2 2 1`, the second key refused; **two calls up through A at once, the second flood reading the busy A11 and passing it by for A12**; **B's marker mid-word when B's unit wants cable B, and the unit waiting the word out** — the coincidence the key's writes used to make in every flood, before reads left the bus; no clash on either cable B, ever; and **no trunk ever given dial tone** |
+| `chain` | three exchanges and a transit: A to C through B, B's monitor lets go at `b`, B's resolver frees itself at the claim, B never holds a register; C to A; and a call **from the middle**, flooded both ways, that drops the losing direction and connects **at the claim**; the leaves A and C strapped on their absent directions, and **never sweeping for nothing**; and **two floods crossing at B**, A's seizure arriving in the middle of B's own sweep |
+| `lchain` | `chain`'s three exchanges with every link a local trunk, B 100 ppm fast and C 100 ppm slow: A to C **through B, across both of B's units**, B's monitor letting go at `b` and its resolver at the claim; **two transits through B at once**, each on its own channels; three local calls at B beside them, the transits untouched; C to A from the glare end, B forwarding from the top of its own glare group; and a call from the middle, flooded both ways, the west channel let go at the claim; the strapped leaves never sweep for nothing |
 | `max` | the class marker on one exchange, no unit: every port's card says what it is, and the marker reads it before it acts. A private line — a tied nail on each card, naming the other — made by the walk at power-up, and a **one-way nail** from a paging amplifier onto the radio, which is never written; the private line used, and **one end left off-hook is no caller: both ends are nailed again and it rings the other**, then made again when both are down; dial tone within a round of the walk; **21 busy, and 22's call goes to 26, which answers to 21**; both busy, **busy tone**; busy-out is busy tone, and still gets dial tone; self, an empty slot, a card out of service, 8 and 2 8 are cannot-complete; a source is listened to, never written or rung; 0 rings the operator, then the second position, then busy tone; 9 takes two outside lines in order and refuses a third; restricted z lets only 0 through and the floor refuses 9; a data line neither calls nor is called, and off-hook is read once a round by the walk and by nothing else; a call nail rings 20 with no dial tone, and hears busy tone when 20 is busy; a CO line ringing in is routed as 0; **PWAIT** set by a round that finds the P line 36 waiting, the register given to 36 and not to 35 beside it, and to 35 once PWAIT has cleared; and a caller gone at the connect leaves the called port free |
+| `fl_link` | the flood study's fixes on two exchanges (A 2 1, B 2 3; two baseband trunks and a local trunk; every port's `T_REL` short, 26 against `CLR` 32, the RC case): **a link outage is a release, never a pulse** — in `b`'s pause, ending mid-dial, one way only, and on the local trunk, whose held channel keeps no other channel poisoned; **no cannot-complete lands on a port that released itself** at the no-digit, 5 s and claim-wait boundaries, nor on a claimed trunk; a break between the key and the seizure write abandons the call; **crossing calls both complete**; a claim during a chattering line's watch taken at once and finished after it; the far caller gone at the claim, nothing held |
+| `fl_chain` | the flood study's races on a chain with a local-trunk hop: **a dial break inside a hold watch two hops down** at six offsets, never a claim of a number nobody dialled; a forward called off in `F_WRITE` when its seizure died; **a resolver whose incoming link was cut lets go** and the mended link carries calls; **a stuck A conductor frees its cell and resolver** after 2–3 × `T_KEY`, parked `BUSY` |
+| `fl_fwd` | the flood study's wrong numbers at **real timers**, the neighbours played by the bench: a 1 ms glitch on a held trunk is no claim; A standing before `b` is cannot-complete; a late flood's first break inside the watch; **glare dropping a trunk and a forward re-seizing it 60 ms later — the hunt hold-off keeps it off the channel**; a far port whose RC runs short; a re-seizure 200 ms after a hang-up, the cell gone at `ID` |
+| `fl_load` | **random traffic** on two 48-line exchanges and a local trunk (the flood study's harness): every call classified by what its two ends heard — **no wrong number, joined pair or phantom ring**; every caller gets dial tone; and after the drain every port, both registers, the claim sequencer, the origin, classifier, forwarder, hold-off, monitors, resolvers and queues idle |
 
-**The checks can fail, and `make faults` shows it.** `faults.py` puts 52 old
+**The checks can fail, and `make faults` shows it.** `faults.py` puts 71 old
 bugs and missing rules back, one at a time, into a copy of the tree, and runs
 the bench meant to catch each: the unit released on `gone` alone, a sweep on an
 even stride, the 5 s rule gone, the claim wait from the last digit, the second
 digit folded, the register armed on a stale sample, no guard, no wait before
 the unit drives, a word not gated by its link, key 1 a flood with no unit, the
 old serialiser rate, `CLM` tied off, no unhold, the origin reading the shared
-sweep, no per-port memory, a second key allowed, a one-key number waiting for
-four, `/HW` steered by `DST` again, every block answering a select, a reader
+sweep, no per-port memory, a second key allowed, `/HW` steered by `DST` again, every block answering a select, a reader
 selecting inside another read's eight frames, the sweep taking a trunk that was
 busy at its select, the classifier holding a channel its own origin had just
 seized, the no-digit timer paused by a digit in progress, the marker
@@ -367,10 +376,18 @@ class marker's — busy tone turned back into cannot-complete, no answers-to
 hunt, a hunt taking a busy port, the walk taking a caller that was busy at its
 select, the restricted floor and z ignored, a data line taken for voice, no
 PWAIT, PWAIT never clearing, no watch, a nail that writes its dest too, the type
-bits read the old way, a source not listened to, no walk — and more. **Every one turns its bench red** on the final
-tree — except one whose rule is held twice, which stays green by design and
-has a second fault removing both holds, which is red: the refusal landing
-after `CLAIM` (the unit's handshake, and its rank on cable B). A trunk's M is
+bits read the old way, a source not listened to, no walk — and twenty for the
+pulse-flood study's fixes: the connect back at the last digit, a claim waiting
+for the line register or never refused, a leaf sweeping, a link outage counted
+as a pulse (both trunk cards, one way, a channel group), a cannot-complete
+written on a released port, a break before the seizure lost, no hunt
+hold-off, no long break, no C_LOW, a claim on one sample or before `b`, cells
+that never age, a forward that ignores its cancel, a leg never seen free, and
+random traffic with a claim attached late. **Every one turns its bench red** on
+the final tree — except two, green by design: the refusal landing after
+`CLAIM`, whose rule is held twice (a second fault removing both holds is red),
+and the unit's release on the no-digit timeout, a backstop that connecting at
+the claim leaves no bench able to reach (`faults.py`'s header). A trunk's M is
 held once where it matters: the unit's hold does not cover `tb_net` scenario
 2's release tail, where only the marker's read of the trunk's word stops it,
 and the bench checks that no trunk is ever given dial tone. **Only a named

@@ -48,6 +48,7 @@ module tb_lnet;
     wire        fs_a, fs_b, t1k_a, t1k_b, rc_a, rc_b;
     wire        sd_a, sc_a, wr_a, cl_a, sd_b, sc_b, wr_b, cl_b;
     wire        reg_a, reg_b, mko_a, mko_b, cla_a, cla_b, hunt_a, hunt_b, uno_a, uno_b;
+    wire        creg_a, creg_b;   // the claim registers
     wire [2:0]  mks_a, mks_b;
     wire [3:0]  dirs_a, dirs_b;
     wire [1:0]  res_a, res_b, mon_a, mon_b;
@@ -74,7 +75,7 @@ module tb_lnet;
         .lt_c_in(lc_ai), .lt_a_in(la_ai), .lt_h_in(lh_ai), .lt_k_in(lk_ai), .lt_up(lup_a),
         .frame_stb(fs_a), .tick_1k(t1k_a), .ring_cad_n(rc_a), .port_busy(busy_a),
         .b_sdata(sd_a), .b_sclk(sc_a), .b_wr(wr_a), .b_clash(cl_a),
-        .reg_busy(reg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
+        .reg_busy(reg_a), .creg_busy(creg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
         .res_busy(res_a), .mon_held(mon_a), .claimed(cla_a), .hunting(hunt_a),
         .un_ovf(uno_a), .n_glare(gl_a), .n_nofwd(nf_a));
 
@@ -91,7 +92,7 @@ module tb_lnet;
         .lt_c_in(lc_bi), .lt_a_in(la_bi), .lt_h_in(lh_bi), .lt_k_in(lk_bi), .lt_up(lup_b),
         .frame_stb(fs_b), .tick_1k(t1k_b), .ring_cad_n(rc_b), .port_busy(busy_b),
         .b_sdata(sd_b), .b_sclk(sc_b), .b_wr(wr_b), .b_clash(cl_b),
-        .reg_busy(reg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
+        .reg_busy(reg_b), .creg_busy(creg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
         .res_busy(res_b), .mon_held(mon_b), .claimed(cla_b), .hunting(hunt_b),
         .un_ovf(uno_b), .n_glare(gl_b), .n_nofwd(nf_b));
 
@@ -157,7 +158,7 @@ module tb_lnet;
     task idle_all(input [8*72-1:0] what);
         begin
             ms(400);
-            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b &&
+            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b && !creg_a && !creg_b &&
                mks_a == 3'd0 && mks_b == 3'd0 && dirs_a == 4'd0 && dirs_b == 4'd0 &&
                res_a == 2'd0 && res_b == 2'd0, what);
         end
@@ -181,7 +182,7 @@ module tb_lnet;
         ck(reg_b === 1'b0, "and B's marker did not take the channel's M as a call");
         dial_a(P20, 2); dial_a(P20, 3);
         ck(cla_a === 1'b1, "the claim came back across the unit: backward A at the origin");
-        ck(reg_b === 1'b1, "B gave the claimed channel its register");
+        ck(creg_b === 1'b1 && reg_b === 1'b0, "B gave the claimed channel its claim register");
         dial_a(P20, 2); dial_a(P20, 1); ms(20);
         rings_b(P21); ck(hi > 50 && lo > 50, "B21 rings, from a caller on A");
         hook_b[P21] = 1'b1; ms(20);

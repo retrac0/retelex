@@ -58,6 +58,7 @@ module tb_chain;
     wire        fs_a, fs_b, fs_c, t1k_a, t1k_b, t1k_c, rc_a, rc_b, rc_c;
     wire        sd_a, sc_a, wr_a, cl_a, sd_b, sc_b, wr_b, cl_b, sd_c, sc_c, wr_c, cl_c;
     wire        reg_a, reg_b, reg_c, mo_a, mo_b, mo_c, cla_a, cla_b, cla_c;
+    wire        creg_a, creg_b, creg_c;   // the claim registers
     wire        hu_a, hu_b, hu_c, uo_a, uo_b, uo_c;
     wire [2:0]  ms_a, ms_b, ms_c;
     wire [3:0]  dirs_a, dirs_b, dirs_c;
@@ -70,12 +71,12 @@ module tb_chain;
         .T_GUARD0(16'd16), .T_KEY(16'd625), .T_CLAIM(16'd250)
 
     site_net #(`SITE_PARAMS, .TRUNKS((64'd1 << T11) | (64'd1 << T12)), .TWORD(TW_A),
-               .OWN_E(3'd2), .OWN_B(3'd2)) A (
+               .OWN_E(3'd2), .OWN_B(3'd2), .STRAP_N(4'b1011)) A (   // a leaf: N S W strapped
         .clk(clk_a), .rst_n(rst_n), .hook(hook_a), .tx(tx_a), .rx(rx_a), .e(e_a),
         .c_out(ac), .a_out(aa), .clk_out(ak), .c_in(ac_i), .a_in(aa_i), .clk_in(ak_i),
         .link_up(up_a), .frame_stb(fs_a), .tick_1k(t1k_a), .ring_cad_n(rc_a),
         .port_busy(busy_a), .b_sdata(sd_a), .b_sclk(sc_a), .b_wr(wr_a), .b_clash(cl_a),
-        .reg_busy(reg_a), .mk_state(ms_a), .mk_ovf(mo_a), .dirs_held(dirs_a),
+        .reg_busy(reg_a), .creg_busy(creg_a), .mk_state(ms_a), .mk_ovf(mo_a), .dirs_held(dirs_a),
         .res_busy(res_a), .mon_held(mon_a), .claimed(cla_a), .hunting(hu_a),
         .un_ovf(uo_a), .n_glare(gl_a), .n_nofwd(nf_a));
 
@@ -86,17 +87,17 @@ module tb_chain;
         .c_out(bc), .a_out(ba), .clk_out(bk), .c_in(bc_i), .a_in(ba_i), .clk_in(bk_i),
         .link_up(up_b), .frame_stb(fs_b), .tick_1k(t1k_b), .ring_cad_n(rc_b),
         .port_busy(busy_b), .b_sdata(sd_b), .b_sclk(sc_b), .b_wr(wr_b), .b_clash(cl_b),
-        .reg_busy(reg_b), .mk_state(ms_b), .mk_ovf(mo_b), .dirs_held(dirs_b),
+        .reg_busy(reg_b), .creg_busy(creg_b), .mk_state(ms_b), .mk_ovf(mo_b), .dirs_held(dirs_b),
         .res_busy(res_b), .mon_held(mon_b), .claimed(cla_b), .hunting(hu_b),
         .un_ovf(uo_b), .n_glare(gl_b), .n_nofwd(nf_b));
 
     site_net #(`SITE_PARAMS, .TRUNKS((64'd1 << T11) | (64'd1 << T12)), .TWORD(TW_C),
-               .OWN_E(3'd2), .OWN_B(3'd4)) C (
+               .OWN_E(3'd2), .OWN_B(3'd4), .STRAP_N(4'b0111)) C (   // a leaf: N S E strapped
         .clk(clk_c), .rst_n(rst_n), .hook(hook_c), .tx(tx_c), .rx(rx_c), .e(e_c),
         .c_out(cc), .a_out(ca), .clk_out(ck_o), .c_in(cc_i), .a_in(ca_i), .clk_in(ck_i),
         .link_up(up_c), .frame_stb(fs_c), .tick_1k(t1k_c), .ring_cad_n(rc_c),
         .port_busy(busy_c), .b_sdata(sd_c), .b_sclk(sc_c), .b_wr(wr_c), .b_clash(cl_c),
-        .reg_busy(reg_c), .mk_state(ms_c), .mk_ovf(mo_c), .dirs_held(dirs_c),
+        .reg_busy(reg_c), .creg_busy(creg_c), .mk_state(ms_c), .mk_ovf(mo_c), .dirs_held(dirs_c),
         .res_busy(res_c), .mon_held(mon_c), .claimed(cla_c), .hunting(hu_c),
         .un_ovf(uo_c), .n_glare(gl_c), .n_nofwd(nf_c));
 
@@ -123,7 +124,7 @@ module tb_chain;
     // A transit holds nothing but latches and a resolver; if B's register is
     // ever busy during scenarios 1 and 2, B took a trunk's M as a call.
     reg watch_b = 1'b0; integer b_reg_seen = 0;
-    always @(posedge clk_b) if (watch_b && reg_b) b_reg_seen = b_reg_seen + 1;
+    always @(posedge clk_b) if (watch_b && (reg_b || creg_b)) b_reg_seen = b_reg_seen + 1;
 
     task ms(input integer n); begin repeat (n) @(posedge t1k_a); end endtask
 
@@ -157,7 +158,7 @@ module tb_chain;
     task idle_all(input [8*72-1:0] what);
         begin
             ms(400);
-            ck(busy_a == 0 && busy_b == 0 && busy_c == 0 && !reg_a && !reg_b && !reg_c &&
+            ck(busy_a == 0 && busy_b == 0 && busy_c == 0 && !reg_a && !reg_b && !reg_c && !creg_a && !creg_b && !creg_c &&
                dirs_a == 0 && dirs_b == 0 && dirs_c == 0 && res_b == 0, what);
         end
     endtask
@@ -182,7 +183,7 @@ module tb_chain;
         ck(mon_b != 2'd0 && mon_c != 2'd0, "e is 2, everyone's: both read on");
         dial(0, P20, 4);                                     // b: C's
         ck(mon_b == 2'd0, "b is 4: B's monitor lets go");
-        ck(reg_c === 1'b1, "C claimed and gave the trunk its register");
+        ck(creg_c === 1'b1, "C claimed and gave the trunk its claim register");
         ck(res_b == 2'd0, "B's resolver saw the claim come back and freed itself");
         ck(cla_a === 1'b1, "and backward A reached A through B's two latches");
         dial(0, P20, 2); dial(0, P20, 1); ms(20);
@@ -214,8 +215,10 @@ module tb_chain;
         ck(busy_a[T12] === 1'b1, "toward A the highest W trunk, 12: B's end has glare");
         ck(busy_c[T11] === 1'b1, "toward C the lowest E trunk");
         dial(1, P20, 2); dial(1, P20, 2);                    // A's code
-        ck(cla_b === 1'b1 && reg_a === 1'b1, "A claimed, and A's register has the trunk");
-        ck(dirs_b == 4'b1000, "B let the trunk toward C go AT THE CLAIM");
+        ck(cla_b === 1'b1 && creg_a === 1'b1, "A claimed, and A's claim register has the trunk");
+        ms(5);
+        ck(dirs_b == 4'b0000 && reg_b === 1'b0,
+           "B let the trunk toward C go AT THE CLAIM, and connected: its register is free");
         ms(60);
         ck(busy_c[T11] === 1'b0, "and C released it");
         dial(1, P20, 2); dial(1, P20, 1); ms(20);
@@ -237,6 +240,10 @@ module tb_chain;
         hook_a[P20] = 1'b0; hook_b[P20] = 1'b0;
         idle_all("4: all three idle");
 
+        // a leaf strapped on its absent directions forwards nothing, so it
+        // never sweeps for nothing either, and n_nofwd means a lost flood
+        // (network.md §10)
+        ck(nf_a == 8'd0 && nf_c == 8'd0, "the strapped leaves A and C never swept for nothing");
         ck(clash == 0, "no cable B had two masters driving at once");
         ck(!mo_a && !mo_b && !mo_c && !uo_a && !uo_b && !uo_c,
            "no queue on any exchange refused a write");
@@ -252,5 +259,5 @@ module tb_chain;
     wire _unused = &{1'b0, rc_a, rc_b, rc_c, t1k_b, t1k_c, fs_a, fs_b, fs_c,
                      sd_a, sc_a, wr_a, sd_b, sc_b, wr_b, sd_c, sc_c, wr_c,
                      ms_a, ms_b, ms_c, cla_c, hu_a, hu_b, hu_c, res_a, res_c, mon_a,
-                     dirs_c, gl_a, gl_b, gl_c, nf_a, nf_b, nf_c, e_b, rx_b, 1'b0};
+                     dirs_c, gl_a, gl_b, gl_c, nf_b, e_b, rx_b, 1'b0};
 endmodule

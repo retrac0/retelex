@@ -62,7 +62,17 @@ module local_trunk #(
     parameter [15:0] HOLDOFF = 16'd6400,
     // Half a '123 on the far HCLK: three frames of silence is a cut.  In
     // master ticks, because the model has no RC.
-    parameter [7:0]  DEAD    = 8'd192
+    parameter [7:0]  DEAD    = 8'd192,
+    // AN OUTAGE IS A RELEASE, NEVER A PULSE (baseband_card.v's POISON, eight
+    // times).  An outage of RIDE frames poisons every channel: A held at 0
+    // both ways and the word NONE.  Each channel clears on its own once it has
+    // been idle both ways -- its A_RX and the far A -- for four strobes of
+    // STB frames running (a shared 128 ms tap, a 2-bit count a channel: over
+    // 384 ms, past T_REL and CLR).  A channel at a time, so a far exchange
+    // still seizing one channel cannot keep the other seven dead.  About
+    // three packages.  Flood study C07.
+    parameter [15:0] RIDE    = 16'd256,
+    parameter [15:0] STB     = 16'd8192
 )(
     input        clk,         // the simulation's timebase, not a pin
     input        rst_n,       // power-on
@@ -142,6 +152,13 @@ module local_trunk #(
     reg  [7:0] sh;
     wire       ld = tx_oct && tx_clk;
 
+    // ---- the poison: a flip-flop and a 2-bit count a channel ------------------
+    reg  [7:0]  poison;
+    reg  [15:0] dn, ps;                        // frames down; the strobe's tap
+    reg  [15:0] idc;                           // 2 bits a channel
+    wire [7:0]  idle2 = ~a_rx & ~x_a;          // idle both ways
+
+    integer pc;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             tx_d <= 1'b0; hk_d <= 1'b0; fh_d <= 1'b0;
@@ -149,6 +166,7 @@ module local_trunk #(
             rn <= 3'd0; rq <= 1'b0; hold_c <= 8'd0; hold_a <= 8'd0;
             x_c <= 8'd0; x_a <= 8'd0;
             quiet <= 8'hFF; up_cnt <= 16'd0; sh <= 8'hFF;
+            poison <= 8'd0; dn <= 16'd0; ps <= 16'd0; idc <= 16'd0;
         end else begin
             tx_d <= tx_clk;
             hk_d <= hclk;
@@ -161,7 +179,7 @@ module local_trunk #(
             end
             if (hk_rise) begin
                 c_q <= c_rx[nx];
-                a_q <= a_rx[nx];
+                a_q <= a_rx[nx] && !poison[nx];
             end
 
             // receive: the '259s written mid-cell, addressed by the far count
@@ -179,6 +197,18 @@ module local_trunk #(
                 x_c <= hold_c;
                 x_a <= hold_a;
                 if (!settled) up_cnt <= up_cnt + 16'd1;
+                // the poison
+                if (!link_up) begin
+                    if (dn != 16'hFFFF) dn <= dn + 16'd1;
+                    if (dn >= RIDE - 16'd1) begin poison <= 8'hFF; idc <= 16'd0; end
+                end else dn <= 16'd0;
+                ps <= (ps >= STB - 16'd1) ? 16'd0 : ps + 16'd1;
+                for (pc = 0; pc < 8; pc = pc + 1)
+                    if (!poison[pc] || !live || !idle2[pc]) idc[pc*2 +: 2] <= 2'd0;
+                    else if (ps == 16'd0) begin
+                        if (idc[pc*2 +: 2] == 2'd3) poison[pc] <= 1'b0;
+                        else idc[pc*2 +: 2] <= idc[pc*2 +: 2] + 2'd1;
+                    end
             end
             if (ld)              sh <= WORD;
             else if (frame_edge) sh <= {1'b1, sh[7:1]};
@@ -189,10 +219,11 @@ module local_trunk #(
     // A dead link is FILL on every C and no M anywhere, so a call in progress
     // releases and an idle group reads like an unfitted one.
     assign c_tx     = live ? x_c : {8{fill}};
-    assign a_tx     = live ? x_a : 8'd0;
+    assign a_tx     = live ? (x_a & ~poison) : 8'd0;
     assign mute_blk = !live;
 
-    // open drain, modelled at the pin: 0 pulled low (a one), 1 left open
-    assign word_n = {8{!(sh[0] && live)}};
+    // open drain, modelled at the pin: 0 pulled low (a one), 1 left open;
+    // a poisoned channel reads NONE, so no hunt takes it until it clears
+    assign word_n = ~({8{sh[0] && live}} & ~poison);
     assign ans_n  = 8'd0;                      // tied low: a trunk never rings
 endmodule

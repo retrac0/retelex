@@ -81,6 +81,7 @@ module site_net #(
     output [63:0] port_busy,
     output        b_sdata, b_sclk, b_wr, b_clash,
     output        reg_busy,
+    output        creg_busy,     // the claim register
     output [2:0]  mk_state,
     output        mk_ovf,
     output [3:0]  dirs_held,
@@ -92,6 +93,10 @@ module site_net #(
     output [7:0]  n_glare,
     output [7:0]  n_nofwd
 );
+    // the trunk cards' outage poison, scaled with CLR (at CLR 256: 300 ms and
+    // a 128 ms strobe, the cards' own defaults)
+    localparam [15:0] P_CLEAR = {7'd0, CLR} * 16'd75;
+    localparam [15:0] P_STB   = {7'd0, CLR} * 16'd32;
     localparam [`PW-1:0] DT = 6'o01, NG = 6'o03;
     localparam [63:0] TONES = (64'd1 << DT) | (64'd1 << NG);
     localparam [63:0] LTP   = {{8{LTU[7]}}, {8{LTU[6]}}, {8{LTU[5]}}, {8{LTU[4]}},
@@ -149,7 +154,7 @@ module site_net #(
         .frame_stb(frame_stb), .tick_1k(tick_1k), .ring_cad_n(ring_cad_n),
         .port_busy(port_busy),
         .b_sdata(b_sdata), .b_sclk(b_sclk), .b_wr(b_wr), .b_clash(b_clash),
-        .reg_busy(reg_busy), .caller(), .mk_state(mk_state), .mk_ovf(mk_ovf),
+        .reg_busy(reg_busy), .creg_busy(creg_busy), .caller(), .mk_state(mk_state), .mk_ovf(mk_ovf),
         .dirs_held(dirs_held), .res_busy(res_busy), .mon_held(mon_held),
         .claimed(claimed), .hunting(hunting), .un_ovf(un_ovf),
         .n_glare(n_glare), .n_nofwd(n_nofwd));
@@ -161,7 +166,7 @@ module site_net #(
     genvar q;
     generate for (q = 0; q < 64; q = q + 1) begin : sock
         if (TRUNKS[q]) begin : trunk
-            baseband_card #(.WORD(TWORD[q*8 +: 8]), .HOLDOFF(HOLDOFF)) u_card (
+            baseband_card #(.WORD(TWORD[q*8 +: 8]), .HOLDOFF(HOLDOFF), .CLEAR(P_CLEAR)) u_card (
                 .clk(clk), .rst_n(rst_n),
                 .tx_clk(tx_clk), .loop_hb(loop_hb), .tx_oct(clk_8k), .fill(fill),
                 .c_tx(t_c_tx[q]), .a_tx(t_a_tx[q]),
@@ -183,7 +188,7 @@ module site_net #(
     genvar h;
     generate for (h = 0; h < 8; h = h + 1) begin : blk
         if (LTU[h]) begin : ltu
-            local_trunk #(.WORD(LTWORD[h*8 +: 8]), .HOLDOFF(HOLDOFF)) u_ltu (
+            local_trunk #(.WORD(LTWORD[h*8 +: 8]), .HOLDOFF(HOLDOFF), .STB(P_STB)) u_ltu (
                 .clk(clk), .rst_n(rst_n),
                 .c_tx(l_c_tx[h*8 +: 8]), .a_tx(l_a_tx[h*8 +: 8]),
                 .word_n(l_word_n[h*8 +: 8]), .ans_n(l_ans_n[h*8 +: 8]),

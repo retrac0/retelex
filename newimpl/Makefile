@@ -40,8 +40,12 @@ TB_chain  := tb/site_net.v tb/tb_chain.v
 TB_lfull  := tb/site_net.v tb/tb_lfull.v
 TB_lchain := tb/site_net.v tb/tb_lchain.v
 TB_max    := tb/site_max.v tb/tb_max.v
+TB_fl_load := tb/site_net.v tb/tb_fl_load.sv
+TB_fl_chain := tb/site_net.v tb/tb_fl_chain.v
+TB_fl_fwd := tb/site_net.v tb/tb_fl_fwd.v
+TB_fl_link := tb/site_net.v tb/tb_fl_link.v
 
-SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet lfull lchain max
+SIMS   := clock fabric ctl ha probe dial mini debug line word tie ltu net chain lnet lfull lchain max fl_load fl_chain fl_fwd fl_link
 IVSIMS := $(addprefix iv-,$(SIMS))    # by hand only: not in the sequence
 
 IVFLAG := -g2012 -I rtl

@@ -91,6 +91,7 @@ module tb_net;
     wire        fs_a, fs_b, t1k_a, t1k_b, rc_a, rc_b;
     wire        sd_a, sc_a, wr_a, cl_a, sd_b, sc_b, wr_b, cl_b;
     wire        reg_a, reg_b, mko_a, mko_b, cla_a, cla_b, hunt_a, hunt_b, uno_a, uno_b;
+    wire        creg_a, creg_b;   // the claim registers
     wire [2:0]  mks_a, mks_b;
     wire [3:0]  dirs_a, dirs_b;
     wire [1:0]  res_a, res_b, mon_a, mon_b;
@@ -106,7 +107,7 @@ module tb_net;
         .c_in(ac_in), .a_in(aa_in), .clk_in(ak_in), .link_up(up_a),
         .frame_stb(fs_a), .tick_1k(t1k_a), .ring_cad_n(rc_a), .port_busy(busy_a),
         .b_sdata(sd_a), .b_sclk(sc_a), .b_wr(wr_a), .b_clash(cl_a),
-        .reg_busy(reg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
+        .reg_busy(reg_a), .creg_busy(creg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
         .res_busy(res_a), .mon_held(mon_a), .claimed(cla_a), .hunting(hunt_a),
         .un_ovf(uno_a), .n_glare(gl_a), .n_nofwd(nf_a));
 
@@ -120,7 +121,7 @@ module tb_net;
         .c_in(bc_in), .a_in(ba_in), .clk_in(bk_in), .link_up(up_b),
         .frame_stb(fs_b), .tick_1k(t1k_b), .ring_cad_n(rc_b), .port_busy(busy_b),
         .b_sdata(sd_b), .b_sclk(sc_b), .b_wr(wr_b), .b_clash(cl_b),
-        .reg_busy(reg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
+        .reg_busy(reg_b), .creg_busy(creg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
         .res_busy(res_b), .mon_held(mon_b), .claimed(cla_b), .hunting(hunt_b),
         .un_ovf(uno_b), .n_glare(gl_b), .n_nofwd(nf_b));
 
@@ -248,7 +249,7 @@ module tb_net;
     task idle_all(input [8*72-1:0] what);
         begin
             ms(400);
-            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b &&
+            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b && !creg_a && !creg_b &&
                mks_a == 3'd0 && mks_b == 3'd0 && dirs_a == 4'd0 && res_b == 2'd0, what);
         end
     endtask
@@ -287,11 +288,13 @@ module tb_net;
         dial_a(P20, 2);                                      // e: B's, read on
         dial_a(P20, 3);                                      // b: B's -- claim
         ck(cla_a === 1'b1, "the claim came back: backward A at the origin");
-        ck(reg_b === 1'b1, "B gave the claimed trunk its register");
+        ck(creg_b === 1'b1 && reg_b === 1'b0,
+           "B gave the claimed trunk its CLAIM register, not the line register");
         ck(mon_b == 2'd0, "and B's monitor is free: two digits and no more");
         dial_a(P20, 2); dial_a(P20, 1); ms(20);
         rings_b(P21); ck(hi > 50 && lo > 50, "B21 rings, from a caller on A");
-        ck(reg_a === 1'b0 && reg_b === 1'b0, "both registers are free: the call is up");
+        ck(reg_a === 1'b0 && reg_b === 1'b0 && creg_b === 1'b0,
+           "every register is free: the call is up");
         hook_b[P21] = 1'b1; ms(20);
         tx_a[P20] = 1'b1; ms(4); ck(rx_b[P21] === 1'b1, "B21 hears A20 across the link");
         tx_a[P20] = 1'b0; ms(4); ck(rx_b[P21] === 1'b0, "and follows it");
@@ -370,20 +373,43 @@ module tb_net;
         hook_a[P20] = 1'b0;
         idle_all("7: idle again");
 
-        // ================= 8.  B's register is busy ============================
-        $display("  8. B's register busy when B claims");
+        // ================= 8.  B's line register is busy ========================
+        // The claim never waits on it: it takes the claim register.  With one
+        // register for both, B20 dialling slowly refused every claim.
+        $display("  8. B's line register busy when B claims");
         hook_b[P20] = 1'b1; ms(10);
         dial_b(P20, 2);                                       // B20 holds B's register
-        ck(reg_b === 1'b1, "B20 holds B's only register, waiting for its s");
+        ck(reg_b === 1'b1, "B20 holds B's line register, waiting for its s");
         hook_a[P20] = 1'b1; ms(10);
         dial_a(P20, 1); dial_a(P20, 2); dial_a(P20, 3);
-        ck(cla_a === 1'b1, "B still claims: backward A reaches A");
-        hear_b(T11); ck(s0 && !s1, "B's trunk listens to 03, not 00: the refusal came AFTER CLAIM");
+        ck(cla_a === 1'b1 && creg_b === 1'b1,
+           "B claims, and the claim register takes the trunk, B20 dialling or not");
         dial_a(P20, 2); dial_a(P20, 1); ms(20);
-        hear_a(P20); ck(s0 && !s1, "A20 hears B's cannot-complete through the path");
-        ck(busy_a[T11] === 1'b1, "and A's trunk is still up: the tone is B's, not A's own");
+        rings_b(P21); ck(hi > 50 && lo > 50, "B21 rings from A20, while B20 still dials");
+        ck(reg_b === 1'b1 && creg_b === 1'b0, "B20 still has the line register; the claim register is free");
         hook_a[P20] = 1'b0; hook_b[P20] = 1'b0;
         idle_all("8: idle again");
+
+        // ================= 8b.  B's claim register is busy =====================
+        // A20's call is claimed and connected, its register free at the claim,
+        // and A20 pauses before h.  A22 then dials B: the claim register is
+        // A20's, so B refuses -- after CLAIM, and heard at once.
+        $display("  8b. B's claim register busy when B claims again");
+        hook_a[P20] = 1'b1; ms(10);
+        dial_a(P20, 1); dial_a(P20, 2); dial_a(P20, 3);
+        ck(cla_a === 1'b1 && creg_b === 1'b1 && reg_a === 1'b0,
+           "A20 claimed at B, A connected at the claim: A's register is free");
+        hook_a[P22] = 1'b1; ms(10);
+        hear_a(P22); ck(s1 && !s0, "A22 gets dial tone while A20's call waits for h");
+        dial_a(P22, 1); dial_a(P22, 2); dial_a(P22, 3); ms(20);
+        ck(busy_a[T12] === 1'b1, "A22's flood went out on the other trunk, A12");
+        hear_b(T12); ck(s0 && !s1, "B's second trunk listens to 03: the refusal came AFTER CLAIM");
+        hear_a(P22); ck(s0 && !s1, "A22 hears B's cannot-complete at once, before any h s");
+        hook_a[P22] = 1'b0;
+        dial_a(P20, 2); dial_a(P20, 1); ms(20);
+        rings_b(P21); ck(hi > 50 && lo > 50, "A20 then finishes: B21 rings");
+        hook_a[P20] = 1'b0;
+        idle_all("8b: idle again");
 
         // ================= 9.  a dialled trunk =================================
         $display("  9. A20 dials 2 5, a trunk");
@@ -411,11 +437,11 @@ module tb_net;
         hook_a[P20] = 1'b1; ms(10);
         dial_a(P20, 1); dial_a(P20, 2); dial_a(P20, 3);
         ck(cla_a === 1'b1, "B claimed");
-        ms(1000);
-        ck(dirs_a == 4'b0100, "a second after b the trunk is still held, waiting for h s");
-        ms(400);
-        ck(dirs_a == 4'd0, "at the no-digit timeout the register goes, and the trunk with it");
-        hear_a(P20); ck(s0 && !s1, "and the caller hears cannot-complete");
+        ms(50);
+        ck(dirs_a == 4'd0 && !reg_a && busy_a[T11] === 1'b1,
+           "A connected at the claim: its register is free, the caller on the kept trunk");
+        ms(1350);
+        hear_a(P20); ck(s0 && !s1, "at B's no-digit timeout the caller hears cannot-complete, through the path");
         hook_a[P20] = 1'b0;
         idle_all("11: idle again");
 

@@ -98,6 +98,17 @@ without the clock are still a usable link inside one room, but a cut cable then
 leaves the trunk in the hunt: one failed call per attempt while it is broken.
 That is a choice to make knowingly.
 
+**An outage is a release, never a pulse.** A link down for 4 ms or more
+(`RIDE`, under the counters' 8 ms `HIT`) **poisons** the card: A is held at 0
+both ways — into its port and out to the far card — and the word reads none,
+until the link is up and the channel has been idle both ways, its own `A_RX`
+and the far A, for 300 ms (`CLEAR`, past `T_REL` and `CLR`). Without it an
+outage of 8–256 ms was a dial pulse to every monitor and register beyond, and
+a longer one ending mid-dial was a fresh seizure counted from mid-number: a
+wrong number (`newimpl/flood-study/REPORT.md` §5.1, C07). Idle *both* ways, because a card whose receive
+fell while the far card's did not still has the far caller's M on its input.
+Half a '4040, a '74 and two gates.
+
 **Levels.** In one rack on one ground: 74HC with 33 Ω at the driver, six
 conductors and a ground. Between racks on separate grounds: V.11 / RS-422, one
 26LS31 and one 26LS32 for the six signals, three pairs each way.
@@ -161,7 +172,11 @@ so it carries `FILL` and A = 0.
 **Link down and power-up.** Far `HCLK` silent for three frames (half a '123), or
 the first ≈ 100 ms after power-up, and the group fails as a block adapter does
 (`fabric.md` §6.2). `tb_ltu`: a cut with no call busies all sixteen ports, reads
-NONE and sends `FILL`.
+NONE and sends `FILL`. **An outage poisons all eight channels** as the baseband
+card's poisons its one (§1); each clears on its own once it has been idle both
+ways for four strobes of a shared 128 ms tap (a 2-bit count a channel, over
+384 ms), so a far exchange still seizing one channel cannot keep the other seven
+dead. About three packages.
 
 **The group.** One '165 from jumpers, fanned to eight 2N7002s: one word for all
 eight channels, which share one link and so one direction. `/ANS` tied low. It

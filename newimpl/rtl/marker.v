@@ -130,6 +130,7 @@ module marker #(
     input                   r_gone,
     input                   r_nodig,
     input                   r_settled,
+    input                   r_hook,        // the caller off-hook, as the register sees it
 
     // ---- NETWORK: the unit's ribbon ------------------------------------------
     input                   net_n,         // /NET: the unit card is fitted.  Pulled up
@@ -267,10 +268,10 @@ module marker #(
 
     // A claim may be taken where the register is free and the sequencer is
     // between calls; it must be refused where the register is someone's --
-    // never on the tick a read completes, and never in WATCH (mini_marker).
+    // never on the tick a read completes, and at once in WATCH (mini_marker).
     wire att_take   = u_att && !att_ack && !r_busy &&
                       ((state == S_IDLE) || (state == S_DRAIN));
-    wire att_refuse = u_att && !att_ack && r_busy && !rd_done && (state != S_WATCH);
+    wire att_refuse = u_att && !att_ack && r_busy && !rd_done;
 
     // The walk's own read: what it says, taken apart where it lands, with the
     // port's M and BUSY at its select.
@@ -394,7 +395,9 @@ module marker #(
                     state       <= S_DRAIN;
                 end
             end else if (r_nodig) begin
-                if (room >= 5'd1) begin
+                // off-hook only: on-hook, the caller's port may have released
+                // itself, and BSY would hold it for good (mini_marker)
+                if ((room >= 5'd1) && r_hook) begin
                     push_v      <= 2'b01;
                     push_d      <= {15'd0, ent(caller, NOGO, 1'b1, ctx_clm)};
                     reg_release <= 1'b1;
@@ -541,7 +544,7 @@ module marker #(
             // The caller gone first: write the called port free.  The line
             // chattering for the whole no-digit time: free both.
             S_WATCH: if (!bus_idle) reg_restart <= 1'b1;
-            else if (r_gone || r_nodig) begin
+            else if (r_gone || (r_nodig && r_hook)) begin
                 if (room >= 5'd2) begin
                     push_v      <= r_gone ? 2'b01 : 2'b11;
                     push_d      <= {ent(caller, NOGO, 1'b1, ctx_clm),
@@ -573,7 +576,7 @@ module marker #(
                     state       <= S_DRAIN;
                 end else if (u_nogo || y_nogo || r_nodig) begin
                     y_nogo <= 1'b1;
-                    if (room >= 5'd1) begin
+                    if ((room >= 5'd1) && r_hook) begin
                         push_v      <= 2'b01;
                         push_d      <= {15'd0, ent(caller, NOGO, 1'b1, 1'b0)};
                         reg_release <= 1'b1;

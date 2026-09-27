@@ -57,7 +57,22 @@ module baseband_card #(
     parameter [15:0] HOLDOFF   = 16'd6400,
     // Half a '123 on the fifth conductor: three frames of silence is a cut.
     // In master ticks, because the model has no RC.
-    parameter [7:0]  DEAD      = 8'd192
+    parameter [7:0]  DEAD      = 8'd192,
+    // AN OUTAGE IS A RELEASE, NEVER A PULSE.  An outage of RIDE frames or more
+    // (4 ms: under the counters' HIT, so anything shorter never counts)
+    // POISONS the card: A is held at 0 both ways -- into this port and out to
+    // the far one -- until the link is up and the channel has been idle BOTH
+    // ways, this port's A_RX and the far card's A, for CLEAR frames (300 ms,
+    // past T_REL and CLR).  So both ends release, every monitor and register
+    // clears, and a caller still off-hook behind an origin that still holds
+    // the trunk is never presented again as a fresh seizure counted from
+    // mid-number -- nor is an outage of 8-256 ms a dial pulse to every
+    // monitor beyond.  Idle both ways, not just this way: a card whose own
+    // receive fell while the far card's did not stays poisoned while the far
+    // caller's M is still on its input.  Half a '4040, a '74 and two gates.
+    // Flood study C07.
+    parameter [15:0] RIDE      = 16'd256,
+    parameter [15:0] CLEAR     = 16'd19200
 )(
     input        clk,         // the simulation's timebase, not a pin
     input        rst_n,       // power-on
@@ -95,8 +110,10 @@ module baseband_card #(
     wire far_edge   = clk_in && !far_d;     // the far end's
 
     // ---- transmit: straight through ----------------------------------------
+    reg        poison;
+    reg [15:0] dn, pt;                      // frames down; frames idle both ways
     assign c_out   = c_rx;
-    assign a_out   = a_rx;
+    assign a_out   = a_rx && !poison;
     assign clk_out = tx_clk;
 
     // ---- receive: half a '74 for C, the RC and a quarter '14 for A ---------
@@ -130,7 +147,18 @@ module baseband_card #(
             tx_d <= 1'b0; far_d <= 1'b0;
             c_sync <= 1'b0; a_s1 <= 1'b0; a_s2 <= 1'b0;
             quiet <= 8'hFF; up_cnt <= 16'd0; sh <= 8'hFF;
+            poison <= 1'b0; dn <= 16'd0; pt <= 16'd0;
         end else begin
+            if (frame_edge) begin
+                if (!link_up) begin
+                    if (dn != 16'hFFFF) dn <= dn + 16'd1;
+                    if (dn >= RIDE - 16'd1) poison <= 1'b1;
+                end else dn <= 16'd0;
+                if (poison && link_up && !a_rx && !a_s2) begin
+                    if (pt >= CLEAR) begin poison <= 1'b0; pt <= 16'd0; end
+                    else pt <= pt + 16'd1;
+                end else pt <= 16'd0;
+            end
             tx_d  <= tx_clk;
             far_d <= clk_in;
 
@@ -153,10 +181,12 @@ module baseband_card #(
     // progress releases (network.md §2, "Link down").  And a card still in
     // its power-up RC presents no M: a seizure it passed on before its word
     // could say "trunk" would be read as NONE, and taken for nobody's.
-    assign a_tx = a_s2 && link_up && settled;
+    // Poisoned, likewise, and it reads NONE, so no hunt takes a trunk that
+    // carries nothing until it clears.
+    assign a_tx = a_s2 && link_up && settled && !poison;
 
     // open drain, modelled at the pin: 0 pulled low (a one), 1 left open
-    assign word_n = !(sh[0] && link_up && settled);
+    assign word_n = !(sh[0] && link_up && settled && !poison);
     assign ans_n  = 1'b0;
     assign rai_n  = 1'b1;
 

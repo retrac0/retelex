@@ -85,6 +85,9 @@ module site_max #(
     output [7:0]  n_glare,
     output [7:0]  n_nofwd
 );
+    // the trunk cards' outage poison, scaled with CLR (at CLR 256: 300 ms, the
+    // card's own default)
+    localparam [15:0] P_CLEAR = {7'd0, CLR} * 16'd75;
     localparam [`PW-1:0] DT = 6'o01, BT = 6'o02, NG = 6'o03;
     localparam [63:0] TONES = (64'd1 << DT) | (64'd1 << BT) | (64'd1 << NG);
     localparam [63:0] PF    = PHONES | TRUNKS | TONES;
@@ -169,7 +172,7 @@ module site_max #(
     genvar q;
     generate for (q = 0; q < 64; q = q + 1) begin : sock
         if (TRUNKS[q]) begin : trunk
-            baseband_card #(.WORD(TWORD[q*8 +: 8]), .HOLDOFF(HOLDOFF)) u_card (
+            baseband_card #(.WORD(TWORD[q*8 +: 8]), .HOLDOFF(HOLDOFF), .CLEAR(P_CLEAR)) u_card (
                 .clk(clk), .rst_n(rst_n),
                 .tx_clk(tx_clk), .loop_hb(loop_hb), .tx_oct(clk_8k), .fill(fill),
                 .c_tx(t_c_tx[q]), .a_tx(t_a_tx[q]),

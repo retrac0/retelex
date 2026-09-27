@@ -69,6 +69,7 @@ module tb_lfull;
     wire        fs_a, fs_b, t1k_a, t1k_b, rc_a, rc_b;
     wire        sd_a, sc_a, wr_a, cl_a, sd_b, sc_b, wr_b, cl_b;
     wire        reg_a, reg_b, mko_a, mko_b, cla_a, cla_b, hunt_a, hunt_b, uno_a, uno_b;
+    wire        creg_a, creg_b;   // the claim registers
     wire [2:0]  mks_a, mks_b;
     wire [3:0]  dirs_a, dirs_b;
     wire [1:0]  res_a, res_b, mon_a, mon_b;
@@ -92,7 +93,7 @@ module tb_lfull;
         .lt_c_in(lc_ai), .lt_a_in(la_ai), .lt_h_in(lh_ai), .lt_k_in(lk_ai), .lt_up(lup_a),
         .frame_stb(fs_a), .tick_1k(t1k_a), .ring_cad_n(rc_a), .port_busy(busy_a),
         .b_sdata(sd_a), .b_sclk(sc_a), .b_wr(wr_a), .b_clash(cl_a),
-        .reg_busy(reg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
+        .reg_busy(reg_a), .creg_busy(creg_a), .mk_state(mks_a), .mk_ovf(mko_a), .dirs_held(dirs_a),
         .res_busy(res_a), .mon_held(mon_a), .claimed(cla_a), .hunting(hunt_a),
         .un_ovf(uno_a), .n_glare(gl_a), .n_nofwd(nf_a));
 
@@ -104,7 +105,7 @@ module tb_lfull;
         .lt_c_in(lc_bi), .lt_a_in(la_bi), .lt_h_in(lh_bi), .lt_k_in(lk_bi), .lt_up(lup_b),
         .frame_stb(fs_b), .tick_1k(t1k_b), .ring_cad_n(rc_b), .port_busy(busy_b),
         .b_sdata(sd_b), .b_sclk(sc_b), .b_wr(wr_b), .b_clash(cl_b),
-        .reg_busy(reg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
+        .reg_busy(reg_b), .creg_busy(creg_b), .mk_state(mks_b), .mk_ovf(mko_b), .dirs_held(dirs_b),
         .res_busy(res_b), .mon_held(mon_b), .claimed(cla_b), .hunting(hunt_b),
         .un_ovf(uno_b), .n_glare(gl_b), .n_nofwd(nf_b));
 
@@ -217,7 +218,7 @@ module tb_lfull;
     task idle_all(input [8*72-1:0] what);
         begin
             ms(400);
-            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b &&
+            ck(busy_a == 64'd0 && busy_b == 64'd0 && !reg_a && !reg_b && !creg_a && !creg_b &&
                mks_a == 3'd0 && mks_b == 3'd0 && dirs_a == 4'd0 && dirs_b == 4'd0 &&
                res_a == 2'd0 && res_b == 2'd0 && mon_a == 2'd0 && mon_b == 2'd0, what);
         end
@@ -286,7 +287,7 @@ module tb_lfull;
         ck(n_ok == 8, "each key took the lowest free channel, A10 to A17 in turn");
         ck(n_rang == 8, "and B30 to B37 each rang");
         ck(busy_a[15:8] === 8'hFF && busy_b[15:8] === 8'hFF, "all eight channels busy at both ends");
-        ck(!reg_a && !reg_b && dirs_a == 4'd0 && res_b == 2'd0 && mon_b == 2'd0,
+        ck(!reg_a && !reg_b && !creg_a && !creg_b && dirs_a == 4'd0 && res_b == 2'd0 && mon_b == 2'd0,
            "and eight calls stand with every register, origin and monitor free");
         n_ok = 0;
         for (k = 0; k < 8; k = k + 1) begin
@@ -362,7 +363,7 @@ module tb_lfull;
                     number_b(6'o21, {4'd2, 4'd2, 4'd3, 4'd2}, 4);
                 join
                 ms(20);
-                ck(!reg_a && !reg_b && dirs_a == 4'd0 && dirs_b == 4'd0,
+                ck(!reg_a && !reg_b && !creg_a && !creg_b && dirs_a == 4'd0 && dirs_b == 4'd0,
                    "both origins finished: registers free, nothing held");
                 fork ring_a(6'o32); ring_b(6'o22); join
                 ck(!e_a[6'o32] && !e_b[6'o22] && !rang, "neither number dialled rang");
@@ -380,7 +381,7 @@ module tb_lfull;
             end
             watch_m = 1'b0;
             hook_a[6'o31] = 1'b0; hook_b[6'o21] = 1'b0; ms(200);
-            ck(busy_a[15:8] === 8'hF7 && busy_b[15:8] === 8'hF7 && !reg_a && !reg_b &&
+            ck(busy_a[15:8] === 8'hF7 && busy_b[15:8] === 8'hF7 && !reg_a && !reg_b && !creg_a && !creg_b &&
                dirs_a == 4'd0 && dirs_b == 4'd0 && res_a == 2'd0 && res_b == 2'd0,
                "after the try, channel 3 is free again and nothing is held");
         end

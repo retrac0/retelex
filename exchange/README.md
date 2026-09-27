@@ -56,7 +56,7 @@ word says what it is.
 
 | | `top_min` | `top_net` | `top_max` |
 |---|---|---|---|
-| common control | the mini marker, its one register on the card | the mini marker and a network unit | the class marker and a register card; the unit fitted or not |
+| common control | the mini marker, its one register on the card | the mini marker, a network unit, and a claim register card | the class marker and a register card; the unit fitted or not |
 | a caller | M and not `BUSY` | the same, and not a trunk, not none | read by the walk, by its word |
 | dial tone within | a pass, 1 ms | a word read and a pass | a round of the walk, about 250 ms |
 | key 1 | highway 1 | the flood | the flood with a unit, else highway 1 |
