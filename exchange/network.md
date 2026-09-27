@@ -181,7 +181,8 @@ at once. **With two or more** (a hub) the incoming trunk stays on 00 until a leg
 claims.
 
 **A resolver is taken for every forward**, one leg or three, and watches the
-incoming port and the legs once a pass. A leg's M rises — that branch claimed: it
+incoming port and the legs once a pass. A leg's M standing four samples, 4 ms,
+the same rule as the origin's claim (§4.1) — that branch claimed: it
 patches the incoming trunk to that leg (done already with one leg), drops every
 other leg to 00 with `BUSY` clear, each then releasing itself, and frees itself.
 The incoming trunk's `BUSY` falls before any claim: it drops every leg and frees
@@ -487,9 +488,7 @@ so no alignment of the counters fixes both (measured, `trunks.md` §2).
   parked `BUSY` at the far end once its cell and resolver age out (§3.4), but
   the near end still reads the channel free and every call from it that way
   takes it first and fails. Options: the far unit writing the parked port to a
-  tone so the near caller hears it; a word the far card can clear. **A
-  resolver's leg claim is one sample of M**; only the origin's claim stands
-  four (§4.1).
+  tone so the near caller hears it; a word the far card can clear.
 - **The unit's writes want a sequencer.** The unit decides up to five writes in a
   tick (a `CLAIM` and four leg drops) and hands them to `ctl_queue`, a model
   part. A board needs a stepping sequencer, a word at a time, with the watches

@@ -413,7 +413,6 @@ snapshot.
 - A noise blip on an idle trunk, then a real seizure of that channel inside `ID`, still gives a wrong number at an
   exchange whose `e` is 1.
 - The killer trunk after C08 parks a stuck conductor.
-- A transit resolver still takes a leg's claim on one sample.
 - A flood first picked up after its first dial break: the timing study's late-rise memory, not taken.
 - The class marker's claims.
 

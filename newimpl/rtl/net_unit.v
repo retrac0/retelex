@@ -376,6 +376,11 @@ module net_unit #(
     // pair a leg; a forward whose every leg is gone lets go, writing nothing.
     // Flood study C10.
     reg  [NRES*4-1:0]    rs_lb, rs_lf;
+    // A LEG'S CLAIM IS M STANDING N_CL SAMPLES, the same four the origin
+    // requires (below).  One sample was a glitch, and it dropped every other
+    // leg.  A count and the leg it belongs to, per resolver.
+    reg  [NRES*3-1:0]    rs_ln;
+    reg  [NRES*2-1:0]    rs_lj;
     assign res_busy = rs_busy;
 
     reg              rs_free_any, rs_act_any;
@@ -434,7 +439,8 @@ module net_unit #(
     // glitch on A, or a stale cell's early claim (C03, C13), dropped every
     // other direction and connected the caller to it; before b, outside the
     // guard, no monitor can have claimed, so it is cannot-complete, never a
-    // wrong number (flood study C12).
+    // wrong number (flood study C12).  A resolver's leg is the same four
+    // samples (rs_ln, above): one sample there dropped the other legs.
     localparam [2:0] N_CL = 3'd4;
     reg [2:0]       cl_n;      // samples the candidate has stood
     reg [1:0]       cl_j;      // the candidate: which held trunk
@@ -592,6 +598,7 @@ module net_unit #(
             h_done <= 1'b0; n_glare <= 8'd0; n_nofwd <= 8'd0;
             m_age <= {NMON*2{1'b0}}; rs_age <= {NRES*2{1'b0}}; ag_cnt <= 16'd0; ag_stb <= 1'b0;
             rs_lb <= {NRES*4{1'b0}}; rs_lf <= {NRES*4{1'b0}};
+            rs_ln <= {NRES*3{1'b0}}; rs_lj <= {NRES*2{1'b0}};
             ho_port <= {4*`PW{1'b0}}; ho_v <= 4'd0; ho_age <= 8'd0; ho_cnt <= 9'd0; ho_stb <= 1'b0;
             o_brk <= 1'b0;
             cl_n <= 3'd0; cl_j <= 2'd0; early <= 1'b0; cl_g <= 1'b0;
@@ -803,11 +810,21 @@ module net_unit #(
                         if (rs_held[v*4 + j2] && (sp_port == rs_leg[(v*4 + j2)*`PW +: `PW])) begin
                             if (sp_busy)              rs_lb[v*4 + j2] <= 1'b1;
                             else if (rs_lb[v*4 + j2]) rs_lf[v*4 + j2] <= 1'b1;
-                            // M on a leg that has released -- or is seen free
-                            // for the first time just now -- is no claim
-                            if (sp_m && !rs_lf[v*4 + j2] && (sp_busy || !rs_lb[v*4 + j2])) begin
-                                rs_act[v*2 +: 2] <= R_LEG; rs_cl[v*2 +: 2] <= j2[1:0];
-                            end
+                            // M standing N_CL samples on a leg that has not
+                            // released is the claim, the same four the origin
+                            // requires.  One was a glitch, and it dropped every
+                            // other leg.  M down on the candidate starts again.
+                            if (sp_m && !rs_lf[v*4 + j2] && (sp_busy || !rs_lb[v*4 + j2]) &&
+                                ((rs_ln[v*3 +: 3] == 3'd0) || (rs_lj[v*2 +: 2] == j2[1:0]))) begin
+                                if (rs_ln[v*3 +: 3] != N_CL - 3'd1) begin
+                                    rs_ln[v*3 +: 3] <= rs_ln[v*3 +: 3] + 3'd1;
+                                    rs_lj[v*2 +: 2] <= j2[1:0];
+                                end else begin
+                                    rs_act[v*2 +: 2] <= R_LEG; rs_cl[v*2 +: 2] <= j2[1:0];
+                                    rs_ln[v*3 +: 3] <= 3'd0;
+                                end
+                            end else if ((rs_ln[v*3 +: 3] != 3'd0) && (rs_lj[v*2 +: 2] == j2[1:0]))
+                                rs_ln[v*3 +: 3] <= 3'd0;
                         end
                     if ((sp_port == rs_in[v*`PW +: `PW]) && !sp_busy)
                         rs_act[v*2 +: 2] <= R_GONE;
@@ -817,6 +834,7 @@ module net_unit #(
                 if (rs_busy[v] && (rs_act[v*2 +: 2] == R_NONE) && (rs_held[v*4 +: 4] != 4'd0) &&
                     ((rs_held[v*4 +: 4] & ~rs_lf[v*4 +: 4]) == 4'd0)) begin
                     rs_busy[v] <= 1'b0; rs_held[v*4 +: 4] <= 4'd0;
+                    rs_ln[v*3 +: 3] <= 3'd0;
                 end
             if (w_res) begin
                 for (v = 0; v < NRES; v = v + 1) if (rs_act1[v]) begin
@@ -843,6 +861,7 @@ module net_unit #(
                                                   rs_leg[(v*4 + {30'd0, rs_cl[v*2 +: 2]})*`PW +: `PW], 1'b1, 1'b0);
                     end
                     rs_busy[v] <= 1'b0; rs_held[v*4 +: 4] <= 4'd0; rs_act[v*2 +: 2] <= R_NONE;
+                    rs_ln[v*3 +: 3] <= 3'd0;
                 end
             end
 
@@ -883,6 +902,7 @@ module net_unit #(
                     rs_held[v*4 +: 4] <= f_ok; rs_act[v*2 +: 2] <= R_NONE;
                     rs_age[v*2 +: 2] <= 2'd0;
                     rs_lb[v*4 +: 4] <= 4'd0; rs_lf[v*4 +: 4] <= 4'd0;
+                    rs_ln[v*3 +: 3] <= 3'd0; rs_lj[v*2 +: 2] <= 2'd0;
                 end
                 fst <= F_IDLE;
             end

@@ -48,10 +48,14 @@
 // the pauses between digits are 400 ms, shorter than a conforming pause and
 // longer than anything here measures.  About 22 s simulated.
 //
+//   6  leg       a resolver's claim is the origin's four samples.  Y floods
+//                A13 and A forwards it east: 2 ms of M on that leg is no
+//                claim; M stood 8 ms is, the resolver lets go and the
+//                forward stays
+//
 // Does not cover: a bench-played far end that re-seizes a channel INSIDE ID of
 // a death younger than T_ARM (the hold-off only guards a far end that is a
-// unit), a monitor's early claim through a transit's resolver (R_LEG takes one
-// sample), a local-trunk link, or rings.
+// unit), a local-trunk link, or rings.
 `timescale 1ns/1ps
 `include "exch.vh"
 
@@ -353,6 +357,24 @@ module tb_fl_fwd;
         ck(!(busy_x[P22] && !hook_x[P22]), "SAFETY: X22 is not rung");
         zm = 1'b0;
         idle("5: both exchanges idle again");
+
+        // ================= 6.  a resolver's leg claim is four samples ==========
+        $display("  6. Y floods A13; 2 ms of M on the east leg, then 8 ms");
+        ym[T13] = 1'b1;
+        n = 0;
+        while ((res_a == 2'd0 || !busy_a[T11]) && n < 5000) begin @(posedge t1k_a); n = n + 1; end
+        ck(res_a != 2'd0 && busy_a[T11] && busy_a[T13],
+           "A forwarded Y's flood east and holds a resolver on it");
+        inj = 1'b1; #2_000_000; inj = 1'b0;
+        ms(20);
+        ck(res_a != 2'd0 && busy_a[T11],
+           "2 ms of M on the leg is no claim: the resolver still holds the forward");
+        inj = 1'b1;
+        ms(15);
+        ck(res_a == 2'd0 && busy_a[T11] && busy_a[T13],
+           "M stood four samples on the leg is the claim: the resolver lets go, the forward stays");
+        inj = 1'b0; ym[T13] = 1'b0;
+        idle("6: both exchanges idle again");
 
         ck(clash == 0, "no cable B had two masters driving at once");
         ck(!mo_a && !mo_x && !uo_a && !uo_x, "no queue on either exchange refused a write");

@@ -265,7 +265,7 @@ FAULTS = [
   'M down in the hold watch waits ID (C_LOW): a dial break is not a death'),
  ('F62-claim-on-one-sample', 'fl_fwd', 'rtl/net_unit.v',
   [("localparam [2:0] N_CL = 3'd4;", "localparam [2:0] N_CL = 3'd1;")],
-  'the origin takes a claim only once M has stood four samples'),
+  'a claim, the origin\'s or a resolver leg\'s, is M stood four samples'),
  ('F63-early-claim-taken', 'fl_fwd', 'rtl/net_unit.v',
   [("if (cl_g || guarding || f2) begin", "if (1'b1) begin")],
   'a claim standing before b, outside the guard, is cannot-complete'),
