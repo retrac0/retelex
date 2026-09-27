@@ -43,8 +43,11 @@
 //
 // Scenario 2 ends with the CALLED party hanging up first: B's trunk port then
 // releases under A20's still-standing M, and must not be taken for a new
-// seizure.  Scenario 7's break comes at once, so the far end's hold is written
-// on a seizure that dies before B's port can arm -- and must still be cleared.
+// seizure -- nor by B's marker for a call, which only its read of the trunk's
+// word stops there: a listener on each bus counts every word that gives a
+// trunk dial tone, and there must be none.  Scenario 7's break comes at once,
+// so the far end's hold is written on a seizure that dies before B's port can
+// arm -- and must still be cleared.
 //
 // Timers scaled by 8 through the straps, so a run is seconds: the register's
 // windows HIT 1, ID 16, CLR 32 ms; the port's detectors 2 and 32 ms; the
@@ -148,6 +151,24 @@ module tb_net;
             if (sh_a[7:2] == 6'o10) ev_notrunk = ev_notrunk + 1;
             else                    ev_other   = ev_other + 1;
         end
+    end
+
+    // ---- a listener on each bus: a trunk given dial tone -------------------------
+    // A trunk's M is never a call (marker.md §3), so no word ever writes a
+    // trunk to listen to 01.  A claimed trunk is given the register with no
+    // dial tone.  G = 1 is a write; DST is bits 13-8, SRC bits 7-2.
+    reg [15:0] sh_b = 16'd0; reg sc_b_d = 1'b0, wr_b_d = 1'b0;
+    integer trunk_tone = 0;
+    always @(posedge clk_a)
+        if (wr_a && !wr_a_d && sh_a[15] && (sh_a[7:2] == 6'o01) &&
+            ((sh_a[13:8] == T11) || (sh_a[13:8] == T12) || (sh_a[13:8] == T25)))
+            trunk_tone = trunk_tone + 1;
+    always @(posedge clk_b) begin
+        sc_b_d <= sc_b; wr_b_d <= wr_b;
+        if (sc_b && !sc_b_d) sh_b <= {sh_b[14:0], sd_b};
+        if (wr_b && !wr_b_d && sh_b[15] && (sh_b[7:2] == 6'o01) &&
+            ((sh_b[13:8] == T11) || (sh_b[13:8] == T12)))
+            trunk_tone = trunk_tone + 1;
     end
 
     // ---- B's monitors, while nothing should be seizing B ------------------------
@@ -509,6 +530,7 @@ module tb_net;
         ck(clash == 0, "cable B never had two masters driving at once");
         ck(!mko_a && !mko_b && !uno_a && !uno_b, "no queue on either exchange refused a write");
         ck(ev_other == 0, "and no event but EV_NOTRUNK was sent");
+        ck(trunk_tone == 0, "no trunk was ever given dial tone: no marker took a trunk's M as a call");
 
         $display("\n  %0d checks, %0d errors.  %s\n", chk, errs,
                  (errs == 0) ? "PASS" : "FAIL");

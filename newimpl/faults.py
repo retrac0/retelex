@@ -2,26 +2,50 @@
 # faults.py -- the proof that the checks can fail.  STYLE.md 7.
 #
 # Each entry puts one old bug, or one missing rule, back into a COPY of the
-# tree under build/fault/, runs the bench that is meant to catch it, and
-# reports RED (the bench caught it) or GREEN (it did not).  Every entry should
-# be RED, with two exceptions that are the design, not a gap:
+# tree under build/fault/, runs the bench that is meant to catch it, and gives
+# it one verdict:
+#
+#   RED          a named check failed: the bench caught it
+#   GREEN        the bench counted its checks and passed: nothing caught it
+#   TIMEOUT      no check failed, and the bench's watchdog or this harness
+#                ran out of time
+#   BROKEN       the copy did not build, or the bench died before its count
+#   NOT-APPLIED  an anchor is not in the tree exactly once: the entry is stale
+#
+# ONLY RED PROVES A CHECK.  A bench that hangs or does not build proves
+# nothing.  Every entry must be RED, with one exception, which is the design
+# and not a gap (CONTRACT, below):
 #
 #   F03  the refusal lands after the CLAIM word for two reasons -- the unit
 #        raises `att` only once its word is out, and it outranks the marker on
-#        cable B.  Break one and the order holds.  F03b breaks both: RED.
-#   F05  a trunk's M is kept from being a call twice over -- the marker reads
-#        the card's word, and the unit holds the trunk BUSY within a pass.
-#        F05b removes both: RED.
+#        the bus.  Break one and the order holds.  F03b breaks both: RED.
 #
-#   python3 faults.py            every fault, three at a time (make faults)
-#   python3 faults.py F07 ...    only those named
+# The run exits non-zero unless every verdict is the contract's.
 #
-# A network build is about 200 MB; each copy is deleted after its run.
-import os, re, shutil, subprocess, sys
-from concurrent.futures import ThreadPoolExecutor
+#   python3 faults.py               every fault, three at a time (make faults)
+#   python3 faults.py F07 F1 ...    only those whose name starts so
+#   python3 faults.py --check       apply every anchor in place, run nothing
+#                                   (make faults-check)
+#   python3 faults.py -j 2          two at a time
+#   python3 faults.py --timeout N   seconds one bench may take (3000; a loaded
+#                                   tb_net has taken 2176)
+#
+# The tree is the one this file is in, or FAULTS_ROOT.  Each bench runs under
+# a 3 GB memory ceiling (systemd-run) with TMPDIR in build/: /tmp is a small
+# tmpfs with a per-user quota.  A network build is about 200 MB, and each copy
+# is deleted after its run.
+import argparse, os, re, shutil, signal, subprocess, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-ROOT = '/home/joel/telco/newimpl'
+ROOT = os.path.abspath(os.environ.get('FAULTS_ROOT') or
+                       os.path.dirname(os.path.abspath(__file__)))
 OUT  = os.path.join(ROOT, 'build', 'fault')
+TMP  = os.path.join(ROOT, 'build', 'tmp')
+CAP  = ['systemd-run', '--user', '--scope', '-q',
+        '-p', 'MemoryMax=3G', '-p', 'MemorySwapMax=0']
+
+# The verdict each fault must have; every fault not named here must be RED.
+CONTRACT = {'F03': 'GREEN'}
 
 FAULTS = [
  ('F01-release-on-gone-only', 'net', 'rtl/net_unit.v',
@@ -31,29 +55,18 @@ FAULTS = [
   [("wire cls_seen  = (cst == C_IDLE) && sp_fresh && sp_m && !sp_busy &&",
     "wire cls_seen  = (cst == C_IDLE) && sp_fresh && sp_m &&")],
   'the classifier (and so the monitor) ignores a port whose BUSY is set'),
+ # F03 raises `att` at the claim decision, with the CLAIM word still queued;
+ # /UREQ is low by then, so the rank alone keeps the refusal behind it, by the
+ # whole WAIT.  (The old three-patch form held by one master tick: any writer
+ # quicker than today's queue turned it red.  REFACTOR.md §1.8.)
  ('F03-refusal-before-claim', 'net', 'rtl/net_unit.v',
-  [("""                push_v <= 5'b00001;
-                push_d <= {60'd0, ent(m_want_port, P00, 1'b1, 1'b1)};
-                for (u = 0; u < NRES; u = u + 1) if (rs_mine[u]) begin""",
-    """                push_v <= 5'b00000;
-                for (u = 0; u < NRES; u = u + 1) if (rs_mine[u]) begin"""),
-   ("CL_WAIT: if (q_empty && !w_claim) begin att <= 1'b1; cl_st <= CL_ACK; end",
-    "CL_WAIT: begin att <= 1'b1; cl_st <= CL_ACK; end"),
-   ("CL_ACK:  if (att_ack) begin att <= 1'b0; cl_st <= CL_IDLE; end",
-    "CL_ACK:  if (att_ack) begin att <= 1'b0; cl_st <= CL_IDLE; push_v <= 5'b00001; push_d <= {60'd0, ent(att_port, P00, 1'b1, 1'b1)}; end")],
-  'the CLAIM word goes out before att, so a refusal lands after it'),
+  [("CL_WAIT: if (q_empty && !w_claim) begin att <= 1'b1; cl_st <= CL_ACK; end",
+    "CL_WAIT: begin att <= 1'b1; cl_st <= CL_ACK; end")],
+  'the unit raises att only once its CLAIM word is out, so a refusal lands after it'),
  ('F03b-refusal-first-and-no-rank', 'net', 'rtl/net_unit.v',
-  [("""                push_v <= 5'b00001;
-                push_d <= {60'd0, ent(m_want_port, P00, 1'b1, 1'b1)};
-                for (u = 0; u < NRES; u = u + 1) if (rs_mine[u]) begin""",
-    """                push_v <= 5'b00000;
-                for (u = 0; u < NRES; u = u + 1) if (rs_mine[u]) begin"""),
-   ("CL_WAIT: if (q_empty && !w_claim) begin att <= 1'b1; cl_st <= CL_ACK; end",
-    "CL_WAIT: begin att <= 1'b1; cl_st <= CL_ACK; end"),
-   ("CL_ACK:  if (att_ack) begin att <= 1'b0; cl_st <= CL_IDLE; end",
-    "CL_ACK:  if (att_ack) begin att <= 1'b0; cl_st <= CL_IDLE; push_v <= 5'b00001; push_d <= {60'd0, ent(att_port, P00, 1'b1, 1'b1)}; end"),
-   ],
-  'the refusal lands after CLAIM -- the handshake broken AND the marker deaf to /UREQ',
+  [("CL_WAIT: if (q_empty && !w_claim) begin att <= 1'b1; cl_st <= CL_ACK; end",
+    "CL_WAIT: begin att <= 1'b1; cl_st <= CL_ACK; end")],
+  'the refusal lands after CLAIM -- att raised early AND the marker deaf to /UREQ',
   [('rtl/mini_marker.v', [(".go(ureq_n), .pending(q_pending), .empty(q_empty),",
                            ".go(1'b1), .pending(q_pending), .empty(q_empty),")])]),
  ('F04-even-stride', 'net', 'rtl/net_unit.v',
@@ -224,48 +237,118 @@ FAULTS = [
   'bits cross the tie trunk'),
 ]
 
-def run(f):
-    name, bench, path, reps, claim = f[:5]
-    extra = f[5] if len(f) > 5 else []
+def fid(name):
+    return name.split('-')[0]
+
+def want(name):
+    return CONTRACT.get(fid(name), 'RED')
+
+def edits(f):
+    # every file this fault touches, with its (anchor, replacement) pairs
+    return [(f[2], f[3])] + (f[5] if len(f) > 5 else [])
+
+def put_back(f, base, write):
+    # Apply the fault's anchors to the tree at `base`, in order, writing the
+    # files only if `write` and every anchor was there exactly once.  Returns
+    # the anchors that were not.
+    missing, done = [], []
+    for path, reps in edits(f):
+        s = open(os.path.join(base, path)).read()
+        for a, b in reps:
+            n = s.count(a)
+            if n != 1:
+                missing.append(f'{path}: found {n}x: {a.strip()[:60]}')
+                continue
+            s = s.replace(a, b)
+        done.append((path, s))
+    if write and not missing:
+        for path, s in done:
+            open(os.path.join(base, path), 'w').write(s)
+    return missing
+
+def verdict(out, timed_out):
+    lines = [l.strip() for l in out.splitlines()]
+    fails = [l for l in lines if l.startswith('FAIL ')]
+    count = re.search(r'(\d+) checks, (\d+) errors', out)
+    if fails or (count and int(count.group(2)) > 0):
+        return 'RED', ([count.group(0)] if count else []) + fails[:6]
+    if timed_out or 'TIMEOUT' in lines:
+        return 'TIMEOUT', ['the harness gave up' if timed_out else "the bench's watchdog fired"]
+    if count and re.search(r'checks, 0 errors\.\s+PASS', out):
+        return 'GREEN', [count.group(0)]
+    return 'BROKEN', [l for l in lines if 'rror' in l or 'Killed' in l][:6] or lines[-3:]
+
+def run(f, timeout, cap):
+    name, bench, claim = f[0], f[1], f[4]
     d = os.path.join(OUT, name)
     shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
-    for x in ('rtl', 'tb'):
-        shutil.copytree(os.path.join(ROOT, x), os.path.join(d, x))
-    shutil.copy(os.path.join(ROOT, 'Makefile'), d)
-    p = os.path.join(d, path)
-    s = open(p).read()
-    for a, b in reps:
-        if s.count(a) != 1:
-            shutil.rmtree(d, ignore_errors=True)
-            return (name, bench, claim, 'NOT APPLIED', [a[:60]])
-        s = s.replace(a, b)
-    open(p, 'w').write(s)
-    for xp, xreps in extra:
-        q = os.path.join(d, xp); t = open(q).read()
-        for a2, b2 in xreps:
-            if t.count(a2) != 1:
-                shutil.rmtree(d, ignore_errors=True)
-                return (name, bench, claim, 'NOT APPLIED', [a2[:60]])
-            t = t.replace(a2, b2)
-        open(q, 'w').write(t)
     try:
-        r = subprocess.run(['make', 'BUILD=bld', bench], cwd=d, capture_output=True,
-                           text=True, timeout=1500)
-        out = r.stdout + r.stderr
-    except subprocess.TimeoutExpired as e:
-        out = (e.stdout or '') + 'TIMEOUT(harness)'
-    fails = [l.strip() for l in out.splitlines() if 'FAIL ' in l or 'TIMEOUT' in l]
-    summary = [l.strip() for l in out.splitlines() if 'checks,' in l]
-    verdict = 'RED' if (fails or 'Error' in out) and not ('checks, 0 errors' in out) else 'GREEN'
-    shutil.rmtree(d, ignore_errors=True)
-    return (name, bench, claim, verdict, summary + fails[:6])
+        for x in ('rtl', 'tb'):
+            shutil.copytree(os.path.join(ROOT, x), os.path.join(d, x))
+        shutil.copy(os.path.join(ROOT, 'Makefile'), d)
+        missing = put_back(f, d, write=True)
+        if missing:
+            return name, bench, claim, 'NOT-APPLIED', missing
+        # Its own process group, so a timeout takes the simulation with it
+        # and not only `make`.
+        p = subprocess.Popen(cap + ['make', 'BUILD=bld', bench], cwd=d,
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             env=dict(os.environ, TMPDIR=TMP), start_new_session=True)
+        try:
+            out, timed_out = p.communicate(timeout=timeout)[0], False
+        except subprocess.TimeoutExpired:
+            os.killpg(p.pid, signal.SIGKILL)
+            out, timed_out = p.communicate()[0], True
+        v, lines = verdict(out.decode(errors='replace'), timed_out)
+        return name, bench, claim, v, lines
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+def report(name, bench, claim, v, lines):
+    mark = '' if v == want(name) else f'   <-- the contract says {want(name)}'
+    print(f'{v:12s} {name:34s} [{bench}]  {claim}{mark}', flush=True)
+    for l in lines:
+        print(f'               {l}', flush=True)
 
 if __name__ == '__main__':
+    ap = argparse.ArgumentParser(description='put each fault back and run its bench')
+    ap.add_argument('only', nargs='*', help='run only the faults whose name starts so')
+    ap.add_argument('-j', type=int, default=3, help='faults at a time (3)')
+    ap.add_argument('--timeout', type=int, default=3000, help='seconds one bench may take')
+    ap.add_argument('--check', action='store_true', help='apply every anchor in place, run nothing')
+    a = ap.parse_args()
+    todo = [f for f in FAULTS if not a.only or any(f[0].startswith(x) for x in a.only)]
+    if not todo:
+        sys.exit(f'no fault starts with {" or ".join(a.only)}')
+
+    if a.check:
+        stale = 0
+        for f in todo:
+            missing = put_back(f, ROOT, write=False)
+            if missing:
+                stale += 1
+                report(f[0], f[1], f[4], 'NOT-APPLIED', missing)
+        print(f'\n  {len(todo)} faults, {stale} not applied.  {"FAIL" if stale else "PASS"}')
+        sys.exit(1 if stale else 0)
+
     os.makedirs(OUT, exist_ok=True)
-    sel = sys.argv[1:]
-    todo = [f for f in FAULTS if not sel or any(f[0].startswith(x) for x in sel)]
-    with ThreadPoolExecutor(max_workers=3) as ex:
-        for name, bench, claim, verdict, lines in ex.map(run, todo):
-            print(f'{verdict:12s} {name:34s} [{bench}]  {claim}', flush=True)
-            for l in lines: print(f'               {l}', flush=True)
+    os.makedirs(TMP, exist_ok=True)
+    cap = CAP if subprocess.run(CAP + ['true'], capture_output=True).returncode == 0 else []
+    if not cap:
+        print('  (no systemd-run: the benches run without a memory ceiling)', flush=True)
+    got = {}
+    with ThreadPoolExecutor(max_workers=a.j) as ex:
+        jobs = [ex.submit(run, f, a.timeout, cap) for f in todo]
+        for j in as_completed(jobs):
+            r = j.result()
+            got[r[0]] = r[3]
+            report(*r)
+    off = [n for n in (f[0] for f in todo) if got[n] != want(n)]
+    tally = ', '.join(f'{sum(v == k for v in got.values())} {k}'
+                      for k in ('RED', 'GREEN', 'TIMEOUT', 'BROKEN', 'NOT-APPLIED')
+                      if any(v == k for v in got.values()))
+    print(f'\n  {len(todo)} faults: {tally}.  The contract is ' +
+          ('met.  PASS' if not off else
+           'NOT met: ' + ', '.join(f'{fid(n)} {got[n]}' for n in off) + '.  FAIL'))
+    sys.exit(1 if off else 0)

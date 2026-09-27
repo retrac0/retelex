@@ -47,7 +47,7 @@ IVSIMS := $(addprefix iv-,$(SIMS))    # by hand only: not in the sequence
 IVFLAG := -g2012 -I rtl
 VLFLAG := --binary --timing -j 4 -Irtl -Wno-fatal
 
-.PHONY: all lint clean faults $(SIMS) $(IVSIMS)
+.PHONY: all lint clean faults faults-check $(SIMS) $(IVSIMS)
 
 all: $(SIMS)
 
@@ -91,9 +91,15 @@ lint:
 	exit $$fail
 
 # Every check that guards a rule is shown able to fail: each fault in
-# faults.py is put back into a copy of the tree, and must turn its bench red.
+# faults.py is put back into a copy of the tree, and must turn its bench red
+# by a named check -- all but F03, which the design holds twice.  It exits
+# non-zero unless every verdict is the contract's.  faults-check only applies
+# each fault's anchors to the tree, and fails if any is stale: a second.
 faults: | $(BUILD)
 	@python3 faults.py
+
+faults-check:
+	@python3 faults.py --check
 
 clean:
 	@rm -rf $(BUILD)

@@ -140,9 +140,9 @@ restricted card, give busy tone, or hold more than one caller.
 Each rule it keeps has a fault in `newimpl/faults.py` that turns a bench red
 when put back: F09 (second key folded), F10 (register armed on a stale
 sample), F14 (key 1 read as the flood with no unit), F21 (a second key after
-the own code), F05b (a trunk's M taken as a caller), F03b (a claim refused
-before the unit's `CLAIM` word), F37–F39 (no watch, or a watch on half of
-`settled`).
+the own code), F05 (a trunk's M taken as a caller; F05b with the unit's hold
+gone too), F03b (a claim refused before the unit's `CLAIM` word), F37–F39 (no
+watch, or a watch on half of `settled`).
 
 ---
 

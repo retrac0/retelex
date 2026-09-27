@@ -718,9 +718,11 @@ Each question is followed by options and a recommendation.
 > **Status, 2026-09-26:** Joel has answered every question but Q10, which
 > waits on the pros and cons of the fold, which he asked for. The sequencer
 > form is decided (§7): gates, behind a seam that a diode matrix can replace.
-> **S0 may start now. S1–S9 and the steps after wait** for another session's
-> analysis of the pulse-flood protocol, because it may bear on them. Each
-> step updates the documents its change touches, in its own commit.
+> **S0 is done** (2026-09-26): all 52 verdicts are the contract's, 51 RED from
+> named checks and F03 GREEN, and `tb_net` passes 89 of 89. **S1–S9 and the
+> steps after wait** for another session's analysis of the pulse-flood
+> protocol, because it may bear on them. Each step updates the documents its
+> change touches, in its own commit.
 
 1. **The marker↔unit ribbon as levels** (§3.6): `/FLOOD`, `OUT[1:0]`, no unit
    `restart`, four-phase `att_ack`.
